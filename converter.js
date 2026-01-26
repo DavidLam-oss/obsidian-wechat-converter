@@ -1,6 +1,7 @@
 /**
  * 🍎 Apple Style Markdown 转换器
- * 使用 wechat-tool 的 white-space:nowrap + inline-block 方案
+ * 直接照抄 wechat-tool 的代码块实现
+ * 针对微信公众号优化：使用 section 结构，增强兼容性
  */
 
 class AppleStyleConverter {
@@ -67,6 +68,32 @@ class AppleStyleConverter {
     } catch (e) { return this.escapeHtml(code); }
   }
 
+  /**
+   * 格式化高亮代码（参考 wechat-tool formatHighlightedCode）
+   */
+  formatHighlightedCode(html, preserveNewlines = false) {
+    let formatted = html;
+    // 将 span 之间的空格移到 span 内部
+    formatted = formatted.replace(/(<span[^>]*>[^<]*<\/span>)(\s+)(<span[^>]*>[^<]*<\/span>)/g,
+      (_, span1, spaces, span2) => span1 + span2.replace(/^(<span[^>]*>)/, `$1${spaces}`));
+    formatted = formatted.replace(/(\s+)(<span[^>]*>)/g,
+      (_, spaces, span) => span.replace(/^(<span[^>]*>)/, `$1${spaces}`));
+    // 替换制表符为4个空格
+    formatted = formatted.replace(/\t/g, '    ');
+
+    // wechat-tool 的逻辑：如果是 lineNumbers 模式（preserveNewlines=false），将空格转为 &nbsp;
+    // 如果不是（preserveNewlines=true），将换行转为 <br/> 且空格转为 &nbsp;
+    if (preserveNewlines) {
+      formatted = formatted
+        .replace(/\r\n/g, '<br/>')
+        .replace(/\n/g, '<br/>')
+        .replace(/(>[^<]+)|(^[^<]+)/g, str => str.replace(/\s/g, '&nbsp;'));
+    } else {
+      formatted = formatted.replace(/(>[^<]+)|(^[^<]+)/g, str => str.replace(/\s/g, '&nbsp;'));
+    }
+    return formatted;
+  }
+
   inlineHighlightStyles(html) {
     const map = {
       'hljs-keyword': 'color:#ff7b72 !important;', 'hljs-built_in': 'color:#ffa657 !important;',
@@ -84,75 +111,106 @@ class AppleStyleConverter {
       'hljs-operator': 'color:#ff7b72 !important;', 'hljs-regexp': 'color:#a5d6ff !important;',
       'hljs-subst': 'color:#e6e6e6 !important;',
     };
-    let result = html;
-    for (const [cls, style] of Object.entries(map)) {
-      result = result.replace(new RegExp(`class="${cls}"`, 'g'), `style="${style}"`);
-    }
-    return result.replace(/class="[^"]*"/g, '');
+
+    // 改进：处理 class 属性包含多个类名的情况
+    return html.replace(/class="([^"]*)"/g, (match, classNames) => {
+      const classes = classNames.split(/\s+/);
+      let styles = '';
+      for (const cls of classes) {
+        if (map[cls]) {
+          styles += map[cls];
+        }
+      }
+      return styles ? `style="${styles}"` : match;
+    }).replace(/class="[^"]*"/g, ''); // 再次清理未匹配的 class
   }
 
   /**
-   * 创建代码块 - 使用 wechat-tool 的 white-space:nowrap 方案
+   * 创建代码块 - 照抄 wechat-tool 的实现
+   * 使用 wechat-tool 的颜色和结构
    */
   createCodeBlock(content, lang) {
     const showMac = this.theme.macCodeBlock;
     const showLineNum = this.theme.codeLineNumber;
 
+    // wechat-tool 的颜色配置（GitHub Dark 主题）
+    const background = '#0d1117';  // GitHub Dark 背景
+    const color = '#f0f6fc';       // GitHub Dark 文字
+    const barBackground = '#161b22'; // 工具栏背景
+    const borderColor = '#30363d';   // 边框颜色
+
     let lines = content.replace(/\r\n/g, '\n').split('\n');
     while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
 
-    // 高亮
-    const highlighted = this.highlightCode(lines.join('\n'), lang);
-    const styled = this.inlineHighlightStyles(highlighted);
+    // Mac 头部
+    // 关键修正：使用 section 而不是 div，增强在公众号中的兼容性
+    const macHeader = showMac ? `<section style="display:block !important;background:${barBackground} !important;padding:10px !important;border:none !important;border-bottom:1px solid ${borderColor} !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;">
+      <span style="display:inline-block !important;width:12px !important;height:12px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:8px !important;"></span>
+      <span style="display:inline-block !important;width:12px !important;height:12px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:8px !important;"></span>
+      <span style="display:inline-block !important;width:12px !important;height:12px !important;border-radius:50% !important;background:#28c840 !important;"></span>
+    </section>` : '';
 
-    // 处理内容：换行转 <br/>，空格转 &nbsp;（参考 wechat-tool）
-    let processedContent = styled;
-    if (styled.includes('<span style=')) {
-      // 有语法高亮
-      processedContent = styled
-        .replace(/\n/g, '<br/>')
-        .replace(/(\s+)(<span)/g, (m, sp, span) => sp.replace(/ /g, '&nbsp;') + span)
-        .replace(/(<\/span>)(\s+)/g, (m, span, sp) => span + sp.replace(/ /g, '&nbsp;'));
-    } else {
-      // 无语法高亮
-      processedContent = styled
-        .replace(/\n/g, '<br/>')
-        .replace(/^(\s+)/gm, m => m.replace(/ /g, '&nbsp;'));
-    }
+    // 统一行高和字体变量
+    const lineHeight = '1.75';
+    // const fontSize = '13px';
 
-    // Mac 头部（只有红绿灯）
-    const macHeader = showMac ? `<div style="background:#0f0f0f !important;padding:4px 8px !important;border:none !important;">
-      <span style="display:inline-block !important;width:8px !important;height:8px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:6px !important;"></span>
-      <span style="display:inline-block !important;width:8px !important;height:8px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:6px !important;"></span>
-      <span style="display:inline-block !important;width:8px !important;height:8px !important;border-radius:50% !important;background:#28c840 !important;"></span>
-    </div>` : '';
-
-    // 代码内容
     let codeHtml;
+
     if (showLineNum) {
-      // 带行号：使用 nobr 包裹每行
-      const styledLines = styled.split('\n');
-      const linesHtml = styledLines.map((line, idx) => {
-        const lineContent = line
-          .replace(/(\s+)(<span)/g, (m, sp, span) => sp.replace(/ /g, '&nbsp;') + span)
-          .replace(/(<\/span>)(\s+)/g, (m, span, sp) => span + sp.replace(/ /g, '&nbsp;'))
-          .replace(/^(\s+)/gm, m => m.replace(/ /g, '&nbsp;')) || '&nbsp;';
-        const lnSpan = `<span style="user-select:none !important;opacity:0.6 !important;display:inline-block !important;width:2.8em !important;text-align:right !important;padding-right:0.75em !important;">${idx + 1}&nbsp;</span>`;
-        return `<nobr>${lnSpan}${lineContent}</nobr>`;
-      }).join('<br>');
-      codeHtml = linesHtml;
+      // 带行号：逐行处理
+      const highlightedLines = lines.map(lineRaw => {
+        const lineHtml = this.highlightCode(lineRaw, lang);
+        const styled = this.inlineHighlightStyles(lineHtml);
+        // 注意：这里 formatHighlightedCode 第二个参数为 false，不包含 <br>，不包含 &nbsp; (除非内部逻辑处理)
+        // 实际上 formatHighlightedCode 第二个参数为 false 时，只做空格处理
+        // wechat-tool 中： return formatted === '' ? '&nbsp;' : formatted
+        const formatted = this.formatHighlightedCode(styled, false);
+        return formatted === '' ? '&nbsp;' : formatted;
+      });
+
+      // 行号列
+      // 关键改动：使用 height: 1.5em (微调，配合 line-height 1.75 可能会有 0.25 的偏差，但 wechat-tool 是这么写的)
+      // 实际上 wechat-tool 写的是 line-height: 1.75 和 height: 1.75em (lines 89 in Step 772)
+      // 让我们严格遵循 1.75em
+      const lineNumbersHtml = highlightedLines.map((_, idx) =>
+        `<section style="height:1.75em !important;line-height:${lineHeight} !important;padding:0 12px 0 12px !important;font-size:13px !important;color:#95989C !important;text-align:right !important;white-space:nowrap !important;vertical-align:top !important;margin:0 !important;">${idx + 1}</section>`
+      ).join('');
+
+      // 代码内容
+      // 关键改动：回归 wechat-tool 原始方案 —— 使用 <br> 拼接代码行，而不是 div 分割
+      // 这样右侧就是一个单一的文本流，高度严格由 line-height 控制
+      const codeInnerHtml = highlightedLines.join('<br/>');
+
+      const codeLinesHtml = `<section style="white-space:nowrap !important;display:inline-block !important;min-width:100% !important;line-height:${lineHeight} !important;font-size:13px !important;">${codeInnerHtml}</section>`;
+
+      // 行号列容器样式
+      const lineNumberColumnStyles = `text-align:right !important;padding:12px 0 12px 0 !important;border-right:1px solid rgba(255,255,255,0.1) !important;user-select:none !important;background:transparent !important;flex:0 0 auto !important;min-width:3.5em !important;margin:0 !important;`;
+
+      // 注意 flex 容器的 padding 0，内部 padding 分别在 lineNumberColumn 和 code section
+      codeHtml = `<section style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;padding:0 !important;margin:0 !important;">
+        <section style="${lineNumberColumnStyles}">${lineNumbersHtml}</section>
+        <section style="flex:1 1 auto !important;overflow-x:auto !important;overflow-y:visible !important;padding:12px 12px 12px 16px !important;margin:0 !important;min-width:0 !important;">${codeLinesHtml}</section>
+      </section>`;
     } else {
-      // 无行号：直接使用 pre
-      codeHtml = processedContent;
+      // 无行号
+      const highlighted = this.highlightCode(lines.join('\n'), lang);
+      const styled = this.inlineHighlightStyles(highlighted);
+      // preserveNewlines=true -> 包含 <br>
+      const formatted = this.formatHighlightedCode(styled, true);
+      const codeLinesHtml = `<section style="white-space:pre !important;display:inline-block !important;min-width:100% !important;word-break:keep-all !important;overflow-wrap:normal !important;line-height:${lineHeight} !important;font-size:13px !important;margin:0 !important;">${formatted}</section>`;
+
+      codeHtml = `<section style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;padding:0 !important;margin:0 !important;">
+        <section style="flex:1 1 auto !important;overflow-x:auto !important;overflow-y:visible !important;padding:12px !important;min-width:0 !important;margin:0 !important;">${codeLinesHtml}</section>
+      </section>`;
     }
 
-    // 使用 div 结构 + white-space:nowrap + overflow-x:scroll（参考 wechat-tool）
-    return `<div style="width:100% !important;margin:12px 0 !important;background:#1e1e1e !important;border:1px solid #1a1a1a !important;border-radius:6px !important;overflow:hidden !important;">
+    // 外层容器
+    return `<section class="code-snippet__fix" style="width:100% !important;margin:12px 0 !important;background:${background} !important;border:1px solid ${borderColor} !important;border-radius:8px !important;overflow:hidden !important;box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;display:block !important;">
 ${macHeader}
-<div style="padding:12px !important;border:none !important;background:#1e1e1e !important;color:#e6e6e6 !important;font-family:'SF Mono',Consolas,Monaco,monospace !important;font-size:12px !important;line-height:1.6 !important;white-space:nowrap !important;overflow-x:scroll !important;">
-<pre style="margin:0 !important;padding:0 !important;background:#1e1e1e !important;font-family:inherit !important;font-size:inherit !important;line-height:inherit !important;color:#e6e6e6 !important;white-space:nowrap !important;overflow-x:visible !important;display:inline-block !important;min-width:100% !important;">${codeHtml}</pre>
-</div>
-</div>`;
+<section style="padding:0 !important;border:none !important;background:${background} !important;color:${color} !important;font-family:'SF Mono',Consolas,Monaco,monospace !important;font-size:13px !important;line-height:${lineHeight} !important;white-space:nowrap !important;overflow-x:auto !important;display:block !important;">
+<pre style="margin:0 !important;padding:0 !important;background:${background} !important;font-family:inherit !important;font-size:13px !important;line-height:inherit !important;color:${color} !important;white-space:nowrap !important;overflow-x:visible !important;display:inline-block !important;min-width:100% !important;">${codeHtml}</pre>
+</section>
+</section>`;
   }
 
   getInlineStyle(tagName) { return this.theme.getStyle(tagName); }
