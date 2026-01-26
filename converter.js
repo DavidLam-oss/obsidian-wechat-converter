@@ -169,9 +169,6 @@ class AppleStyleConverter {
       });
 
       // 行号列
-      // 关键改动：使用 height: 1.5em (微调，配合 line-height 1.75 可能会有 0.25 的偏差，但 wechat-tool 是这么写的)
-      // 实际上 wechat-tool 写的是 line-height: 1.75 和 height: 1.75em (lines 89 in Step 772)
-      // 让我们严格遵循 1.75em
       const lineNumbersHtml = highlightedLines.map((_, idx) =>
         `<section style="height:1.75em !important;line-height:${lineHeight} !important;padding:0 12px 0 12px !important;font-size:13px !important;color:#95989C !important;text-align:right !important;white-space:nowrap !important;vertical-align:top !important;margin:0 !important;">${idx + 1}</section>`
       ).join('');
@@ -197,7 +194,8 @@ class AppleStyleConverter {
       const styled = this.inlineHighlightStyles(highlighted);
       // preserveNewlines=true -> 包含 <br>
       const formatted = this.formatHighlightedCode(styled, true);
-      const codeLinesHtml = `<section style="white-space:pre !important;display:inline-block !important;min-width:100% !important;word-break:keep-all !important;overflow-wrap:normal !important;line-height:${lineHeight} !important;font-size:13px !important;margin:0 !important;">${formatted}</section>`;
+      // 改动：white-space: nowrap !important
+      const codeLinesHtml = `<section style="white-space:nowrap !important;display:inline-block !important;min-width:100% !important;word-break:keep-all !important;overflow-wrap:normal !important;line-height:${lineHeight} !important;font-size:13px !important;margin:0 !important;">${formatted}</section>`;
 
       codeHtml = `<section style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;padding:0 !important;margin:0 !important;">
         <section style="flex:1 1 auto !important;overflow-x:auto !important;overflow-y:visible !important;padding:12px !important;min-width:0 !important;margin:0 !important;">${codeLinesHtml}</section>
