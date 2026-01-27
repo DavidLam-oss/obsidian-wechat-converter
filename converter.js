@@ -5,9 +5,10 @@
  */
 
 window.AppleStyleConverter = class AppleStyleConverter {
-  constructor(theme, avatarUrl = '') {
+  constructor(theme, avatarUrl = '', showImageCaption = true) {
     this.theme = theme;
     this.avatarUrl = avatarUrl;
+    this.showImageCaption = showImageCaption;
     this.md = null;
     this.hljs = null;
   }
@@ -55,12 +56,18 @@ window.AppleStyleConverter = class AppleStyleConverter {
       caption = caption.replace(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i, '');
 
       if (this.avatarUrl) {
-        // 微信公众号会忽略 margin，所以使用显式的间隔元素
+        // 水印模式：显示头像 + 图片名称
         const avatarHeaderStyle = this.getInlineStyle('avatar-header');
         const spacerStyle = 'display:block;height:8px;line-height:8px;font-size:0;';
         return `<figure style="${this.getInlineStyle('figure')}"><div style="${avatarHeaderStyle}"><img src="${this.avatarUrl}" alt="logo" style="${this.getInlineStyle('avatar')}"><span style="${this.getInlineStyle('avatar-caption')}">${caption}</span></div><section style="${spacerStyle}">&nbsp;</section><img src="${src}" alt="${alt}" style="${this.getInlineStyle('img')}"></figure>`;
       }
-      return `<figure style="${this.getInlineStyle('figure')}"><img src="${src}" alt="${alt}" style="${this.getInlineStyle('img')}"><figcaption style="${this.getInlineStyle('figcaption')}">${caption}</figcaption></figure>`;
+
+      // 非水印模式：根据 showImageCaption 决定是否显示说明文字
+      if (this.showImageCaption) {
+        return `<figure style="${this.getInlineStyle('figure')}"><img src="${src}" alt="${alt}" style="${this.getInlineStyle('img')}"><figcaption style="${this.getInlineStyle('figcaption')}">${caption}</figcaption></figure>`;
+      } else {
+        return `<figure style="${this.getInlineStyle('figure')}"><img src="${src}" alt="${alt}" style="${this.getInlineStyle('img')}"></figure>`;
+      }
     };
 
     this.md.renderer.rules.hr = () => `<hr style="${this.getInlineStyle('hr')}">`;

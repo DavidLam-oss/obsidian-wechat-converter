@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS = {
   avatarUrl: '',
   avatarBase64: '',  // Base64 编码的本地头像，优先级高于 avatarUrl
   enableWatermark: false,
+  showImageCaption: true,  // 关闭水印时是否显示图片说明文字
 };
 
 /**
@@ -141,7 +142,8 @@ class AppleStyleView extends ItemView {
       if (this.plugin.settings.enableWatermark) {
         avatarSrc = this.plugin.settings.avatarBase64 || this.plugin.settings.avatarUrl || '';
       }
-      this.converter = new window.AppleStyleConverter(this.theme, avatarSrc);
+      const showCaption = this.plugin.settings.showImageCaption;
+      this.converter = new window.AppleStyleConverter(this.theme, avatarSrc, showCaption);
       await this.converter.initMarkdownIt();
 
       console.log('✅ 依赖加载完成');
@@ -590,6 +592,16 @@ class AppleStyleSettingTab extends PluginSettingTab {
         .setValue(this.plugin.settings.avatarUrl)
         .onChange(async (value) => {
           this.plugin.settings.avatarUrl = value;
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName('显示图片说明文字')
+      .setDesc('关闭水印时，在图片下方显示说明文字（图片名称）')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.showImageCaption)
+        .onChange(async (value) => {
+          this.plugin.settings.showImageCaption = value;
           await this.plugin.saveSettings();
         }));
   }
