@@ -407,6 +407,7 @@
   border-radius: 22px;
 }
 
+body.theme-dark .apple-toggle-slider,
 .theme-dark .apple-toggle-slider {
   background-color: #48484a !important;
   /* 深色模式下开关未激活时的背景色 */
@@ -483,16 +484,17 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: var(--apple-spacing-lg);
-  background: #ffffff;
-  /* 强制浅色背景，模拟微信效果 */
-  color: #1d1d1f;
-  /* 强制深色文字 */
+  background: var(--apple-background);
+  /* 默认跟随主题 */
   border-radius: var(--apple-radius-md);
-  /* 增加圆角 */
   margin: var(--apple-spacing-md);
-  /* 增加外边距 */
+}
+
+.apple-converter-preview.apple-has-content {
+  background: #ffffff;
+  /* 仅在有内容时强制浅色背景 */
+  color: #1d1d1f;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  /* 增加阴影，使其像一张纸 */
 }
 
 /* ========================================
@@ -506,6 +508,8 @@
   height: 100%;
   text-align: center;
   color: var(--apple-secondary);
+  background: var(--apple-background);
+  /* 使用变量以便适配深色模式 */
 }
 
 .apple-placeholder-icon {
@@ -535,6 +539,8 @@
   background: var(--apple-surface);
   border-radius: var(--apple-radius-md);
   font-size: 13px;
+  color: var(--apple-primary);
+  /* 确保文字颜色适配 */
 }
 
 /* ========================================

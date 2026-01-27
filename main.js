@@ -405,6 +405,7 @@ class AppleStyleView extends ItemView {
    */
   setPlaceholder() {
     this.previewContainer.empty();
+    this.previewContainer.removeClass('apple-has-content'); // 移除内容状态类
     const placeholder = this.previewContainer.createEl('div', { cls: 'apple-placeholder' });
     placeholder.createEl('div', { cls: 'apple-placeholder-icon', text: '📝' });
     placeholder.createEl('h2', { text: '微信公众号排版转换器' });
@@ -445,7 +446,8 @@ class AppleStyleView extends ItemView {
       if (!silent) new Notice('⚡ 正在转换...');
       const html = await this.converter.convert(markdown);
       this.currentHtml = html;
-      this.renderHTML(html);
+      this.previewContainer.innerHTML = html;
+      this.previewContainer.addClass('apple-has-content'); // 添加内容状态类
       this.updateCurrentDoc();
       if (!silent) new Notice('✅ 转换成功！');
     } catch (error) {
