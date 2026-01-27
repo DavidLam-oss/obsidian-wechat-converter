@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS = {
 };
 
 /**
- * 🍎 Apple Style 转换视图
+ * 📝 微信公众号转换视图
  */
 class AppleStyleView extends ItemView {
   constructor(leaf, plugin) {
@@ -37,7 +37,7 @@ class AppleStyleView extends ItemView {
   }
 
   getDisplayText() {
-    return '🍎 Apple 风格转换';
+    return '📝 微信排版转换';
   }
 
   getIcon() {
@@ -161,7 +161,7 @@ class AppleStyleView extends ItemView {
 
     // 标题区
     const header = panel.createEl('div', { cls: 'apple-settings-header' });
-    header.createEl('div', { cls: 'apple-settings-title', text: '🍎 Apple 风格转换器' });
+    header.createEl('div', { cls: 'apple-settings-title', text: '📝 微信公众号转换器' });
     this.currentDocLabel = header.createEl('div', { cls: 'apple-current-doc', text: '未选择文档' });
 
     // 设置区域 (使用 details 折叠以节省空间)
@@ -406,13 +406,13 @@ class AppleStyleView extends ItemView {
   setPlaceholder() {
     this.previewContainer.empty();
     const placeholder = this.previewContainer.createEl('div', { cls: 'apple-placeholder' });
-    placeholder.createEl('div', { cls: 'apple-placeholder-icon', text: '🍎' });
-    placeholder.createEl('h2', { text: 'Apple 风格 Markdown 转换器' });
-    placeholder.createEl('p', { text: '将 Markdown 转换为优雅的 HTML，可直接粘贴到公众号' });
+    placeholder.createEl('div', { cls: 'apple-placeholder-icon', text: '📝' });
+    placeholder.createEl('h2', { text: '微信公众号排版转换器' });
+    placeholder.createEl('p', { text: '将 Markdown 转换为精美的 HTML，一键复制到公众号' });
     const steps = placeholder.createEl('div', { cls: 'apple-steps' });
-    steps.createEl('div', { text: '1️⃣ 打开 Markdown 文件' });
-    steps.createEl('div', { text: '2️⃣ 调整设置并点击 "转换"' });
-    steps.createEl('div', { text: '3️⃣ 点击 "复制到公众号" 粘贴' });
+    steps.createEl('div', { text: '1️⃣ 打开需要转换的 Markdown 文件' });
+    steps.createEl('div', { text: '2️⃣ 预览区会自动显示转换效果' });
+    steps.createEl('div', { text: '3️⃣ 点击「复制到公众号」粘贴即可' });
   }
 
   /**
@@ -511,7 +511,7 @@ class AppleStyleView extends ItemView {
 }
 
 /**
- * 🍎 Apple Style 设置面板
+ * 📝 微信公众号转换器设置面板
  */
 class AppleStyleSettingTab extends PluginSettingTab {
   constructor(app, plugin) {
@@ -523,7 +523,7 @@ class AppleStyleSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl('h2', { text: '🍎 Apple Style 转换器设置' });
+    containerEl.createEl('h2', { text: '📝 微信公众号转换器设置' });
     containerEl.createEl('p', { text: '更多排版样式选项（主题、字号、代码块等）请在插件侧边栏面板中进行设置。' });
 
     containerEl.createEl('h3', { text: '🖼️ 图片水印设置' });
@@ -608,11 +608,11 @@ class AppleStyleSettingTab extends PluginSettingTab {
 }
 
 /**
- * 🍎 Apple Style 主插件
+ * 📝 微信公众号转换器主插件
  */
 class AppleStylePlugin extends Plugin {
   async onload() {
-    console.log('🍎 正在加载 Apple Style Converter...');
+    console.log('📝 正在加载微信公众号转换器...');
 
     await this.loadSettings();
 
@@ -621,13 +621,13 @@ class AppleStylePlugin extends Plugin {
       (leaf) => new AppleStyleView(leaf, this)
     );
 
-    this.addRibbonIcon('wand', '🍎 Apple 风格转换器', async () => {
+    this.addRibbonIcon('wand', '📝 微信公众号转换器', async () => {
       await this.openConverter();
     });
 
     this.addCommand({
       id: 'open-apple-converter',
-      name: '打开 Apple 风格转换器',
+      name: '打开微信公众号转换器',
       callback: async () => {
         await this.openConverter();
       },
@@ -635,7 +635,7 @@ class AppleStylePlugin extends Plugin {
 
     this.addCommand({
       id: 'convert-to-apple-style',
-      name: '转换为 Apple 风格 HTML',
+      name: '转换为公众号格式',
       callback: async () => {
         const view = this.getConverterView();
         if (view) {
@@ -652,7 +652,7 @@ class AppleStylePlugin extends Plugin {
 
     this.addSettingTab(new AppleStyleSettingTab(this.app, this));
 
-    console.log('✅ Apple Style Converter 加载完成');
+    console.log('✅ 微信公众号转换器加载完成');
   }
 
   async openConverter() {
@@ -687,7 +687,7 @@ class AppleStylePlugin extends Plugin {
   }
 
   onunload() {
-    console.log('🍎 Apple Style Converter 已卸载');
+    console.log('📝 微信公众号转换器已卸载');
   }
 }
 

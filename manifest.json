@@ -1,9 +1,9 @@
 {
-	"id": "apple-style-formatter",
-	"name": "Apple Style Formatter",
+	"id": "wechat-converter",
+	"name": "Wechat Converter",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "优雅的苹果风格 Markdown 排版工具，提供极简设计、完美间距和精美预览",
+	"description": "微信公众号排版工具，将 Markdown 转换为精美的 HTML 格式，一键复制粘贴到公众号编辑器",
 	"author": "Your Name",
 	"authorUrl": "https://github.com/yourname",
 	"isDesktopOnly": false
