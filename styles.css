@@ -204,6 +204,36 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
+/* Custom Color Button (Text) */
+.apple-btn-custom-text {
+  padding: 0 10px;
+  height: 28px;
+  border: 1px solid var(--apple-border);
+  border-radius: 14px;
+  /* Pill shape */
+  background: var(--apple-background);
+  color: var(--apple-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+}
+
+.apple-btn-custom-text:hover {
+  color: var(--apple-primary);
+  border-color: var(--apple-accent);
+}
+
+.apple-btn-custom-text.active {
+  background: rgba(0, 113, 227, 0.1);
+  color: var(--apple-accent);
+  border-color: rgba(0, 113, 227, 0.3);
+}
+
+
+
 .apple-btn-color:hover {
   transform: scale(1.1);
 }
@@ -211,6 +241,68 @@
 .apple-btn-color.active {
   border-color: var(--btn-color);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+/* === Settings Collapsible === */
+.apple-settings-details {
+  border: 1px solid var(--apple-border);
+  border-radius: var(--apple-radius-md);
+  margin-bottom: var(--apple-spacing-md);
+  overflow: hidden;
+  background: var(--apple-background);
+  /* Cleaner background */
+}
+
+.apple-settings-summary {
+  padding: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: var(--apple-radius-md);
+  transition: all 0.2s ease;
+  user-select: none;
+  color: var(--apple-primary);
+}
+
+.apple-settings-summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Chevron Arrow */
+.apple-settings-summary::after {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid var(--apple-secondary);
+  border-bottom: 2px solid var(--apple-secondary);
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+  margin-right: 4px;
+}
+
+.apple-settings-details[open] .apple-settings-summary::after {
+  transform: rotate(-135deg);
+  /* Point up */
+}
+
+.apple-settings-summary:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.apple-settings-details[open] .apple-settings-summary {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: 1px solid var(--apple-border);
+}
+
+.apple-settings-details .apple-settings-area {
+  padding: var(--apple-spacing-md);
+  background: var(--apple-background);
 }
 
 /* === 下拉选择器 === */
@@ -298,32 +390,19 @@
   gap: 8px;
   margin-top: var(--apple-spacing-md);
   padding-top: var(--apple-spacing-md);
-  border-top: 1px solid var(--apple-border);
+  border-top: 1px dashed var(--apple-border);
+  /* Dashed separator */
 }
 
-.apple-btn-primary {
-  flex: 1;
-  padding: 10px 16px;
-  border: none;
-  border-radius: var(--apple-radius-sm);
-  background: var(--apple-success);
-  color: white;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.apple-btn-primary:hover {
-  opacity: 0.9;
-}
-
+/* Unified Button Style */
+.apple-btn-primary,
 .apple-btn-secondary {
   flex: 1;
   padding: 10px 16px;
   border: none;
   border-radius: var(--apple-radius-sm);
   background: var(--apple-accent);
+  /* Default blue */
   color: white;
   font-size: 13px;
   font-weight: 600;
@@ -331,8 +410,20 @@
   transition: opacity 0.15s ease;
 }
 
+.apple-btn-primary:hover,
 .apple-btn-secondary:hover {
   opacity: 0.9;
+}
+
+/* Full Width Variant */
+.apple-btn-full {
+  width: 100%;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  height: 38px;
+  background: var(--apple-accent);
+  /* Blue */
 }
 
 /* ========================================

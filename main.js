@@ -157,8 +157,15 @@ class AppleStyleView extends ItemView {
     header.createEl('div', { cls: 'apple-settings-title', text: '🍎 Apple 风格转换器' });
     this.currentDocLabel = header.createEl('div', { cls: 'apple-current-doc', text: '未选择文档' });
 
-    // 设置区域
-    const settingsArea = panel.createEl('div', { cls: 'apple-settings-area' });
+    // 设置区域 (使用 details 折叠以节省空间)
+    const details = panel.createEl('details', { cls: 'apple-settings-details' });
+    details.open = false; // 默认折叠
+    const summary = details.createEl('summary', { cls: 'apple-settings-summary', text: '🎨 样式设置' });
+    const settingsArea = details.createEl('div', { cls: 'apple-settings-area' });
+
+    // ... (theme, font, etc. setups remain)
+
+
 
     // === 主题选择 ===
     this.createSection(settingsArea, '主题', (section) => {
@@ -224,12 +231,13 @@ class AppleStyleView extends ItemView {
       });
 
       // 自定义颜色
+      // 自定义颜色
       const customBtn = grid.createEl('button', {
-        cls: `apple-btn-color ${this.plugin.settings.themeColor === 'custom' ? 'active' : ''}`,
+        cls: `apple-btn-custom-text ${this.plugin.settings.themeColor === 'custom' ? 'active' : ''}`,
+        text: '自定义',
         title: '自定义颜色'
       });
       customBtn.dataset.value = 'custom';
-      customBtn.style.setProperty('--btn-color', this.plugin.settings.customColor || '#000000');
 
       // 隐藏的颜色选择器
       const colorInput = grid.createEl('input', {
@@ -240,8 +248,6 @@ class AppleStyleView extends ItemView {
       colorInput.style.visibility = 'hidden';
       colorInput.style.width = '0';
       colorInput.style.height = '0';
-      colorInput.style.padding = '0';
-      colorInput.style.border = '0';
       colorInput.style.position = 'absolute';
 
       // 点击按钮触发颜色选择
@@ -261,7 +267,6 @@ class AppleStyleView extends ItemView {
 
         // 更新设置
         this.plugin.settings.customColor = newColor;
-        // 如果当前不是自定义模式，或者即使是，都触发更新
         this.theme.update({ customColor: newColor });
         await this.onColorChange('custom', grid);
       });
@@ -290,14 +295,8 @@ class AppleStyleView extends ItemView {
     // === 操作按钮 ===
     const actions = panel.createEl('div', { cls: 'apple-actions' });
 
-    const convertBtn = actions.createEl('button', {
-      cls: 'apple-btn-primary',
-      text: '⚡ 转换当前文档',
-    });
-    convertBtn.addEventListener('click', () => this.convertCurrent());
-
     const copyBtn = actions.createEl('button', {
-      cls: 'apple-btn-secondary',
+      cls: 'apple-btn-primary apple-btn-full', // Full width
       text: '📋 复制到公众号',
     });
     copyBtn.addEventListener('click', () => this.copyHTML());
