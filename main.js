@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS = {
   macCodeBlock: true,
   codeLineNumber: true,
   avatarUrl: '',
+  avatarBase64: '',  // Base64 编码的本地头像，优先级高于 avatarUrl
   enableWatermark: false,
 };
 
@@ -135,8 +136,12 @@ class AppleStyleView extends ItemView {
 
       // 初始化转换器
       if (!window.AppleStyleConverter) throw new Error('AppleStyleConverter failed to load');
-      const avatarUrl = this.plugin.settings.enableWatermark ? this.plugin.settings.avatarUrl : '';
-      this.converter = new window.AppleStyleConverter(this.theme, avatarUrl);
+      // 优先使用 Base64 头像，否则使用 URL
+      let avatarSrc = '';
+      if (this.plugin.settings.enableWatermark) {
+        avatarSrc = this.plugin.settings.avatarBase64 || this.plugin.settings.avatarUrl || '';
+      }
+      this.converter = new window.AppleStyleConverter(this.theme, avatarSrc);
       await this.converter.initMarkdownIt();
 
       console.log('✅ 依赖加载完成');
@@ -531,9 +536,55 @@ class AppleStyleSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }));
 
+    // 本地头像上传
+    const uploadSetting = new Setting(containerEl)
+      .setName('上传本地头像')
+      .setDesc(this.plugin.settings.avatarBase64 ? '✅ 已上传本地头像（优先使用）' : '选择本地图片，转换为 Base64 存储，无需网络请求');
+
+    uploadSetting.addButton(button => button
+      .setButtonText(this.plugin.settings.avatarBase64 ? '重新上传' : '选择图片')
+      .onClick(() => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          // 限制文件大小 (100KB)
+          if (file.size > 100 * 1024) {
+            new Notice('❌ 图片太大，请选择小于 100KB 的图片');
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = async (event) => {
+            this.plugin.settings.avatarBase64 = event.target.result;
+            await this.plugin.saveSettings();
+            new Notice('✅ 头像已上传');
+            this.display(); // 刷新设置页面
+          };
+          reader.readAsDataURL(file);
+        };
+        input.click();
+      }));
+
+    // 清除本地头像按钮
+    if (this.plugin.settings.avatarBase64) {
+      uploadSetting.addButton(button => button
+        .setButtonText('清除')
+        .setWarning()
+        .onClick(async () => {
+          this.plugin.settings.avatarBase64 = '';
+          await this.plugin.saveSettings();
+          new Notice('已清除本地头像');
+          this.display();
+        }));
+    }
+
     new Setting(containerEl)
-      .setName('头像 URL')
-      .setDesc('输入头像图片的 URL')
+      .setName('头像 URL（备用）')
+      .setDesc('如未上传本地头像，将使用此 URL')
       .addText(text => text
         .setPlaceholder('https://example.com/avatar.jpg')
         .setValue(this.plugin.settings.avatarUrl)
