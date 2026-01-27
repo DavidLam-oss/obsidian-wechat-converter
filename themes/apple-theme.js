@@ -389,9 +389,8 @@ window.AppleTheme = class AppleTheme {
         color: #999;
       `,
 
-      // === 头像相关 ===
       'avatar-header': `
-        margin: 0 0 ${s.sm}px 0;
+        margin: 0 0 ${s.sm}px 0 !important;
         display: flex !important; 
         align-items: center !important;
         justify-content: flex-start !important;
