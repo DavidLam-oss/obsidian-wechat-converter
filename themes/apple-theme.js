@@ -4,7 +4,8 @@
  * 设计理念：克制、优雅、注重细节
  */
 
-class AppleTheme {
+// Use assignment expression to avoid "Identifier has already been declared" errors if re-eval'd
+window.AppleTheme = class AppleTheme {
   /**
    * 🎨 主题色板 - 8种预设颜色
    */
@@ -49,8 +50,8 @@ class AppleTheme {
       headingLetterSpacing: 0,
       lineHeight: 1.8,
       paragraphGap: 20,
-      h1Decoration: 'none',
-      h2Decoration: 'none',
+      h1Decoration: 'border-bottom', // 边框
+      h2Decoration: 'border-bottom',
       h3Decoration: 'none',
       blockquoteBorderWidth: 4,
       textColor: '#3e3e3e',
@@ -63,8 +64,8 @@ class AppleTheme {
       headingLetterSpacing: 0.5,
       lineHeight: 1.9,
       paragraphGap: 24,
-      h1Decoration: 'underline-gradient', // 渐变下划线
-      h2Decoration: 'underline-gradient',
+      h1Decoration: 'left-border', // 左边框
+      h2Decoration: 'left-border',
       h3Decoration: 'left-border',
       blockquoteBorderWidth: 4,
       textColor: '#3f3f3f',
@@ -77,93 +78,9 @@ class AppleTheme {
       headingLetterSpacing: 1.0,
       lineHeight: 1.9,
       paragraphGap: 20,
-      h1Decoration: 'center-line',
-      h2Decoration: 'center-line',
+      h1Decoration: 'center-underline', // 居中下划线
+      h2Decoration: 'center-underline',
       h3Decoration: 'underline',
-      blockquoteBorderWidth: 3,
-      textColor: '#3e3e3e',
-      headingColor: '#3e3e3e',
-      linkDecoration: 'none',
-    },
-    ink: {
-      name: '水墨',
-      headingWeight: 600,
-      headingLetterSpacing: 1.5,
-      lineHeight: 1.8,
-      paragraphGap: 20,
-      h1Decoration: 'center-line',
-      h2Decoration: 'dash-symbol',
-      h3Decoration: 'left-border',
-      blockquoteBorderWidth: 4,
-      textColor: '#3e3e3e',
-      headingColor: '#3e3e3e',
-      linkDecoration: 'none',
-    },
-    aurora: {
-      name: '极光',
-      headingWeight: 700,
-      headingLetterSpacing: -0.2,
-      lineHeight: 1.8,
-      paragraphGap: 20,
-      h1Decoration: 'top-bottom-lines',
-      h2Decoration: 'dots-symbol',
-      h3Decoration: 'none',
-      blockquoteBorderWidth: 3,
-      textColor: '#3e3e3e',
-      headingColor: '#3e3e3e',
-      linkDecoration: 'underline',
-    },
-    vintage: {
-      name: '复古',
-      headingWeight: 600,
-      headingLetterSpacing: 0.5,
-      lineHeight: 1.8,
-      paragraphGap: 20,
-      h1Decoration: 'dashed-line',
-      h2Decoration: 'diamond-symbol',
-      h3Decoration: 'left-border',
-      blockquoteBorderWidth: 4,
-      textColor: '#3e3e3e',
-      headingColor: '#4a3f28',
-      linkDecoration: 'none',
-    },
-    porcelain: {
-      name: '青瓷',
-      headingWeight: 600,
-      headingLetterSpacing: 0.5,
-      lineHeight: 1.8,
-      paragraphGap: 20,
-      h1Decoration: 'diamond-line',
-      h2Decoration: 'center-line',
-      h3Decoration: 'double-border',
-      blockquoteBorderWidth: 3,
-      textColor: '#3e3e3e',
-      headingColor: '#333',
-      linkDecoration: 'none',
-    },
-    editorial: {
-      name: '报章',
-      headingWeight: 700,
-      headingLetterSpacing: 0,
-      lineHeight: 1.8,
-      paragraphGap: 20,
-      h1Decoration: 'full-underline',
-      h2Decoration: 'medium-underline',
-      h3Decoration: 'underline',
-      blockquoteBorderWidth: 4,
-      textColor: '#3e3e3e',
-      headingColor: '#3e3e3e',
-      linkDecoration: 'underline',
-    },
-    deco: {
-      name: '摩登',
-      headingWeight: 700,
-      headingLetterSpacing: 0.2,
-      lineHeight: 1.8,
-      paragraphGap: 20,
-      h1Decoration: 'double-lines',
-      h2Decoration: 'center-line',
-      h3Decoration: 'top-bottom-border',
       blockquoteBorderWidth: 3,
       textColor: '#3e3e3e',
       headingColor: '#3e3e3e',
@@ -271,7 +188,10 @@ class AppleTheme {
         line-height: 1.2;
         letter-spacing: ${config.headingLetterSpacing}px;
         margin: 32px auto 24px;
-        text-align: center;
+        text-align: ${config.h1Decoration === 'left-border' ? 'left' : 'center'};
+        ${config.h1Decoration === 'border-bottom' ? `border-bottom: 1px solid #eaecef; padding-bottom: 0.3em;` : ''}
+        ${config.h1Decoration === 'left-border' ? `border-left: 4px solid ${color}; padding-left: 12px;` : ''}
+        ${config.h1Decoration === 'center-underline' ? `border-bottom: 2px solid ${color}; display: inline-block; padding-bottom: 8px;` : ''}
       `,
 
       // === H2 次级章节 ===
@@ -283,7 +203,10 @@ class AppleTheme {
         line-height: 1.25;
         letter-spacing: ${config.headingLetterSpacing}px;
         margin: 28px auto 20px;
-        text-align: center;
+        text-align: ${config.h2Decoration === 'left-border' ? 'left' : 'center'};
+        ${config.h2Decoration === 'border-bottom' ? `border-bottom: 1px solid #eaecef; padding-bottom: 0.3em;` : ''}
+        ${config.h2Decoration === 'left-border' ? `border-left: 4px solid ${color}; padding-left: 10px;` : ''}
+        ${config.h2Decoration === 'center-underline' ? `border-bottom: 1px solid ${color}; display: inline-block; padding-bottom: 6px;` : ''}
       `,
 
       // === H3 小节标题 ===
@@ -296,10 +219,8 @@ class AppleTheme {
         letter-spacing: ${config.headingLetterSpacing}px;
         margin: 24px 0 16px;
         text-align: left;
-        ${config.h3Decoration === 'left-border' ? `border-left: 4px solid ${color}; padding-left: 12px;` : ''}
-        ${config.h3Decoration === 'underline' ? `border-bottom: 2px solid ${color}; padding-bottom: 4px; display: inline-block;` : ''}
-        ${config.h3Decoration === 'double-border' ? `border-left: 3px double ${color}; padding-left: 14px;` : ''}
-        ${config.h3Decoration === 'top-bottom-border' ? `border-top: 2px solid ${color}; border-bottom: 2px solid ${color}; padding: 6px 0; display: inline-block;` : ''}
+        ${config.h3Decoration === 'left-border' ? `border-left: 3px solid ${color}; padding-left: 8px;` : ''}
+        ${config.h3Decoration === 'underline' ? `border-bottom: 1px solid ${color}; padding-bottom: 4px; display: inline-block;` : ''}
       `,
 
       // === 段落 ===
@@ -319,7 +240,7 @@ class AppleTheme {
         line-height: ${config.lineHeight};
         color: #666;
         background: ${color}08;
-        margin: ${s.md}px 0;
+        margin: ${s.md}px 0 ${s.md}px 1em; /* Increased indentation */
         padding: ${s.sm}px ${s.md}px;
         border-left: ${config.blockquoteBorderWidth}px solid ${color};
         font-style: italic;
@@ -385,8 +306,13 @@ class AppleTheme {
 
       // === 图片 ===
       'figure': `
+        display: block;
         margin: ${s.md}px 0;
         text-align: center;
+        border: 1px solid #e1e4e8; /* Box Border */
+        border-radius: ${r.md}px;
+        padding: ${s.md}px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Subtle shadow */
       `,
 
       'figcaption': `
@@ -422,7 +348,7 @@ class AppleTheme {
       'th': `
         background: ${color}1F;
         font-weight: bold;
-        color: ${color};
+        color: ${config.textColor};
         border: 1px solid #e1e4e8;
         padding: 12px;
         text-align: left;
@@ -466,19 +392,28 @@ class AppleTheme {
       // === 头像相关 ===
       'avatar-header': `
         margin: 0 0 ${s.sm}px 0;
-        overflow: hidden;
+        display: flex; /* Flex alignment */
+        align-items: center;
+        width: 100%;
       `,
 
       'avatar': `
-        width: 28px !important;
-        max-width: 28px !important;
-        height: 28px !important;
-        max-height: 28px !important;
+        width: 32px !important;
+        max-width: 32px !important;
+        height: 32px !important;
+        max-height: 32px !important;
         border-radius: 50%;
         object-fit: cover;
         border: 1px solid #e8e8ed;
-        float: left;
-        margin-right: ${s.sm}px;
+        flex-shrink: 0;
+      `,
+
+      'avatar-caption': `
+        font-size: ${sizes.caption}px;
+        color: #666;
+        text-align: left;
+        margin-left: 10px;
+        line-height: 1.4;
       `,
     };
 

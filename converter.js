@@ -4,7 +4,7 @@
  * 针对微信公众号优化：使用 section 结构，增强兼容性
  */
 
-class AppleStyleConverter {
+window.AppleStyleConverter = class AppleStyleConverter {
   constructor(theme, avatarUrl = '') {
     this.theme = theme;
     this.avatarUrl = avatarUrl;
@@ -48,7 +48,7 @@ class AppleStyleConverter {
       const src = tokens[idx].attrGet('src'), alt = tokens[idx].content;
       const caption = alt || this.extractFileName(src);
       if (this.avatarUrl) {
-        return `<figure style="${this.getInlineStyle('figure')}"><div style="${this.getInlineStyle('avatar-header')}"><img src="${this.avatarUrl}" alt="logo" style="${this.getInlineStyle('avatar')}"><figcaption style="${this.getInlineStyle('figcaption')}">${caption}</figcaption></div><img src="${src}" alt="${alt}" style="${this.getInlineStyle('img')}"></figure>`;
+        return `<figure style="${this.getInlineStyle('figure')}"><div style="${this.getInlineStyle('avatar-header')}"><img src="${this.avatarUrl}" alt="logo" style="${this.getInlineStyle('avatar')}"><span style="${this.getInlineStyle('avatar-caption')}">${caption}</span></div><img src="${src}" alt="${alt}" style="${this.getInlineStyle('img')}"></figure>`;
       }
       return `<figure style="${this.getInlineStyle('figure')}"><img src="${src}" alt="${alt}" style="${this.getInlineStyle('img')}"><figcaption style="${this.getInlineStyle('figcaption')}">${caption}</figcaption></figure>`;
     };

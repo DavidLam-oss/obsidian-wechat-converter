@@ -122,7 +122,8 @@ class AppleStyleView extends ItemView {
       (0, eval)(converterContent);
 
       // 初始化主题实例
-      this.theme = new AppleTheme({
+      if (!window.AppleTheme) throw new Error('AppleTheme failed to load');
+      this.theme = new window.AppleTheme({
         theme: this.plugin.settings.theme,
         themeColor: this.plugin.settings.themeColor,
         customColor: this.plugin.settings.customColor,
@@ -133,8 +134,9 @@ class AppleStyleView extends ItemView {
       });
 
       // 初始化转换器
+      if (!window.AppleStyleConverter) throw new Error('AppleStyleConverter failed to load');
       const avatarUrl = this.plugin.settings.enableWatermark ? this.plugin.settings.avatarUrl : '';
-      this.converter = new AppleStyleConverter(this.theme, avatarUrl);
+      this.converter = new window.AppleStyleConverter(this.theme, avatarUrl);
       await this.converter.initMarkdownIt();
 
       console.log('✅ 依赖加载完成');
@@ -210,6 +212,8 @@ class AppleStyleView extends ItemView {
     this.createSection(settingsArea, '主题色', (section) => {
       const grid = section.createEl('div', { cls: 'apple-color-grid' });
       const colors = AppleTheme.getColorList();
+
+      // 预设颜色
       colors.forEach(c => {
         const btn = grid.createEl('button', {
           cls: `apple-btn-color ${this.plugin.settings.themeColor === c.value ? 'active' : ''}`,
@@ -217,6 +221,49 @@ class AppleStyleView extends ItemView {
         btn.dataset.value = c.value;
         btn.style.setProperty('--btn-color', c.color);
         btn.addEventListener('click', () => this.onColorChange(c.value, grid));
+      });
+
+      // 自定义颜色
+      const customBtn = grid.createEl('button', {
+        cls: `apple-btn-color ${this.plugin.settings.themeColor === 'custom' ? 'active' : ''}`,
+        title: '自定义颜色'
+      });
+      customBtn.dataset.value = 'custom';
+      customBtn.style.setProperty('--btn-color', this.plugin.settings.customColor || '#000000');
+
+      // 隐藏的颜色选择器
+      const colorInput = grid.createEl('input', {
+        type: 'color',
+        cls: 'apple-color-picker-hidden'
+      });
+      colorInput.value = this.plugin.settings.customColor || '#000000';
+      colorInput.style.visibility = 'hidden';
+      colorInput.style.width = '0';
+      colorInput.style.height = '0';
+      colorInput.style.padding = '0';
+      colorInput.style.border = '0';
+      colorInput.style.position = 'absolute';
+
+      // 点击按钮触发颜色选择
+      customBtn.addEventListener('click', () => {
+        colorInput.click();
+      });
+
+      // 颜色改变实时预览
+      colorInput.addEventListener('input', (e) => {
+        customBtn.style.setProperty('--btn-color', e.target.value);
+      });
+
+      // 颜色确认后保存
+      colorInput.addEventListener('change', async (e) => {
+        const newColor = e.target.value;
+        customBtn.style.setProperty('--btn-color', newColor);
+
+        // 更新设置
+        this.plugin.settings.customColor = newColor;
+        // 如果当前不是自定义模式，或者即使是，都触发更新
+        this.theme.update({ customColor: newColor });
+        await this.onColorChange('custom', grid);
       });
     });
 
