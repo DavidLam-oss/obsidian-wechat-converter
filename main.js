@@ -75,10 +75,12 @@ class AppleStyleView extends ItemView {
     }, 500);
   }
 
+
   /**
    * 监听活动文件切换
    */
   registerActiveFileChange() {
+    // 监听文件切换
     this.registerEvent(
       this.app.workspace.on('active-leaf-change', async () => {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -92,6 +94,32 @@ class AppleStyleView extends ItemView {
           }, 300);
         }
       })
+    );
+
+    // 监听编辑器内容变化 (实时预览)
+    const debounce = (func, wait) => {
+      let timeout;
+      return function (...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+      };
+    };
+
+    const debouncedConvert = debounce(async () => {
+      // 1. 真正的可见性检查 (True Visibility Check)
+      // 如果插件被折叠、隐藏或从未打开，offsetParent 为 null
+      if (!this.containerEl.offsetParent) return;
+
+      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+      // 仅当当前编辑的文件是最后激活的文件时才更新
+      if (activeView && activeView.file && this.lastActiveFile && activeView.file.path === this.lastActiveFile.path) {
+        await this.convertCurrent(true);
+      }
+    }, 500); // 500ms 延迟
+
+    this.registerEvent(
+      this.app.workspace.on('editor-change', debouncedConvert)
     );
   }
 
@@ -449,18 +477,41 @@ class AppleStyleView extends ItemView {
       return;
     }
 
+
     try {
       if (!silent) new Notice('⚡ 正在转换...');
       const html = await this.converter.convert(markdown);
       this.currentHtml = html;
+
+      // 滚动位置保持 (Scroll Preservation)
+      const scrollTop = this.previewContainer.scrollTop;
       this.previewContainer.innerHTML = html;
+      this.previewContainer.scrollTop = scrollTop;
+
       this.previewContainer.addClass('apple-has-content'); // 添加内容状态类
       this.updateCurrentDoc();
       if (!silent) new Notice('✅ 转换成功！');
+
     } catch (error) {
       console.error('转换失败:', error);
       if (!silent) new Notice('❌ 转换失败: ' + error.message);
     }
+  }
+
+  /**
+   * 视图改变大小时触发 (包括侧边栏展开、Tab切换等导致的大小变化)
+   */
+  onResize() {
+    super.onResize();
+    // 使用防抖，避免拖动侧边栏时频繁渲染
+    if (this.resizeTimeout) clearTimeout(this.resizeTimeout);
+
+    // 检查是否可见 (以防万一)
+    if (!this.containerEl.offsetParent) return;
+
+    this.resizeTimeout = setTimeout(() => {
+      this.convertCurrent(true);
+    }, 300);
   }
 
   /**
