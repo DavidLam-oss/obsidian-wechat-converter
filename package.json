@@ -1,5 +1,5 @@
 {
-	"name": "obsidian-apple-style-formatter",
+	"name": "obsidian-wechat-converter",
 	"version": "1.0.0",
 	"description": "Apple Style Formatter for Obsidian",
 	"main": "main.js",
@@ -7,7 +7,13 @@
 		"dev": "node esbuild.config.mjs",
 		"build": "node esbuild.config.mjs production"
 	},
-	"keywords": ["obsidian", "plugin", "apple", "style", "formatter"],
+	"keywords": [
+		"obsidian",
+		"plugin",
+		"apple",
+		"style",
+		"formatter"
+	],
 	"author": "Your Name",
 	"license": "MIT",
 	"devDependencies": {
