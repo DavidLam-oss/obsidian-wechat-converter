@@ -608,27 +608,29 @@ class AppleStyleView extends ItemView {
     return true;
   }
 
+
   async convertImageToLocally(img) {
     try {
-      // src 是 app://....
-      // 我们需要反解回 TFile，或者直接从 src 解析（app://local/path...）
-      // 但是最稳健的方法是利用 converter 中已经把路径转成了 ResourcePath
-      // 我们可以尝试通过 URL 反解 path，但 Obsidian 没有公开 API
-      // 幸好：我们在 preview 时已经 resolved 了。
-      // 更好的方法：我们重新 resolve 一遍？不，sourcePath 可能变了。
-      // 这里的 img.src 是 app://... 它实际上只能由 Electron 的 fetch 访问
-
       // CRITICAL FIX: app:// 资源在 Electron 中可以直接 fetch！
       // 我们不需要反向查找 TFile，直接 fetch(img.src) 拿 blob 即可！
       const response = await fetch(img.src);
       const blob = await response.blob();
 
       // 检查大小警告
-      if (blob.size > 5 * 1024 * 1024) {
-        new Notice('⚠️ 发现大图片 (>5MB)，处理可能较慢');
+      if (blob.size > 10 * 1024 * 1024) {
+        new Notice('⚠️ 发现超大图片 (>10MB)，处理可能较慢');
       }
 
-      const dataUrl = await this.blobToJpegDataUrl(blob);
+      let dataUrl;
+      // GIF Protection: Bypass compression for GIFs to preserve animation
+      if (blob.type === 'image/gif') {
+        // Direct read for GIF
+        dataUrl = await this.blobToDataUrl(blob);
+      } else {
+        // Compress others (JPG/PNG) to JPEG 80%
+        dataUrl = await this.blobToJpegDataUrl(blob);
+      }
+
       img.src = dataUrl;
       // 清除 Obsidian 特有的 dataset 属性，避免干扰
       delete img.dataset.src;
@@ -636,6 +638,16 @@ class AppleStyleView extends ItemView {
       console.error('Image processing failed:', error);
       // 保持原样，至少不破图（虽然微信会看不到）
     }
+  }
+
+  // Helper: Direct Blob to Base64 (for GIFs)
+  blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   }
 
   blobToJpegDataUrl(blob) {
