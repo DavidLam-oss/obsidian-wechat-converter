@@ -20,9 +20,10 @@
 
 ### 方法 1: 手动安装（推荐）
 
-1. 下载最新 release 版本
-2. 解压到 Obsidian vault 的 `.obsidian/plugins/obsidian-wechat-converter/` 目录
-3. 在 Obsidian 设置中启用插件
+1. 下载插件的完整文件夹 (包含 main.js, manifest.json, styles.css 以及 lib/, themes/ 等资源)
+2. 将文件夹放入 Obsidian vault 的 `.obsidian/plugins/` 目录中
+3. 文件夹名称建议为 `wechat-converter` (或保持原名)
+4. 在 Obsidian 设置中启用插件
 
 ### 方法 2: 从源码构建
 

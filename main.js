@@ -100,7 +100,8 @@ class AppleStyleView extends ItemView {
    */
   async loadDependencies() {
     const adapter = this.app.vault.adapter;
-    const basePath = '.obsidian/plugins/obsidian-apple-style';
+    // Use dynamic path from manifest to allow folder renaming
+    const basePath = this.plugin.manifest.dir;
 
     try {
       // 加载 markdown-it
