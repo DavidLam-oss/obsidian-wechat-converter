@@ -6,6 +6,8 @@
 ![Obsidian](https://img.shields.io/badge/Obsidian-0.15.0+-purple)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+> 本项目基于开源项目 [ai-writing-plugins](https://github.com/Ceeon/ai-writing-plugins) 进行迭代开发。
+
 ## ✨ 核心特性
 
 - � **精选排版主题** - 提供 **简约** (GitHub风/wechat-tool同款)、**经典** (商务风)、**优雅** (杂志风) 三大专家级设计主题
