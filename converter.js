@@ -291,15 +291,35 @@ ${macHeader}
     });
 
 
+
     let html = this.md.render(this.stripFrontmatter(markdown));
     html = this.fixListParagraphs(html);
     html = this.unwrapFigures(html); // Fix: Remove <p> wrappers from <figure> to prevent empty lines
+    html = this.removeBlockquoteParagraphMargins(html); // Fix: Remove margins from <p> inside <blockquote> for vertical centering
     return `<section style="${this.getInlineStyle('section')}">${html}</section>`;
   }
 
   fixListParagraphs(html) {
     const style = this.getInlineStyle('li p');
     return html.replace(/<li[^>]*>[\s\S]*?<\/li>/g, m => m.replace(/<p style="[^"]*">/g, `<p style="${style}">`));
+  }
+
+  /**
+   * Fix: Remove margins from <p> inside <blockquote>
+   * Blockquotes use padding for spacing. If <p> inside has margin-bottom (default),
+   * the text appears top-aligned instead of centered.
+   */
+  removeBlockquoteParagraphMargins(html) {
+    return html.replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/g, (match, content) => {
+      // Replace margin: ... with margin: 0 in <p> styles
+      const newContent = content.replace(/<p style="([^"]*)margin:[^;"]*(;?)/g, '<p style="$1margin: 0$2');
+      // Also handle case where margin is not present yet (less likely if style plugin is used)
+      // or if we want to force it.
+      // Since we know our theme adds margin to all p, we just override it.
+      // Actually, regex replace above handles "margin:..." replacement.
+      // If margin is at the end or middle.
+      return match.replace(content, newContent);
+    });
   }
 
   /**
