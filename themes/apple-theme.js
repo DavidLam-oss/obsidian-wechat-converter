@@ -24,11 +24,11 @@ window.AppleTheme = class AppleTheme {
    * 📐 字体大小系统 - 5档
    */
   static FONT_SIZES = {
-    1: { base: 14, h1: 22, h2: 18, h3: 16, code: 12, caption: 12 },  // 小
-    2: { base: 15, h1: 24, h2: 20, h3: 17, code: 13, caption: 12 },  // 较小
-    3: { base: 16, h1: 28, h2: 21, h3: 18, code: 14, caption: 13 },  // 推荐
-    4: { base: 17, h1: 30, h2: 23, h3: 19, code: 15, caption: 14 },  // 较大
-    5: { base: 18, h1: 32, h2: 24, h3: 20, code: 16, caption: 14 },  // 大
+    1: { base: 14, h1: 30, h2: 24, h3: 18, h4: 16, h5: 14, h6: 14, code: 12, caption: 12 },
+    2: { base: 15, h1: 32, h2: 26, h3: 20, h4: 17, h5: 15, h6: 15, code: 13, caption: 12 },
+    3: { base: 16, h1: 34, h2: 28, h3: 22, h4: 18, h5: 16, h6: 16, code: 14, caption: 13 }, // 推荐
+    4: { base: 17, h1: 38, h2: 30, h3: 24, h4: 20, h5: 17, h6: 17, code: 15, caption: 14 },
+    5: { base: 18, h1: 42, h2: 34, h3: 26, h4: 22, h5: 18, h6: 18, code: 16, caption: 14 },
   };
 
   /**
@@ -44,48 +44,52 @@ window.AppleTheme = class AppleTheme {
    * 🎨 主题配置 - 每种主题的独特配色和规则
    */
   static THEME_CONFIGS = {
-    // 基于咪蒙排版标准：行间距 1.8, 字间距 0, 段落间距保留各主题特色
     github: {
       name: '简约',
-      headingWeight: 800,
-      headingLetterSpacing: 0,
       lineHeight: 1.8,
       paragraphGap: 20,
-      h1Decoration: 'border-bottom', // 边框
-      h2Decoration: 'border-bottom',
+      h1Decoration: 'none',
+      h2Decoration: 'none',
       h3Decoration: 'none',
-      blockquoteBorderWidth: 4,
+      h4Decoration: 'none',
+      headingWeight: 800,
+      headingLetterSpacing: -0.5,
       textColor: '#3e3e3e',
       headingColor: '#3e3e3e',
       linkDecoration: 'underline',
+      blockquoteBorderWidth: 4,
+      blockquoteBorderColor: '#d0d7de', // Github 灰
+      blockquoteBg: '#ffffff', // 白底
     },
     wechat: {
       name: '经典',
-      headingWeight: 700,
-      headingLetterSpacing: 0,
       lineHeight: 1.8,
       paragraphGap: 24,
-      h1Decoration: 'left-border', // 左边框
-      h2Decoration: 'left-border',
-      h3Decoration: 'left-border',
-      blockquoteBorderWidth: 4,
+      h1Decoration: 'bottom-line',       // 底部短线
+      h2Decoration: 'bottom-line',       // 底部短线 (原胶囊)
+      h3Decoration: 'left-border',       // 左边框
+      h4Decoration: 'light-bg',          // 浅色背景
+      headingWeight: 700,
+      headingLetterSpacing: 0,
       textColor: '#3e3e3e',
       headingColor: '#3e3e3e',
       linkDecoration: 'none',
+      blockquoteBorderWidth: 4,
     },
     serif: {
       name: '优雅',
-      headingWeight: 700,
-      headingLetterSpacing: 0,
       lineHeight: 1.8,
       paragraphGap: 20,
-      h1Decoration: 'center-underline', // 居中下划线
-      h2Decoration: 'center-underline',
-      h3Decoration: 'underline',
-      blockquoteBorderWidth: 3,
+      h1Decoration: 'border-box',        // 边框盒子
+      h2Decoration: 'bottom-line-center',// 居中极细线
+      h3Decoration: 'bottom-line-left',  // 左对齐短线
+      h4Decoration: 'italic-serif',      // 斜体衬线
+      headingWeight: 700,
+      headingLetterSpacing: 0,
       textColor: '#3e3e3e',
       headingColor: '#3e3e3e',
       linkDecoration: 'none',
+      blockquoteBorderWidth: 3,
     },
   };
 
@@ -167,260 +171,144 @@ window.AppleTheme = class AppleTheme {
     const s = AppleTheme.SPACING;
     const r = AppleTheme.RADIUS;
 
-    const styles = {
-      // === 容器 ===
-      'section': `
-        font-family: ${font};
-        font-size: ${sizes.base}px;
-        line-height: ${config.lineHeight};
-        color: ${config.textColor};
-        padding: ${s.md}px;
-        background: #ffffff;
-        max-width: 100%;
-        word-wrap: break-word;
-      `,
+    switch (tagName) {
+      case 'section':
+        return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${config.textColor}; padding: ${s.md}px; background: #ffffff; max-width: 100%; word-wrap: break-word; text-align: justify;`;
 
-      // === H1 主要章节 ===
-      'h1': `
-        font-family: ${font};
-        font-size: ${sizes.h1}px;
-        font-weight: ${config.headingWeight};
-        color: ${config.headingColor};
-        line-height: 1.2;
-        letter-spacing: ${config.headingLetterSpacing}px;
-        margin: 32px auto 24px;
-        text-align: ${config.h1Decoration === 'left-border' ? 'left' : 'center'};
-        ${config.h1Decoration === 'border-bottom' ? `border-bottom: 1px solid #eaecef; padding-bottom: 0.3em;` : ''}
-        ${config.h1Decoration === 'left-border' ? `border-left: 4px solid ${color}; padding-left: 12px;` : ''}
-        ${config.h1Decoration === 'center-underline' ? `border-bottom: 2px solid ${color}; display: inline-block; padding-bottom: 8px;` : ''}
-      `,
+      case 'h1': return this.getH1Style(config.h1Decoration, color, sizes.h1, font);
+      case 'h2': return this.getH2Style(config.h2Decoration, color, sizes.h2, font);
+      case 'h3': return this.getH3Style(config.h3Decoration, color, sizes.h3, font);
+      case 'h4': return this.getH4Style(config.h4Decoration, color, sizes.h4, font);
 
-      // === H2 次级章节 ===
-      'h2': `
-        font-family: ${font};
-        font-size: ${sizes.h2}px;
-        font-weight: ${Math.max(config.headingWeight - 100, 500)};
-        color: ${config.headingColor};
-        line-height: 1.25;
-        letter-spacing: ${config.headingLetterSpacing}px;
-        margin: 28px auto 20px;
-        text-align: ${config.h2Decoration === 'left-border' ? 'left' : 'center'};
-        ${config.h2Decoration === 'border-bottom' ? `border-bottom: 1px solid #eaecef; padding-bottom: 0.3em;` : ''}
-        ${config.h2Decoration === 'left-border' ? `border-left: 4px solid ${color}; padding-left: 10px;` : ''}
-        ${config.h2Decoration === 'center-underline' ? `border-bottom: 1px solid ${color}; display: inline-block; padding-bottom: 6px;` : ''}
-      `,
+      case 'h5':
+        return `font-family: ${font}; font-size: ${sizes.h5}px; font-weight: bold; color: ${config.headingColor}; margin: 10px 0; text-align: left; line-height: 1.4;`;
+      case 'h6':
+        return `font-family: ${font}; font-size: ${sizes.h6}px; font-weight: bold; color: ${config.headingColor}; margin: 10px 0; text-align: left; line-height: 1.4;`;
 
-      // === H3 小节标题 ===
-      'h3': `
-        font-family: ${font};
-        font-size: ${sizes.h3}px;
-        font-weight: ${Math.max(config.headingWeight - 200, 500)};
-        color: ${config.headingColor};
-        line-height: 1.3;
-        letter-spacing: ${config.headingLetterSpacing}px;
-        margin: 24px 0 16px;
-        text-align: left;
-        ${config.h3Decoration === 'left-border' ? `border-left: 3px solid ${color}; padding-left: 8px;` : ''}
-        ${config.h3Decoration === 'underline' ? `border-bottom: 1px solid ${color}; padding-bottom: 4px; display: inline-block;` : ''}
-      `,
+      case 'p':
+        return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${config.textColor}; margin: 0 0 ${config.paragraphGap}px 0; text-align: justify; letter-spacing: 0;`;
 
-      // === 段落 ===
-      'p': `
-        font-family: ${font};
-        font-size: ${sizes.base}px;
-        line-height: ${config.lineHeight};
-        color: ${config.textColor};
-        margin: 0 0 ${config.paragraphGap}px 0;
-        text-align: justify;
-        letter-spacing: 0;
-      `,
+      case 'blockquote':
+        return `font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: #666; background: ${config.blockquoteBg || color + '08'}; margin: ${s.md}px 0 ${s.md}px 1em; padding: ${s.sm}px ${s.md}px; border-left: ${config.blockquoteBorderWidth}px solid ${config.blockquoteBorderColor || color}; font-style: italic; border-radius: 0 ${r.sm}px ${r.sm}px 0;`;
 
-      // === 引用块 ===
-      'blockquote': `
-        font-size: ${sizes.base}px;
-        line-height: ${config.lineHeight};
-        color: #666;
-        background: ${color}08;
-        margin: ${s.md}px 0 ${s.md}px 1em; /* Increased indentation */
-        padding: ${s.sm}px ${s.md}px;
-        border-left: ${config.blockquoteBorderWidth}px solid ${color};
-        font-style: italic;
-      `,
+      case 'pre':
+        return `background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: ${r.md}px; padding: ${s.md}px; margin: ${s.md}px 0; overflow-x: auto; font-family: ${AppleTheme.FONTS.monospace}; font-size: ${sizes.code}px; line-height: 1.6; color: #24292e;`;
 
-      // === 代码块 ===
-      'pre': `
-        background: #f6f8fa;
-        border: 1px solid #e1e4e8;
-        border-radius: ${r.md}px;
-        padding: ${s.md}px;
-        margin: ${s.md}px 0;
-        overflow-x: auto;
-        font-family: ${AppleTheme.FONTS.monospace};
-        font-size: ${sizes.code}px;
-        line-height: 1.6;
-        color: #24292e;
-      `,
+      case 'code':
+        return `background: ${color}1A; color: ${color}; padding: 2px 4px; border-radius: 3px; font-family: ${AppleTheme.FONTS.monospace}; font-size: ${sizes.code}px;`;
 
-      // === 行内代码 ===
-      'code': `
-        background: ${color}1A;
-        color: ${color};
-        padding: 2px 4px;
-        border-radius: 3px;
-        font-family: ${AppleTheme.FONTS.monospace};
-        font-size: ${sizes.code}px;
-      `,
+      case 'ul':
+        return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${config.textColor}; margin: 12px 0; padding-left: 20px; list-style-type: disc;`;
+      case 'ol':
+        return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${config.textColor}; margin: 12px 0; padding-left: 20px; list-style-type: decimal;`;
+      case 'li':
+        return `font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${config.textColor}; margin: 4px 0;`;
+      case 'li p':
+        return `margin: 0; padding: 0; line-height: ${config.lineHeight};`;
 
-      // === 列表 ===
-      'ul': `
-        font-family: ${font};
-        font-size: ${sizes.base}px;
-        line-height: ${config.lineHeight};
-        color: ${config.textColor};
-        margin: 12px 0;
-        padding-left: 20px;
-        list-style-type: disc;
-      `,
+      case 'figure':
+        return `display: block; margin: ${s.md}px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: ${r.md}px; padding: ${s.md}px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);`;
+      case 'figcaption':
+        return `font-size: ${sizes.caption}px; color: #999; text-align: center; margin-top: ${s.sm}px;`;
+      case 'img':
+        return `max-width: 100%; height: auto; display: block; margin: 0 auto; border-radius: ${r.sm}px;`;
 
-      'ol': `
-        font-family: ${font};
-        font-size: ${sizes.base}px;
-        line-height: ${config.lineHeight};
-        color: ${config.textColor};
-        margin: 12px 0;
-        padding-left: 20px;
-        list-style-type: decimal;
-      `,
+      case 'a':
+        return `color: ${color}; text-decoration: ${config.linkDecoration}; border-bottom: ${config.linkDecoration === 'none' ? `1px dashed ${color}` : 'none'};`;
 
-      'li': `
-        font-size: ${sizes.base}px;
-        line-height: ${config.lineHeight};
-        color: ${config.textColor};
-        margin: 4px 0;
-      `,
+      case 'table':
+        return `border-collapse: collapse; width: 100%; margin: ${s.md}px 0; border: 1px solid #e1e4e8;`;
+      case 'th':
+        return `background: ${color}1F; font-weight: bold; color: ${config.textColor}; border: 1px solid #e1e4e8; padding: 12px; text-align: left;`;
+      case 'td':
+        return `border: 1px solid #e1e4e8; padding: 12px; text-align: left;`;
+      case 'thead':
+        return `background: #f6f8fa;`;
 
-      'li p': `
-        margin: 0;
-        padding: 0;
-        line-height: ${config.lineHeight};
-      `,
+      case 'hr':
+        return `border: 0; border-top: 1px solid rgba(0,0,0,0.08); margin: 40px 0;`;
 
-      // === 图片 ===
-      'figure': `
-        display: block;
-        margin: ${s.md}px 0;
-        text-align: left; /* Changed from center to left to prevent inheritance issues */
-        border: 1px solid #e1e4e8; /* Box Border */
-        border-radius: ${r.md}px;
-        padding: ${s.md}px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Subtle shadow */
-      `,
+      case 'strong':
+        return `font-weight: bold; color: ${color};`;
+      case 'em':
+        return `font-style: italic;`;
+      case 'del':
+        return `text-decoration: line-through; color: #999;`;
 
-      'figcaption': `
-        font-size: ${sizes.caption}px;
-        color: #999;
-        text-align: center;
-        margin-top: ${s.sm}px;
-      `,
+      case 'avatar-header':
+        return `margin: 0 0 ${s.sm}px 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; width: 100%; flex-direction: row !important;`;
+      case 'avatar':
+        return `width: 32px !important; height: 32px !important; border-radius: 50%; object-fit: cover; border: 1px solid #e8e8ed; flex-shrink: 0;`;
+      case 'avatar-caption':
+        return `font-size: ${sizes.caption}px; color: #666; margin-left: 10px; line-height: 1.4;`;
 
-      'img': `
-        max-width: 100%;
-        height: auto;
-        display: block;
-        margin: 0 auto;
-        border-radius: ${r.sm}px;
-      `,
+      default:
+        return '';
+    }
+  }
 
-      // === 链接 ===
-      'a': `
-        color: ${color};
-        text-decoration: ${config.linkDecoration};
-        border-bottom: ${config.linkDecoration === 'none' ? `1px solid ${color}40` : 'none'};
-      `,
+  // === Helper Methods ===
 
-      // === 表格 ===
-      'table': `
-        border-collapse: collapse;
-        width: 100%;
-        margin: ${s.md}px 0;
-        border: 1px solid #e1e4e8;
-      `,
+  getH1Style(type, color, fontSize, font) {
+    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 30px auto 20px; color: #333; text-align: center; line-height: 1.2;`;
+    switch (type) {
+      case 'bottom-line':
+        // Pure CSS centered short line using linear-gradient (simulating image)
+        return `${base} 
+          background-image: linear-gradient(to right, ${color}, ${color});
+          background-size: 80px 3px; 
+          background-repeat: no-repeat;
+          background-position: bottom center;
+          padding-bottom: 15px;`;
+      case 'border-box':
+        return `${base} border: 1px solid ${color}; padding: 10px 20px; border-radius: 4px; display: inline-block; width: auto;`;
+      default: // none or unknown
+        return base;
+    }
+  }
 
-      'th': `
-        background: ${color}1F;
-        font-weight: bold;
-        color: ${config.textColor};
-        border: 1px solid #e1e4e8;
-        padding: 12px;
-        text-align: left;
-      `,
+  getH2Style(type, color, fontSize, font) {
+    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 40px auto 20px; text-align: center; color: #333; line-height: 1.25;`;
+    switch (type) {
+      case 'bottom-line':
+        // Pure CSS centered short line (thinner/shorter for H2)
+        return `${base}
+           background-image: linear-gradient(to right, ${color}, ${color});
+           background-size: 50px 2px;
+           background-repeat: no-repeat;
+           background-position: bottom center;
+           padding-bottom: 12px;`;
+      case 'filled-pill':
+        return `${base} background-color: ${color}; color: #fff; padding: 5px 20px; border-radius: 20px; display: inline-block; width: auto;`;
+      case 'bottom-line-center':
+        return `${base} display: inline-block; border-bottom: 1px solid ${color}; padding-bottom: 5px; width: auto;`;
+      default:
+        return base;
+    }
+  }
 
-      'td': `
-        border: 1px solid #e1e4e8;
-        padding: 12px;
-        text-align: left;
-      `,
+  getH3Style(type, color, fontSize, font) {
+    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 24px 0 16px; text-align: left; color: #333; line-height: 1.3;`;
+    switch (type) {
+      case 'left-border':
+        return `${base} border-left: 4px solid ${color}; padding-left: 10px;`;
+      case 'bottom-line-left':
+        return `${base} display: inline-block; border-bottom: 2px solid ${color}; padding-bottom: 2px; margin-right: auto;`;
+      default:
+        return base;
+    }
+  }
 
-      'thead': `
-        background: #f6f8fa;
-      `,
-
-      // === 分隔线 - 不可见，仅产生间距 ===
-      'hr': `
-        border: 0;
-        border-top: 1px solid rgba(0,0,0,0.08);
-        margin: 40px 0;
-      `,
-
-      // === 强调 - 荧光笔效果 ===
-      'strong': `
-        font-weight: bold;
-        color: ${color};
-        background-color: ${color}15;
-        padding: 2px 4px;
-        border-radius: 3px;
-      `,
-
-      'em': `
-        font-style: italic;
-      `,
-
-      'del': `
-        text-decoration: line-through;
-        color: #999;
-      `,
-
-      'avatar-header': `
-        margin: 0 0 ${s.sm}px 0 !important;
-        display: flex !important; 
-        align-items: center !important;
-        justify-content: flex-start !important;
-        text-align: left !important;
-        width: 100%;
-        flex-direction: row !important;
-      `,
-
-      'avatar': `
-        width: 32px !important;
-        max-width: 32px !important;
-        height: 32px !important;
-        max-height: 32px !important;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 1px solid #e8e8ed;
-        flex-shrink: 0;
-      `,
-
-      'avatar-caption': `
-        font-size: ${sizes.caption}px;
-        color: #666;
-        text-align: left;
-        margin-left: 10px;
-        line-height: 1.4;
-      `,
-    };
-
-    return (styles[tagName] || '').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+  getH4Style(type, color, fontSize, font) {
+    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 15px 0 10px; text-align: left; color: #333; line-height: 1.35;`;
+    switch (type) {
+      case 'light-bg':
+        return `${base} background-color: ${color}15; padding: 4px 8px; border-radius: 4px; display: inline-block; color: ${color};`;
+      case 'italic-serif':
+        return `${base} font-style: italic; font-family: serif; border-bottom: 1px dashed #ccc; display: inline-block; padding-bottom: 2px;`;
+      default:
+        return base;
+    }
   }
 
   /**
