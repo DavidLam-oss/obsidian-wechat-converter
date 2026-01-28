@@ -577,9 +577,14 @@ class AppleStyleView extends ItemView {
     const images = Array.from(container.querySelectorAll('img'));
     const localImages = images.filter(img => img.src.startsWith('app://'));
 
+
     if (localImages.length === 0) return false;
 
-    new Notice(`⏳ 正在压缩 ${localImages.length} 张图片...`);
+    // UX Optimization: Show notice but ensure it stays for at least 800ms to avoid "flashing"
+
+    // UX Optimization: Show notice but ensure it stays for at least 800ms to avoid "flashing"
+    const startTime = Date.now();
+    const processingNotice = new Notice(`⏳ 正在压缩 ${localImages.length} 张图片...`);
 
     // 并发控制：3个一组
     const concurrency = 3;
@@ -587,6 +592,19 @@ class AppleStyleView extends ItemView {
       const chunk = localImages.slice(i, i + concurrency);
       await Promise.all(chunk.map(img => this.convertImageToLocally(img)));
     }
+
+    // Calculate elapsed time and wait if needed
+    const elapsed = Date.now() - startTime;
+    const minDuration = 800; // 800ms minimum duration
+    if (elapsed < minDuration) {
+      await new Promise(resolve => setTimeout(resolve, minDuration - elapsed));
+    }
+
+    // Dismiss the processing notice so it doesn't stack with the success notice
+    if (processingNotice && processingNotice.noticeEl) {
+      processingNotice.noticeEl.remove();
+    }
+
     return true;
   }
 
