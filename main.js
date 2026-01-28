@@ -598,6 +598,9 @@ class AppleStyleView extends ItemView {
     // UX Optimization: Show notice but ensure it stays for at least 800ms to avoid "flashing"
 
     // UX Optimization: Show notice but ensure it stays for at least 800ms to avoid "flashing"
+
+
+    // UX Optimization: Show notice but ensure it stays for at least 800ms to avoid "flashing"
     const startTime = Date.now();
     const processingNotice = new Notice(`⏳ 正在压缩 ${localImages.length} 张图片...`, 0); // 0 = keep until manual dismissal
 
@@ -614,6 +617,7 @@ class AppleStyleView extends ItemView {
     if (elapsed < minDuration) {
       await new Promise(resolve => setTimeout(resolve, minDuration - elapsed));
     }
+
 
 
 
