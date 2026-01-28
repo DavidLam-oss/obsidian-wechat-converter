@@ -528,10 +528,17 @@ class AppleStyleView extends ItemView {
    * 复制 HTML
    */
   async copyHTML() {
+    if (this.isCopying) {
+      new Notice('⚠️ 正在处理中，请勿重复点击');
+      return;
+    }
+
     if (!this.currentHtml) {
       new Notice('请先转换文档');
       return;
     }
+
+    this.isCopying = true;
 
     try {
       // 创建临时的 DOM 容器来解析和处理图片
@@ -561,7 +568,13 @@ class AppleStyleView extends ItemView {
             if (processed.noticeEl) {
               processed.noticeEl.style.transition = 'opacity 0.5s';
               processed.noticeEl.style.opacity = '0';
-              setTimeout(() => processed.noticeEl.remove(), 500);
+              setTimeout(() => {
+                // Defensive cleanup: Ensure display none and remove
+                if (processed.noticeEl) {
+                  processed.noticeEl.style.display = 'none';
+                  processed.noticeEl.remove();
+                }
+              }, 500);
             }
           }, 4000);
         } else {
@@ -576,6 +589,8 @@ class AppleStyleView extends ItemView {
     } catch (error) {
       console.error('复制失败:', error);
       new Notice('❌ 复制失败: ' + error.message);
+    } finally {
+      this.isCopying = false;
     }
   }
 
