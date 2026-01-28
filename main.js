@@ -583,8 +583,10 @@ class AppleStyleView extends ItemView {
     // UX Optimization: Show notice but ensure it stays for at least 800ms to avoid "flashing"
 
     // UX Optimization: Show notice but ensure it stays for at least 800ms to avoid "flashing"
+
+    // UX Optimization: Show notice but ensure it stays for at least 800ms to avoid "flashing"
     const startTime = Date.now();
-    const processingNotice = new Notice(`⏳ 正在压缩 ${localImages.length} 张图片...`);
+    const processingNotice = new Notice(`⏳ 正在压缩 ${localImages.length} 张图片...`, 0); // 0 = keep until manual dismissal
 
     // 并发控制：3个一组
     const concurrency = 3;
@@ -600,9 +602,12 @@ class AppleStyleView extends ItemView {
       await new Promise(resolve => setTimeout(resolve, minDuration - elapsed));
     }
 
+
     // Dismiss the processing notice so it doesn't stack with the success notice
+    // Fix: Use display: none instead of remove() to avoid "black bar" glitch
     if (processingNotice && processingNotice.noticeEl) {
-      processingNotice.noticeEl.remove();
+      processingNotice.noticeEl.style.display = 'none';
+      // Optional: create a new empty notice to ensure cleaner transition? No, keeping it simple.
     }
 
     return true;
