@@ -515,9 +515,14 @@ var AppleStyleView = class extends ItemView {
       const resp = await fetch(src);
       return await resp.blob();
     }
-    if (src.startsWith("http") || src.startsWith("app://") || src.startsWith("capacitor://")) {
+    if (src.startsWith("app://") || src.startsWith("capacitor://")) {
       const resp = await fetch(src);
       return await resp.blob();
+    }
+    if (src.startsWith("http")) {
+      const { requestUrl } = require("obsidian");
+      const response = await requestUrl({ url: src });
+      return new Blob([response.arrayBuffer], { type: "image/png" });
     }
     throw new Error("\u4E0D\u652F\u6301\u7684\u56FE\u7247\u6765\u6E90\uFF0C\u8BF7\u5C1D\u8BD5\u91CD\u65B0\u4E0A\u4F20\u5C01\u9762");
   }

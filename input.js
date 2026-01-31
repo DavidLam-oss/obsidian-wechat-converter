@@ -635,14 +635,26 @@ class AppleStyleView extends ItemView {
    * 将各种形式的 src (Base64, URL, 路径) 转为 Blob
    */
   async srcToBlob(src) {
+    // Base64 可以直接用 fetch 转换
     if (src.startsWith('data:')) {
       const resp = await fetch(src);
       return await resp.blob();
     }
-    if (src.startsWith('http') || src.startsWith('app://') || src.startsWith('capacitor://')) {
+
+    // Obsidian 本地资源 (app:// 或 capacitor://) 可以直接 fetch
+    if (src.startsWith('app://') || src.startsWith('capacitor://')) {
       const resp = await fetch(src);
       return await resp.blob();
     }
+
+    // HTTP/HTTPS 图床链接需要使用 requestUrl 绕过 CORS
+    if (src.startsWith('http')) {
+      const { requestUrl } = require('obsidian');
+      const response = await requestUrl({ url: src });
+      // requestUrl 返回 ArrayBuffer，需要转换为 Blob
+      return new Blob([response.arrayBuffer], { type: 'image/png' });
+    }
+
     throw new Error('不支持的图片来源，请尝试重新上传封面');
   }
 
