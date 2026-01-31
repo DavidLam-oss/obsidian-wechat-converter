@@ -3,3 +3,4 @@ node_modules/
 data.json
 workspace.json
 xgplayer/
+*.zip
