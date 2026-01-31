@@ -20,6 +20,8 @@ const DEFAULT_SETTINGS = {
   // 多账号支持
   wechatAccounts: [],  // [{ id, name, appId, appSecret }]
   defaultAccountId: '',
+  // 代理设置
+  proxyUrl: '',  // Cloudflare Worker 等代理地址
   // 旧字段保留用于迁移检测
   wechatAppId: '',
   wechatAppSecret: '',
@@ -38,11 +40,38 @@ function generateId() {
  * 🚀 微信公众号 API 对接模块
  */
 class WechatAPI {
-  constructor(appId, appSecret) {
+  constructor(appId, appSecret, proxyUrl = '') {
     this.appId = appId;
     this.appSecret = appSecret;
+    this.proxyUrl = proxyUrl;
     this.accessToken = '';
     this.expireTime = 0;
+  }
+
+  /**
+   * 发送请求（如果配置了代理，通过代理发送）
+   */
+  async sendRequest(url, options = {}) {
+    const { requestUrl } = require('obsidian');
+
+    if (this.proxyUrl) {
+      // 通过代理发送
+      const proxyResponse = await requestUrl({
+        url: this.proxyUrl,
+        method: 'POST',
+        body: JSON.stringify({
+          url: url,
+          method: options.method || 'GET',
+          data: options.body ? JSON.parse(options.body) : undefined
+        }),
+        contentType: 'application/json'
+      });
+      return proxyResponse.json;
+    } else {
+      // 直连
+      const response = await requestUrl({ url, ...options });
+      return response.json;
+    }
   }
 
   async getAccessToken() {
@@ -50,12 +79,8 @@ class WechatAPI {
       return this.accessToken;
     }
 
-    // 在 Obsidian 中使用 requestUrl 避开跨域
-    const { requestUrl } = require('obsidian');
     const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.appId}&secret=${this.appSecret}`;
-
-    const response = await requestUrl({ url });
-    const data = response.json;
+    const data = await this.sendRequest(url);
 
     if (data.access_token) {
       this.accessToken = data.access_token;
@@ -65,6 +90,7 @@ class WechatAPI {
       throw new Error(`获取 Token 失败: ${data.errmsg || '未知错误'} (${data.errcode || '??'})`);
     }
   }
+
 
   async uploadCover(blob) {
     const token = await this.getAccessToken();
@@ -80,17 +106,13 @@ class WechatAPI {
 
   async createDraft(article) {
     const token = await this.getAccessToken();
-    const { requestUrl } = require('obsidian');
     const url = `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${token}`;
 
-    const response = await requestUrl({
-      url,
+    const data = await this.sendRequest(url, {
       method: 'POST',
-      body: JSON.stringify({ articles: [article] }),
-      contentType: 'application/json'
+      body: JSON.stringify({ articles: [article] })
     });
 
-    const data = response.json;
     console.log('WeChat Draft API Response:', data); // 调试日志
 
     if (data.media_id) {
@@ -734,7 +756,7 @@ class AppleStyleView extends ItemView {
     const notice = new Notice(`🚀 正在使用 ${account.name} 同步...`, 0);
 
     try {
-      const api = new WechatAPI(account.appId, account.appSecret);
+      const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl);
 
       // 1. 获取封面图
       notice.setMessage('🖼️ 正在处理封面图...');
@@ -1352,7 +1374,7 @@ class AppleStyleSettingTab extends PluginSettingTab {
           testBtn.disabled = true;
           testBtn.textContent = '测试中...';
           try {
-            const api = new WechatAPI(account.appId, account.appSecret);
+            const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl);
             await api.getAccessToken();
             new Notice(`✅ ${account.name} 连接成功！`);
           } catch (err) {
@@ -1435,6 +1457,22 @@ class AppleStyleSettingTab extends PluginSettingTab {
             this.display();
           }));
     }
+
+    // 高级设置
+    new Setting(containerEl)
+      .setName('高级设置')
+      .setHeading();
+
+    new Setting(containerEl)
+      .setName('API 代理地址')
+      .setDesc('如果你的网络 IP 经常变化，可配置 Cloudflare Worker 等代理服务。留空则直连微信 API。')
+      .addText(text => text
+        .setPlaceholder('https://your-proxy.workers.dev')
+        .setValue(this.plugin.settings.proxyUrl)
+        .onChange(async (value) => {
+          this.plugin.settings.proxyUrl = value.trim();
+          await this.plugin.saveSettings();
+        }));
   }
 
   /**
@@ -1489,7 +1527,7 @@ class AppleStyleSettingTab extends PluginSettingTab {
       testBtn.disabled = true;
       testBtn.textContent = '测试中...';
       try {
-        const api = new WechatAPI(appIdInput.value.trim(), secretInput.value.trim());
+        const api = new WechatAPI(appIdInput.value.trim(), secretInput.value.trim(), this.plugin.settings.proxyUrl);
         await api.getAccessToken();
         new Notice('✅ 连接成功！');
       } catch (err) {

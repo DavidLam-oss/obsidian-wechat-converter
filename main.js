@@ -26,6 +26,9 @@ var DEFAULT_SETTINGS = {
   wechatAccounts: [],
   // [{ id, name, appId, appSecret }]
   defaultAccountId: "",
+  // 代理设置
+  proxyUrl: "",
+  // Cloudflare Worker 等代理地址
   // 旧字段保留用于迁移检测
   wechatAppId: "",
   wechatAppSecret: "",
@@ -37,20 +40,41 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 }
 var WechatAPI = class {
-  constructor(appId, appSecret) {
+  constructor(appId, appSecret, proxyUrl = "") {
     this.appId = appId;
     this.appSecret = appSecret;
+    this.proxyUrl = proxyUrl;
     this.accessToken = "";
     this.expireTime = 0;
+  }
+  /**
+   * 发送请求（如果配置了代理，通过代理发送）
+   */
+  async sendRequest(url, options = {}) {
+    const { requestUrl } = require("obsidian");
+    if (this.proxyUrl) {
+      const proxyResponse = await requestUrl({
+        url: this.proxyUrl,
+        method: "POST",
+        body: JSON.stringify({
+          url,
+          method: options.method || "GET",
+          data: options.body ? JSON.parse(options.body) : void 0
+        }),
+        contentType: "application/json"
+      });
+      return proxyResponse.json;
+    } else {
+      const response = await requestUrl({ url, ...options });
+      return response.json;
+    }
   }
   async getAccessToken() {
     if (this.accessToken && Date.now() < this.expireTime - 3e5) {
       return this.accessToken;
     }
-    const { requestUrl } = require("obsidian");
     const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.appId}&secret=${this.appSecret}`;
-    const response = await requestUrl({ url });
-    const data = response.json;
+    const data = await this.sendRequest(url);
     if (data.access_token) {
       this.accessToken = data.access_token;
       this.expireTime = Date.now() + data.expires_in * 1e3;
@@ -71,15 +95,11 @@ var WechatAPI = class {
   }
   async createDraft(article) {
     const token = await this.getAccessToken();
-    const { requestUrl } = require("obsidian");
     const url = `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${token}`;
-    const response = await requestUrl({
-      url,
+    const data = await this.sendRequest(url, {
       method: "POST",
-      body: JSON.stringify({ articles: [article] }),
-      contentType: "application/json"
+      body: JSON.stringify({ articles: [article] })
     });
-    const data = response.json;
     console.log("WeChat Draft API Response:", data);
     if (data.media_id) {
       return data;
@@ -594,7 +614,7 @@ var AppleStyleView = class extends ItemView {
     }
     const notice = new Notice(`\u{1F680} \u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65...`, 0);
     try {
-      const api = new WechatAPI(account.appId, account.appSecret);
+      const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl);
       notice.setMessage("\u{1F5BC}\uFE0F \u6B63\u5728\u5904\u7406\u5C01\u9762\u56FE...");
       const coverSrc = this.sessionCoverBase64 || this.getFrontmatterCover() || this.plugin.settings.defaultCoverBase64;
       if (!coverSrc) {
@@ -1062,7 +1082,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
           testBtn.disabled = true;
           testBtn.textContent = "\u6D4B\u8BD5\u4E2D...";
           try {
-            const api = new WechatAPI(account.appId, account.appSecret);
+            const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl);
             await api.getAccessToken();
             new Notice(`\u2705 ${account.name} \u8FDE\u63A5\u6210\u529F\uFF01`);
           } catch (err) {
@@ -1126,6 +1146,11 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
         this.display();
       }));
     }
+    new Setting(containerEl).setName("\u9AD8\u7EA7\u8BBE\u7F6E").setHeading();
+    new Setting(containerEl).setName("API \u4EE3\u7406\u5730\u5740").setDesc("\u5982\u679C\u4F60\u7684\u7F51\u7EDC IP \u7ECF\u5E38\u53D8\u5316\uFF0C\u53EF\u914D\u7F6E Cloudflare Worker \u7B49\u4EE3\u7406\u670D\u52A1\u3002\u7559\u7A7A\u5219\u76F4\u8FDE\u5FAE\u4FE1 API\u3002").addText((text) => text.setPlaceholder("https://your-proxy.workers.dev").setValue(this.plugin.settings.proxyUrl).onChange(async (value) => {
+      this.plugin.settings.proxyUrl = value.trim();
+      await this.plugin.saveSettings();
+    }));
   }
   /**
    * 显示添加/编辑账号的模态框
@@ -1168,7 +1193,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       testBtn.disabled = true;
       testBtn.textContent = "\u6D4B\u8BD5\u4E2D...";
       try {
-        const api = new WechatAPI(appIdInput.value.trim(), secretInput.value.trim());
+        const api = new WechatAPI(appIdInput.value.trim(), secretInput.value.trim(), this.plugin.settings.proxyUrl);
         await api.getAccessToken();
         new Notice("\u2705 \u8FDE\u63A5\u6210\u529F\uFF01");
       } catch (err) {

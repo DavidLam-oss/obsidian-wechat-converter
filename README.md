@@ -72,6 +72,76 @@
    - 确认预览效果满意后，点击底部的 **[📋 复制到公众号]** 按钮。
    - 提示"已复制"后，直接在微信公众号后台编辑器中 `Ctrl/Cmd + V` 粘贴即可。
 
+4. **一键同步到微信草稿箱** ⭐ 新功能
+   - 在插件设置中配置微信公众号账号（AppID 和 AppSecret）
+   - 点击 **[🚀 一键同步]** 按钮，选择账号和封面图
+   - 文章将自动同步到微信公众号草稿箱
+
+## 🔧 代理设置（解决 IP 白名单问题）
+
+微信公众号 API 需要 IP 白名单验证。如果你使用 VPN 或动态 IP，可以通过 Cloudflare Worker 代理解决。
+
+### 部署步骤
+
+1. **创建 Cloudflare Worker**
+   - 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
+   - 左侧菜单选择 **Workers & Pages** → **Create Application** → **Create Worker**
+   - 命名（如 `wechat-proxy`）并点击 **Deploy**
+
+2. **编辑 Worker 代码**
+
+   点击 **Edit code**，替换为以下代码：
+
+   ```javascript
+   export default {
+     async fetch(request, env) {
+       if (request.method !== 'POST') {
+         return new Response('Method Not Allowed', { status: 405 });
+       }
+       try {
+         const body = await request.json();
+         const { url, method = 'GET', data } = body;
+         if (!url || !url.startsWith('https://api.weixin.qq.com/')) {
+           return new Response(JSON.stringify({ error: 'Invalid URL', received: url }), { 
+             status: 400, headers: { 'Content-Type': 'application/json' }
+           });
+         }
+         const fetchOptions = { method, headers: { 'Content-Type': 'application/json' } };
+         if (method !== 'GET' && data) {
+           fetchOptions.body = JSON.stringify(data);
+         }
+         const response = await fetch(url, fetchOptions);
+         const result = await response.json();
+         return new Response(JSON.stringify(result), {
+           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+         });
+       } catch (error) {
+         return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+       }
+     }
+   };
+   ```
+
+
+3. **配置微信 IP 白名单**
+
+   将 Cloudflare 出口 IP 添加到微信公众号白名单（[官方 IP 列表](https://www.cloudflare.com/ips/)）：
+
+   ```
+   173.245.48.0/20, 103.21.244.0/22, 103.22.200.0/22, 103.31.4.0/22
+   141.101.64.0/18, 108.162.192.0/18, 190.93.240.0/20, 188.114.96.0/20
+   197.234.240.0/22, 198.41.128.0/17, 162.158.0.0/15, 104.16.0.0/13
+   104.24.0.0/14, 172.64.0.0/13, 131.0.72.0/22
+   ```
+
+4. **插件配置**
+
+   在插件设置 → **高级设置** → **API 代理地址** 中填入你的 Worker URL：
+   ```
+   https://wechat-proxy.your-account.workers.dev
+   ```
+
+
 ## 🤝 贡献 (Contributing)
 
 欢迎提交 Issue 或 Pull Request！
