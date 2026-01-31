@@ -568,7 +568,57 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
 }
 
 /* ========================================
+   设置页面区块标题样式
+   ======================================== */
+
+/* 统一使用 Obsidian 界面字体 */
+.vertical-tab-content h2,
+.vertical-tab-content h3,
+.vertical-tab-content h4,
+.vertical-tab-content p,
+.vertical-tab-content .setting-item {
+  font-family: var(--font-interface);
+}
+
+/* 主标题 */
+.vertical-tab-content h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin: 0 0 4px 0;
+  padding: 0;
+}
+
+/* 区块标题 h3 */
+.vertical-tab-content h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin: 24px 0 8px 0;
+  padding: 16px 0 0 0;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+/* 首个 h3 不需要上边框 */
+.vertical-tab-content h3:first-of-type {
+  border-top: none;
+  margin-top: 16px;
+  padding-top: 0;
+}
+
+/* 子标题 h4 */
+.vertical-tab-content h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin: 16px 0 8px 0;
+  padding: 0;
+}
+
+
+/* ========================================
    多账号管理样式
+
    ======================================== */
 .wechat-account-list {
   display: flex;
@@ -857,8 +907,8 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
 }
 
 .wechat-modal-cover-preview {
-  width: 80px;
-  height: 50px;
+  width: 160px;
+  height: 100px;
   border: 1px solid var(--background-modifier-border);
   border-radius: 4px;
   overflow: hidden;
@@ -871,7 +921,7 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
 .wechat-modal-cover-preview img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .wechat-modal-no-cover {
@@ -896,4 +946,97 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
 
 .wechat-modal-cover-btns button:hover {
   border-color: var(--interactive-accent);
+}
+
+/* ========================================
+   Obsidian-Native 极简按钮样式
+   ======================================== */
+
+/* 账号卡片操作按钮 - 极简文字链接风格 */
+.wechat-account-actions button {
+  padding: 4px 8px;
+  font-size: 13px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  font-weight: 400;
+}
+
+/* 普通按钮 (编辑、设为默认、测试) */
+.wechat-account-actions button:not(.wechat-btn-danger) {
+  color: var(--text-muted);
+}
+
+.wechat-account-actions button:not(.wechat-btn-danger):hover {
+  color: var(--interactive-accent);
+}
+
+/* 删除按钮 - 红色文字 */
+.wechat-account-actions .wechat-btn-danger {
+  color: var(--text-error);
+}
+
+.wechat-account-actions .wechat-btn-danger:hover {
+  color: #ff3b30;
+}
+
+/* Modal 按钮区 */
+.wechat-modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.wechat-modal-buttons button {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+/* 取消/测试连接 - 文字链接风格 */
+.wechat-modal-buttons button:not(.mod-cta) {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+}
+
+.wechat-modal-buttons button:not(.mod-cta):hover {
+  color: var(--interactive-accent);
+}
+
+/* CTA 按钮 (保存、开始同步) - 使用 Obsidian 主题色 */
+.wechat-modal-buttons .mod-cta {
+  background: var(--interactive-accent);
+  border: none;
+  color: var(--text-on-accent);
+}
+
+.wechat-modal-buttons .mod-cta:hover {
+  filter: brightness(1.1);
+}
+
+/* 添加账号按钮 - 虚线边框 */
+.wechat-btn-add {
+  width: 100%;
+  padding: 10px;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wechat-btn-add:hover {
+  border-color: var(--interactive-accent);
+  color: var(--interactive-accent);
 }

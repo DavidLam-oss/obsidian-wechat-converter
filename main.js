@@ -976,9 +976,8 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "\u{1F4DD} \u5FAE\u4FE1\u516C\u4F17\u53F7\u8F6C\u6362\u5668\u8BBE\u7F6E" });
-    containerEl.createEl("p", { text: "\u66F4\u591A\u6392\u7248\u6837\u5F0F\u9009\u9879\uFF08\u4E3B\u9898\u3001\u5B57\u53F7\u3001\u4EE3\u7801\u5757\u7B49\uFF09\u8BF7\u5728\u63D2\u4EF6\u4FA7\u8FB9\u680F\u9762\u677F\u4E2D\u8FDB\u884C\u8BBE\u7F6E\u3002" });
-    containerEl.createEl("h3", { text: "\u{1F5BC}\uFE0F \u56FE\u7247\u6C34\u5370\u8BBE\u7F6E" });
+    new Setting(containerEl).setDesc("\u66F4\u591A\u6392\u7248\u6837\u5F0F\u9009\u9879\uFF08\u4E3B\u9898\u3001\u5B57\u53F7\u3001\u4EE3\u7801\u5757\u7B49\uFF09\u8BF7\u5728\u63D2\u4EF6\u4FA7\u8FB9\u680F\u9762\u677F\u4E2D\u8FDB\u884C\u8BBE\u7F6E\u3002");
+    new Setting(containerEl).setName("\u56FE\u7247\u6C34\u5370").setHeading();
     new Setting(containerEl).setName("\u542F\u7528\u56FE\u7247\u6C34\u5370").setDesc("\u5728\u6BCF\u5F20\u56FE\u7247\u4E0A\u65B9\u663E\u793A\u5934\u50CF").addToggle((toggle) => toggle.setValue(this.plugin.settings.enableWatermark).onChange(async (value) => {
       this.plugin.settings.enableWatermark = value;
       await this.plugin.saveSettings();
@@ -1023,11 +1022,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       this.plugin.settings.showImageCaption = value;
       await this.plugin.saveSettings();
     }));
-    containerEl.createEl("h3", { text: "\u{1F680} \u5FAE\u4FE1\u516C\u4F17\u53F7\u8D26\u53F7\u7BA1\u7406" });
-    containerEl.createEl("p", {
-      text: "\u8BF7\u5728\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0 [\u8BBE\u7F6E\u4E0E\u5F00\u53D1] -> [\u57FA\u672C\u914D\u7F6E] \u4E2D\u83B7\u53D6 AppID \u548C AppSecret\uFF0C\u5E76\u786E\u4FDD\u5DF2\u5C06\u5F53\u524D IP \u52A0\u5165\u767D\u540D\u5355\u3002",
-      cls: "setting-item-description"
-    });
+    new Setting(containerEl).setName("\u5FAE\u4FE1\u516C\u4F17\u53F7\u8D26\u53F7").setDesc("\u8BF7\u5728\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0 [\u8BBE\u7F6E\u4E0E\u5F00\u53D1] -> [\u57FA\u672C\u914D\u7F6E] \u4E2D\u83B7\u53D6 AppID \u548C AppSecret\uFF0C\u5E76\u786E\u4FDD\u5DF2\u5C06\u5F53\u524D IP \u52A0\u5165\u767D\u540D\u5355\u3002").setHeading();
     const accounts = this.plugin.settings.wechatAccounts || [];
     const defaultId = this.plugin.settings.defaultAccountId;
     if (accounts.length === 0) {
@@ -1105,7 +1100,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
         attr: { style: "color: var(--text-muted);" }
       });
     }
-    containerEl.createEl("h4", { text: "\u{1F4F7} \u9ED8\u8BA4\u5C01\u9762\u56FE", attr: { style: "margin-top: 24px;" } });
+    new Setting(containerEl).setName("\u9ED8\u8BA4\u5C01\u9762\u56FE").setHeading();
     new Setting(containerEl).setName("\u9ED8\u8BA4\u5C01\u9762\u56FE").setDesc("\u540C\u6B65\u6587\u7AE0\u65F6\uFF0C\u5982\u679C\u672A\u624B\u52A8\u6307\u5B9A\u5C01\u9762\u4E14\u6587\u7AE0\u5185\u6CA1\u6709\u5C01\u9762\u5B57\u6BB5\uFF0C\u5C06\u4F7F\u7528\u6B64\u56FE").addButton((button) => button.setButtonText(this.plugin.settings.defaultCoverBase64 ? "\u66F4\u6362\u5C01\u9762" : "\u9009\u53D6\u56FE\u7247").onClick(() => {
       const input = document.createElement("input");
       input.type = "file";

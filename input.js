@@ -1209,10 +1209,14 @@ class AppleStyleSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl('h2', { text: '📝 微信公众号转换器设置' });
-    containerEl.createEl('p', { text: '更多排版样式选项（主题、字号、代码块等）请在插件侧边栏面板中进行设置。' });
+    // 提示信息
+    new Setting(containerEl)
+      .setDesc('更多排版样式选项（主题、字号、代码块等）请在插件侧边栏面板中进行设置。');
 
-    containerEl.createEl('h3', { text: '🖼️ 图片水印设置' });
+    // 图片水印设置
+    new Setting(containerEl)
+      .setName('图片水印')
+      .setHeading();
 
     new Setting(containerEl)
       .setName('启用图片水印')
@@ -1292,11 +1296,12 @@ class AppleStyleSettingTab extends PluginSettingTab {
         }));
 
 
-    containerEl.createEl('h3', { text: '🚀 微信公众号账号管理' });
-    containerEl.createEl('p', {
-      text: '请在微信公众号后台 [设置与开发] -> [基本配置] 中获取 AppID 和 AppSecret，并确保已将当前 IP 加入白名单。',
-      cls: 'setting-item-description'
-    });
+
+    // 微信公众号账号管理
+    new Setting(containerEl)
+      .setName('微信公众号账号')
+      .setDesc('请在微信公众号后台 [设置与开发] -> [基本配置] 中获取 AppID 和 AppSecret，并确保已将当前 IP 加入白名单。')
+      .setHeading();
 
     // 账号列表
     const accounts = this.plugin.settings.wechatAccounts || [];
@@ -1391,7 +1396,9 @@ class AppleStyleSettingTab extends PluginSettingTab {
     }
 
     // 默认封面图设置
-    containerEl.createEl('h4', { text: '📷 默认封面图', attr: { style: 'margin-top: 24px;' } });
+    new Setting(containerEl)
+      .setName('默认封面图')
+      .setHeading();
 
     new Setting(containerEl)
       .setName('默认封面图')
