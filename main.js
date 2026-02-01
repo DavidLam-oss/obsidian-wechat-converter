@@ -554,9 +554,9 @@ var AppleStyleView = class extends ItemView {
     const autoDigest = (tempDiv.textContent || "").replace(/\s+/g, " ").trim().substring(0, 45);
     const digestInput = digestSection.createEl("textarea", {
       cls: "wechat-modal-digest-input",
-      placeholder: "\u7559\u7A7A\u5219\u81EA\u52A8\u63D0\u53D6\u6587\u7AE0\u524D 45 \u5B57",
-      value: autoDigest
+      placeholder: "\u7559\u7A7A\u5219\u81EA\u52A8\u63D0\u53D6\u6587\u7AE0\u524D 45 \u5B57"
     });
+    digestInput.value = autoDigest;
     digestInput.rows = 3;
     digestInput.style.width = "100%";
     digestInput.style.resize = "vertical";
@@ -564,7 +564,7 @@ var AppleStyleView = class extends ItemView {
     const charCount = digestSection.createEl("div", {
       cls: "wechat-digest-count",
       text: `${digestInput.value.length}/120`,
-      style: "text-align: right; font-size: 12px; color: var(--text-muted); margin-top: 4px;"
+      style: "text-align: right; font-size: 11px; color: var(--text-muted); margin-top: 4px; opacity: 0.7;"
     });
     digestInput.addEventListener("input", () => {
       charCount.setText(`${digestInput.value.length}/120`);
