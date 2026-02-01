@@ -1,7 +1,7 @@
 {
 	"id": "wechat-converter",
 	"name": "Wechat Converter",
-	"version": "1.0.0",
+	"version": "2.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "微信公众号排版工具，将 Markdown 转换为精美的 HTML 格式，一键复制粘贴到公众号编辑器",
 	"author": "林小卫很行",
