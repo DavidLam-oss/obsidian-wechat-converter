@@ -212,6 +212,7 @@ class AppleStyleView extends ItemView {
     this.theme = null;
     this.lastActiveFile = null;
     this.sessionCoverBase64 = ''; // 本次文章的临时封面
+    this.sessionDigest = ''; // 本次同步的摘要
   }
 
   getViewType() {
@@ -741,6 +742,24 @@ class AppleStyleView extends ItemView {
       input.click();
     };
 
+    // 摘要设置
+    const digestSection = modal.contentEl.createDiv({ cls: 'wechat-modal-section' });
+    digestSection.createEl('label', { text: '文章摘要（可选）', cls: 'wechat-modal-label' });
+
+    // 自动提取文章前 120 字作为默认摘要
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = this.currentHtml || '';
+    const autoDigest = (tempDiv.textContent || '').replace(/\s+/g, ' ').trim().substring(0, 120);
+
+    const digestInput = digestSection.createEl('textarea', {
+      cls: 'wechat-modal-digest-input',
+      placeholder: '留空则自动提取文章前 120 字',
+      value: ''
+    });
+    digestInput.rows = 3;
+    digestInput.style.width = '100%';
+    digestInput.style.resize = 'vertical';
+
     // 操作按钮
     const btnRow = modal.contentEl.createDiv({ cls: 'wechat-modal-buttons' });
 
@@ -756,6 +775,8 @@ class AppleStyleView extends ItemView {
       modal.close();
       this.selectedAccountId = selectedAccountId;
       this.sessionCoverBase64 = coverBase64;
+      // 传递用户输入的摘要，或使用自动提取的摘要
+      this.sessionDigest = digestInput.value.trim() || autoDigest || '一键同步自 Obsidian';
       await this.onSyncToWechat();
     };
 
@@ -815,8 +836,8 @@ class AppleStyleView extends ItemView {
         title: title.substring(0, 64),
         content: cleanedHtml,
         thumb_media_id: thumb_media_id,
-        author: this.app.vault.getName() || '',
-        digest: '一键同步自 Obsidian'
+        author: account.author || '',
+        digest: this.sessionDigest || '一键同步自 Obsidian'
       };
 
       await api.createDraft(article);
@@ -1757,6 +1778,15 @@ class AppleStyleSettingTab extends PluginSettingTab {
       value: account?.appSecret || ''
     });
 
+    // 默认作者
+    const authorGroup = form.createDiv({ cls: 'wechat-form-group' });
+    authorGroup.createEl('label', { text: '默认作者（可选）' });
+    const authorInput = authorGroup.createEl('input', {
+      type: 'text',
+      placeholder: '留空则不显示作者',
+      value: account?.author || ''
+    });
+
     // 按钮区
     const btnRow = form.createDiv({ cls: 'wechat-modal-buttons' });
 
@@ -1798,13 +1828,15 @@ class AppleStyleSettingTab extends PluginSettingTab {
         account.name = name;
         account.appId = appId;
         account.appSecret = appSecret;
+        account.author = authorInput.value.trim();
       } else {
         // 添加新账号
         const newAccount = {
           id: generateId(),
           name,
           appId,
-          appSecret
+          appSecret,
+          author: authorInput.value.trim()
         };
         this.plugin.settings.wechatAccounts.push(newAccount);
         // 如果是第一个账号，自动设为默认

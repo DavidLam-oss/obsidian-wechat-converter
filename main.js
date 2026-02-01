@@ -188,6 +188,7 @@ var AppleStyleView = class extends ItemView {
     this.theme = null;
     this.lastActiveFile = null;
     this.sessionCoverBase64 = "";
+    this.sessionDigest = "";
   }
   getViewType() {
     return APPLE_STYLE_VIEW;
@@ -611,6 +612,19 @@ var AppleStyleView = class extends ItemView {
       };
       input.click();
     };
+    const digestSection = modal.contentEl.createDiv({ cls: "wechat-modal-section" });
+    digestSection.createEl("label", { text: "\u6587\u7AE0\u6458\u8981\uFF08\u53EF\u9009\uFF09", cls: "wechat-modal-label" });
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = this.currentHtml || "";
+    const autoDigest = (tempDiv.textContent || "").replace(/\s+/g, " ").trim().substring(0, 120);
+    const digestInput = digestSection.createEl("textarea", {
+      cls: "wechat-modal-digest-input",
+      placeholder: "\u7559\u7A7A\u5219\u81EA\u52A8\u63D0\u53D6\u6587\u7AE0\u524D 120 \u5B57",
+      value: ""
+    });
+    digestInput.rows = 3;
+    digestInput.style.width = "100%";
+    digestInput.style.resize = "vertical";
     const btnRow = modal.contentEl.createDiv({ cls: "wechat-modal-buttons" });
     const cancelBtn = btnRow.createEl("button", { text: "\u53D6\u6D88" });
     cancelBtn.onclick = () => modal.close();
@@ -623,6 +637,7 @@ var AppleStyleView = class extends ItemView {
       modal.close();
       this.selectedAccountId = selectedAccountId;
       this.sessionCoverBase64 = coverBase64;
+      this.sessionDigest = digestInput.value.trim() || autoDigest || "\u4E00\u952E\u540C\u6B65\u81EA Obsidian";
       await this.onSyncToWechat();
     };
     modal.open();
@@ -663,8 +678,8 @@ var AppleStyleView = class extends ItemView {
         title: title.substring(0, 64),
         content: cleanedHtml,
         thumb_media_id,
-        author: this.app.vault.getName() || "",
-        digest: "\u4E00\u952E\u540C\u6B65\u81EA Obsidian"
+        author: account.author || "",
+        digest: this.sessionDigest || "\u4E00\u952E\u540C\u6B65\u81EA Obsidian"
       };
       await api.createDraft(article);
       notice.hide();
@@ -1386,6 +1401,13 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       placeholder: "\u5F00\u53D1\u8005\u5BC6\u94A5",
       value: (account == null ? void 0 : account.appSecret) || ""
     });
+    const authorGroup = form.createDiv({ cls: "wechat-form-group" });
+    authorGroup.createEl("label", { text: "\u9ED8\u8BA4\u4F5C\u8005\uFF08\u53EF\u9009\uFF09" });
+    const authorInput = authorGroup.createEl("input", {
+      type: "text",
+      placeholder: "\u7559\u7A7A\u5219\u4E0D\u663E\u793A\u4F5C\u8005",
+      value: (account == null ? void 0 : account.author) || ""
+    });
     const btnRow = form.createDiv({ cls: "wechat-modal-buttons" });
     const cancelBtn = btnRow.createEl("button", { text: "\u53D6\u6D88" });
     cancelBtn.onclick = () => modal.close();
@@ -1420,12 +1442,14 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
         account.name = name;
         account.appId = appId;
         account.appSecret = appSecret;
+        account.author = authorInput.value.trim();
       } else {
         const newAccount = {
           id: generateId(),
           name,
           appId,
-          appSecret
+          appSecret,
+          author: authorInput.value.trim()
         };
         this.plugin.settings.wechatAccounts.push(newAccount);
         if (this.plugin.settings.wechatAccounts.length === 1) {
