@@ -101,62 +101,62 @@
    点击 **Edit code**，替换为以下代码：
 
    ```javascript
-export default {
-  async fetch(request, env) {
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    };
-
-    // 处理 CORS 预检请求
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
-    }
-
-    if (request.method !== 'POST') {
-      return new Response('Method Not Allowed', { status: 405, headers: corsHeaders });
-    }
-
-    try {
-      const body = await request.json();
-      const { url, method = 'GET', data, fileData, fileName, mimeType, fieldName } = body;
-      
-      // === Debug Logging ===
-      console.log('Received URL:', url);
-      
-      // 安全校验：只允许访问微信 API
-      if (!url || !url.startsWith('https://api.weixin.qq.com/')) {
-        const errorMsg = `Invalid URL. Expected: starts with https://api.weixin.qq.com/. FLASH: Received [${typeof url}]: ${url}`;
-        return new Response(JSON.stringify({ error: errorMsg, receivedBody: body }), { status: 400, headers: corsHeaders });
-      }
-
-      let response;
-      if (method === 'UPLOAD' && fileData) {
-        // 文件上传处理：Base64 -> Binary -> FormData
-        const binary = atob(fileData);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-        
-        const formData = new FormData();
-        formData.append(fieldName || 'media', new Blob([bytes], { type: mimeType }), fileName);
-        response = await fetch(url, { method: 'POST', body: formData });
-      } else {
-        // 普通 JSON 请求
-        const opts = { method, headers: { 'Content-Type': 'application/json' } };
-        if (method !== 'GET' && data) opts.body = JSON.stringify(data);
-        response = await fetch(url, opts);
-      }
-
-      const result = await response.json();
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    } catch (error) {
-      return new Response(JSON.stringify({ error: `Server Error: ${error.message}`, stack: error.stack }), { status: 500, headers: corsHeaders });
-    }
-  }
-};
+   export default {
+     async fetch(request, env) {
+       const corsHeaders = {
+         'Access-Control-Allow-Origin': '*',
+         'Access-Control-Allow-Methods': 'POST, OPTIONS',
+         'Access-Control-Allow-Headers': 'Content-Type',
+       };
+   
+       // 处理 CORS 预检请求
+       if (request.method === 'OPTIONS') {
+         return new Response(null, { headers: corsHeaders });
+       }
+   
+       if (request.method !== 'POST') {
+         return new Response('Method Not Allowed', { status: 405, headers: corsHeaders });
+       }
+   
+       try {
+         const body = await request.json();
+         const { url, method = 'GET', data, fileData, fileName, mimeType, fieldName } = body;
+         
+         // === Debug Logging ===
+         console.log('Received URL:', url);
+         
+         // 安全校验：只允许访问微信 API
+         if (!url || !url.startsWith('https://api.weixin.qq.com/')) {
+           const errorMsg = `Invalid URL. Expected: starts with https://api.weixin.qq.com/. FLASH: Received [${typeof url}]: ${url}`;
+           return new Response(JSON.stringify({ error: errorMsg, receivedBody: body }), { status: 400, headers: corsHeaders });
+         }
+   
+         let response;
+         if (method === 'UPLOAD' && fileData) {
+           // 文件上传处理：Base64 -> Binary -> FormData
+           const binary = atob(fileData);
+           const bytes = new Uint8Array(binary.length);
+           for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+           
+           const formData = new FormData();
+           formData.append(fieldName || 'media', new Blob([bytes], { type: mimeType }), fileName);
+           response = await fetch(url, { method: 'POST', body: formData });
+         } else {
+           // 普通 JSON 请求
+           const opts = { method, headers: { 'Content-Type': 'application/json' } };
+           if (method !== 'GET' && data) opts.body = JSON.stringify(data);
+           response = await fetch(url, opts);
+         }
+   
+         const result = await response.json();
+         return new Response(JSON.stringify(result), {
+           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+         });
+       } catch (error) {
+         return new Response(JSON.stringify({ error: `Server Error: ${error.message}`, stack: error.stack }), { status: 500, headers: corsHeaders });
+       }
+     }
+   };
    ```
 
 
