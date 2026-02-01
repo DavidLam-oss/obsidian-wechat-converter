@@ -100,7 +100,6 @@ var WechatAPI = class {
       method: "POST",
       body: JSON.stringify({ articles: [article] })
     });
-    console.log("WeChat Draft API Response:", data);
     if (data.media_id) {
       return data;
     }
@@ -814,7 +813,7 @@ var AppleStyleView = class extends ItemView {
           contentNodes.shift();
         }
         if (contentNodes.length > 0 && contentNodes[0].nodeType === Node.TEXT_NODE) {
-          contentNodes[0].textContent = contentNodes[0].textContent.replace(/^\\s+/, "");
+          contentNodes[0].textContent = contentNodes[0].textContent.replace(/^\s+/, "");
           if (!contentNodes[0].textContent) {
             contentNodes.shift();
           }
@@ -828,15 +827,13 @@ var AppleStyleView = class extends ItemView {
           contentNodes.forEach((node) => {
             if (node.nodeType !== Node.TEXT_NODE)
               return;
-            node.textContent = node.textContent.replace(/\\s*\\n\\s*/g, " ").replace(/\\s{2,}/g, " ");
+            node.textContent = node.textContent.replace(/\s*\n\s*/g, " ").replace(/\s{2,}/g, " ");
             if (!node.textContent.trim()) {
               node.remove();
             }
           });
           const markerText = isOrdered ? `${index}. ` : "\u2022 ";
-          const firstText = contentNodes.find(
-            (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim()
-          );
+          const firstText = contentNodes.find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
           if (firstText) {
             firstText.textContent = markerText + firstText.textContent;
           } else {
@@ -886,10 +883,6 @@ var AppleStyleView = class extends ItemView {
           node.remove();
         }
       });
-    });
-    console.log("=== cleanHtmlForDraft: Lists after cleanup ===");
-    div.querySelectorAll("ul, ol").forEach((list, i) => {
-      console.log(`List ${i}:`, list.outerHTML.substring(0, 400));
     });
     return div.innerHTML;
   }
@@ -1353,7 +1346,13 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       }));
     }
     new Setting(containerEl).setName("\u9AD8\u7EA7\u8BBE\u7F6E").setHeading();
-    new Setting(containerEl).setName("API \u4EE3\u7406\u5730\u5740").setDesc("\u5982\u679C\u4F60\u7684\u7F51\u7EDC IP \u7ECF\u5E38\u53D8\u5316\uFF0C\u53EF\u914D\u7F6E Cloudflare Worker \u7B49\u4EE3\u7406\u670D\u52A1\u3002\u7559\u7A7A\u5219\u76F4\u8FDE\u5FAE\u4FE1 API\u3002").addText((text) => text.setPlaceholder("https://your-proxy.workers.dev").setValue(this.plugin.settings.proxyUrl).onChange(async (value) => {
+    new Setting(containerEl).setName("API \u4EE3\u7406\u5730\u5740").setDesc(createFragment((frag) => {
+      frag.appendText("\u5982\u679C\u4F60\u7684\u7F51\u7EDC IP \u7ECF\u5E38\u53D8\u5316\uFF0C\u53EF\u914D\u7F6E\u4EE3\u7406\u670D\u52A1\u3002");
+      frag.createEl("a", {
+        text: "\u67E5\u770B\u90E8\u7F72\u6307\u5357",
+        href: "https://xiaoweibox.top/chats/wechat-proxy"
+      });
+    })).addText((text) => text.setPlaceholder("https://your-proxy.workers.dev").setValue(this.plugin.settings.proxyUrl).onChange(async (value) => {
       this.plugin.settings.proxyUrl = value.trim();
       await this.plugin.saveSettings();
     }));

@@ -108,12 +108,11 @@ class WechatAPI {
     const token = await this.getAccessToken();
     const url = `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${token}`;
 
+
     const data = await this.sendRequest(url, {
       method: 'POST',
       body: JSON.stringify({ articles: [article] })
     });
-
-    console.log('WeChat Draft API Response:', data); // 调试日志
 
     if (data.media_id) {
       return data;
@@ -1090,12 +1089,6 @@ class AppleStyleView extends ItemView {
       });
     });
 
-    // 调试：打印清理后的列表 HTML
-    console.log('=== cleanHtmlForDraft: Lists after cleanup ===');
-    div.querySelectorAll('ul, ol').forEach((list, i) => {
-      console.log(`List ${i}:`, list.outerHTML.substring(0, 400));
-    });
-
     return div.innerHTML;
   }
 
@@ -1711,7 +1704,13 @@ class AppleStyleSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('API 代理地址')
-      .setDesc('如果你的网络 IP 经常变化，可配置 Cloudflare Worker 等代理服务。留空则直连微信 API。')
+      .setDesc(createFragment(frag => {
+        frag.appendText('如果你的网络 IP 经常变化，可配置代理服务。');
+        frag.createEl('a', {
+          text: '查看部署指南',
+          href: 'https://xiaoweibox.top/chats/wechat-proxy'
+        });
+      }))
       .addText(text => text
         .setPlaceholder('https://your-proxy.workers.dev')
         .setValue(this.plugin.settings.proxyUrl)
