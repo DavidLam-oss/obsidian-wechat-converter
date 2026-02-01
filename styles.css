@@ -782,45 +782,7 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
   border-top: 1px solid var(--background-modifier-border);
 }
 
-.wechat-modal-buttons button {
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.wechat-modal-buttons button:not(.mod-cta):not(.wechat-btn-test) {
-  background: var(--background-secondary);
-  border: 1px solid var(--background-modifier-border);
-  color: var(--text-muted);
-}
-
-.wechat-modal-buttons button:not(.mod-cta):not(.wechat-btn-test):hover {
-  border-color: var(--interactive-accent);
-  color: var(--text-normal);
-}
-
-.wechat-modal-buttons .wechat-btn-test {
-  background: transparent;
-  border: 1px solid var(--text-success);
-  color: var(--text-success);
-}
-
-.wechat-modal-buttons .wechat-btn-test:hover {
-  background: rgba(52, 199, 89, 0.1);
-}
-
-.wechat-modal-buttons .mod-cta {
-  background: var(--interactive-accent);
-  border: none;
-  color: white;
-}
-
-.wechat-modal-buttons .mod-cta:hover {
-  opacity: 0.9;
-}
+/* Modal buttons are styled at the end of the file (line 984+) */
 
 /* Side Panel 账号选择器 */
 .wechat-account-selector {
@@ -853,6 +815,12 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
 
 .wechat-account-select:hover {
   border-color: var(--interactive-accent);
+}
+
+.wechat-account-select:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.15);
 }
 
 /* ========================================
@@ -1016,10 +984,23 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
   background: var(--interactive-accent);
   border: none;
   color: var(--text-on-accent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease;
 }
 
 .wechat-modal-buttons .mod-cta:hover {
-  filter: brightness(1.1);
+  background: var(--interactive-accent) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* 测试连接按钮 - 绿色文字 */
+.wechat-modal-buttons .wechat-btn-test {
+  color: var(--text-success);
+}
+
+.wechat-modal-buttons .wechat-btn-test:hover {
+  color: #2ecc71;
 }
 
 /* 添加账号按钮 - 虚线边框 */
