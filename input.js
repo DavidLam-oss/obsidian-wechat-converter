@@ -25,7 +25,7 @@ const DEFAULT_SETTINGS = {
   // 旧字段保留用于迁移检测
   wechatAppId: '',
   wechatAppSecret: '',
-  defaultCoverBase64: '', // 默认封面图
+
 };
 
 // 账号上限
@@ -564,99 +564,19 @@ class AppleStyleView extends ItemView {
   }
 
   /**
-   * 创建封面设置区
-
+   * 从文章内容中提取第一张图片作为封面
    */
-  createCoverSection(parent) {
-    const section = parent.createEl('div', { cls: 'apple-setting-section' });
-    section.createEl('label', { cls: 'apple-setting-label', text: '封面设置' });
-    const content = section.createEl('div', { cls: 'apple-setting-content' });
+  getFirstImageFromArticle() {
+    if (!this.currentHtml) return null;
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = this.currentHtml;
+    const imgs = Array.from(tempDiv.querySelectorAll('img'));
 
-    this.coverPreview = content.createEl('div', { cls: 'apple-cover-preview' });
-    this.updateCoverPreview();
-
-    const btnRow = content.createEl('div', { cls: 'apple-btn-row' });
-    const uploadBtn = btnRow.createEl('button', { text: '上传本篇封面' });
-    uploadBtn.addEventListener('click', () => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          this.sessionCoverBase64 = event.target.result;
-          this.updateCoverPreview();
-          new Notice('✅ 本篇封面已设置');
-        };
-        reader.readAsDataURL(file);
-      };
-      input.click();
-    });
-
-    const clearBtn = btnRow.createEl('button', { text: '清除' });
-    clearBtn.addEventListener('click', () => {
-      this.sessionCoverBase64 = '';
-      this.updateCoverPreview();
-    });
-  }
-
-  updateCoverPreview() {
-    if (!this.coverPreview) return;
-    this.coverPreview.empty();
-
-    // 优先级：手动上传 > Frontmatter > 默认封面
-    let src = this.sessionCoverBase64;
-    let sourceLabel = '本篇手动上传';
-
-    if (!src) {
-      src = this.getFrontmatterCover();
-      if (src) sourceLabel = '来自 Frontmatter (cover/banner)';
+    // 遍历所有图片，跳过头像（alt="logo"）
+    for (const img of imgs) {
+      if (img.alt === 'logo') continue;
+      if (img.src) return img.src;
     }
-
-    if (!src) {
-      src = this.plugin.settings.defaultCoverBase64;
-      if (src) sourceLabel = '使用全局默认封面';
-    }
-
-    if (src) {
-      this.coverPreview.createEl('div', {
-        text: `当前状态: ${sourceLabel}`,
-        cls: 'apple-small-note',
-        style: 'margin-bottom: 4px;'
-      });
-      const img = this.coverPreview.createEl('img');
-      img.src = src.startsWith('http') ? src : src; // 统一处理
-      img.style.maxWidth = '100px';
-      img.style.maxHeight = '60px';
-      img.style.borderRadius = '4px';
-    } else {
-      this.coverPreview.createEl('span', {
-        text: '未设置封面 (同步前请先设置)',
-        cls: 'apple-small-note',
-        style: 'color: var(--text-error);'
-      });
-    }
-  }
-
-  /**
-   * 从当前文件的 Frontmatter 中获取封面图
-   */
-  getFrontmatterCover() {
-    const activeFile = this.app.workspace.getActiveFile();
-    if (!activeFile) return null;
-
-    const cache = this.app.metadataCache.getFileCache(activeFile);
-    if (!cache || !cache.frontmatter) return null;
-
-    const coverPath = cache.frontmatter.cover || cache.frontmatter.banner;
-    if (!coverPath) return null;
-
-    // 如果是网络链接，直接返回
-    if (coverPath.startsWith('http')) return coverPath;
-
-    // TODO: 如果是本地路径，需要进一步解析为可显示的 URL
     return null;
   }
 
@@ -687,7 +607,8 @@ class AppleStyleView extends ItemView {
     const accounts = this.plugin.settings.wechatAccounts || [];
     const defaultId = this.plugin.settings.defaultAccountId;
     let selectedAccountId = defaultId;
-    let coverBase64 = this.sessionCoverBase64 || this.getFrontmatterCover() || this.plugin.settings.defaultCoverBase64;
+    // 逻辑变更: 默认只提取文章第一张图，无全局默认，无 frontmatter
+    let coverBase64 = this.sessionCoverBase64 || this.getFirstImageFromArticle();
 
     // 账号选择器
     const accountSection = modal.contentEl.createDiv({ cls: 'wechat-modal-section' });
@@ -716,11 +637,22 @@ class AppleStyleView extends ItemView {
       coverPreview.empty();
       if (coverBase64) {
         coverPreview.createEl('img', { attr: { src: coverBase64 } });
+        // 有封面 -> 启用同步按钮
+        syncBtn.disabled = false;
+        syncBtn.setText('开始同步');
+        syncBtn.removeClass('apple-btn-disabled');
       } else {
-        coverPreview.createEl('span', { text: '未设置封面', cls: 'wechat-modal-no-cover' });
+        // UI 优化：去除 emoji，使用纯净的提示样式 (样式在 CSS 中定义)
+        coverPreview.createEl('div', {
+          text: '暂无封面',
+          cls: 'wechat-modal-no-cover'
+        });
+        // 无封面 -> 禁用同步按钮
+        syncBtn.disabled = true;
+        syncBtn.setText('请先设置封面');
+        syncBtn.addClass('apple-btn-disabled');
       }
     };
-    updatePreview();
 
     const coverBtns = coverContent.createDiv({ cls: 'wechat-modal-cover-btns' });
     const uploadBtn = coverBtns.createEl('button', { text: '上传' });
@@ -746,19 +678,32 @@ class AppleStyleView extends ItemView {
     const digestSection = modal.contentEl.createDiv({ cls: 'wechat-modal-section' });
     digestSection.createEl('label', { text: '文章摘要（可选）', cls: 'wechat-modal-label' });
 
-    // 自动提取文章前 120 字作为默认摘要
+    // 自动提取文章前 45 字作为默认摘要
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = this.currentHtml || '';
-    const autoDigest = (tempDiv.textContent || '').replace(/\s+/g, ' ').trim().substring(0, 120);
+    // 使用 innerText 可以更好地处理换行，但为了安全起见，还是用 textContent 并清理空格
+    const autoDigest = (tempDiv.textContent || '').replace(/\s+/g, ' ').trim().substring(0, 45);
 
     const digestInput = digestSection.createEl('textarea', {
       cls: 'wechat-modal-digest-input',
-      placeholder: '留空则自动提取文章前 120 字',
-      value: ''
+      placeholder: '留空则自动提取文章前 45 字',
+      value: autoDigest
     });
     digestInput.rows = 3;
     digestInput.style.width = '100%';
     digestInput.style.resize = 'vertical';
+    digestInput.maxLength = 120; // 限制最大输入 120 字
+
+    // 字数统计
+    const charCount = digestSection.createEl('div', {
+      cls: 'wechat-digest-count',
+      text: `${digestInput.value.length}/120`,
+      style: 'text-align: right; font-size: 12px; color: var(--text-muted); margin-top: 4px;'
+    });
+
+    digestInput.addEventListener('input', () => {
+      charCount.setText(`${digestInput.value.length}/120`);
+    });
 
     // 操作按钮
     const btnRow = modal.contentEl.createDiv({ cls: 'wechat-modal-buttons' });
@@ -767,6 +712,9 @@ class AppleStyleView extends ItemView {
     cancelBtn.onclick = () => modal.close();
 
     const syncBtn = btnRow.createEl('button', { text: '开始同步', cls: 'mod-cta' });
+    // 初始化时就检查状态
+    updatePreview();
+
     syncBtn.onclick = async () => {
       if (!coverBase64) {
         new Notice('❌ 请先设置封面图');
@@ -810,9 +758,10 @@ class AppleStyleView extends ItemView {
 
       // 1. 获取封面图
       notice.setMessage('🖼️ 正在处理封面图...');
-      const coverSrc = this.sessionCoverBase64 || this.getFrontmatterCover() || this.plugin.settings.defaultCoverBase64;
+      // 严格校验: 必须有 sessionCoverBase64 或者能从文章提取到图片
+      const coverSrc = this.sessionCoverBase64 || this.getFirstImageFromArticle();
       if (!coverSrc) {
-        throw new Error('未设置封面图，同步失败');
+        throw new Error('未设置封面图，同步失败。请在弹窗中上传封面。');
       }
 
       const coverBlob = await this.srcToBlob(coverSrc);
@@ -1251,6 +1200,8 @@ class AppleStyleView extends ItemView {
 
       const html = await this.converter.convert(markdown);
       this.currentHtml = html;
+      // 重置手动上传的封面，确保切换文章时不会残留上一篇的封面
+      this.sessionCoverBase64 = null;
 
       // 滚动位置保持 (Scroll Preservation)
       const scrollTop = this.previewContainer.scrollTop;
@@ -1677,46 +1628,7 @@ class AppleStyleSettingTab extends PluginSettingTab {
       });
     }
 
-    // 默认封面图设置
-    new Setting(containerEl)
-      .setName('默认封面图')
-      .setHeading();
 
-    new Setting(containerEl)
-      .setName('默认封面图')
-      .setDesc('同步文章时，如果未手动指定封面且文章内没有封面字段，将使用此图')
-      .addButton(button => button
-        .setButtonText(this.plugin.settings.defaultCoverBase64 ? '更换封面' : '选取图片')
-        .onClick(() => {
-          const input = document.createElement('input');
-          input.type = 'file';
-          input.accept = 'image/*';
-          input.onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-              this.plugin.settings.defaultCoverBase64 = event.target.result;
-              await this.plugin.saveSettings();
-              this.display();
-            };
-            reader.readAsDataURL(file);
-          };
-          input.click();
-        }));
-
-    if (this.plugin.settings.defaultCoverBase64) {
-      new Setting(containerEl)
-        .setName('清除默认封面')
-        .addButton(button => button
-          .setButtonText('清除')
-          .setWarning()
-          .onClick(async () => {
-            this.plugin.settings.defaultCoverBase64 = '';
-            await this.plugin.saveSettings();
-            this.display();
-          }));
-    }
 
     // 高级设置
     new Setting(containerEl)

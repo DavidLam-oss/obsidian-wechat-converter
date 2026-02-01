@@ -31,9 +31,7 @@ var DEFAULT_SETTINGS = {
   // Cloudflare Worker 等代理地址
   // 旧字段保留用于迁移检测
   wechatAppId: "",
-  wechatAppSecret: "",
-  defaultCoverBase64: ""
-  // 默认封面图
+  wechatAppSecret: ""
 };
 var MAX_ACCOUNTS = 5;
 function generateId() {
@@ -453,91 +451,20 @@ var AppleStyleView = class extends ItemView {
     });
   }
   /**
-     * 创建封面设置区
-  
-     */
-  createCoverSection(parent) {
-    const section = parent.createEl("div", { cls: "apple-setting-section" });
-    section.createEl("label", { cls: "apple-setting-label", text: "\u5C01\u9762\u8BBE\u7F6E" });
-    const content = section.createEl("div", { cls: "apple-setting-content" });
-    this.coverPreview = content.createEl("div", { cls: "apple-cover-preview" });
-    this.updateCoverPreview();
-    const btnRow = content.createEl("div", { cls: "apple-btn-row" });
-    const uploadBtn = btnRow.createEl("button", { text: "\u4E0A\u4F20\u672C\u7BC7\u5C01\u9762" });
-    uploadBtn.addEventListener("click", () => {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file)
-          return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          this.sessionCoverBase64 = event.target.result;
-          this.updateCoverPreview();
-          new Notice("\u2705 \u672C\u7BC7\u5C01\u9762\u5DF2\u8BBE\u7F6E");
-        };
-        reader.readAsDataURL(file);
-      };
-      input.click();
-    });
-    const clearBtn = btnRow.createEl("button", { text: "\u6E05\u9664" });
-    clearBtn.addEventListener("click", () => {
-      this.sessionCoverBase64 = "";
-      this.updateCoverPreview();
-    });
-  }
-  updateCoverPreview() {
-    if (!this.coverPreview)
-      return;
-    this.coverPreview.empty();
-    let src = this.sessionCoverBase64;
-    let sourceLabel = "\u672C\u7BC7\u624B\u52A8\u4E0A\u4F20";
-    if (!src) {
-      src = this.getFrontmatterCover();
-      if (src)
-        sourceLabel = "\u6765\u81EA Frontmatter (cover/banner)";
-    }
-    if (!src) {
-      src = this.plugin.settings.defaultCoverBase64;
-      if (src)
-        sourceLabel = "\u4F7F\u7528\u5168\u5C40\u9ED8\u8BA4\u5C01\u9762";
-    }
-    if (src) {
-      this.coverPreview.createEl("div", {
-        text: `\u5F53\u524D\u72B6\u6001: ${sourceLabel}`,
-        cls: "apple-small-note",
-        style: "margin-bottom: 4px;"
-      });
-      const img = this.coverPreview.createEl("img");
-      img.src = src.startsWith("http") ? src : src;
-      img.style.maxWidth = "100px";
-      img.style.maxHeight = "60px";
-      img.style.borderRadius = "4px";
-    } else {
-      this.coverPreview.createEl("span", {
-        text: "\u672A\u8BBE\u7F6E\u5C01\u9762 (\u540C\u6B65\u524D\u8BF7\u5148\u8BBE\u7F6E)",
-        cls: "apple-small-note",
-        style: "color: var(--text-error);"
-      });
-    }
-  }
-  /**
-   * 从当前文件的 Frontmatter 中获取封面图
+   * 从文章内容中提取第一张图片作为封面
    */
-  getFrontmatterCover() {
-    const activeFile = this.app.workspace.getActiveFile();
-    if (!activeFile)
+  getFirstImageFromArticle() {
+    if (!this.currentHtml)
       return null;
-    const cache = this.app.metadataCache.getFileCache(activeFile);
-    if (!cache || !cache.frontmatter)
-      return null;
-    const coverPath = cache.frontmatter.cover || cache.frontmatter.banner;
-    if (!coverPath)
-      return null;
-    if (coverPath.startsWith("http"))
-      return coverPath;
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = this.currentHtml;
+    const imgs = Array.from(tempDiv.querySelectorAll("img"));
+    for (const img of imgs) {
+      if (img.alt === "logo")
+        continue;
+      if (img.src)
+        return img.src;
+    }
     return null;
   }
   /**
@@ -564,7 +491,7 @@ var AppleStyleView = class extends ItemView {
     const accounts = this.plugin.settings.wechatAccounts || [];
     const defaultId = this.plugin.settings.defaultAccountId;
     let selectedAccountId = defaultId;
-    let coverBase64 = this.sessionCoverBase64 || this.getFrontmatterCover() || this.plugin.settings.defaultCoverBase64;
+    let coverBase64 = this.sessionCoverBase64 || this.getFirstImageFromArticle();
     const accountSection = modal.contentEl.createDiv({ cls: "wechat-modal-section" });
     accountSection.createEl("label", { text: "\u8D26\u53F7", cls: "wechat-modal-label" });
     const accountSelect = accountSection.createEl("select", { cls: "wechat-account-select" });
@@ -587,11 +514,19 @@ var AppleStyleView = class extends ItemView {
       coverPreview.empty();
       if (coverBase64) {
         coverPreview.createEl("img", { attr: { src: coverBase64 } });
+        syncBtn.disabled = false;
+        syncBtn.setText("\u5F00\u59CB\u540C\u6B65");
+        syncBtn.removeClass("apple-btn-disabled");
       } else {
-        coverPreview.createEl("span", { text: "\u672A\u8BBE\u7F6E\u5C01\u9762", cls: "wechat-modal-no-cover" });
+        coverPreview.createEl("div", {
+          text: "\u6682\u65E0\u5C01\u9762",
+          cls: "wechat-modal-no-cover"
+        });
+        syncBtn.disabled = true;
+        syncBtn.setText("\u8BF7\u5148\u8BBE\u7F6E\u5C01\u9762");
+        syncBtn.addClass("apple-btn-disabled");
       }
     };
-    updatePreview();
     const coverBtns = coverContent.createDiv({ cls: "wechat-modal-cover-btns" });
     const uploadBtn = coverBtns.createEl("button", { text: "\u4E0A\u4F20" });
     uploadBtn.onclick = () => {
@@ -616,19 +551,29 @@ var AppleStyleView = class extends ItemView {
     digestSection.createEl("label", { text: "\u6587\u7AE0\u6458\u8981\uFF08\u53EF\u9009\uFF09", cls: "wechat-modal-label" });
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = this.currentHtml || "";
-    const autoDigest = (tempDiv.textContent || "").replace(/\s+/g, " ").trim().substring(0, 120);
+    const autoDigest = (tempDiv.textContent || "").replace(/\s+/g, " ").trim().substring(0, 45);
     const digestInput = digestSection.createEl("textarea", {
       cls: "wechat-modal-digest-input",
-      placeholder: "\u7559\u7A7A\u5219\u81EA\u52A8\u63D0\u53D6\u6587\u7AE0\u524D 120 \u5B57",
-      value: ""
+      placeholder: "\u7559\u7A7A\u5219\u81EA\u52A8\u63D0\u53D6\u6587\u7AE0\u524D 45 \u5B57",
+      value: autoDigest
     });
     digestInput.rows = 3;
     digestInput.style.width = "100%";
     digestInput.style.resize = "vertical";
+    digestInput.maxLength = 120;
+    const charCount = digestSection.createEl("div", {
+      cls: "wechat-digest-count",
+      text: `${digestInput.value.length}/120`,
+      style: "text-align: right; font-size: 12px; color: var(--text-muted); margin-top: 4px;"
+    });
+    digestInput.addEventListener("input", () => {
+      charCount.setText(`${digestInput.value.length}/120`);
+    });
     const btnRow = modal.contentEl.createDiv({ cls: "wechat-modal-buttons" });
     const cancelBtn = btnRow.createEl("button", { text: "\u53D6\u6D88" });
     cancelBtn.onclick = () => modal.close();
     const syncBtn = btnRow.createEl("button", { text: "\u5F00\u59CB\u540C\u6B65", cls: "mod-cta" });
+    updatePreview();
     syncBtn.onclick = async () => {
       if (!coverBase64) {
         new Notice("\u274C \u8BF7\u5148\u8BBE\u7F6E\u5C01\u9762\u56FE");
@@ -661,9 +606,9 @@ var AppleStyleView = class extends ItemView {
     try {
       const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl);
       notice.setMessage("\u{1F5BC}\uFE0F \u6B63\u5728\u5904\u7406\u5C01\u9762\u56FE...");
-      const coverSrc = this.sessionCoverBase64 || this.getFrontmatterCover() || this.plugin.settings.defaultCoverBase64;
+      const coverSrc = this.sessionCoverBase64 || this.getFirstImageFromArticle();
       if (!coverSrc) {
-        throw new Error("\u672A\u8BBE\u7F6E\u5C01\u9762\u56FE\uFF0C\u540C\u6B65\u5931\u8D25");
+        throw new Error("\u672A\u8BBE\u7F6E\u5C01\u9762\u56FE\uFF0C\u540C\u6B65\u5931\u8D25\u3002\u8BF7\u5728\u5F39\u7A97\u4E2D\u4E0A\u4F20\u5C01\u9762\u3002");
       }
       const coverBlob = await this.srcToBlob(coverSrc);
       const coverRes = await api.uploadCover(coverBlob);
@@ -1026,6 +971,7 @@ var AppleStyleView = class extends ItemView {
         this.converter.updateSourcePath(sourcePath);
       const html = await this.converter.convert(markdown);
       this.currentHtml = html;
+      this.sessionCoverBase64 = null;
       const scrollTop = this.previewContainer.scrollTop;
       this.previewContainer.innerHTML = html;
       this.previewContainer.scrollTop = scrollTop;
@@ -1333,32 +1279,6 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
         cls: "setting-item-description",
         attr: { style: "color: var(--text-muted);" }
       });
-    }
-    new Setting(containerEl).setName("\u9ED8\u8BA4\u5C01\u9762\u56FE").setHeading();
-    new Setting(containerEl).setName("\u9ED8\u8BA4\u5C01\u9762\u56FE").setDesc("\u540C\u6B65\u6587\u7AE0\u65F6\uFF0C\u5982\u679C\u672A\u624B\u52A8\u6307\u5B9A\u5C01\u9762\u4E14\u6587\u7AE0\u5185\u6CA1\u6709\u5C01\u9762\u5B57\u6BB5\uFF0C\u5C06\u4F7F\u7528\u6B64\u56FE").addButton((button) => button.setButtonText(this.plugin.settings.defaultCoverBase64 ? "\u66F4\u6362\u5C01\u9762" : "\u9009\u53D6\u56FE\u7247").onClick(() => {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
-      input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file)
-          return;
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          this.plugin.settings.defaultCoverBase64 = event.target.result;
-          await this.plugin.saveSettings();
-          this.display();
-        };
-        reader.readAsDataURL(file);
-      };
-      input.click();
-    }));
-    if (this.plugin.settings.defaultCoverBase64) {
-      new Setting(containerEl).setName("\u6E05\u9664\u9ED8\u8BA4\u5C01\u9762").addButton((button) => button.setButtonText("\u6E05\u9664").setWarning().onClick(async () => {
-        this.plugin.settings.defaultCoverBase64 = "";
-        await this.plugin.saveSettings();
-        this.display();
-      }));
     }
     new Setting(containerEl).setName("\u9AD8\u7EA7\u8BBE\u7F6E").setHeading();
     new Setting(containerEl).setName("API \u4EE3\u7406\u5730\u5740").setDesc(createFragment((frag) => {

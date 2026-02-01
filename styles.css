@@ -893,8 +893,17 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
 }
 
 .wechat-modal-no-cover {
-  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
   color: var(--text-muted);
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  text-align: center;
+  user-select: none;
 }
 
 .wechat-modal-cover-btns {
