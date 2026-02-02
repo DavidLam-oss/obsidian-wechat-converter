@@ -21,6 +21,12 @@ window.AppleStyleConverter = class AppleStyleConverter {
     if (typeof markdownit === 'undefined') throw new Error('markdown-it 未加载');
     this.hljs = typeof hljs !== 'undefined' ? hljs : null;
     this.md = markdownit({ html: true, breaks: true, linkify: true, typographer: true });
+
+    // Enable MathJax if available
+    if (window.ObsidianWechatMath) {
+      window.ObsidianWechatMath(this.md);
+    }
+
     this.setupRenderRules();
   }
 
@@ -298,7 +304,30 @@ ${macHeader}
     html = this.fixListParagraphs(html);
     html = this.unwrapFigures(html); // Fix: Remove <p> wrappers from <figure> to prevent empty lines
     html = this.removeBlockquoteParagraphMargins(html); // Fix: Remove margins from <p> inside <blockquote> for vertical centering
+    html = this.fixMathJaxTags(html); // Fix: Replace <mjx-container> with WeChat-compatible tags
     return `<section style="${this.getInlineStyle('section')}">${html}</section>`;
+  }
+
+  fixMathJaxTags(html) {
+    if (!html.includes('mjx-container')) return html;
+
+    // Replace <mjx-container> with <section> (block) or <span> (inline)
+    // WeChat strips custom tags like mjx-container but keeps SVG content
+    return html.replace(/<mjx-container([^>]*)>(.*?)<\/mjx-container>/gs, (match, attrs, content) => {
+      // Check for block display mode
+      // MathJax 3 usually adds display="true" or class="MathJax CtxtMenu_Attached_0" with separate style
+      const isBlock = attrs.includes('display="true"') || attrs.includes('display: true');
+
+      const tag = isBlock ? 'section' : 'span';
+
+      // Inline math needs vertical alignment adjustment
+      // Block math needs centering and overflow handling
+      const style = isBlock
+        ? 'display: block; margin: 1em 0; text-align: center; overflow-x: auto; max-width: 100%;'
+        : 'display: inline-block; vertical-align: -0.1em; margin: 0 1px;';
+
+      return `<${tag} style="${style}">${content}</${tag}>`;
+    });
   }
 
   fixListParagraphs(html) {

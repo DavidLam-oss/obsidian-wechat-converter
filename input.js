@@ -327,6 +327,21 @@ class AppleStyleView extends ItemView {
         (0, eval)(hljsContent);
       }
 
+      // 加载 MathJax 插件 (如果存在)
+      try {
+        const mathPath = `${basePath}/lib/mathjax-plugin.js`;
+        if (await adapter.exists(mathPath)) {
+          console.log('MathJax Plugin found at:', mathPath);
+          const mathContent = await adapter.read(mathPath);
+          (0, eval)(mathContent);
+          console.log('MathJax Plugin executed.');
+        } else {
+            console.log('MathJax Plugin NOT found at:', mathPath);
+        }
+      } catch (e) {
+        console.error('MathJax plugin load failed:', e);
+      }
+
       // 加载主题
       const themeContent = await adapter.read(`${basePath}/themes/apple-theme.js`);
       (0, eval)(themeContent);
