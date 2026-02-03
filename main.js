@@ -381,7 +381,7 @@ var AppleStyleView = class extends ItemView {
       return;
     this.activeEditorScroller = editorScroller;
     this.editorScrollListener = () => {
-      if (!this.containerEl.isShown())
+      if (!this.containerEl.offsetParent)
         return;
       if (this.ignoreNextEditorScroll) {
         this.ignoreNextEditorScroll = false;
@@ -408,7 +408,7 @@ var AppleStyleView = class extends ItemView {
       }
     };
     this.previewScrollListener = () => {
-      if (!this.containerEl.isShown())
+      if (!this.containerEl.offsetParent)
         return;
       if (this.ignoreNextPreviewScroll) {
         this.ignoreNextPreviewScroll = false;
@@ -1345,8 +1345,11 @@ var AppleStyleView = class extends ItemView {
   }
   async onClose() {
     var _a;
-    if (this.activeEditorScroller && this.scrollListener) {
-      this.activeEditorScroller.removeEventListener("scroll", this.scrollListener);
+    if (this.activeEditorScroller && this.editorScrollListener) {
+      this.activeEditorScroller.removeEventListener("scroll", this.editorScrollListener);
+    }
+    if (this.previewContainer && this.previewScrollListener) {
+      this.previewContainer.removeEventListener("scroll", this.previewScrollListener);
     }
     (_a = this.previewContainer) == null ? void 0 : _a.empty();
     console.log("\u{1F34E} \u8F6C\u6362\u5668\u9762\u677F\u5DF2\u5173\u95ED");

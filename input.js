@@ -492,8 +492,8 @@ class AppleStyleView extends ItemView {
 
     // === Listener A: Editor -> Preview ===
     this.editorScrollListener = () => {
-      // 可见性检查：插件未显示时，完全停止计算
-      if (!this.containerEl.isShown()) return;
+      // 可见性检查：使用原生 offsetParent 判断是否在 DOM 树中且可见
+      if (!this.containerEl.offsetParent) return;
 
       // 锁检查：如果是 Preview 带来的滚动，本次忽略，并重置锁
       if (this.ignoreNextEditorScroll) {
@@ -531,7 +531,7 @@ class AppleStyleView extends ItemView {
     // === Listener B: Preview -> Editor ===
     this.previewScrollListener = () => {
       // 可见性检查
-      if (!this.containerEl.isShown()) return;
+      if (!this.containerEl.offsetParent) return;
 
       // 锁检查
       if (this.ignoreNextPreviewScroll) {
@@ -1719,9 +1719,12 @@ class AppleStyleView extends ItemView {
 
 
   async onClose() {
-    // 清理滚动监听
-    if (this.activeEditorScroller && this.scrollListener) {
-      this.activeEditorScroller.removeEventListener('scroll', this.scrollListener);
+    // 清理滚动监听 (Critical: Fix memory leak)
+    if (this.activeEditorScroller && this.editorScrollListener) {
+      this.activeEditorScroller.removeEventListener('scroll', this.editorScrollListener);
+    }
+    if (this.previewContainer && this.previewScrollListener) {
+      this.previewContainer.removeEventListener('scroll', this.previewScrollListener);
     }
     this.previewContainer?.empty();
     console.log('🍎 转换器面板已关闭');
