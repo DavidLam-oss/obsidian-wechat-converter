@@ -697,8 +697,28 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
 }
 
 /* ========================================
-   设置页面区块标题样式
+   Classic Mode (No Phone Frame)
    ======================================== */
+.apple-preview-wrapper.mode-classic {
+  padding: 0 !important;
+  background: var(--apple-background) !important;
+  overflow: hidden !important;
+  align-items: stretch !important;
+}
+
+.apple-preview-wrapper.mode-classic .apple-converter-preview {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 1000px; /* Limit line width for readability */
+  margin: 0 auto !important;
+  padding: 32px 40px !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.theme-dark .apple-preview-wrapper.mode-classic {
+  background: var(--apple-background) !important;
+}
 
 /* 统一使用 Obsidian 界面字体 */
 .vertical-tab-content h2,

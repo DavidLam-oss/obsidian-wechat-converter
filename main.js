@@ -29,6 +29,9 @@ var DEFAULT_SETTINGS = {
   // 代理设置
   proxyUrl: "",
   // Cloudflare Worker 等代理地址
+  // 预览设置
+  usePhoneFrame: true,
+  // 是否使用手机框预览
   // 旧字段保留用于迁移检测
   wechatAppId: "",
   wechatAppSecret: ""
@@ -267,6 +270,7 @@ var AppleStyleView = class extends ItemView {
     this.lastActiveFile = null;
     this.sessionCoverBase64 = "";
     this.sessionDigest = "";
+    this.isProgrammaticScroll = false;
   }
   getViewType() {
     return APPLE_STYLE_VIEW;
@@ -284,15 +288,23 @@ var AppleStyleView = class extends ItemView {
     container.addClass("apple-converter-container");
     await this.loadDependencies();
     this.createSettingsPanel(container);
-    const previewWrapper = container.createEl("div", { cls: "apple-preview-wrapper" });
-    const phoneFrame = previewWrapper.createEl("div", { cls: "apple-phone-frame" });
-    const header = phoneFrame.createEl("div", { cls: "apple-phone-header" });
-    header.createEl("span", { cls: "title", text: "\u516C\u4F17\u53F7\u9884\u89C8" });
-    header.createEl("span", { cls: "dots", text: "\u2022\u2022\u2022" });
-    this.previewContainer = phoneFrame.createEl("div", {
-      cls: "apple-converter-preview"
+    const previewWrapper = container.createEl("div", {
+      cls: `apple-preview-wrapper ${this.plugin.settings.usePhoneFrame ? "mode-phone" : "mode-classic"}`
     });
-    phoneFrame.createEl("div", { cls: "apple-home-indicator" });
+    if (this.plugin.settings.usePhoneFrame) {
+      const phoneFrame = previewWrapper.createEl("div", { cls: "apple-phone-frame" });
+      const header = phoneFrame.createEl("div", { cls: "apple-phone-header" });
+      header.createEl("span", { cls: "title", text: "\u516C\u4F17\u53F7\u9884\u89C8" });
+      header.createEl("span", { cls: "dots", text: "\u2022\u2022\u2022" });
+      this.previewContainer = phoneFrame.createEl("div", {
+        cls: "apple-converter-preview"
+      });
+      phoneFrame.createEl("div", { cls: "apple-home-indicator" });
+    } else {
+      this.previewContainer = previewWrapper.createEl("div", {
+        cls: "apple-converter-preview"
+      });
+    }
     this.setPlaceholder();
     this.registerActiveFileChange();
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -347,31 +359,81 @@ var AppleStyleView = class extends ItemView {
     );
   }
   /**
-   * 注册同步滚动 (Editor -> Preview)
+   * 注册同步滚动 (双向: Editor <-> Preview)
+   * 采用"原子锁"机制 + "差值检测"机制，彻底解决死循环和精度问题
    */
   registerScrollSync(activeView) {
-    if (this.activeEditorScroller && this.scrollListener) {
-      this.activeEditorScroller.removeEventListener("scroll", this.scrollListener);
-      this.activeEditorScroller = null;
-      this.scrollListener = null;
+    if (this.activeEditorScroller && this.editorScrollListener) {
+      this.activeEditorScroller.removeEventListener("scroll", this.editorScrollListener);
     }
+    if (this.previewContainer && this.previewScrollListener) {
+      this.previewContainer.removeEventListener("scroll", this.previewScrollListener);
+    }
+    this.activeEditorScroller = null;
+    this.editorScrollListener = null;
+    this.previewScrollListener = null;
+    this.ignoreNextPreviewScroll = false;
+    this.ignoreNextEditorScroll = false;
     if (!activeView)
       return;
-    const scroller = activeView.contentEl.querySelector(".cm-scroller");
-    if (!scroller)
+    const editorScroller = activeView.contentEl.querySelector(".cm-scroller");
+    if (!editorScroller)
       return;
-    this.activeEditorScroller = scroller;
-    this.scrollListener = () => {
+    this.activeEditorScroller = editorScroller;
+    this.editorScrollListener = () => {
+      if (!this.containerEl.isShown())
+        return;
+      if (this.ignoreNextEditorScroll) {
+        this.ignoreNextEditorScroll = false;
+        return;
+      }
       if (!this.previewContainer)
         return;
-      const editorScrollable = scroller.scrollHeight - scroller.clientHeight;
-      const previewScrollable = this.previewContainer.scrollHeight - this.previewContainer.clientHeight;
-      if (editorScrollable <= 0 || previewScrollable <= 0)
+      const editorHeight = editorScroller.scrollHeight - editorScroller.clientHeight;
+      const previewHeight = this.previewContainer.scrollHeight - this.previewContainer.clientHeight;
+      if (editorHeight <= 0 || previewHeight <= 0)
         return;
-      const ratio = scroller.scrollTop / editorScrollable;
-      this.previewContainer.scrollTop = ratio * previewScrollable;
+      let targetScrollTop;
+      if (editorScroller.scrollTop === 0) {
+        targetScrollTop = 0;
+      } else if (Math.abs(editorScroller.scrollTop - editorHeight) < 2) {
+        targetScrollTop = previewHeight;
+      } else {
+        const ratio = editorScroller.scrollTop / editorHeight;
+        targetScrollTop = ratio * previewHeight;
+      }
+      if (Math.abs(this.previewContainer.scrollTop - targetScrollTop) > 1) {
+        this.ignoreNextPreviewScroll = true;
+        this.previewContainer.scrollTop = targetScrollTop;
+      }
     };
-    scroller.addEventListener("scroll", this.scrollListener, { passive: true });
+    this.previewScrollListener = () => {
+      if (!this.containerEl.isShown())
+        return;
+      if (this.ignoreNextPreviewScroll) {
+        this.ignoreNextPreviewScroll = false;
+        return;
+      }
+      const editorHeight = editorScroller.scrollHeight - editorScroller.clientHeight;
+      const previewHeight = this.previewContainer.scrollHeight - this.previewContainer.clientHeight;
+      if (editorHeight <= 0 || previewHeight <= 0)
+        return;
+      let targetScrollTop;
+      if (this.previewContainer.scrollTop === 0) {
+        targetScrollTop = 0;
+      } else if (Math.abs(this.previewContainer.scrollTop - previewHeight) < 2) {
+        targetScrollTop = editorHeight;
+      } else {
+        const ratio = this.previewContainer.scrollTop / previewHeight;
+        targetScrollTop = ratio * editorHeight;
+      }
+      if (Math.abs(editorScroller.scrollTop - targetScrollTop) > 1) {
+        this.ignoreNextEditorScroll = true;
+        editorScroller.scrollTop = targetScrollTop;
+      }
+    };
+    editorScroller.addEventListener("scroll", this.editorScrollListener, { passive: true });
+    this.previewContainer.addEventListener("scroll", this.previewScrollListener, { passive: true });
   }
   /**
    * 加载依赖库
@@ -1299,6 +1361,12 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     new Setting(containerEl).setDesc("\u66F4\u591A\u6392\u7248\u6837\u5F0F\u9009\u9879\uFF08\u4E3B\u9898\u3001\u5B57\u53F7\u3001\u4EE3\u7801\u5757\u7B49\uFF09\u8BF7\u5728\u63D2\u4EF6\u4FA7\u8FB9\u680F\u9762\u677F\u4E2D\u8FDB\u884C\u8BBE\u7F6E\u3002");
+    new Setting(containerEl).setName("\u9884\u89C8\u6A21\u5F0F").setHeading();
+    new Setting(containerEl).setName("\u4F7F\u7528\u624B\u673A\u4EFF\u771F\u6846").setDesc("\u5F00\u542F\u540E\uFF0C\u9884\u89C8\u533A\u57DF\u5C06\u663E\u793A\u4E3A iPhone X \u624B\u673A\u6846\u6837\u5F0F\uFF1B\u5173\u95ED\u5219\u6062\u590D\u4E3A\u7ECF\u5178\u5168\u5BBD\u9884\u89C8\u6A21\u5F0F\uFF08\u9700\u91CD\u542F\u63D2\u4EF6\u9762\u677F\u751F\u6548\uFF09").addToggle((toggle) => toggle.setValue(this.plugin.settings.usePhoneFrame).onChange(async (value) => {
+      this.plugin.settings.usePhoneFrame = value;
+      await this.plugin.saveSettings();
+      new Notice("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58\uFF0C\u8BF7\u5173\u95ED\u5E76\u91CD\u65B0\u6253\u5F00\u8F6C\u6362\u5668\u9762\u677F\u4EE5\u751F\u6548");
+    }));
     new Setting(containerEl).setName("\u56FE\u7247\u6C34\u5370").setHeading();
     new Setting(containerEl).setName("\u542F\u7528\u56FE\u7247\u6C34\u5370").setDesc("\u5728\u6BCF\u5F20\u56FE\u7247\u4E0A\u65B9\u663E\u793A\u5934\u50CF").addToggle((toggle) => toggle.setValue(this.plugin.settings.enableWatermark).onChange(async (value) => {
       this.plugin.settings.enableWatermark = value;

@@ -22,6 +22,8 @@ const DEFAULT_SETTINGS = {
   defaultAccountId: '',
   // 代理设置
   proxyUrl: '',  // Cloudflare Worker 等代理地址
+  // 预览设置
+  usePhoneFrame: true, // 是否使用手机框预览
   // 旧字段保留用于迁移检测
   wechatAppId: '',
   wechatAppSecret: '',
@@ -359,23 +361,34 @@ class AppleStyleView extends ItemView {
     // 创建设置面板
     this.createSettingsPanel(container);
 
-    // 创建预览区 - 手机仿真结构
-    const previewWrapper = container.createEl('div', { cls: 'apple-preview-wrapper' });
-    const phoneFrame = previewWrapper.createEl('div', { cls: 'apple-phone-frame' });
-
-    // 1. 顶部导航栏 (模拟微信)
-    const header = phoneFrame.createEl('div', { cls: 'apple-phone-header' });
-    // 移除叉号，仅保留标题和更多菜单
-    header.createEl('span', { cls: 'title', text: '公众号预览' });
-    header.createEl('span', { cls: 'dots', text: '•••' });
-
-    // 2. 内容区域
-    this.previewContainer = phoneFrame.createEl('div', {
-      cls: 'apple-converter-preview',
+    // 创建预览区 - 根据设置决定是否使用手机框
+    const previewWrapper = container.createEl('div', {
+      cls: `apple-preview-wrapper ${this.plugin.settings.usePhoneFrame ? 'mode-phone' : 'mode-classic'}`
     });
 
-    // 3. 底部 Home Indicator
-    phoneFrame.createEl('div', { cls: 'apple-home-indicator' });
+    if (this.plugin.settings.usePhoneFrame) {
+      // === 手机仿真模式 ===
+      const phoneFrame = previewWrapper.createEl('div', { cls: 'apple-phone-frame' });
+
+      // 1. 顶部导航栏 (模拟微信)
+      const header = phoneFrame.createEl('div', { cls: 'apple-phone-header' });
+      header.createEl('span', { cls: 'title', text: '公众号预览' });
+      header.createEl('span', { cls: 'dots', text: '•••' });
+
+      // 2. 内容区域 (挂载到手机框内)
+      this.previewContainer = phoneFrame.createEl('div', {
+        cls: 'apple-converter-preview',
+      });
+
+      // 3. 底部 Home Indicator
+      phoneFrame.createEl('div', { cls: 'apple-home-indicator' });
+    } else {
+      // === 经典无框模式 ===
+      // 直接挂载到 wrapper，且 wrapper 样式会变为填满父容器
+      this.previewContainer = previewWrapper.createEl('div', {
+        cls: 'apple-converter-preview',
+      });
+    }
 
     this.setPlaceholder();
 
@@ -1731,6 +1744,23 @@ class AppleStyleSettingTab extends PluginSettingTab {
     // 提示信息
     new Setting(containerEl)
       .setDesc('更多排版样式选项（主题、字号、代码块等）请在插件侧边栏面板中进行设置。');
+
+    // 预览模式设置
+    new Setting(containerEl)
+      .setName('预览模式')
+      .setHeading();
+
+    new Setting(containerEl)
+      .setName('使用手机仿真框')
+      .setDesc('开启后，预览区域将显示为 iPhone X 手机框样式；关闭则恢复为经典全宽预览模式（需重启插件面板生效）')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.usePhoneFrame)
+        .onChange(async (value) => {
+          this.plugin.settings.usePhoneFrame = value;
+          await this.plugin.saveSettings();
+          // 提示用户重启面板
+          new Notice('设置已保存，请关闭并重新打开转换器面板以生效');
+        }));
 
     // 图片水印设置
     new Setting(containerEl)
