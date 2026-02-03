@@ -128,6 +128,8 @@ window.AppleTheme = class AppleTheme {
     this.fontSize = options.fontSize || 3;
     this.macCodeBlock = options.macCodeBlock !== false;
     this.codeLineNumber = options.codeLineNumber || false;
+    this.pagePadding = options.pagePadding !== undefined ? options.pagePadding : 20;
+    this.codeBlockTheme = options.codeBlockTheme || 'dark';
   }
 
   /**
@@ -176,7 +178,7 @@ window.AppleTheme = class AppleTheme {
 
     switch (tagName) {
       case 'section':
-        return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${config.textColor}; padding: ${s.md}px; background: #ffffff; max-width: 100%; word-wrap: break-word; text-align: justify;`;
+        return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${config.textColor}; padding: 0 ${this.pagePadding}px; background: #ffffff; max-width: 100%; word-wrap: break-word; text-align: justify;`;
 
       case 'h1': return this.getH1Style(config.h1Decoration, color, sizes.h1, font);
       case 'h2': return this.getH2Style(config.h2Decoration, color, sizes.h2, font);
@@ -371,6 +373,8 @@ window.AppleTheme = class AppleTheme {
     if (options.fontSize !== undefined) this.fontSize = options.fontSize;
     if (options.macCodeBlock !== undefined) this.macCodeBlock = options.macCodeBlock;
     if (options.codeLineNumber !== undefined) this.codeLineNumber = options.codeLineNumber;
+    if (options.pagePadding !== undefined) this.pagePadding = options.pagePadding;
+    if (options.codeBlockTheme !== undefined) this.codeBlockTheme = options.codeBlockTheme;
   }
 
   /**
@@ -391,6 +395,32 @@ window.AppleTheme = class AppleTheme {
       value: key,
       color: value,
     }));
+  }
+
+  /**
+   * 获取代码块样式配置
+   */
+  getCodeBlockStyle() {
+    if (this.codeBlockTheme === 'light') {
+      return {
+        background: '#f6f8fa',
+        color: '#24292e',
+        barBackground: '#e1e4e8',
+        borderColor: '#d1d5da',
+        lineNumberColor: '#6e7781', // GitHub light line number
+        borderRightColor: 'rgba(200,200,200,0.1)'
+      };
+    } else {
+      // Dark (Default)
+      return {
+        background: '#0d1117',
+        color: '#f0f6fc',
+        barBackground: '#161b22',
+        borderColor: '#30363d',
+        lineNumberColor: '#95989C',
+        borderRightColor: 'rgba(255,255,255,0.1)'
+      };
+    }
   }
 }
 

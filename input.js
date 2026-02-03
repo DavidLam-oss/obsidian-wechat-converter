@@ -13,6 +13,8 @@ const DEFAULT_SETTINGS = {
   fontSize: 3,
   macCodeBlock: true,
   codeLineNumber: true,
+  pagePadding: 20,
+  codeBlockTheme: 'dark',
   avatarUrl: '',
   avatarBase64: '',  // Base64 编码的本地头像，优先级高于 avatarUrl
   enableWatermark: false,
@@ -81,34 +83,34 @@ class WechatAPI {
 
         // 识别配置错误 (AppID/Secret 错误)，直接失败
         const isConfigError = error.message && (
-            error.message.includes('(40013)') || // invalid appid
-            error.message.includes('(40125)') || // invalid appsecret
-            error.message.includes('invalid appid')
+          error.message.includes('(40013)') || // invalid appid
+          error.message.includes('(40125)') || // invalid appsecret
+          error.message.includes('invalid appid')
         );
 
         if (isConfigError) {
-           console.warn(`[WechatAPI] Configuration error detected, aborting retry: ${error.message}`);
-           throw error;
+          console.warn(`[WechatAPI] Configuration error detected, aborting retry: ${error.message}`);
+          throw error;
         }
 
         // 识别 Token 过期错误，直接失败，交由上层 actionWithTokenRetry 处理刷新
         const isTokenError = error.message && (
-            error.message.includes('40001') ||
-            error.message.includes('42001') ||
-            error.message.includes('40014')
+          error.message.includes('40001') ||
+          error.message.includes('42001') ||
+          error.message.includes('40014')
         );
 
         if (isTokenError) {
-            // console.warn(`[WechatAPI] Token error detected in retry layer, bubbling up: ${error.message}`);
-            throw error;
+          // console.warn(`[WechatAPI] Token error detected in retry layer, bubbling up: ${error.message}`);
+          throw error;
         }
 
         // 识别业务层明确错误 (已收到微信响应但报错)，直接失败，避免无意义重试
         // 排除 -1 (系统繁忙) 这种情况可以重试
         const isBusinessError = error.message && error.message.includes('微信API报错') && !error.message.includes('(-1)');
         if (isBusinessError) {
-             console.warn(`[WechatAPI] Business logic error detected, aborting retry: ${error.message}`);
-             throw error;
+          console.warn(`[WechatAPI] Business logic error detected, aborting retry: ${error.message}`);
+          throw error;
         }
 
         console.warn(`[WechatAPI] Network request failed (attempt ${i + 1}/${maxRetries}): ${error.message}`);
@@ -351,13 +353,16 @@ class AppleStyleView extends ItemView {
     // 加载依赖
     await this.loadDependencies();
 
-    // 创建设置面板
-    this.createSettingsPanel(container);
+    // 1. 创建顶部操作栏
+    this.createTopActions(container);
 
-    // 创建预览区
+    // 2. 创建预览区 (占据中间剩余空间)
     this.previewContainer = container.createEl('div', {
       cls: 'apple-converter-preview',
     });
+
+    // 3. 创建底部悬浮设置面板
+    this.createFloatingSettingsPanel(container);
 
     this.setPlaceholder();
 
@@ -472,6 +477,8 @@ class AppleStyleView extends ItemView {
         fontSize: this.plugin.settings.fontSize,
         macCodeBlock: this.plugin.settings.macCodeBlock,
         codeLineNumber: this.plugin.settings.codeLineNumber,
+        pagePadding: this.plugin.settings.pagePadding,
+        codeBlockTheme: this.plugin.settings.codeBlockTheme,
       });
 
       // 初始化转换器
@@ -499,19 +506,62 @@ class AppleStyleView extends ItemView {
   /**
    * 创建设置面板
    */
-  createSettingsPanel(container) {
-    const panel = container.createEl('div', { cls: 'apple-settings-panel' });
+  /**
+   * 1. 顶部操作栏
+   */
+  createTopActions(container) {
+    const actions = container.createEl('div', { cls: 'apple-top-actions' });
 
-    // 标题区
-    const header = panel.createEl('div', { cls: 'apple-settings-header' });
+    // Sync Button
+    const accounts = this.plugin.settings.wechatAccounts || [];
+    if (accounts.length > 0) {
+      const syncBtn = actions.createEl('button', {
+        cls: 'apple-btn-secondary apple-btn-top',
+        text: '一键同步'
+      });
+      syncBtn.innerHTML = '<span class="apple-icon">☁️</span> 一键同步';
+      syncBtn.addEventListener('click', () => this.showSyncModal());
+    }
+
+    // Copy Button
+    const copyBtn = actions.createEl('button', {
+      cls: 'apple-btn-primary apple-btn-top',
+      text: '复制到公众号',
+    });
+    this.copyBtn = copyBtn;
+    copyBtn.innerHTML = '<span class="apple-icon">📋</span> 复制到公众号';
+    copyBtn.addEventListener('click', () => this.copyHTML());
+  }
+
+  /**
+   * 3. 底部悬浮设置面板
+   */
+  createFloatingSettingsPanel(container) {
+    const panel = container.createEl('div', { cls: 'apple-settings-floating-panel collapsed' });
+
+    // Toggle Handle (Head)
+    const handle = panel.createEl('div', { cls: 'apple-settings-handle' });
+    const handleContent = handle.createEl('div', { cls: 'apple-handle-content' });
+    const icon = handleContent.createEl('span', { cls: 'apple-settings-icon' });
+    icon.textContent = '⚙️';
+    const title = handleContent.createEl('span', { text: '样式设置 (点击展开)', cls: 'apple-settings-handle-title' });
+
+    handle.addEventListener('click', () => {
+      panel.toggleClass('collapsed', !panel.hasClass('collapsed'));
+      const isCollapsed = panel.hasClass('collapsed');
+      title.textContent = isCollapsed ? '样式设置 (点击展开)' : '点击收起设置';
+      icon.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)';
+    });
+
+    // Content Area
+    const settingsContent = panel.createEl('div', { cls: 'apple-settings-content' });
+
+    // Header Info
+    const header = settingsContent.createEl('div', { cls: 'apple-settings-header-info' });
     header.createEl('div', { cls: 'apple-settings-title', text: '📝 微信公众号转换器' });
     this.currentDocLabel = header.createEl('div', { cls: 'apple-current-doc', text: '未选择文档' });
 
-    // 设置区域 (使用 details 折叠以节省空间)
-    const details = panel.createEl('details', { cls: 'apple-settings-details' });
-    details.open = false; // 默认折叠
-    const summary = details.createEl('summary', { cls: 'apple-settings-summary', text: '样式设置' });
-    const settingsArea = details.createEl('div', { cls: 'apple-settings-area' });
+    const settingsArea = settingsContent.createEl('div', { cls: 'apple-settings-area' });
 
     // === 主题选择 ===
     this.createSection(settingsArea, '主题', (section) => {
@@ -565,8 +615,6 @@ class AppleStyleView extends ItemView {
     this.createSection(settingsArea, '主题色', (section) => {
       const grid = section.createEl('div', { cls: 'apple-color-grid' });
       const colors = AppleTheme.getColorList();
-
-      // 预设颜色
       colors.forEach(c => {
         const btn = grid.createEl('button', {
           cls: `apple-btn-color ${this.plugin.settings.themeColor === c.value ? 'active' : ''}`,
@@ -575,45 +623,42 @@ class AppleStyleView extends ItemView {
         btn.style.setProperty('--btn-color', c.color);
         btn.addEventListener('click', () => this.onColorChange(c.value, grid));
       });
-
-      // 自定义颜色
+      // Custom Color
       const customBtn = grid.createEl('button', {
         cls: `apple-btn-custom-text ${this.plugin.settings.themeColor === 'custom' ? 'active' : ''}`,
         text: '自定义',
         title: '自定义颜色'
       });
       customBtn.dataset.value = 'custom';
-
-      // 隐藏的颜色选择器
-      const colorInput = grid.createEl('input', {
-        type: 'color',
-        cls: 'apple-color-picker-hidden'
-      });
+      const colorInput = grid.createEl('input', { type: 'color', cls: 'apple-color-picker-hidden' });
       colorInput.value = this.plugin.settings.customColor || '#000000';
       colorInput.style.visibility = 'hidden';
-      colorInput.style.width = '0';
-      colorInput.style.height = '0';
-      colorInput.style.position = 'absolute';
-
-      // 点击按钮触发颜色选择
-      customBtn.addEventListener('click', () => {
-        colorInput.click();
-      });
-
-      // 颜色改变实时预览
-      colorInput.addEventListener('input', (e) => {
-        customBtn.style.setProperty('--btn-color', e.target.value);
-      });
-
-      // 颜色确认后保存
+      colorInput.style.width = '0'; colorInput.style.height = '0'; colorInput.style.position = 'absolute';
+      customBtn.addEventListener('click', () => { colorInput.click(); });
+      colorInput.addEventListener('input', (e) => { customBtn.style.setProperty('--btn-color', e.target.value); });
       colorInput.addEventListener('change', async (e) => {
         const newColor = e.target.value;
         customBtn.style.setProperty('--btn-color', newColor);
-
-        // 更新设置
         this.plugin.settings.customColor = newColor;
         this.theme.update({ customColor: newColor });
         await this.onColorChange('custom', grid);
+      });
+    });
+
+    // === 页面内边距 ===
+    this.createSection(settingsArea, '页面内边距', (section) => {
+      const container = section.createEl('div', { cls: 'apple-padding-control' });
+      const slider = container.createEl('input', { type: 'range', cls: 'apple-padding-slider' });
+      slider.min = '0'; slider.max = '30'; slider.step = '0.5';
+      slider.value = String(this.plugin.settings.pagePadding);
+      const valueDisplay = container.createEl('span', { cls: 'apple-padding-value', text: `${this.plugin.settings.pagePadding}px` });
+      slider.addEventListener('input', (e) => { valueDisplay.innerText = `${e.target.value}px`; });
+      slider.addEventListener('change', async (e) => {
+        const padding = parseInt(e.target.value);
+        this.plugin.settings.pagePadding = padding;
+        await this.plugin.saveSettings();
+        this.theme.update({ pagePadding: padding });
+        await this.convertCurrent(true);
       });
     });
 
@@ -626,6 +671,22 @@ class AppleStyleView extends ItemView {
       checkbox.addEventListener('change', () => this.onMacCodeBlockChange(checkbox.checked));
     });
 
+    // === 代码块主题 ===
+    this.createSection(settingsArea, '代码块主题', (section) => {
+      const select = section.createEl('select', { cls: 'apple-select' });
+      [{ value: 'dark', label: '暗黑 (默认)' }, { value: 'light', label: '明亮' }].forEach(opt => {
+        const option = select.createEl('option', { value: opt.value, text: opt.label });
+        if (this.plugin.settings.codeBlockTheme === opt.value) option.selected = true;
+      });
+      select.addEventListener('change', async (e) => {
+        const theme = e.target.value;
+        this.plugin.settings.codeBlockTheme = theme;
+        await this.plugin.saveSettings();
+        this.theme.update({ codeBlockTheme: theme });
+        await this.convertCurrent(true);
+      });
+    });
+
     // === 代码块行号开关 ===
     this.createSection(settingsArea, '显示代码行号', (section) => {
       const toggle = section.createEl('label', { cls: 'apple-toggle' });
@@ -634,27 +695,6 @@ class AppleStyleView extends ItemView {
       toggle.createEl('span', { cls: 'apple-toggle-slider' });
       checkbox.addEventListener('change', () => this.onCodeLineNumberChange(checkbox.checked));
     });
-
-    // === 操作按钮 ===
-    const actions = panel.createEl('div', { cls: 'apple-actions' });
-
-    // 只有配置了账号才显示同步按钮
-    const accounts = this.plugin.settings.wechatAccounts || [];
-    if (accounts.length > 0) {
-      const syncBtn = actions.createEl('button', {
-        cls: 'apple-btn-secondary apple-btn-full',
-        text: '一键同步到草稿箱',
-        style: 'margin-bottom: 8px;'
-      });
-      syncBtn.addEventListener('click', () => this.showSyncModal());
-    }
-
-    const copyBtn = actions.createEl('button', {
-      cls: 'apple-btn-primary apple-btn-full',
-      text: '复制到公众号',
-    });
-    this.copyBtn = copyBtn;
-    copyBtn.addEventListener('click', () => this.copyHTML());
   }
 
 
@@ -900,7 +940,7 @@ class AppleStyleView extends ItemView {
       // 2. 处理文章图片
       notice.setMessage('📸 正在同步正文图片...');
       const processedHtml = await this.processAllImages(this.currentHtml, api, (current, total) => {
-          notice.setMessage(`📸 正在同步正文图片 (${current}/${total})...`);
+        notice.setMessage(`📸 正在同步正文图片 (${current}/${total})...`);
       });
 
       // 2.5 清理 HTML 以适配微信编辑器
@@ -973,7 +1013,7 @@ class AppleStyleView extends ItemView {
     const urlMap = new Map();
 
     for (const img of imgs) {
-        if (img.src) uniqueUrls.add(img.src);
+      if (img.src) uniqueUrls.add(img.src);
     }
 
     const total = uniqueUrls.size;
@@ -983,16 +1023,16 @@ class AppleStyleView extends ItemView {
     const tasks = Array.from(uniqueUrls);
 
     await pMap(tasks, async (src) => {
-        // 如果已经处理过（比如重复的URL在并发中被其他任务处理了？不，pMap的任务是唯一的src）
-        // 这里不需要 try-catch，因为我们希望出错时直接抛出，中断整个流程
-        const blob = await this.srcToBlob(src);
-        const res = await api.uploadImage(blob);
-        urlMap.set(src, res.url);
+      // 如果已经处理过（比如重复的URL在并发中被其他任务处理了？不，pMap的任务是唯一的src）
+      // 这里不需要 try-catch，因为我们希望出错时直接抛出，中断整个流程
+      const blob = await this.srcToBlob(src);
+      const res = await api.uploadImage(blob);
+      urlMap.set(src, res.url);
 
-        completed++;
-        if (progressCallback) {
-            progressCallback(completed, total);
-        }
+      completed++;
+      if (progressCallback) {
+        progressCallback(completed, total);
+      }
     }, 3); // 并发数限制为 3
 
     // 3. 替换 DOM 中的图片链接

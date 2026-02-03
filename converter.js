@@ -202,11 +202,14 @@ window.AppleStyleConverter = class AppleStyleConverter {
     const showMac = this.theme.macCodeBlock;
     const showLineNum = this.theme.codeLineNumber;
 
-    // wechat-tool 的颜色配置（GitHub Dark 主题）
-    const background = '#0d1117';  // GitHub Dark 背景
-    const color = '#f0f6fc';       // GitHub Dark 文字
-    const barBackground = '#161b22'; // 工具栏背景
-    const borderColor = '#30363d';   // 边框颜色
+    // 获取代码块主题样式
+    const style = this.theme.getCodeBlockStyle();
+    const background = style.background;
+    const color = style.color;
+    const barBackground = style.barBackground;
+    const borderColor = style.borderColor;
+    const lineNumberColor = style.lineNumberColor;
+    const borderRightColor = style.borderRightColor;
 
     let lines = content.replace(/\r\n/g, '\n').split('\n');
     while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
@@ -239,7 +242,7 @@ window.AppleStyleConverter = class AppleStyleConverter {
 
       // 行号列
       const lineNumbersHtml = highlightedLines.map((_, idx) =>
-        `<section style="height:1.75em !important;line-height:${lineHeight} !important;padding:0 12px 0 12px !important;font-size:13px !important;color:#95989C !important;text-align:right !important;white-space:nowrap !important;vertical-align:top !important;margin:0 !important;">${idx + 1}</section>`
+        `<section style="height:1.75em !important;line-height:${lineHeight} !important;padding:0 12px 0 12px !important;font-size:13px !important;color:${lineNumberColor} !important;text-align:right !important;white-space:nowrap !important;vertical-align:top !important;margin:0 !important;">${idx + 1}</section>`
       ).join('');
 
       // 代码内容
@@ -250,7 +253,7 @@ window.AppleStyleConverter = class AppleStyleConverter {
       const codeLinesHtml = `<section style="white-space:nowrap !important;display:inline-block !important;min-width:100% !important;line-height:${lineHeight} !important;font-size:13px !important;">${codeInnerHtml}</section>`;
 
       // 行号列容器样式
-      const lineNumberColumnStyles = `text-align:right !important;padding:12px 0 12px 0 !important;border-right:1px solid rgba(255,255,255,0.1) !important;user-select:none !important;background:transparent !important;flex:0 0 auto !important;min-width:3.5em !important;margin:0 !important;`;
+      const lineNumberColumnStyles = `text-align:right !important;padding:12px 0 12px 0 !important;border-right:1px solid ${borderRightColor} !important;user-select:none !important;background:transparent !important;flex:0 0 auto !important;min-width:3.5em !important;margin:0 !important;`;
 
       // 注意 flex 容器的 padding 0，内部 padding 分别在 lineNumberColumn 和 code section
       codeHtml = `<section style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;padding:0 !important;margin:0 !important;">
@@ -272,7 +275,7 @@ window.AppleStyleConverter = class AppleStyleConverter {
     }
 
     // 外层容器
-    return `<section class="code-snippet__fix" style="width:100% !important;margin:12px 0 !important;background:${background} !important;border:1px solid ${borderColor} !important;border-radius:8px !important;overflow:hidden !important;box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;display:block !important;">
+    return `<section class="code-snippet__fix" style="width:100% !important;margin:12px 0 !important;background:${background} !important;border:1px solid ${borderColor} !important;border-radius:8px !important;overflow:hidden !important;display:block !important;">
 ${macHeader}
 <section style="padding:0 !important;border:none !important;background:${background} !important;color:${color} !important;font-family:'SF Mono',Consolas,Monaco,monospace !important;font-size:13px !important;line-height:${lineHeight} !important;white-space:nowrap !important;overflow-x:auto !important;display:block !important;">
 <pre style="margin:0 !important;padding:0 !important;background:${background} !important;font-family:inherit !important;font-size:13px !important;line-height:inherit !important;color:${color} !important;white-space:nowrap !important;overflow-x:visible !important;display:inline-block !important;min-width:100% !important;">${codeHtml}</pre>

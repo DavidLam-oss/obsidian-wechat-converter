@@ -16,6 +16,8 @@ var DEFAULT_SETTINGS = {
   fontSize: 3,
   macCodeBlock: true,
   codeLineNumber: true,
+  pagePadding: 20,
+  codeBlockTheme: "dark",
   avatarUrl: "",
   avatarBase64: "",
   // Base64 编码的本地头像，优先级高于 avatarUrl
@@ -283,10 +285,11 @@ var AppleStyleView = class extends ItemView {
     container.empty();
     container.addClass("apple-converter-container");
     await this.loadDependencies();
-    this.createSettingsPanel(container);
+    this.createTopActions(container);
     this.previewContainer = container.createEl("div", {
       cls: "apple-converter-preview"
     });
+    this.createFloatingSettingsPanel(container);
     this.setPlaceholder();
     this.registerActiveFileChange();
     setTimeout(async () => {
@@ -372,7 +375,9 @@ var AppleStyleView = class extends ItemView {
         fontFamily: this.plugin.settings.fontFamily,
         fontSize: this.plugin.settings.fontSize,
         macCodeBlock: this.plugin.settings.macCodeBlock,
-        codeLineNumber: this.plugin.settings.codeLineNumber
+        codeLineNumber: this.plugin.settings.codeLineNumber,
+        pagePadding: this.plugin.settings.pagePadding,
+        codeBlockTheme: this.plugin.settings.codeBlockTheme
       });
       if (!window.AppleStyleConverter)
         throw new Error("AppleStyleConverter failed to load");
@@ -392,15 +397,49 @@ var AppleStyleView = class extends ItemView {
   /**
    * 创建设置面板
    */
-  createSettingsPanel(container) {
-    const panel = container.createEl("div", { cls: "apple-settings-panel" });
-    const header = panel.createEl("div", { cls: "apple-settings-header" });
+  /**
+   * 1. 顶部操作栏
+   */
+  createTopActions(container) {
+    const actions = container.createEl("div", { cls: "apple-top-actions" });
+    const accounts = this.plugin.settings.wechatAccounts || [];
+    if (accounts.length > 0) {
+      const syncBtn = actions.createEl("button", {
+        cls: "apple-btn-secondary apple-btn-top",
+        text: "\u4E00\u952E\u540C\u6B65"
+      });
+      syncBtn.innerHTML = '<span class="apple-icon">\u2601\uFE0F</span> \u4E00\u952E\u540C\u6B65';
+      syncBtn.addEventListener("click", () => this.showSyncModal());
+    }
+    const copyBtn = actions.createEl("button", {
+      cls: "apple-btn-primary apple-btn-top",
+      text: "\u590D\u5236\u5230\u516C\u4F17\u53F7"
+    });
+    this.copyBtn = copyBtn;
+    copyBtn.innerHTML = '<span class="apple-icon">\u{1F4CB}</span> \u590D\u5236\u5230\u516C\u4F17\u53F7';
+    copyBtn.addEventListener("click", () => this.copyHTML());
+  }
+  /**
+   * 3. 底部悬浮设置面板
+   */
+  createFloatingSettingsPanel(container) {
+    const panel = container.createEl("div", { cls: "apple-settings-floating-panel collapsed" });
+    const handle = panel.createEl("div", { cls: "apple-settings-handle" });
+    const handleContent = handle.createEl("div", { cls: "apple-handle-content" });
+    const icon = handleContent.createEl("span", { cls: "apple-settings-icon" });
+    icon.textContent = "\u2699\uFE0F";
+    const title = handleContent.createEl("span", { text: "\u6837\u5F0F\u8BBE\u7F6E (\u70B9\u51FB\u5C55\u5F00)", cls: "apple-settings-handle-title" });
+    handle.addEventListener("click", () => {
+      panel.toggleClass("collapsed", !panel.hasClass("collapsed"));
+      const isCollapsed = panel.hasClass("collapsed");
+      title.textContent = isCollapsed ? "\u6837\u5F0F\u8BBE\u7F6E (\u70B9\u51FB\u5C55\u5F00)" : "\u70B9\u51FB\u6536\u8D77\u8BBE\u7F6E";
+      icon.style.transform = isCollapsed ? "rotate(0deg)" : "rotate(180deg)";
+    });
+    const settingsContent = panel.createEl("div", { cls: "apple-settings-content" });
+    const header = settingsContent.createEl("div", { cls: "apple-settings-header-info" });
     header.createEl("div", { cls: "apple-settings-title", text: "\u{1F4DD} \u5FAE\u4FE1\u516C\u4F17\u53F7\u8F6C\u6362\u5668" });
     this.currentDocLabel = header.createEl("div", { cls: "apple-current-doc", text: "\u672A\u9009\u62E9\u6587\u6863" });
-    const details = panel.createEl("details", { cls: "apple-settings-details" });
-    details.open = false;
-    const summary = details.createEl("summary", { cls: "apple-settings-summary", text: "\u6837\u5F0F\u8BBE\u7F6E" });
-    const settingsArea = details.createEl("div", { cls: "apple-settings-area" });
+    const settingsArea = settingsContent.createEl("div", { cls: "apple-settings-area" });
     this.createSection(settingsArea, "\u4E3B\u9898", (section) => {
       const grid = section.createEl("div", { cls: "apple-btn-grid" });
       const themes = AppleTheme.getThemeList();
@@ -461,10 +500,7 @@ var AppleStyleView = class extends ItemView {
         title: "\u81EA\u5B9A\u4E49\u989C\u8272"
       });
       customBtn.dataset.value = "custom";
-      const colorInput = grid.createEl("input", {
-        type: "color",
-        cls: "apple-color-picker-hidden"
-      });
+      const colorInput = grid.createEl("input", { type: "color", cls: "apple-color-picker-hidden" });
       colorInput.value = this.plugin.settings.customColor || "#000000";
       colorInput.style.visibility = "hidden";
       colorInput.style.width = "0";
@@ -484,12 +520,46 @@ var AppleStyleView = class extends ItemView {
         await this.onColorChange("custom", grid);
       });
     });
+    this.createSection(settingsArea, "\u9875\u9762\u5185\u8FB9\u8DDD", (section) => {
+      const container2 = section.createEl("div", { cls: "apple-padding-control" });
+      const slider = container2.createEl("input", { type: "range", cls: "apple-padding-slider" });
+      slider.min = "0";
+      slider.max = "30";
+      slider.step = "0.5";
+      slider.value = String(this.plugin.settings.pagePadding);
+      const valueDisplay = container2.createEl("span", { cls: "apple-padding-value", text: `${this.plugin.settings.pagePadding}px` });
+      slider.addEventListener("input", (e) => {
+        valueDisplay.innerText = `${e.target.value}px`;
+      });
+      slider.addEventListener("change", async (e) => {
+        const padding = parseInt(e.target.value);
+        this.plugin.settings.pagePadding = padding;
+        await this.plugin.saveSettings();
+        this.theme.update({ pagePadding: padding });
+        await this.convertCurrent(true);
+      });
+    });
     this.createSection(settingsArea, "Mac \u98CE\u683C\u4EE3\u7801\u5757", (section) => {
       const toggle = section.createEl("label", { cls: "apple-toggle" });
       const checkbox = toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" });
       checkbox.checked = this.plugin.settings.macCodeBlock;
       toggle.createEl("span", { cls: "apple-toggle-slider" });
       checkbox.addEventListener("change", () => this.onMacCodeBlockChange(checkbox.checked));
+    });
+    this.createSection(settingsArea, "\u4EE3\u7801\u5757\u4E3B\u9898", (section) => {
+      const select = section.createEl("select", { cls: "apple-select" });
+      [{ value: "dark", label: "\u6697\u9ED1 (\u9ED8\u8BA4)" }, { value: "light", label: "\u660E\u4EAE" }].forEach((opt) => {
+        const option = select.createEl("option", { value: opt.value, text: opt.label });
+        if (this.plugin.settings.codeBlockTheme === opt.value)
+          option.selected = true;
+      });
+      select.addEventListener("change", async (e) => {
+        const theme = e.target.value;
+        this.plugin.settings.codeBlockTheme = theme;
+        await this.plugin.saveSettings();
+        this.theme.update({ codeBlockTheme: theme });
+        await this.convertCurrent(true);
+      });
     });
     this.createSection(settingsArea, "\u663E\u793A\u4EE3\u7801\u884C\u53F7", (section) => {
       const toggle = section.createEl("label", { cls: "apple-toggle" });
@@ -498,22 +568,6 @@ var AppleStyleView = class extends ItemView {
       toggle.createEl("span", { cls: "apple-toggle-slider" });
       checkbox.addEventListener("change", () => this.onCodeLineNumberChange(checkbox.checked));
     });
-    const actions = panel.createEl("div", { cls: "apple-actions" });
-    const accounts = this.plugin.settings.wechatAccounts || [];
-    if (accounts.length > 0) {
-      const syncBtn = actions.createEl("button", {
-        cls: "apple-btn-secondary apple-btn-full",
-        text: "\u4E00\u952E\u540C\u6B65\u5230\u8349\u7A3F\u7BB1",
-        style: "margin-bottom: 8px;"
-      });
-      syncBtn.addEventListener("click", () => this.showSyncModal());
-    }
-    const copyBtn = actions.createEl("button", {
-      cls: "apple-btn-primary apple-btn-full",
-      text: "\u590D\u5236\u5230\u516C\u4F17\u53F7"
-    });
-    this.copyBtn = copyBtn;
-    copyBtn.addEventListener("click", () => this.copyHTML());
   }
   /**
    * 创建账号选择器

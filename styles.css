@@ -1030,3 +1030,147 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
   border-color: var(--interactive-accent);
   color: var(--interactive-accent);
 }
+
+/* ========================================
+   新布局样式
+   ======================================== */
+
+.apple-converter-container {
+  display: flex;
+  flex-direction: column;
+  position: relative; /* For absolute positioning of floating panel */
+  height: 100%;
+  overflow: hidden !important; /* Force no scrollbar on container */
+  background: var(--apple-background);
+}
+
+/* 1. 顶部操作栏 */
+.apple-top-actions {
+  display: flex;
+  gap: 12px;
+  padding: 0 10px 10px;
+  background: var(--apple-background);
+  border-bottom: 1px solid var(--apple-border);
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.apple-btn-top {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+}
+
+.apple-icon {
+    font-size: 14px;
+}
+
+/* 2. 预览区域 (自适应填充) */
+.apple-converter-preview {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  /* Add padding at bottom to ensure content isn't covered by handle if needed, though handle is floating */
+  padding-bottom: 100px; /* Increased padding to account for raised handle */
+}
+
+/* 3. 底部悬浮设置面板 */
+.apple-settings-floating-panel {
+  position: absolute;
+  bottom: 18px; /* Raised by 30px as requested */
+  left: 16px; /* Add side spacing for floating look */
+  right: 16px; /* Add side spacing for floating look */
+  background: rgba(255, 255, 255, 0.85); /* More transparent (0.85) */
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid var(--apple-border); /* Full border */
+  border-radius: 16px; /* All corners rounded for floating look */
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12); /* Unified shadow */
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: 100;
+  max-height: 350px; 
+  display: flex;
+  flex-direction: column;
+}
+
+/* 去掉系统默认的阴影 */
+button.apple-btn-theme,button.apple-btn-size,select.apple-select{
+  box-shadow: none;
+}
+
+/* Dark mode adaptation */
+.theme-dark .apple-settings-floating-panel {
+  background: rgba(30, 30, 30, 0.85); /* More transparent (0.85) */
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+/* Collapsed state */
+.apple-settings-floating-panel.collapsed {
+  transform: translateY(calc(100% - 44px)); /* Show only handle */
+}
+
+/* Expanded state just removes translateY check above logic */
+
+/* Handle Area */
+.apple-settings-handle {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.apple-settings-handle:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+.theme-dark .apple-settings-handle:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.apple-handle-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--apple-secondary);
+}
+
+.apple-settings-icon {
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+/* Content Area */
+.apple-settings-content {
+  overflow-y: auto;
+  padding: 16px 20px 30px 20px; /* Extra bottom padding */
+  flex: 1;
+}
+
+/* Header inside settings */
+.apple-settings-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--apple-border);
+}
+
+/* Remove old settings panel styles overrides if necessary */
+.apple-settings-area {
+    gap: 16px;
+}
