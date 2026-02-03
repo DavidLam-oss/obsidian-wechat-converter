@@ -481,28 +481,148 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
 }
 
 /* ========================================
-   预览区域
+   预览区域 - 手机仿真模式 (Canvas Mode)
    ======================================== */
+.apple-preview-wrapper {
+  flex: 1;
+  display: flex;
+  /* 使用 grid 布局特性或 margin:auto 实现完美的居中+滚动体验 */
+  justify-content: center;
+  align-items: flex-start; /* 关键：防止高度不够时顶部被裁剪 */
+  background: var(--apple-surface);
+  overflow: auto; /* 开启画布滚动 */
+  padding: 40px;
+}
+
+/* 深色模式下背景适配 */
+.theme-dark .apple-preview-wrapper {
+  background: #1e1e1e; /* 深灰色背景，突显白色手机 */
+}
+
+.apple-phone-frame {
+  /* === 核心修复：严格锁定尺寸，禁止变形 === */
+  width: 375px !important;
+  height: 812px !important;
+  min-width: 375px !important;
+  min-height: 812px !important;
+  flex: 0 0 auto; /* 禁止 Flex 压缩或拉伸 */
+  margin: auto; /* 在 flex 容器中自动居中 */
+
+  border-radius: 56px;
+  background: #ffffff;
+  /* 拟态边框 + 深邃阴影 */
+  box-shadow:
+    inset 0 0 0 2px #e5e5e5,
+    0 0 0 10px #1d1d1f,
+    0 40px 80px -20px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease; /* 仅阴影过渡，尺寸不再过渡 */
+}
+
+/* 手机顶部状态栏/导航栏区域 */
+.apple-phone-header {
+  height: 44px;
+  min-height: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+  color: #1d1d1f;
+  font-size: 16px;
+  font-weight: 600;
+  position: relative;
+
+  /* UI 微调：大幅上移，贴近刘海 */
+  margin-top: 12px; /* 原 26px -> 12px */
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.apple-phone-header .title {
+  text-align: center;
+  transform: translateY(-2px);
+}
+
+.apple-phone-header .dots {
+  position: absolute;
+  right: 24px;
+  font-size: 20px;
+  line-height: 1;
+  /* 颜色调浅 */
+  color: rgba(0, 0, 0, 0.2);
+  letter-spacing: 1px;
+  transform: translateY(-2px);
+}
+
+.apple-phone-header .back {
+  display: none;
+}
+
+/* 底部 Home Indicator */
+.apple-home-indicator {
+  height: 34px;
+  min-height: 34px;
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.apple-home-indicator::after {
+  content: '';
+  width: 134px;
+  height: 5px;
+  background: #000000;
+  border-radius: 100px;
+  opacity: 0.1; /* 调浅一点，不抢眼 */
+}
+
 .apple-converter-preview {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: var(--apple-spacing-lg);
-  background: var(--apple-background);
-  /* 默认跟随主题 */
-  border-radius: var(--apple-radius-md);
-  margin: var(--apple-spacing-md);
+  padding: 20px 16px !important; /* 恢复边距 */
+  background: #ffffff !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: #1d1d1f !important;
+
+  /* === 移除整体缩放，恢复清晰度 === */
+  /* zoom: 0.85;  用户反馈太小，移除 */
 }
 
-.apple-converter-preview.apple-has-content {
-  background: #ffffff;
-  /* 仅在有内容时强制浅色背景 */
-  color: #1d1d1f;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+/* 处理表格：优先换行，仅在极个别长单词情况下滚动 */
+.apple-converter-preview table {
+  width: 100% !important;
+  table-layout: auto; /* 自动宽度 */
+  border-collapse: collapse;
+  margin: 16px 0;
+  display: table; /* 恢复表格显示属性 */
+}
+
+/* 单元格内容自动换行 */
+.apple-converter-preview td,
+.apple-converter-preview th {
+  white-space: normal !important; /* 强制换行 */
+  word-wrap: break-word !important;
+  word-break: break-all; /* 允许在单词内换行，防止长链接撑破 */
+  max-width: 300px; /* 限制最大宽度，触发换行 */
+}
+
+/* 隐藏滚动条，获得更像 App 的体验 */
+.apple-converter-preview::-webkit-scrollbar {
+  display: none;
 }
 
 /* ========================================
-   占位符
+   占位符 (调整以适应手机框)
    ======================================== */
 .apple-placeholder-note {
   font-size: 12px !important;

@@ -284,14 +284,23 @@ var AppleStyleView = class extends ItemView {
     container.addClass("apple-converter-container");
     await this.loadDependencies();
     this.createSettingsPanel(container);
-    this.previewContainer = container.createEl("div", {
+    const previewWrapper = container.createEl("div", { cls: "apple-preview-wrapper" });
+    const phoneFrame = previewWrapper.createEl("div", { cls: "apple-phone-frame" });
+    const header = phoneFrame.createEl("div", { cls: "apple-phone-header" });
+    header.createEl("span", { cls: "title", text: "\u516C\u4F17\u53F7\u9884\u89C8" });
+    header.createEl("span", { cls: "dots", text: "\u2022\u2022\u2022" });
+    this.previewContainer = phoneFrame.createEl("div", {
       cls: "apple-converter-preview"
     });
+    phoneFrame.createEl("div", { cls: "apple-home-indicator" });
     this.setPlaceholder();
     this.registerActiveFileChange();
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (activeView)
+      this.registerScrollSync(activeView);
     setTimeout(async () => {
-      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-      if (activeView && this.converter) {
+      const activeView2 = this.app.workspace.getActiveViewOfType(MarkdownView);
+      if (activeView2 && this.converter) {
         await this.convertCurrent(true);
       }
     }, 500);
@@ -307,6 +316,9 @@ var AppleStyleView = class extends ItemView {
           this.lastActiveFile = activeView.file;
         }
         this.updateCurrentDoc();
+        if (activeView) {
+          this.registerScrollSync(activeView);
+        }
         if (activeView && this.converter) {
           setTimeout(async () => {
             await this.convertCurrent(true);
@@ -333,6 +345,33 @@ var AppleStyleView = class extends ItemView {
     this.registerEvent(
       this.app.workspace.on("editor-change", debouncedConvert)
     );
+  }
+  /**
+   * 注册同步滚动 (Editor -> Preview)
+   */
+  registerScrollSync(activeView) {
+    if (this.activeEditorScroller && this.scrollListener) {
+      this.activeEditorScroller.removeEventListener("scroll", this.scrollListener);
+      this.activeEditorScroller = null;
+      this.scrollListener = null;
+    }
+    if (!activeView)
+      return;
+    const scroller = activeView.contentEl.querySelector(".cm-scroller");
+    if (!scroller)
+      return;
+    this.activeEditorScroller = scroller;
+    this.scrollListener = () => {
+      if (!this.previewContainer)
+        return;
+      const editorScrollable = scroller.scrollHeight - scroller.clientHeight;
+      const previewScrollable = this.previewContainer.scrollHeight - this.previewContainer.clientHeight;
+      if (editorScrollable <= 0 || previewScrollable <= 0)
+        return;
+      const ratio = scroller.scrollTop / editorScrollable;
+      this.previewContainer.scrollTop = ratio * previewScrollable;
+    };
+    scroller.addEventListener("scroll", this.scrollListener, { passive: true });
   }
   /**
    * 加载依赖库
@@ -1244,6 +1283,9 @@ var AppleStyleView = class extends ItemView {
   }
   async onClose() {
     var _a;
+    if (this.activeEditorScroller && this.scrollListener) {
+      this.activeEditorScroller.removeEventListener("scroll", this.scrollListener);
+    }
     (_a = this.previewContainer) == null ? void 0 : _a.empty();
     console.log("\u{1F34E} \u8F6C\u6362\u5668\u9762\u677F\u5DF2\u5173\u95ED");
   }

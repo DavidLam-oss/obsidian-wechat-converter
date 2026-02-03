@@ -354,15 +354,32 @@ class AppleStyleView extends ItemView {
     // 创建设置面板
     this.createSettingsPanel(container);
 
-    // 创建预览区
-    this.previewContainer = container.createEl('div', {
+    // 创建预览区 - 手机仿真结构
+    const previewWrapper = container.createEl('div', { cls: 'apple-preview-wrapper' });
+    const phoneFrame = previewWrapper.createEl('div', { cls: 'apple-phone-frame' });
+
+    // 1. 顶部导航栏 (模拟微信)
+    const header = phoneFrame.createEl('div', { cls: 'apple-phone-header' });
+    // 移除叉号，仅保留标题和更多菜单
+    header.createEl('span', { cls: 'title', text: '公众号预览' });
+    header.createEl('span', { cls: 'dots', text: '•••' });
+
+    // 2. 内容区域
+    this.previewContainer = phoneFrame.createEl('div', {
       cls: 'apple-converter-preview',
     });
+
+    // 3. 底部 Home Indicator
+    phoneFrame.createEl('div', { cls: 'apple-home-indicator' });
 
     this.setPlaceholder();
 
     // 监听文件切换
     this.registerActiveFileChange();
+
+    // 初始化同步滚动
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (activeView) this.registerScrollSync(activeView);
 
     // 自动转换当前文档
     setTimeout(async () => {
@@ -386,6 +403,12 @@ class AppleStyleView extends ItemView {
           this.lastActiveFile = activeView.file;
         }
         this.updateCurrentDoc();
+
+        // 更新滚动同步绑定
+        if (activeView) {
+          this.registerScrollSync(activeView);
+        }
+
         if (activeView && this.converter) {
           setTimeout(async () => {
             await this.convertCurrent(true);
@@ -419,6 +442,47 @@ class AppleStyleView extends ItemView {
     this.registerEvent(
       this.app.workspace.on('editor-change', debouncedConvert)
     );
+  }
+
+  /**
+   * 注册同步滚动 (Editor -> Preview)
+   */
+  registerScrollSync(activeView) {
+    // 1. 清理旧的监听器
+    if (this.activeEditorScroller && this.scrollListener) {
+      this.activeEditorScroller.removeEventListener('scroll', this.scrollListener);
+      this.activeEditorScroller = null;
+      this.scrollListener = null;
+    }
+
+    if (!activeView) return;
+
+    // 2. 获取新的 Scroller (CodeMirror 6 使用 .cm-scroller)
+    // contentEl 是 MarkdownView 的主要内容容器
+    const scroller = activeView.contentEl.querySelector('.cm-scroller');
+    if (!scroller) return;
+
+    this.activeEditorScroller = scroller;
+
+    // 3. 定义监听器
+    this.scrollListener = () => {
+      if (!this.previewContainer) return;
+
+      // 计算滚动百分比
+      // scrollHeight - clientHeight = 可滚动距离
+      const editorScrollable = scroller.scrollHeight - scroller.clientHeight;
+      const previewScrollable = this.previewContainer.scrollHeight - this.previewContainer.clientHeight;
+
+      if (editorScrollable <= 0 || previewScrollable <= 0) return;
+
+      const ratio = scroller.scrollTop / editorScrollable;
+
+      // 应用到预览区
+      this.previewContainer.scrollTop = ratio * previewScrollable;
+    };
+
+    // 4. 绑定监听 (使用 passive 提升性能)
+    scroller.addEventListener('scroll', this.scrollListener, { passive: true });
   }
 
   /**
@@ -1571,6 +1635,10 @@ class AppleStyleView extends ItemView {
 
 
   async onClose() {
+    // 清理滚动监听
+    if (this.activeEditorScroller && this.scrollListener) {
+      this.activeEditorScroller.removeEventListener('scroll', this.scrollListener);
+    }
     this.previewContainer?.empty();
     console.log('🍎 转换器面板已关闭');
   }
