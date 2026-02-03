@@ -94,7 +94,94 @@ window.AppleTheme = class AppleTheme {
       blockquoteBorderWidth: 0,          // 居中样式不需要左边框
       blockquoteStyle: 'center',         // 新增：居中引用
     },
+    custom: {
+      name: '自定义',
+      lineHeight: 1.8,
+      paragraphGap: 20,
+    }
   };
+
+  /**
+   * 📜 经典样式 CSS (默认自定义样式)
+   */
+  static CLASSIC_CSS = `/* 基础文本 */
+section { 
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.8;
+  color: #3e3e3e;
+  text-align: justify;
+}
+p {
+  margin: 0 0 20px 0;
+}
+/* 标题 */
+h1 {
+  display: block;
+  font-size: 30px;
+  font-weight: bold;
+  margin: 30px auto 20px;
+  color: #333;
+  text-align: center;
+}
+h2 {
+  display: block;
+  font-size: 24px;
+  font-weight: bold;
+  margin: 40px auto 20px;
+  color: #333;
+  text-align: center;
+}
+h3 {
+  display: block;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 24px 0 16px;
+  color: #333;
+  text-align: left;
+}
+/* 引用 */
+blockquote {
+  font-size: 16px;
+  color: #595959;
+  background: #f5f5f5;
+  margin: 16px 0;
+  padding: 16px;
+  border-left: 4px solid #333;
+  border-radius: 3px;
+}
+/* 列表 */
+ul, ol {
+  margin: 12px 0;
+  padding-left: 20px;
+  color: #3e3e3e;
+}
+li {
+  margin: 4px 0;
+}
+/* 图片 */
+figure {
+  margin: 20px 0;
+  text-align: center;
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  padding: 10px;
+}
+figcaption {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+  text-align: center;
+}
+a {
+  color: #0366d6;
+  text-decoration: none;
+  border-bottom: 1px dashed #0366d6;
+}
+strong {
+  font-weight: bold;
+  color: #333;
+}`;
 
   /**
    * 📐 间距系统 - 8px 基准
@@ -130,6 +217,36 @@ window.AppleTheme = class AppleTheme {
     this.codeLineNumber = options.codeLineNumber || false;
     this.pagePadding = options.pagePadding !== undefined ? options.pagePadding : 20;
     this.codeBlockTheme = options.codeBlockTheme || 'dark';
+
+    // 自定义 CSS
+    this.customCss = options.customCss || AppleTheme.CLASSIC_CSS;
+    this.parsedCss = {};
+    if (this.themeName === 'custom') {
+      this.parsedCss = this.parseCss(this.customCss);
+    }
+  }
+
+  /**
+   * 解析 CSS 字符串为对象
+   */
+  parseCss(cssString) {
+    if (!cssString) return {};
+    const styles = {};
+    // 移除注释
+    const cleanCss = cssString.replace(/\/\*[\s\S]*?\*\//g, '');
+    // 匹配选择器和内容
+    const regex = /([^{]+)\{([^}]+)\}/g;
+    let match;
+
+    while ((match = regex.exec(cleanCss)) !== null) {
+      const selectors = match[1].split(',').map(s => s.trim());
+      const content = match[2].trim().replace(/\n/g, ' ').replace(/\s+/g, ' ');
+
+      selectors.forEach(selector => {
+        styles[selector] = content;
+      });
+    }
+    return styles;
   }
 
   /**
@@ -169,6 +286,27 @@ window.AppleTheme = class AppleTheme {
    * @returns {string} - CSS 样式字符串
    */
   getStyle(tagName) {
+    // === 自定义 CSS 模式 ===
+    if (this.themeName === 'custom') {
+      // 1. 尝试直接匹配标签名
+      // 1. 尝试直接匹配标签名
+      if (this.parsedCss[tagName]) {
+        // 特殊处理 section 的 padding
+        if (tagName === 'section') {
+          return `${this.parsedCss[tagName]}; padding: 0 ${this.pagePadding}px;`;
+        }
+        return this.parsedCss[tagName];
+      }
+
+      // 2. 如果没有匹配，对于 section 给予默认样式，防止内容消失
+      if (tagName === 'section') {
+        return `font-family: -apple-system, sans-serif; font-size: 16px; line-height: 1.8; color: #3e3e3e; text-align: justify; padding: 0 ${this.pagePadding}px;`;
+      }
+
+      return '';
+    }
+
+    // === 正常主题模式 ===
     const config = this.getThemeConfig();
     const sizes = this.getSizes();
     const font = this.getFontFamily();
@@ -375,6 +513,16 @@ window.AppleTheme = class AppleTheme {
     if (options.codeLineNumber !== undefined) this.codeLineNumber = options.codeLineNumber;
     if (options.pagePadding !== undefined) this.pagePadding = options.pagePadding;
     if (options.codeBlockTheme !== undefined) this.codeBlockTheme = options.codeBlockTheme;
+    if (options.customCss !== undefined) {
+      this.customCss = options.customCss;
+      if (this.themeName === 'custom') {
+        this.parsedCss = this.parseCss(this.customCss);
+      }
+    }
+    // Refresh parsed CSS if theme changes to custom
+    if (options.theme === 'custom' || (this.themeName === 'custom' && options.theme === undefined)) {
+      this.parsedCss = this.parseCss(this.customCss);
+    }
   }
 
   /**

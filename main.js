@@ -18,6 +18,7 @@ var DEFAULT_SETTINGS = {
   codeLineNumber: true,
   pagePadding: 20,
   codeBlockTheme: "dark",
+  customCss: "",
   avatarUrl: "",
   avatarBase64: "",
   // Base64 编码的本地头像，优先级高于 avatarUrl
@@ -36,6 +37,84 @@ var DEFAULT_SETTINGS = {
   wechatAppSecret: ""
 };
 var MAX_ACCOUNTS = 5;
+var CLASSIC_CSS = `/* \u57FA\u7840\u6587\u672C */
+section { 
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.8;
+  color: #3e3e3e;
+  text-align: justify;
+}
+p {
+  margin: 0 0 20px 0;
+}
+/* \u6807\u9898 */
+h1 {
+  display: block;
+  font-size: 30px;
+  font-weight: bold;
+  margin: 30px auto 20px;
+  color: #333;
+  text-align: center;
+}
+h2 {
+  display: block;
+  font-size: 24px;
+  font-weight: bold;
+  margin: 40px auto 20px;
+  color: #333;
+  text-align: center;
+}
+h3 {
+  display: block;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 24px 0 16px;
+  color: #333;
+  text-align: left;
+}
+/* \u5F15\u7528 */
+blockquote {
+  font-size: 16px;
+  color: #595959;
+  background: #f5f5f5;
+  margin: 16px 0;
+  padding: 16px;
+  border-left: 4px solid #333;
+  border-radius: 3px;
+}
+/* \u5217\u8868 */
+ul, ol {
+  margin: 12px 0;
+  padding-left: 20px;
+  color: #3e3e3e;
+}
+li {
+  margin: 4px 0;
+}
+/* \u56FE\u7247 */
+figure {
+  margin: 20px 0;
+  text-align: center;
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  padding: 10px;
+}
+figcaption {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+  text-align: center;
+}
+a {
+  color: #0366d6;
+  text-decoration: none;
+  border-bottom: 1px dashed #0366d6;
+}
+strong {
+  font-weight: bold;
+  color: #333;
+}`;
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 }
@@ -377,7 +456,8 @@ var AppleStyleView = class extends ItemView {
         macCodeBlock: this.plugin.settings.macCodeBlock,
         codeLineNumber: this.plugin.settings.codeLineNumber,
         pagePadding: this.plugin.settings.pagePadding,
-        codeBlockTheme: this.plugin.settings.codeBlockTheme
+        codeBlockTheme: this.plugin.settings.codeBlockTheme,
+        customCss: this.plugin.settings.customCss
       });
       if (!window.AppleStyleConverter)
         throw new Error("AppleStyleConverter failed to load");
@@ -449,7 +529,14 @@ var AppleStyleView = class extends ItemView {
           text: t.label
         });
         btn.dataset.value = t.value;
-        btn.addEventListener("click", () => this.onThemeChange(t.value, grid));
+        btn.addEventListener("click", async () => {
+          this.plugin.settings.theme = t.value;
+          grid.querySelectorAll(".apple-btn-theme").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          await this.plugin.saveSettings();
+          this.theme.update({ theme: t.value });
+          await this.convertCurrent(true);
+        });
       });
     });
     this.createSection(settingsArea, "\u5B57\u4F53", (section) => {
@@ -1092,6 +1179,9 @@ var AppleStyleView = class extends ItemView {
    * 转换当前文档
    */
   async convertCurrent(silent = false) {
+    if (this.theme) {
+      this.theme.update({ customCss: this.plugin.settings.customCss });
+    }
     let activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     let markdown = "";
     let sourcePath = "";
@@ -1445,6 +1535,19 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       this.plugin.settings.proxyUrl = value.trim();
       await this.plugin.saveSettings();
     }));
+    new Setting(containerEl).setName("\u6837\u5F0F\u8BBE\u7F6E").setHeading();
+    new Setting(containerEl).setName("\u81EA\u5B9A\u4E49 CSS").setDesc("\u5728\u6B64\u5904\u7F16\u5199\u81EA\u5B9A\u4E49 CSS \u6837\u5F0F\uFF0C\u5F53\u4E3B\u9898\u9009\u62E9\u201C\u81EA\u5B9A\u4E49\u201D\u65F6\u751F\u6548\u3002\u5982\u679C\u505A\u4E86\u4FEE\u6539\uFF0C\u9700\u8981\u5207\u6362\u4E00\u4E0B\u4E3B\u9898\u624D\u80FD\u751F\u6548\u3002\u5F53\u9009\u62E9\u81EA\u5B9A\u4E49\u65F6\uFF0C\u6837\u5F0F\u8BBE\u7F6E\u4E2D\u7684\u5B57\u4F53\u5927\u5C0F\u7B49\u8BBE\u7F6E\u5C06\u5931\u6548\u3002").addTextArea((text) => text.setPlaceholder("/* Put your custom CSS here */").setValue(this.plugin.settings.customCss || CLASSIC_CSS).onChange(async (value) => {
+      this.plugin.settings.customCss = value;
+      await this.plugin.saveSettings();
+    }));
+    const textAreas = containerEl.querySelectorAll("textarea");
+    if (textAreas.length > 0) {
+      const lastTextArea = textAreas[textAreas.length - 1];
+      lastTextArea.rows = 10;
+      lastTextArea.style.width = "100%";
+      lastTextArea.style.fontFamily = "monospace";
+      lastTextArea.style.fontSize = "12px";
+    }
   }
   /**
    * 显示添加/编辑账号的模态框

@@ -15,6 +15,7 @@ const DEFAULT_SETTINGS = {
   codeLineNumber: true,
   pagePadding: 20,
   codeBlockTheme: 'dark',
+  customCss: '',
   avatarUrl: '',
   avatarBase64: '',  // Base64 编码的本地头像，优先级高于 avatarUrl
   enableWatermark: false,
@@ -32,6 +33,85 @@ const DEFAULT_SETTINGS = {
 
 // 账号上限
 const MAX_ACCOUNTS = 5;
+
+const CLASSIC_CSS = `/* 基础文本 */
+section { 
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.8;
+  color: #3e3e3e;
+  text-align: justify;
+}
+p {
+  margin: 0 0 20px 0;
+}
+/* 标题 */
+h1 {
+  display: block;
+  font-size: 30px;
+  font-weight: bold;
+  margin: 30px auto 20px;
+  color: #333;
+  text-align: center;
+}
+h2 {
+  display: block;
+  font-size: 24px;
+  font-weight: bold;
+  margin: 40px auto 20px;
+  color: #333;
+  text-align: center;
+}
+h3 {
+  display: block;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 24px 0 16px;
+  color: #333;
+  text-align: left;
+}
+/* 引用 */
+blockquote {
+  font-size: 16px;
+  color: #595959;
+  background: #f5f5f5;
+  margin: 16px 0;
+  padding: 16px;
+  border-left: 4px solid #333;
+  border-radius: 3px;
+}
+/* 列表 */
+ul, ol {
+  margin: 12px 0;
+  padding-left: 20px;
+  color: #3e3e3e;
+}
+li {
+  margin: 4px 0;
+}
+/* 图片 */
+figure {
+  margin: 20px 0;
+  text-align: center;
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  padding: 10px;
+}
+figcaption {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+  text-align: center;
+}
+a {
+  color: #0366d6;
+  text-decoration: none;
+  border-bottom: 1px dashed #0366d6;
+}
+strong {
+  font-weight: bold;
+  color: #333;
+}`;
 
 // 生成唯一 ID
 function generateId() {
@@ -479,6 +559,7 @@ class AppleStyleView extends ItemView {
         codeLineNumber: this.plugin.settings.codeLineNumber,
         pagePadding: this.plugin.settings.pagePadding,
         codeBlockTheme: this.plugin.settings.codeBlockTheme,
+        customCss: this.plugin.settings.customCss,
       });
 
       // 初始化转换器
@@ -567,13 +648,23 @@ class AppleStyleView extends ItemView {
     this.createSection(settingsArea, '主题', (section) => {
       const grid = section.createEl('div', { cls: 'apple-btn-grid' });
       const themes = AppleTheme.getThemeList();
+
       themes.forEach(t => {
         const btn = grid.createEl('button', {
           cls: `apple-btn-theme ${this.plugin.settings.theme === t.value ? 'active' : ''}`,
           text: t.label,
         });
         btn.dataset.value = t.value;
-        btn.addEventListener('click', () => this.onThemeChange(t.value, grid));
+        btn.addEventListener('click', async () => {
+          this.plugin.settings.theme = t.value;
+          // Update active state
+          grid.querySelectorAll('.apple-btn-theme').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          await this.plugin.saveSettings();
+          this.theme.update({ theme: t.value });
+          await this.convertCurrent(true);
+        });
       });
     });
 
@@ -1355,6 +1446,11 @@ class AppleStyleView extends ItemView {
    * 转换当前文档
    */
   async convertCurrent(silent = false) {
+    // Force update custom CSS from settings before conversion to ensure it's always up to date
+    if (this.theme) {
+      this.theme.update({ customCss: this.plugin.settings.customCss });
+    }
+
     let activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     let markdown = '';
     let sourcePath = '';
@@ -1838,6 +1934,31 @@ class AppleStyleSettingTab extends PluginSettingTab {
           this.plugin.settings.proxyUrl = value.trim();
           await this.plugin.saveSettings();
         }));
+
+    new Setting(containerEl)
+      .setName('样式设置')
+      .setHeading();
+
+    new Setting(containerEl)
+      .setName('自定义 CSS')
+      .setDesc('在此处编写自定义 CSS 样式，当主题选择“自定义”时生效。如果做了修改，需要切换一下主题才能生效。当选择自定义时，样式设置中的字体大小等设置将失效。')
+      .addTextArea(text => text
+        .setPlaceholder('/* Put your custom CSS here */')
+        .setValue(this.plugin.settings.customCss || CLASSIC_CSS)
+        .onChange(async (value) => {
+          this.plugin.settings.customCss = value;
+          await this.plugin.saveSettings();
+        }));
+
+    // Apply styling to textarea after creation
+    const textAreas = containerEl.querySelectorAll('textarea');
+    if (textAreas.length > 0) {
+      const lastTextArea = textAreas[textAreas.length - 1];
+      lastTextArea.rows = 10;
+      lastTextArea.style.width = '100%';
+      lastTextArea.style.fontFamily = 'monospace';
+      lastTextArea.style.fontSize = '12px';
+    }
   }
 
   /**
