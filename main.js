@@ -37,6 +37,21 @@ var MAX_ACCOUNTS = 5;
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 }
+var sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+async function pMap(array, mapper, concurrency = 3) {
+  const results = [];
+  const executing = [];
+  for (const item of array) {
+    const p = Promise.resolve().then(() => mapper(item));
+    results.push(p);
+    const e = p.then(() => executing.splice(executing.indexOf(e), 1));
+    executing.push(e);
+    if (executing.length >= concurrency) {
+      await Promise.race(executing);
+    }
+  }
+  return Promise.all(results);
+}
 var WechatAPI = class {
   constructor(appId, appSecret, proxyUrl = "") {
     this.appId = appId;
@@ -46,7 +61,67 @@ var WechatAPI = class {
     this.expireTime = 0;
   }
   /**
+   * 通用重试机制 (仅处理网络层面的不稳定性)
+   * 不再处理 Token 逻辑，专注于网络波动和配置错误
+   */
+  async requestWithRetry(operation, maxRetries = 3) {
+    let lastError;
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error;
+        const isConfigError = error.message && (error.message.includes("(40013)") || // invalid appid
+        error.message.includes("(40125)") || // invalid appsecret
+        error.message.includes("invalid appid"));
+        if (isConfigError) {
+          console.warn(`[WechatAPI] Configuration error detected, aborting retry: ${error.message}`);
+          throw error;
+        }
+        const isTokenError = error.message && (error.message.includes("40001") || error.message.includes("42001") || error.message.includes("40014"));
+        if (isTokenError) {
+          throw error;
+        }
+        const isBusinessError = error.message && error.message.includes("\u5FAE\u4FE1API\u62A5\u9519") && !error.message.includes("(-1)");
+        if (isBusinessError) {
+          console.warn(`[WechatAPI] Business logic error detected, aborting retry: ${error.message}`);
+          throw error;
+        }
+        console.warn(`[WechatAPI] Network request failed (attempt ${i + 1}/${maxRetries}): ${error.message}`);
+        if (i < maxRetries - 1) {
+          await sleep(1e3 * (i + 1));
+        }
+      }
+    }
+    throw lastError;
+  }
+  /**
+   * 高阶函数：执行带 Token 生命周期管理的操作
+   * 负责：获取 Token -> 执行操作 -> 捕获 Token 过期错误 -> 刷新 Token -> 重试
+   * @param {Function} action - 接收 token 参数的异步函数
+   */
+  async actionWithTokenRetry(action) {
+    let retryCount = 0;
+    const maxRetries = 1;
+    while (true) {
+      try {
+        const token = await this.getAccessToken();
+        return await action(token);
+      } catch (error) {
+        const isTokenExpired = error.message && (error.message.includes("40001") || error.message.includes("42001") || error.message.includes("40014"));
+        if (isTokenExpired && retryCount < maxRetries) {
+          console.warn(`[WechatAPI] Token expired (${error.message}), refreshing and retrying...`);
+          this.accessToken = "";
+          retryCount++;
+          continue;
+        }
+        throw error;
+      }
+    }
+  }
+  /**
    * 发送请求（如果配置了代理，通过代理发送）
+   * 纯粹的 HTTP 请求封装，不包含重试逻辑
    */
   async sendRequest(url, options = {}) {
     const { requestUrl } = require("obsidian");
@@ -72,7 +147,7 @@ var WechatAPI = class {
       return this.accessToken;
     }
     const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.appId}&secret=${this.appSecret}`;
-    const data = await this.sendRequest(url);
+    const data = await this.requestWithRetry(() => this.sendRequest(url));
     if (data.access_token) {
       this.accessToken = data.access_token;
       this.expireTime = Date.now() + data.expires_in * 1e3;
@@ -82,99 +157,104 @@ var WechatAPI = class {
     }
   }
   async uploadCover(blob) {
-    const token = await this.getAccessToken();
-    const url = `https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=${token}&type=image`;
-    return await this.uploadMultipart(url, blob, "media");
+    return this.actionWithTokenRetry(async (token) => {
+      const url = `https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=${token}&type=image`;
+      return await this.uploadMultipart(url, blob, "media");
+    });
   }
   async uploadImage(blob) {
-    const token = await this.getAccessToken();
-    const url = `https://api.weixin.qq.com/cgi-bin/media/uploadimg?access_token=${token}`;
-    return await this.uploadMultipart(url, blob, "media");
+    return this.actionWithTokenRetry(async (token) => {
+      const url = `https://api.weixin.qq.com/cgi-bin/media/uploadimg?access_token=${token}`;
+      return await this.uploadMultipart(url, blob, "media");
+    });
   }
   async createDraft(article) {
-    const token = await this.getAccessToken();
-    const url = `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${token}`;
-    const data = await this.sendRequest(url, {
-      method: "POST",
-      body: JSON.stringify({ articles: [article] })
+    return this.actionWithTokenRetry(async (token) => {
+      const url = `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${token}`;
+      const data = await this.sendRequest(url, {
+        method: "POST",
+        body: JSON.stringify({ articles: [article] })
+      });
+      if (data.media_id) {
+        return data;
+      }
+      throw new Error(`\u521B\u5EFA\u8349\u7A3F\u5931\u8D25: ${data.errmsg || JSON.stringify(data)} (${data.errcode || "N/A"})`);
     });
-    if (data.media_id) {
-      return data;
-    }
-    throw new Error(`\u521B\u5EFA\u8349\u7A3F\u5931\u8D25: ${data.errmsg || JSON.stringify(data)} (${data.errcode || "N/A"})`);
   }
   async uploadMultipart(url, blob, fieldName) {
-    const { requestUrl } = require("obsidian");
-    const mimeType = blob.type || "image/jpeg";
-    const ext = mimeType.includes("gif") ? "gif" : mimeType.includes("png") ? "png" : "jpg";
-    if (this.proxyUrl) {
-      const arrayBuffer = await blob.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      let binary = "";
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-      const base64Data = btoa(binary);
-      const proxyResponse = await requestUrl({
-        url: this.proxyUrl,
-        method: "POST",
-        body: JSON.stringify({
-          url,
-          method: "UPLOAD",
-          // 特殊标记，告诉代理这是文件上传
-          fileData: base64Data,
-          fileName: `image.${ext}`,
-          mimeType,
-          fieldName
-        }),
-        contentType: "application/json"
-      });
-      const data = proxyResponse.json;
-      if (data.media_id || data.url) {
-        return data;
-      } else {
-        throw new Error(`\u5FAE\u4FE1API\u62A5\u9519: ${data.errmsg} (${data.errcode})`);
-      }
-    } else {
-      const boundary = "----ObsidianWechatConverterBoundary" + Math.random().toString(36).substring(2);
-      const arrayBuffer = await blob.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      let header = `--${boundary}\r
-`;
-      header += `Content-Disposition: form-data; name="${fieldName}"; filename="image.${ext}"\r
-`;
-      header += `Content-Type: ${mimeType}\r
-\r
-`;
-      const footer = `\r
---${boundary}--\r
-`;
-      const headerBytes = new TextEncoder().encode(header);
-      const footerBytes = new TextEncoder().encode(footer);
-      const bodyBytes = new Uint8Array(headerBytes.length + bytes.length + footerBytes.length);
-      bodyBytes.set(headerBytes, 0);
-      bodyBytes.set(bytes, headerBytes.length);
-      bodyBytes.set(footerBytes, headerBytes.length + bytes.length);
-      try {
-        const response = await requestUrl({
-          url,
+    return this.requestWithRetry(async () => {
+      const { requestUrl } = require("obsidian");
+      const mimeType = blob.type || "image/jpeg";
+      const ext = mimeType.includes("gif") ? "gif" : mimeType.includes("png") ? "png" : "jpg";
+      if (this.proxyUrl) {
+        const arrayBuffer = await blob.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64Data = btoa(binary);
+        const proxyResponse = await requestUrl({
+          url: this.proxyUrl,
           method: "POST",
-          body: bodyBytes.buffer,
-          headers: {
-            "Content-Type": `multipart/form-data; boundary=${boundary}`
-          }
+          body: JSON.stringify({
+            url,
+            method: "UPLOAD",
+            // 特殊标记，告诉代理这是文件上传
+            fileData: base64Data,
+            fileName: `image.${ext}`,
+            mimeType,
+            fieldName
+          }),
+          contentType: "application/json"
         });
-        const data = response.json;
+        const data = proxyResponse.json;
         if (data.media_id || data.url) {
           return data;
         } else {
           throw new Error(`\u5FAE\u4FE1API\u62A5\u9519: ${data.errmsg} (${data.errcode})`);
         }
-      } catch (error) {
-        console.error("Upload Error:", error);
-        throw new Error(`\u7F51\u7EDC\u8BF7\u6C42\u5931\u8D25: ${error.message}`);
+      } else {
+        const boundary = "----ObsidianWechatConverterBoundary" + Math.random().toString(36).substring(2);
+        const arrayBuffer = await blob.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuffer);
+        let header = `--${boundary}\r
+`;
+        header += `Content-Disposition: form-data; name="${fieldName}"; filename="image.${ext}"\r
+`;
+        header += `Content-Type: ${mimeType}\r
+\r
+`;
+        const footer = `\r
+--${boundary}--\r
+`;
+        const headerBytes = new TextEncoder().encode(header);
+        const footerBytes = new TextEncoder().encode(footer);
+        const bodyBytes = new Uint8Array(headerBytes.length + bytes.length + footerBytes.length);
+        bodyBytes.set(headerBytes, 0);
+        bodyBytes.set(bytes, headerBytes.length);
+        bodyBytes.set(footerBytes, headerBytes.length + bytes.length);
+        try {
+          const response = await requestUrl({
+            url,
+            method: "POST",
+            body: bodyBytes.buffer,
+            headers: {
+              "Content-Type": `multipart/form-data; boundary=${boundary}`
+            }
+          });
+          const data = response.json;
+          if (data.media_id || data.url) {
+            return data;
+          } else {
+            throw new Error(`\u5FAE\u4FE1API\u62A5\u9519: ${data.errmsg} (${data.errcode})`);
+          }
+        } catch (error) {
+          console.error("Upload Error:", error);
+          throw new Error(`\u7F51\u7EDC\u8BF7\u6C42\u5931\u8D25: ${error.message}`);
+        }
       }
-    }
+    });
   }
 };
 var AppleStyleView = class extends ItemView {
@@ -624,7 +704,9 @@ var AppleStyleView = class extends ItemView {
       const coverRes = await api.uploadCover(coverBlob);
       const thumb_media_id = coverRes.media_id;
       notice.setMessage("\u{1F4F8} \u6B63\u5728\u540C\u6B65\u6B63\u6587\u56FE\u7247...");
-      const processedHtml = await this.processAllImages(this.currentHtml, api);
+      const processedHtml = await this.processAllImages(this.currentHtml, api, (current, total) => {
+        notice.setMessage(`\u{1F4F8} \u6B63\u5728\u540C\u6B65\u6B63\u6587\u56FE\u7247 (${current}/${total})...`);
+      });
       const cleanedHtml = this.cleanHtmlForDraft(processedHtml);
       const activeFile = this.app.workspace.getActiveFile();
       const title = activeFile ? activeFile.basename : "\u65E0\u6807\u9898\u6587\u7AE0";
@@ -666,25 +748,33 @@ var AppleStyleView = class extends ItemView {
   }
   /**
    * 处理 HTML 中的所有图片，上传到微信并替换链接
+   * 支持并发上传 (Limit 3) 和进度回调
    */
-  async processAllImages(html, api) {
+  async processAllImages(html, api, progressCallback) {
     const div = document.createElement("div");
     div.innerHTML = html;
     const imgs = Array.from(div.querySelectorAll("img"));
+    const uniqueUrls = /* @__PURE__ */ new Set();
     const urlMap = /* @__PURE__ */ new Map();
     for (const img of imgs) {
-      const originalSrc = img.src;
-      if (urlMap.has(originalSrc)) {
-        img.src = urlMap.get(originalSrc);
-        continue;
+      if (img.src)
+        uniqueUrls.add(img.src);
+    }
+    const total = uniqueUrls.size;
+    let completed = 0;
+    const tasks = Array.from(uniqueUrls);
+    await pMap(tasks, async (src) => {
+      const blob = await this.srcToBlob(src);
+      const res = await api.uploadImage(blob);
+      urlMap.set(src, res.url);
+      completed++;
+      if (progressCallback) {
+        progressCallback(completed, total);
       }
-      try {
-        const blob = await this.srcToBlob(originalSrc);
-        const res = await api.uploadImage(blob);
-        urlMap.set(originalSrc, res.url);
-        img.src = res.url;
-      } catch (err) {
-        console.warn("\u56FE\u7247\u4E0A\u4F20\u5931\u8D25\uFF0C\u8DF3\u8FC7:", originalSrc, err);
+    }, 3);
+    for (const img of imgs) {
+      if (urlMap.has(img.src)) {
+        img.src = urlMap.get(img.src);
       }
     }
     return div.innerHTML;

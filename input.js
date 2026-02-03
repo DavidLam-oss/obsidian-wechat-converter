@@ -36,6 +36,25 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 }
 
+// 辅助函数：等待指定毫秒数
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// 辅助函数：并发控制 (p-limit 简化版)
+async function pMap(array, mapper, concurrency = 3) {
+  const results = [];
+  const executing = [];
+  for (const item of array) {
+    const p = Promise.resolve().then(() => mapper(item));
+    results.push(p);
+    const e = p.then(() => executing.splice(executing.indexOf(e), 1));
+    executing.push(e);
+    if (executing.length >= concurrency) {
+      await Promise.race(executing);
+    }
+  }
+  return Promise.all(results);
+}
+
 /**
  * 🚀 微信公众号 API 对接模块
  */
@@ -49,7 +68,95 @@ class WechatAPI {
   }
 
   /**
+   * 通用重试机制 (仅处理网络层面的不稳定性)
+   * 不再处理 Token 逻辑，专注于网络波动和配置错误
+   */
+  async requestWithRetry(operation, maxRetries = 3) {
+    let lastError;
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error;
+
+        // 识别配置错误 (AppID/Secret 错误)，直接失败
+        const isConfigError = error.message && (
+            error.message.includes('(40013)') || // invalid appid
+            error.message.includes('(40125)') || // invalid appsecret
+            error.message.includes('invalid appid')
+        );
+
+        if (isConfigError) {
+           console.warn(`[WechatAPI] Configuration error detected, aborting retry: ${error.message}`);
+           throw error;
+        }
+
+        // 识别 Token 过期错误，直接失败，交由上层 actionWithTokenRetry 处理刷新
+        const isTokenError = error.message && (
+            error.message.includes('40001') ||
+            error.message.includes('42001') ||
+            error.message.includes('40014')
+        );
+
+        if (isTokenError) {
+            // console.warn(`[WechatAPI] Token error detected in retry layer, bubbling up: ${error.message}`);
+            throw error;
+        }
+
+        // 识别业务层明确错误 (已收到微信响应但报错)，直接失败，避免无意义重试
+        // 排除 -1 (系统繁忙) 这种情况可以重试
+        const isBusinessError = error.message && error.message.includes('微信API报错') && !error.message.includes('(-1)');
+        if (isBusinessError) {
+             console.warn(`[WechatAPI] Business logic error detected, aborting retry: ${error.message}`);
+             throw error;
+        }
+
+        console.warn(`[WechatAPI] Network request failed (attempt ${i + 1}/${maxRetries}): ${error.message}`);
+
+        if (i < maxRetries - 1) {
+          await sleep(1000 * (i + 1)); // 线性退避: 1s, 2s, 3s
+        }
+      }
+    }
+    throw lastError;
+  }
+
+  /**
+   * 高阶函数：执行带 Token 生命周期管理的操作
+   * 负责：获取 Token -> 执行操作 -> 捕获 Token 过期错误 -> 刷新 Token -> 重试
+   * @param {Function} action - 接收 token 参数的异步函数
+   */
+  async actionWithTokenRetry(action) {
+    let retryCount = 0;
+    const maxRetries = 1; // Token 过期只重试一次
+
+    while (true) {
+      try {
+        const token = await this.getAccessToken();
+        return await action(token);
+      } catch (error) {
+        // 检查是否是 Token 过期 (40001, 42001, 40014)
+        const isTokenExpired = error.message && (
+          error.message.includes('40001') ||
+          error.message.includes('42001') ||
+          error.message.includes('40014')
+        );
+
+        if (isTokenExpired && retryCount < maxRetries) {
+          console.warn(`[WechatAPI] Token expired (${error.message}), refreshing and retrying...`);
+          this.accessToken = ''; // 1. 清除本地缓存
+          retryCount++;
+          continue; // 2. 重新循环：再次调用 getAccessToken (会触发新请求) -> 执行 action (使用新 Token 拼接 URL)
+        }
+
+        throw error; // 其他错误或重试次数耗尽，向上抛出
+      }
+    }
+  }
+
+  /**
    * 发送请求（如果配置了代理，通过代理发送）
+   * 纯粹的 HTTP 请求封装，不包含重试逻辑
    */
   async sendRequest(url, options = {}) {
     const { requestUrl } = require('obsidian');
@@ -80,7 +187,8 @@ class WechatAPI {
     }
 
     const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.appId}&secret=${this.appSecret}`;
-    const data = await this.sendRequest(url);
+    // 网络重试包裹
+    const data = await this.requestWithRetry(() => this.sendRequest(url));
 
     if (data.access_token) {
       this.accessToken = data.access_token;
@@ -93,110 +201,117 @@ class WechatAPI {
 
 
   async uploadCover(blob) {
-    const token = await this.getAccessToken();
-    const url = `https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=${token}&type=image`;
-    return await this.uploadMultipart(url, blob, 'media');
+    return this.actionWithTokenRetry(async (token) => {
+      const url = `https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=${token}&type=image`;
+      return await this.uploadMultipart(url, blob, 'media');
+    });
   }
 
   async uploadImage(blob) {
-    const token = await this.getAccessToken();
-    const url = `https://api.weixin.qq.com/cgi-bin/media/uploadimg?access_token=${token}`;
-    return await this.uploadMultipart(url, blob, 'media');
+    return this.actionWithTokenRetry(async (token) => {
+      const url = `https://api.weixin.qq.com/cgi-bin/media/uploadimg?access_token=${token}`;
+      return await this.uploadMultipart(url, blob, 'media');
+    });
   }
 
   async createDraft(article) {
-    const token = await this.getAccessToken();
-    const url = `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${token}`;
+    return this.actionWithTokenRetry(async (token) => {
+      const url = `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${token}`;
 
+      // ⚠️ 关键修正: createDraft 非幂等，不使用 requestWithRetry 自动重试网络超时，
+      // 避免在"请求成功但响应丢失"的情况下创建重复草稿。
+      // 失败后由用户手动点击同步更安全。
+      const data = await this.sendRequest(url, {
+        method: 'POST',
+        body: JSON.stringify({ articles: [article] })
+      });
 
-    const data = await this.sendRequest(url, {
-      method: 'POST',
-      body: JSON.stringify({ articles: [article] })
+      if (data.media_id) {
+        return data;
+      }
+      throw new Error(`创建草稿失败: ${data.errmsg || JSON.stringify(data)} (${data.errcode || 'N/A'})`);
     });
-
-    if (data.media_id) {
-      return data;
-    }
-    throw new Error(`创建草稿失败: ${data.errmsg || JSON.stringify(data)} (${data.errcode || 'N/A'})`);
   }
 
   async uploadMultipart(url, blob, fieldName) {
-    const { requestUrl } = require('obsidian');
+    return this.requestWithRetry(async () => {
+      const { requestUrl } = require('obsidian');
 
-    // 获取真实的 MIME 类型和文件扩展名
-    const mimeType = blob.type || 'image/jpeg';
-    const ext = mimeType.includes('gif') ? 'gif' : mimeType.includes('png') ? 'png' : 'jpg';
+      // 获取真实的 MIME 类型和文件扩展名
+      const mimeType = blob.type || 'image/jpeg';
+      const ext = mimeType.includes('gif') ? 'gif' : mimeType.includes('png') ? 'png' : 'jpg';
 
-    if (this.proxyUrl) {
-      // 通过代理发送：将文件转为 base64
-      const arrayBuffer = await blob.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      let binary = '';
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-      const base64Data = btoa(binary);
+      if (this.proxyUrl) {
+        // 通过代理发送：将文件转为 base64
+        const arrayBuffer = await blob.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64Data = btoa(binary);
 
-      const proxyResponse = await requestUrl({
-        url: this.proxyUrl,
-        method: 'POST',
-        body: JSON.stringify({
-          url: url,
-          method: 'UPLOAD',  // 特殊标记，告诉代理这是文件上传
-          fileData: base64Data,
-          fileName: `image.${ext}`,
-          mimeType: mimeType,
-          fieldName: fieldName
-        }),
-        contentType: 'application/json'
-      });
-
-      const data = proxyResponse.json;
-      if (data.media_id || data.url) {
-        return data;
-      } else {
-        throw new Error(`微信API报错: ${data.errmsg} (${data.errcode})`);
-      }
-    } else {
-      // 直连：原有逻辑
-      const boundary = '----ObsidianWechatConverterBoundary' + Math.random().toString(36).substring(2);
-      const arrayBuffer = await blob.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-
-      let header = `--${boundary}\r\n`;
-      header += `Content-Disposition: form-data; name="${fieldName}"; filename="image.${ext}"\r\n`;
-      header += `Content-Type: ${mimeType}\r\n\r\n`;
-      const footer = `\r\n--${boundary}--\r\n`;
-
-      const headerBytes = new TextEncoder().encode(header);
-      const footerBytes = new TextEncoder().encode(footer);
-
-      const bodyBytes = new Uint8Array(headerBytes.length + bytes.length + footerBytes.length);
-      bodyBytes.set(headerBytes, 0);
-      bodyBytes.set(bytes, headerBytes.length);
-      bodyBytes.set(footerBytes, headerBytes.length + bytes.length);
-
-      try {
-        const response = await requestUrl({
-          url: url,
+        const proxyResponse = await requestUrl({
+          url: this.proxyUrl,
           method: 'POST',
-          body: bodyBytes.buffer,
-          headers: {
-            'Content-Type': `multipart/form-data; boundary=${boundary}`
-          }
+          body: JSON.stringify({
+            url: url,
+            method: 'UPLOAD',  // 特殊标记，告诉代理这是文件上传
+            fileData: base64Data,
+            fileName: `image.${ext}`,
+            mimeType: mimeType,
+            fieldName: fieldName
+          }),
+          contentType: 'application/json'
         });
 
-        const data = response.json;
+        const data = proxyResponse.json;
         if (data.media_id || data.url) {
           return data;
         } else {
           throw new Error(`微信API报错: ${data.errmsg} (${data.errcode})`);
         }
-      } catch (error) {
-        console.error('Upload Error:', error);
-        throw new Error(`网络请求失败: ${error.message}`);
+      } else {
+        // 直连：原有逻辑
+        const boundary = '----ObsidianWechatConverterBoundary' + Math.random().toString(36).substring(2);
+        const arrayBuffer = await blob.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuffer);
+
+        let header = `--${boundary}\r\n`;
+        header += `Content-Disposition: form-data; name="${fieldName}"; filename="image.${ext}"\r\n`;
+        header += `Content-Type: ${mimeType}\r\n\r\n`;
+        const footer = `\r\n--${boundary}--\r\n`;
+
+        const headerBytes = new TextEncoder().encode(header);
+        const footerBytes = new TextEncoder().encode(footer);
+
+        const bodyBytes = new Uint8Array(headerBytes.length + bytes.length + footerBytes.length);
+        bodyBytes.set(headerBytes, 0);
+        bodyBytes.set(bytes, headerBytes.length);
+        bodyBytes.set(footerBytes, headerBytes.length + bytes.length);
+
+        try {
+          const response = await requestUrl({
+            url: url,
+            method: 'POST',
+            body: bodyBytes.buffer,
+            headers: {
+              'Content-Type': `multipart/form-data; boundary=${boundary}`
+            }
+          });
+
+          const data = response.json;
+          if (data.media_id || data.url) {
+            return data;
+          } else {
+            throw new Error(`微信API报错: ${data.errmsg} (${data.errcode})`);
+          }
+        } catch (error) {
+          console.error('Upload Error:', error);
+          throw new Error(`网络请求失败: ${error.message}`);
+        }
       }
-    }
+    });
   }
 }
 
@@ -784,7 +899,9 @@ class AppleStyleView extends ItemView {
 
       // 2. 处理文章图片
       notice.setMessage('📸 正在同步正文图片...');
-      const processedHtml = await this.processAllImages(this.currentHtml, api);
+      const processedHtml = await this.processAllImages(this.currentHtml, api, (current, total) => {
+          notice.setMessage(`📸 正在同步正文图片 (${current}/${total})...`);
+      });
 
       // 2.5 清理 HTML 以适配微信编辑器
       const cleanedHtml = this.cleanHtmlForDraft(processedHtml);
@@ -843,29 +960,45 @@ class AppleStyleView extends ItemView {
 
   /**
    * 处理 HTML 中的所有图片，上传到微信并替换链接
+   * 支持并发上传 (Limit 3) 和进度回调
    */
-  async processAllImages(html, api) {
+  async processAllImages(html, api, progressCallback) {
     const div = document.createElement('div');
     div.innerHTML = html;
     const imgs = Array.from(div.querySelectorAll('img'));
 
-    // 建立图片映射，避免重复上传
+    // 1. 提取唯一图片 URL
+    const uniqueUrls = new Set();
+    // 建立 src -> new_url 的映射
     const urlMap = new Map();
 
     for (const img of imgs) {
-      const originalSrc = img.src;
-      if (urlMap.has(originalSrc)) {
-        img.src = urlMap.get(originalSrc);
-        continue;
-      }
+        if (img.src) uniqueUrls.add(img.src);
+    }
 
-      try {
-        const blob = await this.srcToBlob(originalSrc);
+    const total = uniqueUrls.size;
+    let completed = 0;
+
+    // 2. 定义并发上传任务
+    const tasks = Array.from(uniqueUrls);
+
+    await pMap(tasks, async (src) => {
+        // 如果已经处理过（比如重复的URL在并发中被其他任务处理了？不，pMap的任务是唯一的src）
+        // 这里不需要 try-catch，因为我们希望出错时直接抛出，中断整个流程
+        const blob = await this.srcToBlob(src);
         const res = await api.uploadImage(blob);
-        urlMap.set(originalSrc, res.url);
-        img.src = res.url;
-      } catch (err) {
-        console.warn('图片上传失败，跳过:', originalSrc, err);
+        urlMap.set(src, res.url);
+
+        completed++;
+        if (progressCallback) {
+            progressCallback(completed, total);
+        }
+    }, 3); // 并发数限制为 3
+
+    // 3. 替换 DOM 中的图片链接
+    for (const img of imgs) {
+      if (urlMap.has(img.src)) {
+        img.src = urlMap.get(img.src);
       }
     }
 
