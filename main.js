@@ -348,6 +348,7 @@ var AppleStyleView = class extends ItemView {
     this.lastActiveFile = null;
     this.sessionCoverBase64 = "";
     this.sessionDigest = "";
+    this.isProgrammaticScroll = false;
   }
   getViewType() {
     return APPLE_STYLE_VIEW;
@@ -371,9 +372,12 @@ var AppleStyleView = class extends ItemView {
     this.createFloatingSettingsPanel(container);
     this.setPlaceholder();
     this.registerActiveFileChange();
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (activeView)
+      this.registerScrollSync(activeView);
     setTimeout(async () => {
-      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-      if (activeView && this.converter) {
+      const activeView2 = this.app.workspace.getActiveViewOfType(MarkdownView);
+      if (activeView2 && this.converter) {
         await this.convertCurrent(true);
       }
     }, 500);
@@ -389,6 +393,9 @@ var AppleStyleView = class extends ItemView {
           this.lastActiveFile = activeView.file;
         }
         this.updateCurrentDoc();
+        if (activeView) {
+          this.registerScrollSync(activeView);
+        }
         if (activeView && this.converter) {
           setTimeout(async () => {
             await this.convertCurrent(true);
@@ -415,6 +422,83 @@ var AppleStyleView = class extends ItemView {
     this.registerEvent(
       this.app.workspace.on("editor-change", debouncedConvert)
     );
+  }
+  /**
+  * 注册同步滚动 (双向: Editor <-> Preview)
+  * 采用"原子锁"机制 + "差值检测"机制，彻底解决死循环和精度问题
+  */
+  registerScrollSync(activeView) {
+    if (this.activeEditorScroller && this.editorScrollListener) {
+      this.activeEditorScroller.removeEventListener("scroll", this.editorScrollListener);
+    }
+    if (this.previewContainer && this.previewScrollListener) {
+      this.previewContainer.removeEventListener("scroll", this.previewScrollListener);
+    }
+    this.activeEditorScroller = null;
+    this.editorScrollListener = null;
+    this.previewScrollListener = null;
+    this.ignoreNextPreviewScroll = false;
+    this.ignoreNextEditorScroll = false;
+    if (!activeView)
+      return;
+    const editorScroller = activeView.contentEl.querySelector(".cm-scroller");
+    if (!editorScroller)
+      return;
+    this.activeEditorScroller = editorScroller;
+    this.editorScrollListener = () => {
+      if (!this.containerEl.isShown())
+        return;
+      if (this.ignoreNextEditorScroll) {
+        this.ignoreNextEditorScroll = false;
+        return;
+      }
+      if (!this.previewContainer)
+        return;
+      const editorHeight = editorScroller.scrollHeight - editorScroller.clientHeight;
+      const previewHeight = this.previewContainer.scrollHeight - this.previewContainer.clientHeight;
+      if (editorHeight <= 0 || previewHeight <= 0)
+        return;
+      let targetScrollTop;
+      if (editorScroller.scrollTop === 0) {
+        targetScrollTop = 0;
+      } else if (Math.abs(editorScroller.scrollTop - editorHeight) < 2) {
+        targetScrollTop = previewHeight;
+      } else {
+        const ratio = editorScroller.scrollTop / editorHeight;
+        targetScrollTop = ratio * previewHeight;
+      }
+      if (Math.abs(this.previewContainer.scrollTop - targetScrollTop) > 1) {
+        this.ignoreNextPreviewScroll = true;
+        this.previewContainer.scrollTop = targetScrollTop;
+      }
+    };
+    this.previewScrollListener = () => {
+      if (!this.containerEl.isShown())
+        return;
+      if (this.ignoreNextPreviewScroll) {
+        this.ignoreNextPreviewScroll = false;
+        return;
+      }
+      const editorHeight = editorScroller.scrollHeight - editorScroller.clientHeight;
+      const previewHeight = this.previewContainer.scrollHeight - this.previewContainer.clientHeight;
+      if (editorHeight <= 0 || previewHeight <= 0)
+        return;
+      let targetScrollTop;
+      if (this.previewContainer.scrollTop === 0) {
+        targetScrollTop = 0;
+      } else if (Math.abs(this.previewContainer.scrollTop - previewHeight) < 2) {
+        targetScrollTop = editorHeight;
+      } else {
+        const ratio = this.previewContainer.scrollTop / previewHeight;
+        targetScrollTop = ratio * editorHeight;
+      }
+      if (Math.abs(editorScroller.scrollTop - targetScrollTop) > 1) {
+        this.ignoreNextEditorScroll = true;
+        editorScroller.scrollTop = targetScrollTop;
+      }
+    };
+    editorScroller.addEventListener("scroll", this.editorScrollListener, { passive: true });
+    this.previewContainer.addEventListener("scroll", this.previewScrollListener, { passive: true });
   }
   /**
    * 加载依赖库
@@ -1388,6 +1472,9 @@ var AppleStyleView = class extends ItemView {
   }
   async onClose() {
     var _a;
+    if (this.activeEditorScroller && this.scrollListener) {
+      this.activeEditorScroller.removeEventListener("scroll", this.scrollListener);
+    }
     (_a = this.previewContainer) == null ? void 0 : _a.empty();
     console.log("\u{1F34E} \u8F6C\u6362\u5668\u9762\u677F\u5DF2\u5173\u95ED");
   }
