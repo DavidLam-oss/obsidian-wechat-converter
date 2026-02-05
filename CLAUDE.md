@@ -56,3 +56,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 3. Architecture (Dynamic Loading)
 - **Separate Bundles**: Heavy features (like MathJax) are bundled separately (`lib/mathjax-plugin.js`) and loaded via `eval()` in `input.js` only when needed.
 - **Global Scope**: When `eval`-ing code, do not assume `window` is available or writable in the same way. Use a safe global resolver (`const _global = typeof window ...`) to export functions from the dynamic bundle.
+
+## Release Checklist
+
+When bumping the version (e.g., v2.3.2 -> v2.3.3), ensure **ALL** of the following files are updated:
+
+1.  **`package.json`**: Update `"version": "..."`.
+2.  **`manifest.json`**: Update `"version": "..."`.
+3.  **`README.md`**:
+    -   **Update Badge**: Update the URL in `![Version](https://img.shields.io/badge/version-X.X.X-blue)`. **(Crucial: Don't miss this!)**
+    -   **Update Logs**: Add a new entry in the `Update Logs` section describing the changes.
