@@ -1058,16 +1058,24 @@ class AppleStyleView extends ItemView {
       const activeFile = this.app.workspace.getActiveFile();
       const title = activeFile ? activeFile.basename : '无标题文章';
 
-      // 4. 创建草稿
-      notice.setMessage('📝 正在发送到微信草稿箱...');
-
-      // TODO: 添加内容长度预检 (Pre-flight Check)
+      // 4. 内容长度预检 (Pre-flight Check)
       // 微信限制 content 长度不能超过 20,000 字符 (errcode 45002)
-      // 需要检查 cleanedHtml.length，如果过大（通常是因为图片转 Base64 失败或 SVG 公式过多），
-      // 应提前拦截并提示用户，避免调用 API 失败。
+      if (cleanedHtml.length > 20000) {
+        // 智能诊断：检查是否残留 Base64
+        const base64Count = (cleanedHtml.match(/src=["']data:image/g) || []).length;
 
-      const article = {
-        title: title.substring(0, 64),
+        let msg = `文章内容过长 (${cleanedHtml.length} 字符)，超过微信限制。`;
+        if (base64Count > 0) {
+          msg += `\n\n❌ 诊断：检测到 ${base64Count} 张图片未成功上传（仍为 Base64 格式），导致体积膨胀。建议检查网络连接并重试。`;
+        } else {
+          msg += `\n\n可能原因：包含大量数学公式，或正文内容过长（超过微信 20,000 字符限制）。请尝试精简内容。`;
+        }
+
+        throw new Error(msg);
+      }
+
+      // 5. 创建草稿
+      notice.setMessage('📝 正在发送到微信草稿箱...');
         content: cleanedHtml,
         thumb_media_id: thumb_media_id,
         author: account.author || '',
