@@ -635,7 +635,7 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
    ======================================== */
 .apple-placeholder-note {
   font-size: 12px !important;
-  color: var(--apple-tertiary);
+  color: #86868b;
   margin-top: 24px !important;
   opacity: 0.8;
 }
@@ -647,9 +647,9 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
   justify-content: center;
   height: 100%;
   text-align: center;
-  color: var(--apple-secondary);
-  background: var(--apple-background);
-  /* 使用变量以便适配深色模式 */
+  color: #6e6e73;
+  background: transparent;
+  /* 强制透明背景，使用父容器的白色背景 */
 }
 
 .apple-placeholder-icon {
@@ -660,13 +660,13 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
 .apple-placeholder h2 {
   font-size: 20px;
   font-weight: 600;
-  color: var(--apple-primary);
+  color: #1d1d1f;
   margin: 0 0 var(--apple-spacing-sm) 0;
 }
 
 .apple-placeholder p {
   font-size: 14px;
-  color: var(--apple-secondary);
+  color: #6e6e73;
   margin: 0 0 var(--apple-spacing-lg) 0;
 }
 
@@ -676,10 +676,10 @@ body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
   gap: 6px;
   align-items: flex-start;
   padding: var(--apple-spacing-md);
-  background: var(--apple-surface);
+  background: #f5f5f7;
   border-radius: var(--apple-radius-md);
   font-size: 13px;
-  color: var(--apple-primary);
+  color: #1d1d1f;
   /* 确保文字颜色适配 */
 }
 

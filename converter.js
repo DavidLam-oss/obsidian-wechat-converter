@@ -326,10 +326,23 @@ ${macHeader}
       const tag = isBlock ? 'section' : 'span';
 
       // Inline math needs vertical alignment adjustment
-      // Block math needs centering and overflow handling
+      // Block math needs centering and scaling (not scrolling) as per WeChat behavior
       const style = isBlock
-        ? 'display: block; margin: 1em 0; text-align: center; overflow-x: auto; max-width: 100%;'
+        ? 'display: block; margin: 1em 0; text-align: center; max-width: 100%;'
         : 'display: inline-block; vertical-align: -0.1em; margin: 0 1px;';
+
+      // 关键修复：给块级公式的 SVG 添加 max-width: 100% 和 height: auto
+      // 这样在手机上预览时，公式会按比例缩小以适应屏幕，而不是被遮挡或需要滚动
+      // 这符合微信公众号的默认渲染行为
+      if (isBlock) {
+        content = content.replace(/<svg([^>]*)>/, (m, svgAttrs) => {
+          if (svgAttrs.includes('style="')) {
+            return `<svg${svgAttrs.replace('style="', 'style="max-width: 100%; height: auto; ')}>`;
+          } else {
+            return `<svg${svgAttrs} style="max-width: 100%; height: auto;">`;
+          }
+        });
+      }
 
       return `<${tag} style="${style}">${content}</${tag}>`;
     });

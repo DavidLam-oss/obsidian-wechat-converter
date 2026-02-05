@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Language Preferences
+- Detect the language of the user's prompt (English or Chinese). Always reply in the same language unless explicitly asked otherwise.
+- When drafting replies or documentation intended for Chinese audiences, ensure natural, native-level phrasing.
+
 ## Commands
 
 - **Install Dependencies**: `npm install`
