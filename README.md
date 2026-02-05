@@ -79,17 +79,11 @@
 
 ## 🚀 安装
 
-### 方法 1: 手动安装（推荐）
-
-1. 从 [GitHub Releases](https://github.com/DavidLam-oss/obsidian-wechat-converter/releases) 下载最新的插件包。
-2. 解压并将其中的文件夹放入 Obsidian vault 的 `.obsidian/plugins/wechat-converter/` 目录中。
-3. 确保文件夹内包含 `main.js`, `manifest.json`, `styles.css`, `converter.js`, `themes/` 以及 `lib/`。
+1. 从 [GitHub Releases](https://github.com/DavidLam-oss/obsidian-wechat-converter/releases) 下载最新的 `obsidian-wechat-converter.zip` 插件包。
+2. 解压并将其中的文件夹放入 Obsidian vault 的 `.obsidian/plugins/` 目录中。
+   > 最终路径应为：`.../.obsidian/plugins/obsidian-wechat-converter/`
+3. 确保文件夹内包含 `main.js`, `manifest.json`, `styles.css` 以及 `lib/` 和 `themes/` 文件夹。
 4. 重启 Obsidian 或在设置中刷新插件列表，并启用插件。
-
-### 方法 2: 使用 BRAT
-
-1. 安装 [BRAT](https://github.com/TfTHacker/obsidian42-brat) 插件。
-2. 添加 Beta 仓库: `DavidLam-oss/obsidian-wechat-converter`。
 
 ## 📖 使用方法
 
