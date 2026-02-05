@@ -1060,6 +1060,12 @@ class AppleStyleView extends ItemView {
 
       // 4. 创建草稿
       notice.setMessage('📝 正在发送到微信草稿箱...');
+
+      // TODO: 添加内容长度预检 (Pre-flight Check)
+      // 微信限制 content 长度不能超过 20,000 字符 (errcode 45002)
+      // 需要检查 cleanedHtml.length，如果过大（通常是因为图片转 Base64 失败或 SVG 公式过多），
+      // 应提前拦截并提示用户，避免调用 API 失败。
+
       const article = {
         title: title.substring(0, 64),
         content: cleanedHtml,
