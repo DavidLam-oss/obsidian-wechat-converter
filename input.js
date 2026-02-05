@@ -1076,6 +1076,8 @@ class AppleStyleView extends ItemView {
 
       // 5. 创建草稿
       notice.setMessage('📝 正在发送到微信草稿箱...');
+      const article = {
+        title: title.substring(0, 64),
         content: cleanedHtml,
         thumb_media_id: thumb_media_id,
         author: account.author || '',
