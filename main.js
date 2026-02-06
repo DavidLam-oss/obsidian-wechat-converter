@@ -193,13 +193,12 @@ var WechatAPI = class {
       const mimeType = blob.type || "image/jpeg";
       const ext = mimeType.includes("gif") ? "gif" : mimeType.includes("png") ? "png" : "jpg";
       if (this.proxyUrl) {
-        const arrayBuffer = await blob.arrayBuffer();
-        const bytes = new Uint8Array(arrayBuffer);
-        let binary = "";
-        for (let i = 0; i < bytes.length; i++) {
-          binary += String.fromCharCode(bytes[i]);
-        }
-        const base64Data = btoa(binary);
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        const base64Data = await new Promise((resolve, reject) => {
+          reader.onload = () => resolve(reader.result.split(",")[1]);
+          reader.onerror = reject;
+        });
         const proxyResponse = await requestUrl({
           url: this.proxyUrl,
           method: "POST",
@@ -273,7 +272,6 @@ var AppleStyleView = class extends ItemView {
     this.lastActiveFile = null;
     this.sessionCoverBase64 = "";
     this.sessionDigest = "";
-    this.isProgrammaticScroll = false;
     this.articleStates = /* @__PURE__ */ new Map();
   }
   getViewType() {
@@ -791,24 +789,6 @@ var AppleStyleView = class extends ItemView {
     };
     const coverBtns = coverContent.createDiv({ cls: "wechat-modal-cover-btns" });
     const uploadBtn = coverBtns.createEl("button", { text: "\u4E0A\u4F20" });
-    uploadBtn.onclick = () => {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file)
-          return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          coverBase64 = event.target.result;
-          this.sessionCoverBase64 = coverBase64;
-          updatePreview();
-        };
-        reader.readAsDataURL(file);
-      };
-      input.click();
-    };
     const digestSection = modal.contentEl.createDiv({ cls: "wechat-modal-section" });
     digestSection.createEl("label", { text: "\u6587\u7AE0\u6458\u8981\uFF08\u53EF\u9009\uFF09", cls: "wechat-modal-label" });
     const tempDiv = document.createElement("div");
@@ -950,7 +930,8 @@ var AppleStyleView = class extends ItemView {
     if (src.startsWith("http")) {
       const { requestUrl } = require("obsidian");
       const response = await requestUrl({ url: src });
-      return new Blob([response.arrayBuffer], { type: "image/png" });
+      const contentType = response.headers["content-type"] || response.headers["Content-Type"] || "image/jpeg";
+      return new Blob([response.arrayBuffer], { type: contentType });
     }
     throw new Error("\u4E0D\u652F\u6301\u7684\u56FE\u7247\u6765\u6E90\uFF0C\u8BF7\u5C1D\u8BD5\u91CD\u65B0\u4E0A\u4F20\u5C01\u9762");
   }
@@ -1374,7 +1355,7 @@ var AppleStyleView = class extends ItemView {
    */
   async processImagesToDataURL(container) {
     const images = Array.from(container.querySelectorAll("img"));
-    const localImages = images.filter((img) => img.src.startsWith("app://"));
+    const localImages = images.filter((img) => img.src.startsWith("app://") || img.src.startsWith("capacitor://"));
     if (localImages.length === 0)
       return false;
     const startTime = Date.now();
@@ -1596,10 +1577,18 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
     }
     new Setting(containerEl).setName("\u9AD8\u7EA7\u8BBE\u7F6E").setHeading();
     new Setting(containerEl).setName("API \u4EE3\u7406\u5730\u5740").setDesc(createFragment((frag) => {
-      frag.appendText("\u5982\u679C\u4F60\u7684\u7F51\u7EDC IP \u7ECF\u5E38\u53D8\u5316\uFF0C\u53EF\u914D\u7F6E\u4EE3\u7406\u670D\u52A1\u3002");
-      frag.createEl("a", {
+      const descDiv = frag.createDiv();
+      descDiv.appendText("\u5982\u679C\u4F60\u7684\u7F51\u7EDC IP \u7ECF\u5E38\u53D8\u5316\uFF0C\u53EF\u914D\u7F6E\u4EE3\u7406\u670D\u52A1\u3002");
+      descDiv.createEl("a", {
         text: "\u67E5\u770B\u90E8\u7F72\u6307\u5357",
-        href: "https://xiaoweibox.top/chats/wechat-proxy"
+        href: "https://xiaoweibox.top/chats/wechat-proxy",
+        style: "margin-left: 5px;"
+      });
+      frag.createDiv({
+        cls: "wechat-proxy-note",
+        style: "margin-top: 6px; font-size: 12px; color: var(--text-muted); background: var(--background-secondary); padding: 8px; border-radius: 4px;"
+      }, (el) => {
+        el.createSpan({ text: "\u{1F512} \u5B89\u5168\u63D0\u793A\uFF1A\u4EE3\u7406\u670D\u52A1\u5C06\u4E2D\u8F6C\u60A8\u7684\u8BF7\u6C42\u3002\u8BF7\u786E\u4FDD\u4F7F\u7528\u53D7\u4FE1\u4EFB\u7684\u4EE3\u7406\uFF08\u81EA\u5EFA\u6216\u53EF\u9760\u7B2C\u4E09\u65B9\uFF09\uFF0C\u4EE5\u4FDD\u62A4 AppSecret \u5B89\u5168\u3002" });
       });
     })).addText((text) => text.setPlaceholder("https://your-proxy.workers.dev").setValue(this.plugin.settings.proxyUrl).onChange(async (value) => {
       this.plugin.settings.proxyUrl = value.trim();

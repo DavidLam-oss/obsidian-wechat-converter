@@ -246,14 +246,13 @@ class WechatAPI {
       const ext = mimeType.includes('gif') ? 'gif' : mimeType.includes('png') ? 'png' : 'jpg';
 
       if (this.proxyUrl) {
-        // 通过代理发送：将文件转为 base64
-        const arrayBuffer = await blob.arrayBuffer();
-        const bytes = new Uint8Array(arrayBuffer);
-        let binary = '';
-        for (let i = 0; i < bytes.length; i++) {
-          binary += String.fromCharCode(bytes[i]);
-        }
-        const base64Data = btoa(binary);
+        // 通过代理发送：将文件转为 base64 (使用 FileReader 提升性能)
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        const base64Data = await new Promise((resolve, reject) => {
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+        });
 
         const proxyResponse = await requestUrl({
           url: this.proxyUrl,
@@ -334,10 +333,7 @@ class AppleStyleView extends ItemView {
     this.sessionDigest = ''; // 本次同步的摘要
 
     // 双向同步滚动互斥锁 (原子锁方案)
-    // isProgrammaticScroll: 标记下一次 scroll 事件是否由代码触发
     // 用于区分"用户滚动"和"代码同步滚动"，彻底解决死循环和抖动问题
-    this.isProgrammaticScroll = false;
-
     // 状态缓存：Map<FilePath, { coverBase64, digest }>
     // 用于在不关闭插件面板的情况下，切换文章或关闭弹窗后保留封面和摘要
     this.articleStates = new Map();
@@ -1038,23 +1034,6 @@ class AppleStyleView extends ItemView {
 
     const coverBtns = coverContent.createDiv({ cls: 'wechat-modal-cover-btns' });
     const uploadBtn = coverBtns.createEl('button', { text: '上传' });
-    uploadBtn.onclick = () => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          coverBase64 = event.target.result;
-          this.sessionCoverBase64 = coverBase64;
-          updatePreview();
-        };
-        reader.readAsDataURL(file);
-      };
-      input.click();
-    };
 
     // 摘要设置
     const digestSection = modal.contentEl.createDiv({ cls: 'wechat-modal-section' });
@@ -1260,7 +1239,8 @@ class AppleStyleView extends ItemView {
       const { requestUrl } = require('obsidian');
       const response = await requestUrl({ url: src });
       // requestUrl 返回 ArrayBuffer，需要转换为 Blob
-      return new Blob([response.arrayBuffer], { type: 'image/png' });
+      const contentType = response.headers['content-type'] || response.headers['Content-Type'] || 'image/jpeg';
+      return new Blob([response.arrayBuffer], { type: contentType });
     }
 
     throw new Error('不支持的图片来源，请尝试重新上传封面');
@@ -1778,7 +1758,7 @@ class AppleStyleView extends ItemView {
    */
   async processImagesToDataURL(container) {
     const images = Array.from(container.querySelectorAll('img'));
-    const localImages = images.filter(img => img.src.startsWith('app://'));
+    const localImages = images.filter(img => img.src.startsWith('app://') || img.src.startsWith('capacitor://'));
 
     if (localImages.length === 0) return false;
 
@@ -2111,10 +2091,19 @@ class AppleStyleSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('API 代理地址')
       .setDesc(createFragment(frag => {
-        frag.appendText('如果你的网络 IP 经常变化，可配置代理服务。');
-        frag.createEl('a', {
+        const descDiv = frag.createDiv();
+        descDiv.appendText('如果你的网络 IP 经常变化，可配置代理服务。');
+        descDiv.createEl('a', {
           text: '查看部署指南',
-          href: 'https://xiaoweibox.top/chats/wechat-proxy'
+          href: 'https://xiaoweibox.top/chats/wechat-proxy',
+          style: 'margin-left: 5px;'
+        });
+
+        frag.createDiv({
+            cls: 'wechat-proxy-note',
+            style: 'margin-top: 6px; font-size: 12px; color: var(--text-muted); background: var(--background-secondary); padding: 8px; border-radius: 4px;'
+        }, el => {
+           el.createSpan({ text: '🔒 安全提示：代理服务将中转您的请求。请确保使用受信任的代理（自建或可靠第三方），以保护 AppSecret 安全。' });
         });
       }))
       .addText(text => text
