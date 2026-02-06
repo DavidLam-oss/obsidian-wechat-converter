@@ -23,7 +23,9 @@
     - **纯矢量 SVG 渲染**：采用独家无缓存技术，将公式转为独立的 SVG 矢量图，无论放大多少倍都清晰锐利。
     - **抗清洗**：完美抵抗微信公众号的样式清洗，不再出现乱码或被吞掉的情况。
 
-    ![数学公式渲染](images/math_render.png)
+    <p align="center">
+      <img src="images/math_render.png" alt="数学公式渲染" width="520" />
+    </p>
 
 2.  **🚀 一键同步到微信草稿箱 (v2.2 增强)**
     - **极速并发上传**：图片上传速度提升 300%，支持多线程并发处理，大图文章秒传。
@@ -36,7 +38,9 @@
     - **多账号管理**：支持最多 5 个公众号账号配置，快速切换同步。
     - **Cloudflare 代理支持**：解决 IP 白名单频繁变化问题，[查看部署指南](#-代理设置解决-ip-白名单问题)。
 
-    ![微信同步弹窗](images/wechat_sync_popup.png)
+    <p align="center">
+      <img src="images/wechat_sync_popup.png" alt="微信同步弹窗" width="520" />
+    </p>
 
 3.  **🎛 全新可视化设置面板 (Settings Panel)**
     - 告别繁琐的代码修改！我们内置了直观的设置面板，让您可以实时调整字体、字号、主题色等参数，一切尽在掌握。
@@ -84,7 +88,9 @@
     - 重新设计了代码块样式，支持 macOS 窗口风格及行号显示。
     - **1:1 完美还原**：我们在 Obsidian 预览区看到的样式（包括间距、颜色、边框、阴影），复制到微信后台后将**分毫不差**。
 
-    ![Mac风格代码块](images/code_render.png)
+    <p align="center">
+      <img src="images/code_render.png" alt="Mac风格代码块" width="520" />
+    </p>
 
 ## 🚀 安装
 
