@@ -497,17 +497,36 @@ var AppleStyleView = class extends ItemView {
     }
   }
   /**
-   * 创建设置面板
+   * 创建设置面板（重构为：顶部工具栏 + 悬浮设置层）
    */
   createSettingsPanel(container) {
-    const panel = container.createEl("div", { cls: "apple-settings-panel" });
-    const header = panel.createEl("div", { cls: "apple-settings-header" });
-    header.createEl("div", { cls: "apple-settings-title", text: "\u{1F4DD} \u5FAE\u4FE1\u516C\u4F17\u53F7\u8F6C\u6362\u5668" });
-    this.currentDocLabel = header.createEl("div", { cls: "apple-current-doc", text: "\u672A\u9009\u62E9\u6587\u6863" });
-    const details = panel.createEl("details", { cls: "apple-settings-details" });
-    details.open = false;
-    const summary = details.createEl("summary", { cls: "apple-settings-summary", text: "\u6837\u5F0F\u8BBE\u7F6E" });
-    const settingsArea = details.createEl("div", { cls: "apple-settings-area" });
+    const { setIcon } = require("obsidian");
+    const toolbar = container.createEl("div", { cls: "apple-top-toolbar" });
+    this.currentDocLabel = toolbar.createEl("div", { cls: "apple-toolbar-title" });
+    this.currentDocLabel.createDiv({ text: "\u5FAE\u4FE1\u516C\u4F17\u53F7\u8F6C\u6362\u5668", cls: "apple-toolbar-plugin-name" });
+    this.docTitleText = this.currentDocLabel.createDiv({ text: "\u672A\u9009\u62E9\u6587\u6863", cls: "apple-toolbar-doc-name" });
+    const actions = toolbar.createEl("div", { cls: "apple-toolbar-actions" });
+    const createIconBtn = (icon, title, onClick) => {
+      const btn = actions.createEl("div", {
+        cls: "apple-icon-btn",
+        attr: { "aria-label": title }
+        // Tooltip
+      });
+      setIcon(btn, icon);
+      btn.addEventListener("click", onClick);
+      return btn;
+    };
+    const settingsBtn = createIconBtn("sliders-horizontal", "\u6837\u5F0F\u8BBE\u7F6E", () => {
+      this.settingsOverlay.classList.toggle("visible");
+      settingsBtn.classList.toggle("active");
+    });
+    this.copyBtn = createIconBtn("copy", "\u590D\u5236\u5230\u516C\u4F17\u53F7", () => this.copyHTML());
+    const accounts = this.plugin.settings.wechatAccounts || [];
+    if (accounts.length > 0) {
+      createIconBtn("send", "\u4E00\u952E\u540C\u6B65\u5230\u8349\u7A3F\u7BB1", () => this.showSyncModal());
+    }
+    this.settingsOverlay = container.createEl("div", { cls: "apple-settings-overlay" });
+    const settingsArea = this.settingsOverlay.createEl("div", { cls: "apple-settings-area" });
     this.createSection(settingsArea, "\u4E3B\u9898", (section) => {
       const grid = section.createEl("div", { cls: "apple-btn-grid" });
       const themes = AppleTheme.getThemeList();
@@ -536,13 +555,20 @@ var AppleStyleView = class extends ItemView {
     this.createSection(settingsArea, "\u5B57\u53F7", (section) => {
       const grid = section.createEl("div", { cls: "apple-btn-row" });
       const sizes = [
+        { value: "\u5C0F", label: "\u5C0F" },
+        { value: "\u8F83\u5C0F", label: "\u8F83\u5C0F" },
+        { value: "\u63A8\u8350", label: "\u63A8\u8350" },
+        { value: "\u8F83\u5927", label: "\u8F83\u5927" },
+        { value: "\u5927", label: "\u5927" }
+      ];
+      const sizeOpts = [
         { value: 1, label: "\u5C0F" },
         { value: 2, label: "\u8F83\u5C0F" },
         { value: 3, label: "\u63A8\u8350" },
         { value: 4, label: "\u8F83\u5927" },
         { value: 5, label: "\u5927" }
       ];
-      sizes.forEach((s) => {
+      sizeOpts.forEach((s) => {
         const btn = grid.createEl("button", {
           cls: `apple-btn-size ${this.plugin.settings.fontSize === s.value ? "active" : ""}`,
           text: s.label
@@ -634,22 +660,25 @@ var AppleStyleView = class extends ItemView {
         await this.convertCurrent(true);
       });
     });
-    const actions = panel.createEl("div", { cls: "apple-actions" });
-    const accounts = this.plugin.settings.wechatAccounts || [];
-    if (accounts.length > 0) {
-      const syncBtn = actions.createEl("button", {
-        cls: "apple-btn-secondary apple-btn-full",
-        text: "\u4E00\u952E\u540C\u6B65\u5230\u8349\u7A3F\u7BB1",
-        style: "margin-bottom: 8px;"
-      });
-      syncBtn.addEventListener("click", () => this.showSyncModal());
+    const captionSetting = new Setting(settingsArea).setName("\u663E\u793A\u56FE\u7247\u8BF4\u660E\u6587\u5B57").setDesc("\u5173\u95ED\u6C34\u5370\u65F6\uFF0C\u5728\u56FE\u7247\u4E0B\u65B9\u663E\u793A\u8BF4\u660E\u6587\u5B57").addToggle((toggle) => toggle.setValue(this.plugin.settings.showImageCaption).onChange(async (value) => {
+      this.plugin.settings.showImageCaption = value;
+      await this.plugin.saveSettings();
+      if (this.converter) {
+        this.converter.updateConfig({ showImageCaption: value });
+        await this.convertCurrent(true);
+      }
+    }));
+    if (this.plugin.settings.enableWatermark) {
+      captionSetting.setDesc("\u56E0\u5168\u5C40\u8BBE\u7F6E\u4E2D\u5DF2\u5F00\u542F\u6C34\u5370\uFF0C\u6B64\u9009\u9879\u9ED8\u8BA4\u5F00\u542F");
+      const toggleComp = captionSetting.components[0];
+      toggleComp.setValue(true);
+      toggleComp.setDisabled(true);
+      if (toggleComp.toggleEl) {
+        toggleComp.toggleEl.style.pointerEvents = "none";
+        toggleComp.toggleEl.style.opacity = "0.6";
+        toggleComp.toggleEl.style.filter = "grayscale(100%)";
+      }
     }
-    const copyBtn = actions.createEl("button", {
-      cls: "apple-btn-primary apple-btn-full",
-      text: "\u590D\u5236\u5230\u516C\u4F17\u53F7"
-    });
-    this.copyBtn = copyBtn;
-    copyBtn.addEventListener("click", () => this.copyHTML());
   }
   /**
    * 创建账号选择器
@@ -1183,15 +1212,15 @@ var AppleStyleView = class extends ItemView {
    */
   updateCurrentDoc() {
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (activeView && this.currentDocLabel) {
-      this.currentDocLabel.setText(`\u{1F4C4} ${activeView.file.basename}`);
-      this.currentDocLabel.style.color = "#0071e3";
-    } else if (this.lastActiveFile && this.currentDocLabel) {
-      this.currentDocLabel.setText(`\u{1F4C4} ${this.lastActiveFile.basename}`);
-      this.currentDocLabel.style.color = "#0071e3";
-    } else if (this.currentDocLabel) {
-      this.currentDocLabel.setText("\u672A\u9009\u62E9\u6587\u6863");
-      this.currentDocLabel.style.color = "#86868b";
+    if (activeView && this.docTitleText) {
+      this.docTitleText.setText(activeView.file.basename);
+      this.docTitleText.style.color = "var(--apple-primary)";
+    } else if (this.lastActiveFile && this.docTitleText) {
+      this.docTitleText.setText(this.lastActiveFile.basename);
+      this.docTitleText.style.color = "var(--apple-primary)";
+    } else if (this.docTitleText) {
+      this.docTitleText.setText("\u672A\u9009\u62E9\u6587\u6863");
+      this.docTitleText.style.color = "var(--apple-tertiary)";
     }
   }
   /**
@@ -1304,10 +1333,10 @@ var AppleStyleView = class extends ItemView {
     const originalText = this.copyBtn.innerHTML;
     this.isCopying = true;
     if (this.copyBtn) {
-      this.copyBtn.disabled = true;
-      this.copyBtn.setText("\u23F3 \u6B63\u5728\u538B\u7F29\u56FE\u7247...");
+      this.copyBtn.classList.add("active");
     }
     try {
+      new Notice("\u23F3 \u6B63\u5728\u5904\u7406\u56FE\u7247...");
       const tempDiv = document.createElement("div");
       tempDiv.innerHTML = this.currentHtml;
       const processed = await this.processImagesToDataURL(tempDiv);
@@ -1320,12 +1349,14 @@ var AppleStyleView = class extends ItemView {
           "text/plain": new Blob([text], { type: "text/plain" })
         });
         await navigator.clipboard.write([clipboardItem]);
+        new Notice("\u2705 \u5DF2\u590D\u5236\u5230\u526A\u8D34\u677F\uFF01");
         if (this.copyBtn) {
-          this.copyBtn.setText("\u2705 \u5DF2\u590D\u5236\uFF01");
+          const { setIcon } = require("obsidian");
+          setIcon(this.copyBtn, "check");
           setTimeout(() => {
             if (this.copyBtn) {
-              this.copyBtn.disabled = false;
-              this.copyBtn.innerHTML = originalText;
+              setIcon(this.copyBtn, "copy");
+              this.copyBtn.classList.remove("active");
             }
           }, 2e3);
         }
@@ -1334,12 +1365,9 @@ var AppleStyleView = class extends ItemView {
       throw new Error("Clipboard API unavailable");
     } catch (error) {
       console.error("\u590D\u5236\u5931\u8D25:", error);
+      new Notice(`\u274C \u590D\u5236\u5931\u8D25: ${error.message}`);
       if (this.copyBtn) {
-        this.copyBtn.setText("\u274C \u590D\u5236\u5931\u8D25");
-        setTimeout(() => {
-          this.copyBtn.disabled = false;
-          this.copyBtn.innerHTML = originalText;
-        }, 2e3);
+        this.copyBtn.classList.remove("active");
       }
     } finally {
       this.isCopying = false;
@@ -1490,10 +1518,6 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
     }
     new Setting(containerEl).setName("\u5934\u50CF URL\uFF08\u5907\u7528\uFF09").setDesc("\u5982\u672A\u4E0A\u4F20\u672C\u5730\u5934\u50CF\uFF0C\u5C06\u4F7F\u7528\u6B64 URL").addText((text) => text.setPlaceholder("https://example.com/avatar.jpg").setValue(this.plugin.settings.avatarUrl).onChange(async (value) => {
       this.plugin.settings.avatarUrl = value;
-      await this.plugin.saveSettings();
-    }));
-    new Setting(containerEl).setName("\u663E\u793A\u56FE\u7247\u8BF4\u660E\u6587\u5B57").setDesc("\u5173\u95ED\u6C34\u5370\u65F6\uFF0C\u5728\u56FE\u7247\u4E0B\u65B9\u663E\u793A\u8BF4\u660E\u6587\u5B57\uFF08\u56FE\u7247\u540D\u79F0\uFF09").addToggle((toggle) => toggle.setValue(this.plugin.settings.showImageCaption).onChange(async (value) => {
-      this.plugin.settings.showImageCaption = value;
       await this.plugin.saveSettings();
     }));
     new Setting(containerEl).setName("\u5FAE\u4FE1\u516C\u4F17\u53F7\u8D26\u53F7").setDesc("\u8BF7\u5728\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0 [\u8BBE\u7F6E\u4E0E\u5F00\u53D1] -> [\u57FA\u672C\u914D\u7F6E] \u4E2D\u83B7\u53D6 AppID \u548C AppSecret\uFF0C\u5E76\u786E\u4FDD\u5DF2\u5C06\u5F53\u524D IP \u52A0\u5165\u767D\u540D\u5355\u3002").setHeading();

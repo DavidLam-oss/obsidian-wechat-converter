@@ -79,57 +79,146 @@
   background: var(--apple-background);
   font-family: var(--apple-font-text);
   color: var(--apple-primary);
+  position: relative; /* 为悬浮层提供定位上下文 */
 }
 
 /* ========================================
-   设置面板 - 新 UI
+   顶部工具栏 (Top Toolbar)
    ======================================== */
-.apple-settings-panel {
-  padding: var(--apple-spacing-md);
-  border-bottom: 1px solid var(--apple-border);
-  background: var(--apple-background);
-}
-
-.apple-settings-header {
+.apple-top-toolbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--apple-spacing-md);
+  justify-content: space-between;
+  height: 56px; /* 增加高度以容纳双行 */
+  padding: 0 16px;
+  border-bottom: 1px solid var(--apple-divider);
+  background: var(--apple-background);
+  flex-shrink: 0;
+  z-index: 200; /* 确保在最上层 */
 }
 
-.apple-settings-title {
-  font-size: 15px;
+.apple-toolbar-title {
+  flex: 1;
+  margin-right: 16px;
+  display: flex;
+  flex-direction: column; /* 双行布局 */
+  justify-content: center;
+  align-items: flex-start;
+  overflow: hidden; /* 关键：确保子元素截断生效 */
+}
+
+.apple-toolbar-plugin-name {
+  font-size: 11px;
+  color: var(--apple-tertiary);
+  font-weight: 500;
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+
+.apple-toolbar-doc-name {
+  font-size: 14px;
   font-weight: 600;
+  color: var(--apple-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%; /* 确保占据全宽以触发截断 */
+  line-height: 1.2;
+}
+
+.apple-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.apple-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--apple-radius-sm);
+  color: var(--apple-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.apple-icon-btn:hover {
+  background: var(--apple-surface);
   color: var(--apple-primary);
 }
 
-.apple-current-doc {
-  font-size: 12px;
-  color: var(--apple-tertiary);
+.apple-icon-btn.active {
+  background: var(--apple-accent);
+  color: white;
 }
 
+/* ========================================
+   悬浮设置面板 (Floating Settings Overlay)
+   ======================================== */
+.apple-settings-overlay {
+  position: absolute;
+  top: 48px; /* 紧贴工具栏下方 */
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--apple-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  padding: 16px;
+  max-height: calc(100% - 48px);
+  overflow-y: auto;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+}
+
+.theme-dark .apple-settings-overlay {
+  background: rgba(30, 30, 30, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.apple-settings-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* 隐藏旧的折叠样式，直接平铺 */
 .apple-settings-area {
   display: flex;
   flex-direction: column;
-  gap: var(--apple-spacing-md);
+  gap: 16px;
 }
 
-.apple-setting-section {
+/* ========================================
+   预览区域 (占据剩余空间)
+   ======================================== */
+.apple-preview-wrapper {
+  flex: 1; /* 占据所有剩余高度 */
   display: flex;
-  flex-direction: column;
-  gap: var(--apple-spacing-xs);
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--apple-surface);
+  overflow: auto;
+  padding: 40px;
+  position: relative; /* 建立层叠上下文 */
+  z-index: 1;
 }
 
-.apple-setting-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--apple-primary);
+/* 移除旧的设置面板样式，避免冲突 */
+.apple-settings-panel {
+  display: contents; /* 让子元素直接参与布局 */
 }
 
-.apple-setting-content {
-  display: flex;
-  align-items: center;
-}
+/* === 设置变更处理 === */
+/* ... (保留滑块等其他组件样式) ... */
 
 /* === 主题按钮网格 === */
 .apple-btn-grid {

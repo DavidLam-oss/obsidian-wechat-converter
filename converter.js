@@ -32,6 +32,15 @@ window.AppleStyleConverter = class AppleStyleConverter {
 
   reinit() { this.md = null; }
 
+  updateConfig(config) {
+    if (config.showImageCaption !== undefined) {
+      this.showImageCaption = config.showImageCaption;
+    }
+    if (config.avatarUrl !== undefined) {
+      this.avatarUrl = config.avatarUrl;
+    }
+  }
+
   updateSourcePath(path) {
     this.sourcePath = path;
   }

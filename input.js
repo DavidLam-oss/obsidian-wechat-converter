@@ -652,21 +652,51 @@ class AppleStyleView extends ItemView {
 
 
   /**
-   * 创建设置面板
+   * 创建设置面板（重构为：顶部工具栏 + 悬浮设置层）
    */
   createSettingsPanel(container) {
-    const panel = container.createEl('div', { cls: 'apple-settings-panel' });
+    const { setIcon } = require('obsidian'); // 引入图标工具
 
-    // 标题区
-    const header = panel.createEl('div', { cls: 'apple-settings-header' });
-    header.createEl('div', { cls: 'apple-settings-title', text: '📝 微信公众号转换器' });
-    this.currentDocLabel = header.createEl('div', { cls: 'apple-current-doc', text: '未选择文档' });
+    // 1. 创建顶部工具栏
+    const toolbar = container.createEl('div', { cls: 'apple-top-toolbar' });
 
-    // 设置区域 (使用 details 折叠以节省空间)
-    const details = panel.createEl('details', { cls: 'apple-settings-details' });
-    details.open = false; // 默认折叠
-    const summary = details.createEl('summary', { cls: 'apple-settings-summary', text: '样式设置' });
-    const settingsArea = details.createEl('div', { cls: 'apple-settings-area' });
+    // 1.1 左侧：双层信息（插件名 + 文档名）
+    this.currentDocLabel = toolbar.createEl('div', { cls: 'apple-toolbar-title' });
+    this.currentDocLabel.createDiv({ text: '微信公众号转换器', cls: 'apple-toolbar-plugin-name' });
+    this.docTitleText = this.currentDocLabel.createDiv({ text: '未选择文档', cls: 'apple-toolbar-doc-name' });
+
+    // 1.2 右侧：操作按钮组
+    const actions = toolbar.createEl('div', { cls: 'apple-toolbar-actions' });
+
+    // 按钮工厂函数
+    const createIconBtn = (icon, title, onClick) => {
+      const btn = actions.createEl('div', {
+        cls: 'apple-icon-btn',
+        attr: { 'aria-label': title } // Tooltip
+      });
+      setIcon(btn, icon);
+      btn.addEventListener('click', onClick);
+      return btn;
+    };
+
+    // [设置] 按钮
+    const settingsBtn = createIconBtn('sliders-horizontal', '样式设置', () => {
+      this.settingsOverlay.classList.toggle('visible');
+      settingsBtn.classList.toggle('active');
+    });
+
+    // [复制] 按钮
+    this.copyBtn = createIconBtn('copy', '复制到公众号', () => this.copyHTML());
+
+    // [同步] 按钮 (仅当有账号时显示)
+    const accounts = this.plugin.settings.wechatAccounts || [];
+    if (accounts.length > 0) {
+      createIconBtn('send', '一键同步到草稿箱', () => this.showSyncModal());
+    }
+
+    // 2. 创建悬浮设置层 (初始隐藏)
+    this.settingsOverlay = container.createEl('div', { cls: 'apple-settings-overlay' });
+    const settingsArea = this.settingsOverlay.createEl('div', { cls: 'apple-settings-area' });
 
     // === 主题选择 ===
     this.createSection(settingsArea, '主题', (section) => {
@@ -700,13 +730,24 @@ class AppleStyleView extends ItemView {
     this.createSection(settingsArea, '字号', (section) => {
       const grid = section.createEl('div', { cls: 'apple-btn-row' });
       const sizes = [
+        { value: '小', label: '小' },
+        { value: '较小', label: '较小' },
+        { value: '推荐', label: '推荐' },
+        { value: '较大', label: '较大' },
+        { value: '大', label: '大' },
+      ];
+      // 修正字号 value，之前是 int 1,2,3... 现在代码里用的是 1,2,3 还是 string?
+      // Check AppleTheme.FONT_SIZES: key is '1', '2'... (string/number loose)
+      // Original code used `value: 1`, `value: 2` etc. Let's stick to that.
+      const sizeOpts = [
         { value: 1, label: '小' },
         { value: 2, label: '较小' },
         { value: 3, label: '推荐' },
         { value: 4, label: '较大' },
         { value: 5, label: '大' },
       ];
-      sizes.forEach(s => {
+
+      sizeOpts.forEach(s => {
         const btn = grid.createEl('button', {
           cls: `apple-btn-size ${this.plugin.settings.fontSize === s.value ? 'active' : ''}`,
           text: s.label,
@@ -825,26 +866,36 @@ class AppleStyleView extends ItemView {
       });
     });
 
-    // === 操作按钮 ===
-    const actions = panel.createEl('div', { cls: 'apple-actions' });
+    // === 显示图片说明文字 ===
+    const captionSetting = new Setting(settingsArea)
+      .setName('显示图片说明文字')
+      .setDesc('关闭水印时，在图片下方显示说明文字')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.showImageCaption)
+        .onChange(async (value) => {
+          this.plugin.settings.showImageCaption = value;
+          await this.plugin.saveSettings();
 
-    // 只有配置了账号才显示同步按钮
-    const accounts = this.plugin.settings.wechatAccounts || [];
-    if (accounts.length > 0) {
-      const syncBtn = actions.createEl('button', {
-        cls: 'apple-btn-secondary apple-btn-full',
-        text: '一键同步到草稿箱',
-        style: 'margin-bottom: 8px;'
-      });
-      syncBtn.addEventListener('click', () => this.showSyncModal());
+          // 实时更新转换器配置并刷新预览
+          if (this.converter) {
+            this.converter.updateConfig({ showImageCaption: value });
+            await this.convertCurrent(true);
+          }
+        }));
+
+    // 根据全局水印设置更新状态
+    if (this.plugin.settings.enableWatermark) {
+      captionSetting.setDesc('因全局设置中已开启水印，此选项默认开启');
+      const toggleComp = captionSetting.components[0];
+      toggleComp.setValue(true); // 视觉上设为开启
+      toggleComp.setDisabled(true); // 禁用交互
+      // 强制禁止任何鼠标事件，消除点击时的跳动感
+      if (toggleComp.toggleEl) {
+        toggleComp.toggleEl.style.pointerEvents = 'none';
+        toggleComp.toggleEl.style.opacity = '0.6'; // 增加透明度以明确指示禁用
+        toggleComp.toggleEl.style.filter = 'grayscale(100%)';
+      }
     }
-
-    const copyBtn = actions.createEl('button', {
-      cls: 'apple-btn-primary apple-btn-full',
-      text: '复制到公众号',
-    });
-    this.copyBtn = copyBtn;
-    copyBtn.addEventListener('click', () => this.copyHTML());
   }
 
 
@@ -1533,15 +1584,15 @@ class AppleStyleView extends ItemView {
    */
   updateCurrentDoc() {
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (activeView && this.currentDocLabel) {
-      this.currentDocLabel.setText(`📄 ${activeView.file.basename}`);
-      this.currentDocLabel.style.color = '#0071e3';
-    } else if (this.lastActiveFile && this.currentDocLabel) {
-      this.currentDocLabel.setText(`📄 ${this.lastActiveFile.basename}`);
-      this.currentDocLabel.style.color = '#0071e3';
-    } else if (this.currentDocLabel) {
-      this.currentDocLabel.setText('未选择文档');
-      this.currentDocLabel.style.color = '#86868b';
+    if (activeView && this.docTitleText) {
+      this.docTitleText.setText(activeView.file.basename);
+      this.docTitleText.style.color = 'var(--apple-primary)'; // 恢复激活色
+    } else if (this.lastActiveFile && this.docTitleText) {
+      this.docTitleText.setText(this.lastActiveFile.basename);
+      this.docTitleText.style.color = 'var(--apple-primary)';
+    } else if (this.docTitleText) {
+      this.docTitleText.setText('未选择文档');
+      this.docTitleText.style.color = 'var(--apple-tertiary)'; // 灰色提示
     }
   }
 
@@ -1666,11 +1717,13 @@ class AppleStyleView extends ItemView {
 
     this.isCopying = true;
     if (this.copyBtn) {
-      this.copyBtn.disabled = true;
-      this.copyBtn.setText('⏳ 正在压缩图片...');
+      this.copyBtn.classList.add('active'); // 可选：保持高亮状态
+      // 不再修改文字，保持图标按钮的极简性
     }
 
     try {
+      new Notice('⏳ 正在处理图片...'); // Toast 提示
+
       // 创建临时的 DOM 容器来解析和处理图片
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = this.currentHtml;
@@ -1692,15 +1745,17 @@ class AppleStyleView extends ItemView {
         });
         await navigator.clipboard.write([clipboardItem]);
 
+        // Success Feedback
+        new Notice('✅ 已复制到剪贴板！');
         if (this.copyBtn) {
-          this.copyBtn.setText('✅ 已复制！');
-          // Revert button after 2 seconds
-          setTimeout(() => {
-            if (this.copyBtn) {
-              this.copyBtn.disabled = false;
-              this.copyBtn.innerHTML = originalText;
-            }
-          }, 2000);
+           const { setIcon } = require('obsidian');
+           setIcon(this.copyBtn, 'check'); // 变成对勾图标
+           setTimeout(() => {
+             if (this.copyBtn) {
+               setIcon(this.copyBtn, 'copy'); // 恢复复制图标
+               this.copyBtn.classList.remove('active');
+             }
+           }, 2000);
         }
         return;
       }
@@ -1710,12 +1765,9 @@ class AppleStyleView extends ItemView {
 
     } catch (error) {
       console.error('复制失败:', error);
+      new Notice(`❌ 复制失败: ${error.message}`);
       if (this.copyBtn) {
-        this.copyBtn.setText('❌ 复制失败');
-        setTimeout(() => {
-          this.copyBtn.disabled = false;
-          this.copyBtn.innerHTML = originalText;
-        }, 2000);
+        this.copyBtn.classList.remove('active');
       }
     } finally {
       this.isCopying = false;
@@ -1949,16 +2001,6 @@ class AppleStyleSettingTab extends PluginSettingTab {
         .setValue(this.plugin.settings.avatarUrl)
         .onChange(async (value) => {
           this.plugin.settings.avatarUrl = value;
-          await this.plugin.saveSettings();
-        }));
-
-    new Setting(containerEl)
-      .setName('显示图片说明文字')
-      .setDesc('关闭水印时，在图片下方显示说明文字（图片名称）')
-      .addToggle(toggle => toggle
-        .setValue(this.plugin.settings.showImageCaption)
-        .onChange(async (value) => {
-          this.plugin.settings.showImageCaption = value;
           await this.plugin.saveSettings();
         }));
 
