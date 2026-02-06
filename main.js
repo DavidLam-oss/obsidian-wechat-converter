@@ -884,9 +884,15 @@ var AppleStyleView = class extends ItemView {
       const coverRes = await api.uploadCover(coverBlob);
       const thumb_media_id = coverRes.media_id;
       notice.setMessage("\u{1F4F8} \u6B63\u5728\u540C\u6B65\u6B63\u6587\u56FE\u7247...");
-      const processedHtml = await this.processAllImages(this.currentHtml, api, (current, total) => {
+      let processedHtml = await this.processAllImages(this.currentHtml, api, (current, total) => {
         notice.setMessage(`\u{1F4F8} \u6B63\u5728\u540C\u6B65\u6B63\u6587\u56FE\u7247 (${current}/${total})...`);
       });
+      if (processedHtml.includes("mjx-container") || processedHtml.includes("<svg")) {
+        notice.setMessage("Hz \u6B63\u5728\u8F6C\u6362\u6570\u5B66\u516C\u5F0F...");
+        processedHtml = await this.processMathFormulas(processedHtml, api, (current, total) => {
+          notice.setMessage(`Hz \u6B63\u5728\u8F6C\u6362\u6570\u5B66\u516C\u5F0F (${current}/${total})...`);
+        });
+      }
       const cleanedHtml = this.cleanHtmlForDraft(processedHtml);
       const activeFile = this.app.workspace.getActiveFile();
       const title = activeFile ? activeFile.basename : "\u65E0\u6807\u9898\u6587\u7AE0";
@@ -953,9 +959,13 @@ var AppleStyleView = class extends ItemView {
     let completed = 0;
     const tasks = Array.from(uniqueUrls);
     await pMap(tasks, async (src) => {
-      const blob = await this.srcToBlob(src);
-      const res = await api.uploadImage(blob);
-      urlMap.set(src, res.url);
+      try {
+        const blob = await this.srcToBlob(src);
+        const res = await api.uploadImage(blob);
+        urlMap.set(src, res.url);
+      } catch (error) {
+        console.error("\u56FE\u7247\u5904\u7406\u5931\u8D25\uFF0C\u5DF2\u8DF3\u8FC7:", src, error);
+      }
       completed++;
       if (progressCallback) {
         progressCallback(completed, total);
@@ -967,6 +977,131 @@ var AppleStyleView = class extends ItemView {
       }
     }
     return div.innerHTML;
+  }
+  /**
+   * 处理 HTML 中的数学公式 (MathJax SVG -> Wechat Image)
+   * 解决微信接口内容长度限制问题
+   */
+  async processMathFormulas(html, api, progressCallback) {
+    const container = document.createElement("div");
+    container.style.position = "absolute";
+    container.style.left = "-9999px";
+    container.style.top = "0";
+    container.style.width = "800px";
+    container.innerHTML = html;
+    document.body.appendChild(container);
+    try {
+      const mathNodes = Array.from(container.querySelectorAll("svg"));
+      if (mathNodes.length === 0)
+        return html;
+      const total = mathNodes.length;
+      let completed = 0;
+      await pMap(mathNodes, async (svg) => {
+        try {
+          const { blob, width, height, style } = await this.svgToPngBlob(svg);
+          const res = await api.uploadImage(blob);
+          const img = document.createElement("img");
+          img.src = res.url;
+          img.className = "math-formula-image";
+          if (width)
+            img.setAttribute("width", width);
+          if (height)
+            img.setAttribute("height", height);
+          let finalStyle = "display: inline-block; margin: 0 2px;";
+          const svgStyle = svg.getAttribute("style");
+          if (svgStyle)
+            finalStyle += svgStyle;
+          const parent = svg.parentElement;
+          if (parent && parent.tagName.toLowerCase().includes("mjx")) {
+            const parentStyle = parent.getAttribute("style");
+            if (parentStyle)
+              finalStyle += parentStyle;
+            img.setAttribute("style", finalStyle);
+            parent.replaceWith(img);
+          } else {
+            if (style)
+              finalStyle += style;
+            img.setAttribute("style", finalStyle);
+            svg.replaceWith(img);
+          }
+          completed++;
+          if (progressCallback)
+            progressCallback(completed, total);
+        } catch (error) {
+          console.error("\u516C\u5F0F\u8F6C\u6362\u5931\u8D25\uFF0C\u4FDD\u7559\u539FSVG:", error);
+        }
+      }, 3);
+      return container.innerHTML;
+    } finally {
+      document.body.removeChild(container);
+    }
+  }
+  /**
+   * 将 SVG 元素转换为高分辨率 PNG Blob
+   * 返回: { blob, width, height, style }
+   */
+  async svgToPngBlob(svgElement, scale = 3) {
+    return new Promise((resolve, reject) => {
+      try {
+        const rect = svgElement.getBoundingClientRect();
+        let logicalWidth = rect.width;
+        let logicalHeight = rect.height;
+        const rawWidth = svgElement.getAttribute("width");
+        const rawHeight = svgElement.getAttribute("height");
+        const rawStyle = svgElement.getAttribute("style");
+        if (logicalWidth === 0 || logicalHeight === 0) {
+          logicalWidth = parseFloat(rawWidth) || 100;
+          logicalHeight = parseFloat(rawHeight) || 20;
+        }
+        svgElement.setAttribute("fill", "#333333");
+        svgElement.style.color = "#333333";
+        svgElement.querySelectorAll("*").forEach((el) => {
+          if (el.getAttribute("fill") === "currentColor" || !el.getAttribute("fill")) {
+            el.setAttribute("fill", "#333333");
+          }
+          if (el.getAttribute("stroke") === "currentColor") {
+            el.setAttribute("stroke", "#333333");
+          }
+        });
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svgElement);
+        const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(svgBlob);
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            canvas.width = logicalWidth * scale;
+            canvas.height = logicalHeight * scale;
+            const ctx = canvas.getContext("2d");
+            ctx.scale(scale, scale);
+            ctx.drawImage(img, 0, 0, logicalWidth, logicalHeight);
+            URL.revokeObjectURL(url);
+            canvas.toBlob((blob) => {
+              if (blob) {
+                resolve({
+                  blob,
+                  width: logicalWidth,
+                  // 返回逻辑宽度 (例如 20.5)
+                  height: logicalHeight,
+                  style: rawStyle
+                });
+              } else
+                reject(new Error("Canvas conversion failed"));
+            }, "image/png");
+          } catch (e) {
+            reject(e);
+          }
+        };
+        img.onerror = (e) => {
+          URL.revokeObjectURL(url);
+          reject(new Error("SVG Image load failed"));
+        };
+        img.src = url;
+      } catch (e) {
+        reject(e);
+      }
+    });
   }
   /**
    * 清理 HTML 以适配微信编辑器

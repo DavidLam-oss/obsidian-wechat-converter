@@ -1321,8 +1321,10 @@ class AppleStyleView extends ItemView {
     document.body.appendChild(container);
 
     try {
-      // 查找所有 MathJax 容器
-      const mathNodes = Array.from(container.querySelectorAll('mjx-container svg'));
+      // 查找所有 SVG 容器 (MathJax 公式或其他矢量图)
+      // 之前只查找 mjx-container svg，导致部分 MathJax 配置下(直接输出svg)无法识别
+      // 现在改为通过 querySelectorAll('svg') 捕获所有 SVG，彻底解决内容过长问题
+      const mathNodes = Array.from(container.querySelectorAll('svg'));
       if (mathNodes.length === 0) return html;
 
       const total = mathNodes.length;
@@ -1331,8 +1333,8 @@ class AppleStyleView extends ItemView {
       // 并发处理
       await pMap(mathNodes, async (svg) => {
         try {
-          // 1. 转为 PNG Blob
-          const blob = await this.svgToPngBlob(svg);
+          // 1. 转为 PNG Blob (同时获取原始尺寸)
+          const { blob, width, height, style } = await this.svgToPngBlob(svg);
 
           // 2. 上传到微信
           const res = await api.uploadImage(blob);
@@ -1342,15 +1344,32 @@ class AppleStyleView extends ItemView {
           img.src = res.url;
           img.className = 'math-formula-image';
 
-          // 尝试保留原有的对齐样式
-          const parent = svg.parentElement; // mjx-container
-          if (parent) {
-            const style = parent.getAttribute('style');
-            if (style) img.setAttribute('style', style);
-            // 替换整个 mjx-container，减少嵌套
-            parent.replaceWith(img);
+          // 4. 关键修复：设置显示尺寸为原始逻辑尺寸，防止图片过大
+          // 微信会读取 img 的 width/height 属性来控制显示大小
+          // 我们上传的是 3倍图，但显示要按 1倍显示
+          if (width) img.setAttribute('width', width);
+          if (height) img.setAttribute('height', height);
+
+          // 5. 样式继承 (vertical-align 等)
+          // 优先继承 SVG 本身的 style (通常包含 vertical-align)
+          // 如果 SVG 没有，尝试继承父级 mjx-container 的 style
+          let finalStyle = 'display: inline-block; margin: 0 2px;'; // 默认内联显示
+
+          const svgStyle = svg.getAttribute('style');
+          if (svgStyle) finalStyle += svgStyle;
+
+          // 如果父级有 style 且 SVG 没覆盖，也可以合并（视情况）
+          const parent = svg.parentElement;
+          if (parent && parent.tagName.toLowerCase().includes('mjx')) {
+             const parentStyle = parent.getAttribute('style');
+             if (parentStyle) finalStyle += parentStyle;
+             // 替换整个 mjx-container
+             img.setAttribute('style', finalStyle);
+             parent.replaceWith(img);
           } else {
-            svg.replaceWith(img);
+             if (style) finalStyle += style; // svgToPngBlob 返回的 style
+             img.setAttribute('style', finalStyle);
+             svg.replaceWith(img);
           }
 
           completed++;
@@ -1369,24 +1388,43 @@ class AppleStyleView extends ItemView {
 
   /**
    * 将 SVG 元素转换为高分辨率 PNG Blob
+   * 返回: { blob, width, height, style }
    */
   async svgToPngBlob(svgElement, scale = 3) {
     return new Promise((resolve, reject) => {
       try {
-        // 1. 获取 SVG 尺寸
+        // 1. 获取 SVG 原始逻辑尺寸 (用于在 img 标签上设置显示大小)
         const rect = svgElement.getBoundingClientRect();
-        let width = rect.width;
-        let height = rect.height;
+        let logicalWidth = rect.width;
+        let logicalHeight = rect.height;
+
+        // 尝试从属性获取更精确的值 (ex/em 单位)
+        // MathJax 通常会设置 width/height/style
+        const rawWidth = svgElement.getAttribute('width');
+        const rawHeight = svgElement.getAttribute('height');
+        const rawStyle = svgElement.getAttribute('style');
 
         // 如果尺寸获取失败(0)，尝试读取属性
-        if (width === 0 || height === 0) {
-           width = parseFloat(svgElement.getAttribute('width')) || 100;
-           height = parseFloat(svgElement.getAttribute('height')) || 20;
-           // MathJax width/height 可能是 ex 单位，这里简化处理
-           // 实际因为挂载到了 DOM，getBoundingClientRect 应该能拿到值
+        if (logicalWidth === 0 || logicalHeight === 0) {
+           logicalWidth = parseFloat(rawWidth) || 100;
+           logicalHeight = parseFloat(rawHeight) || 20;
         }
 
         // 2. 序列化 SVG
+        // 强制修改 SVG 颜色为 #333333 (深灰)，使视觉效果更柔和
+        svgElement.setAttribute('fill', '#333333');
+        svgElement.style.color = '#333333'; // 针对 currentColor 属性
+
+        // 同时也需遍历内部所有 path/rect 等元素，防止内联样式覆盖
+        svgElement.querySelectorAll('*').forEach(el => {
+            if (el.getAttribute('fill') === 'currentColor' || !el.getAttribute('fill')) {
+                el.setAttribute('fill', '#333333');
+            }
+            if (el.getAttribute('stroke') === 'currentColor') {
+                el.setAttribute('stroke', '#333333');
+            }
+        });
+
         const serializer = new XMLSerializer();
         const svgString = serializer.serializeToString(svgElement);
         const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
@@ -1396,18 +1434,25 @@ class AppleStyleView extends ItemView {
         img.onload = () => {
           try {
             const canvas = document.createElement('canvas');
-            // 使用高倍率 (Retina 适配)
-            canvas.width = width * scale;
-            canvas.height = height * scale;
+            // Canvas 使用高倍率 (Retina 适配, 物理像素)
+            canvas.width = logicalWidth * scale;
+            canvas.height = logicalHeight * scale;
 
             const ctx = canvas.getContext('2d');
             ctx.scale(scale, scale);
-            ctx.drawImage(img, 0, 0, width, height);
+            ctx.drawImage(img, 0, 0, logicalWidth, logicalHeight);
 
             URL.revokeObjectURL(url);
 
             canvas.toBlob((blob) => {
-              if (blob) resolve(blob);
+              if (blob) {
+                  resolve({
+                      blob,
+                      width: logicalWidth, // 返回逻辑宽度 (例如 20.5)
+                      height: logicalHeight,
+                      style: rawStyle
+                  });
+              }
               else reject(new Error('Canvas conversion failed'));
             }, 'image/png');
           } catch (e) {
