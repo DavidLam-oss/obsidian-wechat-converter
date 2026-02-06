@@ -8,6 +8,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['tests/**/*.test.js'],
+    alias: {
+      obsidian: path.resolve(__dirname, './__mocks__/obsidian.js'),
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

@@ -1,64 +1,54 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// 1. Define the mock factory
-const mockFactory = () => {
-  return {
-    Plugin: class {},
-    ItemView: class {
-        constructor() {
-            this.containerEl = {
-                createEl: () => ({ appendChild: () => {} }),
-                appendChild: () => {}
-            };
-        }
-    },
-    Notice: class {},
-    MarkdownView: class {},
-    PluginSettingTab: class {},
-    Setting: class {},
-    requestUrl: vi.fn(),
-    setIcon: () => {},
-  };
-};
-
-// 2. Mock the module globally using the factory
-vi.mock('obsidian', mockFactory);
-
-// 3. Import the mocked module to access the spy
-import { requestUrl } from 'obsidian';
-
-const { WechatAPI, AppleStyleView } = require('../input.js');
+// Note: We don't use vi.mock('obsidian') here because we use the alias in vitest.config.mjs
+// to resolve 'obsidian' to our __mocks__/obsidian.js file.
+// To mock specific methods like requestUrl, we modify the required module object directly
+// BEFORE importing the module under test (input.js).
 
 describe('WechatAPI - Upload & MIME Logic', () => {
-  let api;
+  let WechatAPI;
+  let AppleStyleView;
+  let obsidianMock;
 
-  beforeEach(() => {
-    // Reset the mock before each test
-    requestUrl.mockReset();
-    api = new WechatAPI('appid', 'secret', 'https://proxy.com');
+  beforeEach(async () => {
+    // 1. Reset modules to ensure we get a fresh import of input.js
+    vi.resetModules();
+
+    // 2. Get the obsidian mock object (resolved via alias)
+    obsidianMock = require('obsidian');
+
+    // 3. Setup the spy on requestUrl
+    // We overwrite the method on the exported object so that when input.js
+    // does `const { requestUrl } = require('obsidian')`, it grabs this spy.
+    obsidianMock.requestUrl = vi.fn().mockResolvedValue({
+      json: {},
+      status: 200,
+      headers: {}
+    });
+
+    // 4. Import the module under test
+    // This must happen AFTER mocking obsidian.requestUrl
+    const inputModule = require('../input.js');
+    WechatAPI = inputModule.WechatAPI;
+    AppleStyleView = inputModule.AppleStyleView;
   });
 
   // === Task A: Proxy Upload Optimization (FileReader) ===
   it('should use FileReader for proxy uploads (Perf Optimization)', async () => {
-    // 1. Mock Blob
+    const api = new WechatAPI('appid', 'secret', 'https://proxy.com');
     const mockBlob = new Blob(['fake-image-data'], { type: 'image/png' });
 
-    // 2. Mock the proxy response
-    requestUrl.mockResolvedValue({
+    obsidianMock.requestUrl.mockResolvedValue({
       json: { media_id: '123', url: 'http://img.com' }
     });
 
-    // 3. Execute
     await api.uploadMultipart('http://wx-api.com', mockBlob, 'media');
 
-    // 4. Verify
-    expect(requestUrl).toHaveBeenCalledTimes(1);
-    const callArg = requestUrl.mock.calls[0][0];
+    expect(obsidianMock.requestUrl).toHaveBeenCalledTimes(1);
+    const callArg = obsidianMock.requestUrl.mock.calls[0][0];
     const body = JSON.parse(callArg.body);
 
     expect(body.method).toBe('UPLOAD');
-    expect(body.fileData).toBeDefined();
-    // Verify base64 conversion "fake-image-data" -> "ZmFrZS1pbWFnZS1kYXRh"
     expect(body.fileData).toBe('ZmFrZS1pbWFnZS1kYXRh');
   });
 
@@ -66,7 +56,7 @@ describe('WechatAPI - Upload & MIME Logic', () => {
   it('should detect MIME type from headers for http images', async () => {
     const view = new AppleStyleView(null, null);
 
-    requestUrl.mockResolvedValue({
+    obsidianMock.requestUrl.mockResolvedValue({
       arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
       headers: { 'content-type': 'image/gif' }
     });
@@ -78,9 +68,9 @@ describe('WechatAPI - Upload & MIME Logic', () => {
   it('should fallback to image/jpeg if header is missing', async () => {
     const view = new AppleStyleView(null, null);
 
-    requestUrl.mockResolvedValue({
+    obsidianMock.requestUrl.mockResolvedValue({
       arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
-      headers: {} // No content-type
+      headers: {}
     });
 
     const blob = await view.srcToBlob('http://example.com/unknown.jpg');
@@ -90,7 +80,7 @@ describe('WechatAPI - Upload & MIME Logic', () => {
   it('should handle Content-Type case insensitively', async () => {
     const view = new AppleStyleView(null, null);
 
-    requestUrl.mockResolvedValue({
+    obsidianMock.requestUrl.mockResolvedValue({
       arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
       headers: { 'Content-Type': 'image/png' }
     });
