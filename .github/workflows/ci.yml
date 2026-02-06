@@ -29,5 +29,10 @@ jobs:
     - name: Build
       run: npm run build
 
+    - name: Setup Mock for CI
+      run: |
+        mkdir -p node_modules/obsidian
+        cp __mocks__/obsidian.js node_modules/obsidian/index.js
+
     - name: Test
       run: npm test -- --run
