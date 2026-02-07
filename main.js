@@ -84,6 +84,16 @@ var WechatAPI = class {
           console.warn(`[WechatAPI] Configuration error detected, aborting retry: ${error.message}`);
           throw error;
         }
+        if (error.message && (error.message.includes("45009") || error.message.includes("reach max api daily quota limit"))) {
+          const fatalError = new Error("\u5FAE\u4FE1\u63A5\u53E3\u4ECA\u65E5\u989D\u5EA6\u5DF2\u7528\u5B8C (45009)\uFF0C\u8BF7\u660E\u5929\u518D\u8BD5\u6216\u5207\u6362\u8D26\u53F7\u3002");
+          fatalError.isFatal = true;
+          throw fatalError;
+        }
+        if (error.message && (error.message.includes("45001") || error.message.includes("media size out of limit"))) {
+          const fatalError = new Error("\u5FAE\u4FE1\u540E\u53F0\u7D20\u6750\u5E93\u5DF2\u6EE1 (45001)\u3002\u8BF7\u767B\u5F55\u5FAE\u4FE1\u516C\u4F17\u5E73\u53F0 -> \u7D20\u6750\u7BA1\u7406\uFF0C\u624B\u52A8\u5220\u9664\u65E7\u56FE\u7247\u4EE5\u91CA\u653E\u7A7A\u95F4\u3002");
+          fatalError.isFatal = true;
+          throw fatalError;
+        }
         const isTokenError = error.message && (error.message.includes("40001") || error.message.includes("42001") || error.message.includes("40014"));
         if (isTokenError) {
           throw error;
@@ -965,6 +975,8 @@ var AppleStyleView = class extends ItemView {
         const res = await api.uploadImage(blob);
         urlMap.set(src, res.url);
       } catch (error) {
+        if (error.isFatal)
+          throw error;
         console.error("\u56FE\u7247\u5904\u7406\u5931\u8D25\uFF0C\u5DF2\u8DF3\u8FC7:", src, error);
       }
       completed++;
@@ -1053,6 +1065,8 @@ var AppleStyleView = class extends ItemView {
           if (progressCallback)
             progressCallback(completed, total);
         } catch (error) {
+          if (error.isFatal)
+            throw error;
           console.error("\u516C\u5F0F\u8F6C\u6362\u5931\u8D25\uFF0C\u4FDD\u7559\u539FSVG:", error);
         }
       }, 3);
@@ -1068,6 +1082,7 @@ var AppleStyleView = class extends ItemView {
   async svgToPngBlob(svgElement, scale = 3) {
     return new Promise((resolve, reject) => {
       try {
+        const clonedSvg = svgElement.cloneNode(true);
         const rect = svgElement.getBoundingClientRect();
         let logicalWidth = rect.width;
         let logicalHeight = rect.height;
@@ -1080,9 +1095,9 @@ var AppleStyleView = class extends ItemView {
         }
         const isMathJax = svgElement.getAttribute("role") === "img" || svgElement.getAttribute("focusable") === "false" || svgElement.classList.contains("MathJax");
         if (isMathJax) {
-          svgElement.setAttribute("fill", "#333333");
-          svgElement.style.color = "#333333";
-          svgElement.querySelectorAll("*").forEach((el) => {
+          clonedSvg.setAttribute("fill", "#333333");
+          clonedSvg.style.color = "#333333";
+          clonedSvg.querySelectorAll("*").forEach((el) => {
             if (el.getAttribute("fill") === "currentColor" || !el.getAttribute("fill")) {
               el.setAttribute("fill", "#333333");
             }
@@ -1092,7 +1107,7 @@ var AppleStyleView = class extends ItemView {
           });
         }
         const serializer = new XMLSerializer();
-        const svgString = serializer.serializeToString(svgElement);
+        const svgString = serializer.serializeToString(clonedSvg);
         const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
         const url = URL.createObjectURL(svgBlob);
         const img = new Image();
