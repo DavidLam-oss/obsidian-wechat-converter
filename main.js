@@ -50,8 +50,8 @@ async function pMap(array, mapper, concurrency = 3) {
   for (const item of array) {
     const p = Promise.resolve().then(() => mapper(item));
     results.push(p);
-    const e = p.then(() => executing.splice(executing.indexOf(e), 1)).catch(() => {
-    });
+    const e = p.catch(() => {
+    }).then(() => executing.splice(executing.indexOf(e), 1));
     executing.push(e);
     if (executing.length >= concurrency) {
       await Promise.race(executing);

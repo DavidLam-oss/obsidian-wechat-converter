@@ -50,9 +50,9 @@ async function pMap(array, mapper, concurrency = 3) {
   for (const item of array) {
     const p = Promise.resolve().then(() => mapper(item));
     results.push(p);
-    // Fix: Handle rejection for concurrency control promise to avoid Unhandled Rejection
-    // The actual error will be caught by Promise.all(results) later
-    const e = p.then(() => executing.splice(executing.indexOf(e), 1)).catch(() => {});
+    // Fix: Ensure cleanup happens regardless of success or failure
+    // .catch() handles the error so .then() always runs to remove from executing queue
+    const e = p.catch(() => {}).then(() => executing.splice(executing.indexOf(e), 1));
     executing.push(e);
     if (executing.length >= concurrency) {
       await Promise.race(executing);
