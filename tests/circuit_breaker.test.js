@@ -97,7 +97,7 @@ describe('Circuit Breaker (Rate Limit & Quota Handling)', () => {
     });
 
     it('should abort processing immediately upon encountering a fatal error', async () => {
-        // Setup: 5 items with concurrency 2
+        // Setup: 5 items with concurrency 3 (default)
         // If fail-fast works, it should stop after the first batch (or slightly more due to race),
         // but definitely NOT process all 5.
         const inputHtml = `
@@ -156,6 +156,57 @@ describe('Circuit Breaker (Rate Limit & Quota Handling)', () => {
         expect(output).toContain('http://ok'); // One succeeded
         // The broken one remains as SVG
         expect(output).toContain('<svg id="1"');
+    });
+  });
+
+  describe('Image Processing Abortion (processAllImages)', () => {
+    let view;
+    let mockApi;
+
+    beforeEach(() => {
+        view = new AppleStyleView(null, null);
+        // Mock srcToBlob to bypass network/file reads
+        view.srcToBlob = vi.fn().mockResolvedValue(new Blob(['']));
+
+        mockApi = {
+            uploadImage: vi.fn()
+        };
+    });
+
+    it('should abort image processing immediately upon encountering a fatal error', async () => {
+        // Setup: 5 images
+        const inputHtml = `
+            <div>
+                <img src="1.jpg" />
+                <img src="2.jpg" />
+                <img src="3.jpg" />
+                <img src="4.jpg" />
+                <img src="5.jpg" />
+            </div>
+        `;
+
+        // Mock: First upload throws FATAL error (e.g. 45001 Quota Full)
+        const fatalError = new Error('Fatal 45001');
+        fatalError.isFatal = true;
+
+        mockApi.uploadImage
+            .mockRejectedValueOnce(fatalError) // 1st fails fatally
+            .mockResolvedValue({ url: 'http://ok' }); // Others would succeed
+
+        // Execute
+        try {
+            await view.processAllImages(inputHtml, mockApi);
+        } catch (e) {
+            expect(e.message).toBe('Fatal 45001');
+
+            // Verification:
+            // Concurrency is 3.
+            // 1, 2, 3 start. 1 fails. Loop breaks. 4, 5 never start.
+            expect(mockApi.uploadImage).toHaveBeenCalledTimes(3);
+            return;
+        }
+        // Fail if no error thrown
+        throw new Error('Should have thrown fatal error');
     });
   });
 });
