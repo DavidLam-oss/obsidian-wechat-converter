@@ -14,6 +14,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Testing**: This project relies on manual visual testing.
     - Use `TEST.md` to verify rendering logic, style conversion, and WeChat compatibility.
     - Check the "Live Preview" pane in Obsidian to ensure "What You See Is What You Get".
+- **Automated Testing**: `npm test` (Runs Vitest unit tests).
+    - Always evaluate the need for new unit tests after significant logic changes.
+    - Use the `universal-guardrails` skill to scaffold tests if needed.
 
 ## Architecture & Structure
 
@@ -41,7 +44,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **UI/UX**: The plugin adds a ribbon icon and a command "Open Wechat Converter". It uses a side panel for live preview.
 - **Image Handling**: Special attention is needed for local image paths (absolute/relative/WikiLink) and GIF handling (size limits).
 
-## Best Practices & Lessons Learned (v2.1 Math Update)
+## Best Practices & Lessons Learned (v2.1 Math Update & v2.5 Math-to-Image)
 
 ### 1. Bundling & Dependencies
 - **Avoid Dynamic Requires**: Libraries that use `require(path.join(__dirname, 'package.json'))` will crash in Obsidian. Use `esbuild`'s `define` to inject static versions or mock the file system if possible.
@@ -50,8 +53,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 2. WeChat Compatibility
 - **Zero-CSS Strategy**: WeChat strips `<style>` and class-based styling. All visual elements must be inline styles or self-contained SVGs.
-- **MathJax Config**: For math formulas to work in WeChat, **MUST** use `svg: { fontCache: 'none' }`. This forces paths to be embedded in the SVG, preventing reliance on external font definitions which get stripped.
-- **Assistive Text**: MathJax generates hidden `<mjx-assistive-mml>` for screen readers. WeChat strips the "hidden" CSS, making this text visible. **MUST** explicitly strip these tags before syncing.
+- **Math Formula Strategy**:
+    - **Upload as Image**: WeChat API has strict content length limits. Complex SVGs (MathJax) must be converted to PNGs and uploaded to WeChat servers to bypass this limit.
+    - **Smart Recoloring**: MathJax formulas should be recolored (e.g., `#333333`) for better readability, but non-formula SVGs (e.g., Mermaid) must retain their original colors.
+- **Circuit Breaker**: Implement fail-fast logic for API rate limits (`45009`) and quota limits (`45001`) to prevent wasted retries and poor UX.
 
 ### 3. Architecture (Dynamic Loading)
 - **Separate Bundles**: Heavy features (like MathJax) are bundled separately (`lib/mathjax-plugin.js`) and loaded via `eval()` in `input.js` only when needed.
@@ -61,6 +66,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Native Components First**: Always prefer Obsidian's native UI components and browser-default styles (e.g., standard range inputs) over custom CSS hacks.
 - **Vertical Alignment**: Avoid manually calculating margins for vertical centering (e.g., `margin-top: -8px`). Use flexbox or grid layouts where possible, or rely on standard form controls which are already optimized for the platform.
 - **State Persistence**: For multi-document workflows, use in-memory maps (e.g., `Map<Path, State>`) to temporarily cache UI state (like cover images or toggle positions) per file. Clear this cache on plugin unload or view close to prevent memory leaks.
+
+### 5. Engineering & Quality
+- **Unit Testing**: Use `Vitest` + `jsdom`.
+    - Mock Obsidian API (`requestUrl`, `Notice`) robustly using `vi.mock` factory functions or file-system mocks in CI.
+    - **Always** add unit tests for new core logic (especially regex, data transformation, and error handling).
+    - Use the `universal-guardrails` skill to maintain test infrastructure.
+- **CI/CD**: Ensure CI environments (Node version) match toolchain requirements (e.g., Node 20+ for Vitest), even if the runtime target is lower (Node 16).
 
 ## Release Checklist
 
