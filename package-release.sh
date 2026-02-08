@@ -20,6 +20,9 @@ zip -r "$ZIP_FILE" \
     converter.js \
     lib/ \
     themes/ \
+    images/ \
+    README.md \
+    LICENSE \
     -x "*.DS_Store*"
 
 echo "✅ 打包完成: $ZIP_FILE"
