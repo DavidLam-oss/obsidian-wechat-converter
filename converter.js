@@ -636,7 +636,7 @@ ${macHeader}
     if (!url) return '#';
     // Allow safe protocols
     // data: is only allowed for images
-    const safeProtocols = ['http:', 'https:', 'obsidian:', 'mailto:', 'tel:'];
+    const safeProtocols = ['http:', 'https:', 'obsidian:', 'mailto:', 'tel:', 'app:', 'capacitor:'];
     if (isImage) safeProtocols.push('data:');
 
     try {
