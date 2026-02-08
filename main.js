@@ -35,6 +35,8 @@ var DEFAULT_SETTINGS = {
   // 排版设置
   sidePadding: 16,
   // 页面两侧留白 (px)
+  coloredHeader: false,
+  // 标题是否使用主题色
   // 旧字段保留用于迁移检测
   wechatAppId: "",
   wechatAppSecret: ""
@@ -515,8 +517,10 @@ var AppleStyleView = class extends ItemView {
         fontSize: this.plugin.settings.fontSize,
         macCodeBlock: this.plugin.settings.macCodeBlock,
         codeLineNumber: this.plugin.settings.codeLineNumber,
-        sidePadding: this.plugin.settings.sidePadding
+        sidePadding: this.plugin.settings.sidePadding,
         // 新增参数
+        coloredHeader: this.plugin.settings.coloredHeader
+        // 关键修复：初始化时传入标题染色状态
       });
       if (!window.AppleStyleConverter)
         throw new Error("AppleStyleConverter failed to load");
@@ -591,13 +595,6 @@ var AppleStyleView = class extends ItemView {
     });
     this.createSection(settingsArea, "\u5B57\u53F7", (section) => {
       const grid = section.createEl("div", { cls: "apple-btn-row" });
-      const sizes = [
-        { value: "\u5C0F", label: "\u5C0F" },
-        { value: "\u8F83\u5C0F", label: "\u8F83\u5C0F" },
-        { value: "\u63A8\u8350", label: "\u63A8\u8350" },
-        { value: "\u8F83\u5927", label: "\u8F83\u5927" },
-        { value: "\u5927", label: "\u5927" }
-      ];
       const sizeOpts = [
         { value: 1, label: "\u5C0F" },
         { value: 2, label: "\u8F83\u5C0F" },
@@ -652,6 +649,26 @@ var AppleStyleView = class extends ItemView {
         this.plugin.settings.customColor = newColor;
         this.theme.update({ customColor: newColor });
         await this.onColorChange("custom", grid);
+      });
+    });
+    this.createSection(settingsArea, "\u6807\u9898\u6837\u5F0F", (section) => {
+      section.style.display = "flex";
+      section.style.alignItems = "center";
+      const toggle = section.createEl("label", { cls: "apple-toggle" });
+      const checkbox = toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" });
+      checkbox.checked = this.plugin.settings.coloredHeader;
+      toggle.createEl("span", { cls: "apple-toggle-slider" });
+      section.createEl("span", {
+        text: "\u6807\u9898\u4F7F\u7528\u52A0\u6DF1\u4E3B\u9898\u8272",
+        attr: {
+          style: "font-size: 11px; color: var(--apple-secondary); margin-left: 12px; opacity: 0.8; font-weight: 500; transform: translateY(-1px);"
+        }
+      });
+      checkbox.addEventListener("change", async () => {
+        this.plugin.settings.coloredHeader = checkbox.checked;
+        await this.plugin.saveSettings();
+        this.theme.update({ coloredHeader: checkbox.checked });
+        await this.convertCurrent(true);
       });
     });
     this.createSection(settingsArea, "Mac \u98CE\u683C\u4EE3\u7801\u5757", (section) => {

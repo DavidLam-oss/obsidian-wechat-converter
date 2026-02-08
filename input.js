@@ -26,6 +26,7 @@ const DEFAULT_SETTINGS = {
   usePhoneFrame: true, // 是否使用手机框预览
   // 排版设置
   sidePadding: 16, // 页面两侧留白 (px)
+  coloredHeader: false, // 标题是否使用主题色
   // 旧字段保留用于迁移检测
   wechatAppId: '',
   wechatAppSecret: '',
@@ -686,6 +687,7 @@ class AppleStyleView extends ItemView {
         macCodeBlock: this.plugin.settings.macCodeBlock,
         codeLineNumber: this.plugin.settings.codeLineNumber,
         sidePadding: this.plugin.settings.sidePadding, // 新增参数
+        coloredHeader: this.plugin.settings.coloredHeader, // 关键修复：初始化时传入标题染色状态
       });
 
       // 初始化转换器
@@ -788,16 +790,6 @@ class AppleStyleView extends ItemView {
     // === 字号选择 ===
     this.createSection(settingsArea, '字号', (section) => {
       const grid = section.createEl('div', { cls: 'apple-btn-row' });
-      const sizes = [
-        { value: '小', label: '小' },
-        { value: '较小', label: '较小' },
-        { value: '推荐', label: '推荐' },
-        { value: '较大', label: '较大' },
-        { value: '大', label: '大' },
-      ];
-      // 修正字号 value，之前是 int 1,2,3... 现在代码里用的是 1,2,3 还是 string?
-      // Check AppleTheme.FONT_SIZES: key is '1', '2'... (string/number loose)
-      // Original code used `value: 1`, `value: 2` etc. Let's stick to that.
       const sizeOpts = [
         { value: 1, label: '小' },
         { value: 2, label: '较小' },
@@ -816,7 +808,7 @@ class AppleStyleView extends ItemView {
       });
     });
 
-    // === 主题色 ===
+    // === 主题色 (移到标题样式上方) ===
     this.createSection(settingsArea, '主题色', (section) => {
       const grid = section.createEl('div', { cls: 'apple-color-grid' });
       const colors = AppleTheme.getColorList();
@@ -869,6 +861,37 @@ class AppleStyleView extends ItemView {
         this.plugin.settings.customColor = newColor;
         this.theme.update({ customColor: newColor });
         await this.onColorChange('custom', grid);
+      });
+    });
+
+    // === 标题样式 (移到主题色下方) ===
+    this.createSection(settingsArea, '标题样式', (section) => {
+      // 1. 容器布局
+      section.style.display = 'flex';
+      section.style.alignItems = 'center';
+
+      // 2. 开关控件 (标准大小 40x22)
+      const toggle = section.createEl('label', { cls: 'apple-toggle' });
+      const checkbox = toggle.createEl('input', { type: 'checkbox', cls: 'apple-toggle-input' });
+      checkbox.checked = this.plugin.settings.coloredHeader;
+      toggle.createEl('span', { cls: 'apple-toggle-slider' });
+
+      // 3. 描述文本 (优化布局：增加间距，缩小字号)
+      section.createEl('span', {
+        text: '标题使用加深主题色',
+        attr: {
+          style: 'font-size: 11px; color: var(--apple-secondary); margin-left: 12px; opacity: 0.8; font-weight: 500; transform: translateY(-1px);'
+        }
+      });
+
+      checkbox.addEventListener('change', async () => {
+        this.plugin.settings.coloredHeader = checkbox.checked;
+        await this.plugin.saveSettings();
+
+        // 关键修复：更新主题状态并重绘
+        this.theme.update({ coloredHeader: checkbox.checked });
+        // 强制刷新
+        await this.convertCurrent(true);
       });
     });
 
@@ -1806,6 +1829,11 @@ class AppleStyleView extends ItemView {
     await this.plugin.saveSettings();
     this.updateButtonActive(grid, value);
     this.theme.update({ themeColor: value });
+
+    // 移除：不再更改全局 CSS 变量，保持设置面板 UI 为默认蓝色 (#0071e3)
+    // const colorHex = this.theme.getThemeColorValue();
+    // this.containerEl.style.setProperty('--apple-accent', colorHex);
+
     await this.convertCurrent(true);
   }
 

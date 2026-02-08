@@ -21,6 +21,21 @@ window.AppleTheme = class AppleTheme {
   };
 
   /**
+   * 🎨 标题专用深色板 (Tone-on-Tone)
+   * 相比主题色加深 15-20%，用于标题以增加视觉稳重感，避免与正文高亮色冲突
+   */
+  static THEME_COLORS_DEEP = {
+    blue: '#004795',    // Deep Blue
+    green: '#1e7e34',   // Deep Green
+    purple: '#4a2b82',  // Deep Purple
+    orange: '#c75e0b',  // Deep Orange
+    teal: '#158765',    // Deep Teal
+    rose: '#b81f66',    // Deep Rose
+    ruby: '#a81825',    // Deep Ruby
+    slate: '#495057',   // Deep Slate
+  };
+
+  /**
    * 📐 字体大小系统 - 5档
    */
   static FONT_SIZES = {
@@ -130,6 +145,8 @@ window.AppleTheme = class AppleTheme {
     this.codeLineNumber = options.codeLineNumber || false;
     // 侧边距设置 (默认 16px)
     this.sidePadding = options.sidePadding !== undefined ? options.sidePadding : 16;
+    // 标题染色设置
+    this.coloredHeader = options.coloredHeader || false;
   }
 
   /**
@@ -140,6 +157,51 @@ window.AppleTheme = class AppleTheme {
       return this.customColor;
     }
     return AppleTheme.THEME_COLORS[this.themeColor] || AppleTheme.THEME_COLORS.blue;
+  }
+
+  /**
+   * 获取标题专用深色值
+   */
+  getHeadingColorValue() {
+    // 1. 如果未开启标题染色，返回默认深灰
+    if (!this.coloredHeader) {
+      return '#3e3e3e';
+    }
+
+    // 2. 自定义颜色：自动计算变深 20%
+    if (this.themeColor === 'custom' && this.customColor) {
+      return this.adjustColorBrightness(this.customColor, -20);
+    }
+
+    // 3. 预设颜色：返回深色板对应值
+    return AppleTheme.THEME_COLORS_DEEP[this.themeColor] || AppleTheme.THEME_COLORS_DEEP.blue;
+  }
+
+  /**
+   * 辅助：调整 Hex 颜色亮度
+   * @param {string} hex - #RRGGBB
+   * @param {number} percent - -100 to 100
+   */
+  adjustColorBrightness(hex, percent) {
+    hex = hex.replace(/^#/, '');
+    let r = parseInt(hex.substring(0, 2), 16);
+    let g = parseInt(hex.substring(2, 4), 16);
+    let b = parseInt(hex.substring(4, 6), 16);
+
+    r = Math.round(r * (100 + percent) / 100);
+    g = Math.round(g * (100 + percent) / 100);
+    b = Math.round(b * (100 + percent) / 100);
+
+    r = (r < 255) ? r : 255;
+    g = (g < 255) ? g : 255;
+    b = (b < 255) ? b : 255;
+
+    // Pad with 0 if necessary
+    const rr = ((r.toString(16).length === 1) ? '0' + r.toString(16) : r.toString(16));
+    const gg = ((g.toString(16).length === 1) ? '0' + g.toString(16) : g.toString(16));
+    const bb = ((b.toString(16).length === 1) ? '0' + b.toString(16) : b.toString(16));
+
+    return `#${rr}${gg}${bb}`;
   }
 
   /**
@@ -176,20 +238,24 @@ window.AppleTheme = class AppleTheme {
     const s = AppleTheme.SPACING;
     const r = AppleTheme.RADIUS;
 
+    // 标题颜色逻辑：使用专门的深色系标题色
+    // 注意：某些特殊主题装饰(h1Decoration)可能已经包含了颜色设置，这里主要针对文字本身
+    const headingColor = this.getHeadingColorValue();
+
     switch (tagName) {
       case 'section':
         // 使用配置的 sidePadding
         return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${config.textColor}; padding: 20px ${this.sidePadding}px; background: #ffffff; max-width: 100%; word-wrap: break-word; text-align: justify;`;
 
-      case 'h1': return this.getH1Style(config.h1Decoration, color, sizes.h1, font);
-      case 'h2': return this.getH2Style(config.h2Decoration, color, sizes.h2, font);
-      case 'h3': return this.getH3Style(config.h3Decoration, color, sizes.h3, font);
-      case 'h4': return this.getH4Style(config.h4Decoration, color, sizes.h4, font);
+      case 'h1': return this.getH1Style(config.h1Decoration, color, sizes.h1, font, headingColor);
+      case 'h2': return this.getH2Style(config.h2Decoration, color, sizes.h2, font, headingColor);
+      case 'h3': return this.getH3Style(config.h3Decoration, color, sizes.h3, font, headingColor);
+      case 'h4': return this.getH4Style(config.h4Decoration, color, sizes.h4, font, headingColor);
 
       case 'h5':
-        return `font-family: ${font}; font-size: ${sizes.h5}px; font-weight: bold; color: ${config.headingColor}; margin: 10px 0; text-align: left; line-height: 1.4;`;
+        return `font-family: ${font}; font-size: ${sizes.h5}px; font-weight: bold; color: ${headingColor}; margin: 10px 0; text-align: left; line-height: 1.4;`;
       case 'h6':
-        return `font-family: ${font}; font-size: ${sizes.h6}px; font-weight: bold; color: ${config.headingColor}; margin: 10px 0; text-align: left; line-height: 1.4;`;
+        return `font-family: ${font}; font-size: ${sizes.h6}px; font-weight: bold; color: ${headingColor}; margin: 10px 0; text-align: left; line-height: 1.4;`;
 
       case 'p':
         return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${config.textColor}; margin: 0 0 ${config.paragraphGap}px 0; text-align: justify; letter-spacing: 0;`;
@@ -282,11 +348,11 @@ window.AppleTheme = class AppleTheme {
 
   // === Helper Methods ===
 
-  getH1Style(type, color, fontSize, font) {
-    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 30px auto 20px; color: #333; text-align: center; line-height: 1.2;`;
+  getH1Style(type, color, fontSize, font, headingColor) {
+    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 30px auto 20px; color: ${headingColor}; text-align: center; line-height: 1.2;`;
     switch (type) {
       case 'editorial-h1': // Magazine Style: Forced Serif + Golden Line
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 30px auto 20px; color: #333; text-align: center; line-height: 1.2;
+        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 30px auto 20px; color: ${headingColor}; text-align: center; line-height: 1.2;
           background-image: linear-gradient(to right, transparent, ${color}, transparent);
           background-size: 100px 1px;
           background-repeat: no-repeat;
@@ -294,9 +360,9 @@ window.AppleTheme = class AppleTheme {
           padding-bottom: 20px; letter-spacing: 1px;`;
       case 'bottom-line':
         // Pure CSS centered short line using linear-gradient (simulating image)
-        return `${base} 
+        return `${base}
           background-image: linear-gradient(to right, ${color}, ${color});
-          background-size: 80px 3px; 
+          background-size: 80px 3px;
           background-repeat: no-repeat;
           background-position: bottom center;
           padding-bottom: 15px;`;
@@ -307,18 +373,18 @@ window.AppleTheme = class AppleTheme {
     }
   }
 
-  getH2Style(type, color, fontSize, font) {
-    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 40px auto 20px; text-align: center; color: #333; line-height: 1.25;`;
+  getH2Style(type, color, fontSize, font, headingColor) {
+    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 40px auto 20px; text-align: center; color: ${headingColor}; line-height: 1.25;`;
     switch (type) {
       case 'editorial-h1': // Golden Line (Shifted from H1)
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 40px auto 20px; color: #333; text-align: center; line-height: 1.2;
+        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 40px auto 20px; color: ${headingColor}; text-align: center; line-height: 1.2;
           background-image: linear-gradient(to right, transparent, ${color}, transparent);
           background-size: 100px 1px;
           background-repeat: no-repeat;
           background-position: bottom center;
           padding-bottom: 20px; letter-spacing: 1px;`;
       case 'editorial-h2': // Magazine Subtitle
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: normal; margin: 40px auto 20px; text-align: center; color: #333; line-height: 1.4; font-style: italic; letter-spacing: 1px;`;
+        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: normal; margin: 40px auto 20px; text-align: center; color: ${headingColor}; line-height: 1.4; font-style: italic; letter-spacing: 1px;`;
       case 'bottom-line':
         // Pure CSS centered short line (thinner/shorter for H2)
         return `${base}
@@ -336,13 +402,13 @@ window.AppleTheme = class AppleTheme {
     }
   }
 
-  getH3Style(type, color, fontSize, font) {
-    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 24px 0 16px; text-align: left; color: #333; line-height: 1.3;`;
+  getH3Style(type, color, fontSize, font, headingColor) {
+    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 24px 0 16px; text-align: left; color: ${headingColor}; line-height: 1.3;`;
     switch (type) {
       case 'editorial-h2': // Italic Serif (Left Aligned for H3)
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: normal; margin: 30px 0 16px; text-align: left; color: #333; line-height: 1.4; font-style: italic; letter-spacing: 1px;`;
+        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: normal; margin: 30px 0 16px; text-align: left; color: ${headingColor}; line-height: 1.4; font-style: italic; letter-spacing: 1px;`;
       case 'editorial-h3': // Magazine Section: Forced Serif + Left Underline
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 30px 0 16px; text-align: left; color: #333; line-height: 1.3;
+        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 30px 0 16px; text-align: left; color: ${headingColor}; line-height: 1.3;
            border-bottom: 1px solid ${color}; padding-bottom: 4px; display: inline-block; width: auto; letter-spacing: 0.5px;`;
       case 'left-border':
         return `${base} border-left: 4px solid ${color}; padding-left: 10px;`;
@@ -353,16 +419,18 @@ window.AppleTheme = class AppleTheme {
     }
   }
 
-  getH4Style(type, color, fontSize, font) {
-    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 15px 0 10px; text-align: left; color: #333; line-height: 1.35;`;
+  getH4Style(type, color, fontSize, font, headingColor) {
+    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 15px 0 10px; text-align: left; color: ${headingColor}; line-height: 1.35;`;
     switch (type) {
       case 'editorial-h3': // Inherit H3 style for H4
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 15px 0 10px; text-align: left; color: #333; line-height: 1.35;
+        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 15px 0 10px; text-align: left; color: ${headingColor}; line-height: 1.35;
            border-bottom: 1px solid ${color}; padding-bottom: 3px; display: inline-block; width: auto; letter-spacing: 0.5px;`;
       case 'simple': // Simple Bold (User Font)
-        return `${base} color: ${color};`;
+        // Use headingColor (Deep) instead of color (Bright)
+        return `${base}`;
       case 'light-bg':
-        return `${base} background-color: ${color}15; padding: 4px 8px; border-radius: 4px; display: inline-block; color: ${color};`;
+        // Background uses bright color tint (low opacity), Text uses deep headingColor
+        return `${base} background-color: ${color}15; padding: 4px 8px; border-radius: 4px; display: inline-block;`;
       case 'italic-serif':
         return `${base} font-style: italic; font-family: serif; border-bottom: 1px dashed #ccc; display: inline-block; padding-bottom: 2px;`;
       default:
@@ -382,6 +450,7 @@ window.AppleTheme = class AppleTheme {
     if (options.macCodeBlock !== undefined) this.macCodeBlock = options.macCodeBlock;
     if (options.codeLineNumber !== undefined) this.codeLineNumber = options.codeLineNumber;
     if (options.sidePadding !== undefined) this.sidePadding = options.sidePadding;
+    if (options.coloredHeader !== undefined) this.coloredHeader = options.coloredHeader;
   }
 
   /**
