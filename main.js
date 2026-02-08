@@ -324,6 +324,14 @@ var AppleStyleView = class extends ItemView {
     const previewWrapper = container.createEl("div", {
       cls: `apple-preview-wrapper ${this.plugin.settings.usePhoneFrame ? "mode-phone" : "mode-classic"}`
     });
+    previewWrapper.addEventListener("click", (e) => {
+      if (this.settingsOverlay && this.settingsOverlay.classList.contains("visible")) {
+        this.settingsOverlay.classList.remove("visible");
+        const btn = container.querySelector('.apple-icon-btn[aria-label="\u6837\u5F0F\u8BBE\u7F6E"]');
+        if (btn)
+          btn.classList.remove("active");
+      }
+    });
     if (this.plugin.settings.usePhoneFrame) {
       const phoneFrame = previewWrapper.createEl("div", { cls: "apple-phone-frame" });
       const header = phoneFrame.createEl("div", { cls: "apple-phone-header" });

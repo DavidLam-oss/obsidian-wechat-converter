@@ -411,6 +411,26 @@ class AppleStyleView extends ItemView {
       cls: `apple-preview-wrapper ${this.plugin.settings.usePhoneFrame ? 'mode-phone' : 'mode-classic'}`
     });
 
+    // Light Dismiss: 点击预览区域(手机框外)收起设置面板
+    previewWrapper.addEventListener('click', (e) => {
+      // 确保点击的不是设置面板本身（虽然设置面板是 overlay，但为了保险起见）
+      // 且当前设置面板是可见的
+      if (this.settingsOverlay && this.settingsOverlay.classList.contains('visible')) {
+        // 如果点击的是 previewWrapper 本身（空白处），或者是 wrapper 内部非交互元素
+        // 这里简化为：只要点击发生，就尝试关闭面板。
+        // 由于 settingsOverlay 是 absolute 定位在 toolbar 下方，
+        // 且 z-index 高于 previewWrapper，所以点击 settingsOverlay 不会冒泡到 previewWrapper
+        // (前提是 settingsOverlay 不是 previewWrapper 的子元素，确实不是，它是兄弟元素)
+        this.settingsOverlay.classList.remove('visible');
+        // 同时移除按钮激活状态。需要获取 settingsBtn 引用？
+        // 由于 settingsBtn 是在 createSettingsPanel 内部定义的局部变量，这里无法直接访问。
+        // 我们需要一种方式来同步状态。
+        // 方案：查找 DOM 中的按钮并移除类
+        const btn = container.querySelector('.apple-icon-btn[aria-label="样式设置"]');
+        if (btn) btn.classList.remove('active');
+      }
+    });
+
     if (this.plugin.settings.usePhoneFrame) {
       // === 手机仿真模式 ===
       const phoneFrame = previewWrapper.createEl('div', { cls: 'apple-phone-frame' });

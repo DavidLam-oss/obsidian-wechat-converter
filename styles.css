@@ -163,8 +163,8 @@
   top: 48px; /* 紧贴工具栏下方 */
   left: 0;
   right: 0;
-  /* 调整透明度：0.95 -> 0.85，让模糊效果更明显 */
-  background: rgba(255, 255, 255, 0.85);
+  /* 调整透明度：0.85 -> 0.72，增加通透感 */
+  background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 
@@ -181,12 +181,18 @@
   z-index: 100;
   /* 调整内边距：20px -> 12px，让内容更紧凑，两侧留白减少 */
   padding: 24px 12px 32px 12px;
-  max-height: calc(100% - 64px); /* 留出一点底部空间，避免贴底 */
+
+  /* === 核心修改：高度限制与动画 === */
+  max-height: 60%; /* 限制高度为 60%，内部自动滚动 */
   overflow-y: auto;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* 初始状态：向上隐去 (收起) */
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-8px) scale(0.98); /* 微缩放动画，更有质感 */
+  transform: translateY(-20px); /* 向上位移，模拟收起状态 */
+
+  /* 丝滑的物理缓动动画 */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .theme-dark .apple-settings-overlay {
@@ -201,7 +207,7 @@
 .apple-settings-overlay.visible {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0) scale(1);
+  transform: translateY(0); /* 向下展开，回到原位 */
 }
 
 /* 隐藏旧的折叠样式，直接平铺 */
