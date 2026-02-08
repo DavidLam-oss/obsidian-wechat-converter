@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-wechat-converter",
-	"version": "2.5.1",
+	"version": "2.6.0",
 	"description": "Apple Style Formatter for Obsidian",
 	"main": "main.js",
 	"scripts": {
