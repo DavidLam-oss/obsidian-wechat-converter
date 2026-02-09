@@ -1896,6 +1896,16 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       return "";
     return vaultPath.trim().replace(/\\/g, "/").replace(/\/{2,}/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
   }
+  isAbsolutePathLike(vaultPath) {
+    if (typeof vaultPath !== "string")
+      return false;
+    const trimmed = vaultPath.trim();
+    if (!trimmed)
+      return false;
+    if (trimmed.startsWith("/"))
+      return true;
+    return /^[a-zA-Z]:[\\/]/.test(trimmed);
+  }
   display() {
     const { containerEl } = this;
     containerEl.empty();
@@ -2030,7 +2040,16 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       this.plugin.settings.cleanupAfterSync = value;
       await this.plugin.saveSettings();
     }));
-    new Setting(containerEl).setName("\u6E05\u7406\u76EE\u5F55").setDesc("\u586B\u5199\u8981\u5220\u9664\u7684\u76EE\u5F55\uFF08vault \u76F8\u5BF9\u8DEF\u5F84\uFF09\uFF0C\u652F\u6301 {{note}} \u5360\u4F4D\u7B26\uFF0C\u4F8B\u5982 published/{{note}}_img\u3002").addText((text) => text.setPlaceholder("published/{{note}}_img").setValue(this.plugin.settings.cleanupDirTemplate || "").onChange(async (value) => {
+    let hasWarnedAbsoluteCleanupPath = false;
+    new Setting(containerEl).setName("\u6E05\u7406\u76EE\u5F55").setDesc("\u586B\u5199 vault \u5185\u76F8\u5BF9\u8DEF\u5F84\uFF08\u4E0D\u8981\u586B /Users/... \u8FD9\u7C7B\u7EDD\u5BF9\u8DEF\u5F84\uFF09\uFF0C\u652F\u6301 {{note}} \u5360\u4F4D\u7B26\uFF0C\u4F8B\u5982 published/{{note}}_img\u3002").addText((text) => text.setPlaceholder("published/{{note}}_img").setValue(this.plugin.settings.cleanupDirTemplate || "").onChange(async (value) => {
+      if (this.isAbsolutePathLike(value)) {
+        if (!hasWarnedAbsoluteCleanupPath) {
+          new Notice("\u26A0\uFE0F \u6E05\u7406\u76EE\u5F55\u8BF7\u586B\u5199 vault \u5185\u76F8\u5BF9\u8DEF\u5F84\uFF0C\u4E0D\u8981\u4F7F\u7528\u7EDD\u5BF9\u8DEF\u5F84\uFF08\u5982 /Users/... \u6216 C:\\...\uFF09");
+          hasWarnedAbsoluteCleanupPath = true;
+        }
+      } else {
+        hasWarnedAbsoluteCleanupPath = false;
+      }
       const normalized = this.normalizeVaultPath(value);
       if (normalized.includes("..")) {
         new Notice("\u274C \u6E05\u7406\u76EE\u5F55\u4E0D\u80FD\u5305\u542B ..");

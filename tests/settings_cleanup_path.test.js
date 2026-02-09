@@ -10,5 +10,13 @@ describe('AppleStyleSettingTab - Cleanup Path Normalize', () => {
     expect(tab.normalizeVaultPath('')).toBe('');
     expect(tab.normalizeVaultPath(null)).toBe('');
   });
-});
 
+  it('should detect absolute path inputs', () => {
+    const tab = new AppleStyleSettingTab({}, { settings: {} });
+
+    expect(tab.isAbsolutePathLike('/Users/me/MyVault/published')).toBe(true);
+    expect(tab.isAbsolutePathLike('C:\\Vault\\published')).toBe(true);
+    expect(tab.isAbsolutePathLike('Wechat/published/img')).toBe(false);
+    expect(tab.isAbsolutePathLike('')).toBe(false);
+  });
+});

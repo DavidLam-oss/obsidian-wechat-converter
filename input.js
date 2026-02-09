@@ -2449,6 +2449,14 @@ class AppleStyleSettingTab extends PluginSettingTab {
       .replace(/\/+$/, '');
   }
 
+  isAbsolutePathLike(vaultPath) {
+    if (typeof vaultPath !== 'string') return false;
+    const trimmed = vaultPath.trim();
+    if (!trimmed) return false;
+    if (trimmed.startsWith('/')) return true; // Unix/macOS absolute path
+    return /^[a-zA-Z]:[\\/]/.test(trimmed); // Windows absolute path
+  }
+
   display() {
     const { containerEl } = this;
     containerEl.empty();
@@ -2661,13 +2669,23 @@ class AppleStyleSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }));
 
+    let hasWarnedAbsoluteCleanupPath = false;
     new Setting(containerEl)
       .setName('清理目录')
-      .setDesc('填写要删除的目录（vault 相对路径），支持 {{note}} 占位符，例如 published/{{note}}_img。')
+      .setDesc('填写 vault 内相对路径（不要填 /Users/... 这类绝对路径），支持 {{note}} 占位符，例如 published/{{note}}_img。')
       .addText(text => text
         .setPlaceholder('published/{{note}}_img')
         .setValue(this.plugin.settings.cleanupDirTemplate || '')
         .onChange(async (value) => {
+          if (this.isAbsolutePathLike(value)) {
+            if (!hasWarnedAbsoluteCleanupPath) {
+              new Notice('⚠️ 清理目录请填写 vault 内相对路径，不要使用绝对路径（如 /Users/... 或 C:\\...）');
+              hasWarnedAbsoluteCleanupPath = true;
+            }
+          } else {
+            hasWarnedAbsoluteCleanupPath = false;
+          }
+
           const normalized = this.normalizeVaultPath(value);
           if (normalized.includes('..')) {
             new Notice('❌ 清理目录不能包含 ..');
