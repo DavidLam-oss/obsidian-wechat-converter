@@ -37,6 +37,13 @@ var DEFAULT_SETTINGS = {
   // 页面两侧留白 (px)
   coloredHeader: false,
   // 标题是否使用主题色
+  // 同步后清理封面资源（默认关闭，避免破坏性行为）
+  cleanupAfterSync: false,
+  cleanupTarget: "file",
+  // 'file' | 'folder'
+  cleanupUseSystemTrash: true,
+  cleanupRootDir: "",
+  // 清理安全护栏根目录（vault 相对路径，默认留空需手动配置）
   // 旧字段保留用于迁移检测
   wechatAppId: "",
   wechatAppSecret: ""
@@ -777,6 +784,189 @@ var AppleStyleView = class extends ItemView {
     return null;
   }
   /**
+   * 读取当前文档 frontmatter 中的发布元数据
+   * @returns {{ excerpt: string, cover: string, cover_dir: string, coverSrc: string|null }}
+   */
+  getFrontmatterPublishMeta(activeFile) {
+    var _a;
+    if (!activeFile) {
+      return { excerpt: "", cover: "", cover_dir: "", coverSrc: null };
+    }
+    const frontmatter = (_a = this.app.metadataCache.getFileCache(activeFile)) == null ? void 0 : _a.frontmatter;
+    const excerpt = this.getFrontmatterString(frontmatter, ["excerpt"]);
+    const cover = this.getFrontmatterString(frontmatter, ["cover"]);
+    const cover_dir = this.getFrontmatterString(frontmatter, ["cover_dir", "coverDir", "cover-dir", "coverdir", "CoverDIR"]);
+    const coverSrc = cover ? this.resolveVaultPathToResourceSrc(cover) : null;
+    return { excerpt, cover, cover_dir, coverSrc };
+  }
+  getFrontmatterString(frontmatter, keys) {
+    if (!frontmatter || typeof frontmatter !== "object")
+      return "";
+    if (!Array.isArray(keys) || keys.length === 0)
+      return "";
+    const normalizedTargets = new Set(keys.map((key) => this.normalizeFrontmatterKey(key)));
+    for (const key of keys) {
+      const value = frontmatter[key];
+      if (typeof value === "string" && value.trim())
+        return value.trim();
+    }
+    for (const [key, value] of Object.entries(frontmatter)) {
+      if (!normalizedTargets.has(this.normalizeFrontmatterKey(key)))
+        continue;
+      if (typeof value === "string" && value.trim())
+        return value.trim();
+    }
+    return "";
+  }
+  normalizeFrontmatterKey(key) {
+    return String(key || "").toLowerCase().replace(/[_-]/g, "");
+  }
+  clearFrontmatterStringVariants(frontmatter, keys) {
+    if (!frontmatter || typeof frontmatter !== "object")
+      return;
+    if (!Array.isArray(keys) || keys.length === 0)
+      return;
+    const normalizedTargets = new Set(keys.map((key) => this.normalizeFrontmatterKey(key)));
+    for (const key of Object.keys(frontmatter)) {
+      if (!normalizedTargets.has(this.normalizeFrontmatterKey(key)))
+        continue;
+      frontmatter[key] = "";
+    }
+  }
+  /**
+   * 将 vault 相对路径解析为可预览/上传的资源 src（通常是 app://）
+   */
+  resolveVaultPathToResourceSrc(vaultPath) {
+    if (typeof vaultPath !== "string")
+      return null;
+    const normalized = vaultPath.trim().replace(/\\/g, "/").replace(/^\/+/, "");
+    if (!normalized)
+      return null;
+    try {
+      const file = this.app.vault.getAbstractFileByPath(normalized);
+      if (!file)
+        return null;
+      if (typeof file.extension !== "string")
+        return null;
+      return this.app.vault.getResourcePath(file);
+    } catch (error) {
+      return null;
+    }
+  }
+  getParentPath(vaultPath) {
+    if (typeof vaultPath !== "string")
+      return "";
+    const normalized = vaultPath.trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+    if (!normalized)
+      return "";
+    const idx = normalized.lastIndexOf("/");
+    if (idx <= 0)
+      return "";
+    return normalized.substring(0, idx);
+  }
+  getCleanupRootDir() {
+    var _a, _b;
+    const raw = typeof ((_b = (_a = this.plugin) == null ? void 0 : _a.settings) == null ? void 0 : _b.cleanupRootDir) === "string" ? this.plugin.settings.cleanupRootDir : "";
+    return raw.trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+  }
+  /**
+   * 清理路径安全校验：仅允许清理根目录下，且禁止根目录本身
+   */
+  isSafeCleanupPath(vaultPath, target = "file") {
+    if (typeof vaultPath !== "string")
+      return false;
+    const normalized = vaultPath.trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+    const cleanupRoot = this.getCleanupRootDir();
+    if (!normalized)
+      return false;
+    if (normalized.includes(".."))
+      return false;
+    if (!cleanupRoot || cleanupRoot.includes(".."))
+      return false;
+    if (normalized === cleanupRoot)
+      return false;
+    if (!normalized.startsWith(`${cleanupRoot}/`))
+      return false;
+    if (target === "folder") {
+      const folderName = normalized.split("/").pop() || "";
+      if (!folderName.includes("_img"))
+        return false;
+    }
+    return true;
+  }
+  /**
+   * 在同步成功后按配置清理封面资源
+   * 失败返回 warning，不抛错（避免影响同步成功状态）
+   */
+  async cleanupCoverAssets(meta = {}, activeFile) {
+    const safeMeta = {
+      cover: typeof meta.cover === "string" ? meta.cover : "",
+      cover_dir: typeof meta.cover_dir === "string" ? meta.cover_dir : ""
+    };
+    if (!this.plugin.settings.cleanupAfterSync) {
+      return { attempted: false };
+    }
+    const targetMode = this.plugin.settings.cleanupTarget === "folder" ? "folder" : "file";
+    const useSystemTrash = this.plugin.settings.cleanupUseSystemTrash !== false;
+    const cleanupRoot = this.getCleanupRootDir();
+    if (!cleanupRoot) {
+      return { attempted: true, success: false, warning: "\u672A\u914D\u7F6E\u6E05\u7406\u6839\u76EE\u5F55\uFF0C\u8BF7\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u5148\u586B\u5199\u540E\u518D\u542F\u7528\u81EA\u52A8\u6E05\u7406" };
+    }
+    let targetPath = "";
+    if (targetMode === "folder") {
+      targetPath = safeMeta.cover_dir || this.getParentPath(safeMeta.cover || "");
+    } else {
+      targetPath = safeMeta.cover || "";
+    }
+    if (!targetPath) {
+      return { attempted: true, success: false, warning: "\u672A\u627E\u5230\u53EF\u6E05\u7406\u7684\u5C01\u9762\u8DEF\u5F84\uFF08frontmatter.cover/cover_dir \u4E3A\u7A7A\uFF09" };
+    }
+    if (!this.isSafeCleanupPath(targetPath, targetMode)) {
+      return { attempted: true, success: false, warning: `\u8DEF\u5F84\u4E0D\u5B89\u5168\uFF0C\u5DF2\u8DF3\u8FC7\u6E05\u7406: ${targetPath}` };
+    }
+    const normalized = targetPath.trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+    const abstractFile = this.app.vault.getAbstractFileByPath(normalized);
+    if (!abstractFile) {
+      return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u6807\u4E0D\u5B58\u5728: ${normalized}` };
+    }
+    const isFile = typeof abstractFile.extension === "string";
+    if (targetMode === "file" && !isFile) {
+      return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u6807\u4E0D\u662F\u6587\u4EF6\uFF0C\u5DF2\u8DF3\u8FC7: ${normalized}` };
+    }
+    if (targetMode === "folder" && isFile) {
+      return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u6807\u4E0D\u662F\u6587\u4EF6\u5939\uFF0C\u5DF2\u8DF3\u8FC7: ${normalized}` };
+    }
+    try {
+      if (typeof this.app.vault.trash === "function") {
+        await this.app.vault.trash(abstractFile, useSystemTrash);
+      } else if (typeof this.app.vault.delete === "function") {
+        await this.app.vault.delete(abstractFile, true);
+      } else {
+        throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301\u5220\u9664\u63A5\u53E3");
+      }
+    } catch (error) {
+      return { attempted: true, success: false, warning: `\u5220\u9664\u5931\u8D25 (${normalized}): ${error.message}` };
+    }
+    if (activeFile && (safeMeta.cover || safeMeta.cover_dir)) {
+      try {
+        await this.app.fileManager.processFrontMatter(activeFile, (frontmatter) => {
+          if (!frontmatter)
+            return;
+          this.clearFrontmatterStringVariants(frontmatter, ["cover"]);
+          this.clearFrontmatterStringVariants(frontmatter, ["cover_dir", "coverDir", "cover-dir", "coverdir", "CoverDIR"]);
+        });
+      } catch (error) {
+        return {
+          attempted: true,
+          success: true,
+          cleanedPath: normalized,
+          warning: `\u8D44\u6E90\u5DF2\u5220\u9664\uFF0C\u4F46\u6E05\u7A7A frontmatter \u5931\u8D25: ${error.message}`
+        };
+      }
+    }
+    return { attempted: true, success: true, cleanedPath: normalized };
+  }
+  /**
    * 创建设置区块
    */
   createSection(parent, label, builder) {
@@ -799,6 +989,7 @@ var AppleStyleView = class extends ItemView {
     modal.contentEl.addClass("wechat-sync-modal");
     const activeFile = this.app.workspace.getActiveFile();
     const currentPath = activeFile ? activeFile.path : null;
+    const frontmatterMeta = this.getFrontmatterPublishMeta(activeFile);
     let cachedState = null;
     if (currentPath && this.articleStates.has(currentPath)) {
       cachedState = this.articleStates.get(currentPath);
@@ -806,7 +997,7 @@ var AppleStyleView = class extends ItemView {
     const accounts = this.plugin.settings.wechatAccounts || [];
     const defaultId = this.plugin.settings.defaultAccountId;
     let selectedAccountId = defaultId;
-    let coverBase64 = (cachedState == null ? void 0 : cachedState.coverBase64) || this.getFirstImageFromArticle();
+    let coverBase64 = (cachedState == null ? void 0 : cachedState.coverBase64) || frontmatterMeta.coverSrc || this.getFirstImageFromArticle();
     this.sessionCoverBase64 = coverBase64;
     const accountSection = modal.contentEl.createDiv({ cls: "wechat-modal-section" });
     accountSection.createEl("label", { text: "\u8D26\u53F7", cls: "wechat-modal-label" });
@@ -850,7 +1041,7 @@ var AppleStyleView = class extends ItemView {
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = this.currentHtml || "";
     const autoDigest = (tempDiv.textContent || "").replace(/\s+/g, " ").trim().substring(0, 45);
-    const initialDigest = (cachedState == null ? void 0 : cachedState.digest) !== void 0 ? cachedState.digest : autoDigest;
+    const initialDigest = (cachedState == null ? void 0 : cachedState.digest) !== void 0 ? cachedState.digest : frontmatterMeta.excerpt || autoDigest;
     const digestInput = digestSection.createEl("textarea", {
       cls: "wechat-modal-digest-input",
       placeholder: "\u7559\u7A7A\u5219\u81EA\u52A8\u63D0\u53D6\u6587\u7AE0\u524D 45 \u5B57"
@@ -929,10 +1120,12 @@ var AppleStyleView = class extends ItemView {
       return;
     }
     const notice = new Notice(`\u{1F680} \u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65...`, 0);
+    const activeFile = this.app.workspace.getActiveFile();
+    const publishMeta = this.getFrontmatterPublishMeta(activeFile);
     try {
       const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl);
       notice.setMessage("\u{1F5BC}\uFE0F \u6B63\u5728\u5904\u7406\u5C01\u9762\u56FE...");
-      const coverSrc = this.sessionCoverBase64 || this.getFirstImageFromArticle();
+      const coverSrc = this.sessionCoverBase64 || publishMeta.coverSrc || this.getFirstImageFromArticle();
       if (!coverSrc) {
         throw new Error("\u672A\u8BBE\u7F6E\u5C01\u9762\u56FE\uFF0C\u540C\u6B65\u5931\u8D25\u3002\u8BF7\u5728\u5F39\u7A97\u4E2D\u4E0A\u4F20\u5C01\u9762\u3002");
       }
@@ -950,7 +1143,6 @@ var AppleStyleView = class extends ItemView {
         });
       }
       const cleanedHtml = this.cleanHtmlForDraft(processedHtml);
-      const activeFile = this.app.workspace.getActiveFile();
       const title = activeFile ? activeFile.basename : "\u65E0\u6807\u9898\u6587\u7AE0";
       const base64Count = (cleanedHtml.match(/src=["']data:image/g) || []).length;
       if (base64Count > 0) {
@@ -965,8 +1157,12 @@ var AppleStyleView = class extends ItemView {
         digest: this.sessionDigest || "\u4E00\u952E\u540C\u6B65\u81EA Obsidian"
       };
       await api.createDraft(article);
+      const cleanupResult = await this.cleanupCoverAssets(publishMeta, activeFile);
       notice.hide();
       new Notice("\u2705 \u540C\u6B65\u6210\u529F\uFF01\u8BF7\u524D\u5F80\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0\u8349\u7A3F\u7BB1\u67E5\u770B");
+      if (cleanupResult == null ? void 0 : cleanupResult.warning) {
+        new Notice(`\u26A0\uFE0F \u5C01\u9762\u6E05\u7406\u5931\u8D25\uFF1A${cleanupResult.warning}`, 7e3);
+      }
     } catch (error) {
       notice.hide();
       console.error("Wechat Sync Error:", error);
@@ -1812,6 +2008,27 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       });
     }
     new Setting(containerEl).setName("\u9AD8\u7EA7\u8BBE\u7F6E").setHeading();
+    new Setting(containerEl).setName("\u53D1\u9001\u6210\u529F\u540E\u6E05\u7406\u5C01\u9762\u8D44\u6E90").setDesc("\u9ED8\u8BA4\u5173\u95ED\u3002\u5F00\u542F\u540E\u4F1A\u5728\u521B\u5EFA\u8349\u7A3F\u6210\u529F\u540E\uFF0C\u6309\u4E0B\u9762\u89C4\u5219\u5220\u9664\u201C\u6E05\u7406\u6839\u76EE\u5F55\u201D\u4E0B\u7684\u5C01\u9762\u6587\u4EF6\u6216\u76EE\u5F55\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.cleanupAfterSync).onChange(async (value) => {
+      this.plugin.settings.cleanupAfterSync = value;
+      await this.plugin.saveSettings();
+    }));
+    new Setting(containerEl).setName("\u6E05\u7406\u6839\u76EE\u5F55").setDesc("\u4EC5\u5141\u8BB8\u5220\u9664\u8BE5\u76EE\u5F55\u4E0B\u7684\u8D44\u6E90\u3002\u9ED8\u8BA4\u7559\u7A7A\uFF0C\u9700\u624B\u52A8\u586B\u5199\u4F60\u7684\u53D1\u5E03\u76EE\u5F55\uFF08vault \u76F8\u5BF9\u8DEF\u5F84\uFF09\u3002").addText((text) => text.setPlaceholder("your/publish-dir").setValue(this.plugin.settings.cleanupRootDir || "").onChange(async (value) => {
+      const normalized = value.trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+      if (normalized.includes("..")) {
+        new Notice("\u274C \u6E05\u7406\u6839\u76EE\u5F55\u4E0D\u80FD\u5305\u542B ..");
+        return;
+      }
+      this.plugin.settings.cleanupRootDir = normalized;
+      await this.plugin.saveSettings();
+    }));
+    new Setting(containerEl).setName("\u6E05\u7406\u76EE\u6807").setDesc("\u4F60\u53EF\u4EE5\u9009\u201C\u53EA\u5220\u5C01\u9762\u56FE\u201D\uFF08\u66F4\u7A33\u59A5\uFF09\uFF0C\u6216\u201C\u5220\u6574\u5957\u5C01\u9762\u56FE\u201D\uFF08\u4F1A\u628A\u5C01\u9762\u6240\u5728\u6587\u4EF6\u5939\u4E00\u8D77\u5220\u6389\uFF09\u3002").addDropdown((dropdown) => dropdown.addOption("file", "\u53EA\u5220\u5C01\u9762\u56FE\uFF08\u66F4\u5B89\u5168\uFF09").addOption("folder", "\u5220\u6574\u5957\u5C01\u9762\u56FE\uFF08\u6574\u4E2A\u5C01\u9762\u6587\u4EF6\u5939\uFF09").setValue(this.plugin.settings.cleanupTarget || "file").onChange(async (value) => {
+      this.plugin.settings.cleanupTarget = value === "folder" ? "folder" : "file";
+      await this.plugin.saveSettings();
+    }));
+    new Setting(containerEl).setName("\u4F7F\u7528\u7CFB\u7EDF\u56DE\u6536\u7AD9").setDesc("\u5F00\u542F\u65F6\u4F18\u5148\u79FB\u52A8\u5230\u7CFB\u7EDF\u56DE\u6536\u7AD9\uFF1B\u5173\u95ED\u65F6\u76F4\u63A5\u4ECE vault \u5220\u9664\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.cleanupUseSystemTrash !== false).onChange(async (value) => {
+      this.plugin.settings.cleanupUseSystemTrash = value;
+      await this.plugin.saveSettings();
+    }));
     new Setting(containerEl).setName("API \u4EE3\u7406\u5730\u5740").setDesc(createFragment((frag) => {
       const descDiv = frag.createDiv();
       descDiv.appendText("\u5982\u679C\u4F60\u7684\u7F51\u7EDC IP \u7ECF\u5E38\u53D8\u5316\uFF0C\u53EF\u914D\u7F6E\u4EE3\u7406\u670D\u52A1\u3002");

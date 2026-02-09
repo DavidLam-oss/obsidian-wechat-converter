@@ -13,7 +13,18 @@ module.exports = {
       };
     }
   },
-  Notice: class {},
+  Notice: class {
+    constructor(message = '', duration = 0) {
+      this.message = message;
+      this.duration = duration;
+    }
+    setMessage(message) {
+      this.message = message;
+    }
+    hide() {
+      this.hidden = true;
+    }
+  },
   MarkdownView: class {},
   PluginSettingTab: class {},
   Setting: class {

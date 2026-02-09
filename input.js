@@ -27,6 +27,11 @@ const DEFAULT_SETTINGS = {
   // 排版设置
   sidePadding: 16, // 页面两侧留白 (px)
   coloredHeader: false, // 标题是否使用主题色
+  // 同步后清理封面资源（默认关闭，避免破坏性行为）
+  cleanupAfterSync: false,
+  cleanupTarget: 'file', // 'file' | 'folder'
+  cleanupUseSystemTrash: true,
+  cleanupRootDir: '', // 清理安全护栏根目录（vault 相对路径，默认留空需手动配置）
   // 旧字段保留用于迁移检测
   wechatAppId: '',
   wechatAppSecret: '',
@@ -1031,6 +1036,199 @@ class AppleStyleView extends ItemView {
   }
 
   /**
+   * 读取当前文档 frontmatter 中的发布元数据
+   * @returns {{ excerpt: string, cover: string, cover_dir: string, coverSrc: string|null }}
+   */
+  getFrontmatterPublishMeta(activeFile) {
+    if (!activeFile) {
+      return { excerpt: '', cover: '', cover_dir: '', coverSrc: null };
+    }
+
+    const frontmatter = this.app.metadataCache.getFileCache(activeFile)?.frontmatter;
+    const excerpt = this.getFrontmatterString(frontmatter, ['excerpt']);
+    const cover = this.getFrontmatterString(frontmatter, ['cover']);
+    const cover_dir = this.getFrontmatterString(frontmatter, ['cover_dir', 'coverDir', 'cover-dir', 'coverdir', 'CoverDIR']);
+
+    // 解析失败时静默回退：返回 null，不中断流程
+    const coverSrc = cover ? this.resolveVaultPathToResourceSrc(cover) : null;
+
+    return { excerpt, cover, cover_dir, coverSrc };
+  }
+
+  getFrontmatterString(frontmatter, keys) {
+    if (!frontmatter || typeof frontmatter !== 'object') return '';
+    if (!Array.isArray(keys) || keys.length === 0) return '';
+
+    const normalizedTargets = new Set(keys.map(key => this.normalizeFrontmatterKey(key)));
+    for (const key of keys) {
+      const value = frontmatter[key];
+      if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+
+    for (const [key, value] of Object.entries(frontmatter)) {
+      if (!normalizedTargets.has(this.normalizeFrontmatterKey(key))) continue;
+      if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+
+    return '';
+  }
+
+  normalizeFrontmatterKey(key) {
+    return String(key || '').toLowerCase().replace(/[_-]/g, '');
+  }
+
+  clearFrontmatterStringVariants(frontmatter, keys) {
+    if (!frontmatter || typeof frontmatter !== 'object') return;
+    if (!Array.isArray(keys) || keys.length === 0) return;
+
+    const normalizedTargets = new Set(keys.map(key => this.normalizeFrontmatterKey(key)));
+    for (const key of Object.keys(frontmatter)) {
+      if (!normalizedTargets.has(this.normalizeFrontmatterKey(key))) continue;
+      frontmatter[key] = '';
+    }
+  }
+
+  /**
+   * 将 vault 相对路径解析为可预览/上传的资源 src（通常是 app://）
+   */
+  resolveVaultPathToResourceSrc(vaultPath) {
+    if (typeof vaultPath !== 'string') return null;
+    const normalized = vaultPath.trim().replace(/\\/g, '/').replace(/^\/+/, '');
+    if (!normalized) return null;
+
+    try {
+      const file = this.app.vault.getAbstractFileByPath(normalized);
+      if (!file) return null;
+      if (typeof file.extension !== 'string') return null; // 仅接受文件，不接受目录
+      return this.app.vault.getResourcePath(file);
+    } catch (error) {
+      // frontmatter 路径失效或不是文件时，静默回退
+      return null;
+    }
+  }
+
+  getParentPath(vaultPath) {
+    if (typeof vaultPath !== 'string') return '';
+    const normalized = vaultPath.trim().replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+$/, '');
+    if (!normalized) return '';
+    const idx = normalized.lastIndexOf('/');
+    if (idx <= 0) return '';
+    return normalized.substring(0, idx);
+  }
+
+  getCleanupRootDir() {
+    const raw = typeof this.plugin?.settings?.cleanupRootDir === 'string'
+      ? this.plugin.settings.cleanupRootDir
+      : '';
+    return raw.trim().replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+$/, '');
+  }
+
+  /**
+   * 清理路径安全校验：仅允许清理根目录下，且禁止根目录本身
+   */
+  isSafeCleanupPath(vaultPath, target = 'file') {
+    if (typeof vaultPath !== 'string') return false;
+    const normalized = vaultPath.trim().replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+$/, '');
+    const cleanupRoot = this.getCleanupRootDir();
+    if (!normalized) return false;
+    if (normalized.includes('..')) return false;
+    if (!cleanupRoot || cleanupRoot.includes('..')) return false;
+    if (normalized === cleanupRoot) return false;
+    if (!normalized.startsWith(`${cleanupRoot}/`)) return false;
+
+    if (target === 'folder') {
+      const folderName = normalized.split('/').pop() || '';
+      if (!folderName.includes('_img')) return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * 在同步成功后按配置清理封面资源
+   * 失败返回 warning，不抛错（避免影响同步成功状态）
+   */
+  async cleanupCoverAssets(meta = {}, activeFile) {
+    const safeMeta = {
+      cover: typeof meta.cover === 'string' ? meta.cover : '',
+      cover_dir: typeof meta.cover_dir === 'string' ? meta.cover_dir : ''
+    };
+
+    if (!this.plugin.settings.cleanupAfterSync) {
+      return { attempted: false };
+    }
+
+    const targetMode = this.plugin.settings.cleanupTarget === 'folder' ? 'folder' : 'file';
+    const useSystemTrash = this.plugin.settings.cleanupUseSystemTrash !== false;
+    const cleanupRoot = this.getCleanupRootDir();
+
+    if (!cleanupRoot) {
+      return { attempted: true, success: false, warning: '未配置清理根目录，请在插件设置中先填写后再启用自动清理' };
+    }
+
+    let targetPath = '';
+    if (targetMode === 'folder') {
+      targetPath = safeMeta.cover_dir || this.getParentPath(safeMeta.cover || '');
+    } else {
+      targetPath = safeMeta.cover || '';
+    }
+
+    if (!targetPath) {
+      return { attempted: true, success: false, warning: '未找到可清理的封面路径（frontmatter.cover/cover_dir 为空）' };
+    }
+
+    if (!this.isSafeCleanupPath(targetPath, targetMode)) {
+      return { attempted: true, success: false, warning: `路径不安全，已跳过清理: ${targetPath}` };
+    }
+
+    const normalized = targetPath.trim().replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+$/, '');
+    const abstractFile = this.app.vault.getAbstractFileByPath(normalized);
+    if (!abstractFile) {
+      return { attempted: true, success: false, warning: `清理目标不存在: ${normalized}` };
+    }
+
+    const isFile = typeof abstractFile.extension === 'string';
+    if (targetMode === 'file' && !isFile) {
+      return { attempted: true, success: false, warning: `清理目标不是文件，已跳过: ${normalized}` };
+    }
+    if (targetMode === 'folder' && isFile) {
+      return { attempted: true, success: false, warning: `清理目标不是文件夹，已跳过: ${normalized}` };
+    }
+
+    try {
+      if (typeof this.app.vault.trash === 'function') {
+        await this.app.vault.trash(abstractFile, useSystemTrash);
+      } else if (typeof this.app.vault.delete === 'function') {
+        await this.app.vault.delete(abstractFile, true);
+      } else {
+        throw new Error('当前 Obsidian 版本不支持删除接口');
+      }
+    } catch (error) {
+      return { attempted: true, success: false, warning: `删除失败 (${normalized}): ${error.message}` };
+    }
+
+    // 推荐：清理成功后清空 frontmatter，避免下次指向失效路径
+    if (activeFile && (safeMeta.cover || safeMeta.cover_dir)) {
+      try {
+        await this.app.fileManager.processFrontMatter(activeFile, (frontmatter) => {
+          if (!frontmatter) return;
+          this.clearFrontmatterStringVariants(frontmatter, ['cover']);
+          this.clearFrontmatterStringVariants(frontmatter, ['cover_dir', 'coverDir', 'cover-dir', 'coverdir', 'CoverDIR']);
+        });
+      } catch (error) {
+        return {
+          attempted: true,
+          success: true,
+          cleanedPath: normalized,
+          warning: `资源已删除，但清空 frontmatter 失败: ${error.message}`
+        };
+      }
+    }
+
+    return { attempted: true, success: true, cleanedPath: normalized };
+  }
+
+  /**
    * 创建设置区块
    */
   createSection(parent, label, builder) {
@@ -1057,6 +1255,7 @@ class AppleStyleView extends ItemView {
     // 获取当前活动文件的路径，用于状态缓存
     const activeFile = this.app.workspace.getActiveFile();
     const currentPath = activeFile ? activeFile.path : null;
+    const frontmatterMeta = this.getFrontmatterPublishMeta(activeFile);
 
     // 尝试从缓存读取状态
     let cachedState = null;
@@ -1068,8 +1267,8 @@ class AppleStyleView extends ItemView {
     const defaultId = this.plugin.settings.defaultAccountId;
     let selectedAccountId = defaultId;
 
-    // 封面逻辑：优先使用缓存 -> 否则提取文章第一张图
-    let coverBase64 = cachedState?.coverBase64 || this.getFirstImageFromArticle();
+    // 封面逻辑：优先使用缓存 -> frontmatter.cover -> 文章第一张图
+    let coverBase64 = cachedState?.coverBase64 || frontmatterMeta.coverSrc || this.getFirstImageFromArticle();
 
     // 更新 sessionCoverBase64 以便 onSyncToWechat 使用
     this.sessionCoverBase64 = coverBase64;
@@ -1131,8 +1330,10 @@ class AppleStyleView extends ItemView {
     // 使用 innerText 可以更好地处理换行，但为了安全起见，还是用 textContent 并清理空格
     const autoDigest = (tempDiv.textContent || '').replace(/\s+/g, ' ').trim().substring(0, 45);
 
-    // 摘要逻辑：优先使用缓存 -> 否则使用自动提取
-    const initialDigest = cachedState?.digest !== undefined ? cachedState.digest : autoDigest;
+    // 摘要逻辑：优先使用缓存 -> frontmatter.excerpt -> 自动提取
+    const initialDigest = cachedState?.digest !== undefined
+      ? cachedState.digest
+      : (frontmatterMeta.excerpt || autoDigest);
 
     const digestInput = digestSection.createEl('textarea', {
       cls: 'wechat-modal-digest-input',
@@ -1238,6 +1439,8 @@ class AppleStyleView extends ItemView {
     }
 
     const notice = new Notice(`🚀 正在使用 ${account.name} 同步...`, 0);
+    const activeFile = this.app.workspace.getActiveFile();
+    const publishMeta = this.getFrontmatterPublishMeta(activeFile);
 
     try {
       const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl);
@@ -1245,7 +1448,7 @@ class AppleStyleView extends ItemView {
       // 1. 获取封面图
       notice.setMessage('🖼️ 正在处理封面图...');
       // 严格校验: 必须有 sessionCoverBase64 或者能从文章提取到图片
-      const coverSrc = this.sessionCoverBase64 || this.getFirstImageFromArticle();
+      const coverSrc = this.sessionCoverBase64 || publishMeta.coverSrc || this.getFirstImageFromArticle();
       if (!coverSrc) {
         throw new Error('未设置封面图，同步失败。请在弹窗中上传封面。');
       }
@@ -1273,7 +1476,6 @@ class AppleStyleView extends ItemView {
       const cleanedHtml = this.cleanHtmlForDraft(processedHtml);
 
       // 3. 获取文章标题
-      const activeFile = this.app.workspace.getActiveFile();
       const title = activeFile ? activeFile.basename : '无标题文章';
 
       // 4. 内容长度预检 (Pre-flight Check)
@@ -1296,8 +1498,13 @@ class AppleStyleView extends ItemView {
 
       await api.createDraft(article);
 
+      const cleanupResult = await this.cleanupCoverAssets(publishMeta, activeFile);
+
       notice.hide();
       new Notice('✅ 同步成功！请前往微信公众号后台草稿箱查看');
+      if (cleanupResult?.warning) {
+        new Notice(`⚠️ 封面清理失败：${cleanupResult.warning}`, 7000);
+      }
     } catch (error) {
       notice.hide();
       console.error('Wechat Sync Error:', error);
@@ -2410,6 +2617,54 @@ class AppleStyleSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('高级设置')
       .setHeading();
+
+    new Setting(containerEl)
+      .setName('发送成功后清理封面资源')
+      .setDesc('默认关闭。开启后会在创建草稿成功后，按下面规则删除“清理根目录”下的封面文件或目录。')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.cleanupAfterSync)
+        .onChange(async (value) => {
+          this.plugin.settings.cleanupAfterSync = value;
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName('清理根目录')
+      .setDesc('仅允许删除该目录下的资源。默认留空，需手动填写你的发布目录（vault 相对路径）。')
+      .addText(text => text
+        .setPlaceholder('your/publish-dir')
+        .setValue(this.plugin.settings.cleanupRootDir || '')
+        .onChange(async (value) => {
+          const normalized = value.trim().replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+$/, '');
+          if (normalized.includes('..')) {
+            new Notice('❌ 清理根目录不能包含 ..');
+            return;
+          }
+          this.plugin.settings.cleanupRootDir = normalized;
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName('清理目标')
+      .setDesc('你可以选“只删封面图”（更稳妥），或“删整套封面图”（会把封面所在文件夹一起删掉）。')
+      .addDropdown(dropdown => dropdown
+        .addOption('file', '只删封面图（更安全）')
+        .addOption('folder', '删整套封面图（整个封面文件夹）')
+        .setValue(this.plugin.settings.cleanupTarget || 'file')
+        .onChange(async (value) => {
+          this.plugin.settings.cleanupTarget = value === 'folder' ? 'folder' : 'file';
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName('使用系统回收站')
+      .setDesc('开启时优先移动到系统回收站；关闭时直接从 vault 删除。')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.cleanupUseSystemTrash !== false)
+        .onChange(async (value) => {
+          this.plugin.settings.cleanupUseSystemTrash = value;
+          await this.plugin.saveSettings();
+        }));
 
     new Setting(containerEl)
       .setName('API 代理地址')
