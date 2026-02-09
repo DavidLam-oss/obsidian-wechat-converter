@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-describe('AppleStyleView - Frontmatter Publish Meta & Cleanup', () => {
+describe('AppleStyleView - Frontmatter Meta & Configured Directory Cleanup', () => {
   let AppleStyleView;
   let WechatAPI;
   let view;
@@ -28,9 +28,8 @@ describe('AppleStyleView - Frontmatter Publish Meta & Cleanup', () => {
     plugin = {
       settings: {
         cleanupAfterSync: false,
-        cleanupTarget: 'file',
         cleanupUseSystemTrash: true,
-        cleanupRootDir: '',
+        cleanupDirTemplate: '',
         wechatAccounts: [{
           id: 'acc1',
           name: '测试号',
@@ -54,6 +53,7 @@ describe('AppleStyleView - Frontmatter Publish Meta & Cleanup', () => {
     files = new Map([
       ['published/post_img/post-cover.jpg', { path: 'published/post_img/post-cover.jpg', extension: 'jpg' }],
       ['published/post_img', { path: 'published/post_img' }],
+      ['published/single-file.jpg', { path: 'published/single-file.jpg', extension: 'jpg' }],
     ]);
 
     view.app = {
@@ -109,36 +109,38 @@ describe('AppleStyleView - Frontmatter Publish Meta & Cleanup', () => {
     expect(meta.cover_dir).toBe('published/post_img');
   });
 
-  it('should enforce cleanup path safety guards', () => {
-    plugin.settings.cleanupRootDir = 'published';
-    expect(view.isSafeCleanupPath('published/post_img/post-cover.jpg', 'file')).toBe(true);
-    expect(view.isSafeCleanupPath('published/post_img', 'folder')).toBe(true);
+  it('should resolve cleanup directory with {{note}} placeholder', () => {
+    plugin.settings.cleanupDirTemplate = 'published/{{note}}_img';
+    const resolved = view.resolveCleanupDirPath(activeFile);
 
-    expect(view.isSafeCleanupPath('published', 'folder')).toBe(false);
-    expect(view.isSafeCleanupPath('notes/post_img', 'folder')).toBe(false);
-    expect(view.isSafeCleanupPath('published/../secret', 'file')).toBe(false);
-    expect(view.isSafeCleanupPath('published/post-assets', 'folder')).toBe(false);
+    expect(resolved.path).toBe('published/post_img');
+    expect(resolved.warning).toBeUndefined();
   });
 
-  it('should respect custom cleanup root directory', () => {
-    plugin.settings.cleanupRootDir = 'articles';
-    expect(view.isSafeCleanupPath('published/post_img/post-cover.jpg', 'file')).toBe(false);
-    expect(view.isSafeCleanupPath('articles/post_img/post-cover.jpg', 'file')).toBe(true);
+  it('should return warning when {{note}} exists but no active file', () => {
+    plugin.settings.cleanupDirTemplate = 'published/{{note}}_img';
+    const resolved = view.resolveCleanupDirPath(null);
+
+    expect(resolved.path).toBe('');
+    expect(resolved.warning).toContain('{{note}}');
   });
 
-  it('should cleanup cover file after sync and clear frontmatter fields', async () => {
+  it('should enforce cleanup dir safety guards', () => {
+    expect(view.isSafeCleanupDirPath('published/post_img')).toBe(true);
+    expect(view.isSafeCleanupDirPath('published/../secret')).toBe(false);
+    expect(view.isSafeCleanupDirPath('.obsidian')).toBe(false);
+    expect(view.isSafeCleanupDirPath('')).toBe(false);
+  });
+
+  it('should cleanup configured directory after sync success', async () => {
     plugin.settings.cleanupAfterSync = true;
-    plugin.settings.cleanupTarget = 'file';
     plugin.settings.cleanupUseSystemTrash = true;
-    plugin.settings.cleanupRootDir = 'published';
+    plugin.settings.cleanupDirTemplate = 'published/{{note}}_img';
 
-    const result = await view.cleanupCoverAssets({
-      cover: 'published/post_img/post-cover.jpg',
-      cover_dir: 'published/post_img',
-    }, activeFile);
+    const result = await view.cleanupConfiguredDirectory(activeFile);
 
     expect(view.app.vault.trash).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'published/post_img/post-cover.jpg' }),
+      expect.objectContaining({ path: 'published/post_img' }),
       true
     );
     expect(result.success).toBe(true);
@@ -146,110 +148,75 @@ describe('AppleStyleView - Frontmatter Publish Meta & Cleanup', () => {
     expect(frontmatter.cover_dir).toBe('');
   });
 
-  it('should cleanup folder using cover_dir first in folder mode', async () => {
+  it('should skip cleanup with warning when cleanup directory is not configured', async () => {
     plugin.settings.cleanupAfterSync = true;
-    plugin.settings.cleanupTarget = 'folder';
-    plugin.settings.cleanupRootDir = 'published';
+    plugin.settings.cleanupDirTemplate = '';
 
-    const result = await view.cleanupCoverAssets({
-      cover: 'published/post_img/post-cover.jpg',
-      cover_dir: 'published/post_img',
-    }, activeFile);
+    const result = await view.cleanupConfiguredDirectory(activeFile);
 
-    expect(view.app.vault.trash).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'published/post_img' }),
-      true
-    );
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
+    expect(result.warning).toContain('未配置清理目录');
+    expect(view.app.vault.trash).not.toHaveBeenCalled();
   });
 
-  it('should fallback to dirname(cover) when cleanupTarget=folder and cover_dir is empty', async () => {
+  it('should refuse cleanup when configured path points to a file', async () => {
     plugin.settings.cleanupAfterSync = true;
-    plugin.settings.cleanupTarget = 'folder';
-    plugin.settings.cleanupRootDir = 'published';
+    plugin.settings.cleanupDirTemplate = 'published/single-file.jpg';
 
-    const result = await view.cleanupCoverAssets({
-      cover: 'published/post_img/post-cover.jpg',
-      cover_dir: '',
-    }, activeFile);
+    const result = await view.cleanupConfiguredDirectory(activeFile);
 
-    expect(view.app.vault.trash).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'published/post_img' }),
-      true
-    );
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
+    expect(result.warning).toContain('不是目录');
+    expect(view.app.vault.trash).not.toHaveBeenCalled();
   });
 
-  it('should return warning (not throw) when cleanup fails', async () => {
+  it('should return warning (not throw) when cleanup delete fails', async () => {
     plugin.settings.cleanupAfterSync = true;
-    plugin.settings.cleanupTarget = 'file';
-    plugin.settings.cleanupRootDir = 'published';
+    plugin.settings.cleanupDirTemplate = 'published/{{note}}_img';
     view.app.vault.trash.mockRejectedValueOnce(new Error('boom'));
 
-    const result = await view.cleanupCoverAssets({
-      cover: 'published/post_img/post-cover.jpg',
-      cover_dir: 'published/post_img',
-    }, activeFile);
+    const result = await view.cleanupConfiguredDirectory(activeFile);
 
     expect(result.success).toBe(false);
     expect(result.warning).toContain('删除失败');
   });
 
-  it('should refuse deleting a folder in file mode', async () => {
-    plugin.settings.cleanupAfterSync = true;
-    plugin.settings.cleanupTarget = 'file';
-    plugin.settings.cleanupRootDir = 'published';
-
-    const result = await view.cleanupCoverAssets({
-      cover: 'published/post_img',
-      cover_dir: 'published/post_img',
-    }, activeFile);
-
-    expect(result.success).toBe(false);
-    expect(result.warning).toContain('不是文件');
-    expect(view.app.vault.trash).not.toHaveBeenCalled();
-  });
-
-  it('should clear alias frontmatter keys after cleanup success', async () => {
+  it('should clear only frontmatter paths that are inside cleaned directory', async () => {
     frontmatter = {
+      excerpt: '摘要',
+      cover: 'assets/shared-cover.jpg',
+      cover_dir: 'published/post_img',
       Cover: 'published/post_img/post-cover.jpg',
       CoverDIR: 'published/post_img',
     };
     view.app.metadataCache.getFileCache = vi.fn(() => ({ frontmatter }));
 
     plugin.settings.cleanupAfterSync = true;
-    plugin.settings.cleanupTarget = 'folder';
-    plugin.settings.cleanupRootDir = 'published';
+    plugin.settings.cleanupDirTemplate = 'published/{{note}}_img';
 
-    const result = await view.cleanupCoverAssets({
-      cover: 'published/post_img/post-cover.jpg',
-      cover_dir: 'published/post_img',
-    }, activeFile);
+    const result = await view.cleanupConfiguredDirectory(activeFile);
 
     expect(result.success).toBe(true);
+    expect(frontmatter.cover).toBe('assets/shared-cover.jpg');
+    expect(frontmatter.cover_dir).toBe('');
     expect(frontmatter.Cover).toBe('');
     expect(frontmatter.CoverDIR).toBe('');
   });
 
-  it('should skip cleanup with warning when cleanup root dir is not configured', async () => {
+  it('should return success with warning when frontmatter cleanup fails', async () => {
     plugin.settings.cleanupAfterSync = true;
-    plugin.settings.cleanupTarget = 'file';
-    plugin.settings.cleanupRootDir = '';
+    plugin.settings.cleanupDirTemplate = 'published/{{note}}_img';
+    view.app.fileManager.processFrontMatter.mockRejectedValueOnce(new Error('fm failed'));
 
-    const result = await view.cleanupCoverAssets({
-      cover: 'published/post_img/post-cover.jpg',
-      cover_dir: 'published/post_img',
-    }, activeFile);
+    const result = await view.cleanupConfiguredDirectory(activeFile);
 
-    expect(result.success).toBe(false);
-    expect(result.warning).toContain('未配置清理根目录');
-    expect(view.app.vault.trash).not.toHaveBeenCalled();
+    expect(result.success).toBe(true);
+    expect(result.warning).toContain('frontmatter');
   });
 
   it('should trigger cleanup only after createDraft succeeds', async () => {
     plugin.settings.cleanupAfterSync = true;
-    plugin.settings.cleanupTarget = 'file';
-    plugin.settings.cleanupRootDir = 'published';
+    plugin.settings.cleanupDirTemplate = 'published/{{note}}_img';
 
     view.currentHtml = '<p>正文</p>';
     view.selectedAccountId = 'acc1';
@@ -265,7 +232,7 @@ describe('AppleStyleView - Frontmatter Publish Meta & Cleanup', () => {
     view.srcToBlob = vi.fn().mockResolvedValue(new Blob(['x'], { type: 'image/jpeg' }));
     view.processAllImages = vi.fn().mockResolvedValue('<p>正文</p>');
     view.cleanHtmlForDraft = vi.fn((html) => html);
-    view.cleanupCoverAssets = vi.fn().mockResolvedValue({ attempted: true, success: true });
+    view.cleanupConfiguredDirectory = vi.fn().mockResolvedValue({ attempted: true, success: true });
 
     const uploadCoverSpy = vi.spyOn(WechatAPI.prototype, 'uploadCover').mockResolvedValue({ media_id: 'mid_1' });
     const createDraftSpy = vi.spyOn(WechatAPI.prototype, 'createDraft').mockResolvedValue({});
@@ -273,8 +240,8 @@ describe('AppleStyleView - Frontmatter Publish Meta & Cleanup', () => {
     await view.onSyncToWechat();
 
     expect(createDraftSpy).toHaveBeenCalledTimes(1);
-    expect(view.cleanupCoverAssets).toHaveBeenCalledTimes(1);
-    expect(createDraftSpy.mock.invocationCallOrder[0]).toBeLessThan(view.cleanupCoverAssets.mock.invocationCallOrder[0]);
+    expect(view.cleanupConfiguredDirectory).toHaveBeenCalledTimes(1);
+    expect(createDraftSpy.mock.invocationCallOrder[0]).toBeLessThan(view.cleanupConfiguredDirectory.mock.invocationCallOrder[0]);
 
     uploadCoverSpy.mockRestore();
     createDraftSpy.mockRestore();
@@ -282,8 +249,7 @@ describe('AppleStyleView - Frontmatter Publish Meta & Cleanup', () => {
 
   it('should not trigger cleanup when createDraft fails', async () => {
     plugin.settings.cleanupAfterSync = true;
-    plugin.settings.cleanupTarget = 'file';
-    plugin.settings.cleanupRootDir = 'published';
+    plugin.settings.cleanupDirTemplate = 'published/{{note}}_img';
 
     view.currentHtml = '<p>正文</p>';
     view.selectedAccountId = 'acc1';
@@ -298,7 +264,7 @@ describe('AppleStyleView - Frontmatter Publish Meta & Cleanup', () => {
     view.srcToBlob = vi.fn().mockResolvedValue(new Blob(['x'], { type: 'image/jpeg' }));
     view.processAllImages = vi.fn().mockResolvedValue('<p>正文</p>');
     view.cleanHtmlForDraft = vi.fn((html) => html);
-    view.cleanupCoverAssets = vi.fn();
+    view.cleanupConfiguredDirectory = vi.fn();
 
     const uploadCoverSpy = vi.spyOn(WechatAPI.prototype, 'uploadCover').mockResolvedValue({ media_id: 'mid_1' });
     const createDraftSpy = vi.spyOn(WechatAPI.prototype, 'createDraft').mockRejectedValue(new Error('create failed'));
@@ -306,7 +272,7 @@ describe('AppleStyleView - Frontmatter Publish Meta & Cleanup', () => {
     await view.onSyncToWechat();
 
     expect(createDraftSpy).toHaveBeenCalledTimes(1);
-    expect(view.cleanupCoverAssets).not.toHaveBeenCalled();
+    expect(view.cleanupConfiguredDirectory).not.toHaveBeenCalled();
 
     uploadCoverSpy.mockRestore();
     createDraftSpy.mockRestore();

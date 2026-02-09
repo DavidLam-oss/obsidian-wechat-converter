@@ -27,11 +27,10 @@ const DEFAULT_SETTINGS = {
   // 排版设置
   sidePadding: 16, // 页面两侧留白 (px)
   coloredHeader: false, // 标题是否使用主题色
-  // 同步后清理封面资源（默认关闭，避免破坏性行为）
+  // 同步后清理资源（默认关闭，避免破坏性行为）
   cleanupAfterSync: false,
-  cleanupTarget: 'file', // 'file' | 'folder'
   cleanupUseSystemTrash: true,
-  cleanupRootDir: '', // 清理安全护栏根目录（vault 相对路径，默认留空需手动配置）
+  cleanupDirTemplate: '', // 发送成功后要清理的目录（支持 {{note}}）
   // 旧字段保留用于迁移检测
   wechatAppId: '',
   wechatAppSecret: '',
@@ -1077,15 +1076,60 @@ class AppleStyleView extends ItemView {
     return String(key || '').toLowerCase().replace(/[_-]/g, '');
   }
 
-  clearFrontmatterStringVariants(frontmatter, keys) {
-    if (!frontmatter || typeof frontmatter !== 'object') return;
-    if (!Array.isArray(keys) || keys.length === 0) return;
+  getFrontmatterKeyMap(frontmatter, keys) {
+    const result = {};
+    if (!frontmatter || typeof frontmatter !== 'object') return result;
+    if (!Array.isArray(keys) || keys.length === 0) return result;
 
     const normalizedTargets = new Set(keys.map(key => this.normalizeFrontmatterKey(key)));
-    for (const key of Object.keys(frontmatter)) {
+    for (const [key, value] of Object.entries(frontmatter)) {
       if (!normalizedTargets.has(this.normalizeFrontmatterKey(key))) continue;
-      frontmatter[key] = '';
+      if (typeof value !== 'string') continue;
+      const normalizedValue = this.normalizeVaultPath(value);
+      if (!normalizedValue) continue;
+      result[key] = normalizedValue;
     }
+    return result;
+  }
+
+  isPathInsideDirectory(filePath, dirPath) {
+    const file = this.normalizeVaultPath(filePath);
+    const dir = this.normalizeVaultPath(dirPath);
+    if (!file || !dir) return false;
+    if (file === dir) return true;
+    return file.startsWith(`${dir}/`);
+  }
+
+  async clearInvalidPublishMetaAfterCleanup(activeFile, cleanedDirPath) {
+    if (!activeFile || !cleanedDirPath) return null;
+
+    const cleanedDir = this.normalizeVaultPath(cleanedDirPath);
+    if (!cleanedDir) return null;
+
+    try {
+      await this.app.fileManager.processFrontMatter(activeFile, (frontmatter) => {
+        if (!frontmatter || typeof frontmatter !== 'object') return;
+
+        const coverMap = this.getFrontmatterKeyMap(frontmatter, ['cover']);
+        const coverDirMap = this.getFrontmatterKeyMap(frontmatter, ['cover_dir', 'coverDir', 'cover-dir', 'coverdir', 'CoverDIR']);
+
+        for (const [key, value] of Object.entries(coverMap)) {
+          if (this.isPathInsideDirectory(value, cleanedDir)) {
+            frontmatter[key] = '';
+          }
+        }
+
+        for (const [key, value] of Object.entries(coverDirMap)) {
+          if (this.isPathInsideDirectory(value, cleanedDir)) {
+            frontmatter[key] = '';
+          }
+        }
+      });
+    } catch (error) {
+      return `资源已删除，但清理 frontmatter 中失效的 cover/cover_dir 失败: ${error.message}`;
+    }
+
+    return null;
   }
 
   /**
@@ -1107,92 +1151,84 @@ class AppleStyleView extends ItemView {
     }
   }
 
-  getParentPath(vaultPath) {
+  normalizeVaultPath(vaultPath) {
     if (typeof vaultPath !== 'string') return '';
-    const normalized = vaultPath.trim().replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+$/, '');
-    if (!normalized) return '';
-    const idx = normalized.lastIndexOf('/');
-    if (idx <= 0) return '';
-    return normalized.substring(0, idx);
+    return vaultPath
+      .trim()
+      .replace(/\\/g, '/')
+      .replace(/\/{2,}/g, '/')
+      .replace(/^\/+/, '')
+      .replace(/\/+$/, '');
   }
 
-  getCleanupRootDir() {
-    const raw = typeof this.plugin?.settings?.cleanupRootDir === 'string'
-      ? this.plugin.settings.cleanupRootDir
+  getCleanupDirTemplate() {
+    const raw = typeof this.plugin?.settings?.cleanupDirTemplate === 'string'
+      ? this.plugin.settings.cleanupDirTemplate
       : '';
-    return raw.trim().replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+$/, '');
+    return this.normalizeVaultPath(raw);
+  }
+
+  resolveCleanupDirPath(activeFile) {
+    const template = this.getCleanupDirTemplate();
+    if (!template) {
+      return { path: '', warning: '未配置清理目录，请在插件设置中先填写目录后再启用自动清理' };
+    }
+
+    const hasNotePlaceholder = /\{\{\s*note\s*\}\}/i.test(template);
+    if (hasNotePlaceholder && !activeFile) {
+      return { path: '', warning: '当前没有活动文档，无法解析清理目录中的 {{note}}' };
+    }
+
+    const noteName = (activeFile?.basename || '').trim();
+    const resolved = template.replace(/\{\{\s*note\s*\}\}/gi, noteName);
+    const normalized = this.normalizeVaultPath(resolved);
+    if (!normalized) {
+      return { path: '', warning: '清理目录为空，请检查设置值' };
+    }
+
+    return { path: normalized };
   }
 
   /**
-   * 清理路径安全校验：仅允许清理根目录下，且禁止根目录本身
+   * 清理目录安全校验：禁止空路径、上跳路径、系统配置目录等危险路径
    */
-  isSafeCleanupPath(vaultPath, target = 'file') {
-    if (typeof vaultPath !== 'string') return false;
-    const normalized = vaultPath.trim().replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+$/, '');
-    const cleanupRoot = this.getCleanupRootDir();
+  isSafeCleanupDirPath(vaultPath) {
+    const normalized = this.normalizeVaultPath(vaultPath);
     if (!normalized) return false;
+    if (normalized === '.') return false;
     if (normalized.includes('..')) return false;
-    if (!cleanupRoot || cleanupRoot.includes('..')) return false;
-    if (normalized === cleanupRoot) return false;
-    if (!normalized.startsWith(`${cleanupRoot}/`)) return false;
-
-    if (target === 'folder') {
-      const folderName = normalized.split('/').pop() || '';
-      if (!folderName.includes('_img')) return false;
-    }
-
+    if (normalized === '.obsidian' || normalized.startsWith('.obsidian/')) return false;
     return true;
   }
 
   /**
-   * 在同步成功后按配置清理封面资源
+   * 在同步成功后按配置清理目录
    * 失败返回 warning，不抛错（避免影响同步成功状态）
    */
-  async cleanupCoverAssets(meta = {}, activeFile) {
-    const safeMeta = {
-      cover: typeof meta.cover === 'string' ? meta.cover : '',
-      cover_dir: typeof meta.cover_dir === 'string' ? meta.cover_dir : ''
-    };
-
+  async cleanupConfiguredDirectory(activeFile) {
     if (!this.plugin.settings.cleanupAfterSync) {
       return { attempted: false };
     }
 
-    const targetMode = this.plugin.settings.cleanupTarget === 'folder' ? 'folder' : 'file';
     const useSystemTrash = this.plugin.settings.cleanupUseSystemTrash !== false;
-    const cleanupRoot = this.getCleanupRootDir();
-
-    if (!cleanupRoot) {
-      return { attempted: true, success: false, warning: '未配置清理根目录，请在插件设置中先填写后再启用自动清理' };
+    const resolved = this.resolveCleanupDirPath(activeFile);
+    if (!resolved.path) {
+      return { attempted: true, success: false, warning: resolved.warning || '未解析到清理目录' };
     }
 
-    let targetPath = '';
-    if (targetMode === 'folder') {
-      targetPath = safeMeta.cover_dir || this.getParentPath(safeMeta.cover || '');
-    } else {
-      targetPath = safeMeta.cover || '';
+    const normalized = resolved.path;
+    if (!this.isSafeCleanupDirPath(normalized)) {
+      return { attempted: true, success: false, warning: `清理目录不安全，已跳过: ${normalized}` };
     }
 
-    if (!targetPath) {
-      return { attempted: true, success: false, warning: '未找到可清理的封面路径（frontmatter.cover/cover_dir 为空）' };
-    }
-
-    if (!this.isSafeCleanupPath(targetPath, targetMode)) {
-      return { attempted: true, success: false, warning: `路径不安全，已跳过清理: ${targetPath}` };
-    }
-
-    const normalized = targetPath.trim().replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+$/, '');
     const abstractFile = this.app.vault.getAbstractFileByPath(normalized);
     if (!abstractFile) {
-      return { attempted: true, success: false, warning: `清理目标不存在: ${normalized}` };
+      return { attempted: true, success: false, warning: `清理目录不存在: ${normalized}` };
     }
 
     const isFile = typeof abstractFile.extension === 'string';
-    if (targetMode === 'file' && !isFile) {
-      return { attempted: true, success: false, warning: `清理目标不是文件，已跳过: ${normalized}` };
-    }
-    if (targetMode === 'folder' && isFile) {
-      return { attempted: true, success: false, warning: `清理目标不是文件夹，已跳过: ${normalized}` };
+    if (isFile) {
+      return { attempted: true, success: false, warning: `清理路径不是目录，已跳过: ${normalized}` };
     }
 
     try {
@@ -1207,22 +1243,9 @@ class AppleStyleView extends ItemView {
       return { attempted: true, success: false, warning: `删除失败 (${normalized}): ${error.message}` };
     }
 
-    // 推荐：清理成功后清空 frontmatter，避免下次指向失效路径
-    if (activeFile && (safeMeta.cover || safeMeta.cover_dir)) {
-      try {
-        await this.app.fileManager.processFrontMatter(activeFile, (frontmatter) => {
-          if (!frontmatter) return;
-          this.clearFrontmatterStringVariants(frontmatter, ['cover']);
-          this.clearFrontmatterStringVariants(frontmatter, ['cover_dir', 'coverDir', 'cover-dir', 'coverdir', 'CoverDIR']);
-        });
-      } catch (error) {
-        return {
-          attempted: true,
-          success: true,
-          cleanedPath: normalized,
-          warning: `资源已删除，但清空 frontmatter 失败: ${error.message}`
-        };
-      }
+    const frontmatterWarning = await this.clearInvalidPublishMetaAfterCleanup(activeFile, normalized);
+    if (frontmatterWarning) {
+      return { attempted: true, success: true, cleanedPath: normalized, warning: frontmatterWarning };
     }
 
     return { attempted: true, success: true, cleanedPath: normalized };
@@ -1498,12 +1521,12 @@ class AppleStyleView extends ItemView {
 
       await api.createDraft(article);
 
-      const cleanupResult = await this.cleanupCoverAssets(publishMeta, activeFile);
+      const cleanupResult = await this.cleanupConfiguredDirectory(activeFile);
 
       notice.hide();
       new Notice('✅ 同步成功！请前往微信公众号后台草稿箱查看');
       if (cleanupResult?.warning) {
-        new Notice(`⚠️ 封面清理失败：${cleanupResult.warning}`, 7000);
+        new Notice(`⚠️ 资源清理失败：${cleanupResult.warning}`, 7000);
       }
     } catch (error) {
       notice.hide();
@@ -2416,6 +2439,16 @@ class AppleStyleSettingTab extends PluginSettingTab {
     this.plugin = plugin;
   }
 
+  normalizeVaultPath(vaultPath) {
+    if (typeof vaultPath !== 'string') return '';
+    return vaultPath
+      .trim()
+      .replace(/\\/g, '/')
+      .replace(/\/{2,}/g, '/')
+      .replace(/^\/+/, '')
+      .replace(/\/+$/, '');
+  }
+
   display() {
     const { containerEl } = this;
     containerEl.empty();
@@ -2619,8 +2652,8 @@ class AppleStyleSettingTab extends PluginSettingTab {
       .setHeading();
 
     new Setting(containerEl)
-      .setName('发送成功后清理封面资源')
-      .setDesc('默认关闭。开启后会在创建草稿成功后，按下面规则删除“清理根目录”下的封面文件或目录。')
+      .setName('发送成功后自动清理资源')
+      .setDesc('默认关闭。开启后会在创建草稿成功后，删除你在下方配置的目录。')
       .addToggle(toggle => toggle
         .setValue(this.plugin.settings.cleanupAfterSync)
         .onChange(async (value) => {
@@ -2629,30 +2662,18 @@ class AppleStyleSettingTab extends PluginSettingTab {
         }));
 
     new Setting(containerEl)
-      .setName('清理根目录')
-      .setDesc('仅允许删除该目录下的资源。默认留空，需手动填写你的发布目录（vault 相对路径）。')
+      .setName('清理目录')
+      .setDesc('填写要删除的目录（vault 相对路径），支持 {{note}} 占位符，例如 published/{{note}}_img。')
       .addText(text => text
-        .setPlaceholder('your/publish-dir')
-        .setValue(this.plugin.settings.cleanupRootDir || '')
+        .setPlaceholder('published/{{note}}_img')
+        .setValue(this.plugin.settings.cleanupDirTemplate || '')
         .onChange(async (value) => {
-          const normalized = value.trim().replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+$/, '');
+          const normalized = this.normalizeVaultPath(value);
           if (normalized.includes('..')) {
-            new Notice('❌ 清理根目录不能包含 ..');
+            new Notice('❌ 清理目录不能包含 ..');
             return;
           }
-          this.plugin.settings.cleanupRootDir = normalized;
-          await this.plugin.saveSettings();
-        }));
-
-    new Setting(containerEl)
-      .setName('清理目标')
-      .setDesc('你可以选“只删封面图”（更稳妥），或“删整套封面图”（会把封面所在文件夹一起删掉）。')
-      .addDropdown(dropdown => dropdown
-        .addOption('file', '只删封面图（更安全）')
-        .addOption('folder', '删整套封面图（整个封面文件夹）')
-        .setValue(this.plugin.settings.cleanupTarget || 'file')
-        .onChange(async (value) => {
-          this.plugin.settings.cleanupTarget = value === 'folder' ? 'folder' : 'file';
+          this.plugin.settings.cleanupDirTemplate = normalized;
           await this.plugin.saveSettings();
         }));
 
@@ -2870,6 +2891,7 @@ class AppleStylePlugin extends Plugin {
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    let didMigrate = false;
 
     // 数据迁移：将旧的单账号格式迁移到新的多账号格式
     if (this.settings.wechatAppId && this.settings.wechatAccounts.length === 0) {
@@ -2884,8 +2906,43 @@ class AppleStylePlugin extends Plugin {
       // 清除旧字段
       this.settings.wechatAppId = '';
       this.settings.wechatAppSecret = '';
-      await this.saveSettings();
+      didMigrate = true;
       console.log('✅ 已将旧账号配置迁移到新格式');
+    }
+
+    // 数据迁移：旧清理配置 -> cleanupDirTemplate
+    const normalizePath = (value) => {
+      if (typeof value !== 'string') return '';
+      return value
+        .trim()
+        .replace(/\\/g, '/')
+        .replace(/\/{2,}/g, '/')
+        .replace(/^\/+/, '')
+        .replace(/\/+$/, '');
+    };
+    const currentTemplate = normalizePath(this.settings.cleanupDirTemplate || '');
+    const legacyRootDir = normalizePath(this.settings.cleanupRootDir || '');
+    const legacyTarget = this.settings.cleanupTarget;
+
+    // 仅迁移旧的 folder 模式，避免把 file 模式误迁移成“删目录”
+    if (!currentTemplate && legacyRootDir && legacyTarget === 'folder') {
+      this.settings.cleanupDirTemplate = `${legacyRootDir}/{{note}}_img`;
+      didMigrate = true;
+      console.log('✅ 已将旧清理配置迁移为目录模板 cleanupDirTemplate');
+    }
+
+    // 清理弃用字段，避免后续歧义
+    if (Object.prototype.hasOwnProperty.call(this.settings, 'cleanupRootDir')) {
+      delete this.settings.cleanupRootDir;
+      didMigrate = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(this.settings, 'cleanupTarget')) {
+      delete this.settings.cleanupTarget;
+      didMigrate = true;
+    }
+
+    if (didMigrate) {
+      await this.saveSettings();
     }
   }
 
@@ -2901,3 +2958,4 @@ class AppleStylePlugin extends Plugin {
 module.exports = AppleStylePlugin;
 module.exports.AppleStyleView = AppleStyleView;
 module.exports.WechatAPI = WechatAPI;
+module.exports.AppleStyleSettingTab = AppleStyleSettingTab;

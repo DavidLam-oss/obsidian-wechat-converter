@@ -37,13 +37,11 @@ var DEFAULT_SETTINGS = {
   // 页面两侧留白 (px)
   coloredHeader: false,
   // 标题是否使用主题色
-  // 同步后清理封面资源（默认关闭，避免破坏性行为）
+  // 同步后清理资源（默认关闭，避免破坏性行为）
   cleanupAfterSync: false,
-  cleanupTarget: "file",
-  // 'file' | 'folder'
   cleanupUseSystemTrash: true,
-  cleanupRootDir: "",
-  // 清理安全护栏根目录（vault 相对路径，默认留空需手动配置）
+  cleanupDirTemplate: "",
+  // 发送成功后要清理的目录（支持 {{note}}）
   // 旧字段保留用于迁移检测
   wechatAppId: "",
   wechatAppSecret: ""
@@ -821,17 +819,61 @@ var AppleStyleView = class extends ItemView {
   normalizeFrontmatterKey(key) {
     return String(key || "").toLowerCase().replace(/[_-]/g, "");
   }
-  clearFrontmatterStringVariants(frontmatter, keys) {
+  getFrontmatterKeyMap(frontmatter, keys) {
+    const result = {};
     if (!frontmatter || typeof frontmatter !== "object")
-      return;
+      return result;
     if (!Array.isArray(keys) || keys.length === 0)
-      return;
+      return result;
     const normalizedTargets = new Set(keys.map((key) => this.normalizeFrontmatterKey(key)));
-    for (const key of Object.keys(frontmatter)) {
+    for (const [key, value] of Object.entries(frontmatter)) {
       if (!normalizedTargets.has(this.normalizeFrontmatterKey(key)))
         continue;
-      frontmatter[key] = "";
+      if (typeof value !== "string")
+        continue;
+      const normalizedValue = this.normalizeVaultPath(value);
+      if (!normalizedValue)
+        continue;
+      result[key] = normalizedValue;
     }
+    return result;
+  }
+  isPathInsideDirectory(filePath, dirPath) {
+    const file = this.normalizeVaultPath(filePath);
+    const dir = this.normalizeVaultPath(dirPath);
+    if (!file || !dir)
+      return false;
+    if (file === dir)
+      return true;
+    return file.startsWith(`${dir}/`);
+  }
+  async clearInvalidPublishMetaAfterCleanup(activeFile, cleanedDirPath) {
+    if (!activeFile || !cleanedDirPath)
+      return null;
+    const cleanedDir = this.normalizeVaultPath(cleanedDirPath);
+    if (!cleanedDir)
+      return null;
+    try {
+      await this.app.fileManager.processFrontMatter(activeFile, (frontmatter) => {
+        if (!frontmatter || typeof frontmatter !== "object")
+          return;
+        const coverMap = this.getFrontmatterKeyMap(frontmatter, ["cover"]);
+        const coverDirMap = this.getFrontmatterKeyMap(frontmatter, ["cover_dir", "coverDir", "cover-dir", "coverdir", "CoverDIR"]);
+        for (const [key, value] of Object.entries(coverMap)) {
+          if (this.isPathInsideDirectory(value, cleanedDir)) {
+            frontmatter[key] = "";
+          }
+        }
+        for (const [key, value] of Object.entries(coverDirMap)) {
+          if (this.isPathInsideDirectory(value, cleanedDir)) {
+            frontmatter[key] = "";
+          }
+        }
+      });
+    } catch (error) {
+      return `\u8D44\u6E90\u5DF2\u5220\u9664\uFF0C\u4F46\u6E05\u7406 frontmatter \u4E2D\u5931\u6548\u7684 cover/cover_dir \u5931\u8D25: ${error.message}`;
+    }
+    return null;
   }
   /**
    * 将 vault 相对路径解析为可预览/上传的资源 src（通常是 app://）
@@ -853,88 +895,72 @@ var AppleStyleView = class extends ItemView {
       return null;
     }
   }
-  getParentPath(vaultPath) {
+  normalizeVaultPath(vaultPath) {
     if (typeof vaultPath !== "string")
       return "";
-    const normalized = vaultPath.trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
-    if (!normalized)
-      return "";
-    const idx = normalized.lastIndexOf("/");
-    if (idx <= 0)
-      return "";
-    return normalized.substring(0, idx);
+    return vaultPath.trim().replace(/\\/g, "/").replace(/\/{2,}/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
   }
-  getCleanupRootDir() {
+  getCleanupDirTemplate() {
     var _a, _b;
-    const raw = typeof ((_b = (_a = this.plugin) == null ? void 0 : _a.settings) == null ? void 0 : _b.cleanupRootDir) === "string" ? this.plugin.settings.cleanupRootDir : "";
-    return raw.trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+    const raw = typeof ((_b = (_a = this.plugin) == null ? void 0 : _a.settings) == null ? void 0 : _b.cleanupDirTemplate) === "string" ? this.plugin.settings.cleanupDirTemplate : "";
+    return this.normalizeVaultPath(raw);
+  }
+  resolveCleanupDirPath(activeFile) {
+    const template = this.getCleanupDirTemplate();
+    if (!template) {
+      return { path: "", warning: "\u672A\u914D\u7F6E\u6E05\u7406\u76EE\u5F55\uFF0C\u8BF7\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u5148\u586B\u5199\u76EE\u5F55\u540E\u518D\u542F\u7528\u81EA\u52A8\u6E05\u7406" };
+    }
+    const hasNotePlaceholder = /\{\{\s*note\s*\}\}/i.test(template);
+    if (hasNotePlaceholder && !activeFile) {
+      return { path: "", warning: "\u5F53\u524D\u6CA1\u6709\u6D3B\u52A8\u6587\u6863\uFF0C\u65E0\u6CD5\u89E3\u6790\u6E05\u7406\u76EE\u5F55\u4E2D\u7684 {{note}}" };
+    }
+    const noteName = ((activeFile == null ? void 0 : activeFile.basename) || "").trim();
+    const resolved = template.replace(/\{\{\s*note\s*\}\}/gi, noteName);
+    const normalized = this.normalizeVaultPath(resolved);
+    if (!normalized) {
+      return { path: "", warning: "\u6E05\u7406\u76EE\u5F55\u4E3A\u7A7A\uFF0C\u8BF7\u68C0\u67E5\u8BBE\u7F6E\u503C" };
+    }
+    return { path: normalized };
   }
   /**
-   * 清理路径安全校验：仅允许清理根目录下，且禁止根目录本身
+   * 清理目录安全校验：禁止空路径、上跳路径、系统配置目录等危险路径
    */
-  isSafeCleanupPath(vaultPath, target = "file") {
-    if (typeof vaultPath !== "string")
-      return false;
-    const normalized = vaultPath.trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
-    const cleanupRoot = this.getCleanupRootDir();
+  isSafeCleanupDirPath(vaultPath) {
+    const normalized = this.normalizeVaultPath(vaultPath);
     if (!normalized)
+      return false;
+    if (normalized === ".")
       return false;
     if (normalized.includes(".."))
       return false;
-    if (!cleanupRoot || cleanupRoot.includes(".."))
+    if (normalized === ".obsidian" || normalized.startsWith(".obsidian/"))
       return false;
-    if (normalized === cleanupRoot)
-      return false;
-    if (!normalized.startsWith(`${cleanupRoot}/`))
-      return false;
-    if (target === "folder") {
-      const folderName = normalized.split("/").pop() || "";
-      if (!folderName.includes("_img"))
-        return false;
-    }
     return true;
   }
   /**
-   * 在同步成功后按配置清理封面资源
+   * 在同步成功后按配置清理目录
    * 失败返回 warning，不抛错（避免影响同步成功状态）
    */
-  async cleanupCoverAssets(meta = {}, activeFile) {
-    const safeMeta = {
-      cover: typeof meta.cover === "string" ? meta.cover : "",
-      cover_dir: typeof meta.cover_dir === "string" ? meta.cover_dir : ""
-    };
+  async cleanupConfiguredDirectory(activeFile) {
     if (!this.plugin.settings.cleanupAfterSync) {
       return { attempted: false };
     }
-    const targetMode = this.plugin.settings.cleanupTarget === "folder" ? "folder" : "file";
     const useSystemTrash = this.plugin.settings.cleanupUseSystemTrash !== false;
-    const cleanupRoot = this.getCleanupRootDir();
-    if (!cleanupRoot) {
-      return { attempted: true, success: false, warning: "\u672A\u914D\u7F6E\u6E05\u7406\u6839\u76EE\u5F55\uFF0C\u8BF7\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u5148\u586B\u5199\u540E\u518D\u542F\u7528\u81EA\u52A8\u6E05\u7406" };
+    const resolved = this.resolveCleanupDirPath(activeFile);
+    if (!resolved.path) {
+      return { attempted: true, success: false, warning: resolved.warning || "\u672A\u89E3\u6790\u5230\u6E05\u7406\u76EE\u5F55" };
     }
-    let targetPath = "";
-    if (targetMode === "folder") {
-      targetPath = safeMeta.cover_dir || this.getParentPath(safeMeta.cover || "");
-    } else {
-      targetPath = safeMeta.cover || "";
+    const normalized = resolved.path;
+    if (!this.isSafeCleanupDirPath(normalized)) {
+      return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u5F55\u4E0D\u5B89\u5168\uFF0C\u5DF2\u8DF3\u8FC7: ${normalized}` };
     }
-    if (!targetPath) {
-      return { attempted: true, success: false, warning: "\u672A\u627E\u5230\u53EF\u6E05\u7406\u7684\u5C01\u9762\u8DEF\u5F84\uFF08frontmatter.cover/cover_dir \u4E3A\u7A7A\uFF09" };
-    }
-    if (!this.isSafeCleanupPath(targetPath, targetMode)) {
-      return { attempted: true, success: false, warning: `\u8DEF\u5F84\u4E0D\u5B89\u5168\uFF0C\u5DF2\u8DF3\u8FC7\u6E05\u7406: ${targetPath}` };
-    }
-    const normalized = targetPath.trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
     const abstractFile = this.app.vault.getAbstractFileByPath(normalized);
     if (!abstractFile) {
-      return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u6807\u4E0D\u5B58\u5728: ${normalized}` };
+      return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u5F55\u4E0D\u5B58\u5728: ${normalized}` };
     }
     const isFile = typeof abstractFile.extension === "string";
-    if (targetMode === "file" && !isFile) {
-      return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u6807\u4E0D\u662F\u6587\u4EF6\uFF0C\u5DF2\u8DF3\u8FC7: ${normalized}` };
-    }
-    if (targetMode === "folder" && isFile) {
-      return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u6807\u4E0D\u662F\u6587\u4EF6\u5939\uFF0C\u5DF2\u8DF3\u8FC7: ${normalized}` };
+    if (isFile) {
+      return { attempted: true, success: false, warning: `\u6E05\u7406\u8DEF\u5F84\u4E0D\u662F\u76EE\u5F55\uFF0C\u5DF2\u8DF3\u8FC7: ${normalized}` };
     }
     try {
       if (typeof this.app.vault.trash === "function") {
@@ -947,22 +973,9 @@ var AppleStyleView = class extends ItemView {
     } catch (error) {
       return { attempted: true, success: false, warning: `\u5220\u9664\u5931\u8D25 (${normalized}): ${error.message}` };
     }
-    if (activeFile && (safeMeta.cover || safeMeta.cover_dir)) {
-      try {
-        await this.app.fileManager.processFrontMatter(activeFile, (frontmatter) => {
-          if (!frontmatter)
-            return;
-          this.clearFrontmatterStringVariants(frontmatter, ["cover"]);
-          this.clearFrontmatterStringVariants(frontmatter, ["cover_dir", "coverDir", "cover-dir", "coverdir", "CoverDIR"]);
-        });
-      } catch (error) {
-        return {
-          attempted: true,
-          success: true,
-          cleanedPath: normalized,
-          warning: `\u8D44\u6E90\u5DF2\u5220\u9664\uFF0C\u4F46\u6E05\u7A7A frontmatter \u5931\u8D25: ${error.message}`
-        };
-      }
+    const frontmatterWarning = await this.clearInvalidPublishMetaAfterCleanup(activeFile, normalized);
+    if (frontmatterWarning) {
+      return { attempted: true, success: true, cleanedPath: normalized, warning: frontmatterWarning };
     }
     return { attempted: true, success: true, cleanedPath: normalized };
   }
@@ -1157,11 +1170,11 @@ var AppleStyleView = class extends ItemView {
         digest: this.sessionDigest || "\u4E00\u952E\u540C\u6B65\u81EA Obsidian"
       };
       await api.createDraft(article);
-      const cleanupResult = await this.cleanupCoverAssets(publishMeta, activeFile);
+      const cleanupResult = await this.cleanupConfiguredDirectory(activeFile);
       notice.hide();
       new Notice("\u2705 \u540C\u6B65\u6210\u529F\uFF01\u8BF7\u524D\u5F80\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0\u8349\u7A3F\u7BB1\u67E5\u770B");
       if (cleanupResult == null ? void 0 : cleanupResult.warning) {
-        new Notice(`\u26A0\uFE0F \u5C01\u9762\u6E05\u7406\u5931\u8D25\uFF1A${cleanupResult.warning}`, 7e3);
+        new Notice(`\u26A0\uFE0F \u8D44\u6E90\u6E05\u7406\u5931\u8D25\uFF1A${cleanupResult.warning}`, 7e3);
       }
     } catch (error) {
       notice.hide();
@@ -1878,6 +1891,11 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
     super(app, plugin);
     this.plugin = plugin;
   }
+  normalizeVaultPath(vaultPath) {
+    if (typeof vaultPath !== "string")
+      return "";
+    return vaultPath.trim().replace(/\\/g, "/").replace(/\/{2,}/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+  }
   display() {
     const { containerEl } = this;
     containerEl.empty();
@@ -2008,21 +2026,17 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       });
     }
     new Setting(containerEl).setName("\u9AD8\u7EA7\u8BBE\u7F6E").setHeading();
-    new Setting(containerEl).setName("\u53D1\u9001\u6210\u529F\u540E\u6E05\u7406\u5C01\u9762\u8D44\u6E90").setDesc("\u9ED8\u8BA4\u5173\u95ED\u3002\u5F00\u542F\u540E\u4F1A\u5728\u521B\u5EFA\u8349\u7A3F\u6210\u529F\u540E\uFF0C\u6309\u4E0B\u9762\u89C4\u5219\u5220\u9664\u201C\u6E05\u7406\u6839\u76EE\u5F55\u201D\u4E0B\u7684\u5C01\u9762\u6587\u4EF6\u6216\u76EE\u5F55\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.cleanupAfterSync).onChange(async (value) => {
+    new Setting(containerEl).setName("\u53D1\u9001\u6210\u529F\u540E\u81EA\u52A8\u6E05\u7406\u8D44\u6E90").setDesc("\u9ED8\u8BA4\u5173\u95ED\u3002\u5F00\u542F\u540E\u4F1A\u5728\u521B\u5EFA\u8349\u7A3F\u6210\u529F\u540E\uFF0C\u5220\u9664\u4F60\u5728\u4E0B\u65B9\u914D\u7F6E\u7684\u76EE\u5F55\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.cleanupAfterSync).onChange(async (value) => {
       this.plugin.settings.cleanupAfterSync = value;
       await this.plugin.saveSettings();
     }));
-    new Setting(containerEl).setName("\u6E05\u7406\u6839\u76EE\u5F55").setDesc("\u4EC5\u5141\u8BB8\u5220\u9664\u8BE5\u76EE\u5F55\u4E0B\u7684\u8D44\u6E90\u3002\u9ED8\u8BA4\u7559\u7A7A\uFF0C\u9700\u624B\u52A8\u586B\u5199\u4F60\u7684\u53D1\u5E03\u76EE\u5F55\uFF08vault \u76F8\u5BF9\u8DEF\u5F84\uFF09\u3002").addText((text) => text.setPlaceholder("your/publish-dir").setValue(this.plugin.settings.cleanupRootDir || "").onChange(async (value) => {
-      const normalized = value.trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+    new Setting(containerEl).setName("\u6E05\u7406\u76EE\u5F55").setDesc("\u586B\u5199\u8981\u5220\u9664\u7684\u76EE\u5F55\uFF08vault \u76F8\u5BF9\u8DEF\u5F84\uFF09\uFF0C\u652F\u6301 {{note}} \u5360\u4F4D\u7B26\uFF0C\u4F8B\u5982 published/{{note}}_img\u3002").addText((text) => text.setPlaceholder("published/{{note}}_img").setValue(this.plugin.settings.cleanupDirTemplate || "").onChange(async (value) => {
+      const normalized = this.normalizeVaultPath(value);
       if (normalized.includes("..")) {
-        new Notice("\u274C \u6E05\u7406\u6839\u76EE\u5F55\u4E0D\u80FD\u5305\u542B ..");
+        new Notice("\u274C \u6E05\u7406\u76EE\u5F55\u4E0D\u80FD\u5305\u542B ..");
         return;
       }
-      this.plugin.settings.cleanupRootDir = normalized;
-      await this.plugin.saveSettings();
-    }));
-    new Setting(containerEl).setName("\u6E05\u7406\u76EE\u6807").setDesc("\u4F60\u53EF\u4EE5\u9009\u201C\u53EA\u5220\u5C01\u9762\u56FE\u201D\uFF08\u66F4\u7A33\u59A5\uFF09\uFF0C\u6216\u201C\u5220\u6574\u5957\u5C01\u9762\u56FE\u201D\uFF08\u4F1A\u628A\u5C01\u9762\u6240\u5728\u6587\u4EF6\u5939\u4E00\u8D77\u5220\u6389\uFF09\u3002").addDropdown((dropdown) => dropdown.addOption("file", "\u53EA\u5220\u5C01\u9762\u56FE\uFF08\u66F4\u5B89\u5168\uFF09").addOption("folder", "\u5220\u6574\u5957\u5C01\u9762\u56FE\uFF08\u6574\u4E2A\u5C01\u9762\u6587\u4EF6\u5939\uFF09").setValue(this.plugin.settings.cleanupTarget || "file").onChange(async (value) => {
-      this.plugin.settings.cleanupTarget = value === "folder" ? "folder" : "file";
+      this.plugin.settings.cleanupDirTemplate = normalized;
       await this.plugin.saveSettings();
     }));
     new Setting(containerEl).setName("\u4F7F\u7528\u7CFB\u7EDF\u56DE\u6536\u7AD9").setDesc("\u5F00\u542F\u65F6\u4F18\u5148\u79FB\u52A8\u5230\u7CFB\u7EDF\u56DE\u6536\u7AD9\uFF1B\u5173\u95ED\u65F6\u76F4\u63A5\u4ECE vault \u5220\u9664\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.cleanupUseSystemTrash !== false).onChange(async (value) => {
@@ -2186,6 +2200,7 @@ var AppleStylePlugin = class extends Plugin {
   }
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    let didMigrate = false;
     if (this.settings.wechatAppId && this.settings.wechatAccounts.length === 0) {
       const migratedAccount = {
         id: generateId(),
@@ -2197,8 +2212,32 @@ var AppleStylePlugin = class extends Plugin {
       this.settings.defaultAccountId = migratedAccount.id;
       this.settings.wechatAppId = "";
       this.settings.wechatAppSecret = "";
-      await this.saveSettings();
+      didMigrate = true;
       console.log("\u2705 \u5DF2\u5C06\u65E7\u8D26\u53F7\u914D\u7F6E\u8FC1\u79FB\u5230\u65B0\u683C\u5F0F");
+    }
+    const normalizePath = (value) => {
+      if (typeof value !== "string")
+        return "";
+      return value.trim().replace(/\\/g, "/").replace(/\/{2,}/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+    };
+    const currentTemplate = normalizePath(this.settings.cleanupDirTemplate || "");
+    const legacyRootDir = normalizePath(this.settings.cleanupRootDir || "");
+    const legacyTarget = this.settings.cleanupTarget;
+    if (!currentTemplate && legacyRootDir && legacyTarget === "folder") {
+      this.settings.cleanupDirTemplate = `${legacyRootDir}/{{note}}_img`;
+      didMigrate = true;
+      console.log("\u2705 \u5DF2\u5C06\u65E7\u6E05\u7406\u914D\u7F6E\u8FC1\u79FB\u4E3A\u76EE\u5F55\u6A21\u677F cleanupDirTemplate");
+    }
+    if (Object.prototype.hasOwnProperty.call(this.settings, "cleanupRootDir")) {
+      delete this.settings.cleanupRootDir;
+      didMigrate = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(this.settings, "cleanupTarget")) {
+      delete this.settings.cleanupTarget;
+      didMigrate = true;
+    }
+    if (didMigrate) {
+      await this.saveSettings();
     }
   }
   async saveSettings() {
@@ -2211,3 +2250,4 @@ var AppleStylePlugin = class extends Plugin {
 module.exports = AppleStylePlugin;
 module.exports.AppleStyleView = AppleStyleView;
 module.exports.WechatAPI = WechatAPI;
+module.exports.AppleStyleSettingTab = AppleStyleSettingTab;
