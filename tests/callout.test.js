@@ -170,6 +170,19 @@ describe('Callout Syntax Support', () => {
       expect(result.label).toBe('学习研究');
     });
 
+    it('should not detect callout when type is only whitespace', () => {
+      const tokens = [
+        { type: 'blockquote_open', tag: 'blockquote', nesting: 1 },
+        { type: 'paragraph_open', tag: 'p', nesting: 1 },
+        { type: 'inline', content: '[!   ] 标题', children: [] },
+        { type: 'paragraph_close', tag: 'p', nesting: -1 },
+        { type: 'blockquote_close', tag: 'blockquote', nesting: -1 },
+      ];
+
+      const result = converter.detectCallout(tokens, 0);
+      expect(result).toBeNull();
+    });
+
     it('should handle callout with multiline content (only checks first inline)', () => {
       const tokens = [
         { type: 'blockquote_open', tag: 'blockquote', nesting: 1 },
@@ -245,6 +258,20 @@ describe('Callout Syntax Support', () => {
 
       expect(html).toContain('display: flex');
       expect(html).toContain('align-items: center');
+    });
+
+    it('should escape HTML in callout title', () => {
+      const calloutInfo = {
+        type: 'note',
+        title: '<img src=x onerror=alert(1)>',
+        icon: 'ℹ️',
+        label: '备注',
+      };
+
+      const html = converter.renderCalloutOpen(calloutInfo);
+
+      expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
+      expect(html).not.toContain('<img src=x onerror=alert(1)>');
     });
   });
 
