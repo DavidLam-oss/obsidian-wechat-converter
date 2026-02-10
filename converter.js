@@ -226,9 +226,11 @@ window.AppleStyleConverter = class AppleStyleConverter {
       if (tokens[i].type === 'inline' && tokens[i].content) {
         // 只取第一行内容进行匹配
         const firstLine = tokens[i].content.split('\n')[0];
-        const match = firstLine.match(/^\[!(\w+)\](?:\s+(.*))?/);
+        // 支持自定义 callout 类型（包含中文、连字符等），例如 [!学习研究] / [!custom-type]
+        const match = firstLine.match(/^\[!\s*([^\]\r\n]+?)\s*\](?:\s+(.*))?/);
         if (match) {
-          const type = match[1].toLowerCase();
+          const rawType = match[1].trim();
+          const type = rawType.toLowerCase();
           const customTitle = match[2] ? match[2].trim() : null;
           const config = CALLOUT_ICONS[type] || { icon: '📌', label: type };
           const defaultTitle = type.charAt(0).toUpperCase() + type.slice(1);

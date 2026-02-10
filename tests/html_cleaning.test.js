@@ -164,4 +164,52 @@ describe('AppleStyleView - HTML Cleaning', () => {
     expect(li.innerHTML).not.toContain('<br');
     expect(li.textContent.replace(/\s+/g, ' ').trim()).toBe('清理时机： 只有创建草稿成功后才清理');
   });
+
+  it('should keep non-leading strong untouched (no label rewrite)', () => {
+    const inputHtml = `
+      <ol>
+        <li>前缀文本 <strong style="font-weight:bold;color:#0366d6;">标签：</strong> 内容</li>
+      </ol>
+    `;
+
+    const outputHtml = view.cleanHtmlForDraft(inputHtml);
+    const div = document.createElement('div');
+    div.innerHTML = outputHtml;
+
+    const li = div.querySelector('ol > li');
+    const strong = li.querySelector('strong');
+    expect(strong).not.toBeNull();
+    expect(strong.textContent).toBe('标签：');
+    expect(li.querySelector(':scope > span[style*="display:block"]')).toBeNull();
+  });
+
+  it('should not wrap leading formatted text when no colon is present', () => {
+    const inputHtml = `
+      <ol>
+        <li><strong style="font-weight:bold;color:#0366d6;">说明</strong> 纯文本内容</li>
+      </ol>
+    `;
+
+    const outputHtml = view.cleanHtmlForDraft(inputHtml);
+    const div = document.createElement('div');
+    div.innerHTML = outputHtml;
+
+    const li = div.querySelector('ol > li');
+    const directSpan = li.querySelector(':scope > span');
+    expect(directSpan).not.toBeNull();
+    expect(directSpan.getAttribute('style')).toContain('display:inline !important;');
+    expect(directSpan.getAttribute('style')).not.toContain('display:block');
+  });
+
+  it('should be idempotent for list label cleanup', () => {
+    const inputHtml = `
+      <ol>
+        <li><strong>第三步：</strong><br>评估结果</li>
+      </ol>
+    `;
+
+    const once = view.cleanHtmlForDraft(inputHtml);
+    const twice = view.cleanHtmlForDraft(once);
+    expect(twice).toBe(once);
+  });
 });

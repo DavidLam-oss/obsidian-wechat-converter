@@ -152,6 +152,24 @@ describe('Callout Syntax Support', () => {
       expect(result.icon).toBe('📌'); // Fallback icon
     });
 
+    it('should detect custom Chinese callout type and use fallback icon', () => {
+      const tokens = [
+        { type: 'blockquote_open', tag: 'blockquote', nesting: 1 },
+        { type: 'paragraph_open', tag: 'p', nesting: 1 },
+        { type: 'inline', content: '[!学习研究] 研究内容', children: [] },
+        { type: 'paragraph_close', tag: 'p', nesting: -1 },
+        { type: 'blockquote_close', tag: 'blockquote', nesting: -1 },
+      ];
+
+      const result = converter.detectCallout(tokens, 0);
+
+      expect(result).not.toBeNull();
+      expect(result.type).toBe('学习研究');
+      expect(result.title).toBe('研究内容');
+      expect(result.icon).toBe('📌'); // 未映射类型走默认图标
+      expect(result.label).toBe('学习研究');
+    });
+
     it('should handle callout with multiline content (only checks first inline)', () => {
       const tokens = [
         { type: 'blockquote_open', tag: 'blockquote', nesting: 1 },
