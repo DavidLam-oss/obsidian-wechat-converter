@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 const {
+  isSafeRawImageSrc,
   preprocessMarkdownForNative,
   renderNativeMarkdown,
 } = require('../services/native-renderer');
@@ -54,6 +55,46 @@ describe('Native Renderer', () => {
     expect(output).toContain('正常文本 **保留**');
   });
 
+  it('should accept only approved raw image protocols', () => {
+    expect(isSafeRawImageSrc('https://example.com/a.png')).toBe(true);
+    expect(isSafeRawImageSrc('http://example.com/a.png')).toBe(true);
+    expect(isSafeRawImageSrc('data:image/png;base64,abc')).toBe(true);
+    expect(isSafeRawImageSrc('app://local/image.png')).toBe(true);
+    expect(isSafeRawImageSrc('capacitor://localhost/_app_file_/x.png')).toBe(true);
+    expect(isSafeRawImageSrc('obsidian://open?vault=MyVault')).toBe(true);
+
+    expect(isSafeRawImageSrc('javascript:alert(1)')).toBe(false);
+    expect(isSafeRawImageSrc('file:///tmp/x.png')).toBe(false);
+    expect(isSafeRawImageSrc('/absolute/path.png')).toBe(false);
+    expect(isSafeRawImageSrc('relative/path.png')).toBe(false);
+    expect(isSafeRawImageSrc('')).toBe(false);
+    expect(isSafeRawImageSrc('#')).toBe(false);
+  });
+
+  it('preprocess should preserve safe raw image protocols and remove unsafe ones', () => {
+    const input = [
+      '<img src="https://example.com/ok.png">',
+      '<img src="data:image/png;base64,abc">',
+      '<img src="app://ok.png">',
+      '<img src="obsidian://ok">',
+      '<img src="javascript:alert(1)">',
+      '<img src="file:///tmp/x.png">',
+      '<img src="/x.png">',
+      '<img src="x.png">',
+    ].join('\n');
+
+    const output = preprocessMarkdownForNative(input);
+    expect(output).toContain('<img src="https://example.com/ok.png">');
+    expect(output).toContain('<img src="data:image/png;base64,abc">');
+    expect(output).toContain('<img src="app://ok.png">');
+    expect(output).toContain('<img src="obsidian://ok">');
+
+    expect(output).not.toContain('javascript:alert(1)');
+    expect(output).not.toContain('file:///tmp/x.png');
+    expect(output).not.toContain('<img src="/x.png">');
+    expect(output).not.toContain('<img src="x.png">');
+  });
+
   it('should fix known micro sample issues in native pipeline', async () => {
     const md = readFixture('control-micro.md');
     const html = await renderNativeMarkdown({
@@ -71,5 +112,14 @@ describe('Native Renderer', () => {
 
     const orphanImages = Array.from(container.querySelectorAll('img')).filter((img) => !img.closest('figure'));
     expect(orphanImages.length).toBe(0);
+  });
+
+  it('should throw when converter is missing', async () => {
+    await expect(
+      renderNativeMarkdown({
+        converter: null,
+        markdown: '# title',
+      })
+    ).rejects.toThrow('Native converter is not ready');
   });
 });
