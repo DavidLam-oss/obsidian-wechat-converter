@@ -1877,8 +1877,262 @@ class AppleStyleView extends ItemView {
     const div = document.createElement('div');
     div.innerHTML = html;
 
+    const getInlineLabelPrefixInfo = (container) => {
+      if (!container) return null;
+      const nodes = Array.from(container.childNodes);
+      const firstElementIdx = nodes.findIndex(node => node.nodeType === Node.ELEMENT_NODE);
+      if (firstElementIdx === -1) return null;
+      const hasOnlyWhitespaceBefore = nodes
+        .slice(0, firstElementIdx)
+        .every(node => node.nodeType === Node.TEXT_NODE && !node.textContent.trim());
+      if (!hasOnlyWhitespaceBefore) return null;
+
+      const firstElement = nodes[firstElementIdx];
+      if (!['STRONG', 'CODE'].includes(firstElement.tagName)) return null;
+
+      const elementText = (firstElement.textContent || '').trim();
+      if (/[：:]$/.test(elementText)) {
+        return { firstElementIdx, prefixEndIdx: firstElementIdx };
+      }
+
+      const nextNode = nodes[firstElementIdx + 1];
+      if (nextNode && nextNode.nodeType === Node.TEXT_NODE) {
+        const nextText = nextNode.textContent || '';
+        if (/^\s*[：:]/.test(nextText)) {
+          return { firstElementIdx, prefixEndIdx: firstElementIdx + 1 };
+        }
+      }
+
+      return null;
+    };
+
+    const hasInlineLabelPrefix = (container) => !!getInlineLabelPrefixInfo(container);
+
+    const collapseLabelBreakInParagraph = (paragraph) => {
+      const prefixInfo = getInlineLabelPrefixInfo(paragraph);
+      if (!prefixInfo) return;
+
+      const nodes = Array.from(paragraph.childNodes);
+      const startIdx = prefixInfo.prefixEndIdx + 1;
+
+      if (prefixInfo.prefixEndIdx > prefixInfo.firstElementIdx) {
+        const colonNode = nodes[prefixInfo.prefixEndIdx];
+        if (colonNode && colonNode.nodeType === Node.TEXT_NODE) {
+          colonNode.textContent = (colonNode.textContent || '').replace(/^\s*([：:])\s*/, '$1 ');
+        }
+      }
+
+      let sawBreak = false;
+      for (let i = startIdx; i < nodes.length; i += 1) {
+        const node = nodes[i];
+
+        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') {
+          node.remove();
+          sawBreak = true;
+          continue;
+        }
+
+        if (node.nodeType === Node.TEXT_NODE) {
+          if (!node.textContent.trim()) continue;
+          const hasLeadingWhitespace = /^\s+/.test(node.textContent);
+          if (sawBreak || hasLeadingWhitespace) {
+            node.textContent = node.textContent.replace(/^\s+/, ' ');
+          }
+          return;
+        }
+
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          if (sawBreak) paragraph.insertBefore(document.createTextNode(' '), node);
+          return;
+        }
+      }
+    };
+
+    const isInlineOnlyParagraph = (paragraph) => {
+      if (!paragraph) return false;
+      const blockLikeTags = new Set(['UL', 'OL', 'TABLE', 'PRE', 'BLOCKQUOTE', 'SECTION', 'FIGURE', 'DIV', 'P']);
+      return !Array.from(paragraph.querySelectorAll('*')).some(el => blockLikeTags.has(el.tagName));
+    };
+
+    const unwrapSimpleListParagraphs = (li) => {
+      const hasDirectNestedList = Array.from(li.children).some(child => child.tagName === 'UL' || child.tagName === 'OL');
+      if (hasDirectNestedList) return;
+
+      const meaningfulChildren = Array.from(li.childNodes).filter(node =>
+        !(node.nodeType === Node.TEXT_NODE && !node.textContent.trim())
+      );
+      if (meaningfulChildren.length === 0) return;
+
+      const allInlineParagraphs = meaningfulChildren.every(node =>
+        node.nodeType === Node.ELEMENT_NODE &&
+        node.tagName === 'P' &&
+        isInlineOnlyParagraph(node)
+      );
+      if (!allInlineParagraphs) return;
+
+      const fragment = document.createDocumentFragment();
+      meaningfulChildren.forEach((paragraph, index) => {
+        while (paragraph.firstChild) {
+          fragment.appendChild(paragraph.firstChild);
+        }
+        if (index < meaningfulChildren.length - 1) {
+          fragment.appendChild(document.createTextNode(' '));
+        }
+      });
+
+      while (li.firstChild) {
+        li.removeChild(li.firstChild);
+      }
+      li.appendChild(fragment);
+    };
+
+    const collapseLabelBreakInListItem = (li) => {
+      const prefixInfo = getInlineLabelPrefixInfo(li);
+      if (!prefixInfo) return;
+
+      const nodes = Array.from(li.childNodes);
+      const startIdx = prefixInfo.prefixEndIdx + 1;
+
+      if (prefixInfo.prefixEndIdx > prefixInfo.firstElementIdx) {
+        const colonNode = nodes[prefixInfo.prefixEndIdx];
+        if (colonNode && colonNode.nodeType === Node.TEXT_NODE) {
+          colonNode.textContent = (colonNode.textContent || '').replace(/^\s*([：:])\s*/, '$1 ');
+        }
+      }
+
+      let sawBreak = false;
+      for (let i = startIdx; i < nodes.length; i += 1) {
+        const node = nodes[i];
+
+        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') {
+          node.remove();
+          sawBreak = true;
+          continue;
+        }
+
+        if (node.nodeType === Node.TEXT_NODE) {
+          if (!node.textContent.trim()) continue;
+          const hasLeadingWhitespace = /^\s+/.test(node.textContent);
+          if (sawBreak || hasLeadingWhitespace) {
+            node.textContent = node.textContent.replace(/^\s+/, ' ');
+          }
+          return;
+        }
+
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          if (sawBreak) li.insertBefore(document.createTextNode(' '), node);
+          return;
+        }
+      }
+    };
+
+    const convertLeadingStrongOrCodeToSpan = (li) => {
+      const getFirstMeaningfulNode = (container) => {
+        if (!container) return null;
+        return Array.from(container.childNodes).find(node =>
+          !(node.nodeType === Node.TEXT_NODE && !node.textContent.trim())
+        ) || null;
+      };
+
+      let firstNode = getFirstMeaningfulNode(li);
+      if (!firstNode) return;
+
+      if (firstNode.nodeType === Node.ELEMENT_NODE && firstNode.tagName === 'P') {
+        firstNode = getFirstMeaningfulNode(firstNode);
+      }
+
+      if (!firstNode || firstNode.nodeType !== Node.ELEMENT_NODE) return;
+      if (!['STRONG', 'CODE'].includes(firstNode.tagName)) return;
+
+      const span = document.createElement('span');
+      const currentStyle = firstNode.getAttribute('style') || '';
+      const cleanedStyle = currentStyle
+        .replace(/display\s*:\s*[^;]+;?/gi, '')
+        .replace(/width\s*:\s*[^;]+;?/gi, '')
+        .replace(/float\s*:\s*[^;]+;?/gi, '')
+        .trim();
+      const normalizedStyle = cleanedStyle
+        ? `${cleanedStyle}${cleanedStyle.trim().endsWith(';') ? '' : ';'}`
+        : '';
+      const extraStyle = firstNode.tagName === 'CODE'
+        ? ' margin:0 2px !important; vertical-align:baseline;'
+        : '';
+      span.setAttribute('style', `${normalizedStyle}display:inline !important; width:auto !important; float:none !important;${extraStyle}`);
+      span.innerHTML = firstNode.innerHTML;
+      firstNode.replaceWith(span);
+    };
+
+    const wrapLeadingLabelInBlockSpan = (li) => {
+      const hasDirectNestedList = Array.from(li.children).some(child => child.tagName === 'UL' || child.tagName === 'OL');
+      if (hasDirectNestedList) return;
+
+      const nodes = Array.from(li.childNodes).filter(node =>
+        !(node.nodeType === Node.TEXT_NODE && !node.textContent.trim())
+      );
+      if (nodes.length < 2) return;
+
+      const firstNode = nodes[0];
+      if (firstNode.nodeType !== Node.ELEMENT_NODE) return;
+      if (firstNode.tagName !== 'SPAN') return;
+
+      const firstText = (firstNode.textContent || '').trim();
+      const secondNode = nodes[1];
+      const secondText = secondNode.nodeType === Node.TEXT_NODE ? (secondNode.textContent || '') : '';
+      const hasColon = /[：:]$/.test(firstText) || /^\s*[：:]/.test(secondText);
+      if (!hasColon) return;
+
+      const wrapper = document.createElement('span');
+      const liStyle = li.getAttribute('style') || '';
+      const lineHeightMatch = liStyle.match(/line-height:\s*[^;]+/i);
+      const lineHeight = lineHeightMatch ? `${lineHeightMatch[0]};` : '';
+      wrapper.setAttribute('style', `display:block;margin:0;padding:0;${lineHeight}`);
+
+      while (li.firstChild) {
+        wrapper.appendChild(li.firstChild);
+      }
+      li.appendChild(wrapper);
+    };
+
+    const mergeLabelParagraphs = (li) => {
+      const directParagraphs = Array.from(li.children).filter(child => child.tagName === 'P');
+      if (directParagraphs.length < 2) return;
+      if (!hasInlineLabelPrefix(directParagraphs[0])) return;
+      if (!isInlineOnlyParagraph(directParagraphs[0]) || !isInlineOnlyParagraph(directParagraphs[1])) return;
+
+      const first = directParagraphs[0];
+      const second = directParagraphs[1];
+      if (!second.textContent || !second.textContent.trim()) return;
+
+      while (
+        second.firstChild &&
+        second.firstChild.nodeType === Node.TEXT_NODE &&
+        !second.firstChild.textContent.trim()
+      ) {
+        second.removeChild(second.firstChild);
+      }
+
+      if (first.lastChild && first.lastChild.nodeType === Node.TEXT_NODE) {
+        first.lastChild.textContent = first.lastChild.textContent.replace(/\s*$/, ' ');
+      } else {
+        first.appendChild(document.createTextNode(' '));
+      }
+
+      while (second.firstChild) {
+        first.appendChild(second.firstChild);
+      }
+      second.remove();
+    };
+
     // 1. 处理包含嵌套列表的 li：移除直接子 p，并把前置行内内容包成块级 span
     div.querySelectorAll('li').forEach(li => {
+      const directParagraphs = Array.from(li.children).filter(child => child.tagName === 'P');
+      directParagraphs.forEach(paragraph => collapseLabelBreakInParagraph(paragraph));
+      mergeLabelParagraphs(li);
+      unwrapSimpleListParagraphs(li);
+      collapseLabelBreakInListItem(li);
+      convertLeadingStrongOrCodeToSpan(li);
+      wrapLeadingLabelInBlockSpan(li);
+
       const hasNestedList = li.querySelector('ul, ol');
       if (!hasNestedList) return;
 
@@ -2064,6 +2318,29 @@ class AppleStyleView extends ItemView {
           node.remove();
         }
       });
+    });
+
+    // 7. 微信兼容修复：强制列表项内 strong/code 保持行内，避免“标题词”和冒号/正文断行
+    const forceInlineStyle = (el, extraStyle = '') => {
+      const currentStyle = el.getAttribute('style') || '';
+      const cleanedStyle = currentStyle
+        .replace(/display\s*:\s*[^;]+;?/gi, '')
+        .replace(/width\s*:\s*[^;]+;?/gi, '')
+        .replace(/float\s*:\s*[^;]+;?/gi, '')
+        .trim();
+      const normalizedStyle = cleanedStyle
+        ? `${cleanedStyle}${cleanedStyle.endsWith(';') ? '' : ';'}`
+        : '';
+      const finalStyle = `${normalizedStyle}display:inline !important; width:auto !important; float:none !important;${extraStyle}`;
+      el.setAttribute('style', finalStyle);
+    };
+
+    div.querySelectorAll('li strong').forEach(strong => {
+      forceInlineStyle(strong);
+    });
+
+    div.querySelectorAll('li code').forEach(code => {
+      forceInlineStyle(code, ' margin:0 2px !important; vertical-align:baseline;');
     });
 
     return div.innerHTML;
@@ -2295,15 +2572,30 @@ class AppleStyleView extends ItemView {
       // 清理 HTML 以适配微信编辑器（处理嵌套列表等）
       const cleanedHtml = this.cleanHtmlForDraft(tempDiv.innerHTML);
 
-      const text = tempDiv.textContent || '';
+      // 注意：微信有时会优先读取 text/plain。必须使用清理后的 HTML 生成纯文本，
+      // 否则会出现“HTML 修复生效但粘贴结果仍异常”的情况。
+      const plainDiv = document.createElement('div');
+      plainDiv.innerHTML = cleanedHtml;
+      const text = plainDiv.textContent || '';
       const htmlContent = cleanedHtml;
+      window.__OWC_LAST_CLIPBOARD_HTML = htmlContent;
+      window.__OWC_LAST_CLIPBOARD_TEXT = text;
 
       if (navigator.clipboard && navigator.clipboard.write) {
-        const clipboardItem = new ClipboardItem({
-          'text/html': new Blob([htmlContent], { type: 'text/html' }),
-          'text/plain': new Blob([text], { type: 'text/plain' }),
-        });
-        await navigator.clipboard.write([clipboardItem]);
+        // 先尝试仅写入 HTML，避免某些编辑器优先读取 text/plain 导致样式/结构修复失效。
+        // 如果环境不支持，再降级为 HTML + plain text 双格式。
+        try {
+          const htmlOnlyItem = new ClipboardItem({
+            'text/html': new Blob([htmlContent], { type: 'text/html' }),
+          });
+          await navigator.clipboard.write([htmlOnlyItem]);
+        } catch (htmlOnlyError) {
+          const clipboardItem = new ClipboardItem({
+            'text/html': new Blob([htmlContent], { type: 'text/html' }),
+            'text/plain': new Blob([text], { type: 'text/plain' }),
+          });
+          await navigator.clipboard.write([clipboardItem]);
+        }
 
         // Success Feedback
         new Notice('✅ 已复制到剪贴板！');

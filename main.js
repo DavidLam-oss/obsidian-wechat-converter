@@ -1449,7 +1449,229 @@ var AppleStyleView = class extends ItemView {
   cleanHtmlForDraft(html) {
     const div = document.createElement("div");
     div.innerHTML = html;
+    const getInlineLabelPrefixInfo = (container) => {
+      if (!container)
+        return null;
+      const nodes = Array.from(container.childNodes);
+      const firstElementIdx = nodes.findIndex((node) => node.nodeType === Node.ELEMENT_NODE);
+      if (firstElementIdx === -1)
+        return null;
+      const hasOnlyWhitespaceBefore = nodes.slice(0, firstElementIdx).every((node) => node.nodeType === Node.TEXT_NODE && !node.textContent.trim());
+      if (!hasOnlyWhitespaceBefore)
+        return null;
+      const firstElement = nodes[firstElementIdx];
+      if (!["STRONG", "CODE"].includes(firstElement.tagName))
+        return null;
+      const elementText = (firstElement.textContent || "").trim();
+      if (/[：:]$/.test(elementText)) {
+        return { firstElementIdx, prefixEndIdx: firstElementIdx };
+      }
+      const nextNode = nodes[firstElementIdx + 1];
+      if (nextNode && nextNode.nodeType === Node.TEXT_NODE) {
+        const nextText = nextNode.textContent || "";
+        if (/^\s*[：:]/.test(nextText)) {
+          return { firstElementIdx, prefixEndIdx: firstElementIdx + 1 };
+        }
+      }
+      return null;
+    };
+    const hasInlineLabelPrefix = (container) => !!getInlineLabelPrefixInfo(container);
+    const collapseLabelBreakInParagraph = (paragraph) => {
+      const prefixInfo = getInlineLabelPrefixInfo(paragraph);
+      if (!prefixInfo)
+        return;
+      const nodes = Array.from(paragraph.childNodes);
+      const startIdx = prefixInfo.prefixEndIdx + 1;
+      if (prefixInfo.prefixEndIdx > prefixInfo.firstElementIdx) {
+        const colonNode = nodes[prefixInfo.prefixEndIdx];
+        if (colonNode && colonNode.nodeType === Node.TEXT_NODE) {
+          colonNode.textContent = (colonNode.textContent || "").replace(/^\s*([：:])\s*/, "$1 ");
+        }
+      }
+      let sawBreak = false;
+      for (let i = startIdx; i < nodes.length; i += 1) {
+        const node = nodes[i];
+        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR") {
+          node.remove();
+          sawBreak = true;
+          continue;
+        }
+        if (node.nodeType === Node.TEXT_NODE) {
+          if (!node.textContent.trim())
+            continue;
+          const hasLeadingWhitespace = /^\s+/.test(node.textContent);
+          if (sawBreak || hasLeadingWhitespace) {
+            node.textContent = node.textContent.replace(/^\s+/, " ");
+          }
+          return;
+        }
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          if (sawBreak)
+            paragraph.insertBefore(document.createTextNode(" "), node);
+          return;
+        }
+      }
+    };
+    const isInlineOnlyParagraph = (paragraph) => {
+      if (!paragraph)
+        return false;
+      const blockLikeTags = /* @__PURE__ */ new Set(["UL", "OL", "TABLE", "PRE", "BLOCKQUOTE", "SECTION", "FIGURE", "DIV", "P"]);
+      return !Array.from(paragraph.querySelectorAll("*")).some((el) => blockLikeTags.has(el.tagName));
+    };
+    const unwrapSimpleListParagraphs = (li) => {
+      const hasDirectNestedList = Array.from(li.children).some((child) => child.tagName === "UL" || child.tagName === "OL");
+      if (hasDirectNestedList)
+        return;
+      const meaningfulChildren = Array.from(li.childNodes).filter(
+        (node) => !(node.nodeType === Node.TEXT_NODE && !node.textContent.trim())
+      );
+      if (meaningfulChildren.length === 0)
+        return;
+      const allInlineParagraphs = meaningfulChildren.every(
+        (node) => node.nodeType === Node.ELEMENT_NODE && node.tagName === "P" && isInlineOnlyParagraph(node)
+      );
+      if (!allInlineParagraphs)
+        return;
+      const fragment = document.createDocumentFragment();
+      meaningfulChildren.forEach((paragraph, index) => {
+        while (paragraph.firstChild) {
+          fragment.appendChild(paragraph.firstChild);
+        }
+        if (index < meaningfulChildren.length - 1) {
+          fragment.appendChild(document.createTextNode(" "));
+        }
+      });
+      while (li.firstChild) {
+        li.removeChild(li.firstChild);
+      }
+      li.appendChild(fragment);
+    };
+    const collapseLabelBreakInListItem = (li) => {
+      const prefixInfo = getInlineLabelPrefixInfo(li);
+      if (!prefixInfo)
+        return;
+      const nodes = Array.from(li.childNodes);
+      const startIdx = prefixInfo.prefixEndIdx + 1;
+      if (prefixInfo.prefixEndIdx > prefixInfo.firstElementIdx) {
+        const colonNode = nodes[prefixInfo.prefixEndIdx];
+        if (colonNode && colonNode.nodeType === Node.TEXT_NODE) {
+          colonNode.textContent = (colonNode.textContent || "").replace(/^\s*([：:])\s*/, "$1 ");
+        }
+      }
+      let sawBreak = false;
+      for (let i = startIdx; i < nodes.length; i += 1) {
+        const node = nodes[i];
+        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR") {
+          node.remove();
+          sawBreak = true;
+          continue;
+        }
+        if (node.nodeType === Node.TEXT_NODE) {
+          if (!node.textContent.trim())
+            continue;
+          const hasLeadingWhitespace = /^\s+/.test(node.textContent);
+          if (sawBreak || hasLeadingWhitespace) {
+            node.textContent = node.textContent.replace(/^\s+/, " ");
+          }
+          return;
+        }
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          if (sawBreak)
+            li.insertBefore(document.createTextNode(" "), node);
+          return;
+        }
+      }
+    };
+    const convertLeadingStrongOrCodeToSpan = (li) => {
+      const getFirstMeaningfulNode = (container) => {
+        if (!container)
+          return null;
+        return Array.from(container.childNodes).find(
+          (node) => !(node.nodeType === Node.TEXT_NODE && !node.textContent.trim())
+        ) || null;
+      };
+      let firstNode = getFirstMeaningfulNode(li);
+      if (!firstNode)
+        return;
+      if (firstNode.nodeType === Node.ELEMENT_NODE && firstNode.tagName === "P") {
+        firstNode = getFirstMeaningfulNode(firstNode);
+      }
+      if (!firstNode || firstNode.nodeType !== Node.ELEMENT_NODE)
+        return;
+      if (!["STRONG", "CODE"].includes(firstNode.tagName))
+        return;
+      const span = document.createElement("span");
+      const currentStyle = firstNode.getAttribute("style") || "";
+      const cleanedStyle = currentStyle.replace(/display\s*:\s*[^;]+;?/gi, "").replace(/width\s*:\s*[^;]+;?/gi, "").replace(/float\s*:\s*[^;]+;?/gi, "").trim();
+      const normalizedStyle = cleanedStyle ? `${cleanedStyle}${cleanedStyle.trim().endsWith(";") ? "" : ";"}` : "";
+      const extraStyle = firstNode.tagName === "CODE" ? " margin:0 2px !important; vertical-align:baseline;" : "";
+      span.setAttribute("style", `${normalizedStyle}display:inline !important; width:auto !important; float:none !important;${extraStyle}`);
+      span.innerHTML = firstNode.innerHTML;
+      firstNode.replaceWith(span);
+    };
+    const wrapLeadingLabelInBlockSpan = (li) => {
+      const hasDirectNestedList = Array.from(li.children).some((child) => child.tagName === "UL" || child.tagName === "OL");
+      if (hasDirectNestedList)
+        return;
+      const nodes = Array.from(li.childNodes).filter(
+        (node) => !(node.nodeType === Node.TEXT_NODE && !node.textContent.trim())
+      );
+      if (nodes.length < 2)
+        return;
+      const firstNode = nodes[0];
+      if (firstNode.nodeType !== Node.ELEMENT_NODE)
+        return;
+      if (firstNode.tagName !== "SPAN")
+        return;
+      const firstText = (firstNode.textContent || "").trim();
+      const secondNode = nodes[1];
+      const secondText = secondNode.nodeType === Node.TEXT_NODE ? secondNode.textContent || "" : "";
+      const hasColon = /[：:]$/.test(firstText) || /^\s*[：:]/.test(secondText);
+      if (!hasColon)
+        return;
+      const wrapper = document.createElement("span");
+      const liStyle = li.getAttribute("style") || "";
+      const lineHeightMatch = liStyle.match(/line-height:\s*[^;]+/i);
+      const lineHeight = lineHeightMatch ? `${lineHeightMatch[0]};` : "";
+      wrapper.setAttribute("style", `display:block;margin:0;padding:0;${lineHeight}`);
+      while (li.firstChild) {
+        wrapper.appendChild(li.firstChild);
+      }
+      li.appendChild(wrapper);
+    };
+    const mergeLabelParagraphs = (li) => {
+      const directParagraphs = Array.from(li.children).filter((child) => child.tagName === "P");
+      if (directParagraphs.length < 2)
+        return;
+      if (!hasInlineLabelPrefix(directParagraphs[0]))
+        return;
+      if (!isInlineOnlyParagraph(directParagraphs[0]) || !isInlineOnlyParagraph(directParagraphs[1]))
+        return;
+      const first = directParagraphs[0];
+      const second = directParagraphs[1];
+      if (!second.textContent || !second.textContent.trim())
+        return;
+      while (second.firstChild && second.firstChild.nodeType === Node.TEXT_NODE && !second.firstChild.textContent.trim()) {
+        second.removeChild(second.firstChild);
+      }
+      if (first.lastChild && first.lastChild.nodeType === Node.TEXT_NODE) {
+        first.lastChild.textContent = first.lastChild.textContent.replace(/\s*$/, " ");
+      } else {
+        first.appendChild(document.createTextNode(" "));
+      }
+      while (second.firstChild) {
+        first.appendChild(second.firstChild);
+      }
+      second.remove();
+    };
     div.querySelectorAll("li").forEach((li) => {
+      const directParagraphs = Array.from(li.children).filter((child) => child.tagName === "P");
+      directParagraphs.forEach((paragraph) => collapseLabelBreakInParagraph(paragraph));
+      mergeLabelParagraphs(li);
+      unwrapSimpleListParagraphs(li);
+      collapseLabelBreakInListItem(li);
+      convertLeadingStrongOrCodeToSpan(li);
+      wrapLeadingLabelInBlockSpan(li);
       const hasNestedList = li.querySelector("ul, ol");
       if (!hasNestedList)
         return;
@@ -1602,6 +1824,19 @@ var AppleStyleView = class extends ItemView {
           node.remove();
         }
       });
+    });
+    const forceInlineStyle = (el, extraStyle = "") => {
+      const currentStyle = el.getAttribute("style") || "";
+      const cleanedStyle = currentStyle.replace(/display\s*:\s*[^;]+;?/gi, "").replace(/width\s*:\s*[^;]+;?/gi, "").replace(/float\s*:\s*[^;]+;?/gi, "").trim();
+      const normalizedStyle = cleanedStyle ? `${cleanedStyle}${cleanedStyle.endsWith(";") ? "" : ";"}` : "";
+      const finalStyle = `${normalizedStyle}display:inline !important; width:auto !important; float:none !important;${extraStyle}`;
+      el.setAttribute("style", finalStyle);
+    };
+    div.querySelectorAll("li strong").forEach((strong) => {
+      forceInlineStyle(strong);
+    });
+    div.querySelectorAll("li code").forEach((code) => {
+      forceInlineStyle(code, " margin:0 2px !important; vertical-align:baseline;");
     });
     return div.innerHTML;
   }
@@ -1791,14 +2026,25 @@ var AppleStyleView = class extends ItemView {
       }
       const processed = await this.processImagesToDataURL(tempDiv);
       const cleanedHtml = this.cleanHtmlForDraft(tempDiv.innerHTML);
-      const text = tempDiv.textContent || "";
+      const plainDiv = document.createElement("div");
+      plainDiv.innerHTML = cleanedHtml;
+      const text = plainDiv.textContent || "";
       const htmlContent = cleanedHtml;
+      window.__OWC_LAST_CLIPBOARD_HTML = htmlContent;
+      window.__OWC_LAST_CLIPBOARD_TEXT = text;
       if (navigator.clipboard && navigator.clipboard.write) {
-        const clipboardItem = new ClipboardItem({
-          "text/html": new Blob([htmlContent], { type: "text/html" }),
-          "text/plain": new Blob([text], { type: "text/plain" })
-        });
-        await navigator.clipboard.write([clipboardItem]);
+        try {
+          const htmlOnlyItem = new ClipboardItem({
+            "text/html": new Blob([htmlContent], { type: "text/html" })
+          });
+          await navigator.clipboard.write([htmlOnlyItem]);
+        } catch (htmlOnlyError) {
+          const clipboardItem = new ClipboardItem({
+            "text/html": new Blob([htmlContent], { type: "text/html" }),
+            "text/plain": new Blob([text], { type: "text/plain" })
+          });
+          await navigator.clipboard.write([clipboardItem]);
+        }
         new Notice("\u2705 \u5DF2\u590D\u5236\u5230\u526A\u8D34\u677F\uFF01");
         if (this.copyBtn) {
           const { setIcon } = require("obsidian");
