@@ -230,6 +230,7 @@ window.AppleStyleConverter = class AppleStyleConverter {
         const match = firstLine.match(/^\[!\s*([^\]\r\n]+?)\s*\](?:\s+(.*))?/);
         if (match) {
           const rawType = match[1].trim();
+          if (!rawType || !/\S/u.test(rawType)) return null;
           const type = rawType.toLowerCase();
           const customTitle = match[2] ? match[2].trim() : null;
           const config = CALLOUT_ICONS[type] || { icon: '📌', label: type };
@@ -283,6 +284,7 @@ window.AppleStyleConverter = class AppleStyleConverter {
     const sizes = this.theme.getSizes();
     const font = this.theme.getFontFamily();
     const themeName = this.theme.themeName;
+    const safeTitle = this.escapeHtml(String(calloutInfo.title ?? ''));
 
     // 优雅主题：居中样式（与其引用块风格一致）
     if (themeName === 'serif') {
@@ -330,7 +332,7 @@ window.AppleStyleConverter = class AppleStyleConverter {
     return `<section style="${containerStyle}">
       <section style="${headerStyle}">
         <span style="${iconStyle}">${calloutInfo.icon}</span>
-        <span style="${titleStyle}">${calloutInfo.title}</span>
+        <span style="${titleStyle}">${safeTitle}</span>
       </section>
       <section style="${contentStyle}">`;
   }
@@ -344,6 +346,7 @@ window.AppleStyleConverter = class AppleStyleConverter {
    * @returns {string} - HTML 字符串
    */
   renderCalloutOpenCentered(calloutInfo, color, sizes, font) {
+    const safeTitle = this.escapeHtml(String(calloutInfo.title ?? ''));
     // 居中样式：无左边框，水平居中，圆角边框
     const containerStyle = `
       margin: 30px 60px;
@@ -375,7 +378,7 @@ window.AppleStyleConverter = class AppleStyleConverter {
     return `<section style="${containerStyle}">
       <section style="${headerStyle}">
         <span style="margin-right: 8px;">${calloutInfo.icon}</span>
-        <span>${calloutInfo.title}</span>
+        <span>${safeTitle}</span>
       </section>
       <section style="${contentStyle}">`;
   }
@@ -636,21 +639,28 @@ ${macHeader}
 
   validateLink(url, isImage = false) {
     if (!url) return '#';
+    const value = String(url).trim();
+    if (!value) return '#';
+
+    // Keep legacy parity: allow raw data:image src in image context.
+    // Non-image data: remains blocked.
+    if (/^data:/i.test(value)) {
+      if (!isImage) return '#unsafe';
+      return /^data:image\//i.test(value) ? value : '#';
+    }
+
     // Allow safe protocols
-    // data: is only allowed for images
     const safeProtocols = ['http:', 'https:', 'obsidian:', 'mailto:', 'tel:', 'app:', 'capacitor:'];
-    if (isImage) safeProtocols.push('data:');
 
     try {
       // URL constructor might fail for some internal links or malformed data URIs
-      const parsed = new URL(url);
-      if (safeProtocols.includes(parsed.protocol)) return url;
-
-      // If it's a data: URI but not an image context, neutralize it explicitly
-      if (parsed.protocol === 'data:' && !isImage) return '#unsafe';
+      const parsed = new URL(value);
+      if (safeProtocols.includes(parsed.protocol)) {
+        return value;
+      }
     } catch (e) {
       // Handle relative paths or Obsidian internal links that URL() can't parse
-      if (url.startsWith('#') || url.startsWith('/') || !url.includes(':')) return url;
+      if (value.startsWith('#') || value.startsWith('/') || !value.includes(':')) return value;
     }
     return '#'; // Block javascript: and other dangerous protocols
   }

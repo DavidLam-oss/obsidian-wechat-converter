@@ -1,13 +1,19 @@
 {
 	"name": "obsidian-wechat-converter",
-	"version": "2.5.2",
+	"version": "2.5.5",
 	"description": "Apple Style Formatter for Obsidian",
 	"main": "main.js",
 	"scripts": {
-		"dev": "node esbuild.config.mjs",
-		"build": "node esbuild.config.mjs production",
+		"generate:embedded": "node scripts/generate-embedded-deps.mjs",
+		"check:embedded": "node scripts/generate-embedded-deps.mjs --check",
+		"dev": "npm run generate:embedded && node esbuild.config.mjs",
+		"build": "npm run generate:embedded && node esbuild.config.mjs production",
+		"pretest": "npm run check:embedded",
 		"test": "vitest",
-		"test:coverage": "vitest run --coverage"
+		"test:coverage": "vitest run --coverage",
+		"release:pack": "bash package-release.sh",
+		"release:validate": "node scripts/release-validate.mjs",
+		"release:dryrun": "npm run build && npm run release:pack && npm run release:validate"
 	},
 	"keywords": [
 		"obsidian",

@@ -81,6 +81,18 @@ describe('AppleStyleConverter - validateLink', () => {
     expect(converter.validateLink(dataUri, false)).toBe('#unsafe');
   });
 
+  it('should keep placeholder-like data:image payloads for legacy parity', () => {
+    expect(
+      converter.validateLink('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB...', true)
+    ).toBe('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB...');
+  });
+
+  it('should reject non-image data urls even in image context', () => {
+    expect(
+      converter.validateLink('data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==', true)
+    ).toBe('#');
+  });
+
   it('should block javascript: protocol', () => {
     expect(converter.validateLink('javascript:alert(1)')).toBe('#');
   });

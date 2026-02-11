@@ -26,6 +26,16 @@ module.exports = {
     }
   },
   MarkdownView: class {},
+  MarkdownRenderer: {
+    async renderMarkdown(markdown, el) {
+      // Minimal markdown mock for tests that depend on Triplet renderer plumbing.
+      const safe = String(markdown || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      el.innerHTML = `<p>${safe}</p>`;
+    },
+  },
   PluginSettingTab: class {},
   Setting: class {
     constructor() { return this; }

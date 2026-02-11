@@ -93,6 +93,24 @@ describe('AppleStyleView - HTML Cleaning', () => {
     expect(secondLi.textContent.replace(/\s+/g, ' ').trim()).toBe('cover 字段');
   });
 
+  it('should not force code block inside list item to inline display', () => {
+    const inputHtml = `
+      <ol>
+        <li>
+          <pre><code style="display:block; background:#111;">const x = 1;</code></pre>
+        </li>
+      </ol>
+    `;
+
+    const outputHtml = view.cleanHtmlForDraft(inputHtml);
+    const div = document.createElement('div');
+    div.innerHTML = outputHtml;
+
+    const code = div.querySelector('li pre code');
+    expect(code).not.toBeNull();
+    expect(code.getAttribute('style')).not.toContain('display:inline !important;');
+  });
+
   it('should collapse line break after strong label in list item paragraph', () => {
     const inputHtml = `
       <ol>

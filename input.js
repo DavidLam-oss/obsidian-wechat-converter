@@ -1,5 +1,16 @@
 const { Plugin, MarkdownView, ItemView, Notice } = require('obsidian');
 const { PluginSettingTab, Setting } = require('obsidian');
+const { createRenderPipelines } = require('./services/render-pipeline');
+const { buildRenderRuntime } = require('./services/dependency-loader');
+const { resolveMarkdownSource } = require('./services/markdown-source');
+const { normalizeVaultPath, isAbsolutePathLike } = require('./services/path-utils');
+const { renderObsidianTripletMarkdown } = require('./services/obsidian-triplet-renderer');
+const { createWechatSyncService } = require('./services/wechat-sync');
+const { resolveSyncAccount, toSyncFriendlyMessage } = require('./services/sync-context');
+const { processAllImages: processAllImagesService, processMathFormulas: processMathFormulasService } = require('./services/wechat-media');
+const { cleanHtmlForDraft: cleanHtmlForDraftService } = require('./services/wechat-html-cleaner');
+
+const TRIPLET_PARITY_DEBUG_REV = 'triplet-parity-r6';
 
 // 视图类型标识
 const APPLE_STYLE_VIEW = 'apple-style-converter';
@@ -24,6 +35,15 @@ const DEFAULT_SETTINGS = {
   proxyUrl: '',  // Cloudflare Worker 等代理地址
   // 预览设置
   usePhoneFrame: true, // 是否使用手机框预览
+  // 三件套渲染开关
+  useTripletPipeline: false,
+  tripletFallbackToPhase2: true,
+  enforceTripletParity: true, // 严格零差异门禁
+  tripletParityVerboseLog: false, // 输出完整差异 payload 到控制台（调试用）
+  // 旧字段保留用于迁移检测
+  useNativePipeline: false,
+  enableLegacyFallback: true,
+  enforceNativeParity: true,
   // 排版设置
   sidePadding: 16, // 页面两侧留白 (px)
   coloredHeader: false, // 标题是否使用主题色
@@ -369,6 +389,8 @@ class AppleStyleView extends ItemView {
     this.plugin = plugin;
     this.currentHtml = null;
     this.converter = null;
+    this.legacyRenderPipeline = null;
+    this.nativeRenderPipeline = null;
     this.theme = null;
     this.lastActiveFile = null;
     this.sessionCoverBase64 = ''; // 本次文章的临时封面
@@ -383,8 +405,12 @@ class AppleStyleView extends ItemView {
     // 公式/SVG 上传缓存：Map<Hash, WechatURL>
     // 避免重复上传相同的公式，节省微信 API 调用额度 (Quota) 并提升速度
     this.svgUploadCache = new Map();
+    // 普通图片上传缓存：Map<accountId::src, wechatUrl>
+    // 用于同一视图生命周期内跨次同步复用，避免重复上传相同图片
+    this.imageUploadCache = new Map();
 
     this.renderGeneration = 0;
+    this.lastParityMismatchNoticeKey = '';
   }
 
   getViewType() {
@@ -648,65 +674,29 @@ class AppleStyleView extends ItemView {
     const basePath = this.plugin.manifest.dir;
 
     try {
-      // 加载 markdown-it
-      if (typeof markdownit === 'undefined') {
-        const mdContent = await adapter.read(`${basePath}/lib/markdown-it.min.js`);
-        (0, eval)(mdContent);
-      }
-
-      // 加载 highlight.js
-      if (typeof hljs === 'undefined') {
-        const hljsContent = await adapter.read(`${basePath}/lib/highlight.min.js`);
-        (0, eval)(hljsContent);
-      }
-
-      // 加载 MathJax 插件 (如果存在)
-      try {
-        const mathPath = `${basePath}/lib/mathjax-plugin.js`;
-        if (await adapter.exists(mathPath)) {
-          const mathContent = await adapter.read(mathPath);
-          (0, eval)(mathContent);
-        } else {
-        }
-      } catch (e) {
-        console.error('MathJax plugin load failed:', e);
-      }
-
-      // 加载主题
-      const themeContent = await adapter.read(`${basePath}/themes/apple-theme.js`);
-      (0, eval)(themeContent);
-
-      // 加载转换器
-      const converterContent = await adapter.read(`${basePath}/converter.js`);
-      (0, eval)(converterContent);
-
-      // 初始化主题实例
-      if (!window.AppleTheme) throw new Error('AppleTheme failed to load');
-      this.theme = new window.AppleTheme({
-        theme: this.plugin.settings.theme,
-        themeColor: this.plugin.settings.themeColor,
-        customColor: this.plugin.settings.customColor,
-        fontFamily: this.plugin.settings.fontFamily,
-        fontSize: this.plugin.settings.fontSize,
-        macCodeBlock: this.plugin.settings.macCodeBlock,
-        codeLineNumber: this.plugin.settings.codeLineNumber,
-        sidePadding: this.plugin.settings.sidePadding, // 新增参数
-        coloredHeader: this.plugin.settings.coloredHeader, // 关键修复：初始化时传入标题染色状态
+      const runtime = await buildRenderRuntime({
+        settings: this.plugin.settings,
+        app: this.app,
+        adapter,
+        basePath,
       });
-
-      // 初始化转换器
-
-      // 初始化转换器
-      if (!window.AppleStyleConverter) throw new Error('AppleStyleConverter failed to load');
-      // 优先使用 Base64 头像，否则使用 URL
-      let avatarSrc = '';
-      if (this.plugin.settings.enableWatermark) {
-        avatarSrc = this.plugin.settings.avatarBase64 || this.plugin.settings.avatarUrl || '';
-      }
-      const showCaption = this.plugin.settings.showImageCaption;
-      // 传递 App 实例，用于解析本地图片
-      this.converter = new window.AppleStyleConverter(this.theme, avatarSrc, showCaption, this.app);
-      await this.converter.initMarkdownIt();
+      this.theme = runtime.theme;
+      this.converter = runtime.converter;
+      const { legacyPipeline, nativePipeline } = createRenderPipelines({
+        converter: this.converter,
+        getFlags: () => this.getRenderPipelineFlags(),
+        candidateRenderer: async (markdown, context = {}) => {
+          return renderObsidianTripletMarkdown({
+            app: this.app,
+            converter: this.converter,
+            markdown,
+            sourcePath: context.sourcePath || '',
+            component: this,
+          });
+        },
+      });
+      this.legacyRenderPipeline = legacyPipeline;
+      this.nativeRenderPipeline = nativePipeline;
 
       console.log('✅ 依赖加载完成');
     } catch (error) {
@@ -1191,13 +1181,7 @@ class AppleStyleView extends ItemView {
   }
 
   normalizeVaultPath(vaultPath) {
-    if (typeof vaultPath !== 'string') return '';
-    return vaultPath
-      .trim()
-      .replace(/\\/g, '/')
-      .replace(/\/{2,}/g, '/')
-      .replace(/^\/+/, '')
-      .replace(/\/+$/, '');
+    return normalizeVaultPath(vaultPath);
   }
 
   getCleanupDirTemplate() {
@@ -1484,11 +1468,11 @@ class AppleStyleView extends ItemView {
    * 处理同步到微信逻辑
    */
   async onSyncToWechat() {
-
-    // 获取选中的账号（优先使用下拉选择，否则用默认账号）
-    const accounts = this.plugin.settings.wechatAccounts || [];
-    const accountId = this.selectedAccountId || this.plugin.settings.defaultAccountId;
-    const account = accounts.find(a => a.id === accountId);
+    const account = resolveSyncAccount({
+      accounts: this.plugin.settings.wechatAccounts || [],
+      selectedAccountId: this.selectedAccountId,
+      defaultAccountId: this.plugin.settings.defaultAccountId,
+    });
 
     if (!account) {
       new Notice('❌ 请先在插件设置中添加微信公众号账号');
@@ -1505,62 +1489,37 @@ class AppleStyleView extends ItemView {
     const publishMeta = this.getFrontmatterPublishMeta(activeFile);
 
     try {
-      const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl);
-
-      // 1. 获取封面图
-      notice.setMessage('🖼️ 正在处理封面图...');
-      // 严格校验: 必须有 sessionCoverBase64 或者能从文章提取到图片
-      const coverSrc = this.sessionCoverBase64 || publishMeta.coverSrc || this.getFirstImageFromArticle();
-      if (!coverSrc) {
-        throw new Error('未设置封面图，同步失败。请在弹窗中上传封面。');
-      }
-
-      const coverBlob = await this.srcToBlob(coverSrc);
-      const coverRes = await api.uploadCover(coverBlob);
-      const thumb_media_id = coverRes.media_id;
-
-      // 2. 处理文章图片
-      notice.setMessage('📸 正在同步正文图片...');
-      let processedHtml = await this.processAllImages(this.currentHtml, api, (current, total) => {
-          notice.setMessage(`📸 正在同步正文图片 (${current}/${total})...`);
+      const syncService = createWechatSyncService({
+        createApi: (appId, appSecret, proxyUrl) => new WechatAPI(appId, appSecret, proxyUrl),
+        srcToBlob: this.srcToBlob.bind(this),
+        processAllImages: this.processAllImages.bind(this),
+        processMathFormulas: this.processMathFormulas.bind(this),
+        cleanHtmlForDraft: this.cleanHtmlForDraft.bind(this),
+        cleanupConfiguredDirectory: this.cleanupConfiguredDirectory.bind(this),
+        getFirstImageFromArticle: this.getFirstImageFromArticle.bind(this),
       });
 
-      // 2.5 处理数学公式 (SVG -> PNG)
-      // 放宽检测条件：只要包含 mjx-container 或 <svg，都尝试进行扫描
-      if (processedHtml.includes('mjx-container') || processedHtml.includes('<svg')) {
-        notice.setMessage('🧮 正在转换矢量图/数学公式...');
-        processedHtml = await this.processMathFormulas(processedHtml, api, (current, total) => {
+      const { cleanupResult } = await syncService.syncToDraft({
+        account,
+        proxyUrl: this.plugin.settings.proxyUrl,
+        currentHtml: this.currentHtml,
+        activeFile,
+        publishMeta,
+        sessionCoverBase64: this.sessionCoverBase64,
+        sessionDigest: this.sessionDigest,
+        onStatus: (stage) => {
+          if (stage === 'cover') notice.setMessage('🖼️ 正在处理封面图...');
+          if (stage === 'images') notice.setMessage('📸 正在同步正文图片...');
+          if (stage === 'math') notice.setMessage('🧮 正在转换矢量图/数学公式...');
+          if (stage === 'draft') notice.setMessage('📝 正在发送到微信草稿箱...');
+        },
+        onImageProgress: (current, total) => {
+          notice.setMessage(`📸 正在同步正文图片 (${current}/${total})...`);
+        },
+        onMathProgress: (current, total) => {
           notice.setMessage(`🧮 正在转换矢量图/数学公式 (${current}/${total})...`);
-        });
-      }
-
-      // 2.6 清理 HTML 以适配微信编辑器
-      const cleanedHtml = this.cleanHtmlForDraft(processedHtml);
-
-      // 3. 获取文章标题
-      const title = activeFile ? activeFile.basename : '无标题文章';
-
-      // 4. 内容长度预检 (Pre-flight Check)
-      // 微信官方对 content 长度的实际限制远大于 20,000，且主要取决于 JSON 包体大小。
-      // 因此移除硬编码的长度限制，仅检查 Base64 残留作为异常拦截。
-      const base64Count = (cleanedHtml.match(/src=["']data:image/g) || []).length;
-      if (base64Count > 0) {
-        throw new Error(`检测到 ${base64Count} 张图片未成功上传（仍为 Base64 格式），这会导致同步失败。建议检查网络连接并重试。`);
-      }
-
-      // 5. 创建草稿
-      notice.setMessage('📝 正在发送到微信草稿箱...');
-      const article = {
-        title: title.substring(0, 64),
-        content: cleanedHtml,
-        thumb_media_id: thumb_media_id,
-        author: account.author || '',
-        digest: this.sessionDigest || '一键同步自 Obsidian'
-      };
-
-      await api.createDraft(article);
-
-      const cleanupResult = await this.cleanupConfiguredDirectory(activeFile);
+        },
+      });
 
       notice.hide();
       new Notice('✅ 同步成功！请前往微信公众号后台草稿箱查看');
@@ -1570,14 +1529,7 @@ class AppleStyleView extends ItemView {
     } catch (error) {
       notice.hide();
       console.error('Wechat Sync Error:', error);
-
-      let friendlyMsg = error.message;
-
-      // 捕获微信返回的内容长度错误 (45002) 并转换为友好提示
-      if (error.message.includes('45002')) {
-        friendlyMsg = '文章太长，微信接口拒收。建议分篇发送，或使用插件顶部的「复制」按钮手动粘贴到公众号后台。';
-      }
-
+      const friendlyMsg = toSyncFriendlyMessage(error.message);
       new Notice(`❌ 同步失败: ${friendlyMsg}`);
     }
   }
@@ -1614,54 +1566,17 @@ class AppleStyleView extends ItemView {
    * 处理 HTML 中的所有图片，上传到微信并替换链接
    * 支持并发上传 (Limit 3) 和进度回调
    */
-  async processAllImages(html, api, progressCallback) {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    const imgs = Array.from(div.querySelectorAll('img'));
-
-    // 1. 提取唯一图片 URL
-    const uniqueUrls = new Set();
-    // 建立 src -> new_url 的映射
-    const urlMap = new Map();
-
-    for (const img of imgs) {
-        if (img.src) uniqueUrls.add(img.src);
-    }
-
-    const total = uniqueUrls.size;
-    let completed = 0;
-
-    // 2. 定义并发上传任务
-    const tasks = Array.from(uniqueUrls);
-
-    await pMap(tasks, async (src) => {
-        try {
-          const blob = await this.srcToBlob(src);
-          const res = await api.uploadImage(blob);
-          urlMap.set(src, res.url);
-        } catch (error) {
-          // 熔断机制：如果是配额超限等致命错误，停止后续所有上传
-          if (error.isFatal) throw error;
-
-          console.error('图片处理失败，已跳过:', src, error);
-          // 仅在控制台记录，不中断流程，也不频繁弹窗打扰用户
-          // 用户会在预览中看到该图片未被替换
-        }
-
-        completed++;
-        if (progressCallback) {
-            progressCallback(completed, total);
-        }
-    }, 3); // 并发数限制为 3
-
-    // 3. 替换 DOM 中的图片链接
-    for (const img of imgs) {
-      if (urlMap.has(img.src)) {
-        img.src = urlMap.get(img.src);
-      }
-    }
-
-    return div.innerHTML;
+  async processAllImages(html, api, progressCallback, cacheContext = {}) {
+    const accountId = cacheContext?.accountId || '';
+    return processAllImagesService({
+      html,
+      api,
+      progressCallback,
+      pMap,
+      srcToBlob: this.srcToBlob.bind(this),
+      imageUploadCache: this.imageUploadCache,
+      cacheNamespace: accountId,
+    });
   }
 
   /**
@@ -1669,106 +1584,15 @@ class AppleStyleView extends ItemView {
    * 解决微信接口内容长度限制问题
    */
   async processMathFormulas(html, api, progressCallback) {
-    // 创建临时容器并挂载到 DOM (为了正确计算 SVG 尺寸)
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.width = '800px'; // 模拟常见的文章宽度
-    container.innerHTML = html;
-    document.body.appendChild(container);
-
-    try {
-      // 查找所有 SVG 容器 (MathJax 公式或其他矢量图)
-      // 之前只查找 mjx-container svg，导致部分 MathJax 配置下(直接输出svg)无法识别
-      // 现在改为通过 querySelectorAll('svg') 捕获所有 SVG，彻底解决内容过长问题
-      const mathNodes = Array.from(container.querySelectorAll('svg'));
-      if (mathNodes.length === 0) return html;
-
-      const total = mathNodes.length;
-      let completed = 0;
-
-      // 并发处理
-      await pMap(mathNodes, async (svg) => {
-        try {
-          // 0. 计算 SVG 指纹 (简单的 Hash)
-          const svgStr = new XMLSerializer().serializeToString(svg);
-          // 加上样式属性作为指纹一部分，因为同样的公式可能有不同的 style (color/align)
-          const styleAttr = svg.getAttribute('style') || '';
-          const fillAttr = svg.getAttribute('fill') || '';
-          const fingerprint = this.simpleHash(svgStr + styleAttr + fillAttr);
-
-          let wechatUrl = '';
-          let logicalWidth, logicalHeight, rawStyle;
-
-          // 1. 检查缓存
-          if (this.svgUploadCache.has(fingerprint)) {
-            // console.log('DEBUG: Hit SVG Cache!', fingerprint);
-            const cachedData = this.svgUploadCache.get(fingerprint);
-            wechatUrl = cachedData.url;
-            logicalWidth = cachedData.width;
-            logicalHeight = cachedData.height;
-            rawStyle = cachedData.style;
-          } else {
-            // 2. 缓存未命中，执行转图和上传
-            const result = await this.svgToPngBlob(svg); // { blob, width, height, style }
-            const res = await api.uploadImage(result.blob);
-
-            wechatUrl = res.url;
-            logicalWidth = result.width;
-            logicalHeight = result.height;
-            rawStyle = result.style;
-
-            // 写入缓存
-            this.svgUploadCache.set(fingerprint, {
-                url: wechatUrl,
-                width: logicalWidth,
-                height: logicalHeight,
-                style: rawStyle
-            });
-          }
-
-          // 3. 替换 DOM
-          const img = document.createElement('img');
-          img.src = wechatUrl;
-          img.className = 'math-formula-image';
-
-          // 4. 关键修复：设置显示尺寸为原始逻辑尺寸
-          if (logicalWidth) img.setAttribute('width', logicalWidth);
-          if (logicalHeight) img.setAttribute('height', logicalHeight);
-
-          // 5. 样式继承
-          let finalStyle = 'display: inline-block; margin: 0 2px;';
-          const svgStyle = svg.getAttribute('style');
-          if (svgStyle) finalStyle += svgStyle;
-
-          const parent = svg.parentElement;
-          if (parent && parent.tagName.toLowerCase().includes('mjx')) {
-             const parentStyle = parent.getAttribute('style');
-             if (parentStyle) finalStyle += parentStyle;
-             img.setAttribute('style', finalStyle);
-             parent.replaceWith(img);
-          } else {
-             if (rawStyle) finalStyle += rawStyle;
-             img.setAttribute('style', finalStyle);
-             svg.replaceWith(img);
-          }
-
-          completed++;
-          if (progressCallback) progressCallback(completed, total);
-        } catch (error) {
-          // 熔断机制：如果是配额超限等致命错误，停止后续所有上传
-          if (error.isFatal) throw error;
-
-          console.error('公式转换失败，保留原SVG:', error);
-        }
-      }, 3); // 限制并发数
-
-      return container.innerHTML;
-    } finally {
-      // 清理 DOM
-      document.body.removeChild(container);
-    }
+    return processMathFormulasService({
+      html,
+      api,
+      progressCallback,
+      pMap,
+      simpleHash: this.simpleHash.bind(this),
+      svgUploadCache: this.svgUploadCache,
+      svgToPngBlob: this.svgToPngBlob.bind(this),
+    });
   }
 
   /**
@@ -1874,476 +1698,7 @@ class AppleStyleView extends ItemView {
    * 4. 移除空的 li 元素和空白文本节点
    */
   cleanHtmlForDraft(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-
-    const getInlineLabelPrefixInfo = (container) => {
-      if (!container) return null;
-      const nodes = Array.from(container.childNodes);
-      const firstElementIdx = nodes.findIndex(node => node.nodeType === Node.ELEMENT_NODE);
-      if (firstElementIdx === -1) return null;
-      const hasOnlyWhitespaceBefore = nodes
-        .slice(0, firstElementIdx)
-        .every(node => node.nodeType === Node.TEXT_NODE && !node.textContent.trim());
-      if (!hasOnlyWhitespaceBefore) return null;
-
-      const firstElement = nodes[firstElementIdx];
-      if (!['STRONG', 'CODE'].includes(firstElement.tagName)) return null;
-
-      const elementText = (firstElement.textContent || '').trim();
-      if (/[：:]$/.test(elementText)) {
-        return { firstElementIdx, prefixEndIdx: firstElementIdx };
-      }
-
-      const nextNode = nodes[firstElementIdx + 1];
-      if (nextNode && nextNode.nodeType === Node.TEXT_NODE) {
-        const nextText = nextNode.textContent || '';
-        if (/^\s*[：:]/.test(nextText)) {
-          return { firstElementIdx, prefixEndIdx: firstElementIdx + 1 };
-        }
-      }
-
-      return null;
-    };
-
-    const hasInlineLabelPrefix = (container) => !!getInlineLabelPrefixInfo(container);
-
-    const collapseLabelBreakInParagraph = (paragraph) => {
-      const prefixInfo = getInlineLabelPrefixInfo(paragraph);
-      if (!prefixInfo) return;
-
-      const nodes = Array.from(paragraph.childNodes);
-      const startIdx = prefixInfo.prefixEndIdx + 1;
-
-      if (prefixInfo.prefixEndIdx > prefixInfo.firstElementIdx) {
-        const colonNode = nodes[prefixInfo.prefixEndIdx];
-        if (colonNode && colonNode.nodeType === Node.TEXT_NODE) {
-          colonNode.textContent = (colonNode.textContent || '').replace(/^\s*([：:])\s*/, '$1 ');
-        }
-      }
-
-      let sawBreak = false;
-      for (let i = startIdx; i < nodes.length; i += 1) {
-        const node = nodes[i];
-
-        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') {
-          node.remove();
-          sawBreak = true;
-          continue;
-        }
-
-        if (node.nodeType === Node.TEXT_NODE) {
-          if (!node.textContent.trim()) continue;
-          const hasLeadingWhitespace = /^\s+/.test(node.textContent);
-          if (sawBreak || hasLeadingWhitespace) {
-            node.textContent = node.textContent.replace(/^\s+/, ' ');
-          }
-          return;
-        }
-
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          if (sawBreak) paragraph.insertBefore(document.createTextNode(' '), node);
-          return;
-        }
-      }
-    };
-
-    const isInlineOnlyParagraph = (paragraph) => {
-      if (!paragraph) return false;
-      const blockLikeTags = new Set(['UL', 'OL', 'TABLE', 'PRE', 'BLOCKQUOTE', 'SECTION', 'FIGURE', 'DIV', 'P']);
-      return !Array.from(paragraph.querySelectorAll('*')).some(el => blockLikeTags.has(el.tagName));
-    };
-
-    const unwrapSimpleListParagraphs = (li) => {
-      const hasDirectNestedList = Array.from(li.children).some(child => child.tagName === 'UL' || child.tagName === 'OL');
-      if (hasDirectNestedList) return;
-
-      const meaningfulChildren = Array.from(li.childNodes).filter(node =>
-        !(node.nodeType === Node.TEXT_NODE && !node.textContent.trim())
-      );
-      if (meaningfulChildren.length === 0) return;
-
-      const allInlineParagraphs = meaningfulChildren.every(node =>
-        node.nodeType === Node.ELEMENT_NODE &&
-        node.tagName === 'P' &&
-        isInlineOnlyParagraph(node)
-      );
-      if (!allInlineParagraphs) return;
-
-      const fragment = document.createDocumentFragment();
-      meaningfulChildren.forEach((paragraph, index) => {
-        while (paragraph.firstChild) {
-          fragment.appendChild(paragraph.firstChild);
-        }
-        if (index < meaningfulChildren.length - 1) {
-          fragment.appendChild(document.createTextNode(' '));
-        }
-      });
-
-      while (li.firstChild) {
-        li.removeChild(li.firstChild);
-      }
-      li.appendChild(fragment);
-    };
-
-    const collapseLabelBreakInListItem = (li) => {
-      const prefixInfo = getInlineLabelPrefixInfo(li);
-      if (!prefixInfo) return;
-
-      const nodes = Array.from(li.childNodes);
-      const startIdx = prefixInfo.prefixEndIdx + 1;
-
-      if (prefixInfo.prefixEndIdx > prefixInfo.firstElementIdx) {
-        const colonNode = nodes[prefixInfo.prefixEndIdx];
-        if (colonNode && colonNode.nodeType === Node.TEXT_NODE) {
-          colonNode.textContent = (colonNode.textContent || '').replace(/^\s*([：:])\s*/, '$1 ');
-        }
-      }
-
-      let sawBreak = false;
-      for (let i = startIdx; i < nodes.length; i += 1) {
-        const node = nodes[i];
-
-        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') {
-          node.remove();
-          sawBreak = true;
-          continue;
-        }
-
-        if (node.nodeType === Node.TEXT_NODE) {
-          if (!node.textContent.trim()) continue;
-          const hasLeadingWhitespace = /^\s+/.test(node.textContent);
-          if (sawBreak || hasLeadingWhitespace) {
-            node.textContent = node.textContent.replace(/^\s+/, ' ');
-          }
-          return;
-        }
-
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          if (sawBreak) li.insertBefore(document.createTextNode(' '), node);
-          return;
-        }
-      }
-    };
-
-    const convertLeadingStrongOrCodeToSpan = (li) => {
-      const getFirstMeaningfulNode = (container) => {
-        if (!container) return null;
-        return Array.from(container.childNodes).find(node =>
-          !(node.nodeType === Node.TEXT_NODE && !node.textContent.trim())
-        ) || null;
-      };
-
-      let firstNode = getFirstMeaningfulNode(li);
-      if (!firstNode) return;
-
-      if (firstNode.nodeType === Node.ELEMENT_NODE && firstNode.tagName === 'P') {
-        firstNode = getFirstMeaningfulNode(firstNode);
-      }
-
-      if (!firstNode || firstNode.nodeType !== Node.ELEMENT_NODE) return;
-      if (!['STRONG', 'CODE'].includes(firstNode.tagName)) return;
-
-      const span = document.createElement('span');
-      const currentStyle = firstNode.getAttribute('style') || '';
-      const cleanedStyle = currentStyle
-        .replace(/display\s*:\s*[^;]+;?/gi, '')
-        .replace(/width\s*:\s*[^;]+;?/gi, '')
-        .replace(/float\s*:\s*[^;]+;?/gi, '')
-        .trim();
-      const normalizedStyle = cleanedStyle
-        ? `${cleanedStyle}${cleanedStyle.trim().endsWith(';') ? '' : ';'}`
-        : '';
-      const extraStyle = firstNode.tagName === 'CODE'
-        ? ' margin:0 2px !important; vertical-align:baseline;'
-        : '';
-      span.setAttribute('style', `${normalizedStyle}display:inline !important; width:auto !important; float:none !important;${extraStyle}`);
-      span.innerHTML = firstNode.innerHTML;
-      firstNode.replaceWith(span);
-    };
-
-    const wrapLeadingLabelInBlockSpan = (li) => {
-      const hasDirectNestedList = Array.from(li.children).some(child => child.tagName === 'UL' || child.tagName === 'OL');
-      if (hasDirectNestedList) return;
-
-      const nodes = Array.from(li.childNodes).filter(node =>
-        !(node.nodeType === Node.TEXT_NODE && !node.textContent.trim())
-      );
-      if (nodes.length < 2) return;
-
-      const firstNode = nodes[0];
-      if (firstNode.nodeType !== Node.ELEMENT_NODE) return;
-      if (firstNode.tagName !== 'SPAN') return;
-
-      const firstText = (firstNode.textContent || '').trim();
-      const secondNode = nodes[1];
-      const secondText = secondNode.nodeType === Node.TEXT_NODE ? (secondNode.textContent || '') : '';
-      const hasColon = /[：:]$/.test(firstText) || /^\s*[：:]/.test(secondText);
-      if (!hasColon) return;
-
-      const wrapper = document.createElement('span');
-      const liStyle = li.getAttribute('style') || '';
-      const lineHeightMatch = liStyle.match(/line-height:\s*[^;]+/i);
-      const lineHeight = lineHeightMatch ? `${lineHeightMatch[0]};` : '';
-      wrapper.setAttribute('style', `display:block;margin:0;padding:0;${lineHeight}`);
-
-      while (li.firstChild) {
-        wrapper.appendChild(li.firstChild);
-      }
-      li.appendChild(wrapper);
-    };
-
-    const mergeLabelParagraphs = (li) => {
-      const directParagraphs = Array.from(li.children).filter(child => child.tagName === 'P');
-      if (directParagraphs.length < 2) return;
-      if (!hasInlineLabelPrefix(directParagraphs[0])) return;
-      if (!isInlineOnlyParagraph(directParagraphs[0]) || !isInlineOnlyParagraph(directParagraphs[1])) return;
-
-      const first = directParagraphs[0];
-      const second = directParagraphs[1];
-      if (!second.textContent || !second.textContent.trim()) return;
-
-      while (
-        second.firstChild &&
-        second.firstChild.nodeType === Node.TEXT_NODE &&
-        !second.firstChild.textContent.trim()
-      ) {
-        second.removeChild(second.firstChild);
-      }
-
-      if (first.lastChild && first.lastChild.nodeType === Node.TEXT_NODE) {
-        first.lastChild.textContent = first.lastChild.textContent.replace(/\s*$/, ' ');
-      } else {
-        first.appendChild(document.createTextNode(' '));
-      }
-
-      while (second.firstChild) {
-        first.appendChild(second.firstChild);
-      }
-      second.remove();
-    };
-
-    // 1. 处理包含嵌套列表的 li：移除直接子 p，并把前置行内内容包成块级 span
-    div.querySelectorAll('li').forEach(li => {
-      const directParagraphs = Array.from(li.children).filter(child => child.tagName === 'P');
-      directParagraphs.forEach(paragraph => collapseLabelBreakInParagraph(paragraph));
-      mergeLabelParagraphs(li);
-      unwrapSimpleListParagraphs(li);
-      collapseLabelBreakInListItem(li);
-      convertLeadingStrongOrCodeToSpan(li);
-      wrapLeadingLabelInBlockSpan(li);
-
-      const hasNestedList = li.querySelector('ul, ol');
-      if (!hasNestedList) return;
-
-      // 1.1 解包直接子 p（避免微信将 p 与嵌套列表当成同级）
-      Array.from(li.children).forEach(child => {
-        if (child.tagName === 'P') {
-          while (child.firstChild) {
-            li.insertBefore(child.firstChild, child);
-          }
-          child.remove();
-        }
-      });
-
-      // 1.2 将嵌套列表前的行内节点包裹为块级 span，稳定层级结构
-      const firstList = Array.from(li.children).find(child => child.tagName === 'UL' || child.tagName === 'OL');
-      if (!firstList) return;
-
-      const nodesBeforeList = [];
-      for (let node = li.firstChild; node && node !== firstList; node = node.nextSibling) {
-        nodesBeforeList.push(node);
-      }
-
-      const meaningfulNodes = nodesBeforeList.filter(node =>
-        !(node.nodeType === Node.TEXT_NODE && !node.textContent.trim())
-      );
-
-      if (meaningfulNodes.length === 0) return;
-
-      const blockTags = new Set(['UL', 'OL', 'TABLE', 'PRE', 'BLOCKQUOTE', 'SECTION', 'FIGURE', 'DIV']);
-      const hasBlock = meaningfulNodes.some(node =>
-        node.nodeType === Node.ELEMENT_NODE && blockTags.has(node.tagName)
-      );
-
-      if (hasBlock) return;
-
-      const wrapper = document.createElement('span');
-      const liStyle = li.getAttribute('style') || '';
-      const lineHeightMatch = liStyle.match(/line-height:\s*[^;]+/i);
-      const lineHeight = lineHeightMatch ? `${lineHeightMatch[0]};` : '';
-      wrapper.setAttribute('style', `display:block;margin:0;padding:0;${lineHeight}`);
-
-      meaningfulNodes.forEach(node => wrapper.appendChild(node));
-      li.insertBefore(wrapper, firstList);
-    });
-
-    // 2. 将深层嵌套列表转为伪列表（仅处理 depth >= 2）
-    const getListDepth = list => {
-      let depth = 0;
-      let current = list.parentElement;
-      while (current) {
-        if (current.tagName === 'UL' || current.tagName === 'OL') depth += 1;
-        current = current.parentElement;
-      }
-      return depth;
-    };
-
-    const buildPseudoItems = (list, depth) => {
-      const fragment = document.createDocumentFragment();
-      const isOrdered = list.tagName === 'OL';
-      let index = 1;
-
-      Array.from(list.children).forEach(li => {
-        if (li.tagName !== 'LI') return;
-
-        const nestedLists = Array.from(li.children).filter(
-          child => child.tagName === 'UL' || child.tagName === 'OL'
-        );
-
-        const liStyle = li.getAttribute('style') || '';
-        const indent = Math.max(0, depth - 1) * 20;
-        const wrapper = document.createElement('p');
-        wrapper.setAttribute(
-          'style',
-          `${liStyle} margin:0 0 4px ${indent}px; padding:0;`
-        );
-
-        const contentNodes = [];
-        Array.from(li.childNodes).forEach(node => {
-          if (node.nodeType === Node.ELEMENT_NODE && (node.tagName === 'UL' || node.tagName === 'OL')) return;
-          if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'P') {
-            const children = Array.from(node.childNodes);
-            if (children.length && contentNodes.length) {
-              contentNodes.push(document.createTextNode(' '));
-            }
-            children.forEach(child => contentNodes.push(child));
-            return;
-          }
-          contentNodes.push(node);
-        });
-
-        // Trim leading whitespace-only text nodes to avoid bullets on separate lines.
-        while (
-          contentNodes.length > 0 &&
-          contentNodes[0].nodeType === Node.TEXT_NODE &&
-          !contentNodes[0].textContent.trim()
-        ) {
-          contentNodes.shift();
-        }
-        // If the first text node starts with a newline/indent, trim it to keep marker + text on one line.
-        if (contentNodes.length > 0 && contentNodes[0].nodeType === Node.TEXT_NODE) {
-          contentNodes[0].textContent = contentNodes[0].textContent.replace(/^\s+/, '');
-          if (!contentNodes[0].textContent) {
-            contentNodes.shift();
-          }
-        }
-
-        const hasContent = contentNodes.some(node => {
-          if (node.nodeType === Node.TEXT_NODE) return node.textContent.trim();
-          return true;
-        });
-
-        if (hasContent) {
-          contentNodes.forEach(node => {
-            if (node.nodeType !== Node.TEXT_NODE) return;
-            node.textContent = node.textContent.replace(/\s*\n\s*/g, ' ').replace(/\s{2,}/g, ' ');
-            if (!node.textContent.trim()) {
-              node.remove();
-            }
-          });
-
-          const markerText = isOrdered ? `${index}. ` : '• ';
-          const firstText = contentNodes.find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
-          if (firstText) {
-            firstText.textContent = markerText + firstText.textContent;
-          } else {
-            contentNodes.unshift(document.createTextNode(markerText));
-          }
-
-          contentNodes.forEach(node => wrapper.appendChild(node));
-          fragment.appendChild(wrapper);
-        }
-
-        nestedLists.forEach(nested => {
-          fragment.appendChild(buildPseudoItems(nested, depth + 1));
-        });
-
-        index += 1;
-      });
-
-      return fragment;
-    };
-
-    Array.from(div.querySelectorAll('ul, ol')).forEach(list => {
-      if (!div.contains(list)) return;
-      const depth = getListDepth(list);
-      if (depth < 2) return;
-      const fragment = buildPseudoItems(list, depth);
-      list.parentNode.insertBefore(fragment, list);
-      list.remove();
-    });
-
-    // 3. 处理嵌套的 ul/ol（在 li 内的列表）：移除 margin，调整缩进
-    div.querySelectorAll('li > ul, li > ol').forEach(nestedList => {
-      // 获取原有样式
-      let style = nestedList.getAttribute('style') || '';
-      // 移除 margin，保留其他样式 (Fix: use regex that catches margin-left/top etc)
-      style = style.replace(/margin(-[a-z]+)?:\s*[^;]+;?/gi, '');
-      // 添加 margin: 0 确保紧贴父元素
-      style = 'margin: 0; ' + style;
-      nestedList.setAttribute('style', style);
-    });
-
-    // 4. 移除空的 li 元素
-    div.querySelectorAll('li').forEach(li => {
-      if (!li.textContent.trim() && li.querySelectorAll('img, ul, ol').length === 0) {
-        li.remove();
-      }
-    });
-
-    // 5. 移除 ul/ol 内的纯空白文本节点
-    div.querySelectorAll('ul, ol').forEach(list => {
-      Array.from(list.childNodes).forEach(node => {
-        if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) {
-          node.remove();
-        }
-      });
-    });
-
-    // 6. 移除 li 内的多余换行/空白文本节点
-    div.querySelectorAll('li').forEach(li => {
-      Array.from(li.childNodes).forEach(node => {
-        if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) {
-          node.remove();
-        }
-      });
-    });
-
-    // 7. 微信兼容修复：强制列表项内 strong/code 保持行内，避免“标题词”和冒号/正文断行
-    const forceInlineStyle = (el, extraStyle = '') => {
-      const currentStyle = el.getAttribute('style') || '';
-      const cleanedStyle = currentStyle
-        .replace(/display\s*:\s*[^;]+;?/gi, '')
-        .replace(/width\s*:\s*[^;]+;?/gi, '')
-        .replace(/float\s*:\s*[^;]+;?/gi, '')
-        .trim();
-      const normalizedStyle = cleanedStyle
-        ? `${cleanedStyle}${cleanedStyle.endsWith(';') ? '' : ';'}`
-        : '';
-      const finalStyle = `${normalizedStyle}display:inline !important; width:auto !important; float:none !important;${extraStyle}`;
-      el.setAttribute('style', finalStyle);
-    };
-
-    div.querySelectorAll('li strong').forEach(strong => {
-      forceInlineStyle(strong);
-    });
-
-    div.querySelectorAll('li code').forEach(code => {
-      forceInlineStyle(code, ' margin:0 2px !important; vertical-align:baseline;');
-    });
-
-    return div.innerHTML;
+    return cleanHtmlForDraftService(html);
   }
 
   // === 设置变更处理 ===
@@ -2413,6 +1768,48 @@ class AppleStyleView extends ItemView {
     });
   }
 
+  getRenderPipelineFlags() {
+    const useTripletPipeline = this.plugin?.settings?.useTripletPipeline === true;
+    const tripletFallbackToPhase2 = this.plugin?.settings?.tripletFallbackToPhase2 !== false;
+    const enforceTripletParity = this.plugin?.settings?.enforceTripletParity !== false;
+    return {
+      useTripletPipeline,
+      tripletFallbackToPhase2,
+      enforceTripletParity,
+      // Backward-compatible aliases for existing tests and fallback paths.
+      useNativePipeline: useTripletPipeline,
+      enableLegacyFallback: tripletFallbackToPhase2,
+      enforceNativeParity: enforceTripletParity,
+      parityErrorCode: 'TRIPLET_PARITY_MISMATCH',
+      parityTransform: (html) => {
+        const cleaned = this.cleanHtmlForDraft(html);
+        // Normalize newline-only gaps between tags to avoid false-positive byte diffs.
+        return cleaned
+          .replace(/>\r?\n\s*</g, '><')
+          .replace(/\r?\n/g, '');
+      },
+      onParityMismatch: ({ context, mismatch }) => {
+        this.logParityMismatchDetails(context?.sourcePath || '', mismatch || {});
+      },
+    };
+  }
+
+  getActiveRenderPipeline() {
+    const flags = this.getRenderPipelineFlags();
+    if (flags.useTripletPipeline && this.nativeRenderPipeline) {
+      return this.nativeRenderPipeline;
+    }
+    return this.legacyRenderPipeline;
+  }
+
+  async renderMarkdownForPreview(markdown, sourcePath) {
+    const pipeline = this.getActiveRenderPipeline();
+    if (!pipeline) {
+      throw new Error('渲染管线未初始化');
+    }
+    return pipeline.renderForPreview(markdown, { sourcePath });
+  }
+
   /**
    * 更新当前文档显示
    */
@@ -2452,31 +1849,124 @@ class AppleStyleView extends ItemView {
     });
   }
 
+  showParityMismatchPlaceholder(sourcePath, mismatch = {}) {
+    this.currentHtml = null;
+    this.previewContainer.empty();
+    this.previewContainer.removeClass('apple-has-content');
+
+    const index = Number.isInteger(mismatch.index) ? mismatch.index : -1;
+    const segmentCount = Number.isInteger(mismatch.segmentCount) ? mismatch.segmentCount : 0;
+    const name = sourcePath ? String(sourcePath).split('/').pop() : '当前文档';
+    const box = this.previewContainer.createEl('div', { cls: 'apple-placeholder' });
+    box.createEl('div', { cls: 'apple-placeholder-icon', text: '⚠️' });
+    box.createEl('h2', { text: '三件套渲染未通过零差异门禁' });
+    box.createEl('p', {
+      text: `${name} 与 Phase2 基线输出存在差异（首个 index ${index}，共 ${segmentCount} 段差异）。`,
+    });
+    if (Array.isArray(mismatch.segments) && mismatch.segments.length > 0) {
+      const list = box.createEl('ul', { cls: 'apple-parity-list' });
+      mismatch.segments.slice(0, 3).forEach((seg, idx) => {
+        const segIndex = Number.isInteger(seg.index) ? seg.index : -1;
+        const lLine = Number.isInteger(seg.legacyLine) ? seg.legacyLine : -1;
+        const lCol = Number.isInteger(seg.legacyColumn) ? seg.legacyColumn : -1;
+        list.createEl('li', {
+          text: `#${idx + 1}: index ${segIndex}（legacy ${lLine}:${lCol}）`,
+        });
+      });
+    }
+    box.createEl('p', {
+      cls: 'apple-placeholder-note',
+      text: '建议开启“三件套失败时回退 Phase2”，或继续在当前模式下定位差异。'
+    });
+    this.updateCurrentDoc();
+  }
+
+  logParityMismatchDetails(sourcePath, mismatch = {}) {
+    const fileName = sourcePath ? String(sourcePath).split('/').pop() : '当前文档';
+    const index = Number.isInteger(mismatch.index) ? mismatch.index : -1;
+    const segmentCount = Number.isInteger(mismatch.segmentCount) ? mismatch.segmentCount : 0;
+    const lengthDelta = Number.isInteger(mismatch.lengthDelta) ? mismatch.lengthDelta : 0;
+    const legacyLength = Number.isInteger(mismatch.legacyLength) ? mismatch.legacyLength : -1;
+    const candidateLength = Number.isInteger(mismatch.candidateLength) ? mismatch.candidateLength : -1;
+    const verboseLog = this.plugin?.settings?.tripletParityVerboseLog === true;
+
+    console.groupCollapsed(
+      `[Triplet Parity] ${fileName} mismatch: index=${index}, segments=${segmentCount}, delta=${lengthDelta}`
+    );
+    console.warn('[Triplet Parity] summary', {
+      sourcePath,
+      index,
+      segmentCount,
+      lengthDelta,
+      legacyLength,
+      candidateLength,
+      truncated: mismatch.truncated === true,
+    });
+
+    if (Array.isArray(mismatch.segments) && mismatch.segments.length > 0) {
+      const maxPreview = 5;
+      mismatch.segments.slice(0, maxPreview).forEach((seg, idx) => {
+        const segIndex = Number.isInteger(seg.index) ? seg.index : -1;
+        const legacyLine = Number.isInteger(seg.legacyLine) ? seg.legacyLine : -1;
+        const legacyColumn = Number.isInteger(seg.legacyColumn) ? seg.legacyColumn : -1;
+        const candidateLine = Number.isInteger(seg.candidateLine) ? seg.candidateLine : -1;
+        const candidateColumn = Number.isInteger(seg.candidateColumn) ? seg.candidateColumn : -1;
+        console.warn(`[Triplet Parity] segment #${idx + 1}`, {
+          index: segIndex,
+          legacy: `${legacyLine}:${legacyColumn}`,
+          candidate: `${candidateLine}:${candidateColumn}`,
+          legacySnippet: seg.legacySnippet,
+          candidateSnippet: seg.candidateSnippet,
+        });
+      });
+      if (mismatch.segments.length > maxPreview) {
+        console.warn(`[Triplet Parity] ${mismatch.segments.length - maxPreview} more segments omitted from log preview`);
+      }
+    }
+    // Machine-consumable full payload for one-shot debugging and offline analysis.
+    const fullDetails = {
+      revision: TRIPLET_PARITY_DEBUG_REV,
+      sourcePath,
+      index,
+      segmentCount,
+      lengthDelta,
+      legacyLength,
+      candidateLength,
+      truncated: mismatch.truncated === true,
+      segments: Array.isArray(mismatch.segments) ? mismatch.segments : [],
+    };
+    if (typeof window !== 'undefined') {
+      window.__OWC_LAST_PARITY_DETAILS = fullDetails;
+      window.__OWC_TRIPLET_PARITY_REV = TRIPLET_PARITY_DEBUG_REV;
+    }
+    if (verboseLog) {
+      console.log('[Triplet Parity] full-details', fullDetails);
+    }
+    console.groupEnd();
+    // Emit once outside collapsed group so terminal-style log collectors can capture it.
+    if (verboseLog) {
+      console.error('[Triplet Parity] full-details-json', JSON.stringify(fullDetails));
+    }
+  }
+
 
   /**
    * 转换当前文档
    */
   async convertCurrent(silent = false) {
     const generation = ++this.renderGeneration;
-    let activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    let markdown = '';
-    let sourcePath = '';
+    const source = await resolveMarkdownSource({
+      app: this.app,
+      lastActiveFile: this.lastActiveFile,
+      MarkdownViewType: MarkdownView,
+    });
 
-    if (!activeView && this.lastActiveFile) {
-      try {
-        markdown = await this.app.vault.read(this.lastActiveFile);
-        sourcePath = this.lastActiveFile.path;
-      } catch (error) {
-        if (!silent) new Notice('请先打开一个 Markdown 文件');
-        return;
-      }
-    } else if (activeView) {
-      markdown = activeView.editor.getValue();
-      if (activeView.file) sourcePath = activeView.file.path;
-    } else {
+    if (!source.ok) {
       if (!silent) new Notice('请先打开一个 Markdown 文件');
       return;
     }
+    const markdown = source.markdown;
+    const sourcePath = source.sourcePath;
 
     if (!markdown.trim()) {
       if (!silent) new Notice('当前文件内容为空');
@@ -2485,10 +1975,7 @@ class AppleStyleView extends ItemView {
 
     try {
       if (!silent) new Notice('⚡ 正在转换...');
-      // 更新当前文件路径，用于解析相对路径图片
-      if (this.converter) this.converter.updateSourcePath(sourcePath);
-
-      const html = await this.converter.convert(markdown);
+      const html = await this.renderMarkdownForPreview(markdown, sourcePath);
 
       if (generation !== this.renderGeneration) return;
 
@@ -2507,6 +1994,18 @@ class AppleStyleView extends ItemView {
 
     } catch (error) {
       console.error('转换失败:', error);
+      if (error && (error.code === 'TRIPLET_PARITY_MISMATCH' || error.code === 'PARITY_MISMATCH')) {
+        const index = Number.isInteger(error?.parity?.index) ? error.parity.index : -1;
+        const segmentCount = Number.isInteger(error?.parity?.segmentCount) ? error.parity.segmentCount : 0;
+        this.showParityMismatchPlaceholder(sourcePath, error.parity || {});
+
+        const noticeKey = `${sourcePath || ''}:${index}:${segmentCount}`;
+        if (!silent || this.lastParityMismatchNoticeKey !== noticeKey) {
+          new Notice(`⚠️ 三件套渲染与 Phase2 基线不一致（首个 index ${index}，共 ${segmentCount} 段）`);
+          this.lastParityMismatchNoticeKey = noticeKey;
+        }
+        return;
+      }
       if (!silent) new Notice('❌ 转换失败: ' + error.message);
     }
   }
@@ -2745,6 +2244,12 @@ class AppleStyleView extends ItemView {
     if (this.articleStates) {
       this.articleStates.clear();
     }
+    if (this.svgUploadCache) {
+      this.svgUploadCache.clear();
+    }
+    if (this.imageUploadCache) {
+      this.imageUploadCache.clear();
+    }
 
     console.log('🍎 转换器面板已关闭');
   }
@@ -2771,21 +2276,11 @@ class AppleStyleSettingTab extends PluginSettingTab {
   }
 
   normalizeVaultPath(vaultPath) {
-    if (typeof vaultPath !== 'string') return '';
-    return vaultPath
-      .trim()
-      .replace(/\\/g, '/')
-      .replace(/\/{2,}/g, '/')
-      .replace(/^\/+/, '')
-      .replace(/\/+$/, '');
+    return normalizeVaultPath(vaultPath);
   }
 
   isAbsolutePathLike(vaultPath) {
-    if (typeof vaultPath !== 'string') return false;
-    const trimmed = vaultPath.trim();
-    if (!trimmed) return false;
-    if (trimmed.startsWith('/')) return true; // Unix/macOS absolute path
-    return /^[a-zA-Z]:[\\/]/.test(trimmed); // Windows absolute path
+    return isAbsolutePathLike(vaultPath);
   }
 
   display() {
@@ -2989,6 +2484,55 @@ class AppleStyleSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('高级设置')
       .setHeading();
+
+    new Setting(containerEl)
+      .setName('启用 Obsidian 原生三件套渲染')
+      .setDesc('一次性启用 Source + Render + Export 三件套链路。关闭时使用当前稳定 Phase2 基线渲染。')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.useTripletPipeline === true)
+        .onChange(async (value) => {
+          this.plugin.settings.useTripletPipeline = value;
+          await this.plugin.saveSettings();
+          new Notice(value ? '已启用 Obsidian 原生三件套渲染' : '已切回 Phase2 基线渲染');
+          const converterView = this.plugin.getConverterView();
+          if (converterView) {
+            await converterView.convertCurrent(true);
+          }
+        }));
+
+    new Setting(containerEl)
+      .setName('三件套失败时回退 Phase2')
+      .setDesc('建议保持开启。三件套渲染失败或未通过门禁时自动回退，确保日常可用性。')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.tripletFallbackToPhase2 !== false)
+        .onChange(async (value) => {
+          this.plugin.settings.tripletFallbackToPhase2 = value;
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName('三件套零差异门禁')
+      .setDesc('开启后会将三件套输出与 Phase2 基线做字节级对比；不一致时按回退策略处理。建议保持开启。')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.enforceTripletParity !== false)
+        .onChange(async (value) => {
+          this.plugin.settings.enforceTripletParity = value;
+          await this.plugin.saveSettings();
+          const converterView = this.plugin.getConverterView();
+          if (converterView) {
+            await converterView.convertCurrent(true);
+          }
+        }));
+
+    new Setting(containerEl)
+      .setName('输出三件套完整差异日志（调试）')
+      .setDesc('默认关闭。开启后会把完整差异 payload 输出到控制台，日志体积会明显增大。')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.tripletParityVerboseLog === true)
+        .onChange(async (value) => {
+          this.plugin.settings.tripletParityVerboseLog = value;
+          await this.plugin.saveSettings();
+        }));
 
     new Setting(containerEl)
       .setName('发送成功后自动清理资源')
@@ -3239,7 +2783,8 @@ class AppleStylePlugin extends Plugin {
   }
 
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const loadedData = (await this.loadData()) || {};
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
     let didMigrate = false;
 
     // 数据迁移：将旧的单账号格式迁移到新的多账号格式
@@ -3260,17 +2805,8 @@ class AppleStylePlugin extends Plugin {
     }
 
     // 数据迁移：旧清理配置 -> cleanupDirTemplate
-    const normalizePath = (value) => {
-      if (typeof value !== 'string') return '';
-      return value
-        .trim()
-        .replace(/\\/g, '/')
-        .replace(/\/{2,}/g, '/')
-        .replace(/^\/+/, '')
-        .replace(/\/+$/, '');
-    };
-    const currentTemplate = normalizePath(this.settings.cleanupDirTemplate || '');
-    const legacyRootDir = normalizePath(this.settings.cleanupRootDir || '');
+    const currentTemplate = normalizeVaultPath(this.settings.cleanupDirTemplate || '');
+    const legacyRootDir = normalizeVaultPath(this.settings.cleanupRootDir || '');
     const legacyTarget = this.settings.cleanupTarget;
 
     // 仅迁移旧的 folder 模式，避免把 file 模式误迁移成“删目录”
@@ -3289,6 +2825,36 @@ class AppleStylePlugin extends Plugin {
       delete this.settings.cleanupTarget;
       didMigrate = true;
     }
+
+    // 渲染开关迁移：旧 Native/Legacy 命名 -> Triplet/Phase2 命名
+    if (
+      !Object.prototype.hasOwnProperty.call(loadedData, 'useTripletPipeline') &&
+      Object.prototype.hasOwnProperty.call(loadedData, 'useNativePipeline')
+    ) {
+      this.settings.useTripletPipeline = loadedData.useNativePipeline === true;
+      didMigrate = true;
+    }
+
+    if (
+      !Object.prototype.hasOwnProperty.call(loadedData, 'tripletFallbackToPhase2') &&
+      Object.prototype.hasOwnProperty.call(loadedData, 'enableLegacyFallback')
+    ) {
+      this.settings.tripletFallbackToPhase2 = loadedData.enableLegacyFallback !== false;
+      didMigrate = true;
+    }
+
+    if (
+      !Object.prototype.hasOwnProperty.call(loadedData, 'enforceTripletParity') &&
+      Object.prototype.hasOwnProperty.call(loadedData, 'enforceNativeParity')
+    ) {
+      this.settings.enforceTripletParity = loadedData.enforceNativeParity !== false;
+      didMigrate = true;
+    }
+
+    // 维护双向兼容：新配置写回旧字段，保证老逻辑/测试在迁移期可继续工作
+    this.settings.useNativePipeline = this.settings.useTripletPipeline === true;
+    this.settings.enableLegacyFallback = this.settings.tripletFallbackToPhase2 !== false;
+    this.settings.enforceNativeParity = this.settings.enforceTripletParity !== false;
 
     if (didMigrate) {
       await this.saveSettings();

@@ -86,4 +86,19 @@ describe('AppleTheme Color Logic', () => {
         expect(theme.adjustColorBrightness('#FFFFFF', -20).toLowerCase()).toBe('#cccccc');
     });
   });
+
+  describe('Avatar Watermark Layout', () => {
+    it('should keep avatar and caption styles inline-friendly for hostile editor defaults', () => {
+      const theme = new AppleTheme({ theme: 'wechat' });
+      const avatarStyle = theme.getStyle('avatar');
+      const captionStyle = theme.getStyle('avatar-caption');
+      const headerStyle = theme.getStyle('avatar-header');
+
+      expect(avatarStyle).toContain('display: inline-block !important;');
+      expect(avatarStyle).toContain('vertical-align: middle !important;');
+      expect(captionStyle).toContain('display: inline-block !important;');
+      expect(captionStyle).toContain('vertical-align: middle !important;');
+      expect(headerStyle).toContain('flex-wrap: nowrap !important;');
+    });
+  });
 });
