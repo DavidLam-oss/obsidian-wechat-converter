@@ -7,7 +7,10 @@
 		"dev": "node esbuild.config.mjs",
 		"build": "node esbuild.config.mjs production",
 		"test": "vitest",
-		"test:coverage": "vitest run --coverage"
+		"test:coverage": "vitest run --coverage",
+		"release:pack": "bash package-release.sh",
+		"release:validate": "node scripts/release-validate.mjs",
+		"release:dryrun": "npm run build && npm run release:pack && npm run release:validate"
 	},
 	"keywords": [
 		"obsidian",
