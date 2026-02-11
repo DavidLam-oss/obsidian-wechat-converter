@@ -54,6 +54,11 @@ jobs:
             exit 1
           fi
 
+      - name: Setup Mock for CI
+        run: |
+          mkdir -p node_modules/obsidian
+          cp __mocks__/obsidian.js node_modules/obsidian/index.js
+
       - name: Run tests
         run: npm test -- --run
 
