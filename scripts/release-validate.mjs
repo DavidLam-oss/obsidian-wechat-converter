@@ -71,14 +71,19 @@ function main() {
   assert(fs.existsSync(zipPath), `Missing release zip: ${zipPath}. Run npm run release:pack first.`);
 
   const entries = listZipEntries(zipPath);
-  const requiredFiles = ["main.js", "manifest.json", "styles.css", "converter.js", "README.md", "LICENSE"];
+  const requiredFiles = ["main.js", "manifest.json", "styles.css", "README.md", "LICENSE"];
   for (const file of requiredFiles) {
     assert(entries.includes(file), `Zip missing required file: ${file}`);
   }
 
-  const requiredPrefixes = ["lib/", "themes/", "images/"];
-  for (const prefix of requiredPrefixes) {
-    assert(hasPrefix(entries, prefix), `Zip missing required directory contents: ${prefix}`);
+  const disallowedEntries = ["converter.js"];
+  for (const file of disallowedEntries) {
+    assert(!entries.includes(file), `Zip should not include runtime dependency file anymore: ${file}`);
+  }
+
+  const disallowedPrefixes = ["lib/", "themes/"];
+  for (const prefix of disallowedPrefixes) {
+    assert(!hasPrefix(entries, prefix), `Zip should not include runtime dependency directory anymore: ${prefix}`);
   }
 
   assert(!entries.some((entry) => entry.startsWith("/") || entry.includes("..")), "Zip contains unsafe paths");

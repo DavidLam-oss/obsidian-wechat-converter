@@ -4,8 +4,11 @@
 	"description": "Apple Style Formatter for Obsidian",
 	"main": "main.js",
 	"scripts": {
-		"dev": "node esbuild.config.mjs",
-		"build": "node esbuild.config.mjs production",
+		"generate:embedded": "node scripts/generate-embedded-deps.mjs",
+		"check:embedded": "node scripts/generate-embedded-deps.mjs --check",
+		"dev": "npm run generate:embedded && node esbuild.config.mjs",
+		"build": "npm run generate:embedded && node esbuild.config.mjs production",
+		"pretest": "npm run check:embedded",
 		"test": "vitest",
 		"test:coverage": "vitest run --coverage",
 		"release:pack": "bash package-release.sh",

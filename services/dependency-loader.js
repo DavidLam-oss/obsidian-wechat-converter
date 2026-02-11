@@ -1,3 +1,5 @@
+const { embeddedDependencyScripts } = require('./generated-embedded-deps');
+
 function getAvatarSrc(settings = {}) {
   if (!settings.enableWatermark) return '';
   return settings.avatarBase64 || settings.avatarUrl || '';
@@ -17,41 +19,99 @@ function toThemeOptions(settings = {}) {
   };
 }
 
-async function ensureGlobalLibrary({ adapter, path, isReady, execute }) {
-  if (isReady()) return;
-  const content = await adapter.read(path);
-  execute(content);
+async function readEmbeddedOrFile({
+  key,
+  adapter,
+  path,
+  required = true,
+  logger = console,
+  embeddedScripts = embeddedDependencyScripts,
+}) {
+  const embedded = embeddedScripts && typeof embeddedScripts[key] === 'string'
+    ? embeddedScripts[key]
+    : '';
+  if (embedded) return embedded;
+
+  if (!adapter || typeof adapter.read !== 'function') {
+    if (required) {
+      throw new Error(`Missing embedded script and file adapter for dependency: ${key}`);
+    }
+    return '';
+  }
+
+  if (!required && adapter.exists && typeof adapter.exists === 'function') {
+    try {
+      if (!(await adapter.exists(path))) return '';
+    } catch (error) {
+      logger.error(`Dependency exists() check failed for ${path}:`, error);
+      return '';
+    }
+  }
+
+  return adapter.read(path);
 }
 
-async function loadConverterDependencies({ adapter, basePath, execute, logger = console }) {
-  await ensureGlobalLibrary({
-    adapter,
-    path: `${basePath}/lib/markdown-it.min.js`,
-    isReady: () => typeof markdownit !== 'undefined',
-    execute,
-  });
+async function loadConverterDependencies({
+  adapter,
+  basePath,
+  execute,
+  logger = console,
+  embeddedScripts = embeddedDependencyScripts,
+}) {
+  if (typeof markdownit === 'undefined') {
+    const markdownItSource = await readEmbeddedOrFile({
+      key: 'markdownIt',
+      adapter,
+      path: `${basePath}/lib/markdown-it.min.js`,
+      logger,
+      embeddedScripts,
+    });
+    execute(markdownItSource);
+  }
 
-  await ensureGlobalLibrary({
-    adapter,
-    path: `${basePath}/lib/highlight.min.js`,
-    isReady: () => typeof hljs !== 'undefined',
-    execute,
-  });
+  if (typeof hljs === 'undefined') {
+    const highlightSource = await readEmbeddedOrFile({
+      key: 'highlight',
+      adapter,
+      path: `${basePath}/lib/highlight.min.js`,
+      logger,
+      embeddedScripts,
+    });
+    execute(highlightSource);
+  }
 
   try {
-    const mathPath = `${basePath}/lib/mathjax-plugin.js`;
-    if (await adapter.exists(mathPath)) {
-      const mathContent = await adapter.read(mathPath);
+    const mathContent = await readEmbeddedOrFile({
+      key: 'mathjax',
+      adapter,
+      path: `${basePath}/lib/mathjax-plugin.js`,
+      required: false,
+      logger,
+      embeddedScripts,
+    });
+    if (mathContent) {
       execute(mathContent);
     }
   } catch (error) {
     logger.error('MathJax plugin load failed:', error);
   }
 
-  const themeContent = await adapter.read(`${basePath}/themes/apple-theme.js`);
+  const themeContent = await readEmbeddedOrFile({
+    key: 'theme',
+    adapter,
+    path: `${basePath}/themes/apple-theme.js`,
+    logger,
+    embeddedScripts,
+  });
   execute(themeContent);
 
-  const converterContent = await adapter.read(`${basePath}/converter.js`);
+  const converterContent = await readEmbeddedOrFile({
+    key: 'converter',
+    adapter,
+    path: `${basePath}/converter.js`,
+    logger,
+    embeddedScripts,
+  });
   execute(converterContent);
 
   if (!window.AppleTheme) throw new Error('AppleTheme failed to load');
@@ -65,8 +125,9 @@ async function buildRenderRuntime({
   basePath,
   execute = (code) => (0, eval)(code),
   logger = console,
+  embeddedScripts = embeddedDependencyScripts,
 }) {
-  await loadConverterDependencies({ adapter, basePath, execute, logger });
+  await loadConverterDependencies({ adapter, basePath, execute, logger, embeddedScripts });
 
   const theme = new window.AppleTheme(toThemeOptions(settings));
   const converter = new window.AppleStyleConverter(
@@ -85,4 +146,5 @@ module.exports = {
   toThemeOptions,
   loadConverterDependencies,
   buildRenderRuntime,
+  readEmbeddedOrFile,
 };

@@ -1,6 +1,6 @@
 # Releasing
 
-This project currently uses a multi-file runtime package (not only the Obsidian "three files").
+This project now uses the standard Obsidian three-file runtime.
 
 ## Release Checklist
 
@@ -19,7 +19,9 @@ This project currently uses a multi-file runtime package (not only the Obsidian 
    - `git push origin v2.5.5`
 7. Create GitHub Release for that tag and upload:
    - `obsidian-wechat-converter.zip`
+   - `main.js`
    - `manifest.json`
+   - `styles.css`
    - `versions.json`
 
 ## Required Files In Zip
@@ -27,10 +29,6 @@ This project currently uses a multi-file runtime package (not only the Obsidian 
 - `main.js`
 - `manifest.json`
 - `styles.css`
-- `converter.js`
-- `lib/`
-- `themes/`
-- `images/`
 - `README.md`
 - `LICENSE`
 

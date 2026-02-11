@@ -72,6 +72,8 @@ jobs:
         with:
           files: |
             obsidian-wechat-converter.zip
+            main.js
             manifest.json
+            styles.css
             versions.json
           generate_release_notes: true
