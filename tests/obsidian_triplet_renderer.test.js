@@ -579,23 +579,31 @@ describe('Obsidian Triplet Renderer', () => {
     const doc1 = 'Document 1: $a+b$';
     const doc2 = 'Document 2: $x+y$';
 
-    // Simulate concurrent renders
-    const [html1, html2] = await Promise.all([
-      renderObsidianTripletMarkdown({
+    // Simulate concurrent renders with explicit interleaving
+    // We use delays to ensure the requests overlap at different stages
+    const delayedRender1 = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0)); // Yield to allow interleaving
+      return renderObsidianTripletMarkdown({
         app: {},
         converter,
         markdown: doc1,
         sourcePath: 'doc1.md',
         markdownRenderer: { renderMarkdown },
-      }),
-      renderObsidianTripletMarkdown({
+      });
+    };
+
+    const delayedRender2 = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5)); // Slightly longer delay
+      return renderObsidianTripletMarkdown({
         app: {},
         converter,
         markdown: doc2,
         sourcePath: 'doc2.md',
         markdownRenderer: { renderMarkdown },
-      }),
-    ]);
+      });
+    };
+
+    const [html1, html2] = await Promise.all([delayedRender1(), delayedRender2()]);
 
     // Both should render successfully without cross-contamination
     expect(html1).toMatch(/mjx-container|<svg/);
