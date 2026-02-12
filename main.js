@@ -2665,6 +2665,150 @@ var require_obsidian_triplet_renderer = __commonJS({
       }
       return lines.join("\n");
     }
+    var KNOWN_HTML_TAGS = /* @__PURE__ */ new Set([
+      // Block elements
+      "div",
+      "p",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+      "blockquote",
+      "pre",
+      "hr",
+      "br",
+      "ul",
+      "ol",
+      "li",
+      "dl",
+      "dt",
+      "dd",
+      "figure",
+      "figcaption",
+      "main",
+      "section",
+      "article",
+      "aside",
+      "header",
+      "footer",
+      "nav",
+      "address",
+      // Inline elements
+      "a",
+      "strong",
+      "b",
+      "em",
+      "i",
+      "u",
+      "s",
+      "strike",
+      "del",
+      "ins",
+      "code",
+      "kbd",
+      "samp",
+      "var",
+      "mark",
+      "small",
+      "sub",
+      "sup",
+      "span",
+      "abbr",
+      "cite",
+      "q",
+      "time",
+      "ruby",
+      "rt",
+      "rp",
+      "bdi",
+      "bdo",
+      "dfn",
+      "wbr",
+      // Media elements
+      "img",
+      "picture",
+      "source",
+      "video",
+      "audio",
+      "track",
+      "canvas",
+      "svg",
+      "math",
+      // Table elements
+      "table",
+      "thead",
+      "tbody",
+      "tfoot",
+      "tr",
+      "th",
+      "td",
+      "caption",
+      "colgroup",
+      "col",
+      // Form elements (though these are stripped by sanitizer)
+      "form",
+      "input",
+      "button",
+      "select",
+      "option",
+      "optgroup",
+      "textarea",
+      "label",
+      "fieldset",
+      "legend",
+      "datalist",
+      "output",
+      "progress",
+      "meter",
+      // Other common elements
+      "details",
+      "summary",
+      "dialog",
+      "menu",
+      "menuitem",
+      "noscript",
+      "template",
+      // MathJax specific
+      "mjx-container",
+      "mjx-math"
+    ]);
+    function escapePseudoHtmlTags(markdown) {
+      const lines = markdown.split("\n");
+      const result = [];
+      let inCodeBlock = false;
+      let codeBlockFence = "";
+      for (const line of lines) {
+        if (line.startsWith("```") || line.startsWith("~~~")) {
+          if (!inCodeBlock) {
+            inCodeBlock = true;
+            codeBlockFence = line.slice(0, 3);
+          } else if (line.startsWith(codeBlockFence)) {
+            inCodeBlock = false;
+            codeBlockFence = "";
+          }
+          result.push(line);
+          continue;
+        }
+        if (inCodeBlock) {
+          result.push(line);
+          continue;
+        }
+        let processed = line.replace(/<\/?([a-zA-Z][a-zA-Z0-9-]*)\b/g, (match, tagName) => {
+          const lowerTag = tagName.toLowerCase();
+          if (KNOWN_HTML_TAGS.has(lowerTag)) {
+            return match;
+          }
+          if (match.startsWith("</")) {
+            return `&lt;/${tagName}`;
+          }
+          return `&lt;${tagName}`;
+        });
+        result.push(processed);
+      }
+      return result.join("\n");
+    }
     var MATH_PLACEHOLDER_SESSION = `M${Date.now().toString(36)}X`;
     var mathPlaceholderCounter = 0;
     function generateMathPlaceholder(type) {
@@ -2715,6 +2859,7 @@ var require_obsidian_triplet_renderer = __commonJS({
       }
       const { markdown: mathProcessed, formulas: mathFormulas } = preRenderMathFormulas(output, converter);
       output = mathProcessed;
+      output = escapePseudoHtmlTags(output);
       output = neutralizeUnsafeMarkdownLinks(output);
       output = neutralizePlainWikilinks(output);
       output = injectHardBreaksForLegacyParity(output);
@@ -3723,7 +3868,7 @@ var WechatAPI = class {
           throw fatalError;
         }
         if (error.message && (error.message.includes("45001") || error.message.includes("media size out of limit"))) {
-          const fatalError = new Error("\u5FAE\u4FE1\u540E\u53F0\u7D20\u6750\u5E93\u5DF2\u6EE1 (45001)\u3002\u8BF7\u767B\u5F55\u5FAE\u4FE1\u516C\u4F17\u5E73\u53F0 -> \u7D20\u6750\u7BA1\u7406\uFF0C\u624B\u52A8\u5220\u9664\u65E7\u56FE\u7247\u4EE5\u91CA\u653E\u7A7A\u95F4\u3002");
+          const fatalError = new Error("\u5FAE\u4FE1\u4E0A\u4F20\u5931\u8D25 (45001)\u3002\u53EF\u80FD\u539F\u56E0\uFF1A\n1. \u7D20\u6750\u5E93\u5DF2\u6EE1 - \u8BF7\u767B\u5F55\u5FAE\u4FE1\u516C\u4F17\u5E73\u53F0 -> \u7D20\u6750\u7BA1\u7406\uFF0C\u5220\u9664\u65E7\u56FE\u7247\u91CA\u653E\u7A7A\u95F4\n2. \u56FE\u7247\u592A\u5927 - \u8BF7\u68C0\u67E5\u5C01\u9762\u6216\u6B63\u6587\u56FE\u7247\u662F\u5426\u8FC7\u5927");
           fatalError.isFatal = true;
           throw fatalError;
         }
@@ -5339,9 +5484,10 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       new Notice("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58\uFF0C\u8BF7\u5173\u95ED\u5E76\u91CD\u65B0\u6253\u5F00\u8F6C\u6362\u5668\u9762\u677F\u4EE5\u751F\u6548");
     }));
     new Setting(containerEl).setName("\u56FE\u7247\u6C34\u5370").setHeading();
-    new Setting(containerEl).setName("\u542F\u7528\u56FE\u7247\u6C34\u5370").setDesc("\u5728\u6BCF\u5F20\u56FE\u7247\u4E0A\u65B9\u663E\u793A\u5934\u50CF").addToggle((toggle) => toggle.setValue(this.plugin.settings.enableWatermark).onChange(async (value) => {
+    new Setting(containerEl).setName("\u542F\u7528\u56FE\u7247\u6C34\u5370").setDesc("\u5728\u6BCF\u5F20\u56FE\u7247\u4E0A\u65B9\u663E\u793A\u5934\u50CF\uFF08\u9700\u91CD\u542F\u63D2\u4EF6\u9762\u677F\u751F\u6548\uFF09").addToggle((toggle) => toggle.setValue(this.plugin.settings.enableWatermark).onChange(async (value) => {
       this.plugin.settings.enableWatermark = value;
       await this.plugin.saveSettings();
+      new Notice("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58\uFF0C\u8BF7\u5173\u95ED\u5E76\u91CD\u65B0\u6253\u5F00\u8F6C\u6362\u5668\u9762\u677F\u4EE5\u751F\u6548");
     }));
     const uploadSetting = new Setting(containerEl).setName("\u4E0A\u4F20\u672C\u5730\u5934\u50CF").setDesc(this.plugin.settings.avatarBase64 ? "\u2705 \u5DF2\u4E0A\u4F20\u672C\u5730\u5934\u50CF\uFF08\u4F18\u5148\u4F7F\u7528\uFF09" : "\u9009\u62E9\u672C\u5730\u56FE\u7247\uFF0C\u8F6C\u6362\u4E3A Base64 \u5B58\u50A8\uFF0C\u65E0\u9700\u7F51\u7EDC\u8BF7\u6C42");
     uploadSetting.addButton((button) => button.setButtonText(this.plugin.settings.avatarBase64 ? "\u91CD\u65B0\u4E0A\u4F20" : "\u9009\u62E9\u56FE\u7247").onClick(() => {
@@ -5458,7 +5604,6 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       });
     }
     new Setting(containerEl).setName("\u9AD8\u7EA7\u8BBE\u7F6E").setHeading();
-    new Setting(containerEl).setName("\u6E32\u67D3\u6A21\u5F0F").setDesc("\u5F53\u524D\u7248\u672C\u56FA\u5B9A\u4F7F\u7528 Obsidian \u539F\u751F\u4E09\u4EF6\u5957\u6E32\u67D3\uFF08native-only\uFF09\u3002");
     new Setting(containerEl).setName("\u53D1\u9001\u6210\u529F\u540E\u81EA\u52A8\u6E05\u7406\u8D44\u6E90").setDesc("\u9ED8\u8BA4\u5173\u95ED\u3002\u5F00\u542F\u540E\u4F1A\u5728\u521B\u5EFA\u8349\u7A3F\u6210\u529F\u540E\uFF0C\u5220\u9664\u4F60\u5728\u4E0B\u65B9\u914D\u7F6E\u7684\u76EE\u5F55\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.cleanupAfterSync).onChange(async (value) => {
       this.plugin.settings.cleanupAfterSync = value;
       await this.plugin.saveSettings();
@@ -5485,6 +5630,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       this.plugin.settings.cleanupUseSystemTrash = value;
       await this.plugin.saveSettings();
     }));
+    let hasWarnedInsecureProxy = false;
     new Setting(containerEl).setName("API \u4EE3\u7406\u5730\u5740").setDesc(createFragment((frag) => {
       const descDiv = frag.createDiv();
       descDiv.appendText("\u5982\u679C\u4F60\u7684\u7F51\u7EDC IP \u7ECF\u5E38\u53D8\u5316\uFF0C\u53EF\u914D\u7F6E\u4EE3\u7406\u670D\u52A1\u3002");
@@ -5502,7 +5648,12 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
     })).addText((text) => text.setPlaceholder("https://your-proxy.workers.dev").setValue(this.plugin.settings.proxyUrl).onChange(async (value) => {
       const trimmedValue = value.trim();
       if (trimmedValue && !trimmedValue.startsWith("https://")) {
-        new Notice("\u26A0\uFE0F \u5B89\u5168\u98CE\u9669\uFF1A\u4EE3\u7406\u5730\u5740\u5FC5\u987B\u4F7F\u7528 HTTPS \u4EE5\u4FDD\u62A4\u60A8\u7684 AppSecret\u3002");
+        if (!hasWarnedInsecureProxy) {
+          new Notice("\u26A0\uFE0F \u5B89\u5168\u98CE\u9669\uFF1A\u4EE3\u7406\u5730\u5740\u5FC5\u987B\u4F7F\u7528 HTTPS \u4EE5\u4FDD\u62A4\u60A8\u7684 AppSecret\u3002");
+          hasWarnedInsecureProxy = true;
+        }
+      } else {
+        hasWarnedInsecureProxy = false;
       }
       this.plugin.settings.proxyUrl = trimmedValue;
       await this.plugin.saveSettings();

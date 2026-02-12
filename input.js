@@ -125,9 +125,9 @@ class WechatAPI {
             throw fatalError;
         }
 
-        // 45001: 素材数量达到上限 (总限额)
+        // 45001: 素材数量达到上限或图片大小超限
         if (error.message && (error.message.includes('45001') || error.message.includes('media size out of limit'))) {
-            const fatalError = new Error('微信后台素材库已满 (45001)。请登录微信公众平台 -> 素材管理，手动删除旧图片以释放空间。');
+            const fatalError = new Error('微信上传失败 (45001)。可能原因：\n1. 素材库已满 - 请登录微信公众平台 -> 素材管理，删除旧图片释放空间\n2. 图片太大 - 请检查封面或正文图片是否过大');
             fatalError.isFatal = true;
             throw fatalError;
         }
@@ -2194,12 +2194,13 @@ class AppleStyleSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('启用图片水印')
-      .setDesc('在每张图片上方显示头像')
+      .setDesc('在每张图片上方显示头像（需重启插件面板生效）')
       .addToggle(toggle => toggle
         .setValue(this.plugin.settings.enableWatermark)
         .onChange(async (value) => {
           this.plugin.settings.enableWatermark = value;
           await this.plugin.saveSettings();
+          new Notice('设置已保存，请关闭并重新打开转换器面板以生效');
         }));
 
     // 本地头像上传
@@ -2365,10 +2366,6 @@ class AppleStyleSettingTab extends PluginSettingTab {
       .setHeading();
 
     new Setting(containerEl)
-      .setName('渲染模式')
-      .setDesc('当前版本固定使用 Obsidian 原生三件套渲染（native-only）。');
-
-    new Setting(containerEl)
       .setName('发送成功后自动清理资源')
       .setDesc('默认关闭。开启后会在创建草稿成功后，删除你在下方配置的目录。')
       .addToggle(toggle => toggle
@@ -2414,6 +2411,7 @@ class AppleStyleSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }));
 
+    let hasWarnedInsecureProxy = false;
     new Setting(containerEl)
       .setName('API 代理地址')
       .setDesc(createFragment(frag => {
@@ -2438,7 +2436,12 @@ class AppleStyleSettingTab extends PluginSettingTab {
         .onChange(async (value) => {
           const trimmedValue = value.trim();
           if (trimmedValue && !trimmedValue.startsWith('https://')) {
-            new Notice('⚠️ 安全风险：代理地址必须使用 HTTPS 以保护您的 AppSecret。');
+            if (!hasWarnedInsecureProxy) {
+              new Notice('⚠️ 安全风险：代理地址必须使用 HTTPS 以保护您的 AppSecret。');
+              hasWarnedInsecureProxy = true;
+            }
+          } else {
+            hasWarnedInsecureProxy = false;
           }
           this.plugin.settings.proxyUrl = trimmedValue;
           await this.plugin.saveSettings();
