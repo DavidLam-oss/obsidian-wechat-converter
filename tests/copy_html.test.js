@@ -84,4 +84,14 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
     const plain = await blobToText(secondItem.items['text/plain']);
     expect(plain).toBe('清理时机： 正文');
   });
+
+  it('should block copy when latest render has failed', async () => {
+    view.currentHtml = null;
+    view.lastRenderError = 'native boom';
+
+    await view.copyHTML();
+
+    expect(view.processImagesToDataURL).not.toHaveBeenCalled();
+    expect(writeMock).not.toHaveBeenCalled();
+  });
 });

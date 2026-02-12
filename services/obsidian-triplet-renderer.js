@@ -1,11 +1,6 @@
 const { MarkdownRenderer } = require('obsidian');
 const { serializeObsidianRenderedHtml } = require('./obsidian-triplet-serializer');
 
-function containsLegacyIncompatibleMathMarkup(html) {
-  const value = String(html || '');
-  return /<mjx-(?:math|container)\b/i.test(value);
-}
-
 function isFencedBlockDelimiter(line) {
   return /^\s{0,3}(?:`{3,}|~{3,})/.test(String(line || ''));
 }
@@ -196,6 +191,234 @@ function neutralizePlainWikilinks(markdown) {
   return lines.join('\n');
 }
 
+// Known safe HTML tags that should NOT be escaped
+// This list includes common HTML5 tags that users might intentionally use
+const KNOWN_HTML_TAGS = new Set([
+  // Block elements
+  'div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre', 'hr', 'br',
+  'ul', 'ol', 'li', 'dl', 'dt', 'dd', 'figure', 'figcaption', 'main', 'section',
+  'article', 'aside', 'header', 'footer', 'nav', 'address',
+  // Inline elements
+  'a', 'strong', 'b', 'em', 'i', 'u', 's', 'strike', 'del', 'ins', 'code', 'kbd',
+  'samp', 'var', 'mark', 'small', 'sub', 'sup', 'span', 'abbr', 'cite', 'q',
+  'time', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'dfn', 'wbr',
+  // Media elements
+  'img', 'picture', 'source', 'video', 'audio', 'track', 'canvas', 'svg', 'math',
+  // Table elements
+  'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption', 'colgroup', 'col',
+  // Form elements (though these are stripped by sanitizer)
+  'form', 'input', 'button', 'select', 'option', 'optgroup', 'textarea', 'label',
+  'fieldset', 'legend', 'datalist', 'output', 'progress', 'meter',
+  // Other common elements
+  'details', 'summary', 'dialog', 'menu', 'menuitem', 'noscript', 'template',
+  // MathJax specific
+  'mjx-container', 'mjx-math',
+]);
+
+/**
+ * Escape pseudo-HTML tags that look like HTML but are actually text.
+ * For example: <Title>_xxx_MS.pdf should be rendered as text, not as an HTML tag.
+ */
+function escapePseudoHtmlTags(markdown) {
+  const lines = markdown.split('\n');
+  const result = [];
+  let inCodeBlock = false;
+  let codeBlockFence = null; // { marker: '`' or '~', length: number }
+
+  for (const line of lines) {
+    // Track code block boundaries using existing parser (supports 0-3 leading spaces)
+    const parsed = parseFencedBlockDelimiter(line);
+    if (parsed) {
+      if (!inCodeBlock) {
+        // Opening fence
+        inCodeBlock = true;
+        codeBlockFence = { marker: parsed.marker, length: parsed.length };
+      } else if (parsed.marker === codeBlockFence.marker && parsed.length >= codeBlockFence.length) {
+        // Closing fence must match marker type and be at least as long
+        inCodeBlock = false;
+        codeBlockFence = null;
+      }
+      // If marker doesn't match, it's content inside the code block (not a closing fence)
+      result.push(line);
+      continue;
+    }
+
+    if (inCodeBlock) {
+      result.push(line);
+      continue;
+    }
+
+    // Escape pseudo-HTML tags outside code blocks, but preserve inline code
+    const processed = escapeLinePreservingInlineCode(line);
+    result.push(processed);
+  }
+
+  return result.join('\n');
+}
+
+/**
+ * Escape pseudo-HTML tags in a line while preserving inline code content.
+ * Supports multi-backtick code spans (CommonMark compliant).
+ */
+function escapeLinePreservingInlineCode(line) {
+  const segments = [];
+  let lastIndex = 0;
+  let i = 0;
+
+  while (i < line.length) {
+    // Look for backtick sequence (inline code span start)
+    if (line[i] === '`') {
+      // Skip fenced block markers at line start (3+ backticks)
+      if (i === 0 && line.match(/^`{3,}/)) {
+        i++;
+        continue;
+      }
+
+      // Count opening delimiter run length
+      const startIndex = i;
+      let openLen = 0;
+      while (i < line.length && line[i] === '`') {
+        openLen++;
+        i++;
+      }
+
+      // Find matching closing delimiter run of the same length
+      let foundClose = false;
+      while (i < line.length) {
+        if (line[i] === '`') {
+          const closeStart = i;
+          let closeLen = 0;
+          while (i < line.length && line[i] === '`') {
+            closeLen++;
+            i++;
+          }
+          // Closing delimiter must match opening length
+          if (closeLen === openLen) {
+            foundClose = true;
+            break;
+          }
+          // Otherwise continue searching
+        } else {
+          i++;
+        }
+      }
+
+      if (foundClose) {
+        // Add text before code span and the code span itself
+        segments.push(line.slice(lastIndex, startIndex));
+        segments.push(line.slice(startIndex, i));
+        lastIndex = i;
+      }
+      // If no close found, the opening backticks are just literal text
+    } else {
+      i++;
+    }
+  }
+
+  // Add remaining text
+  if (lastIndex < line.length) {
+    segments.push(line.slice(lastIndex));
+  }
+
+  // If no inline code found, process the whole line
+  if (segments.length === 0) {
+    return escapePseudoHtmlInText(line);
+  }
+
+  // Process non-code segments (even indices are text, odd are code spans)
+  return segments.map((seg, idx) => {
+    if (idx % 2 === 1) return seg; // Preserve code span as-is
+    return escapePseudoHtmlInText(seg);
+  }).join('');
+}
+
+/**
+ * Escape pseudo-HTML tags in plain text (not inside code).
+ * Matches full tag patterns including attributes and closing bracket.
+ */
+function escapePseudoHtmlInText(text) {
+  // Match opening tags: <tag> or <tag attr="value">
+  // Match closing tags: </tag>
+  return text.replace(/<\/?([a-zA-Z][a-zA-Z0-9-]*)([^>]*)>/g, (match, tagName, attrs) => {
+    const lowerTag = tagName.toLowerCase();
+    // If it's a known HTML tag, keep it as-is
+    if (KNOWN_HTML_TAGS.has(lowerTag)) {
+      return match;
+    }
+    // Otherwise escape the angle brackets
+    if (match.startsWith('</')) {
+      return `&lt;/${tagName}&gt;`;
+    }
+    return `&lt;${tagName}${attrs}&gt;`;
+  });
+}
+
+// Generate a unique placeholder that won't conflict with user content
+// Uses a random session ID + counter to prevent collision
+const MATH_PLACEHOLDER_SESSION = `M${Date.now().toString(36)}X`;
+let mathPlaceholderCounter = 0;
+
+function generateMathPlaceholder(type) {
+  const id = `${MATH_PLACEHOLDER_SESSION}_${mathPlaceholderCounter}_${Math.random().toString(36).slice(2, 6)}`;
+  mathPlaceholderCounter += 1;
+  // Zero-width spaces protect from Markdown, unique ID prevents collision
+  return `\u200B${id}_${type}\u200B`;
+}
+
+/**
+ * Pre-render math formulas and return both the processed markdown and formulas array.
+ * This function is pure - it doesn't use or modify any global state.
+ * @returns {{ markdown: string, formulas: Array<{placeholder: string, rendered: string, isBlock: boolean}> }}
+ */
+function preRenderMathFormulas(markdown, converter) {
+  const formulas = [];
+
+  if (!converter || !converter.md) return { markdown, formulas };
+  if (typeof converter.md.render !== 'function') return { markdown, formulas };
+
+  let output = markdown;
+
+  // First, handle block math ($$...$$) - must be processed before inline
+  // Match $$...$$ where content can span multiple lines
+  const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
+  output = output.replace(blockMathPattern, (match, formula) => {
+    const placeholder = generateMathPlaceholder('BLOCK');
+    try {
+      // Render using full markdown-it (handles block math)
+      const rendered = converter.md.render(`$$${formula}$$`);
+      // Extract just the rendered math (strip wrapper <p> if any)
+      const cleaned = rendered.replace(/^<p>|<\/p>$/g, '').trim();
+      formulas.push({ placeholder, rendered: cleaned, isBlock: true });
+      return placeholder;
+    } catch (error) {
+      return match;
+    }
+  });
+
+  // Then, handle inline math ($...$) - single $ not $$
+  // Use negative lookbehind/lookahead to avoid matching $$
+  const inlineMathPattern = /(?<!\$)\$(?!\$)([^\$\n]+?)\$(?!\$)/g;
+  output = output.replace(inlineMathPattern, (match, formula) => {
+    const placeholder = generateMathPlaceholder('INLINE');
+    try {
+      // Render using renderInline for inline math
+      const rendered = converter.md.renderInline(`$${formula}$`);
+      formulas.push({ placeholder, rendered, isBlock: false });
+      return placeholder;
+    } catch (error) {
+      return match;
+    }
+  });
+
+  return { markdown: output, formulas };
+}
+
+/**
+ * Preprocess markdown for triplet rendering.
+ * Returns an object with processed markdown and pre-rendered math formulas.
+ * This function is pure - no global state is used.
+ * @returns {{ markdown: string, mathFormulas: Array }}
+ */
 function preprocessMarkdownForTriplet(markdown, converter) {
   let output = String(markdown || '');
 
@@ -209,6 +432,15 @@ function preprocessMarkdownForTriplet(markdown, converter) {
     output = converter.stripFrontmatter(output);
   }
 
+  // Pre-render math formulas using markdown-it + MathJax before Obsidian renders
+  // This is needed because Obsidian's MarkdownRenderer.renderMarkdown doesn't render LaTeX
+  const { markdown: mathProcessed, formulas: mathFormulas } = preRenderMathFormulas(output, converter);
+  output = mathProcessed;
+
+  // Escape pseudo-HTML tags that look like HTML but are actually text
+  // For example: <Title>_xxx_MS.pdf should render as text, not as an HTML tag
+  output = escapePseudoHtmlTags(output);
+
   output = neutralizeUnsafeMarkdownLinks(output);
   output = neutralizePlainWikilinks(output);
 
@@ -216,7 +448,7 @@ function preprocessMarkdownForTriplet(markdown, converter) {
   // so Obsidian renderer emits equivalent <br> in common paragraph text.
   output = injectHardBreaksForLegacyParity(output);
 
-  return output;
+  return { markdown: output, mathFormulas };
 }
 
 function countUnresolvedImageEmbeds(root) {
@@ -233,23 +465,132 @@ function countUnresolvedImageEmbeds(root) {
   return unresolved;
 }
 
+function normalizeReferenceLabel(label) {
+  return String(label || '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function extractInlineImageTarget(rawTarget) {
+  const value = String(rawTarget || '').trim();
+  if (!value) return '';
+  if (value.startsWith('<')) {
+    const endIndex = value.indexOf('>');
+    if (endIndex > 1) {
+      return value.slice(1, endIndex).trim();
+    }
+  }
+  return value.split(/\s+/)[0] || '';
+}
+
+function collectImageTargets(markdown) {
+  const source = String(markdown || '');
+  const targets = [];
+  if (!source || !source.includes('![')) return targets;
+
+  const referenceTargets = new Map();
+  const referenceDefinitionPattern = /^\s{0,3}\[([^\]]+)\]:\s*(?:<([^>\r\n]+)>|(\S+))/gm;
+  let definitionMatch = referenceDefinitionPattern.exec(source);
+  while (definitionMatch) {
+    const label = normalizeReferenceLabel(definitionMatch[1]);
+    const target = String(definitionMatch[2] || definitionMatch[3] || '').trim();
+    if (label && target && !referenceTargets.has(label)) {
+      referenceTargets.set(label, target);
+    }
+    definitionMatch = referenceDefinitionPattern.exec(source);
+  }
+
+  const inlineImagePattern = /!\[[^\]]*]\(([^)\r\n]+)\)/g;
+  let inlineMatch = inlineImagePattern.exec(source);
+  while (inlineMatch) {
+    targets.push(extractInlineImageTarget(inlineMatch[1]));
+    inlineMatch = inlineImagePattern.exec(source);
+  }
+
+  const fullReferenceImagePattern = /!\[([^\]]*)]\[([^\]]*)]/g;
+  let fullReferenceMatch = fullReferenceImagePattern.exec(source);
+  while (fullReferenceMatch) {
+    const fallbackLabel = String(fullReferenceMatch[1] || '');
+    const refLabel = String(fullReferenceMatch[2] || '');
+    const normalizedLabel = normalizeReferenceLabel(refLabel || fallbackLabel);
+    targets.push(referenceTargets.get(normalizedLabel) || '');
+    fullReferenceMatch = fullReferenceImagePattern.exec(source);
+  }
+
+  const shortcutReferenceImagePattern = /!\[([^\]]+)](?![\[(])/g;
+  let shortcutReferenceMatch = shortcutReferenceImagePattern.exec(source);
+  while (shortcutReferenceMatch) {
+    const label = normalizeReferenceLabel(shortcutReferenceMatch[1]);
+    targets.push(referenceTargets.get(label) || '');
+    shortcutReferenceMatch = shortcutReferenceImagePattern.exec(source);
+  }
+
+  return targets;
+}
+
+function shouldObserveAsyncEmbedWindow(markdown) {
+  const source = String(markdown || '');
+  if (!source || !source.includes('![')) return false;
+
+  const targets = collectImageTargets(source);
+  if (targets.length === 0) {
+    // Unknown image syntax: keep conservative short observe window.
+    return true;
+  }
+
+  for (const item of targets) {
+    // collectImageTargets already strips angle brackets via extractInlineImageTarget
+    // and referenceDefinitionPattern's capturing groups.
+    const target = String(item || '').trim().toLowerCase();
+    if (!target) return true;
+
+    // Remote/data images are rendered directly; local-like paths may resolve
+    // asynchronously via Obsidian embed pipeline.
+    const isRemoteLike = (
+      target.startsWith('http://') ||
+      target.startsWith('https://') ||
+      target.startsWith('data:')
+    );
+    if (!isRemoteLike) return true;
+  }
+
+  return false;
+}
+
 async function waitForTripletDomToSettle(root, options = {}) {
+  if (!root) return;
   const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : 500;
   const intervalMs = Number.isFinite(options.intervalMs) ? options.intervalMs : 16;
+  const minObserveMs = Number.isFinite(options.minObserveMs)
+    ? Math.max(0, Math.floor(options.minObserveMs))
+    : Math.min(48, timeoutMs);
+
   const start = Date.now();
-  let previousSnapshot = '';
+  let unresolved = countUnresolvedImageEmbeds(root);
+  if (unresolved === 0 && minObserveMs <= 0) {
+    return;
+  }
+
+  // Fast path with a short observation window: avoid waiting full settle time
+  // while still catching delayed async embed insertion after render.
+  if (unresolved === 0 && minObserveMs > 0) {
+    while (Date.now() - start < minObserveMs) {
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+      unresolved = countUnresolvedImageEmbeds(root);
+      if (unresolved > 0) break;
+    }
+    if (unresolved === 0) return;
+  }
+
   let stableCount = 0;
 
   while (Date.now() - start < timeoutMs) {
-    const unresolved = countUnresolvedImageEmbeds(root);
-    const snapshot = `${unresolved}:${root ? root.innerHTML : ''}`;
-    if (unresolved === 0 && snapshot === previousSnapshot) {
+    unresolved = countUnresolvedImageEmbeds(root);
+    if (unresolved === 0) {
       stableCount += 1;
       if (stableCount >= 2) return;
     } else {
       stableCount = 0;
     }
-    previousSnapshot = snapshot;
     // eslint-disable-next-line no-await-in-loop
     await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }
@@ -298,7 +639,9 @@ async function renderObsidianTripletMarkdown({
   }
 
   const container = document.createElement('div');
-  const preparedMarkdown = preprocessMarkdownForTriplet(markdown, converter);
+  const { markdown: preparedMarkdown, mathFormulas } = preprocessMarkdownForTriplet(markdown, converter);
+
+  const shouldObserveWindow = shouldObserveAsyncEmbedWindow(preparedMarkdown);
   await renderByObsidianMarkdownRenderer({
     app,
     markdown: preparedMarkdown,
@@ -307,35 +650,27 @@ async function renderObsidianTripletMarkdown({
     component,
     markdownRenderer,
   });
+
   // Wait for image embeds to settle; MarkdownRenderer may resolve embeds asynchronously.
-  await waitForTripletDomToSettle(container);
+  await waitForTripletDomToSettle(container, shouldObserveWindow ? {} : { minObserveMs: 0 });
 
   const serializedHtml = serializer({
     root: container,
     converter,
     sourcePath,
     app,
+    preRenderedMath: mathFormulas,
   });
-
-  // MathJax markup generated by MarkdownRenderer may remain as mjx-* tags,
-  // while legacy phase2 emits SVG-wrapped output. Fall back to legacy converter
-  // for math-containing documents to keep strict parity.
-  if (containsLegacyIncompatibleMathMarkup(serializedHtml) && typeof converter.convert === 'function') {
-    if (typeof converter.updateSourcePath === 'function') {
-      converter.updateSourcePath(sourcePath);
-    }
-    return converter.convert(markdown);
-  }
 
   return serializedHtml;
 }
 
 module.exports = {
-  containsLegacyIncompatibleMathMarkup,
   neutralizeUnsafeMarkdownLinks,
   neutralizePlainWikilinks,
   preprocessMarkdownForTriplet,
   injectHardBreaksForLegacyParity,
+  shouldObserveAsyncEmbedWindow,
   waitForTripletDomToSettle,
   renderByObsidianMarkdownRenderer,
   renderObsidianTripletMarkdown,

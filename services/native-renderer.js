@@ -65,7 +65,6 @@ async function renderNativeMarkdown({
   converter,
   markdown,
   sourcePath = '',
-  strictLegacyParity = false,
 }) {
   if (!converter || typeof converter.convert !== 'function') {
     throw new Error('Native converter is not ready');
@@ -73,11 +72,6 @@ async function renderNativeMarkdown({
 
   if (typeof converter.updateSourcePath === 'function') {
     converter.updateSourcePath(sourcePath);
-  }
-
-  // Phase 2 strict mode: preserve byte-level compatibility with legacy converter output.
-  if (strictLegacyParity) {
-    return converter.convert(markdown);
   }
 
   const preprocessed = preprocessMarkdownForNative(markdown);

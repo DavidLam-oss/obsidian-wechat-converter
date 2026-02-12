@@ -7,7 +7,7 @@
 
 只需一键，即可将您的 Markdown 笔记转换为符合微信生态美学、阅读体验极佳的 HTML，无论是代码块、引用、列表还是本地图片，都能完美呈现。
 
-![Version](https://img.shields.io/badge/version-2.5.5-blue)
+![Version](https://img.shields.io/badge/version-2.6.0-blue)
 ![Obsidian](https://img.shields.io/badge/Obsidian-1.0.0+-purple)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -95,22 +95,6 @@
     <p align="center">
       <img src="images/code_render.png" alt="Mac风格代码块" width="520" />
     </p>
-
-## 🧭 渲染管线阶段说明
-
-为降低重构风险，当前采用分阶段迁移策略：
-
-- **Legacy 渲染管线（默认）**
-  - 当前稳定生产路径。
-- **实验渲染管线（Phase 1）**
-  - 仍复用现有 `AppleStyleConverter`，并增加安全预处理/后处理。
-  - 目标是先把“渲染入口解耦 + 风险可回退”落地，不在本阶段承诺完整 Obsidian 原生三件套替换。
-  - 已知会有少量有意识差异（例如：清理不安全 raw HTML 图片、修复 `**加粗**`在特定混排下的显示问题）。
-- **Phase 2（后续）**
-  - 才会逐步替换为 Obsidian 原生渲染能力，并补充对应端到端回归。
-  - 新增“零差异门禁（Phase 2）”：实验渲染输出会与 Legacy 输出做字节级对比，不一致则自动回退 Legacy。
-
-在插件设置里开启“实验渲染管线（Phase 1）”时，建议同时开启“原生失败时回退 Legacy”，以保证日常可用性。
 
 ## 🚀 安装
 

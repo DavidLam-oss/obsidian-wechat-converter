@@ -23,17 +23,14 @@ function createObsidianLikeElement(tag = 'div') {
   return el;
 }
 
-describe('AppleStyleView parity mismatch + lifecycle', () => {
+describe('AppleStyleView native render + lifecycle', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('convertCurrent should render parity mismatch placeholder in silent mode', async () => {
+  it('convertCurrent should render native html in silent mode', async () => {
     const view = new AppleStyleView(null, { settings: {} });
     view.previewContainer = createObsidianLikeElement();
-    view.previewContainer.addClass('apple-has-content');
-    view.currentHtml = '<p>old</p>';
-
     view.app = {
       workspace: {
         getActiveViewOfType: vi.fn(() => ({
@@ -43,105 +40,60 @@ describe('AppleStyleView parity mismatch + lifecycle', () => {
       },
     };
 
-    const mismatchError = new Error('mismatch');
-    mismatchError.code = 'TRIPLET_PARITY_MISMATCH';
-    mismatchError.parity = {
-      index: 12,
-      segmentCount: 2,
-      segments: [
-        { index: 12, legacyLine: 1, legacyColumn: 13 },
-        { index: 48, legacyLine: 2, legacyColumn: 7 },
-      ],
-    };
-    vi.spyOn(view, 'renderMarkdownForPreview').mockRejectedValue(mismatchError);
+    vi.spyOn(view, 'renderMarkdownForPreview').mockResolvedValue('<section><p>native</p></section>');
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.spyOn(console, 'groupCollapsed').mockImplementation(() => {});
-    vi.spyOn(console, 'groupEnd').mockImplementation(() => {});
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    await view.convertCurrent(true);
+
+    expect(view.currentHtml).toBe('<section><p>native</p></section>');
+    expect(view.previewContainer.classList.contains('apple-has-content')).toBe(true);
+    expect(view.previewContainer.innerHTML).toContain('<p>native</p>');
+  });
+
+  it('convertCurrent should invalidate stale html on silent render failure', async () => {
+    const view = new AppleStyleView(null, { settings: {} });
+    view.previewContainer = createObsidianLikeElement();
+    view.previewContainer.addClass('apple-has-content');
+    view.previewContainer.innerHTML = '<section><p>stale</p></section>';
+    view.currentHtml = '<section><p>stale</p></section>';
+    view.app = {
+      workspace: {
+        getActiveViewOfType: vi.fn(() => ({
+          editor: { getValue: () => '# micro sample' },
+          file: { path: 'fixtures/micro.md', basename: 'micro' },
+        })),
+      },
+    };
+
+    vi.spyOn(view, 'renderMarkdownForPreview').mockRejectedValue(new Error('native boom'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
 
     await view.convertCurrent(true);
 
     expect(view.currentHtml).toBeNull();
+    expect(view.lastRenderError).toBe('native boom');
     expect(view.previewContainer.classList.contains('apple-has-content')).toBe(false);
-    expect(view.previewContainer.textContent).toContain('三件套渲染未通过零差异门禁');
-    expect(view.previewContainer.textContent).toContain('micro.md 与 Phase2 基线输出存在差异（首个 index 12，共 2 段差异）。');
-    expect(view.previewContainer.textContent).toContain('#1: index 12（legacy 1:13）');
-    expect(view.lastParityMismatchNoticeKey).toBe('fixtures/micro.md:12:2');
+    expect(view.previewContainer.textContent).toContain('渲染失败');
+    expect(view.previewContainer.textContent).toContain('native boom');
   });
 
-  it('logParityMismatchDetails should emit full payload logs only in verbose mode', () => {
-    const view = new AppleStyleView(null, { settings: { tripletParityVerboseLog: true } });
-    vi.spyOn(console, 'groupCollapsed').mockImplementation(() => {});
-    vi.spyOn(console, 'groupEnd').mockImplementation(() => {});
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'log').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    const segments = Array.from({ length: 8 }, (_, i) => ({
-      index: i * 10,
-      legacyLine: i + 1,
-      legacyColumn: 2,
-      candidateLine: i + 1,
-      candidateColumn: 2,
-      legacySnippet: `legacy-${i}`,
-      candidateSnippet: `candidate-${i}`,
-    }));
-
-    view.logParityMismatchDetails('fixtures/micro.md', {
-      index: 10,
-      segmentCount: segments.length,
-      lengthDelta: 4,
-      legacyLength: 120,
-      candidateLength: 124,
-      truncated: false,
-      segments,
+  it('onSyncToWechat should stop before sync when render result is unavailable', async () => {
+    const view = new AppleStyleView(null, {
+      settings: {
+        wechatAccounts: [{ id: 'acc-1', name: '账号1', appId: 'wx-1', appSecret: 'sec-1' }],
+        defaultAccountId: 'acc-1',
+        proxyUrl: '',
+      },
     });
+    view.currentHtml = null;
+    view.lastRenderError = 'native boom';
+    view.selectedAccountId = 'acc-1';
 
-    expect(console.log).toHaveBeenCalledWith('[Triplet Parity] full-details', expect.objectContaining({
-      sourcePath: 'fixtures/micro.md',
-      segmentCount: 8,
-      segments: expect.arrayContaining([
-        expect.objectContaining({ index: 0 }),
-        expect.objectContaining({ index: 70 }),
-      ]),
-    }));
-    expect(console.error).toHaveBeenCalledWith(
-      '[Triplet Parity] full-details-json',
-      expect.stringContaining('"sourcePath":"fixtures/micro.md"')
-    );
-    expect(window.__OWC_LAST_PARITY_DETAILS).toEqual(expect.objectContaining({
-      sourcePath: 'fixtures/micro.md',
-      segmentCount: 8,
-    }));
-  });
+    const processAllImagesSpy = vi.spyOn(view, 'processAllImages');
 
-  it('logParityMismatchDetails should keep machine payload but skip full logs by default', () => {
-    const view = new AppleStyleView(null, { settings: {} });
-    vi.spyOn(console, 'groupCollapsed').mockImplementation(() => {});
-    vi.spyOn(console, 'groupEnd').mockImplementation(() => {});
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'log').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    await view.onSyncToWechat();
 
-    view.logParityMismatchDetails('fixtures/default.md', {
-      index: 1,
-      segmentCount: 1,
-      segments: [{ index: 1, legacyLine: 1, legacyColumn: 1 }],
-    });
-
-    expect(console.log).not.toHaveBeenCalledWith(
-      '[Triplet Parity] full-details',
-      expect.anything()
-    );
-    expect(console.error).not.toHaveBeenCalledWith(
-      '[Triplet Parity] full-details-json',
-      expect.any(String)
-    );
-    expect(window.__OWC_LAST_PARITY_DETAILS).toEqual(expect.objectContaining({
-      sourcePath: 'fixtures/default.md',
-      segmentCount: 1,
-    }));
+    expect(processAllImagesSpy).not.toHaveBeenCalled();
   });
 
   it('onClose should detach listeners and clear all view-level caches', async () => {

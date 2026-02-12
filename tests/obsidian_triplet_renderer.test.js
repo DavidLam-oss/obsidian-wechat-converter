@@ -1,10 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
+const { createLegacyConverter } = require('./helpers/render-runtime');
 const {
-  containsLegacyIncompatibleMathMarkup,
   neutralizeUnsafeMarkdownLinks,
   neutralizePlainWikilinks,
   preprocessMarkdownForTriplet,
   injectHardBreaksForLegacyParity,
+  shouldObserveAsyncEmbedWindow,
   waitForTripletDomToSettle,
   renderByObsidianMarkdownRenderer,
   renderObsidianTripletMarkdown,
@@ -27,7 +28,7 @@ describe('Obsidian Triplet Renderer', () => {
       '$$',
     ].join('\n');
 
-    const output = preprocessMarkdownForTriplet(input, converter);
+    const { markdown: output } = preprocessMarkdownForTriplet(input, converter);
     expect(output).not.toContain('title: test');
     expect(output).toContain('![封面](folder/a%20b.png)');
     expect(output).toContain('$$');
@@ -56,7 +57,7 @@ describe('Obsidian Triplet Renderer', () => {
       '```',
     ].join('\n');
 
-    const output = preprocessMarkdownForTriplet(input, {});
+    const { markdown: output } = preprocessMarkdownForTriplet(input, {});
     expect(output).toContain('正文 \\[[目标文档|别名]]');
     expect(output).toContain('![图注](assets/pic%20a.png)');
     expect(output).toContain('[[code-link]]');
@@ -65,7 +66,7 @@ describe('Obsidian Triplet Renderer', () => {
   it('should keep inline-code wikilinks unescaped while neutralizing plain wikilinks', () => {
     const input = '正文 [[目标文档]] 与 `[[标题]]`';
 
-    const output = preprocessMarkdownForTriplet(input, {});
+    const { markdown: output } = preprocessMarkdownForTriplet(input, {});
     expect(output).toContain('正文 \\[[目标文档]] 与 `[[标题]]`');
     expect(output).not.toContain('`\\[[标题]]`');
   });
@@ -80,7 +81,7 @@ describe('Obsidian Triplet Renderer', () => {
       '正文 [[outside-fence]]',
     ].join('\n');
 
-    const output = preprocessMarkdownForTriplet(input, {});
+    const { markdown: output } = preprocessMarkdownForTriplet(input, {});
     expect(output).toContain('[[inside-fence]]');
     expect(output).not.toContain('\\[[inside-fence]]');
     expect(output).toContain('正文 \\[[outside-fence]]');
@@ -180,6 +181,51 @@ describe('Obsidian Triplet Renderer', () => {
     expect(output).toContain('脚本会自动帮我建好那两个文件。\n2. 第二项');
   });
 
+  it('should only observe settle window for local-like image targets', () => {
+    expect(shouldObserveAsyncEmbedWindow('纯文本')).toBe(false);
+    expect(shouldObserveAsyncEmbedWindow('![remote](https://example.com/a.png)')).toBe(false);
+    expect(shouldObserveAsyncEmbedWindow('![data](data:image/png;base64,abc)')).toBe(false);
+    expect(shouldObserveAsyncEmbedWindow('![local](attachments/a.png)')).toBe(true);
+    expect(shouldObserveAsyncEmbedWindow('![app](app://obsidian.md/a.png)')).toBe(true);
+    expect(shouldObserveAsyncEmbedWindow('![ref][img]\n[img]: https://example.com/a.png')).toBe(false);
+    expect(shouldObserveAsyncEmbedWindow('![ref][img]\n[img]: attachments/a.png')).toBe(true);
+    expect(shouldObserveAsyncEmbedWindow('![ref][img]')).toBe(true);
+  });
+
+  it('should handle shortcut reference images with definitions', () => {
+    // Shortcut reference with remote target - no observe window needed
+    expect(shouldObserveAsyncEmbedWindow('![img]\n\n[img]: https://example.com/a.png')).toBe(false);
+    // Shortcut reference with local target - needs observe window
+    expect(shouldObserveAsyncEmbedWindow('![img]\n\n[img]: attachments/a.png')).toBe(true);
+  });
+
+  it('should handle angle-bracket wrapped reference definitions', () => {
+    expect(shouldObserveAsyncEmbedWindow('![ref][img]\n[img]: <https://example.com/a.png>')).toBe(false);
+    expect(shouldObserveAsyncEmbedWindow('![ref][img]\n[img]: <attachments/a.png>')).toBe(true);
+  });
+
+  it('should normalize reference labels case-insensitively', () => {
+    // Labels are case-insensitive per CommonMark spec
+    expect(shouldObserveAsyncEmbedWindow('![My Image][IMG]\n[img]: https://example.com/a.png')).toBe(false);
+    expect(shouldObserveAsyncEmbedWindow('![My Image]\n\n[my image]: attachments/a.png')).toBe(true);
+  });
+
+  it('should handle mixed local and remote images', () => {
+    // Mixed: local + remote should still need observe window (local triggers it)
+    expect(shouldObserveAsyncEmbedWindow('![local](a.png) and ![remote](https://b.png)')).toBe(true);
+    // All remote: no observe window needed
+    expect(shouldObserveAsyncEmbedWindow('![a](https://a.png) and ![b](https://b.png)')).toBe(false);
+  });
+
+  it('should handle edge cases gracefully', () => {
+    // Empty target: conservative - needs observe window
+    expect(shouldObserveAsyncEmbedWindow('![]()')).toBe(true);
+    // Inline image with title (space after URL)
+    expect(shouldObserveAsyncEmbedWindow('![alt](https://example.com/a.png "title")')).toBe(false);
+    // Reference with title
+    expect(shouldObserveAsyncEmbedWindow('![ref][img]\n[img]: https://example.com/a.png "title"')).toBe(false);
+  });
+
   it('should render with renderMarkdown API and serialize output', async () => {
     const renderMarkdown = vi.fn(async (markdown, el) => {
       el.innerHTML = `<p>${markdown}</p>`;
@@ -199,31 +245,6 @@ describe('Obsidian Triplet Renderer', () => {
     expect(renderMarkdown.mock.calls[0][0]).toBe('# title');
     expect(serializer).toHaveBeenCalled();
     expect(html).toBe('<section>ok</section>');
-  });
-
-  it('should detect legacy-incompatible mjx math markup', () => {
-    expect(containsLegacyIncompatibleMathMarkup('<span><mjx-math></mjx-math></span>')).toBe(true);
-    expect(containsLegacyIncompatibleMathMarkup('<mjx-container display="true"></mjx-container>')).toBe(true);
-    expect(containsLegacyIncompatibleMathMarkup('<span><svg></svg></span>')).toBe(false);
-  });
-
-  it('should fallback to legacy converter when serialized triplet html still contains mjx markup', async () => {
-    const renderMarkdown = vi.fn(async (_markdown, el) => {
-      el.innerHTML = '<p>math</p>';
-    });
-    const convert = vi.fn(async () => '<section>legacy-math</section>');
-
-    const html = await renderObsidianTripletMarkdown({
-      app: {},
-      converter: { convert },
-      markdown: '$E=mc^2$',
-      sourcePath: 'note.md',
-      markdownRenderer: { renderMarkdown },
-      serializer: () => '<section><span><mjx-math></mjx-math></span></section>',
-    });
-
-    expect(html).toBe('<section>legacy-math</section>');
-    expect(convert).toHaveBeenCalledWith('$E=mc^2$');
   });
 
   it('should pass component into markdown renderer APIs', async () => {
@@ -259,7 +280,7 @@ describe('Obsidian Triplet Renderer', () => {
     const html = await renderObsidianTripletMarkdown({
       app: {},
       converter: {},
-      markdown: 'x',
+      markdown: '![x](attachments/y.png)',
       sourcePath: 'note.md',
       markdownRenderer: { renderMarkdown },
       serializer: ({ root }) => root.innerHTML,
@@ -303,6 +324,21 @@ describe('Obsidian Triplet Renderer', () => {
     await expect(waitForTripletDomToSettle(root, { timeoutMs: 20, intervalMs: 1 })).resolves.toBeUndefined();
   });
 
+  it('waitForTripletDomToSettle should allow immediate return when observation window is disabled', async () => {
+    vi.useFakeTimers();
+    try {
+      const root = document.createElement('div');
+      root.innerHTML = '<p>ok</p>';
+
+      const promise = waitForTripletDomToSettle(root, { timeoutMs: 100, intervalMs: 10, minObserveMs: 0 });
+      await Promise.resolve();
+      expect(vi.getTimerCount()).toBe(0);
+      await expect(promise).resolves.toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('should execute markdown renderer + serializer path by default', async () => {
     const convert = vi.fn();
     const renderMarkdown = vi.fn();
@@ -321,5 +357,387 @@ describe('Obsidian Triplet Renderer', () => {
     expect(renderMarkdown).toHaveBeenCalledTimes(1);
     expect(serializer).toHaveBeenCalledTimes(1);
     expect(convert).not.toHaveBeenCalled();
+  });
+
+  it('should wait for delayed async image-embed injection before serialization', async () => {
+    const renderMarkdown = vi.fn(async (_markdown, el) => {
+      el.innerHTML = '<p>start</p>';
+      setTimeout(() => {
+        el.innerHTML = '<p><span class="internal-embed image-embed" src="app://obsidian.md/y"></span></p>';
+        setTimeout(() => {
+          const span = el.querySelector('span.internal-embed.image-embed');
+          if (span) {
+            span.innerHTML = '<img src="app://obsidian.md/y">';
+          }
+        }, 10);
+      }, 5);
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter: {},
+      markdown: '![x](attachments/y.png)',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+      serializer: ({ root }) => root.innerHTML,
+    });
+
+    expect(html).toContain('<img');
+  });
+
+  it('should keep observe window for reference-style local image and wait delayed embed injection', async () => {
+    const renderMarkdown = vi.fn(async (_markdown, el) => {
+      el.innerHTML = '<p>start</p>';
+      setTimeout(() => {
+        el.innerHTML = '<p><span class="internal-embed image-embed" src="app://obsidian.md/ref"></span></p>';
+        setTimeout(() => {
+          const span = el.querySelector('span.internal-embed.image-embed');
+          if (span) {
+            span.innerHTML = '<img src="app://obsidian.md/ref">';
+          }
+        }, 10);
+      }, 5);
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter: {},
+      markdown: '![封面][img]\n\n[img]: attachments/ref-local.png',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+      serializer: ({ root }) => root.innerHTML,
+    });
+
+    expect(html).toContain('<img');
+  });
+
+  it('should render unresolved inline math formulas via markdown-it MathJax', async () => {
+    const converter = await createLegacyConverter();
+
+    // Simulate Obsidian MarkdownRenderer not rendering math (leaves $...$ as-is)
+    const renderMarkdown = vi.fn(async (_markdown, el) => {
+      el.innerHTML = '<p>Energy is $E=mc^2$.</p>';
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: 'Energy is $E=mc^2$.',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+      // Use default serializer (serializeObsidianRenderedHtml) which calls renderUnresolvedMathFormulas
+    });
+
+    // MathJax should render to mjx-container or span with SVG
+    expect(html).toMatch(/mjx-container|<svg/);
+  });
+
+  it('should render unresolved block math formulas via markdown-it MathJax', async () => {
+    const converter = await createLegacyConverter();
+
+    // The preprocessMarkdownForTriplet will convert $$...$$ to placeholders
+    // Obsidian will render the placeholder as plain text in a paragraph
+    const renderMarkdown = vi.fn(async (markdown, el) => {
+      // Simulate Obsidian rendering the placeholder as-is
+      el.innerHTML = `<p>Here is a formula:</p><p>${markdown.split('\n\n')[1] || markdown}</p>`;
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: 'Here is a formula:\n\n$$\nE=mc^2\n$$',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+    });
+
+    // Block math should render to mjx-container or section with SVG
+    expect(html).toMatch(/mjx-container|<svg/);
+  });
+
+  it('should handle multiple inline math formulas in preprocessing', async () => {
+    const converter = await createLegacyConverter();
+
+    const renderMarkdown = vi.fn(async (markdown, el) => {
+      // markdown now contains placeholders like %%OWC_MATH_INLINE_0%%
+      el.innerHTML = `<p>${markdown}</p>`;
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: '$a+b$ and $c+d$ and $e+f$',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+    });
+
+    // All three formulas should be rendered (check for SVG or mjx-container)
+    // Note: fixMathJaxTags converts mjx-container to span/section, so check for svg
+    const svgMatches = html.match(/<svg/g) || [];
+    expect(svgMatches.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('should handle mixed inline and block math in preprocessing', async () => {
+    const converter = await createLegacyConverter();
+
+    const renderMarkdown = vi.fn(async (markdown, el) => {
+      el.innerHTML = `<p>${markdown.replace(/\n/g, '<br>')}</p>`;
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: 'Inline $x=1$ and block:\n\n$$y=2$$',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+    });
+
+    // Both inline and block should be rendered
+    expect(html).toMatch(/mjx-container|<svg/);
+  });
+
+  it('should preserve text around math formulas', async () => {
+    const converter = await createLegacyConverter();
+
+    const renderMarkdown = vi.fn(async (markdown, el) => {
+      el.innerHTML = `<p>${markdown}</p>`;
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: 'Before $E=mc^2$ after',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+    });
+
+    expect(html).toContain('Before');
+    expect(html).toContain('after');
+    expect(html).toMatch(/mjx-container|<svg/);
+  });
+
+  it('should handle empty or invalid math gracefully', async () => {
+    const converter = await createLegacyConverter();
+
+    const renderMarkdown = vi.fn(async (markdown, el) => {
+      el.innerHTML = `<p>${markdown}</p>`;
+    });
+
+    // Empty formula and text with dollar signs that are not math
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: 'Price is $100 and $$',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+    });
+
+    // Should not crash, content should be preserved
+    expect(html).toContain('Price');
+  });
+
+  it('should preserve placeholders through real markdown-it rendering and inject correctly', async () => {
+    // This test simulates the real Obsidian MarkdownRenderer path more closely
+    // by using converter.md.render() to parse markdown, ensuring placeholders
+    // survive the markdown parsing phase.
+    const converter = await createLegacyConverter();
+
+    // Simulate real Obsidian MarkdownRenderer behavior: parse markdown with markdown-it
+    const renderMarkdown = vi.fn(async (markdown, el) => {
+      // Use converter.md.render to simulate real markdown parsing
+      // This is closer to what Obsidian's MarkdownRenderer.renderMarkdown does
+      const parsed = converter.md.render(markdown);
+      el.innerHTML = parsed;
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: 'Inline $E=mc^2$ and block:\n\n$$\\sum_{i=1}^{n} i$$',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+    });
+
+    // Both formulas should be rendered (not just placeholders surviving)
+    expect(html).toMatch(/mjx-container|<svg/);
+    // Should not contain raw placeholder patterns (zero-width space + BLOCK/INLINE markers)
+    // Current placeholder format: \u200B{session}_{counter}_{random}_{BLOCK|INLINE}\u200B
+    expect(html).not.toMatch(/\u200B\w+_\d+_[a-z0-9]+_(BLOCK|INLINE)\u200B/);
+  });
+
+  it('should isolate math placeholders across concurrent renders', async () => {
+    // This test ensures that concurrent render calls don't pollute each other's
+    // math formula placeholders. Previously, a global shared state caused
+    // cross-request contamination.
+    const converter = await createLegacyConverter();
+
+    // Track execution overlap to ensure we're testing concurrent scenarios
+    let render1Active = false;
+    let render2Active = false;
+    let hadOverlap = false;
+
+    const createRenderMarkdown = (marker) => vi.fn(async (markdown, el) => {
+      // Set active flag and check for overlap
+      if (marker === 1) render1Active = true;
+      if (marker === 2) render2Active = true;
+      if (render1Active && render2Active) hadOverlap = true;
+
+      // Simulate work that takes time (ensures overlap)
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      const parsed = converter.md.render(markdown);
+      el.innerHTML = parsed;
+
+      // Clear active flag
+      if (marker === 1) render1Active = false;
+      if (marker === 2) render2Active = false;
+    });
+
+    // Two different documents with different formulas
+    const doc1 = 'Document 1: $a+b$';
+    const doc2 = 'Document 2: $x+y$';
+
+    // Start both renders simultaneously (no delay before starting)
+    const [html1, html2] = await Promise.all([
+      renderObsidianTripletMarkdown({
+        app: {},
+        converter,
+        markdown: doc1,
+        sourcePath: 'doc1.md',
+        markdownRenderer: { renderMarkdown: createRenderMarkdown(1) },
+      }),
+      renderObsidianTripletMarkdown({
+        app: {},
+        converter,
+        markdown: doc2,
+        sourcePath: 'doc2.md',
+        markdownRenderer: { renderMarkdown: createRenderMarkdown(2) },
+      }),
+    ]);
+
+    // Verify we actually had concurrent execution (overlap detected)
+    expect(hadOverlap).toBe(true);
+
+    // Both should render successfully without cross-contamination
+    expect(html1).toMatch(/mjx-container|<svg/);
+    expect(html2).toMatch(/mjx-container|<svg/);
+    // Neither should contain raw placeholders
+    expect(html1).not.toMatch(/\u200B\w+_\d+_[a-z0-9]+_(BLOCK|INLINE)\u200B/);
+    expect(html2).not.toMatch(/\u200B\w+_\d+_[a-z0-9]+_(BLOCK|INLINE)\u200B/);
+  });
+
+  describe('escapePseudoHtmlTags edge cases', () => {
+    it('should preserve inline code content with pseudo-tags', () => {
+      const input = 'Use `<Title>` tag in your code';
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Inline code should be preserved as-is
+      expect(output).toContain('`<Title>`');
+      expect(output).not.toContain('`&lt;Title>`');
+    });
+
+    it('should escape pseudo-tags outside inline code', () => {
+      const input = 'File: <Title>_xxx_MS.pdf and code: `<Title>`';
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Outside inline code should be escaped
+      expect(output).toContain('&lt;Title&gt;_xxx_MS.pdf');
+      // Inside inline code should be preserved
+      expect(output).toContain('`<Title>`');
+    });
+
+    it('should handle nested fences with different lengths (4 backticks outer, 3 inner)', () => {
+      const input = [
+        '````markdown',
+        '```code',
+        '<Tag>inside nested fence</Tag>',
+        '```',
+        '````',
+        '<Tag>outside fence</Tag>',
+      ].join('\n');
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Content inside nested fence should be preserved
+      expect(output).toContain('<Tag>inside nested fence</Tag>');
+      // Content outside fence should be escaped
+      expect(output).toContain('&lt;Tag&gt;outside fence');
+    });
+
+    it('should handle pseudo-tags with attributes', () => {
+      const input = '<CustomTag attr="value">text</CustomTag>';
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      expect(output).toContain('&lt;CustomTag');
+    });
+
+    it('should preserve known HTML tags', () => {
+      const input = '<div class="test"><span>content</span></div>';
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Known tags should not be escaped
+      expect(output).toContain('<div');
+      expect(output).toContain('<span');
+    });
+
+    it('should not close backtick fence with tilde fence (mixed marker)', () => {
+      const input = [
+        '```js',
+        '<Tag>inside code block</Tag>',
+        '~~~',
+        'still inside backtick block',
+        '```',
+        '<Tag>outside fence</Tag>',
+      ].join('\n');
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Content after ~~~ should still be preserved (~~~ didn't close the ``` block)
+      expect(output).toContain('<Tag>inside code block</Tag>');
+      expect(output).toContain('still inside backtick block');
+      // Content after proper closing should be escaped
+      expect(output).toContain('&lt;Tag&gt;outside fence');
+    });
+
+    it('should preserve multi-backtick inline code spans', () => {
+      const input = 'Inline ``<Title>`` and outside <Title>.';
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Double-backtick code span should be preserved
+      expect(output).toContain('``<Title>``');
+      // Outside should be escaped
+      expect(output).toContain('&lt;Title&gt;.');
+      expect(output).not.toContain('&lt;Title&gt;``');
+    });
+
+    it('should preserve triple-backtick inline code spans', () => {
+      const input = 'Code: ```<Tag>``` and outside <Tag>.';
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Triple-backtick code span should be preserved
+      expect(output).toContain('```<Tag>```');
+      // Outside should be escaped
+      expect(output).toContain('&lt;Tag&gt;.');
+    });
+
+    it('should handle fenced blocks with leading spaces (0-3 spaces)', () => {
+      const input = [
+        '   ```js',
+        '<Tag>inside indented fence</Tag>',
+        '   ```',
+        '<Tag>outside fence</Tag>',
+      ].join('\n');
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Content inside indented fence should be preserved
+      expect(output).toContain('<Tag>inside indented fence</Tag>');
+      // Content outside fence should be escaped
+      expect(output).toContain('&lt;Tag&gt;outside fence');
+    });
+
+    it('should handle fenced blocks with leading spaces + mixed marker', () => {
+      const input = [
+        '  ```js',
+        '<Tag>inside</Tag>',
+        '  ~~~',
+        'still inside (~~~ does not close ```)',
+        '  ```',
+        '<Tag>outside</Tag>',
+      ].join('\n');
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // ~~~ should not close ``` (different marker)
+      expect(output).toContain('<Tag>inside</Tag>');
+      expect(output).toContain('still inside (~~~ does not close ```)');
+      // After proper close, outside content should be escaped
+      expect(output).toContain('&lt;Tag&gt;outside');
+    });
   });
 });

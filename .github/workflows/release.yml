@@ -71,14 +71,42 @@ jobs:
       - name: Validate release artifact
         run: npm run release:validate
 
+      - name: Extract release notes
+        id: release_notes
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          NOTES_FILE="RELEASE_NOTES/v${VERSION}.md"
+
+          if [ -f "$NOTES_FILE" ]; then
+            # Extract title from YAML front matter
+            TITLE=$(sed -n 's/^title: *//p' "$NOTES_FILE" | head -1)
+
+            # Extract body (everything after front matter)
+            BODY=$(sed '1,/^---$/d' "$NOTES_FILE" | sed '1,/^---$/d')
+
+            # Write to files for multiline handling
+            echo "title=$TITLE" >> $GITHUB_OUTPUT
+            echo "body<<EOF" >> $GITHUB_OUTPUT
+            echo "$BODY" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+            echo "Release notes file not found: $NOTES_FILE"
+          fi
+
       - name: Create GitHub release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          name: ${{ github.ref_name }}${{ steps.release_notes.outputs.found == 'true' && format(' - {0}', steps.release_notes.outputs.title) || '' }}
+          body: ${{ steps.release_notes.outputs.found == 'true' && steps.release_notes.outputs.body || '' }}
           files: |
             obsidian-wechat-converter.zip
             main.js
             manifest.json
             styles.css
             versions.json
-          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

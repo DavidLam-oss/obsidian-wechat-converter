@@ -378,12 +378,29 @@ function sanitizeAnchorAndImageLinks(container, converter) {
   if (!container) return;
 
   const hasExplicitProtocol = (value) => /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(String(value || ''));
+  const hasNonAscii = (value) => /[^\x00-\x7F]/.test(String(value || ''));
 
   const canonicalizeRelativeHrefForLegacyParity = (href) => {
     const value = String(href || '').trim();
     if (!value) return value;
     if (value.startsWith('#') || value.startsWith('//')) return value;
-    if (hasExplicitProtocol(value)) return value;
+    if (hasExplicitProtocol(value)) {
+      // Keep most absolute links unchanged; only normalize non-ASCII http(s) URLs
+      // for parity with legacy punycode output.
+      if (/^https?:/i.test(value) && hasNonAscii(value)) {
+        try {
+          const parsed = new URL(value);
+          const isBareHost = /^https?:\/\/[^/?#]+$/i.test(value);
+          if (isBareHost && parsed.pathname === '/' && !parsed.search && !parsed.hash) {
+            return `${parsed.protocol}//${parsed.host}`;
+          }
+          return parsed.href;
+        } catch (error) {
+          return value;
+        }
+      }
+      return value;
+    }
 
     let decoded = value;
     try {
@@ -658,6 +675,35 @@ function trimLeadingWhitespaceInBlockText(container) {
   }
 }
 
+function pruneEmptyHeadings(container) {
+  if (!container) return;
+  const headings = Array.from(container.querySelectorAll('h1,h2,h3,h4,h5,h6'));
+
+  for (const heading of headings) {
+    const text = String(heading.textContent || '')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/\u00a0/g, ' ')
+      .trim();
+    if (text) continue;
+
+    const html = String(heading.innerHTML || '')
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .trim();
+    if (!html) {
+      heading.remove();
+      continue;
+    }
+
+    const normalized = html
+      .replace(/<br\s*\/?>/gi, '')
+      .replace(/&nbsp;/gi, '')
+      .replace(/\s+/g, '');
+    if (!normalized) {
+      heading.remove();
+    }
+  }
+}
+
 function applyThemeInlineStyles(container, converter) {
   if (!container || !converter) return;
 
@@ -727,6 +773,78 @@ function applyLegacyTypographerParity(container, converter) {
   }
 }
 
+function renderUnresolvedMathFormulas(container, converter) {
+  // Obsidian's MarkdownRenderer.renderMarkdown does not render LaTeX math formulas.
+  // This function detects unresolved $...$ and $$...$$ patterns in text nodes
+  // and renders them using the converter's markdown-it + MathJax pipeline.
+  if (!container || !converter) return;
+  if (!converter.md || typeof converter.md.renderInline !== 'function') return;
+
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
+  let node = walker.nextNode();
+  while (node) {
+    const text = String(node.textContent || '');
+    // Check for math patterns: $...$ (inline) or $$...$$ (block)
+    if (text.includes('$')) {
+      textNodes.push(node);
+    }
+    node = walker.nextNode();
+  }
+
+  for (const textNode of textNodes) {
+    const parent = textNode.parentElement;
+    if (!parent) continue;
+    // Skip if inside code, pre, or already rendered math
+    if (parent.closest('pre,code,kbd,samp,script,style,textarea,mjx-container,mjx-math,math')) continue;
+
+    const text = String(textNode.textContent || '');
+    if (!text.includes('$')) continue;
+
+    // Check if there are actual math patterns (not just escaped dollar signs)
+    // Pattern: $$...$$ for block, $...$ for inline (not preceded/followed by $)
+    const hasBlockMath = /\$\$[\s\S]+?\$\$/.test(text);
+    const hasInlineMath = /(?<!\$)\$(?!\$)([^\$\n]+?)\$(?!\$)/.test(text);
+    if (!hasBlockMath && !hasInlineMath) continue;
+
+    // Use markdown-it to render the text with math
+    let rendered;
+    try {
+      // For block math, we need to handle it differently
+      if (hasBlockMath) {
+        // Create a temporary container and use full render for block math
+        const tempDiv = document.createElement('div');
+        // Wrap block math in paragraph-like structure for rendering
+        const wrappedText = text.replace(/\$\$([\s\S]+?)\$\$/g, '\n$$\n$1\n$$\n');
+        const fullRendered = converter.md.render(wrappedText);
+        tempDiv.innerHTML = fullRendered;
+
+        // Extract the rendered content
+        const fragment = document.createDocumentFragment();
+        while (tempDiv.firstChild) {
+          fragment.appendChild(tempDiv.firstChild);
+        }
+        textNode.replaceWith(fragment);
+      } else {
+        // Inline math only - use renderInline
+        rendered = converter.md.renderInline(text);
+        if (rendered && rendered !== text) {
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = rendered;
+          const fragment = document.createDocumentFragment();
+          while (tempDiv.firstChild) {
+            fragment.appendChild(tempDiv.firstChild);
+          }
+          textNode.replaceWith(fragment);
+        }
+      }
+    } catch (error) {
+      // Keep original text if rendering fails
+      continue;
+    }
+  }
+}
+
 function applyLegacyLinkifyParity(container, converter) {
   if (!container || !converter || !converter.md || !converter.md.linkify) return;
   if (typeof converter.md.linkify.match !== 'function') return;
@@ -789,7 +907,20 @@ function applyLegacyLinkifyParity(container, converter) {
   }
 }
 
-function serializeObsidianRenderedHtml({ root, converter }) {
+function injectPreRenderedMathFormulas(html, formulas) {
+  if (!html || !Array.isArray(formulas) || formulas.length === 0) return html;
+
+  let result = html;
+  for (const { placeholder, rendered } of formulas) {
+    if (placeholder && rendered) {
+      // Replace placeholder with pre-rendered math HTML
+      result = result.split(placeholder).join(rendered);
+    }
+  }
+  return result;
+}
+
+function serializeObsidianRenderedHtml({ root, converter, preRenderedMath = [] }) {
   if (typeof document === 'undefined') {
     throw new Error('Triplet serializer requires DOM environment');
   }
@@ -804,6 +935,8 @@ function serializeObsidianRenderedHtml({ root, converter }) {
   normalizeLegacyTagAliases(container);
   normalizeLegacyDeleteNesting(container);
   stripDangerousTags(container);
+  // Render math formulas that Obsidian's MarkdownRenderer didn't process
+  renderUnresolvedMathFormulas(container, converter);
   applyLegacyLinkifyParity(container, converter);
   applyLegacyTypographerParity(container, converter);
   sanitizeAnchorAndImageLinks(container, converter);
@@ -813,8 +946,13 @@ function serializeObsidianRenderedHtml({ root, converter }) {
   pruneObsidianOnlyAttributes(container, { finalStage: true });
   trimLeadingWhitespaceInBlockText(container);
   trimTrailingWhitespaceInBlockText(container);
+  pruneEmptyHeadings(container);
 
   let html = container.innerHTML;
+
+  // Inject pre-rendered math formulas (placeholders were created during preprocessing)
+  html = injectPreRenderedMathFormulas(html, preRenderedMath);
+
   if (converter && typeof converter.fixListParagraphs === 'function') {
     html = converter.fixListParagraphs(html);
   }
