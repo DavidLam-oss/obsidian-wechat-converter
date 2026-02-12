@@ -453,4 +453,85 @@ describe('Obsidian Triplet Renderer', () => {
     // Block math should render to mjx-container or section with SVG
     expect(html).toMatch(/mjx-container|<svg/);
   });
+
+  it('should handle multiple inline math formulas in preprocessing', async () => {
+    const converter = await createLegacyConverter();
+
+    const renderMarkdown = vi.fn(async (markdown, el) => {
+      // markdown now contains placeholders like %%OWC_MATH_INLINE_0%%
+      el.innerHTML = `<p>${markdown}</p>`;
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: '$a+b$ and $c+d$ and $e+f$',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+    });
+
+    // All three formulas should be rendered (check for SVG or mjx-container)
+    // Note: fixMathJaxTags converts mjx-container to span/section, so check for svg
+    const svgMatches = html.match(/<svg/g) || [];
+    expect(svgMatches.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('should handle mixed inline and block math in preprocessing', async () => {
+    const converter = await createLegacyConverter();
+
+    const renderMarkdown = vi.fn(async (markdown, el) => {
+      el.innerHTML = `<p>${markdown.replace(/\n/g, '<br>')}</p>`;
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: 'Inline $x=1$ and block:\n\n$$y=2$$',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+    });
+
+    // Both inline and block should be rendered
+    expect(html).toMatch(/mjx-container|<svg/);
+  });
+
+  it('should preserve text around math formulas', async () => {
+    const converter = await createLegacyConverter();
+
+    const renderMarkdown = vi.fn(async (markdown, el) => {
+      el.innerHTML = `<p>${markdown}</p>`;
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: 'Before $E=mc^2$ after',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+    });
+
+    expect(html).toContain('Before');
+    expect(html).toContain('after');
+    expect(html).toMatch(/mjx-container|<svg/);
+  });
+
+  it('should handle empty or invalid math gracefully', async () => {
+    const converter = await createLegacyConverter();
+
+    const renderMarkdown = vi.fn(async (markdown, el) => {
+      el.innerHTML = `<p>${markdown}</p>`;
+    });
+
+    // Empty formula and text with dollar signs that are not math
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: 'Price is $100 and $$',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+    });
+
+    // Should not crash, content should be preserved
+    expect(html).toContain('Price');
+  });
 });
