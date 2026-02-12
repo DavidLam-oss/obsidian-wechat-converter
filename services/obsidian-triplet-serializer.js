@@ -378,12 +378,29 @@ function sanitizeAnchorAndImageLinks(container, converter) {
   if (!container) return;
 
   const hasExplicitProtocol = (value) => /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(String(value || ''));
+  const hasNonAscii = (value) => /[^\x00-\x7F]/.test(String(value || ''));
 
   const canonicalizeRelativeHrefForLegacyParity = (href) => {
     const value = String(href || '').trim();
     if (!value) return value;
     if (value.startsWith('#') || value.startsWith('//')) return value;
-    if (hasExplicitProtocol(value)) return value;
+    if (hasExplicitProtocol(value)) {
+      // Keep most absolute links unchanged; only normalize non-ASCII http(s) URLs
+      // for parity with legacy punycode output.
+      if (/^https?:/i.test(value) && hasNonAscii(value)) {
+        try {
+          const parsed = new URL(value);
+          const isBareHost = /^https?:\/\/[^/?#]+$/i.test(value);
+          if (isBareHost && parsed.pathname === '/' && !parsed.search && !parsed.hash) {
+            return `${parsed.protocol}//${parsed.host}`;
+          }
+          return parsed.href;
+        } catch (error) {
+          return value;
+        }
+      }
+      return value;
+    }
 
     let decoded = value;
     try {
@@ -658,6 +675,35 @@ function trimLeadingWhitespaceInBlockText(container) {
   }
 }
 
+function pruneEmptyHeadings(container) {
+  if (!container) return;
+  const headings = Array.from(container.querySelectorAll('h1,h2,h3,h4,h5,h6'));
+
+  for (const heading of headings) {
+    const text = String(heading.textContent || '')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/\u00a0/g, ' ')
+      .trim();
+    if (text) continue;
+
+    const html = String(heading.innerHTML || '')
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .trim();
+    if (!html) {
+      heading.remove();
+      continue;
+    }
+
+    const normalized = html
+      .replace(/<br\s*\/?>/gi, '')
+      .replace(/&nbsp;/gi, '')
+      .replace(/\s+/g, '');
+    if (!normalized) {
+      heading.remove();
+    }
+  }
+}
+
 function applyThemeInlineStyles(container, converter) {
   if (!container || !converter) return;
 
@@ -813,6 +859,7 @@ function serializeObsidianRenderedHtml({ root, converter }) {
   pruneObsidianOnlyAttributes(container, { finalStage: true });
   trimLeadingWhitespaceInBlockText(container);
   trimTrailingWhitespaceInBlockText(container);
+  pruneEmptyHeadings(container);
 
   let html = container.innerHTML;
   if (converter && typeof converter.fixListParagraphs === 'function') {

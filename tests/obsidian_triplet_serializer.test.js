@@ -1,10 +1,19 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 const {
   serializeObsidianRenderedHtml,
   deriveImageCaption,
   safeDecodeCaption,
 } = require('../services/obsidian-triplet-serializer');
 const { createLegacyConverter } = require('./helpers/render-runtime');
+const tripletFixtureRoot = path.resolve(__dirname, 'fixtures', 'triplet');
+const tripletCorpusPath = path.resolve(tripletFixtureRoot, 'corpus.json');
+const tripletCorpus = JSON.parse(fs.readFileSync(tripletCorpusPath, 'utf8'));
+
+function readTripletFixture(name) {
+  return fs.readFileSync(path.resolve(tripletFixtureRoot, name), 'utf8');
+}
 
 describe('Obsidian Triplet Serializer', () => {
   let converter;
@@ -59,6 +68,43 @@ describe('Obsidian Triplet Serializer', () => {
 
     const href = container.querySelector('a')?.getAttribute('href') || '';
     expect(href).toBe('%E5%96%9C%E6%AC%A2%E6%82%A8%E6%9D%A5%EF%BC%81%E5%B8%A6%E4%BD%A0%E5%9C%A8%E7%BA%BF%E9%80%9B%E9%80%9B%E6%88%91%E7%9A%84%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5.md');
+  });
+
+  it('should canonicalize non-ascii http host to legacy punycode form without forcing trailing slash', () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<p><a href="http://dontbesilent小红书标题方法论.md">A</a><a href="http://开头的关系详解.md">B</a></p>';
+
+    const html = serializeObsidianRenderedHtml({ root, converter });
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    const hrefs = Array.from(container.querySelectorAll('a')).map((a) => a.getAttribute('href'));
+    expect(hrefs).toContain('http://xn--dontbesilent-nw5s334mlk4ayyhqjvrh7e188bh1zc.md');
+    expect(hrefs).toContain('http://xn--d6qv2qg5ebq2aqfho8t8gd.md');
+  });
+
+  it('should keep claude-code workflow fixture normalized for link+empty-heading+whitespace parity', () => {
+    for (const sample of tripletCorpus) {
+      const root = document.createElement('div');
+      root.innerHTML = readTripletFixture(sample.fixture);
+
+      const html = serializeObsidianRenderedHtml({ root, converter });
+      const container = document.createElement('div');
+      container.innerHTML = html;
+
+      const hrefs = Array.from(container.querySelectorAll('a')).map((a) => a.getAttribute('href'));
+      expect(hrefs).toContain('http://xn--dontbesilent-nw5s334mlk4ayyhqjvrh7e188bh1zc.md');
+      expect(hrefs).toContain('http://xn--d6qv2qg5ebq2aqfho8t8gd.md');
+
+      const emptyHeadings = Array.from(container.querySelectorAll('h1,h2,h3,h4,h5,h6')).filter(
+        (heading) => !(heading.textContent || '').replace(/\u00a0/g, ' ').trim()
+      );
+      expect(emptyHeadings).toHaveLength(0);
+
+      const paragraphs = Array.from(container.querySelectorAll('p')).map((p) => p.textContent || '');
+      expect(paragraphs).toContain('夜里 10 点，我对着电脑屏幕发呆。');
+      expect(paragraphs).toContain('下一句收尾。');
+    }
   });
 
   it('should convert Obsidian callout DOM to legacy callout sections', () => {
