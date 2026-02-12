@@ -76,10 +76,62 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Release Checklist
 
-When bumping the version (e.g., v2.3.2 -> v2.3.3), ensure **ALL** of the following files are updated:
+### 版本号更新
 
-1.  **`package.json`**: Update `"version": "..."`.
-2.  **`manifest.json`**: Update `"version": "..."`.
-3.  **`README.md`**:
-    -   **Update Badge**: Update the URL in `![Version](https://img.shields.io/badge/version-X.X.X-blue)`. **(Crucial: Don't miss this!)**
-    -   **Update Logs**: Add a new entry in the `Update Logs` section describing the changes.
+当发布新版本（如 v2.5.6 -> v2.6.0）时，确保以下文件都已更新：
+
+1. **`package.json`**: 更新 `"version": "..."`
+2. **`manifest.json`**: 更新 `"version": "..."`
+3. **`versions.json`**: 添加新版本映射，如 `"2.6.0": "0.15.0"`
+4. **`README.md`**: 更新 Badge 中的版本号 `![Version](https://img.shields.io/badge/version-X.X.X-blue)`
+
+### Release Notes
+
+在 `RELEASE_NOTES/` 目录下创建对应版本的文件，格式如下：
+
+```
+RELEASE_NOTES/v2.6.0.md
+```
+
+文件内容格式：
+```markdown
+---
+title: 简短标题（会显示为 "v2.6.0 - 标题"）
+---
+
+## 更新内容
+
+### 🚀 重大更新
+- ...
+
+### 🐛 问题修复
+- ...
+
+### ✨ 功能优化
+- ...
+```
+
+### 发布流程
+
+1. **准备阶段**（在 feature 分支完成）
+   - 更新版本号文件
+   - 创建 `RELEASE_NOTES/v{version}.md`
+   - 确保所有测试通过：`npm test`
+
+2. **合并 PR**
+   - 将 feature 分支合并到 `main` 分支
+
+3. **触发发布**
+   ```bash
+   git checkout main
+   git pull
+   git tag v{version}  # 如 git tag v2.6.0
+   git push --tags
+   ```
+
+4. **自动化流程**（GitHub Actions 自动执行）
+   - 运行测试
+   - 构建项目
+   - 打 zip 文件
+   - 创建 GitHub Release（从 `RELEASE_NOTES/v{version}.md` 读取标题和内容）
+   - 上传 release 文件
