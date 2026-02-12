@@ -2780,15 +2780,12 @@ var require_obsidian_triplet_renderer = __commonJS({
       let inCodeBlock = false;
       let codeBlockFence = null;
       for (const line of lines) {
-        const fenceMatch = line.match(/^(`{3,}|~{3,})/);
-        if (fenceMatch) {
-          const fenceStr = fenceMatch[1];
-          const fenceChar = fenceStr[0];
-          const fenceLen = fenceStr.length;
+        const parsed = parseFencedBlockDelimiter(line);
+        if (parsed) {
           if (!inCodeBlock) {
             inCodeBlock = true;
-            codeBlockFence = { char: fenceChar, len: fenceLen };
-          } else if (fenceChar === codeBlockFence.char && fenceLen >= codeBlockFence.len) {
+            codeBlockFence = { marker: parsed.marker, length: parsed.length };
+          } else if (parsed.marker === codeBlockFence.marker && parsed.length >= codeBlockFence.length) {
             inCodeBlock = false;
             codeBlockFence = null;
           }

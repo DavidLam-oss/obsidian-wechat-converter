@@ -708,5 +708,36 @@ describe('Obsidian Triplet Renderer', () => {
       // Outside should be escaped
       expect(output).toContain('&lt;Tag&gt;.');
     });
+
+    it('should handle fenced blocks with leading spaces (0-3 spaces)', () => {
+      const input = [
+        '   ```js',
+        '<Tag>inside indented fence</Tag>',
+        '   ```',
+        '<Tag>outside fence</Tag>',
+      ].join('\n');
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Content inside indented fence should be preserved
+      expect(output).toContain('<Tag>inside indented fence</Tag>');
+      // Content outside fence should be escaped
+      expect(output).toContain('&lt;Tag&gt;outside fence');
+    });
+
+    it('should handle fenced blocks with leading spaces + mixed marker', () => {
+      const input = [
+        '  ```js',
+        '<Tag>inside</Tag>',
+        '  ~~~',
+        'still inside (~~~ does not close ```)',
+        '  ```',
+        '<Tag>outside</Tag>',
+      ].join('\n');
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // ~~~ should not close ``` (different marker)
+      expect(output).toContain('<Tag>inside</Tag>');
+      expect(output).toContain('still inside (~~~ does not close ```)');
+      // After proper close, outside content should be escaped
+      expect(output).toContain('&lt;Tag&gt;outside');
+    });
   });
 });

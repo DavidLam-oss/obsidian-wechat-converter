@@ -223,26 +223,22 @@ function escapePseudoHtmlTags(markdown) {
   const lines = markdown.split('\n');
   const result = [];
   let inCodeBlock = false;
-  let codeBlockFence = null; // { char: '`' or '~', len: number }
+  let codeBlockFence = null; // { marker: '`' or '~', length: number }
 
   for (const line of lines) {
-    // Track code block boundaries - must match both fence character type and length
-    const fenceMatch = line.match(/^(`{3,}|~{3,})/);
-    if (fenceMatch) {
-      const fenceStr = fenceMatch[1];
-      const fenceChar = fenceStr[0];
-      const fenceLen = fenceStr.length;
-
+    // Track code block boundaries using existing parser (supports 0-3 leading spaces)
+    const parsed = parseFencedBlockDelimiter(line);
+    if (parsed) {
       if (!inCodeBlock) {
         // Opening fence
         inCodeBlock = true;
-        codeBlockFence = { char: fenceChar, len: fenceLen };
-      } else if (fenceChar === codeBlockFence.char && fenceLen >= codeBlockFence.len) {
-        // Closing fence must match character type and be at least as long
+        codeBlockFence = { marker: parsed.marker, length: parsed.length };
+      } else if (parsed.marker === codeBlockFence.marker && parsed.length >= codeBlockFence.length) {
+        // Closing fence must match marker type and be at least as long
         inCodeBlock = false;
         codeBlockFence = null;
       }
-      // If fence char doesn't match, it's content inside the code block (not a closing fence)
+      // If marker doesn't match, it's content inside the code block (not a closing fence)
       result.push(line);
       continue;
     }
