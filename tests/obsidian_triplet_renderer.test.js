@@ -28,7 +28,7 @@ describe('Obsidian Triplet Renderer', () => {
       '$$',
     ].join('\n');
 
-    const output = preprocessMarkdownForTriplet(input, converter);
+    const { markdown: output } = preprocessMarkdownForTriplet(input, converter);
     expect(output).not.toContain('title: test');
     expect(output).toContain('![封面](folder/a%20b.png)');
     expect(output).toContain('$$');
@@ -57,7 +57,7 @@ describe('Obsidian Triplet Renderer', () => {
       '```',
     ].join('\n');
 
-    const output = preprocessMarkdownForTriplet(input, {});
+    const { markdown: output } = preprocessMarkdownForTriplet(input, {});
     expect(output).toContain('正文 \\[[目标文档|别名]]');
     expect(output).toContain('![图注](assets/pic%20a.png)');
     expect(output).toContain('[[code-link]]');
@@ -66,7 +66,7 @@ describe('Obsidian Triplet Renderer', () => {
   it('should keep inline-code wikilinks unescaped while neutralizing plain wikilinks', () => {
     const input = '正文 [[目标文档]] 与 `[[标题]]`';
 
-    const output = preprocessMarkdownForTriplet(input, {});
+    const { markdown: output } = preprocessMarkdownForTriplet(input, {});
     expect(output).toContain('正文 \\[[目标文档]] 与 `[[标题]]`');
     expect(output).not.toContain('`\\[[标题]]`');
   });
@@ -81,7 +81,7 @@ describe('Obsidian Triplet Renderer', () => {
       '正文 [[outside-fence]]',
     ].join('\n');
 
-    const output = preprocessMarkdownForTriplet(input, {});
+    const { markdown: output } = preprocessMarkdownForTriplet(input, {});
     expect(output).toContain('[[inside-fence]]');
     expect(output).not.toContain('\\[[inside-fence]]');
     expect(output).toContain('正文 \\[[outside-fence]]');
@@ -562,5 +562,46 @@ describe('Obsidian Triplet Renderer', () => {
     // Should not contain raw placeholder patterns (zero-width space + BLOCK/INLINE markers)
     // Current placeholder format: \u200B{session}_{counter}_{random}_{BLOCK|INLINE}\u200B
     expect(html).not.toMatch(/\u200B\w+_\d+_[a-z0-9]+_(BLOCK|INLINE)\u200B/);
+  });
+
+  it('should isolate math placeholders across concurrent renders', async () => {
+    // This test ensures that concurrent render calls don't pollute each other's
+    // math formula placeholders. Previously, a global shared state caused
+    // cross-request contamination.
+    const converter = await createLegacyConverter();
+
+    const renderMarkdown = vi.fn(async (markdown, el) => {
+      const parsed = converter.md.render(markdown);
+      el.innerHTML = parsed;
+    });
+
+    // Two different documents with different formulas
+    const doc1 = 'Document 1: $a+b$';
+    const doc2 = 'Document 2: $x+y$';
+
+    // Simulate concurrent renders
+    const [html1, html2] = await Promise.all([
+      renderObsidianTripletMarkdown({
+        app: {},
+        converter,
+        markdown: doc1,
+        sourcePath: 'doc1.md',
+        markdownRenderer: { renderMarkdown },
+      }),
+      renderObsidianTripletMarkdown({
+        app: {},
+        converter,
+        markdown: doc2,
+        sourcePath: 'doc2.md',
+        markdownRenderer: { renderMarkdown },
+      }),
+    ]);
+
+    // Both should render successfully without cross-contamination
+    expect(html1).toMatch(/mjx-container|<svg/);
+    expect(html2).toMatch(/mjx-container|<svg/);
+    // Neither should contain raw placeholders
+    expect(html1).not.toMatch(/\u200B\w+_\d+_[a-z0-9]+_(BLOCK|INLINE)\u200B/);
+    expect(html2).not.toMatch(/\u200B\w+_\d+_[a-z0-9]+_(BLOCK|INLINE)\u200B/);
   });
 });

@@ -191,9 +191,6 @@ function neutralizePlainWikilinks(markdown) {
   return lines.join('\n');
 }
 
-// Global store for pre-rendered math formulas (cleared per render call)
-let preRenderedMathFormulas = [];
-
 // Generate a unique placeholder that won't conflict with user content
 // Uses a random session ID + counter to prevent collision
 const MATH_PLACEHOLDER_SESSION = `M${Date.now().toString(36)}X`;
@@ -206,39 +203,16 @@ function generateMathPlaceholder(type) {
   return `\u200B${id}_${type}\u200B`;
 }
 
-function preprocessMarkdownForTriplet(markdown, converter) {
-  // Clear the store for this render call
-  preRenderedMathFormulas = [];
-
-  let output = String(markdown || '');
-
-  // Align with converter.convert preprocessing to reduce non-semantic parity noise.
-  output = output.replace(/^[\t ]+(\$\$)/gm, '$1');
-  output = output.replace(/!\[\[([^\[\]|]+)(?:\|([^\[\]]+))?\]\]/g, (match, imagePath, alt) => {
-    return `![${alt || ''}](${encodeURI(String(imagePath || '').trim())})`;
-  });
-
-  if (converter && typeof converter.stripFrontmatter === 'function') {
-    output = converter.stripFrontmatter(output);
-  }
-
-  // Pre-render math formulas using markdown-it + MathJax before Obsidian renders
-  // This is needed because Obsidian's MarkdownRenderer.renderMarkdown doesn't render LaTeX
-  output = preRenderMathFormulas(output, converter);
-
-  output = neutralizeUnsafeMarkdownLinks(output);
-  output = neutralizePlainWikilinks(output);
-
-  // Legacy converter runs markdown-it with breaks=true. Normalize soft line breaks
-  // so Obsidian renderer emits equivalent <br> in common paragraph text.
-  output = injectHardBreaksForLegacyParity(output);
-
-  return output;
-}
-
+/**
+ * Pre-render math formulas and return both the processed markdown and formulas array.
+ * This function is pure - it doesn't use or modify any global state.
+ * @returns {{ markdown: string, formulas: Array<{placeholder: string, rendered: string, isBlock: boolean}> }}
+ */
 function preRenderMathFormulas(markdown, converter) {
-  if (!converter || !converter.md) return markdown;
-  if (typeof converter.md.render !== 'function') return markdown;
+  const formulas = [];
+
+  if (!converter || !converter.md) return { markdown, formulas };
+  if (typeof converter.md.render !== 'function') return { markdown, formulas };
 
   let output = markdown;
 
@@ -252,7 +226,7 @@ function preRenderMathFormulas(markdown, converter) {
       const rendered = converter.md.render(`$$${formula}$$`);
       // Extract just the rendered math (strip wrapper <p> if any)
       const cleaned = rendered.replace(/^<p>|<\/p>$/g, '').trim();
-      preRenderedMathFormulas.push({ placeholder, rendered: cleaned, isBlock: true });
+      formulas.push({ placeholder, rendered: cleaned, isBlock: true });
       return placeholder;
     } catch (error) {
       return match;
@@ -267,14 +241,48 @@ function preRenderMathFormulas(markdown, converter) {
     try {
       // Render using renderInline for inline math
       const rendered = converter.md.renderInline(`$${formula}$`);
-      preRenderedMathFormulas.push({ placeholder, rendered, isBlock: false });
+      formulas.push({ placeholder, rendered, isBlock: false });
       return placeholder;
     } catch (error) {
       return match;
     }
   });
 
-  return output;
+  return { markdown: output, formulas };
+}
+
+/**
+ * Preprocess markdown for triplet rendering.
+ * Returns an object with processed markdown and pre-rendered math formulas.
+ * This function is pure - no global state is used.
+ * @returns {{ markdown: string, mathFormulas: Array }}
+ */
+function preprocessMarkdownForTriplet(markdown, converter) {
+  let output = String(markdown || '');
+
+  // Align with converter.convert preprocessing to reduce non-semantic parity noise.
+  output = output.replace(/^[\t ]+(\$\$)/gm, '$1');
+  output = output.replace(/!\[\[([^\[\]|]+)(?:\|([^\[\]]+))?\]\]/g, (match, imagePath, alt) => {
+    return `![${alt || ''}](${encodeURI(String(imagePath || '').trim())})`;
+  });
+
+  if (converter && typeof converter.stripFrontmatter === 'function') {
+    output = converter.stripFrontmatter(output);
+  }
+
+  // Pre-render math formulas using markdown-it + MathJax before Obsidian renders
+  // This is needed because Obsidian's MarkdownRenderer.renderMarkdown doesn't render LaTeX
+  const { markdown: mathProcessed, formulas: mathFormulas } = preRenderMathFormulas(output, converter);
+  output = mathProcessed;
+
+  output = neutralizeUnsafeMarkdownLinks(output);
+  output = neutralizePlainWikilinks(output);
+
+  // Legacy converter runs markdown-it with breaks=true. Normalize soft line breaks
+  // so Obsidian renderer emits equivalent <br> in common paragraph text.
+  output = injectHardBreaksForLegacyParity(output);
+
+  return { markdown: output, mathFormulas };
 }
 
 function countUnresolvedImageEmbeds(root) {
@@ -465,7 +473,7 @@ async function renderObsidianTripletMarkdown({
   }
 
   const container = document.createElement('div');
-  const preparedMarkdown = preprocessMarkdownForTriplet(markdown, converter);
+  const { markdown: preparedMarkdown, mathFormulas } = preprocessMarkdownForTriplet(markdown, converter);
 
   const shouldObserveWindow = shouldObserveAsyncEmbedWindow(preparedMarkdown);
   await renderByObsidianMarkdownRenderer({
@@ -479,9 +487,6 @@ async function renderObsidianTripletMarkdown({
 
   // Wait for image embeds to settle; MarkdownRenderer may resolve embeds asynchronously.
   await waitForTripletDomToSettle(container, shouldObserveWindow ? {} : { minObserveMs: 0 });
-
-  // Capture pre-rendered math formulas for the serializer
-  const mathFormulas = [...preRenderedMathFormulas];
 
   const serializedHtml = serializer({
     root: container,
@@ -503,7 +508,4 @@ module.exports = {
   waitForTripletDomToSettle,
   renderByObsidianMarkdownRenderer,
   renderObsidianTripletMarkdown,
-  // Export for serializer to access pre-rendered math
-  getPreRenderedMathFormulas: () => preRenderedMathFormulas,
-  clearPreRenderedMathFormulas: () => { preRenderedMathFormulas = []; },
 };

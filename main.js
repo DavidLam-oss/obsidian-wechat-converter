@@ -2665,7 +2665,6 @@ var require_obsidian_triplet_renderer = __commonJS({
       }
       return lines.join("\n");
     }
-    var preRenderedMathFormulas = [];
     var MATH_PLACEHOLDER_SESSION = `M${Date.now().toString(36)}X`;
     var mathPlaceholderCounter = 0;
     function generateMathPlaceholder(type) {
@@ -2673,27 +2672,12 @@ var require_obsidian_triplet_renderer = __commonJS({
       mathPlaceholderCounter += 1;
       return `\u200B${id}_${type}\u200B`;
     }
-    function preprocessMarkdownForTriplet(markdown, converter) {
-      preRenderedMathFormulas = [];
-      let output = String(markdown || "");
-      output = output.replace(/^[\t ]+(\$\$)/gm, "$1");
-      output = output.replace(/!\[\[([^\[\]|]+)(?:\|([^\[\]]+))?\]\]/g, (match, imagePath, alt) => {
-        return `![${alt || ""}](${encodeURI(String(imagePath || "").trim())})`;
-      });
-      if (converter && typeof converter.stripFrontmatter === "function") {
-        output = converter.stripFrontmatter(output);
-      }
-      output = preRenderMathFormulas(output, converter);
-      output = neutralizeUnsafeMarkdownLinks(output);
-      output = neutralizePlainWikilinks(output);
-      output = injectHardBreaksForLegacyParity(output);
-      return output;
-    }
     function preRenderMathFormulas(markdown, converter) {
+      const formulas = [];
       if (!converter || !converter.md)
-        return markdown;
+        return { markdown, formulas };
       if (typeof converter.md.render !== "function")
-        return markdown;
+        return { markdown, formulas };
       let output = markdown;
       const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
       output = output.replace(blockMathPattern, (match, formula) => {
@@ -2701,7 +2685,7 @@ var require_obsidian_triplet_renderer = __commonJS({
         try {
           const rendered = converter.md.render(`$$${formula}$$`);
           const cleaned = rendered.replace(/^<p>|<\/p>$/g, "").trim();
-          preRenderedMathFormulas.push({ placeholder, rendered: cleaned, isBlock: true });
+          formulas.push({ placeholder, rendered: cleaned, isBlock: true });
           return placeholder;
         } catch (error) {
           return match;
@@ -2712,13 +2696,29 @@ var require_obsidian_triplet_renderer = __commonJS({
         const placeholder = generateMathPlaceholder("INLINE");
         try {
           const rendered = converter.md.renderInline(`$${formula}$`);
-          preRenderedMathFormulas.push({ placeholder, rendered, isBlock: false });
+          formulas.push({ placeholder, rendered, isBlock: false });
           return placeholder;
         } catch (error) {
           return match;
         }
       });
-      return output;
+      return { markdown: output, formulas };
+    }
+    function preprocessMarkdownForTriplet(markdown, converter) {
+      let output = String(markdown || "");
+      output = output.replace(/^[\t ]+(\$\$)/gm, "$1");
+      output = output.replace(/!\[\[([^\[\]|]+)(?:\|([^\[\]]+))?\]\]/g, (match, imagePath, alt) => {
+        return `![${alt || ""}](${encodeURI(String(imagePath || "").trim())})`;
+      });
+      if (converter && typeof converter.stripFrontmatter === "function") {
+        output = converter.stripFrontmatter(output);
+      }
+      const { markdown: mathProcessed, formulas: mathFormulas } = preRenderMathFormulas(output, converter);
+      output = mathProcessed;
+      output = neutralizeUnsafeMarkdownLinks(output);
+      output = neutralizePlainWikilinks(output);
+      output = injectHardBreaksForLegacyParity(output);
+      return { markdown: output, mathFormulas };
     }
     function countUnresolvedImageEmbeds(root) {
       if (!root)
@@ -2880,7 +2880,7 @@ var require_obsidian_triplet_renderer = __commonJS({
         throw new Error("Triplet renderer requires converter runtime");
       }
       const container = document.createElement("div");
-      const preparedMarkdown = preprocessMarkdownForTriplet(markdown, converter);
+      const { markdown: preparedMarkdown, mathFormulas } = preprocessMarkdownForTriplet(markdown, converter);
       const shouldObserveWindow = shouldObserveAsyncEmbedWindow(preparedMarkdown);
       await renderByObsidianMarkdownRenderer({
         app,
@@ -2891,7 +2891,6 @@ var require_obsidian_triplet_renderer = __commonJS({
         markdownRenderer
       });
       await waitForTripletDomToSettle(container, shouldObserveWindow ? {} : { minObserveMs: 0 });
-      const mathFormulas = [...preRenderedMathFormulas];
       const serializedHtml = serializer({
         root: container,
         converter,
@@ -2909,12 +2908,7 @@ var require_obsidian_triplet_renderer = __commonJS({
       shouldObserveAsyncEmbedWindow,
       waitForTripletDomToSettle,
       renderByObsidianMarkdownRenderer,
-      renderObsidianTripletMarkdown: renderObsidianTripletMarkdown2,
-      // Export for serializer to access pre-rendered math
-      getPreRenderedMathFormulas: () => preRenderedMathFormulas,
-      clearPreRenderedMathFormulas: () => {
-        preRenderedMathFormulas = [];
-      }
+      renderObsidianTripletMarkdown: renderObsidianTripletMarkdown2
     };
   }
 });
