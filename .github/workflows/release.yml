@@ -71,9 +71,9 @@ jobs:
       - name: Validate release artifact
         run: npm run release:validate
 
-      - name: Extract release notes
-        id: release_notes
+      - name: Prepare release notes
         if: startsWith(github.ref, 'refs/tags/')
+        id: release_notes
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           NOTES_FILE="RELEASE_NOTES/v${VERSION}.md"
@@ -81,19 +81,20 @@ jobs:
           if [ -f "$NOTES_FILE" ]; then
             # Extract title from YAML front matter
             TITLE=$(sed -n 's/^title: *//p' "$NOTES_FILE" | head -1)
-
-            # Extract body (everything after front matter)
-            BODY=$(sed '1,/^---$/d' "$NOTES_FILE" | sed '1,/^---$/d')
-
-            # Write to files for multiline handling
             echo "title=$TITLE" >> $GITHUB_OUTPUT
-            echo "body<<EOF" >> $GITHUB_OUTPUT
-            echo "$BODY" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+
+            # Extract body (everything after the second ---)
+            # Use awk to get content after the closing front matter delimiter
+            awk '/^---$/{n++;next} n>=2' "$NOTES_FILE" > /tmp/release_body.md
+            echo "body_file=/tmp/release_body.md" >> $GITHUB_OUTPUT
             echo "found=true" >> $GITHUB_OUTPUT
+            echo "✅ Found release notes: $NOTES_FILE"
+            echo "Title: $TITLE"
+            echo "Body preview:"
+            head -5 /tmp/release_body.md
           else
             echo "found=false" >> $GITHUB_OUTPUT
-            echo "Release notes file not found: $NOTES_FILE"
+            echo "⚠️ Release notes file not found: $NOTES_FILE"
           fi
 
       - name: Create GitHub release
@@ -101,7 +102,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ github.ref_name }}${{ steps.release_notes.outputs.found == 'true' && format(' - {0}', steps.release_notes.outputs.title) || '' }}
-          body: ${{ steps.release_notes.outputs.found == 'true' && steps.release_notes.outputs.body || '' }}
+          body_path: ${{ steps.release_notes.outputs.body_file }}
           files: |
             obsidian-wechat-converter.zip
             main.js
