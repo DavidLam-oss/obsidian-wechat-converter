@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 const {
-  containsLegacyIncompatibleMathMarkup,
   neutralizeUnsafeMarkdownLinks,
   neutralizePlainWikilinks,
   preprocessMarkdownForTriplet,
@@ -199,31 +198,6 @@ describe('Obsidian Triplet Renderer', () => {
     expect(renderMarkdown.mock.calls[0][0]).toBe('# title');
     expect(serializer).toHaveBeenCalled();
     expect(html).toBe('<section>ok</section>');
-  });
-
-  it('should detect legacy-incompatible mjx math markup', () => {
-    expect(containsLegacyIncompatibleMathMarkup('<span><mjx-math></mjx-math></span>')).toBe(true);
-    expect(containsLegacyIncompatibleMathMarkup('<mjx-container display="true"></mjx-container>')).toBe(true);
-    expect(containsLegacyIncompatibleMathMarkup('<span><svg></svg></span>')).toBe(false);
-  });
-
-  it('should fallback to legacy converter when serialized triplet html still contains mjx markup', async () => {
-    const renderMarkdown = vi.fn(async (_markdown, el) => {
-      el.innerHTML = '<p>math</p>';
-    });
-    const convert = vi.fn(async () => '<section>legacy-math</section>');
-
-    const html = await renderObsidianTripletMarkdown({
-      app: {},
-      converter: { convert },
-      markdown: '$E=mc^2$',
-      sourcePath: 'note.md',
-      markdownRenderer: { renderMarkdown },
-      serializer: () => '<section><span><mjx-math></mjx-math></span></section>',
-    });
-
-    expect(html).toBe('<section>legacy-math</section>');
-    expect(convert).toHaveBeenCalledWith('$E=mc^2$');
   });
 
   it('should pass component into markdown renderer APIs', async () => {

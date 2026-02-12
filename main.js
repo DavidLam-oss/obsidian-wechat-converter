@@ -8,269 +8,18 @@ var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
 
-// services/parity-gate.js
-var require_parity_gate = __commonJS({
-  "services/parity-gate.js"(exports2, module2) {
-    function isStrictHtmlParity(legacyHtml, candidateHtml) {
-      return String(legacyHtml || "") === String(candidateHtml || "");
-    }
-    function findFirstDiffIndex(a, b) {
-      const left = String(a || "");
-      const right = String(b || "");
-      const minLength = Math.min(left.length, right.length);
-      for (let i = 0; i < minLength; i += 1) {
-        if (left[i] !== right[i])
-          return i;
-      }
-      if (left.length !== right.length)
-        return minLength;
-      return -1;
-    }
-    function indexToLineColumn(text, index) {
-      const source = String(text || "");
-      const safeIndex = Math.max(0, Math.min(source.length, index));
-      let line = 1;
-      let column = 1;
-      for (let i = 0; i < safeIndex; i += 1) {
-        if (source[i] === "\n") {
-          line += 1;
-          column = 1;
-        } else {
-          column += 1;
-        }
-      }
-      return { line, column };
-    }
-    function findSyncPoint(left, right, leftIndex, rightIndex, lookahead = 64) {
-      const maxLeftOffset = Math.min(lookahead, Math.max(0, left.length - leftIndex));
-      const maxRightOffset = Math.min(lookahead, Math.max(0, right.length - rightIndex));
-      for (let leftOffset = 0; leftOffset <= maxLeftOffset; leftOffset += 1) {
-        for (let rightOffset = 0; rightOffset <= maxRightOffset; rightOffset += 1) {
-          const lPos = leftIndex + leftOffset;
-          const rPos = rightIndex + rightOffset;
-          if (lPos >= left.length || rPos >= right.length)
-            continue;
-          if (left[lPos] !== right[rPos])
-            continue;
-          const lNext = lPos + 1;
-          const rNext = rPos + 1;
-          const nextLooksAligned = lNext >= left.length || rNext >= right.length || left[lNext] === right[rNext];
-          if (nextLooksAligned) {
-            return { leftIndex: lPos, rightIndex: rPos };
-          }
-        }
-      }
-      return null;
-    }
-    function collectMismatchSegments(left, right, options = {}) {
-      const lookahead = Number.isInteger(options.lookahead) ? options.lookahead : 64;
-      const maxSegments = Number.isInteger(options.maxSegments) && options.maxSegments > 0 ? options.maxSegments : Number.POSITIVE_INFINITY;
-      const snippetContext = Number.isInteger(options.snippetContext) ? options.snippetContext : 60;
-      let i = 0;
-      let j = 0;
-      let segmentCount = 0;
-      const segments = [];
-      while (i < left.length && j < right.length) {
-        if (left[i] === right[j]) {
-          i += 1;
-          j += 1;
-          continue;
-        }
-        const startLeft = i;
-        const startRight = j;
-        const sync = findSyncPoint(left, right, i, j, lookahead);
-        let endLeft = left.length;
-        let endRight = right.length;
-        if (sync) {
-          endLeft = sync.leftIndex;
-          endRight = sync.rightIndex;
-          i = sync.leftIndex;
-          j = sync.rightIndex;
-        } else {
-          i = left.length;
-          j = right.length;
-        }
-        const start = Math.max(0, Math.min(startLeft, startRight) - snippetContext);
-        const leftLineColumn = indexToLineColumn(left, startLeft);
-        const rightLineColumn = indexToLineColumn(right, startRight);
-        segmentCount += 1;
-        if (segments.length < maxSegments) {
-          segments.push({
-            index: startLeft,
-            legacyStart: startLeft,
-            legacyEnd: endLeft,
-            candidateStart: startRight,
-            candidateEnd: endRight,
-            legacyLine: leftLineColumn.line,
-            legacyColumn: leftLineColumn.column,
-            candidateLine: rightLineColumn.line,
-            candidateColumn: rightLineColumn.column,
-            legacySnippet: left.slice(start, Math.min(left.length, startLeft + snippetContext)),
-            candidateSnippet: right.slice(start, Math.min(right.length, startRight + snippetContext))
-          });
-        }
-      }
-      if (i < left.length || j < right.length) {
-        segmentCount += 1;
-        if (segments.length < maxSegments) {
-          const leftLineColumn = indexToLineColumn(left, i);
-          const rightLineColumn = indexToLineColumn(right, j);
-          const start = Math.max(0, Math.min(i, j) - snippetContext);
-          segments.push({
-            index: i,
-            legacyStart: i,
-            legacyEnd: left.length,
-            candidateStart: j,
-            candidateEnd: right.length,
-            legacyLine: leftLineColumn.line,
-            legacyColumn: leftLineColumn.column,
-            candidateLine: rightLineColumn.line,
-            candidateColumn: rightLineColumn.column,
-            legacySnippet: left.slice(start, Math.min(left.length, i + snippetContext)),
-            candidateSnippet: right.slice(start, Math.min(right.length, j + snippetContext))
-          });
-        }
-      }
-      return {
-        segmentCount,
-        segments,
-        truncated: Number.isFinite(maxSegments) ? segmentCount > segments.length : false
-      };
-    }
-    function buildParityMismatchDetails(legacyHtml, candidateHtml, contextLength = 80) {
-      const left = String(legacyHtml || "");
-      const right = String(candidateHtml || "");
-      const index = findFirstDiffIndex(left, right);
-      if (index === -1) {
-        return {
-          index: -1,
-          legacySnippet: "",
-          candidateSnippet: "",
-          legacyLength: left.length,
-          candidateLength: right.length,
-          lengthDelta: 0,
-          segmentCount: 0,
-          segments: [],
-          truncated: false
-        };
-      }
-      const start = Math.max(0, index - contextLength);
-      const endLeft = Math.min(left.length, index + contextLength);
-      const endRight = Math.min(right.length, index + contextLength);
-      const leftLineColumn = indexToLineColumn(left, index);
-      const rightLineColumn = indexToLineColumn(right, index);
-      const segmentData = collectMismatchSegments(left, right);
-      return {
-        index,
-        legacySnippet: left.slice(start, endLeft),
-        candidateSnippet: right.slice(start, endRight),
-        legacyLength: left.length,
-        candidateLength: right.length,
-        lengthDelta: right.length - left.length,
-        legacyLine: leftLineColumn.line,
-        legacyColumn: leftLineColumn.column,
-        candidateLine: rightLineColumn.line,
-        candidateColumn: rightLineColumn.column,
-        segmentCount: segmentData.segmentCount,
-        segments: segmentData.segments,
-        truncated: segmentData.truncated
-      };
-    }
-    module2.exports = {
-      isStrictHtmlParity,
-      findFirstDiffIndex,
-      buildParityMismatchDetails
-    };
-  }
-});
-
 // services/render-pipeline.js
 var require_render_pipeline = __commonJS({
   "services/render-pipeline.js"(exports2, module2) {
-    var { isStrictHtmlParity, buildParityMismatchDetails } = require_parity_gate();
-    function pickFlag(flags, primaryKey, legacyKey, defaultValue) {
-      if (Object.prototype.hasOwnProperty.call(flags || {}, primaryKey)) {
-        return flags[primaryKey];
-      }
-      if (Object.prototype.hasOwnProperty.call(flags || {}, legacyKey)) {
-        return flags[legacyKey];
-      }
-      return defaultValue;
-    }
-    var LegacyRenderPipeline = class {
-      constructor(converter) {
-        this.converter = converter;
-      }
-      async renderForPreview(markdown, context = {}) {
-        if (!this.converter || typeof this.converter.convert !== "function") {
-          throw new Error("Legacy converter is not ready");
-        }
-        if (typeof this.converter.updateSourcePath === "function") {
-          this.converter.updateSourcePath(context.sourcePath || "");
-        }
-        return this.converter.convert(markdown);
-      }
-      async renderForExport(markdown, context = {}) {
-        return {
-          html: await this.renderForPreview(markdown, context),
-          diagnostics: []
-        };
-      }
-    };
     var NativeRenderPipeline = class {
-      constructor({ nativeRenderer, candidateRenderer, legacyPipeline, getFlags }) {
+      constructor({ nativeRenderer, candidateRenderer }) {
         this.nativeRenderer = candidateRenderer || nativeRenderer;
-        this.legacyPipeline = legacyPipeline;
-        this.getFlags = typeof getFlags === "function" ? getFlags : () => ({});
       }
       async renderForPreview(markdown, context = {}) {
-        const flags = this.getFlags() || {};
-        const strictParity = pickFlag(flags, "enforceTripletParity", "enforceNativeParity", false) === true;
-        const enableFallback = pickFlag(flags, "tripletFallbackToPhase2", "enableLegacyFallback", true) !== false;
-        const mismatchCode = flags.parityErrorCode || "PARITY_MISMATCH";
-        const parityTransform = typeof flags.parityTransform === "function" ? flags.parityTransform : null;
         if (typeof this.nativeRenderer !== "function") {
-          if (enableFallback && this.legacyPipeline) {
-            return this.legacyPipeline.renderForPreview(markdown, context);
-          }
           throw new Error("Triplet render pipeline is not implemented yet");
         }
-        try {
-          const nativeHtml = await this.nativeRenderer(markdown, context);
-          if (!strictParity || !this.legacyPipeline) {
-            return nativeHtml;
-          }
-          const legacyHtml = await this.legacyPipeline.renderForPreview(markdown, context);
-          const parityLegacyHtml = parityTransform ? parityTransform(legacyHtml, { markdown, context, pipeline: "legacy" }) : legacyHtml;
-          const parityNativeHtml = parityTransform ? parityTransform(nativeHtml, { markdown, context, pipeline: "native" }) : nativeHtml;
-          if (isStrictHtmlParity(parityLegacyHtml, parityNativeHtml)) {
-            return nativeHtml;
-          }
-          const mismatch = buildParityMismatchDetails(parityLegacyHtml, parityNativeHtml);
-          const parityError = new Error(
-            `[RenderPipeline] Parity mismatch at index ${mismatch.index} (segments ${mismatch.segmentCount}, delta ${mismatch.lengthDelta})`
-          );
-          parityError.code = mismatchCode;
-          parityError.parity = mismatch;
-          if (typeof flags.onParityMismatch === "function") {
-            flags.onParityMismatch({
-              markdown,
-              context,
-              mismatch
-            });
-          }
-          if (enableFallback && this.legacyPipeline) {
-            console.warn("[RenderPipeline] Triplet parity mismatch, fallback to Phase2 baseline:", mismatch.index);
-            return legacyHtml;
-          }
-          throw parityError;
-        } catch (error) {
-          if (enableFallback && this.legacyPipeline) {
-            console.warn("[RenderPipeline] Triplet render failed, fallback to Phase2 baseline:", (error == null ? void 0 : error.message) || error);
-            return this.legacyPipeline.renderForPreview(markdown, context);
-          }
-          throw error;
-        }
+        return this.nativeRenderer(markdown, context);
       }
       async renderForExport(markdown, context = {}) {
         return {
@@ -279,18 +28,14 @@ var require_render_pipeline = __commonJS({
         };
       }
     };
-    function createRenderPipelines2({ converter, getFlags, nativeRenderer, candidateRenderer }) {
-      const legacyPipeline = new LegacyRenderPipeline(converter);
+    function createRenderPipelines2({ nativeRenderer, candidateRenderer }) {
       const nativePipeline = new NativeRenderPipeline({
         nativeRenderer,
-        candidateRenderer,
-        legacyPipeline,
-        getFlags
+        candidateRenderer
       });
-      return { legacyPipeline, nativePipeline };
+      return { nativePipeline };
     }
     module2.exports = {
-      LegacyRenderPipeline,
       NativeRenderPipeline,
       createRenderPipelines: createRenderPipelines2
     };
@@ -2191,14 +1936,28 @@ var require_obsidian_triplet_serializer = __commonJS({
       if (!container)
         return;
       const hasExplicitProtocol = (value) => /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(String(value || ""));
+      const hasNonAscii = (value) => /[^\x00-\x7F]/.test(String(value || ""));
       const canonicalizeRelativeHrefForLegacyParity = (href) => {
         const value = String(href || "").trim();
         if (!value)
           return value;
         if (value.startsWith("#") || value.startsWith("//"))
           return value;
-        if (hasExplicitProtocol(value))
+        if (hasExplicitProtocol(value)) {
+          if (/^https?:/i.test(value) && hasNonAscii(value)) {
+            try {
+              const parsed = new URL(value);
+              const isBareHost = /^https?:\/\/[^/?#]+$/i.test(value);
+              if (isBareHost && parsed.pathname === "/" && !parsed.search && !parsed.hash) {
+                return `${parsed.protocol}//${parsed.host}`;
+              }
+              return parsed.href;
+            } catch (error) {
+              return value;
+            }
+          }
           return value;
+        }
         let decoded = value;
         try {
           decoded = decodeURI(value);
@@ -2443,6 +2202,25 @@ var require_obsidian_triplet_serializer = __commonJS({
         }
       }
     }
+    function pruneEmptyHeadings(container) {
+      if (!container)
+        return;
+      const headings = Array.from(container.querySelectorAll("h1,h2,h3,h4,h5,h6"));
+      for (const heading of headings) {
+        const text = String(heading.textContent || "").replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/\u00a0/g, " ").trim();
+        if (text)
+          continue;
+        const html = String(heading.innerHTML || "").replace(/<!--[\s\S]*?-->/g, "").trim();
+        if (!html) {
+          heading.remove();
+          continue;
+        }
+        const normalized = html.replace(/<br\s*\/?>/gi, "").replace(/&nbsp;/gi, "").replace(/\s+/g, "");
+        if (!normalized) {
+          heading.remove();
+        }
+      }
+    }
     function applyThemeInlineStyles(container, converter) {
       if (!container || !converter)
         return;
@@ -2610,6 +2388,7 @@ var require_obsidian_triplet_serializer = __commonJS({
       pruneObsidianOnlyAttributes(container, { finalStage: true });
       trimLeadingWhitespaceInBlockText(container);
       trimTrailingWhitespaceInBlockText(container);
+      pruneEmptyHeadings(container);
       let html = container.innerHTML;
       if (converter && typeof converter.fixListParagraphs === "function") {
         html = converter.fixListParagraphs(html);
@@ -2643,10 +2422,6 @@ var require_obsidian_triplet_renderer = __commonJS({
   "services/obsidian-triplet-renderer.js"(exports2, module2) {
     var { MarkdownRenderer } = require("obsidian");
     var { serializeObsidianRenderedHtml } = require_obsidian_triplet_serializer();
-    function containsLegacyIncompatibleMathMarkup(html) {
-      const value = String(html || "");
-      return /<mjx-(?:math|container)\b/i.test(value);
-    }
     function isFencedBlockDelimiter(line) {
       return /^\s{0,3}(?:`{3,}|~{3,})/.test(String(line || ""));
     }
@@ -2923,16 +2698,9 @@ var require_obsidian_triplet_renderer = __commonJS({
         sourcePath,
         app
       });
-      if (containsLegacyIncompatibleMathMarkup(serializedHtml) && typeof converter.convert === "function") {
-        if (typeof converter.updateSourcePath === "function") {
-          converter.updateSourcePath(sourcePath);
-        }
-        return converter.convert(markdown);
-      }
       return serializedHtml;
     }
     module2.exports = {
-      containsLegacyIncompatibleMathMarkup,
       neutralizeUnsafeMarkdownLinks,
       neutralizePlainWikilinks,
       preprocessMarkdownForTriplet,
@@ -3656,7 +3424,6 @@ var { createWechatSyncService } = require_wechat_sync();
 var { resolveSyncAccount, toSyncFriendlyMessage } = require_sync_context();
 var { processAllImages: processAllImagesService, processMathFormulas: processMathFormulasService } = require_wechat_media();
 var { cleanHtmlForDraft: cleanHtmlForDraftService } = require_wechat_html_cleaner();
-var TRIPLET_PARITY_DEBUG_REV = "triplet-parity-r6";
 var APPLE_STYLE_VIEW = "apple-style-converter";
 var DEFAULT_SETTINGS = {
   theme: "github",
@@ -3682,17 +3449,7 @@ var DEFAULT_SETTINGS = {
   // 预览设置
   usePhoneFrame: true,
   // 是否使用手机框预览
-  // 三件套渲染开关
-  useTripletPipeline: false,
-  tripletFallbackToPhase2: true,
-  enforceTripletParity: true,
-  // 严格零差异门禁
-  tripletParityVerboseLog: false,
-  // 输出完整差异 payload 到控制台（调试用）
-  // 旧字段保留用于迁移检测
-  useNativePipeline: false,
-  enableLegacyFallback: true,
-  enforceNativeParity: true,
+  // 渲染模式已切换为 native-only
   // 排版设置
   sidePadding: 16,
   // 页面两侧留白 (px)
@@ -3965,7 +3722,6 @@ var AppleStyleView = class extends ItemView {
     this.plugin = plugin;
     this.currentHtml = null;
     this.converter = null;
-    this.legacyRenderPipeline = null;
     this.nativeRenderPipeline = null;
     this.theme = null;
     this.lastActiveFile = null;
@@ -3975,7 +3731,8 @@ var AppleStyleView = class extends ItemView {
     this.svgUploadCache = /* @__PURE__ */ new Map();
     this.imageUploadCache = /* @__PURE__ */ new Map();
     this.renderGeneration = 0;
-    this.lastParityMismatchNoticeKey = "";
+    this.lastRenderError = "";
+    this.lastRenderFailureNoticeKey = "";
   }
   getViewType() {
     return APPLE_STYLE_VIEW;
@@ -4163,9 +3920,7 @@ var AppleStyleView = class extends ItemView {
       });
       this.theme = runtime.theme;
       this.converter = runtime.converter;
-      const { legacyPipeline, nativePipeline } = createRenderPipelines({
-        converter: this.converter,
-        getFlags: () => this.getRenderPipelineFlags(),
+      const { nativePipeline } = createRenderPipelines({
         candidateRenderer: async (markdown, context = {}) => {
           return renderObsidianTripletMarkdown({
             app: this.app,
@@ -4176,7 +3931,6 @@ var AppleStyleView = class extends ItemView {
           });
         }
       });
-      this.legacyRenderPipeline = legacyPipeline;
       this.nativeRenderPipeline = nativePipeline;
       console.log("\u2705 \u4F9D\u8D56\u52A0\u8F7D\u5B8C\u6210");
     } catch (error) {
@@ -4671,7 +4425,7 @@ var AppleStyleView = class extends ItemView {
    */
   showSyncModal() {
     if (!this.currentHtml) {
-      new Notice("\u26A0\uFE0F \u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u6587\u7AE0\u8FDB\u884C\u8F6C\u6362");
+      new Notice(this.getMissingRenderNotice());
       return;
     }
     const { Modal } = require("obsidian");
@@ -4809,7 +4563,7 @@ var AppleStyleView = class extends ItemView {
       return;
     }
     if (!this.currentHtml) {
-      new Notice("\u274C \u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u6587\u7AE0\u8FDB\u884C\u8F6C\u6362");
+      new Notice(this.getMissingRenderNotice());
       return;
     }
     const notice = new Notice(`\u{1F680} \u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65...`, 0);
@@ -5048,35 +4802,8 @@ var AppleStyleView = class extends ItemView {
       btn.classList.toggle("active", btn.dataset.value == value);
     });
   }
-  getRenderPipelineFlags() {
-    var _a, _b, _c, _d, _e, _f;
-    const useTripletPipeline = ((_b = (_a = this.plugin) == null ? void 0 : _a.settings) == null ? void 0 : _b.useTripletPipeline) === true;
-    const tripletFallbackToPhase2 = ((_d = (_c = this.plugin) == null ? void 0 : _c.settings) == null ? void 0 : _d.tripletFallbackToPhase2) !== false;
-    const enforceTripletParity = ((_f = (_e = this.plugin) == null ? void 0 : _e.settings) == null ? void 0 : _f.enforceTripletParity) !== false;
-    return {
-      useTripletPipeline,
-      tripletFallbackToPhase2,
-      enforceTripletParity,
-      // Backward-compatible aliases for existing tests and fallback paths.
-      useNativePipeline: useTripletPipeline,
-      enableLegacyFallback: tripletFallbackToPhase2,
-      enforceNativeParity: enforceTripletParity,
-      parityErrorCode: "TRIPLET_PARITY_MISMATCH",
-      parityTransform: (html) => {
-        const cleaned = this.cleanHtmlForDraft(html);
-        return cleaned.replace(/>\r?\n\s*</g, "><").replace(/\r?\n/g, "");
-      },
-      onParityMismatch: ({ context, mismatch }) => {
-        this.logParityMismatchDetails((context == null ? void 0 : context.sourcePath) || "", mismatch || {});
-      }
-    };
-  }
   getActiveRenderPipeline() {
-    const flags = this.getRenderPipelineFlags();
-    if (flags.useTripletPipeline && this.nativeRenderPipeline) {
-      return this.nativeRenderPipeline;
-    }
-    return this.legacyRenderPipeline;
+    return this.nativeRenderPipeline;
   }
   async renderMarkdownForPreview(markdown, sourcePath) {
     const pipeline = this.getActiveRenderPipeline();
@@ -5120,105 +4847,31 @@ var AppleStyleView = class extends ItemView {
       cls: "apple-placeholder-note"
     });
   }
-  showParityMismatchPlaceholder(sourcePath, mismatch = {}) {
-    this.currentHtml = null;
+  showRenderFailurePlaceholder(message = "") {
+    if (!this.previewContainer || typeof this.previewContainer.createEl !== "function")
+      return;
     this.previewContainer.empty();
     this.previewContainer.removeClass("apple-has-content");
-    const index = Number.isInteger(mismatch.index) ? mismatch.index : -1;
-    const segmentCount = Number.isInteger(mismatch.segmentCount) ? mismatch.segmentCount : 0;
-    const name = sourcePath ? String(sourcePath).split("/").pop() : "\u5F53\u524D\u6587\u6863";
-    const box = this.previewContainer.createEl("div", { cls: "apple-placeholder" });
-    box.createEl("div", { cls: "apple-placeholder-icon", text: "\u26A0\uFE0F" });
-    box.createEl("h2", { text: "\u4E09\u4EF6\u5957\u6E32\u67D3\u672A\u901A\u8FC7\u96F6\u5DEE\u5F02\u95E8\u7981" });
-    box.createEl("p", {
-      text: `${name} \u4E0E Phase2 \u57FA\u7EBF\u8F93\u51FA\u5B58\u5728\u5DEE\u5F02\uFF08\u9996\u4E2A index ${index}\uFF0C\u5171 ${segmentCount} \u6BB5\u5DEE\u5F02\uFF09\u3002`
+    const placeholder = this.previewContainer.createEl("div", { cls: "apple-placeholder" });
+    placeholder.createEl("div", { cls: "apple-placeholder-icon", text: "\u26A0\uFE0F" });
+    placeholder.createEl("h2", { text: "\u6E32\u67D3\u5931\u8D25" });
+    placeholder.createEl("p", {
+      text: "\u5F53\u524D\u6587\u6863\u5C1A\u672A\u6210\u529F\u6E32\u67D3\uFF0C\u590D\u5236/\u540C\u6B65\u5DF2\u7981\u7528\u3002\u8BF7\u4FEE\u590D\u540E\u91CD\u8BD5\u3002"
     });
-    if (Array.isArray(mismatch.segments) && mismatch.segments.length > 0) {
-      const list = box.createEl("ul", { cls: "apple-parity-list" });
-      mismatch.segments.slice(0, 3).forEach((seg, idx) => {
-        const segIndex = Number.isInteger(seg.index) ? seg.index : -1;
-        const lLine = Number.isInteger(seg.legacyLine) ? seg.legacyLine : -1;
-        const lCol = Number.isInteger(seg.legacyColumn) ? seg.legacyColumn : -1;
-        list.createEl("li", {
-          text: `#${idx + 1}: index ${segIndex}\uFF08legacy ${lLine}:${lCol}\uFF09`
-        });
-      });
+    if (message) {
+      placeholder.createEl("p", { cls: "apple-placeholder-note", text: `\u9519\u8BEF\u4FE1\u606F\uFF1A${message}` });
     }
-    box.createEl("p", {
-      cls: "apple-placeholder-note",
-      text: "\u5EFA\u8BAE\u5F00\u542F\u201C\u4E09\u4EF6\u5957\u5931\u8D25\u65F6\u56DE\u9000 Phase2\u201D\uFF0C\u6216\u7EE7\u7EED\u5728\u5F53\u524D\u6A21\u5F0F\u4E0B\u5B9A\u4F4D\u5DEE\u5F02\u3002"
-    });
-    this.updateCurrentDoc();
   }
-  logParityMismatchDetails(sourcePath, mismatch = {}) {
-    var _a, _b;
-    const fileName = sourcePath ? String(sourcePath).split("/").pop() : "\u5F53\u524D\u6587\u6863";
-    const index = Number.isInteger(mismatch.index) ? mismatch.index : -1;
-    const segmentCount = Number.isInteger(mismatch.segmentCount) ? mismatch.segmentCount : 0;
-    const lengthDelta = Number.isInteger(mismatch.lengthDelta) ? mismatch.lengthDelta : 0;
-    const legacyLength = Number.isInteger(mismatch.legacyLength) ? mismatch.legacyLength : -1;
-    const candidateLength = Number.isInteger(mismatch.candidateLength) ? mismatch.candidateLength : -1;
-    const verboseLog = ((_b = (_a = this.plugin) == null ? void 0 : _a.settings) == null ? void 0 : _b.tripletParityVerboseLog) === true;
-    console.groupCollapsed(
-      `[Triplet Parity] ${fileName} mismatch: index=${index}, segments=${segmentCount}, delta=${lengthDelta}`
-    );
-    console.warn("[Triplet Parity] summary", {
-      sourcePath,
-      index,
-      segmentCount,
-      lengthDelta,
-      legacyLength,
-      candidateLength,
-      truncated: mismatch.truncated === true
-    });
-    if (Array.isArray(mismatch.segments) && mismatch.segments.length > 0) {
-      const maxPreview = 5;
-      mismatch.segments.slice(0, maxPreview).forEach((seg, idx) => {
-        const segIndex = Number.isInteger(seg.index) ? seg.index : -1;
-        const legacyLine = Number.isInteger(seg.legacyLine) ? seg.legacyLine : -1;
-        const legacyColumn = Number.isInteger(seg.legacyColumn) ? seg.legacyColumn : -1;
-        const candidateLine = Number.isInteger(seg.candidateLine) ? seg.candidateLine : -1;
-        const candidateColumn = Number.isInteger(seg.candidateColumn) ? seg.candidateColumn : -1;
-        console.warn(`[Triplet Parity] segment #${idx + 1}`, {
-          index: segIndex,
-          legacy: `${legacyLine}:${legacyColumn}`,
-          candidate: `${candidateLine}:${candidateColumn}`,
-          legacySnippet: seg.legacySnippet,
-          candidateSnippet: seg.candidateSnippet
-        });
-      });
-      if (mismatch.segments.length > maxPreview) {
-        console.warn(`[Triplet Parity] ${mismatch.segments.length - maxPreview} more segments omitted from log preview`);
-      }
+  getMissingRenderNotice() {
+    if (this.lastRenderError) {
+      return "\u274C \u5F53\u524D\u6587\u6863\u6E32\u67D3\u5931\u8D25\uFF0C\u8BF7\u4FEE\u590D\u540E\u91CD\u8BD5";
     }
-    const fullDetails = {
-      revision: TRIPLET_PARITY_DEBUG_REV,
-      sourcePath,
-      index,
-      segmentCount,
-      lengthDelta,
-      legacyLength,
-      candidateLength,
-      truncated: mismatch.truncated === true,
-      segments: Array.isArray(mismatch.segments) ? mismatch.segments : []
-    };
-    if (typeof window !== "undefined") {
-      window.__OWC_LAST_PARITY_DETAILS = fullDetails;
-      window.__OWC_TRIPLET_PARITY_REV = TRIPLET_PARITY_DEBUG_REV;
-    }
-    if (verboseLog) {
-      console.log("[Triplet Parity] full-details", fullDetails);
-    }
-    console.groupEnd();
-    if (verboseLog) {
-      console.error("[Triplet Parity] full-details-json", JSON.stringify(fullDetails));
-    }
+    return "\u26A0\uFE0F \u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u6587\u7AE0\u8FDB\u884C\u8F6C\u6362";
   }
   /**
    * 转换当前文档
    */
   async convertCurrent(silent = false) {
-    var _a, _b;
     const generation = ++this.renderGeneration;
     const source = await resolveMarkdownSource({
       app: this.app,
@@ -5244,6 +4897,8 @@ var AppleStyleView = class extends ItemView {
       if (generation !== this.renderGeneration)
         return;
       this.currentHtml = html;
+      this.lastRenderError = "";
+      this.lastRenderFailureNoticeKey = "";
       this.sessionCoverBase64 = null;
       const scrollTop = this.previewContainer.scrollTop;
       this.previewContainer.innerHTML = html;
@@ -5254,19 +4909,17 @@ var AppleStyleView = class extends ItemView {
         new Notice("\u2705 \u8F6C\u6362\u6210\u529F\uFF01");
     } catch (error) {
       console.error("\u8F6C\u6362\u5931\u8D25:", error);
-      if (error && (error.code === "TRIPLET_PARITY_MISMATCH" || error.code === "PARITY_MISMATCH")) {
-        const index = Number.isInteger((_a = error == null ? void 0 : error.parity) == null ? void 0 : _a.index) ? error.parity.index : -1;
-        const segmentCount = Number.isInteger((_b = error == null ? void 0 : error.parity) == null ? void 0 : _b.segmentCount) ? error.parity.segmentCount : 0;
-        this.showParityMismatchPlaceholder(sourcePath, error.parity || {});
-        const noticeKey = `${sourcePath || ""}:${index}:${segmentCount}`;
-        if (!silent || this.lastParityMismatchNoticeKey !== noticeKey) {
-          new Notice(`\u26A0\uFE0F \u4E09\u4EF6\u5957\u6E32\u67D3\u4E0E Phase2 \u57FA\u7EBF\u4E0D\u4E00\u81F4\uFF08\u9996\u4E2A index ${index}\uFF0C\u5171 ${segmentCount} \u6BB5\uFF09`);
-          this.lastParityMismatchNoticeKey = noticeKey;
-        }
+      if (generation !== this.renderGeneration)
         return;
+      this.currentHtml = null;
+      this.lastRenderError = (error == null ? void 0 : error.message) || "\u672A\u77E5\u6E32\u67D3\u9519\u8BEF";
+      this.showRenderFailurePlaceholder(this.lastRenderError);
+      this.updateCurrentDoc();
+      const noticeKey = `${sourcePath || ""}:${this.lastRenderError}`;
+      if (!silent || this.lastRenderFailureNoticeKey !== noticeKey) {
+        new Notice("\u274C \u8F6C\u6362\u5931\u8D25: " + this.lastRenderError);
+        this.lastRenderFailureNoticeKey = noticeKey;
       }
-      if (!silent)
-        new Notice("\u274C \u8F6C\u6362\u5931\u8D25: " + error.message);
     }
   }
   /**
@@ -5296,7 +4949,7 @@ var AppleStyleView = class extends ItemView {
     if (this.isCopying)
       return;
     if (!this.currentHtml) {
-      new Notice("\u26A0\uFE0F \u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u6587\u7AE0\u8FDB\u884C\u8F6C\u6362");
+      new Notice(this.getMissingRenderNotice());
       return;
     }
     this.isCopying = true;
@@ -5604,31 +5257,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       });
     }
     new Setting(containerEl).setName("\u9AD8\u7EA7\u8BBE\u7F6E").setHeading();
-    new Setting(containerEl).setName("\u542F\u7528 Obsidian \u539F\u751F\u4E09\u4EF6\u5957\u6E32\u67D3").setDesc("\u4E00\u6B21\u6027\u542F\u7528 Source + Render + Export \u4E09\u4EF6\u5957\u94FE\u8DEF\u3002\u5173\u95ED\u65F6\u4F7F\u7528\u5F53\u524D\u7A33\u5B9A Phase2 \u57FA\u7EBF\u6E32\u67D3\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.useTripletPipeline === true).onChange(async (value) => {
-      this.plugin.settings.useTripletPipeline = value;
-      await this.plugin.saveSettings();
-      new Notice(value ? "\u5DF2\u542F\u7528 Obsidian \u539F\u751F\u4E09\u4EF6\u5957\u6E32\u67D3" : "\u5DF2\u5207\u56DE Phase2 \u57FA\u7EBF\u6E32\u67D3");
-      const converterView = this.plugin.getConverterView();
-      if (converterView) {
-        await converterView.convertCurrent(true);
-      }
-    }));
-    new Setting(containerEl).setName("\u4E09\u4EF6\u5957\u5931\u8D25\u65F6\u56DE\u9000 Phase2").setDesc("\u5EFA\u8BAE\u4FDD\u6301\u5F00\u542F\u3002\u4E09\u4EF6\u5957\u6E32\u67D3\u5931\u8D25\u6216\u672A\u901A\u8FC7\u95E8\u7981\u65F6\u81EA\u52A8\u56DE\u9000\uFF0C\u786E\u4FDD\u65E5\u5E38\u53EF\u7528\u6027\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.tripletFallbackToPhase2 !== false).onChange(async (value) => {
-      this.plugin.settings.tripletFallbackToPhase2 = value;
-      await this.plugin.saveSettings();
-    }));
-    new Setting(containerEl).setName("\u4E09\u4EF6\u5957\u96F6\u5DEE\u5F02\u95E8\u7981").setDesc("\u5F00\u542F\u540E\u4F1A\u5C06\u4E09\u4EF6\u5957\u8F93\u51FA\u4E0E Phase2 \u57FA\u7EBF\u505A\u5B57\u8282\u7EA7\u5BF9\u6BD4\uFF1B\u4E0D\u4E00\u81F4\u65F6\u6309\u56DE\u9000\u7B56\u7565\u5904\u7406\u3002\u5EFA\u8BAE\u4FDD\u6301\u5F00\u542F\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.enforceTripletParity !== false).onChange(async (value) => {
-      this.plugin.settings.enforceTripletParity = value;
-      await this.plugin.saveSettings();
-      const converterView = this.plugin.getConverterView();
-      if (converterView) {
-        await converterView.convertCurrent(true);
-      }
-    }));
-    new Setting(containerEl).setName("\u8F93\u51FA\u4E09\u4EF6\u5957\u5B8C\u6574\u5DEE\u5F02\u65E5\u5FD7\uFF08\u8C03\u8BD5\uFF09").setDesc("\u9ED8\u8BA4\u5173\u95ED\u3002\u5F00\u542F\u540E\u4F1A\u628A\u5B8C\u6574\u5DEE\u5F02 payload \u8F93\u51FA\u5230\u63A7\u5236\u53F0\uFF0C\u65E5\u5FD7\u4F53\u79EF\u4F1A\u660E\u663E\u589E\u5927\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.tripletParityVerboseLog === true).onChange(async (value) => {
-      this.plugin.settings.tripletParityVerboseLog = value;
-      await this.plugin.saveSettings();
-    }));
+    new Setting(containerEl).setName("\u6E32\u67D3\u6A21\u5F0F").setDesc("\u5F53\u524D\u7248\u672C\u56FA\u5B9A\u4F7F\u7528 Obsidian \u539F\u751F\u4E09\u4EF6\u5957\u6E32\u67D3\uFF08native-only\uFF09\u3002");
     new Setting(containerEl).setName("\u53D1\u9001\u6210\u529F\u540E\u81EA\u52A8\u6E05\u7406\u8D44\u6E90").setDesc("\u9ED8\u8BA4\u5173\u95ED\u3002\u5F00\u542F\u540E\u4F1A\u5728\u521B\u5EFA\u8349\u7A3F\u6210\u529F\u540E\uFF0C\u5220\u9664\u4F60\u5728\u4E0B\u65B9\u914D\u7F6E\u7684\u76EE\u5F55\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.cleanupAfterSync).onChange(async (value) => {
       this.plugin.settings.cleanupAfterSync = value;
       await this.plugin.saveSettings();
@@ -5844,21 +5473,23 @@ var AppleStylePlugin = class extends Plugin {
       delete this.settings.cleanupTarget;
       didMigrate = true;
     }
-    if (!Object.prototype.hasOwnProperty.call(loadedData, "useTripletPipeline") && Object.prototype.hasOwnProperty.call(loadedData, "useNativePipeline")) {
-      this.settings.useTripletPipeline = loadedData.useNativePipeline === true;
-      didMigrate = true;
+    const deprecatedRenderKeys = [
+      "useTripletPipeline",
+      "tripletFallbackToPhase2",
+      "enforceTripletParity",
+      "tripletParityMaxLengthDelta",
+      "tripletParityMaxSegmentCount",
+      "tripletParityVerboseLog",
+      "useNativePipeline",
+      "enableLegacyFallback",
+      "enforceNativeParity"
+    ];
+    for (const key of deprecatedRenderKeys) {
+      if (Object.prototype.hasOwnProperty.call(this.settings, key)) {
+        delete this.settings[key];
+        didMigrate = true;
+      }
     }
-    if (!Object.prototype.hasOwnProperty.call(loadedData, "tripletFallbackToPhase2") && Object.prototype.hasOwnProperty.call(loadedData, "enableLegacyFallback")) {
-      this.settings.tripletFallbackToPhase2 = loadedData.enableLegacyFallback !== false;
-      didMigrate = true;
-    }
-    if (!Object.prototype.hasOwnProperty.call(loadedData, "enforceTripletParity") && Object.prototype.hasOwnProperty.call(loadedData, "enforceNativeParity")) {
-      this.settings.enforceTripletParity = loadedData.enforceNativeParity !== false;
-      didMigrate = true;
-    }
-    this.settings.useNativePipeline = this.settings.useTripletPipeline === true;
-    this.settings.enableLegacyFallback = this.settings.tripletFallbackToPhase2 !== false;
-    this.settings.enforceNativeParity = this.settings.enforceTripletParity !== false;
     if (didMigrate) {
       await this.saveSettings();
     }

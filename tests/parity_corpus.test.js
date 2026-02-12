@@ -14,60 +14,47 @@ function readFixture(name) {
   return fs.readFileSync(path.resolve(fixtureRoot, name), 'utf8');
 }
 
-describe('Parity Corpus (Phase 2 Strict No-Diff Gate)', () => {
+describe('Native Corpus Regression Gate', () => {
   let converter;
+  let nativePipeline;
 
   beforeAll(async () => {
     converter = await createLegacyConverter();
+    nativePipeline = createRenderPipelines({
+      nativeRenderer: (markdown, context = {}) =>
+        renderNativeMarkdown({
+          converter,
+          markdown,
+          sourcePath: context.sourcePath || '',
+        }),
+    }).nativePipeline;
   });
 
-  it('corpus samples should explicitly declare expectParityMismatch', () => {
+  it('corpus samples should explicitly declare expectedCleanHtml', () => {
     for (const sample of corpus) {
-      expect(sample).toHaveProperty('expectParityMismatch');
-      expect(typeof sample.expectParityMismatch).toBe('boolean');
+      expect(typeof sample.expectedCleanHtml).toBe('string');
+      expect(sample.expectedCleanHtml.length).toBeGreaterThan(0);
     }
   });
 
   for (const sample of corpus) {
-    it(`should keep final html byte-equal for ${sample.id}`, async () => {
-      let parityMismatchCount = 0;
-      const flags = {
-        useNativePipeline: true,
-        enableLegacyFallback: true,
-        enforceNativeParity: true,
-        parityTransform: (html) => cleanHtmlForDraft(html),
-        onParityMismatch: () => {
-          parityMismatchCount += 1;
-        },
-      };
-
-      const { legacyPipeline, nativePipeline } = createRenderPipelines({
-        converter,
-        getFlags: () => flags,
-        nativeRenderer: (markdown, context = {}) =>
-          renderNativeMarkdown({
-            converter,
-            markdown,
-            sourcePath: context.sourcePath || '',
-            strictLegacyParity: flags.enforceNativeParity === true,
-          }),
-      });
-
+    it(`should keep cleaned html stable for ${sample.id}`, async () => {
       const markdown = readFixture(sample.fixture);
       const context = { sourcePath: sample.sourcePath || '' };
 
-      const legacyRawHtml = await legacyPipeline.renderForPreview(markdown, context);
-      const nativeGuardedRawHtml = await nativePipeline.renderForPreview(markdown, context);
+      const rawHtml = await nativePipeline.renderForPreview(markdown, context);
+      const cleaned = cleanHtmlForDraft(rawHtml);
+      const expected = readFixture(sample.expectedCleanHtml);
 
-      const legacyFinalHtml = cleanHtmlForDraft(legacyRawHtml);
-      const nativeGuardedFinalHtml = cleanHtmlForDraft(nativeGuardedRawHtml);
+      expect(cleaned).toBe(expected);
+      expect(cleaned).not.toContain('<script');
 
-      expect(nativeGuardedFinalHtml).toBe(legacyFinalHtml);
-      if (sample.expectParityMismatch === true) {
-        expect(parityMismatchCount).toBeGreaterThan(0);
-      } else {
-        expect(parityMismatchCount).toBe(0);
-      }
+      const container = document.createElement('div');
+      container.innerHTML = cleaned;
+      const unsafeLinks = Array.from(container.querySelectorAll('a[href]')).filter(
+        (a) => /^javascript:/i.test(a.getAttribute('href') || '')
+      );
+      expect(unsafeLinks).toHaveLength(0);
     });
   }
 });

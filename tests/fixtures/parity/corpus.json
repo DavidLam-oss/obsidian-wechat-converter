@@ -3,18 +3,18 @@
     "id": "control-main",
     "fixture": "control-main.md",
     "sourcePath": "fixtures/control-main.md",
-    "expectParityMismatch": false
+    "expectedCleanHtml": "parity/baseline/control-main.clean.html"
   },
   {
     "id": "control-micro",
     "fixture": "control-micro.md",
     "sourcePath": "fixtures/control-micro.md",
-    "expectParityMismatch": false
+    "expectedCleanHtml": "parity/baseline/control-micro.clean.html"
   },
   {
     "id": "control-micro-placeholder-data",
     "fixture": "control-micro-placeholder-data.md",
     "sourcePath": "fixtures/control-micro-placeholder-data.md",
-    "expectParityMismatch": false
+    "expectedCleanHtml": "parity/baseline/control-micro-placeholder-data.clean.html"
   }
 ]

@@ -123,16 +123,17 @@ describe('Native Renderer', () => {
     ).rejects.toThrow('Native converter is not ready');
   });
 
-  it('should preserve legacy-compatible output when strictLegacyParity is enabled', async () => {
+  it('should keep native preprocessing even when legacy parity option is passed', async () => {
     const md = readFixture('control-micro.md');
-    const legacyHtml = await converter.convert(md);
-    const strictHtml = await renderNativeMarkdown({
+    const html = await renderNativeMarkdown({
       converter,
       markdown: md,
       sourcePath: '',
-      strictLegacyParity: true,
+      strictLegacyParity: true, // ignored in native-only mode
     });
 
-    expect(strictHtml).toBe(legacyHtml);
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    expect(container.querySelector('img[src="x"]')).toBeNull();
   });
 });

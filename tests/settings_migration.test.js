@@ -50,52 +50,15 @@ describe('AppleStylePlugin - Settings Migration', () => {
     expect(plugin.saveData).toHaveBeenCalledTimes(1);
   });
 
-  it('should default enforceTripletParity to true when setting is missing', async () => {
+  it('should remove deprecated legacy/parity render flags in native-only mode', async () => {
     const plugin = new AppleStylePlugin();
     plugin.loadData = vi.fn().mockResolvedValue({
-      wechatAccounts: [],
-      defaultAccountId: '',
-    });
-    plugin.saveData = vi.fn().mockResolvedValue(undefined);
-
-    await plugin.loadSettings();
-
-    expect(plugin.settings.enforceTripletParity).toBe(true);
-    expect(plugin.saveData).not.toHaveBeenCalled();
-  });
-
-  it('should keep enforceTripletParity false when explicitly configured', async () => {
-    const plugin = new AppleStylePlugin();
-    plugin.loadData = vi.fn().mockResolvedValue({
+      useTripletPipeline: false,
+      tripletFallbackToPhase2: false,
       enforceTripletParity: false,
-      wechatAccounts: [],
-      defaultAccountId: '',
-    });
-    plugin.saveData = vi.fn().mockResolvedValue(undefined);
-
-    await plugin.loadSettings();
-
-    expect(plugin.settings.enforceTripletParity).toBe(false);
-    expect(plugin.saveData).not.toHaveBeenCalled();
-  });
-
-  it('should default tripletParityVerboseLog to false when setting is missing', async () => {
-    const plugin = new AppleStylePlugin();
-    plugin.loadData = vi.fn().mockResolvedValue({
-      wechatAccounts: [],
-      defaultAccountId: '',
-    });
-    plugin.saveData = vi.fn().mockResolvedValue(undefined);
-
-    await plugin.loadSettings();
-
-    expect(plugin.settings.tripletParityVerboseLog).toBe(false);
-    expect(plugin.saveData).not.toHaveBeenCalled();
-  });
-
-  it('should migrate legacy render flags to triplet flags', async () => {
-    const plugin = new AppleStylePlugin();
-    plugin.loadData = vi.fn().mockResolvedValue({
+      tripletParityMaxLengthDelta: 8,
+      tripletParityMaxSegmentCount: 2,
+      tripletParityVerboseLog: true,
       useNativePipeline: true,
       enableLegacyFallback: false,
       enforceNativeParity: false,
@@ -106,13 +69,31 @@ describe('AppleStylePlugin - Settings Migration', () => {
 
     await plugin.loadSettings();
 
-    expect(plugin.settings.useTripletPipeline).toBe(true);
-    expect(plugin.settings.tripletFallbackToPhase2).toBe(false);
-    expect(plugin.settings.enforceTripletParity).toBe(false);
-    // compatibility mirror
-    expect(plugin.settings.useNativePipeline).toBe(true);
-    expect(plugin.settings.enableLegacyFallback).toBe(false);
-    expect(plugin.settings.enforceNativeParity).toBe(false);
+    expect(plugin.settings.useTripletPipeline).toBeUndefined();
+    expect(plugin.settings.tripletFallbackToPhase2).toBeUndefined();
+    expect(plugin.settings.enforceTripletParity).toBeUndefined();
+    expect(plugin.settings.tripletParityMaxLengthDelta).toBeUndefined();
+    expect(plugin.settings.tripletParityMaxSegmentCount).toBeUndefined();
+    expect(plugin.settings.tripletParityVerboseLog).toBeUndefined();
+    expect(plugin.settings.useNativePipeline).toBeUndefined();
+    expect(plugin.settings.enableLegacyFallback).toBeUndefined();
+    expect(plugin.settings.enforceNativeParity).toBeUndefined();
     expect(plugin.saveData).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not write settings when no migration is needed', async () => {
+    const plugin = new AppleStylePlugin();
+    plugin.loadData = vi.fn().mockResolvedValue({
+      wechatAccounts: [],
+      defaultAccountId: '',
+      cleanupDirTemplate: '',
+      cleanupAfterSync: false,
+      cleanupUseSystemTrash: true,
+    });
+    plugin.saveData = vi.fn().mockResolvedValue(undefined);
+
+    await plugin.loadSettings();
+
+    expect(plugin.saveData).not.toHaveBeenCalled();
   });
 });
