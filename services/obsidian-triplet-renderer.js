@@ -194,6 +194,18 @@ function neutralizePlainWikilinks(markdown) {
 // Global store for pre-rendered math formulas (cleared per render call)
 let preRenderedMathFormulas = [];
 
+// Generate a unique placeholder that won't conflict with user content
+// Uses a random session ID + counter to prevent collision
+const MATH_PLACEHOLDER_SESSION = `M${Date.now().toString(36)}X`;
+let mathPlaceholderCounter = 0;
+
+function generateMathPlaceholder(type) {
+  const id = `${MATH_PLACEHOLDER_SESSION}_${mathPlaceholderCounter}_${Math.random().toString(36).slice(2, 6)}`;
+  mathPlaceholderCounter += 1;
+  // Zero-width spaces protect from Markdown, unique ID prevents collision
+  return `\u200B${id}_${type}\u200B`;
+}
+
 function preprocessMarkdownForTriplet(markdown, converter) {
   // Clear the store for this render call
   preRenderedMathFormulas = [];
@@ -241,9 +253,7 @@ function preRenderMathFormulas(markdown, converter) {
   // Match $$...$$ where content can span multiple lines
   const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
   output = output.replace(blockMathPattern, (match, formula) => {
-    // Use zero-width space characters to protect placeholder from Markdown processing
-    // \u200B is zero-width space - invisible but prevents Markdown interpretation
-    const placeholder = `\u200BOWCMATHBLOCK${formulaIndex}\u200B`;
+    const placeholder = generateMathPlaceholder('BLOCK');
     try {
       // Render using full markdown-it (handles block math)
       const rendered = converter.md.render(`$$${formula}$$`);
@@ -263,9 +273,7 @@ function preRenderMathFormulas(markdown, converter) {
   // Use negative lookbehind/lookahead to avoid matching $$
   const inlineMathPattern = /(?<!\$)\$(?!\$)([^\$\n]+?)\$(?!\$)/g;
   output = output.replace(inlineMathPattern, (match, formula) => {
-    // Use zero-width space characters to protect placeholder from Markdown processing
-    // \u200B is zero-width space - invisible but prevents Markdown interpretation
-    const placeholder = `\u200BOWCMATHINLINE${formulaIndex}\u200B`;
+    const placeholder = generateMathPlaceholder('INLINE');
     try {
       // Render using renderInline for inline math
       const rendered = converter.md.renderInline(`$${formula}$`);

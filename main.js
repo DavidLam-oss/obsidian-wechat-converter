@@ -2694,6 +2694,13 @@ var require_obsidian_triplet_renderer = __commonJS({
       return lines.join("\n");
     }
     var preRenderedMathFormulas = [];
+    var MATH_PLACEHOLDER_SESSION = `M${Date.now().toString(36)}X`;
+    var mathPlaceholderCounter = 0;
+    function generateMathPlaceholder(type) {
+      const id = `${MATH_PLACEHOLDER_SESSION}_${mathPlaceholderCounter}_${Math.random().toString(36).slice(2, 6)}`;
+      mathPlaceholderCounter += 1;
+      return `\u200B${id}_${type}\u200B`;
+    }
     function preprocessMarkdownForTriplet(markdown, converter) {
       preRenderedMathFormulas = [];
       let output = String(markdown || "");
@@ -2723,7 +2730,7 @@ var require_obsidian_triplet_renderer = __commonJS({
       let formulaIndex = 0;
       const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
       output = output.replace(blockMathPattern, (match, formula) => {
-        const placeholder = `\u200BOWCMATHBLOCK${formulaIndex}\u200B`;
+        const placeholder = generateMathPlaceholder("BLOCK");
         try {
           const rendered = converter.md.render(`$$${formula}$$`);
           const cleaned = rendered.replace(/^<p>|<\/p>$/g, "").trim();
@@ -2738,7 +2745,7 @@ var require_obsidian_triplet_renderer = __commonJS({
       });
       const inlineMathPattern = /(?<!\$)\$(?!\$)([^\$\n]+?)\$(?!\$)/g;
       output = output.replace(inlineMathPattern, (match, formula) => {
-        const placeholder = `\u200BOWCMATHINLINE${formulaIndex}\u200B`;
+        const placeholder = generateMathPlaceholder("INLINE");
         try {
           const rendered = converter.md.renderInline(`$${formula}$`);
           preRenderedMathFormulas.push({ placeholder, rendered, isBlock: false });
