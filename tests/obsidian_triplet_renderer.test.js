@@ -672,5 +672,41 @@ describe('Obsidian Triplet Renderer', () => {
       expect(output).toContain('<div');
       expect(output).toContain('<span');
     });
+
+    it('should not close backtick fence with tilde fence (mixed marker)', () => {
+      const input = [
+        '```js',
+        '<Tag>inside code block</Tag>',
+        '~~~',
+        'still inside backtick block',
+        '```',
+        '<Tag>outside fence</Tag>',
+      ].join('\n');
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Content after ~~~ should still be preserved (~~~ didn't close the ``` block)
+      expect(output).toContain('<Tag>inside code block</Tag>');
+      expect(output).toContain('still inside backtick block');
+      // Content after proper closing should be escaped
+      expect(output).toContain('&lt;Tag&gt;outside fence');
+    });
+
+    it('should preserve multi-backtick inline code spans', () => {
+      const input = 'Inline ``<Title>`` and outside <Title>.';
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Double-backtick code span should be preserved
+      expect(output).toContain('``<Title>``');
+      // Outside should be escaped
+      expect(output).toContain('&lt;Title&gt;.');
+      expect(output).not.toContain('&lt;Title&gt;``');
+    });
+
+    it('should preserve triple-backtick inline code spans', () => {
+      const input = 'Code: ```<Tag>``` and outside <Tag>.';
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Triple-backtick code span should be preserved
+      expect(output).toContain('```<Tag>```');
+      // Outside should be escaped
+      expect(output).toContain('&lt;Tag&gt;.');
+    });
   });
 });

@@ -2778,17 +2778,19 @@ var require_obsidian_triplet_renderer = __commonJS({
       const lines = markdown.split("\n");
       const result = [];
       let inCodeBlock = false;
-      let codeBlockFenceLen = 0;
+      let codeBlockFence = null;
       for (const line of lines) {
         const fenceMatch = line.match(/^(`{3,}|~{3,})/);
         if (fenceMatch) {
-          const currentFenceLen = fenceMatch[1].length;
+          const fenceStr = fenceMatch[1];
+          const fenceChar = fenceStr[0];
+          const fenceLen = fenceStr.length;
           if (!inCodeBlock) {
             inCodeBlock = true;
-            codeBlockFenceLen = currentFenceLen;
-          } else if (currentFenceLen >= codeBlockFenceLen) {
+            codeBlockFence = { char: fenceChar, len: fenceLen };
+          } else if (fenceChar === codeBlockFence.char && fenceLen >= codeBlockFence.len) {
             inCodeBlock = false;
-            codeBlockFenceLen = 0;
+            codeBlockFence = null;
           }
           result.push(line);
           continue;
@@ -2805,24 +2807,41 @@ var require_obsidian_triplet_renderer = __commonJS({
     function escapeLinePreservingInlineCode(line) {
       const segments = [];
       let lastIndex = 0;
-      let inInlineCode = false;
       let i = 0;
       while (i < line.length) {
-        if (line[i] === "`" && !(i < 3 && line.slice(0, 3).match(/^`{3}/))) {
+        if (line[i] === "`") {
+          if (i === 0 && line.match(/^`{3,}/)) {
+            i++;
+            continue;
+          }
           const startIndex = i;
-          i++;
-          while (i < line.length) {
-            if (line[i] === "`") {
-              if (i + 1 >= line.length || line[i + 1] !== "`") {
-                i++;
-                break;
-              }
-            }
+          let openLen = 0;
+          while (i < line.length && line[i] === "`") {
+            openLen++;
             i++;
           }
-          segments.push(line.slice(lastIndex, startIndex));
-          segments.push(line.slice(startIndex, i));
-          lastIndex = i;
+          let foundClose = false;
+          while (i < line.length) {
+            if (line[i] === "`") {
+              const closeStart = i;
+              let closeLen = 0;
+              while (i < line.length && line[i] === "`") {
+                closeLen++;
+                i++;
+              }
+              if (closeLen === openLen) {
+                foundClose = true;
+                break;
+              }
+            } else {
+              i++;
+            }
+          }
+          if (foundClose) {
+            segments.push(line.slice(lastIndex, startIndex));
+            segments.push(line.slice(startIndex, i));
+            lastIndex = i;
+          }
         } else {
           i++;
         }

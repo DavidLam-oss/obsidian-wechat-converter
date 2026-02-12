@@ -223,21 +223,26 @@ function escapePseudoHtmlTags(markdown) {
   const lines = markdown.split('\n');
   const result = [];
   let inCodeBlock = false;
-  let codeBlockFenceLen = 0; // Track full fence length for proper nesting
+  let codeBlockFence = null; // { char: '`' or '~', len: number }
 
   for (const line of lines) {
-    // Track code block boundaries using proper fence length matching
+    // Track code block boundaries - must match both fence character type and length
     const fenceMatch = line.match(/^(`{3,}|~{3,})/);
     if (fenceMatch) {
-      const currentFenceLen = fenceMatch[1].length;
+      const fenceStr = fenceMatch[1];
+      const fenceChar = fenceStr[0];
+      const fenceLen = fenceStr.length;
+
       if (!inCodeBlock) {
+        // Opening fence
         inCodeBlock = true;
-        codeBlockFenceLen = currentFenceLen;
-      } else if (currentFenceLen >= codeBlockFenceLen) {
-        // Closing fence must be at least as long as opening fence
+        codeBlockFence = { char: fenceChar, len: fenceLen };
+      } else if (fenceChar === codeBlockFence.char && fenceLen >= codeBlockFence.len) {
+        // Closing fence must match character type and be at least as long
         inCodeBlock = false;
-        codeBlockFenceLen = 0;
+        codeBlockFence = null;
       }
+      // If fence char doesn't match, it's content inside the code block (not a closing fence)
       result.push(line);
       continue;
     }
@@ -257,40 +262,58 @@ function escapePseudoHtmlTags(markdown) {
 
 /**
  * Escape pseudo-HTML tags in a line while preserving inline code content.
+ * Supports multi-backtick code spans (CommonMark compliant).
  */
 function escapeLinePreservingInlineCode(line) {
-  // Split by inline code segments (single backticks, not triple for fenced blocks)
-  // We need to handle both single `code` and escaped backticks
   const segments = [];
   let lastIndex = 0;
-  let inInlineCode = false;
   let i = 0;
 
   while (i < line.length) {
-    // Check for backtick (inline code boundary)
-    // Skip if it's part of a fenced block marker at line start (already handled above)
-    if (line[i] === '`' && !(i < 3 && line.slice(0, 3).match(/^`{3}/))) {
-      // Find the end of this inline code segment
-      const startIndex = i;
-      i++; // Skip opening backtick
+    // Look for backtick sequence (inline code span start)
+    if (line[i] === '`') {
+      // Skip fenced block markers at line start (3+ backticks)
+      if (i === 0 && line.match(/^`{3,}/)) {
+        i++;
+        continue;
+      }
 
-      // Find closing backtick (not double backtick which escapes)
-      while (i < line.length) {
-        if (line[i] === '`') {
-          // Check if this is a closing backtick
-          // It's closing if it's a single backtick or if it's followed by non-backtick
-          if (i + 1 >= line.length || line[i + 1] !== '`') {
-            i++; // Include closing backtick
-            break;
-          }
-        }
+      // Count opening delimiter run length
+      const startIndex = i;
+      let openLen = 0;
+      while (i < line.length && line[i] === '`') {
+        openLen++;
         i++;
       }
 
-      // Add the inline code segment as-is (no escaping)
-      segments.push(line.slice(lastIndex, startIndex));
-      segments.push(line.slice(startIndex, i));
-      lastIndex = i;
+      // Find matching closing delimiter run of the same length
+      let foundClose = false;
+      while (i < line.length) {
+        if (line[i] === '`') {
+          const closeStart = i;
+          let closeLen = 0;
+          while (i < line.length && line[i] === '`') {
+            closeLen++;
+            i++;
+          }
+          // Closing delimiter must match opening length
+          if (closeLen === openLen) {
+            foundClose = true;
+            break;
+          }
+          // Otherwise continue searching
+        } else {
+          i++;
+        }
+      }
+
+      if (foundClose) {
+        // Add text before code span and the code span itself
+        segments.push(line.slice(lastIndex, startIndex));
+        segments.push(line.slice(startIndex, i));
+        lastIndex = i;
+      }
+      // If no close found, the opening backticks are just literal text
     } else {
       i++;
     }
@@ -306,10 +329,9 @@ function escapeLinePreservingInlineCode(line) {
     return escapePseudoHtmlInText(line);
   }
 
-  // Process non-code segments
+  // Process non-code segments (even indices are text, odd are code spans)
   return segments.map((seg, idx) => {
-    // Even indices are non-code, odd indices are inline code (preserved as-is)
-    if (idx % 2 === 1) return seg;
+    if (idx % 2 === 1) return seg; // Preserve code span as-is
     return escapePseudoHtmlInText(seg);
   }).join('');
 }
