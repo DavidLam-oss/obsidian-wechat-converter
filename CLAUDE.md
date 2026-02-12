@@ -76,4 +76,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Release
 
-发布新版本时，使用 `/release` skill 查看完整流程。
+发布新版本时，使用 `/project-release` skill 查看完整流程。
