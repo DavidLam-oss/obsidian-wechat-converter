@@ -2723,7 +2723,7 @@ var require_obsidian_triplet_renderer = __commonJS({
       let formulaIndex = 0;
       const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
       output = output.replace(blockMathPattern, (match, formula) => {
-        const placeholder = `__OWC_MATH_BLOCK_${formulaIndex}__`;
+        const placeholder = `\u200BOWCMATHBLOCK${formulaIndex}\u200B`;
         try {
           const rendered = converter.md.render(`$$${formula}$$`);
           const cleaned = rendered.replace(/^<p>|<\/p>$/g, "").trim();
@@ -2738,7 +2738,7 @@ var require_obsidian_triplet_renderer = __commonJS({
       });
       const inlineMathPattern = /(?<!\$)\$(?!\$)([^\$\n]+?)\$(?!\$)/g;
       output = output.replace(inlineMathPattern, (match, formula) => {
-        const placeholder = `__OWC_MATH_INLINE_${formulaIndex}__`;
+        const placeholder = `\u200BOWCMATHINLINE${formulaIndex}\u200B`;
         try {
           const rendered = converter.md.renderInline(`$${formula}$`);
           preRenderedMathFormulas.push({ placeholder, rendered, isBlock: false });
