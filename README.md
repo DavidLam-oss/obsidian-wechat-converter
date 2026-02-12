@@ -104,6 +104,13 @@
 - 不再保留 Legacy 渲染回退开关与 parity 对比开关。
 - 质量保障改为 native 回归基线测试（corpus + baseline fixtures）。
 
+### 延迟基线口径（开发）
+
+- 命令：`npm run measure:latency`
+- 口径：这是 **end-to-end preview latency**，包含 fixture 读取、native 渲染链路、triplet DOM settle 观察窗口。
+- 用途：作为工程内 smoke/baseline 采样，辅助判断日常体验是否可接受。
+- 注意：该结果不等同于 renderer-only microbenchmark，不能直接用于定位纯渲染热点。
+
 ## 🚀 安装
 
 1. 从 [GitHub Releases](https://github.com/DavidLam-oss/obsidian-wechat-converter/releases) 下载最新的 `obsidian-wechat-converter.zip` 插件包。

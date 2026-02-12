@@ -11,6 +11,7 @@
 		"pretest": "npm run check:embedded",
 		"test": "vitest",
 		"test:coverage": "vitest run --coverage",
+		"measure:latency": "node scripts/measure-native-latency.mjs",
 		"release:pack": "bash package-release.sh",
 		"release:validate": "node scripts/release-validate.mjs",
 		"release:dryrun": "npm run build && npm run release:pack && npm run release:validate"
