@@ -777,16 +777,8 @@ function renderUnresolvedMathFormulas(container, converter) {
   // Obsidian's MarkdownRenderer.renderMarkdown does not render LaTeX math formulas.
   // This function detects unresolved $...$ and $$...$$ patterns in text nodes
   // and renders them using the converter's markdown-it + MathJax pipeline.
-  if (!container || !converter) {
-    console.log('[OWC Math Fallback] container or converter missing');
-    return;
-  }
-  if (!converter.md || typeof converter.md.renderInline !== 'function') {
-    console.log('[OWC Math Fallback] converter.md not available or renderInline not a function');
-    return;
-  }
-
-  console.log('[OWC Math Fallback] Starting fallback math rendering');
+  if (!container || !converter) return;
+  if (!converter.md || typeof converter.md.renderInline !== 'function') return;
 
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
   const textNodes = [];
@@ -916,42 +908,15 @@ function applyLegacyLinkifyParity(container, converter) {
 }
 
 function injectPreRenderedMathFormulas(html, formulas) {
-  console.log(`[OWC Math] injectPreRenderedMathFormulas called with ${formulas?.length || 0} formulas`);
   if (!html || !Array.isArray(formulas) || formulas.length === 0) return html;
 
-  // Debug: show what's actually in the HTML
-  console.log(`[OWC Math] HTML sample (first 500 chars): ${html.substring(0, 500)}`);
-  console.log(`[OWC Math] Looking for placeholders like: ${formulas[0]?.placeholder}`);
-
-  // Check if placeholder text exists in any form
-  for (const { placeholder } of formulas) {
-    if (placeholder && html.includes(placeholder)) {
-      console.log(`[OWC Math] Found exact placeholder: ${placeholder}`);
-    } else if (placeholder) {
-      // Check for partial match or transformed version
-      const partial = placeholder.replace(/_/g, '');
-      if (html.includes(partial)) {
-        console.log(`[OWC Math] Found partial match for: ${placeholder} -> ${partial}`);
-      }
-    }
-  }
-
   let result = html;
-  let injected = 0;
   for (const { placeholder, rendered } of formulas) {
     if (placeholder && rendered) {
       // Replace placeholder with pre-rendered math HTML
-      const before = result;
       result = result.split(placeholder).join(rendered);
-      if (result !== before) {
-        injected += 1;
-        console.log(`[OWC Math] Injected placeholder: ${placeholder}`);
-      } else {
-        console.log(`[OWC Math] Placeholder not found in HTML: ${placeholder}`);
-      }
     }
   }
-  console.log(`[OWC Math] Total injected: ${injected}/${formulas.length}`);
   return result;
 }
 
