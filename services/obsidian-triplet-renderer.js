@@ -470,6 +470,11 @@ async function renderObsidianTripletMarkdown({
 
   const container = document.createElement('div');
   const preparedMarkdown = preprocessMarkdownForTriplet(markdown, converter);
+
+  // Debug: log what we're sending to Obsidian
+  console.log('[OWC Math] Prepared markdown (first 300 chars):', preparedMarkdown.substring(0, 300));
+  console.log('[OWC Math] Contains __OWC_MATH_BLOCK_0__:', preparedMarkdown.includes('__OWC_MATH_BLOCK_0__'));
+
   const shouldObserveWindow = shouldObserveAsyncEmbedWindow(preparedMarkdown);
   await renderByObsidianMarkdownRenderer({
     app,
@@ -479,6 +484,11 @@ async function renderObsidianTripletMarkdown({
     component,
     markdownRenderer,
   });
+
+  // Debug: log what Obsidian returned
+  console.log('[OWC Math] Obsidian output (first 300 chars):', container.innerHTML.substring(0, 300));
+  console.log('[OWC Math] Obsidian output contains __OWC_MATH_BLOCK_0__:', container.innerHTML.includes('__OWC_MATH_BLOCK_0__'));
+
   // Wait for image embeds to settle; MarkdownRenderer may resolve embeds asynchronously.
   await waitForTripletDomToSettle(container, shouldObserveWindow ? {} : { minObserveMs: 0 });
 

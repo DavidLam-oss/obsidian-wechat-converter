@@ -2914,6 +2914,8 @@ var require_obsidian_triplet_renderer = __commonJS({
       }
       const container = document.createElement("div");
       const preparedMarkdown = preprocessMarkdownForTriplet(markdown, converter);
+      console.log("[OWC Math] Prepared markdown (first 300 chars):", preparedMarkdown.substring(0, 300));
+      console.log("[OWC Math] Contains __OWC_MATH_BLOCK_0__:", preparedMarkdown.includes("__OWC_MATH_BLOCK_0__"));
       const shouldObserveWindow = shouldObserveAsyncEmbedWindow(preparedMarkdown);
       await renderByObsidianMarkdownRenderer({
         app,
@@ -2923,6 +2925,8 @@ var require_obsidian_triplet_renderer = __commonJS({
         component,
         markdownRenderer
       });
+      console.log("[OWC Math] Obsidian output (first 300 chars):", container.innerHTML.substring(0, 300));
+      console.log("[OWC Math] Obsidian output contains __OWC_MATH_BLOCK_0__:", container.innerHTML.includes("__OWC_MATH_BLOCK_0__"));
       await waitForTripletDomToSettle(container, shouldObserveWindow ? {} : { minObserveMs: 0 });
       const mathFormulas = [...preRenderedMathFormulas];
       const serializedHtml = serializer({
