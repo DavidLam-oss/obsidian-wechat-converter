@@ -559,7 +559,8 @@ describe('Obsidian Triplet Renderer', () => {
 
     // Both formulas should be rendered (not just placeholders surviving)
     expect(html).toMatch(/mjx-container|<svg/);
-    // Should not contain raw placeholder patterns
-    expect(html).not.toMatch(/OWC_MATH_\w+/);
+    // Should not contain raw placeholder patterns (zero-width space + BLOCK/INLINE markers)
+    // Current placeholder format: \u200B{session}_{counter}_{random}_{BLOCK|INLINE}\u200B
+    expect(html).not.toMatch(/\u200B\w+_\d+_[a-z0-9]+_(BLOCK|INLINE)\u200B/);
   });
 });
