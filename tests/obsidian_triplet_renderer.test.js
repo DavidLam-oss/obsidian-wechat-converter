@@ -570,40 +570,52 @@ describe('Obsidian Triplet Renderer', () => {
     // cross-request contamination.
     const converter = await createLegacyConverter();
 
-    const renderMarkdown = vi.fn(async (markdown, el) => {
+    // Track execution overlap to ensure we're testing concurrent scenarios
+    let render1Active = false;
+    let render2Active = false;
+    let hadOverlap = false;
+
+    const createRenderMarkdown = (marker) => vi.fn(async (markdown, el) => {
+      // Set active flag and check for overlap
+      if (marker === 1) render1Active = true;
+      if (marker === 2) render2Active = true;
+      if (render1Active && render2Active) hadOverlap = true;
+
+      // Simulate work that takes time (ensures overlap)
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       const parsed = converter.md.render(markdown);
       el.innerHTML = parsed;
+
+      // Clear active flag
+      if (marker === 1) render1Active = false;
+      if (marker === 2) render2Active = false;
     });
 
     // Two different documents with different formulas
     const doc1 = 'Document 1: $a+b$';
     const doc2 = 'Document 2: $x+y$';
 
-    // Simulate concurrent renders with explicit interleaving
-    // We use delays to ensure the requests overlap at different stages
-    const delayedRender1 = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0)); // Yield to allow interleaving
-      return renderObsidianTripletMarkdown({
+    // Start both renders simultaneously (no delay before starting)
+    const [html1, html2] = await Promise.all([
+      renderObsidianTripletMarkdown({
         app: {},
         converter,
         markdown: doc1,
         sourcePath: 'doc1.md',
-        markdownRenderer: { renderMarkdown },
-      });
-    };
-
-    const delayedRender2 = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 5)); // Slightly longer delay
-      return renderObsidianTripletMarkdown({
+        markdownRenderer: { renderMarkdown: createRenderMarkdown(1) },
+      }),
+      renderObsidianTripletMarkdown({
         app: {},
         converter,
         markdown: doc2,
         sourcePath: 'doc2.md',
-        markdownRenderer: { renderMarkdown },
-      });
-    };
+        markdownRenderer: { renderMarkdown: createRenderMarkdown(2) },
+      }),
+    ]);
 
-    const [html1, html2] = await Promise.all([delayedRender1(), delayedRender2()]);
+    // Verify we actually had concurrent execution (overlap detected)
+    expect(hadOverlap).toBe(true);
 
     // Both should render successfully without cross-contamination
     expect(html1).toMatch(/mjx-container|<svg/);
