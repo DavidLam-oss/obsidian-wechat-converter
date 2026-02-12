@@ -225,8 +225,14 @@ function preprocessMarkdownForTriplet(markdown, converter) {
 }
 
 function preRenderMathFormulas(markdown, converter) {
-  if (!converter || !converter.md) return markdown;
-  if (typeof converter.md.render !== 'function') return markdown;
+  if (!converter || !converter.md) {
+    console.log('[OWC Math] converter or converter.md not available');
+    return markdown;
+  }
+  if (typeof converter.md.render !== 'function') {
+    console.log('[OWC Math] converter.md.render is not a function');
+    return markdown;
+  }
 
   let output = markdown;
   let formulaIndex = 0;
@@ -242,9 +248,11 @@ function preRenderMathFormulas(markdown, converter) {
       // Extract just the rendered math (strip wrapper <p> if any)
       const cleaned = rendered.replace(/^<p>|<\/p>$/g, '').trim();
       preRenderedMathFormulas.push({ placeholder, rendered: cleaned, isBlock: true });
+      console.log(`[OWC Math] Block formula ${formulaIndex} rendered, length: ${cleaned.length}`);
       formulaIndex += 1;
       return placeholder;
     } catch (error) {
+      console.error('[OWC Math] Block formula render error:', error);
       return match;
     }
   });
@@ -258,13 +266,16 @@ function preRenderMathFormulas(markdown, converter) {
       // Render using renderInline for inline math
       const rendered = converter.md.renderInline(`$${formula}$`);
       preRenderedMathFormulas.push({ placeholder, rendered, isBlock: false });
+      console.log(`[OWC Math] Inline formula ${formulaIndex} rendered, length: ${rendered.length}`);
       formulaIndex += 1;
       return placeholder;
     } catch (error) {
+      console.error('[OWC Math] Inline formula render error:', error);
       return match;
     }
   });
 
+  console.log(`[OWC Math] Total formulas pre-rendered: ${preRenderedMathFormulas.length}`);
   return output;
 }
 

@@ -2312,10 +2312,15 @@ var require_obsidian_triplet_serializer = __commonJS({
       }
     }
     function renderUnresolvedMathFormulas(container, converter) {
-      if (!container || !converter)
+      if (!container || !converter) {
+        console.log("[OWC Math Fallback] container or converter missing");
         return;
-      if (!converter.md || typeof converter.md.renderInline !== "function")
+      }
+      if (!converter.md || typeof converter.md.renderInline !== "function") {
+        console.log("[OWC Math Fallback] converter.md not available or renderInline not a function");
         return;
+      }
+      console.log("[OWC Math Fallback] Starting fallback math rendering");
       const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
       const textNodes = [];
       let node = walker.nextNode();
@@ -2424,14 +2429,24 @@ var require_obsidian_triplet_serializer = __commonJS({
       }
     }
     function injectPreRenderedMathFormulas(html, formulas) {
+      console.log(`[OWC Math] injectPreRenderedMathFormulas called with ${(formulas == null ? void 0 : formulas.length) || 0} formulas`);
       if (!html || !Array.isArray(formulas) || formulas.length === 0)
         return html;
       let result = html;
+      let injected = 0;
       for (const { placeholder, rendered } of formulas) {
         if (placeholder && rendered) {
+          const before = result;
           result = result.split(placeholder).join(rendered);
+          if (result !== before) {
+            injected += 1;
+            console.log(`[OWC Math] Injected placeholder: ${placeholder}`);
+          } else {
+            console.log(`[OWC Math] Placeholder not found in HTML: ${placeholder}`);
+          }
         }
       }
+      console.log(`[OWC Math] Total injected: ${injected}/${formulas.length}`);
       return result;
     }
     function serializeObsidianRenderedHtml({ root, converter, preRenderedMath = [] }) {
@@ -2683,10 +2698,14 @@ var require_obsidian_triplet_renderer = __commonJS({
       return output;
     }
     function preRenderMathFormulas(markdown, converter) {
-      if (!converter || !converter.md)
+      if (!converter || !converter.md) {
+        console.log("[OWC Math] converter or converter.md not available");
         return markdown;
-      if (typeof converter.md.render !== "function")
+      }
+      if (typeof converter.md.render !== "function") {
+        console.log("[OWC Math] converter.md.render is not a function");
         return markdown;
+      }
       let output = markdown;
       let formulaIndex = 0;
       const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
@@ -2696,9 +2715,11 @@ var require_obsidian_triplet_renderer = __commonJS({
           const rendered = converter.md.render(`$$${formula}$$`);
           const cleaned = rendered.replace(/^<p>|<\/p>$/g, "").trim();
           preRenderedMathFormulas.push({ placeholder, rendered: cleaned, isBlock: true });
+          console.log(`[OWC Math] Block formula ${formulaIndex} rendered, length: ${cleaned.length}`);
           formulaIndex += 1;
           return placeholder;
         } catch (error) {
+          console.error("[OWC Math] Block formula render error:", error);
           return match;
         }
       });
@@ -2708,12 +2729,15 @@ var require_obsidian_triplet_renderer = __commonJS({
         try {
           const rendered = converter.md.renderInline(`$${formula}$`);
           preRenderedMathFormulas.push({ placeholder, rendered, isBlock: false });
+          console.log(`[OWC Math] Inline formula ${formulaIndex} rendered, length: ${rendered.length}`);
           formulaIndex += 1;
           return placeholder;
         } catch (error) {
+          console.error("[OWC Math] Inline formula render error:", error);
           return match;
         }
       });
+      console.log(`[OWC Math] Total formulas pre-rendered: ${preRenderedMathFormulas.length}`);
       return output;
     }
     function countUnresolvedImageEmbeds(root) {
