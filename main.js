@@ -2623,6 +2623,79 @@ var require_obsidian_triplet_renderer = __commonJS({
       }
       return unresolved;
     }
+    function normalizeReferenceLabel(label) {
+      return String(label || "").trim().replace(/\s+/g, " ").toLowerCase();
+    }
+    function extractInlineImageTarget(rawTarget) {
+      const value = String(rawTarget || "").trim();
+      if (!value)
+        return "";
+      if (value.startsWith("<")) {
+        const endIndex = value.indexOf(">");
+        if (endIndex > 1) {
+          return value.slice(1, endIndex).trim();
+        }
+      }
+      return value.split(/\s+/)[0] || "";
+    }
+    function collectImageTargets(markdown) {
+      const source = String(markdown || "");
+      const targets = [];
+      if (!source || !source.includes("!["))
+        return targets;
+      const referenceTargets = /* @__PURE__ */ new Map();
+      const referenceDefinitionPattern = /^\s{0,3}\[([^\]]+)\]:\s*(?:<([^>\r\n]+)>|(\S+))/gm;
+      let definitionMatch = referenceDefinitionPattern.exec(source);
+      while (definitionMatch) {
+        const label = normalizeReferenceLabel(definitionMatch[1]);
+        const target = String(definitionMatch[2] || definitionMatch[3] || "").trim();
+        if (label && target && !referenceTargets.has(label)) {
+          referenceTargets.set(label, target);
+        }
+        definitionMatch = referenceDefinitionPattern.exec(source);
+      }
+      const inlineImagePattern = /!\[[^\]]*]\(([^)\r\n]+)\)/g;
+      let inlineMatch = inlineImagePattern.exec(source);
+      while (inlineMatch) {
+        targets.push(extractInlineImageTarget(inlineMatch[1]));
+        inlineMatch = inlineImagePattern.exec(source);
+      }
+      const fullReferenceImagePattern = /!\[([^\]]*)]\[([^\]]*)]/g;
+      let fullReferenceMatch = fullReferenceImagePattern.exec(source);
+      while (fullReferenceMatch) {
+        const fallbackLabel = String(fullReferenceMatch[1] || "");
+        const refLabel = String(fullReferenceMatch[2] || "");
+        const normalizedLabel = normalizeReferenceLabel(refLabel || fallbackLabel);
+        targets.push(referenceTargets.get(normalizedLabel) || "");
+        fullReferenceMatch = fullReferenceImagePattern.exec(source);
+      }
+      const shortcutReferenceImagePattern = /!\[([^\]]+)](?![\[(])/g;
+      let shortcutReferenceMatch = shortcutReferenceImagePattern.exec(source);
+      while (shortcutReferenceMatch) {
+        const label = normalizeReferenceLabel(shortcutReferenceMatch[1]);
+        targets.push(referenceTargets.get(label) || "");
+        shortcutReferenceMatch = shortcutReferenceImagePattern.exec(source);
+      }
+      return targets;
+    }
+    function shouldObserveAsyncEmbedWindow(markdown) {
+      const source = String(markdown || "");
+      if (!source || !source.includes("!["))
+        return false;
+      const targets = collectImageTargets(source);
+      if (targets.length === 0) {
+        return true;
+      }
+      for (const item of targets) {
+        const target = String(item || "").trim().toLowerCase();
+        if (!target)
+          return true;
+        const isRemoteLike = target.startsWith("http://") || target.startsWith("https://") || target.startsWith("data:");
+        if (!isRemoteLike)
+          return true;
+      }
+      return false;
+    }
     async function waitForTripletDomToSettle(root, options = {}) {
       if (!root)
         return;
@@ -2697,6 +2770,7 @@ var require_obsidian_triplet_renderer = __commonJS({
       }
       const container = document.createElement("div");
       const preparedMarkdown = preprocessMarkdownForTriplet(markdown, converter);
+      const shouldObserveWindow = shouldObserveAsyncEmbedWindow(preparedMarkdown);
       await renderByObsidianMarkdownRenderer({
         app,
         markdown: preparedMarkdown,
@@ -2705,7 +2779,7 @@ var require_obsidian_triplet_renderer = __commonJS({
         component,
         markdownRenderer
       });
-      await waitForTripletDomToSettle(container);
+      await waitForTripletDomToSettle(container, shouldObserveWindow ? {} : { minObserveMs: 0 });
       const serializedHtml = serializer({
         root: container,
         converter,
@@ -2719,6 +2793,7 @@ var require_obsidian_triplet_renderer = __commonJS({
       neutralizePlainWikilinks,
       preprocessMarkdownForTriplet,
       injectHardBreaksForLegacyParity,
+      shouldObserveAsyncEmbedWindow,
       waitForTripletDomToSettle,
       renderByObsidianMarkdownRenderer,
       renderObsidianTripletMarkdown: renderObsidianTripletMarkdown2

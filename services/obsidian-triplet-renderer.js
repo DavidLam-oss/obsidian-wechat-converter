@@ -300,7 +300,9 @@ function shouldObserveAsyncEmbedWindow(markdown) {
   }
 
   for (const item of targets) {
-    const target = String(item || '').trim().replace(/^<|>$/g, '').toLowerCase();
+    // collectImageTargets already strips angle brackets via extractInlineImageTarget
+    // and referenceDefinitionPattern's capturing groups.
+    const target = String(item || '').trim().toLowerCase();
     if (!target) return true;
 
     // Remote/data images are rendered directly; local-like paths may resolve
