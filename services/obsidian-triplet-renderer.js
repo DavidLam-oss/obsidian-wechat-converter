@@ -241,7 +241,8 @@ function preRenderMathFormulas(markdown, converter) {
   // Match $$...$$ where content can span multiple lines
   const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
   output = output.replace(blockMathPattern, (match, formula) => {
-    const placeholder = `%%OWC_MATH_BLOCK_${formulaIndex}%%`;
+    // Use a placeholder format that Obsidian won't strip (not %%...%% which is comment syntax)
+    const placeholder = `__OWC_MATH_BLOCK_${formulaIndex}__`;
     try {
       // Render using full markdown-it (handles block math)
       const rendered = converter.md.render(`$$${formula}$$`);
@@ -261,7 +262,8 @@ function preRenderMathFormulas(markdown, converter) {
   // Use negative lookbehind/lookahead to avoid matching $$
   const inlineMathPattern = /(?<!\$)\$(?!\$)([^\$\n]+?)\$(?!\$)/g;
   output = output.replace(inlineMathPattern, (match, formula) => {
-    const placeholder = `%%OWC_MATH_INLINE_${formulaIndex}%%`;
+    // Use a placeholder format that Obsidian won't strip (not %%...%% which is comment syntax)
+    const placeholder = `__OWC_MATH_INLINE_${formulaIndex}__`;
     try {
       // Render using renderInline for inline math
       const rendered = converter.md.renderInline(`$${formula}$`);
