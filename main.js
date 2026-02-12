@@ -2624,22 +2624,36 @@ var require_obsidian_triplet_renderer = __commonJS({
       return unresolved;
     }
     async function waitForTripletDomToSettle(root, options = {}) {
+      if (!root)
+        return;
       const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : 500;
       const intervalMs = Number.isFinite(options.intervalMs) ? options.intervalMs : 16;
+      const minObserveMs = Number.isFinite(options.minObserveMs) ? Math.max(0, Math.floor(options.minObserveMs)) : Math.min(48, timeoutMs);
       const start = Date.now();
-      let previousSnapshot = "";
+      let unresolved = countUnresolvedImageEmbeds(root);
+      if (unresolved === 0 && minObserveMs <= 0) {
+        return;
+      }
+      if (unresolved === 0 && minObserveMs > 0) {
+        while (Date.now() - start < minObserveMs) {
+          await new Promise((resolve) => setTimeout(resolve, intervalMs));
+          unresolved = countUnresolvedImageEmbeds(root);
+          if (unresolved > 0)
+            break;
+        }
+        if (unresolved === 0)
+          return;
+      }
       let stableCount = 0;
       while (Date.now() - start < timeoutMs) {
-        const unresolved = countUnresolvedImageEmbeds(root);
-        const snapshot = `${unresolved}:${root ? root.innerHTML : ""}`;
-        if (unresolved === 0 && snapshot === previousSnapshot) {
+        unresolved = countUnresolvedImageEmbeds(root);
+        if (unresolved === 0) {
           stableCount += 1;
           if (stableCount >= 2)
             return;
         } else {
           stableCount = 0;
         }
-        previousSnapshot = snapshot;
         await new Promise((resolve) => setTimeout(resolve, intervalMs));
       }
     }

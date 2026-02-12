@@ -277,6 +277,21 @@ describe('Obsidian Triplet Renderer', () => {
     await expect(waitForTripletDomToSettle(root, { timeoutMs: 20, intervalMs: 1 })).resolves.toBeUndefined();
   });
 
+  it('waitForTripletDomToSettle should allow immediate return when observation window is disabled', async () => {
+    vi.useFakeTimers();
+    try {
+      const root = document.createElement('div');
+      root.innerHTML = '<p>ok</p>';
+
+      const promise = waitForTripletDomToSettle(root, { timeoutMs: 100, intervalMs: 10, minObserveMs: 0 });
+      await Promise.resolve();
+      expect(vi.getTimerCount()).toBe(0);
+      await expect(promise).resolves.toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('should execute markdown renderer + serializer path by default', async () => {
     const convert = vi.fn();
     const renderMarkdown = vi.fn();
@@ -295,5 +310,31 @@ describe('Obsidian Triplet Renderer', () => {
     expect(renderMarkdown).toHaveBeenCalledTimes(1);
     expect(serializer).toHaveBeenCalledTimes(1);
     expect(convert).not.toHaveBeenCalled();
+  });
+
+  it('should wait for delayed async image-embed injection before serialization', async () => {
+    const renderMarkdown = vi.fn(async (_markdown, el) => {
+      el.innerHTML = '<p>start</p>';
+      setTimeout(() => {
+        el.innerHTML = '<p><span class="internal-embed image-embed" src="app://obsidian.md/y"></span></p>';
+        setTimeout(() => {
+          const span = el.querySelector('span.internal-embed.image-embed');
+          if (span) {
+            span.innerHTML = '<img src="app://obsidian.md/y">';
+          }
+        }, 10);
+      }, 5);
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter: {},
+      markdown: 'x',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+      serializer: ({ root }) => root.innerHTML,
+    });
+
+    expect(html).toContain('<img');
   });
 });
