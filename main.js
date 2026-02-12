@@ -2311,6 +2311,63 @@ var require_obsidian_triplet_serializer = __commonJS({
         }
       }
     }
+    function renderUnresolvedMathFormulas(container, converter) {
+      if (!container || !converter)
+        return;
+      if (!converter.md || typeof converter.md.renderInline !== "function")
+        return;
+      const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+      const textNodes = [];
+      let node = walker.nextNode();
+      while (node) {
+        const text = String(node.textContent || "");
+        if (text.includes("$")) {
+          textNodes.push(node);
+        }
+        node = walker.nextNode();
+      }
+      for (const textNode of textNodes) {
+        const parent = textNode.parentElement;
+        if (!parent)
+          continue;
+        if (parent.closest("pre,code,kbd,samp,script,style,textarea,mjx-container,mjx-math,math"))
+          continue;
+        const text = String(textNode.textContent || "");
+        if (!text.includes("$"))
+          continue;
+        const hasBlockMath = /\$\$[\s\S]+?\$\$/.test(text);
+        const hasInlineMath = /(?<!\$)\$(?!\$)([^\$\n]+?)\$(?!\$)/.test(text);
+        if (!hasBlockMath && !hasInlineMath)
+          continue;
+        let rendered;
+        try {
+          if (hasBlockMath) {
+            const tempDiv = document.createElement("div");
+            const wrappedText = text.replace(/\$\$([\s\S]+?)\$\$/g, "\n$$\n$1\n$$\n");
+            const fullRendered = converter.md.render(wrappedText);
+            tempDiv.innerHTML = fullRendered;
+            const fragment = document.createDocumentFragment();
+            while (tempDiv.firstChild) {
+              fragment.appendChild(tempDiv.firstChild);
+            }
+            textNode.replaceWith(fragment);
+          } else {
+            rendered = converter.md.renderInline(text);
+            if (rendered && rendered !== text) {
+              const tempDiv = document.createElement("div");
+              tempDiv.innerHTML = rendered;
+              const fragment = document.createDocumentFragment();
+              while (tempDiv.firstChild) {
+                fragment.appendChild(tempDiv.firstChild);
+              }
+              textNode.replaceWith(fragment);
+            }
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+    }
     function applyLegacyLinkifyParity(container, converter) {
       if (!container || !converter || !converter.md || !converter.md.linkify)
         return;
@@ -2366,7 +2423,18 @@ var require_obsidian_triplet_serializer = __commonJS({
         current.replaceWith(fragment);
       }
     }
-    function serializeObsidianRenderedHtml({ root, converter }) {
+    function injectPreRenderedMathFormulas(html, formulas) {
+      if (!html || !Array.isArray(formulas) || formulas.length === 0)
+        return html;
+      let result = html;
+      for (const { placeholder, rendered } of formulas) {
+        if (placeholder && rendered) {
+          result = result.split(placeholder).join(rendered);
+        }
+      }
+      return result;
+    }
+    function serializeObsidianRenderedHtml({ root, converter, preRenderedMath = [] }) {
       if (typeof document === "undefined") {
         throw new Error("Triplet serializer requires DOM environment");
       }
@@ -2379,6 +2447,7 @@ var require_obsidian_triplet_serializer = __commonJS({
       normalizeLegacyTagAliases(container);
       normalizeLegacyDeleteNesting(container);
       stripDangerousTags(container);
+      renderUnresolvedMathFormulas(container, converter);
       applyLegacyLinkifyParity(container, converter);
       applyLegacyTypographerParity(container, converter);
       sanitizeAnchorAndImageLinks(container, converter);
@@ -2390,6 +2459,7 @@ var require_obsidian_triplet_serializer = __commonJS({
       trimTrailingWhitespaceInBlockText(container);
       pruneEmptyHeadings(container);
       let html = container.innerHTML;
+      html = injectPreRenderedMathFormulas(html, preRenderedMath);
       if (converter && typeof converter.fixListParagraphs === "function") {
         html = converter.fixListParagraphs(html);
       }
@@ -2595,7 +2665,9 @@ var require_obsidian_triplet_renderer = __commonJS({
       }
       return lines.join("\n");
     }
+    var preRenderedMathFormulas = [];
     function preprocessMarkdownForTriplet(markdown, converter) {
+      preRenderedMathFormulas = [];
       let output = String(markdown || "");
       output = output.replace(/^[\t ]+(\$\$)/gm, "$1");
       output = output.replace(/!\[\[([^\[\]|]+)(?:\|([^\[\]]+))?\]\]/g, (match, imagePath, alt) => {
@@ -2604,9 +2676,44 @@ var require_obsidian_triplet_renderer = __commonJS({
       if (converter && typeof converter.stripFrontmatter === "function") {
         output = converter.stripFrontmatter(output);
       }
+      output = preRenderMathFormulas(output, converter);
       output = neutralizeUnsafeMarkdownLinks(output);
       output = neutralizePlainWikilinks(output);
       output = injectHardBreaksForLegacyParity(output);
+      return output;
+    }
+    function preRenderMathFormulas(markdown, converter) {
+      if (!converter || !converter.md)
+        return markdown;
+      if (typeof converter.md.render !== "function")
+        return markdown;
+      let output = markdown;
+      let formulaIndex = 0;
+      const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
+      output = output.replace(blockMathPattern, (match, formula) => {
+        const placeholder = `%%OWC_MATH_BLOCK_${formulaIndex}%%`;
+        try {
+          const rendered = converter.md.render(`$$${formula}$$`);
+          const cleaned = rendered.replace(/^<p>|<\/p>$/g, "").trim();
+          preRenderedMathFormulas.push({ placeholder, rendered: cleaned, isBlock: true });
+          formulaIndex += 1;
+          return placeholder;
+        } catch (error) {
+          return match;
+        }
+      });
+      const inlineMathPattern = /(?<!\$)\$(?!\$)([^\$\n]+?)\$(?!\$)/g;
+      output = output.replace(inlineMathPattern, (match, formula) => {
+        const placeholder = `%%OWC_MATH_INLINE_${formulaIndex}%%`;
+        try {
+          const rendered = converter.md.renderInline(`$${formula}$`);
+          preRenderedMathFormulas.push({ placeholder, rendered, isBlock: false });
+          formulaIndex += 1;
+          return placeholder;
+        } catch (error) {
+          return match;
+        }
+      });
       return output;
     }
     function countUnresolvedImageEmbeds(root) {
@@ -2780,11 +2887,13 @@ var require_obsidian_triplet_renderer = __commonJS({
         markdownRenderer
       });
       await waitForTripletDomToSettle(container, shouldObserveWindow ? {} : { minObserveMs: 0 });
+      const mathFormulas = [...preRenderedMathFormulas];
       const serializedHtml = serializer({
         root: container,
         converter,
         sourcePath,
-        app
+        app,
+        preRenderedMath: mathFormulas
       });
       return serializedHtml;
     }
@@ -2796,7 +2905,12 @@ var require_obsidian_triplet_renderer = __commonJS({
       shouldObserveAsyncEmbedWindow,
       waitForTripletDomToSettle,
       renderByObsidianMarkdownRenderer,
-      renderObsidianTripletMarkdown: renderObsidianTripletMarkdown2
+      renderObsidianTripletMarkdown: renderObsidianTripletMarkdown2,
+      // Export for serializer to access pre-rendered math
+      getPreRenderedMathFormulas: () => preRenderedMathFormulas,
+      clearPreRenderedMathFormulas: () => {
+        preRenderedMathFormulas = [];
+      }
     };
   }
 });

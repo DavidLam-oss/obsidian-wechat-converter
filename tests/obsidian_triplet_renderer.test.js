@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+const { createLegacyConverter } = require('./helpers/render-runtime');
 const {
   neutralizeUnsafeMarkdownLinks,
   neutralizePlainWikilinks,
@@ -408,5 +409,48 @@ describe('Obsidian Triplet Renderer', () => {
     });
 
     expect(html).toContain('<img');
+  });
+
+  it('should render unresolved inline math formulas via markdown-it MathJax', async () => {
+    const converter = await createLegacyConverter();
+
+    // Simulate Obsidian MarkdownRenderer not rendering math (leaves $...$ as-is)
+    const renderMarkdown = vi.fn(async (_markdown, el) => {
+      el.innerHTML = '<p>Energy is $E=mc^2$.</p>';
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: 'Energy is $E=mc^2$.',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+      // Use default serializer (serializeObsidianRenderedHtml) which calls renderUnresolvedMathFormulas
+    });
+
+    // MathJax should render to mjx-container or span with SVG
+    expect(html).toMatch(/mjx-container|<svg/);
+  });
+
+  it('should render unresolved block math formulas via markdown-it MathJax', async () => {
+    const converter = await createLegacyConverter();
+
+    // The preprocessMarkdownForTriplet will convert $$...$$ to placeholders
+    // Obsidian will render the placeholder as plain text in a paragraph
+    const renderMarkdown = vi.fn(async (markdown, el) => {
+      // Simulate Obsidian rendering the placeholder as-is
+      el.innerHTML = `<p>Here is a formula:</p><p>${markdown.split('\n\n')[1] || markdown}</p>`;
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: 'Here is a formula:\n\n$$\nE=mc^2\n$$',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+    });
+
+    // Block math should render to mjx-container or section with SVG
+    expect(html).toMatch(/mjx-container|<svg/);
   });
 });

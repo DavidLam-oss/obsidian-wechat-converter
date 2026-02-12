@@ -191,7 +191,13 @@ function neutralizePlainWikilinks(markdown) {
   return lines.join('\n');
 }
 
+// Global store for pre-rendered math formulas (cleared per render call)
+let preRenderedMathFormulas = [];
+
 function preprocessMarkdownForTriplet(markdown, converter) {
+  // Clear the store for this render call
+  preRenderedMathFormulas = [];
+
   let output = String(markdown || '');
 
   // Align with converter.convert preprocessing to reduce non-semantic parity noise.
@@ -204,12 +210,60 @@ function preprocessMarkdownForTriplet(markdown, converter) {
     output = converter.stripFrontmatter(output);
   }
 
+  // Pre-render math formulas using markdown-it + MathJax before Obsidian renders
+  // This is needed because Obsidian's MarkdownRenderer.renderMarkdown doesn't render LaTeX
+  output = preRenderMathFormulas(output, converter);
+
   output = neutralizeUnsafeMarkdownLinks(output);
   output = neutralizePlainWikilinks(output);
 
   // Legacy converter runs markdown-it with breaks=true. Normalize soft line breaks
   // so Obsidian renderer emits equivalent <br> in common paragraph text.
   output = injectHardBreaksForLegacyParity(output);
+
+  return output;
+}
+
+function preRenderMathFormulas(markdown, converter) {
+  if (!converter || !converter.md) return markdown;
+  if (typeof converter.md.render !== 'function') return markdown;
+
+  let output = markdown;
+  let formulaIndex = 0;
+
+  // First, handle block math ($$...$$) - must be processed before inline
+  // Match $$...$$ where content can span multiple lines
+  const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
+  output = output.replace(blockMathPattern, (match, formula) => {
+    const placeholder = `%%OWC_MATH_BLOCK_${formulaIndex}%%`;
+    try {
+      // Render using full markdown-it (handles block math)
+      const rendered = converter.md.render(`$$${formula}$$`);
+      // Extract just the rendered math (strip wrapper <p> if any)
+      const cleaned = rendered.replace(/^<p>|<\/p>$/g, '').trim();
+      preRenderedMathFormulas.push({ placeholder, rendered: cleaned, isBlock: true });
+      formulaIndex += 1;
+      return placeholder;
+    } catch (error) {
+      return match;
+    }
+  });
+
+  // Then, handle inline math ($...$) - single $ not $$
+  // Use negative lookbehind/lookahead to avoid matching $$
+  const inlineMathPattern = /(?<!\$)\$(?!\$)([^\$\n]+?)\$(?!\$)/g;
+  output = output.replace(inlineMathPattern, (match, formula) => {
+    const placeholder = `%%OWC_MATH_INLINE_${formulaIndex}%%`;
+    try {
+      // Render using renderInline for inline math
+      const rendered = converter.md.renderInline(`$${formula}$`);
+      preRenderedMathFormulas.push({ placeholder, rendered, isBlock: false });
+      formulaIndex += 1;
+      return placeholder;
+    } catch (error) {
+      return match;
+    }
+  });
 
   return output;
 }
@@ -415,11 +469,15 @@ async function renderObsidianTripletMarkdown({
   // Wait for image embeds to settle; MarkdownRenderer may resolve embeds asynchronously.
   await waitForTripletDomToSettle(container, shouldObserveWindow ? {} : { minObserveMs: 0 });
 
+  // Capture pre-rendered math formulas for the serializer
+  const mathFormulas = [...preRenderedMathFormulas];
+
   const serializedHtml = serializer({
     root: container,
     converter,
     sourcePath,
     app,
+    preRenderedMath: mathFormulas,
   });
 
   return serializedHtml;
@@ -434,4 +492,7 @@ module.exports = {
   waitForTripletDomToSettle,
   renderByObsidianMarkdownRenderer,
   renderObsidianTripletMarkdown,
+  // Export for serializer to access pre-rendered math
+  getPreRenderedMathFormulas: () => preRenderedMathFormulas,
+  clearPreRenderedMathFormulas: () => { preRenderedMathFormulas = []; },
 };
