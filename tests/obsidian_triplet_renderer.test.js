@@ -624,4 +624,53 @@ describe('Obsidian Triplet Renderer', () => {
     expect(html1).not.toMatch(/\u200B\w+_\d+_[a-z0-9]+_(BLOCK|INLINE)\u200B/);
     expect(html2).not.toMatch(/\u200B\w+_\d+_[a-z0-9]+_(BLOCK|INLINE)\u200B/);
   });
+
+  describe('escapePseudoHtmlTags edge cases', () => {
+    it('should preserve inline code content with pseudo-tags', () => {
+      const input = 'Use `<Title>` tag in your code';
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Inline code should be preserved as-is
+      expect(output).toContain('`<Title>`');
+      expect(output).not.toContain('`&lt;Title>`');
+    });
+
+    it('should escape pseudo-tags outside inline code', () => {
+      const input = 'File: <Title>_xxx_MS.pdf and code: `<Title>`';
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Outside inline code should be escaped
+      expect(output).toContain('&lt;Title&gt;_xxx_MS.pdf');
+      // Inside inline code should be preserved
+      expect(output).toContain('`<Title>`');
+    });
+
+    it('should handle nested fences with different lengths (4 backticks outer, 3 inner)', () => {
+      const input = [
+        '````markdown',
+        '```code',
+        '<Tag>inside nested fence</Tag>',
+        '```',
+        '````',
+        '<Tag>outside fence</Tag>',
+      ].join('\n');
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Content inside nested fence should be preserved
+      expect(output).toContain('<Tag>inside nested fence</Tag>');
+      // Content outside fence should be escaped
+      expect(output).toContain('&lt;Tag&gt;outside fence');
+    });
+
+    it('should handle pseudo-tags with attributes', () => {
+      const input = '<CustomTag attr="value">text</CustomTag>';
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      expect(output).toContain('&lt;CustomTag');
+    });
+
+    it('should preserve known HTML tags', () => {
+      const input = '<div class="test"><span>content</span></div>';
+      const { markdown: output } = preprocessMarkdownForTriplet(input, {});
+      // Known tags should not be escaped
+      expect(output).toContain('<div');
+      expect(output).toContain('<span');
+    });
+  });
 });

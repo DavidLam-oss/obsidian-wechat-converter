@@ -2778,15 +2778,17 @@ var require_obsidian_triplet_renderer = __commonJS({
       const lines = markdown.split("\n");
       const result = [];
       let inCodeBlock = false;
-      let codeBlockFence = "";
+      let codeBlockFenceLen = 0;
       for (const line of lines) {
-        if (line.startsWith("```") || line.startsWith("~~~")) {
+        const fenceMatch = line.match(/^(`{3,}|~{3,})/);
+        if (fenceMatch) {
+          const currentFenceLen = fenceMatch[1].length;
           if (!inCodeBlock) {
             inCodeBlock = true;
-            codeBlockFence = line.slice(0, 3);
-          } else if (line.startsWith(codeBlockFence)) {
+            codeBlockFenceLen = currentFenceLen;
+          } else if (currentFenceLen >= codeBlockFenceLen) {
             inCodeBlock = false;
-            codeBlockFence = "";
+            codeBlockFenceLen = 0;
           }
           result.push(line);
           continue;
@@ -2795,19 +2797,59 @@ var require_obsidian_triplet_renderer = __commonJS({
           result.push(line);
           continue;
         }
-        let processed = line.replace(/<\/?([a-zA-Z][a-zA-Z0-9-]*)\b/g, (match, tagName) => {
-          const lowerTag = tagName.toLowerCase();
-          if (KNOWN_HTML_TAGS.has(lowerTag)) {
-            return match;
-          }
-          if (match.startsWith("</")) {
-            return `&lt;/${tagName}`;
-          }
-          return `&lt;${tagName}`;
-        });
+        const processed = escapeLinePreservingInlineCode(line);
         result.push(processed);
       }
       return result.join("\n");
+    }
+    function escapeLinePreservingInlineCode(line) {
+      const segments = [];
+      let lastIndex = 0;
+      let inInlineCode = false;
+      let i = 0;
+      while (i < line.length) {
+        if (line[i] === "`" && !(i < 3 && line.slice(0, 3).match(/^`{3}/))) {
+          const startIndex = i;
+          i++;
+          while (i < line.length) {
+            if (line[i] === "`") {
+              if (i + 1 >= line.length || line[i + 1] !== "`") {
+                i++;
+                break;
+              }
+            }
+            i++;
+          }
+          segments.push(line.slice(lastIndex, startIndex));
+          segments.push(line.slice(startIndex, i));
+          lastIndex = i;
+        } else {
+          i++;
+        }
+      }
+      if (lastIndex < line.length) {
+        segments.push(line.slice(lastIndex));
+      }
+      if (segments.length === 0) {
+        return escapePseudoHtmlInText(line);
+      }
+      return segments.map((seg, idx) => {
+        if (idx % 2 === 1)
+          return seg;
+        return escapePseudoHtmlInText(seg);
+      }).join("");
+    }
+    function escapePseudoHtmlInText(text) {
+      return text.replace(/<\/?([a-zA-Z][a-zA-Z0-9-]*)([^>]*)>/g, (match, tagName, attrs) => {
+        const lowerTag = tagName.toLowerCase();
+        if (KNOWN_HTML_TAGS.has(lowerTag)) {
+          return match;
+        }
+        if (match.startsWith("</")) {
+          return `&lt;/${tagName}&gt;`;
+        }
+        return `&lt;${tagName}${attrs}&gt;`;
+      });
     }
     var MATH_PLACEHOLDER_SESSION = `M${Date.now().toString(36)}X`;
     var mathPlaceholderCounter = 0;

@@ -220,22 +220,23 @@ const KNOWN_HTML_TAGS = new Set([
  * For example: <Title>_xxx_MS.pdf should be rendered as text, not as an HTML tag.
  */
 function escapePseudoHtmlTags(markdown) {
-  // Match <tag> or </tag> patterns where tag is not a known HTML tag
-  // We need to be careful not to escape inside code blocks
   const lines = markdown.split('\n');
   const result = [];
   let inCodeBlock = false;
-  let codeBlockFence = '';
+  let codeBlockFenceLen = 0; // Track full fence length for proper nesting
 
   for (const line of lines) {
-    // Track code block boundaries
-    if (line.startsWith('```') || line.startsWith('~~~')) {
+    // Track code block boundaries using proper fence length matching
+    const fenceMatch = line.match(/^(`{3,}|~{3,})/);
+    if (fenceMatch) {
+      const currentFenceLen = fenceMatch[1].length;
       if (!inCodeBlock) {
         inCodeBlock = true;
-        codeBlockFence = line.slice(0, 3);
-      } else if (line.startsWith(codeBlockFence)) {
+        codeBlockFenceLen = currentFenceLen;
+      } else if (currentFenceLen >= codeBlockFenceLen) {
+        // Closing fence must be at least as long as opening fence
         inCodeBlock = false;
-        codeBlockFence = '';
+        codeBlockFenceLen = 0;
       }
       result.push(line);
       continue;
@@ -246,29 +247,92 @@ function escapePseudoHtmlTags(markdown) {
       continue;
     }
 
-    // Escape pseudo-HTML tags outside code blocks
-    // Match <tagName or </tagName at word boundary
-    let processed = line.replace(/<\/?([a-zA-Z][a-zA-Z0-9-]*)\b/g, (match, tagName) => {
-      const lowerTag = tagName.toLowerCase();
-      // If it's a known HTML tag, keep it as-is
-      if (KNOWN_HTML_TAGS.has(lowerTag)) {
-        return match;
-      }
-      // Otherwise escape the angle brackets
-      if (match.startsWith('</')) {
-        return `&lt;/${tagName}`;
-      }
-      return `&lt;${tagName}`;
-    });
-
-    // Also escape unmatched > that might be part of a pseudo-tag
-    // But only if it looks like it's closing a pseudo-tag (preceded by text that was a tag)
-    // This is tricky, so we do a simpler approach: escape > that's part of a pseudo-tag pattern
-
+    // Escape pseudo-HTML tags outside code blocks, but preserve inline code
+    const processed = escapeLinePreservingInlineCode(line);
     result.push(processed);
   }
 
   return result.join('\n');
+}
+
+/**
+ * Escape pseudo-HTML tags in a line while preserving inline code content.
+ */
+function escapeLinePreservingInlineCode(line) {
+  // Split by inline code segments (single backticks, not triple for fenced blocks)
+  // We need to handle both single `code` and escaped backticks
+  const segments = [];
+  let lastIndex = 0;
+  let inInlineCode = false;
+  let i = 0;
+
+  while (i < line.length) {
+    // Check for backtick (inline code boundary)
+    // Skip if it's part of a fenced block marker at line start (already handled above)
+    if (line[i] === '`' && !(i < 3 && line.slice(0, 3).match(/^`{3}/))) {
+      // Find the end of this inline code segment
+      const startIndex = i;
+      i++; // Skip opening backtick
+
+      // Find closing backtick (not double backtick which escapes)
+      while (i < line.length) {
+        if (line[i] === '`') {
+          // Check if this is a closing backtick
+          // It's closing if it's a single backtick or if it's followed by non-backtick
+          if (i + 1 >= line.length || line[i + 1] !== '`') {
+            i++; // Include closing backtick
+            break;
+          }
+        }
+        i++;
+      }
+
+      // Add the inline code segment as-is (no escaping)
+      segments.push(line.slice(lastIndex, startIndex));
+      segments.push(line.slice(startIndex, i));
+      lastIndex = i;
+    } else {
+      i++;
+    }
+  }
+
+  // Add remaining text
+  if (lastIndex < line.length) {
+    segments.push(line.slice(lastIndex));
+  }
+
+  // If no inline code found, process the whole line
+  if (segments.length === 0) {
+    return escapePseudoHtmlInText(line);
+  }
+
+  // Process non-code segments
+  return segments.map((seg, idx) => {
+    // Even indices are non-code, odd indices are inline code (preserved as-is)
+    if (idx % 2 === 1) return seg;
+    return escapePseudoHtmlInText(seg);
+  }).join('');
+}
+
+/**
+ * Escape pseudo-HTML tags in plain text (not inside code).
+ * Matches full tag patterns including attributes and closing bracket.
+ */
+function escapePseudoHtmlInText(text) {
+  // Match opening tags: <tag> or <tag attr="value">
+  // Match closing tags: </tag>
+  return text.replace(/<\/?([a-zA-Z][a-zA-Z0-9-]*)([^>]*)>/g, (match, tagName, attrs) => {
+    const lowerTag = tagName.toLowerCase();
+    // If it's a known HTML tag, keep it as-is
+    if (KNOWN_HTML_TAGS.has(lowerTag)) {
+      return match;
+    }
+    // Otherwise escape the angle brackets
+    if (match.startsWith('</')) {
+      return `&lt;/${tagName}&gt;`;
+    }
+    return `&lt;${tagName}${attrs}&gt;`;
+  });
 }
 
 // Generate a unique placeholder that won't conflict with user content
