@@ -534,4 +534,32 @@ describe('Obsidian Triplet Renderer', () => {
     // Should not crash, content should be preserved
     expect(html).toContain('Price');
   });
+
+  it('should preserve placeholders through real markdown-it rendering and inject correctly', async () => {
+    // This test simulates the real Obsidian MarkdownRenderer path more closely
+    // by using converter.md.render() to parse markdown, ensuring placeholders
+    // survive the markdown parsing phase.
+    const converter = await createLegacyConverter();
+
+    // Simulate real Obsidian MarkdownRenderer behavior: parse markdown with markdown-it
+    const renderMarkdown = vi.fn(async (markdown, el) => {
+      // Use converter.md.render to simulate real markdown parsing
+      // This is closer to what Obsidian's MarkdownRenderer.renderMarkdown does
+      const parsed = converter.md.render(markdown);
+      el.innerHTML = parsed;
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: 'Inline $E=mc^2$ and block:\n\n$$\\sum_{i=1}^{n} i$$',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+    });
+
+    // Both formulas should be rendered (not just placeholders surviving)
+    expect(html).toMatch(/mjx-container|<svg/);
+    // Should not contain raw placeholder patterns
+    expect(html).not.toMatch(/OWC_MATH_\w+/);
+  });
 });

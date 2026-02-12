@@ -241,7 +241,6 @@ function preRenderMathFormulas(markdown, converter) {
   if (typeof converter.md.render !== 'function') return markdown;
 
   let output = markdown;
-  let formulaIndex = 0;
 
   // First, handle block math ($$...$$) - must be processed before inline
   // Match $$...$$ where content can span multiple lines
@@ -254,7 +253,6 @@ function preRenderMathFormulas(markdown, converter) {
       // Extract just the rendered math (strip wrapper <p> if any)
       const cleaned = rendered.replace(/^<p>|<\/p>$/g, '').trim();
       preRenderedMathFormulas.push({ placeholder, rendered: cleaned, isBlock: true });
-      formulaIndex += 1;
       return placeholder;
     } catch (error) {
       return match;
@@ -270,7 +268,6 @@ function preRenderMathFormulas(markdown, converter) {
       // Render using renderInline for inline math
       const rendered = converter.md.renderInline(`$${formula}$`);
       preRenderedMathFormulas.push({ placeholder, rendered, isBlock: false });
-      formulaIndex += 1;
       return placeholder;
     } catch (error) {
       return match;

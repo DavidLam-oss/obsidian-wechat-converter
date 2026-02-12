@@ -2695,7 +2695,6 @@ var require_obsidian_triplet_renderer = __commonJS({
       if (typeof converter.md.render !== "function")
         return markdown;
       let output = markdown;
-      let formulaIndex = 0;
       const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
       output = output.replace(blockMathPattern, (match, formula) => {
         const placeholder = generateMathPlaceholder("BLOCK");
@@ -2703,7 +2702,6 @@ var require_obsidian_triplet_renderer = __commonJS({
           const rendered = converter.md.render(`$$${formula}$$`);
           const cleaned = rendered.replace(/^<p>|<\/p>$/g, "").trim();
           preRenderedMathFormulas.push({ placeholder, rendered: cleaned, isBlock: true });
-          formulaIndex += 1;
           return placeholder;
         } catch (error) {
           return match;
@@ -2715,7 +2713,6 @@ var require_obsidian_triplet_renderer = __commonJS({
         try {
           const rendered = converter.md.renderInline(`$${formula}$`);
           preRenderedMathFormulas.push({ placeholder, rendered, isBlock: false });
-          formulaIndex += 1;
           return placeholder;
         } catch (error) {
           return match;
