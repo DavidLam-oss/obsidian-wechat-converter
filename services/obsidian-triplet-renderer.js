@@ -191,6 +191,86 @@ function neutralizePlainWikilinks(markdown) {
   return lines.join('\n');
 }
 
+// Known safe HTML tags that should NOT be escaped
+// This list includes common HTML5 tags that users might intentionally use
+const KNOWN_HTML_TAGS = new Set([
+  // Block elements
+  'div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre', 'hr', 'br',
+  'ul', 'ol', 'li', 'dl', 'dt', 'dd', 'figure', 'figcaption', 'main', 'section',
+  'article', 'aside', 'header', 'footer', 'nav', 'address',
+  // Inline elements
+  'a', 'strong', 'b', 'em', 'i', 'u', 's', 'strike', 'del', 'ins', 'code', 'kbd',
+  'samp', 'var', 'mark', 'small', 'sub', 'sup', 'span', 'abbr', 'cite', 'q',
+  'time', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'dfn', 'wbr',
+  // Media elements
+  'img', 'picture', 'source', 'video', 'audio', 'track', 'canvas', 'svg', 'math',
+  // Table elements
+  'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption', 'colgroup', 'col',
+  // Form elements (though these are stripped by sanitizer)
+  'form', 'input', 'button', 'select', 'option', 'optgroup', 'textarea', 'label',
+  'fieldset', 'legend', 'datalist', 'output', 'progress', 'meter',
+  // Other common elements
+  'details', 'summary', 'dialog', 'menu', 'menuitem', 'noscript', 'template',
+  // MathJax specific
+  'mjx-container', 'mjx-math',
+]);
+
+/**
+ * Escape pseudo-HTML tags that look like HTML but are actually text.
+ * For example: <Title>_xxx_MS.pdf should be rendered as text, not as an HTML tag.
+ */
+function escapePseudoHtmlTags(markdown) {
+  // Match <tag> or </tag> patterns where tag is not a known HTML tag
+  // We need to be careful not to escape inside code blocks
+  const lines = markdown.split('\n');
+  const result = [];
+  let inCodeBlock = false;
+  let codeBlockFence = '';
+
+  for (const line of lines) {
+    // Track code block boundaries
+    if (line.startsWith('```') || line.startsWith('~~~')) {
+      if (!inCodeBlock) {
+        inCodeBlock = true;
+        codeBlockFence = line.slice(0, 3);
+      } else if (line.startsWith(codeBlockFence)) {
+        inCodeBlock = false;
+        codeBlockFence = '';
+      }
+      result.push(line);
+      continue;
+    }
+
+    if (inCodeBlock) {
+      result.push(line);
+      continue;
+    }
+
+    // Escape pseudo-HTML tags outside code blocks
+    // Match <tagName or </tagName at word boundary
+    let processed = line.replace(/<\/?([a-zA-Z][a-zA-Z0-9-]*)\b/g, (match, tagName) => {
+      const lowerTag = tagName.toLowerCase();
+      // If it's a known HTML tag, keep it as-is
+      if (KNOWN_HTML_TAGS.has(lowerTag)) {
+        return match;
+      }
+      // Otherwise escape the angle brackets
+      if (match.startsWith('</')) {
+        return `&lt;/${tagName}`;
+      }
+      return `&lt;${tagName}`;
+    });
+
+    // Also escape unmatched > that might be part of a pseudo-tag
+    // But only if it looks like it's closing a pseudo-tag (preceded by text that was a tag)
+    // This is tricky, so we do a simpler approach: escape > that's part of a pseudo-tag pattern
+
+    result.push(processed);
+  }
+
+  return result.join('\n');
+}
+
 // Generate a unique placeholder that won't conflict with user content
 // Uses a random session ID + counter to prevent collision
 const MATH_PLACEHOLDER_SESSION = `M${Date.now().toString(36)}X`;
@@ -274,6 +354,10 @@ function preprocessMarkdownForTriplet(markdown, converter) {
   // This is needed because Obsidian's MarkdownRenderer.renderMarkdown doesn't render LaTeX
   const { markdown: mathProcessed, formulas: mathFormulas } = preRenderMathFormulas(output, converter);
   output = mathProcessed;
+
+  // Escape pseudo-HTML tags that look like HTML but are actually text
+  // For example: <Title>_xxx_MS.pdf should render as text, not as an HTML tag
+  output = escapePseudoHtmlTags(output);
 
   output = neutralizeUnsafeMarkdownLinks(output);
   output = neutralizePlainWikilinks(output);
