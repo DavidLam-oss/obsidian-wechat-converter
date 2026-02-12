@@ -4,6 +4,7 @@ const {
   neutralizePlainWikilinks,
   preprocessMarkdownForTriplet,
   injectHardBreaksForLegacyParity,
+  shouldObserveAsyncEmbedWindow,
   waitForTripletDomToSettle,
   renderByObsidianMarkdownRenderer,
   renderObsidianTripletMarkdown,
@@ -179,6 +180,14 @@ describe('Obsidian Triplet Renderer', () => {
     expect(output).toContain('脚本会自动帮我建好那两个文件。\n2. 第二项');
   });
 
+  it('should only observe settle window for local-like image targets', () => {
+    expect(shouldObserveAsyncEmbedWindow('纯文本')).toBe(false);
+    expect(shouldObserveAsyncEmbedWindow('![remote](https://example.com/a.png)')).toBe(false);
+    expect(shouldObserveAsyncEmbedWindow('![data](data:image/png;base64,abc)')).toBe(false);
+    expect(shouldObserveAsyncEmbedWindow('![local](attachments/a.png)')).toBe(true);
+    expect(shouldObserveAsyncEmbedWindow('![app](app://obsidian.md/a.png)')).toBe(true);
+  });
+
   it('should render with renderMarkdown API and serialize output', async () => {
     const renderMarkdown = vi.fn(async (markdown, el) => {
       el.innerHTML = `<p>${markdown}</p>`;
@@ -233,7 +242,7 @@ describe('Obsidian Triplet Renderer', () => {
     const html = await renderObsidianTripletMarkdown({
       app: {},
       converter: {},
-      markdown: 'x',
+      markdown: '![x](attachments/y.png)',
       sourcePath: 'note.md',
       markdownRenderer: { renderMarkdown },
       serializer: ({ root }) => root.innerHTML,
@@ -329,7 +338,7 @@ describe('Obsidian Triplet Renderer', () => {
     const html = await renderObsidianTripletMarkdown({
       app: {},
       converter: {},
-      markdown: 'x',
+      markdown: '![x](attachments/y.png)',
       sourcePath: 'note.md',
       markdownRenderer: { renderMarkdown },
       serializer: ({ root }) => root.innerHTML,

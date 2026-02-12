@@ -103,13 +103,16 @@
 - 渲染入口统一为 Obsidian `MarkdownRenderer` + triplet serializer。
 - 不再保留 Legacy 渲染回退开关与 parity 对比开关。
 - 质量保障改为 native 回归基线测试（corpus + baseline fixtures）。
+- 预览 settle 等待窗口按内容启发式触发（本地图片链路保留等待，纯文本/远程图场景跳过额外观察）。
 
 ### 延迟基线口径（开发）
 
 - 命令：`npm run measure:latency`
+- 多轮稳定性：`npm run measure:latency:stability`（默认 5 轮）
 - 口径：这是 **end-to-end preview latency**，包含 fixture 读取、native 渲染链路、triplet DOM settle 观察窗口。
 - 用途：作为工程内 smoke/baseline 采样，辅助判断日常体验是否可接受。
 - 注意：该结果不等同于 renderer-only microbenchmark，不能直接用于定位纯渲染热点。
+- 可选参数：`--rounds`、`--warmup`、`--switch-iterations`、`--edit-iterations`、`--json-out <path>`。
 
 ## 🚀 安装
 

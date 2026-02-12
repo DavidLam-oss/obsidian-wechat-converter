@@ -16,5 +16,17 @@
     "fixture": "control-micro-placeholder-data.md",
     "sourcePath": "fixtures/control-micro-placeholder-data.md",
     "expectedCleanHtml": "parity/baseline/control-micro-placeholder-data.clean.html"
+  },
+  {
+    "id": "control-longform-workflow",
+    "fixture": "control-longform-workflow.md",
+    "sourcePath": "fixtures/control-longform-workflow.md",
+    "expectedCleanHtml": "parity/baseline/control-longform-workflow.clean.html"
+  },
+  {
+    "id": "control-image-stack",
+    "fixture": "control-image-stack.md",
+    "sourcePath": "fixtures/control-image-stack.md",
+    "expectedCleanHtml": "parity/baseline/control-image-stack.clean.html"
   }
 ]

@@ -12,6 +12,7 @@
 		"test": "vitest",
 		"test:coverage": "vitest run --coverage",
 		"measure:latency": "node scripts/measure-native-latency.mjs",
+		"measure:latency:stability": "node scripts/measure-native-latency.mjs --rounds 5",
 		"release:pack": "bash package-release.sh",
 		"release:validate": "node scripts/release-validate.mjs",
 		"release:dryrun": "npm run build && npm run release:pack && npm run release:validate"

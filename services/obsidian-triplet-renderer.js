@@ -228,6 +228,29 @@ function countUnresolvedImageEmbeds(root) {
   return unresolved;
 }
 
+function shouldObserveAsyncEmbedWindow(markdown) {
+  const source = String(markdown || '');
+  if (!source || !source.includes('![')) return false;
+
+  const imagePattern = /!\[[^\]]*]\(([^)\r\n]+)\)/g;
+  let match = imagePattern.exec(source);
+  while (match) {
+    const rawTarget = String(match[1] || '').trim().replace(/^<|>$/g, '');
+    const target = rawTarget.toLowerCase();
+    // Remote/data images are rendered directly; local-like paths may resolve
+    // asynchronously via Obsidian embed pipeline.
+    const isRemoteLike = (
+      target.startsWith('http://') ||
+      target.startsWith('https://') ||
+      target.startsWith('data:')
+    );
+    if (!isRemoteLike) return true;
+    match = imagePattern.exec(source);
+  }
+
+  return false;
+}
+
 async function waitForTripletDomToSettle(root, options = {}) {
   if (!root) return;
   const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : 500;
@@ -313,6 +336,7 @@ async function renderObsidianTripletMarkdown({
 
   const container = document.createElement('div');
   const preparedMarkdown = preprocessMarkdownForTriplet(markdown, converter);
+  const shouldObserveWindow = shouldObserveAsyncEmbedWindow(preparedMarkdown);
   await renderByObsidianMarkdownRenderer({
     app,
     markdown: preparedMarkdown,
@@ -322,7 +346,7 @@ async function renderObsidianTripletMarkdown({
     markdownRenderer,
   });
   // Wait for image embeds to settle; MarkdownRenderer may resolve embeds asynchronously.
-  await waitForTripletDomToSettle(container);
+  await waitForTripletDomToSettle(container, shouldObserveWindow ? {} : { minObserveMs: 0 });
 
   const serializedHtml = serializer({
     root: container,
@@ -339,6 +363,7 @@ module.exports = {
   neutralizePlainWikilinks,
   preprocessMarkdownForTriplet,
   injectHardBreaksForLegacyParity,
+  shouldObserveAsyncEmbedWindow,
   waitForTripletDomToSettle,
   renderByObsidianMarkdownRenderer,
   renderObsidianTripletMarkdown,
