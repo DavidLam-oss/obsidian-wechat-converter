@@ -918,6 +918,24 @@ function applyLegacyLinkifyParity(container, converter) {
 function injectPreRenderedMathFormulas(html, formulas) {
   console.log(`[OWC Math] injectPreRenderedMathFormulas called with ${formulas?.length || 0} formulas`);
   if (!html || !Array.isArray(formulas) || formulas.length === 0) return html;
+
+  // Debug: show what's actually in the HTML
+  console.log(`[OWC Math] HTML sample (first 500 chars): ${html.substring(0, 500)}`);
+  console.log(`[OWC Math] Looking for placeholders like: ${formulas[0]?.placeholder}`);
+
+  // Check if placeholder text exists in any form
+  for (const { placeholder } of formulas) {
+    if (placeholder && html.includes(placeholder)) {
+      console.log(`[OWC Math] Found exact placeholder: ${placeholder}`);
+    } else if (placeholder) {
+      // Check for partial match or transformed version
+      const partial = placeholder.replace(/_/g, '');
+      if (html.includes(partial)) {
+        console.log(`[OWC Math] Found partial match for: ${placeholder} -> ${partial}`);
+      }
+    }
+  }
+
   let result = html;
   let injected = 0;
   for (const { placeholder, rendered } of formulas) {

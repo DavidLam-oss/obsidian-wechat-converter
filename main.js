@@ -2429,9 +2429,22 @@ var require_obsidian_triplet_serializer = __commonJS({
       }
     }
     function injectPreRenderedMathFormulas(html, formulas) {
+      var _a;
       console.log(`[OWC Math] injectPreRenderedMathFormulas called with ${(formulas == null ? void 0 : formulas.length) || 0} formulas`);
       if (!html || !Array.isArray(formulas) || formulas.length === 0)
         return html;
+      console.log(`[OWC Math] HTML sample (first 500 chars): ${html.substring(0, 500)}`);
+      console.log(`[OWC Math] Looking for placeholders like: ${(_a = formulas[0]) == null ? void 0 : _a.placeholder}`);
+      for (const { placeholder } of formulas) {
+        if (placeholder && html.includes(placeholder)) {
+          console.log(`[OWC Math] Found exact placeholder: ${placeholder}`);
+        } else if (placeholder) {
+          const partial = placeholder.replace(/_/g, "");
+          if (html.includes(partial)) {
+            console.log(`[OWC Math] Found partial match for: ${placeholder} -> ${partial}`);
+          }
+        }
+      }
       let result = html;
       let injected = 0;
       for (const { placeholder, rendered } of formulas) {
