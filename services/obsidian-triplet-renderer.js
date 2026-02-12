@@ -228,15 +228,81 @@ function countUnresolvedImageEmbeds(root) {
   return unresolved;
 }
 
+function normalizeReferenceLabel(label) {
+  return String(label || '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function extractInlineImageTarget(rawTarget) {
+  const value = String(rawTarget || '').trim();
+  if (!value) return '';
+  if (value.startsWith('<')) {
+    const endIndex = value.indexOf('>');
+    if (endIndex > 1) {
+      return value.slice(1, endIndex).trim();
+    }
+  }
+  return value.split(/\s+/)[0] || '';
+}
+
+function collectImageTargets(markdown) {
+  const source = String(markdown || '');
+  const targets = [];
+  if (!source || !source.includes('![')) return targets;
+
+  const referenceTargets = new Map();
+  const referenceDefinitionPattern = /^\s{0,3}\[([^\]]+)\]:\s*(?:<([^>\r\n]+)>|(\S+))/gm;
+  let definitionMatch = referenceDefinitionPattern.exec(source);
+  while (definitionMatch) {
+    const label = normalizeReferenceLabel(definitionMatch[1]);
+    const target = String(definitionMatch[2] || definitionMatch[3] || '').trim();
+    if (label && target && !referenceTargets.has(label)) {
+      referenceTargets.set(label, target);
+    }
+    definitionMatch = referenceDefinitionPattern.exec(source);
+  }
+
+  const inlineImagePattern = /!\[[^\]]*]\(([^)\r\n]+)\)/g;
+  let inlineMatch = inlineImagePattern.exec(source);
+  while (inlineMatch) {
+    targets.push(extractInlineImageTarget(inlineMatch[1]));
+    inlineMatch = inlineImagePattern.exec(source);
+  }
+
+  const fullReferenceImagePattern = /!\[([^\]]*)]\[([^\]]*)]/g;
+  let fullReferenceMatch = fullReferenceImagePattern.exec(source);
+  while (fullReferenceMatch) {
+    const fallbackLabel = String(fullReferenceMatch[1] || '');
+    const refLabel = String(fullReferenceMatch[2] || '');
+    const normalizedLabel = normalizeReferenceLabel(refLabel || fallbackLabel);
+    targets.push(referenceTargets.get(normalizedLabel) || '');
+    fullReferenceMatch = fullReferenceImagePattern.exec(source);
+  }
+
+  const shortcutReferenceImagePattern = /!\[([^\]]+)](?![\[(])/g;
+  let shortcutReferenceMatch = shortcutReferenceImagePattern.exec(source);
+  while (shortcutReferenceMatch) {
+    const label = normalizeReferenceLabel(shortcutReferenceMatch[1]);
+    targets.push(referenceTargets.get(label) || '');
+    shortcutReferenceMatch = shortcutReferenceImagePattern.exec(source);
+  }
+
+  return targets;
+}
+
 function shouldObserveAsyncEmbedWindow(markdown) {
   const source = String(markdown || '');
   if (!source || !source.includes('![')) return false;
 
-  const imagePattern = /!\[[^\]]*]\(([^)\r\n]+)\)/g;
-  let match = imagePattern.exec(source);
-  while (match) {
-    const rawTarget = String(match[1] || '').trim().replace(/^<|>$/g, '');
-    const target = rawTarget.toLowerCase();
+  const targets = collectImageTargets(source);
+  if (targets.length === 0) {
+    // Unknown image syntax: keep conservative short observe window.
+    return true;
+  }
+
+  for (const item of targets) {
+    const target = String(item || '').trim().replace(/^<|>$/g, '').toLowerCase();
+    if (!target) return true;
+
     // Remote/data images are rendered directly; local-like paths may resolve
     // asynchronously via Obsidian embed pipeline.
     const isRemoteLike = (
@@ -245,7 +311,6 @@ function shouldObserveAsyncEmbedWindow(markdown) {
       target.startsWith('data:')
     );
     if (!isRemoteLike) return true;
-    match = imagePattern.exec(source);
   }
 
   return false;

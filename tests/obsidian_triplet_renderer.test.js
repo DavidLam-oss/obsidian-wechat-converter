@@ -186,6 +186,43 @@ describe('Obsidian Triplet Renderer', () => {
     expect(shouldObserveAsyncEmbedWindow('![data](data:image/png;base64,abc)')).toBe(false);
     expect(shouldObserveAsyncEmbedWindow('![local](attachments/a.png)')).toBe(true);
     expect(shouldObserveAsyncEmbedWindow('![app](app://obsidian.md/a.png)')).toBe(true);
+    expect(shouldObserveAsyncEmbedWindow('![ref][img]\n[img]: https://example.com/a.png')).toBe(false);
+    expect(shouldObserveAsyncEmbedWindow('![ref][img]\n[img]: attachments/a.png')).toBe(true);
+    expect(shouldObserveAsyncEmbedWindow('![ref][img]')).toBe(true);
+  });
+
+  it('should handle shortcut reference images with definitions', () => {
+    // Shortcut reference with remote target - no observe window needed
+    expect(shouldObserveAsyncEmbedWindow('![img]\n\n[img]: https://example.com/a.png')).toBe(false);
+    // Shortcut reference with local target - needs observe window
+    expect(shouldObserveAsyncEmbedWindow('![img]\n\n[img]: attachments/a.png')).toBe(true);
+  });
+
+  it('should handle angle-bracket wrapped reference definitions', () => {
+    expect(shouldObserveAsyncEmbedWindow('![ref][img]\n[img]: <https://example.com/a.png>')).toBe(false);
+    expect(shouldObserveAsyncEmbedWindow('![ref][img]\n[img]: <attachments/a.png>')).toBe(true);
+  });
+
+  it('should normalize reference labels case-insensitively', () => {
+    // Labels are case-insensitive per CommonMark spec
+    expect(shouldObserveAsyncEmbedWindow('![My Image][IMG]\n[img]: https://example.com/a.png')).toBe(false);
+    expect(shouldObserveAsyncEmbedWindow('![My Image]\n\n[my image]: attachments/a.png')).toBe(true);
+  });
+
+  it('should handle mixed local and remote images', () => {
+    // Mixed: local + remote should still need observe window (local triggers it)
+    expect(shouldObserveAsyncEmbedWindow('![local](a.png) and ![remote](https://b.png)')).toBe(true);
+    // All remote: no observe window needed
+    expect(shouldObserveAsyncEmbedWindow('![a](https://a.png) and ![b](https://b.png)')).toBe(false);
+  });
+
+  it('should handle edge cases gracefully', () => {
+    // Empty target: conservative - needs observe window
+    expect(shouldObserveAsyncEmbedWindow('![]()')).toBe(true);
+    // Inline image with title (space after URL)
+    expect(shouldObserveAsyncEmbedWindow('![alt](https://example.com/a.png "title")')).toBe(false);
+    // Reference with title
+    expect(shouldObserveAsyncEmbedWindow('![ref][img]\n[img]: https://example.com/a.png "title"')).toBe(false);
   });
 
   it('should render with renderMarkdown API and serialize output', async () => {
@@ -339,6 +376,32 @@ describe('Obsidian Triplet Renderer', () => {
       app: {},
       converter: {},
       markdown: '![x](attachments/y.png)',
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+      serializer: ({ root }) => root.innerHTML,
+    });
+
+    expect(html).toContain('<img');
+  });
+
+  it('should keep observe window for reference-style local image and wait delayed embed injection', async () => {
+    const renderMarkdown = vi.fn(async (_markdown, el) => {
+      el.innerHTML = '<p>start</p>';
+      setTimeout(() => {
+        el.innerHTML = '<p><span class="internal-embed image-embed" src="app://obsidian.md/ref"></span></p>';
+        setTimeout(() => {
+          const span = el.querySelector('span.internal-embed.image-embed');
+          if (span) {
+            span.innerHTML = '<img src="app://obsidian.md/ref">';
+          }
+        }, 10);
+      }, 5);
+    });
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter: {},
+      markdown: '![封面][img]\n\n[img]: attachments/ref-local.png',
       sourcePath: 'note.md',
       markdownRenderer: { renderMarkdown },
       serializer: ({ root }) => root.innerHTML,
