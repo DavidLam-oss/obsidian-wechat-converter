@@ -188,6 +188,129 @@ function cleanHtmlForDraft(html) {
       firstNode.replaceWith(span);
     };
 
+    const collapseLeadingBreakAfterInlinePrefixInListItem = (li) => {
+      const hasDirectNestedList = Array.from(li.children).some(child => child.tagName === 'UL' || child.tagName === 'OL');
+      if (hasDirectNestedList) return;
+
+      const nodes = Array.from(li.childNodes);
+      const firstMeaningfulIdx = nodes.findIndex(node =>
+        !(node.nodeType === Node.TEXT_NODE && !node.textContent.trim())
+      );
+      if (firstMeaningfulIdx === -1) return;
+
+      const firstMeaningfulNode = nodes[firstMeaningfulIdx];
+      if (firstMeaningfulNode.nodeType !== Node.ELEMENT_NODE) return;
+      if (!['SPAN', 'STRONG', 'CODE'].includes(firstMeaningfulNode.tagName)) return;
+      const prefixText = (firstMeaningfulNode.textContent || '').trim();
+      const prefixEndsAscii = /[A-Za-z0-9]$/.test(prefixText);
+
+      let sawBreak = false;
+      for (let i = firstMeaningfulIdx + 1; i < nodes.length; i += 1) {
+        const node = nodes[i];
+
+        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') {
+          sawBreak = true;
+          node.remove();
+          continue;
+        }
+
+        if (node.nodeType === Node.TEXT_NODE) {
+          const original = node.textContent || '';
+          if (!original.trim()) {
+            if (/\n/.test(original)) {
+              sawBreak = true;
+              node.remove();
+              continue;
+            }
+            continue;
+          }
+
+          if (!(sawBreak || /\n/.test(original))) return;
+
+          const trimmed = original
+            .replace(/^\s*\n+\s*/, '')
+            .replace(/^\s+/, '');
+          const needsAsciiGap = prefixEndsAscii || /^[A-Za-z0-9]/.test(trimmed);
+          node.textContent = `${needsAsciiGap ? ' ' : ''}${trimmed}`;
+          return;
+        }
+
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const text = (node.textContent || '').trim();
+          if (!text) continue;
+          if (!sawBreak) return;
+          if (prefixEndsAscii || /^[A-Za-z0-9]/.test(text)) {
+            li.insertBefore(document.createTextNode(' '), node);
+          }
+          return;
+        }
+      }
+    };
+
+    const wrapTextContinuationAfterLeadingPrefix = (li) => {
+      const hasDirectNestedList = Array.from(li.children).some(child => child.tagName === 'UL' || child.tagName === 'OL');
+      if (hasDirectNestedList) return;
+
+      const nodes = Array.from(li.childNodes);
+      const firstMeaningfulIdx = nodes.findIndex(node =>
+        !(node.nodeType === Node.TEXT_NODE && !node.textContent.trim())
+      );
+      if (firstMeaningfulIdx === -1) return;
+
+      const firstMeaningfulNode = nodes[firstMeaningfulIdx];
+      if (firstMeaningfulNode.nodeType !== Node.ELEMENT_NODE) return;
+      if (!['SPAN', 'STRONG', 'CODE'].includes(firstMeaningfulNode.tagName)) return;
+
+      let nextMeaningfulNode = null;
+      for (let i = firstMeaningfulIdx + 1; i < nodes.length; i += 1) {
+        const node = nodes[i];
+        if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) continue;
+        nextMeaningfulNode = node;
+        break;
+      }
+      if (!nextMeaningfulNode || nextMeaningfulNode.nodeType !== Node.TEXT_NODE) return;
+
+      const text = nextMeaningfulNode.textContent || '';
+      if (!text.trim()) return;
+
+      const span = document.createElement('span');
+      span.setAttribute('style', 'display:inline !important;');
+      span.textContent = text;
+      nextMeaningfulNode.replaceWith(span);
+    };
+
+    const bundleLeadingPrefixForWechatLineBreak = (li) => {
+      const hasDirectNestedList = Array.from(li.children).some(child => child.tagName === 'UL' || child.tagName === 'OL');
+      if (hasDirectNestedList) return;
+
+      const nodes = Array.from(li.childNodes).filter(node =>
+        !(node.nodeType === Node.TEXT_NODE && !node.textContent.trim())
+      );
+      if (nodes.length < 2) return;
+
+      const first = nodes[0];
+      const second = nodes[1];
+      if (first.nodeType !== Node.ELEMENT_NODE || second.nodeType !== Node.ELEMENT_NODE) return;
+      if (first.tagName !== 'SPAN' || second.tagName !== 'SPAN') return;
+
+      const firstText = (first.textContent || '').trim();
+      const secondText = (second.textContent || '').trim();
+      if (!firstText || !secondText) return;
+
+      // Keep colon-label flows on the original path.
+      if (/[：:]$/.test(firstText) || /^[：:]/.test(secondText)) return;
+
+      // Only bundle short leading chunks (e.g. "登录用"+"的用户名", "SSH 端口"+"（通常是 22）").
+      if (secondText.length > 16) return;
+
+      const bundle = document.createElement('span');
+      bundle.setAttribute('style', 'display:inline-block; white-space:nowrap;');
+
+      li.insertBefore(bundle, first);
+      bundle.appendChild(first);
+      bundle.appendChild(second);
+    };
+
     const wrapLeadingLabelInBlockSpan = (li) => {
       const hasDirectNestedList = Array.from(li.children).some(child => child.tagName === 'UL' || child.tagName === 'OL');
       if (hasDirectNestedList) return;
@@ -203,7 +326,9 @@ function cleanHtmlForDraft(html) {
 
       const firstText = (firstNode.textContent || '').trim();
       const secondNode = nodes[1];
-      const secondText = secondNode.nodeType === Node.TEXT_NODE ? (secondNode.textContent || '') : '';
+      const secondText = secondNode.nodeType === Node.TEXT_NODE
+        ? (secondNode.textContent || '')
+        : (secondNode.nodeType === Node.ELEMENT_NODE ? (secondNode.textContent || '') : '');
       const hasColon = /[：:]$/.test(firstText) || /^\s*[：:]/.test(secondText);
       if (!hasColon) return;
 
@@ -257,6 +382,9 @@ function cleanHtmlForDraft(html) {
       unwrapSimpleListParagraphs(li);
       collapseLabelBreakInListItem(li);
       convertLeadingStrongOrCodeToSpan(li);
+      collapseLeadingBreakAfterInlinePrefixInListItem(li);
+      wrapTextContinuationAfterLeadingPrefix(li);
+      bundleLeadingPrefixForWechatLineBreak(li);
       wrapLeadingLabelInBlockSpan(li);
 
       const hasNestedList = li.querySelector('ul, ol');

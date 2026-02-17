@@ -219,6 +219,92 @@ describe('AppleStyleView - HTML Cleaning', () => {
     expect(directSpan.getAttribute('style')).not.toContain('display:block');
   });
 
+  it('should collapse newline before parenthetical note after leading strong label', () => {
+    const inputHtml = `
+      <ol>
+        <li><strong style="font-weight:bold;color:#0366d6;">SSH 端口</strong>
+        （通常是 22）</li>
+      </ol>
+    `;
+
+    const outputHtml = view.cleanHtmlForDraft(inputHtml);
+    const div = document.createElement('div');
+    div.innerHTML = outputHtml;
+
+    const li = div.querySelector('ol > li');
+    expect(li.textContent.replace(/\s+/g, ' ').trim()).toBe('SSH 端口（通常是 22）');
+    expect(li.innerHTML).not.toContain('\n（');
+  });
+
+  it('should collapse newline before plain text after leading strong label', () => {
+    const inputHtml = `
+      <ol>
+        <li><strong style="font-weight:bold;color:#0366d6;">登录用</strong>
+        的用户名</li>
+      </ol>
+    `;
+
+    const outputHtml = view.cleanHtmlForDraft(inputHtml);
+    const div = document.createElement('div');
+    div.innerHTML = outputHtml;
+
+    const li = div.querySelector('ol > li');
+    expect(li.textContent.replace(/\s+/g, ' ').trim()).toBe('登录用的用户名');
+    expect(li.innerHTML).not.toContain('\n的用户名');
+  });
+
+  it('should wrap plain-text continuation after leading prefix into inline span', () => {
+    const inputHtml = `
+      <ol>
+        <li><span style="font-weight:bold;color:#0366d6;">登录用</span>的用户名</li>
+      </ol>
+    `;
+
+    const outputHtml = view.cleanHtmlForDraft(inputHtml);
+    const div = document.createElement('div');
+    div.innerHTML = outputHtml;
+
+    const li = div.querySelector('ol > li');
+    const spans = li.querySelectorAll(':scope > span');
+    expect(spans.length).toBeGreaterThanOrEqual(2);
+    expect(spans[0].textContent).toBe('登录用');
+    expect(spans[1].textContent).toBe('的用户名');
+    expect(spans[1].getAttribute('style')).toContain('display:inline !important;');
+  });
+
+  it('should collapse br before parenthetical note after leading strong label', () => {
+    const inputHtml = `
+      <ol>
+        <li><strong style="font-weight:bold;color:#0366d6;">SSH 私钥路径</strong><br>（或者密码）</li>
+      </ol>
+    `;
+
+    const outputHtml = view.cleanHtmlForDraft(inputHtml);
+    const div = document.createElement('div');
+    div.innerHTML = outputHtml;
+
+    const li = div.querySelector('ol > li');
+    expect(li.textContent.replace(/\s+/g, ' ').trim()).toBe('SSH 私钥路径（或者密码）');
+    expect(li.innerHTML).not.toContain('<br');
+  });
+
+  it('should remove newline-only spacer before element continuation after leading prefix', () => {
+    const inputHtml = `
+      <ol>
+        <li><span style="font-weight:bold;color:#0366d6;">SSH 端口</span>
+        <span>（通常是 22）</span></li>
+      </ol>
+    `;
+
+    const outputHtml = view.cleanHtmlForDraft(inputHtml);
+    const div = document.createElement('div');
+    div.innerHTML = outputHtml;
+
+    const li = div.querySelector('ol > li');
+    expect(li.textContent.replace(/\s+/g, ' ').trim()).toBe('SSH 端口（通常是 22）');
+    expect(li.innerHTML).not.toContain('\n<span>（通常是 22）</span>');
+  });
+
   it('should be idempotent for list label cleanup', () => {
     const inputHtml = `
       <ol>

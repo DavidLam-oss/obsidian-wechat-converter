@@ -152,8 +152,8 @@ describe('Obsidian Triplet Renderer', () => {
     ].join('\n');
 
     const output = injectHardBreaksForLegacyParity(input);
-    expect(output).toContain('> 引用块第一行\\\n> *引用块第二行*');
-    expect(output).not.toContain('> [!note]\\\n> callout 内容');
+    expect(output).toContain('> 引用块第一行<br>\n> *引用块第二行*');
+    expect(output).not.toContain('> [!note]<br>\n> callout 内容');
   });
 
   it('should not inject hard breaks on heading lines but keep breaks before image lines', () => {

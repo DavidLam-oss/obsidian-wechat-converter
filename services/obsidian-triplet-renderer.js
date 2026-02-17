@@ -56,8 +56,8 @@ function appendLegacyHardBreak(line) {
 function appendQuoteHardBreak(line) {
   const value = String(line || '');
   if (!value) return value;
-  if (/\\\s*$/.test(value)) return value;
-  return `${value.replace(/[ \t]+$/, '')}\\`;
+  if (/<br\s*\/?>\s*$/i.test(value)) return value;
+  return `${value.replace(/[ \t]+$/, '')}<br>`;
 }
 
 function injectHardBreaksForLegacyParity(markdown) {
