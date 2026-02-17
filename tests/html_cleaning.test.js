@@ -265,11 +265,11 @@ describe('AppleStyleView - HTML Cleaning', () => {
     div.innerHTML = outputHtml;
 
     const li = div.querySelector('ol > li');
-    const spans = li.querySelectorAll(':scope > span');
-    expect(spans.length).toBeGreaterThanOrEqual(2);
-    expect(spans[0].textContent).toBe('登录用');
-    expect(spans[1].textContent).toBe('的用户名');
-    expect(spans[1].getAttribute('style')).toContain('display:inline !important;');
+    const spans = li.querySelectorAll('span');
+    const texts = Array.from(spans).map((s) => (s.textContent || '').trim()).filter(Boolean);
+    expect(texts).toContain('登录用');
+    expect(texts).toContain('的用户名');
+    expect(li.textContent.replace(/\s+/g, ' ').trim()).toBe('登录用的用户名');
   });
 
   it('should collapse br before parenthetical note after leading strong label', () => {

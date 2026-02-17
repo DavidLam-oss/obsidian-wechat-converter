@@ -260,6 +260,7 @@ function cleanHtmlForDraft(html) {
       const firstMeaningfulNode = nodes[firstMeaningfulIdx];
       if (firstMeaningfulNode.nodeType !== Node.ELEMENT_NODE) return;
       if (!['SPAN', 'STRONG', 'CODE'].includes(firstMeaningfulNode.tagName)) return;
+      const firstText = (firstMeaningfulNode.textContent || '').trim();
 
       let nextMeaningfulNode = null;
       for (let i = firstMeaningfulIdx + 1; i < nodes.length; i += 1) {
@@ -272,6 +273,7 @@ function cleanHtmlForDraft(html) {
 
       const text = nextMeaningfulNode.textContent || '';
       if (!text.trim()) return;
+      if (/[：:]$/.test(firstText) || /^\s*[：:]/.test(text)) return;
 
       const span = document.createElement('span');
       span.setAttribute('style', 'display:inline !important;');
@@ -299,6 +301,9 @@ function cleanHtmlForDraft(html) {
 
       // Keep colon-label flows on the original path.
       if (/[：:]$/.test(firstText) || /^[：:]/.test(secondText)) return;
+
+      // Only keep bundled no-wrap for known WeChat break-prone continuations.
+      if (!/^(?:[（(]|的)/.test(secondText)) return;
 
       // Only bundle short leading chunks (e.g. "登录用"+"的用户名", "SSH 端口"+"（通常是 22）").
       if (secondText.length > 16) return;
