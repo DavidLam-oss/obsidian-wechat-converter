@@ -8766,7 +8766,41 @@ ${String((message == null ? void 0 : message.content) || "").trim()}`;
         });
       }
     }
-    async function testAiProviderConnection2(provider, fetchImpl = globalThis.fetch) {
+    function createObsidianFetchAdapter2() {
+      const { requestUrl } = require("obsidian");
+      return async (url, options = {}) => {
+        if (options.signal && options.signal.aborted) {
+          throw new DOMException("The operation was aborted.", "AbortError");
+        }
+        let abortHandler;
+        const abortPromise = options.signal ? new Promise((_, reject) => {
+          abortHandler = () => reject(new DOMException("The operation was aborted.", "AbortError"));
+          options.signal.addEventListener("abort", abortHandler, { once: true });
+        }) : null;
+        try {
+          const requestPromise = requestUrl({
+            url,
+            method: options.method || "GET",
+            headers: options.headers,
+            body: options.body,
+            contentType: options.headers && options.headers["Content-Type"]
+          });
+          const response = await (abortPromise ? Promise.race([requestPromise, abortPromise]) : requestPromise);
+          return {
+            ok: response.status >= 200 && response.status < 300,
+            status: response.status,
+            statusText: String(response.status || ""),
+            text: async () => response.text,
+            json: async () => response.json
+          };
+        } finally {
+          if (options.signal && abortHandler) {
+            options.signal.removeEventListener("abort", abortHandler);
+          }
+        }
+      };
+    }
+    async function testAiProviderConnection2(provider, fetchImpl = createObsidianFetchAdapter2()) {
       var _a2, _b;
       const result = await generateArticleLayout2({
         provider,
@@ -9272,6 +9306,7 @@ ${String((message == null ? void 0 : message.content) || "").trim()}`;
       buildLayoutResult,
       AiLayoutSchemaError,
       AiLayoutTimeoutError,
+      createObsidianFetchAdapter: createObsidianFetchAdapter2,
       generateArticleLayout: generateArticleLayout2,
       renderArticleLayoutHtml: renderArticleLayoutHtml2,
       testAiProviderConnection: testAiProviderConnection2
@@ -10299,6 +10334,7 @@ var {
   normalizeArticleLayoutCacheEntry,
   extractImageRefsFromHtml,
   extractRenderedSectionFragments,
+  createObsidianFetchAdapter,
   generateArticleLayout,
   renderArticleLayoutHtml,
   testAiProviderConnection
@@ -12146,7 +12182,8 @@ var AppleStyleView = class extends ItemView {
         markdown: sourceContext.markdown,
         selection: requestedSelection,
         imageRefs,
-        timeoutMs: aiSettings.requestTimeoutMs
+        timeoutMs: aiSettings.requestTimeoutMs,
+        fetchImpl: createObsidianFetchAdapter()
       });
       const layoutJson = result.layoutJson;
       if (!Array.isArray(layoutJson == null ? void 0 : layoutJson.blocks) || !layoutJson.blocks.length)
@@ -13135,7 +13172,8 @@ var AppleStyleView = class extends ItemView {
         markdown: context.markdown,
         selection,
         imageRefs,
-        timeoutMs: aiSettings.requestTimeoutMs
+        timeoutMs: aiSettings.requestTimeoutMs,
+        fetchImpl: createObsidianFetchAdapter()
       });
       const layoutJson = result.layoutJson;
       if (!Array.isArray(layoutJson == null ? void 0 : layoutJson.blocks) || !layoutJson.blocks.length) {
@@ -14692,7 +14730,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
           testBtn.disabled = true;
           testBtn.textContent = "\u6D4B\u8BD5\u4E2D...";
           try {
-            await testAiProviderConnection(provider);
+            await testAiProviderConnection(provider, createObsidianFetchAdapter());
             new Notice(`\u2705 ${provider.name} \u8FDE\u63A5\u6210\u529F\uFF01`);
           } catch (error) {
             new Notice(`\u274C ${provider.name} \u8FDE\u63A5\u5931\u8D25: ${error.message}`);
@@ -14880,7 +14918,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       testBtn.disabled = true;
       testBtn.textContent = "\u6D4B\u8BD5\u4E2D...";
       try {
-        await testAiProviderConnection(candidate);
+        await testAiProviderConnection(candidate, createObsidianFetchAdapter());
         new Notice("\u2705 AI Provider \u8FDE\u63A5\u6210\u529F\uFF01");
       } catch (error) {
         new Notice(`\u274C \u8FDE\u63A5\u5931\u8D25: ${error.message}`);
