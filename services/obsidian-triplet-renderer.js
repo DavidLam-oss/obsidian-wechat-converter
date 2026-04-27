@@ -1,4 +1,10 @@
-const { MarkdownRenderer } = require('obsidian');
+function getDefaultMarkdownRenderer() {
+  try {
+    return require('obsidian').MarkdownRenderer;
+  } catch (error) {
+    return null;
+  }
+}
 const { serializeObsidianRenderedHtml } = require('./obsidian-triplet-serializer');
 const { normalizeRenderedDomPunctuation } = require('./chinese-punctuation');
 const {
@@ -440,6 +446,111 @@ function preRenderMathFormulas(markdown, converter) {
   return { markdown: output, formulas };
 }
 
+
+const SENSITIVE_IMAGE_TYPE = 'sensitive-image';
+const SENSITIVE_IMAGE_DEFAULT_WARNING = '此类图片可能引发不适，向左滑动查看';
+const SENSITIVE_IMAGE_TITLE_PREFIX = 'OWC_SENSITIVE_IMAGE:';
+
+function encodeSensitiveImageMarkerValue(value) {
+  return encodeURIComponent(String(value || ''));
+}
+
+function escapeSensitiveImageHtmlAttr(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function parseSensitiveImageMarkdownLine(line) {
+  const match = String(line || '').match(/!\[([^\]]*)\]\((\S+)(?:\s+["'][^"']*["'])?\)/);
+  if (!match) return null;
+  return {
+    alt: String(match[1] || '').trim(),
+    src: String(match[2] || '').trim(),
+  };
+}
+
+function extractSensitiveImageItalicCaption(lines, imageIndex) {
+  for (let i = imageIndex + 1; i < lines.length; i += 1) {
+    const line = String(lines[i] || '').trim();
+    if (!line) continue;
+    const match = line.match(/^(?:\*|_)(.+?)(?:\*|_)$/);
+    return match ? String(match[1] || '').trim() : '';
+  }
+  return '';
+}
+
+function renderSensitiveImageHtmlBlock(blockLines, warning) {
+  let image = null;
+  let imageIndex = -1;
+  for (let i = 0; i < blockLines.length; i += 1) {
+    image = parseSensitiveImageMarkdownLine(blockLines[i]);
+    if (image) {
+      imageIndex = i;
+      break;
+    }
+  }
+
+  if (!image) {
+    return [`> ${warning}`, ...blockLines];
+  }
+
+  const caption = image.alt || extractSensitiveImageItalicCaption(blockLines, imageIndex);
+  const encodedWarning = encodeSensitiveImageMarkerValue(warning);
+  const altMarker = `${caption}${caption ? ' ' : ''}${SENSITIVE_IMAGE_TITLE_PREFIX}${encodedWarning}`;
+  return [
+    `<section data-owc-sensitive-image="1" data-owc-sensitive-warning="${escapeSensitiveImageHtmlAttr(encodedWarning)}">`,
+    `<img src="${escapeSensitiveImageHtmlAttr(image.src)}" alt="${escapeSensitiveImageHtmlAttr(altMarker)}">`,
+    '</section>',
+  ];
+}
+
+function preprocessSensitiveImageBlocks(markdown) {
+  const lines = String(markdown || '').split('\n');
+  const output = [];
+  let inBlock = false;
+  let warningText = '';
+  let blockLines = [];
+
+  const flushBlock = () => {
+    const warning = warningText.trim() || SENSITIVE_IMAGE_DEFAULT_WARNING;
+    output.push(...renderSensitiveImageHtmlBlock(blockLines, warning));
+    inBlock = false;
+    warningText = '';
+    blockLines = [];
+  };
+
+  for (const line of lines) {
+    const openMatch = line.match(/^\s*:::\s*sensitive-image\b(.*)$/);
+    if (!inBlock && openMatch) {
+      inBlock = true;
+      warningText = String(openMatch[1] || '').trim();
+      blockLines = [];
+      continue;
+    }
+
+    if (inBlock && /^\s*:::\s*$/.test(line)) {
+      flushBlock();
+      continue;
+    }
+
+    if (inBlock) {
+      blockLines.push(line);
+    } else {
+      output.push(line);
+    }
+  }
+
+  if (inBlock) {
+    output.push(`:::${SENSITIVE_IMAGE_TYPE}${warningText ? ` ${warningText}` : ''}`);
+    output.push(...blockLines);
+  }
+
+  return output.join('\n');
+}
+
 /**
  * Preprocess markdown for triplet rendering.
  * Returns an object with processed markdown and pre-rendered math formulas.
@@ -447,7 +558,7 @@ function preRenderMathFormulas(markdown, converter) {
  * @returns {{ markdown: string, mathFormulas: Array }}
  */
 function preprocessMarkdownForTriplet(markdown, converter) {
-  let output = String(markdown || '');
+  let output = preprocessSensitiveImageBlocks(markdown);
 
   // Align with converter.convert preprocessing to reduce non-semantic parity noise.
   output = output.replace(/^[\t ]+(\$\$)/gm, '$1');
@@ -707,20 +818,21 @@ async function renderByObsidianMarkdownRenderer({
   sourcePath,
   targetEl,
   component = null,
-  markdownRenderer = MarkdownRenderer,
+  markdownRenderer = null,
 }) {
-  if (!markdownRenderer) {
+  const renderer = markdownRenderer || getDefaultMarkdownRenderer();
+  if (!renderer) {
     throw new Error('Obsidian MarkdownRenderer is not available');
   }
 
-  if (typeof markdownRenderer.renderMarkdown === 'function') {
-    await markdownRenderer.renderMarkdown(markdown, targetEl, sourcePath || '', component);
+  if (typeof renderer.renderMarkdown === 'function') {
+    await renderer.renderMarkdown(markdown, targetEl, sourcePath || '', component);
     return;
   }
 
-  if (typeof markdownRenderer.render === 'function') {
+  if (typeof renderer.render === 'function') {
     if (!app) throw new Error('Obsidian app instance is required for MarkdownRenderer.render');
-    await markdownRenderer.render(app, markdown, targetEl, sourcePath || '', component);
+    await renderer.render(app, markdown, targetEl, sourcePath || '', component);
     return;
   }
 
@@ -734,7 +846,7 @@ async function renderObsidianTripletMarkdown({
   sourcePath = '',
   component = null,
   settings = {},
-  markdownRenderer = MarkdownRenderer,
+  markdownRenderer = null,
   serializer = serializeObsidianRenderedHtml,
   mermaidCodeRenderer = renderMermaidCodeBlocks,
   mermaidRasterizer = rasterizeRenderedMermaidDiagrams,

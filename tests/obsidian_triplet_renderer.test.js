@@ -1,4 +1,17 @@
 import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('obsidian', () => ({
+  MarkdownRenderer: {
+    async renderMarkdown(markdown, el) {
+      const safe = String(markdown || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      el.innerHTML = `<p>${safe}</p>`;
+    },
+  },
+}));
+
 const { createLegacyConverter } = require('./helpers/render-runtime');
 const {
   neutralizeUnsafeMarkdownLinks,
@@ -34,6 +47,40 @@ describe('Obsidian Triplet Renderer', () => {
     expect(output).toContain('![封面](folder/a%20b.png)');
     expect(output).toContain('$$');
     expect(output).not.toContain('   $$');
+  });
+
+
+
+  it('should preprocess sensitive image containers into marked raw html', () => {
+    const input = [
+      'before',
+      ':::sensitive-image 此类图片可能引发不适，向左滑动查看',
+      '![图 84.1 阴茎干部的生殖器疱疹皮损。](images/herpes.jpg)',
+      ':::',
+      'after',
+    ].join('\n');
+
+    const { markdown: output } = preprocessMarkdownForTriplet(input, null);
+
+    expect(output).toContain('data-owc-sensitive-image="1"');
+    expect(output).toContain('data-owc-sensitive-warning="%E6%AD%A4%E7%B1%BB%E5%9B%BE%E7%89%87');
+    expect(output).toContain('<img src="images/herpes.jpg"');
+    expect(output).toContain('alt="图 84.1 阴茎干部的生殖器疱疹皮损。 OWC_SENSITIVE_IMAGE:');
+    expect(output).not.toContain(':::sensitive-image');
+  });
+
+  it('should use italic caption when sensitive image alt text is empty', () => {
+    const input = [
+      ':::sensitive-image',
+      '![](images/example.jpg)',
+      '*图 84.2 示例图注。*',
+      ':::',
+    ].join('\n');
+
+    const { markdown: output } = preprocessMarkdownForTriplet(input, null);
+
+    expect(output).toContain('alt="图 84.2 示例图注。 OWC_SENSITIVE_IMAGE:');
+    expect(output).toContain('data-owc-sensitive-warning="%E6%AD%A4%E7%B1%BB%E5%9B%BE%E7%89%87');
   });
 
   it('should neutralize unsafe markdown links into literal text form', () => {

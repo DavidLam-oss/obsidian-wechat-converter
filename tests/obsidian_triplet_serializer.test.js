@@ -409,6 +409,47 @@ describe('Obsidian Triplet Serializer', () => {
     expect(html).not.toContain('onerror=');
   });
 
+
+
+  it('should convert marked sensitive image sections into horizontal reveal panels', () => {
+    const root = document.createElement('div');
+    root.innerHTML = [
+      '<section data-owc-sensitive-image="1" data-owc-sensitive-warning="%E6%AD%A4%E7%B1%BB%E5%9B%BE%E7%89%87%E5%8F%AF%E8%83%BD%E5%BC%95%E5%8F%91%E4%B8%8D%E9%80%82%EF%BC%8C%E5%90%91%E5%B7%A6%E6%BB%91%E5%8A%A8%E6%9F%A5%E7%9C%8B">',
+      '<img src="images/herpes.jpg" alt="图 84.1 阴茎干部的生殖器疱疹皮损。 OWC_SENSITIVE_IMAGE:%E6%AD%A4%E7%B1%BB%E5%9B%BE%E7%89%87%E5%8F%AF%E8%83%BD%E5%BC%95%E5%8F%91%E4%B8%8D%E9%80%82%EF%BC%8C%E5%90%91%E5%B7%A6%E6%BB%91%E5%8A%A8%E6%9F%A5%E7%9C%8B">',
+      '</section>',
+    ].join('');
+
+    const html = serializeObsidianRenderedHtml({ root, converter });
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    expect(html).toContain('overflow-x:auto');
+    expect(html).toContain('width:200%');
+    expect(html).toContain('← 向左滑动查看');
+    expect(html).toContain('敏感图片');
+    expect(html).toContain('此类图片可能引发不适，向左滑动查看');
+    expect(html).toContain('图 84.1 阴茎干部的生殖器疱疹皮损。');
+    expect(container.querySelector('figure')).toBeNull();
+    expect(container.querySelector('img')?.getAttribute('alt')).toBe('图 84.1 阴茎干部的生殖器疱疹皮损。');
+  });
+
+  it('should not create a caption when marked sensitive image has no caption', () => {
+    const root = document.createElement('div');
+    root.innerHTML = [
+      '<section data-owc-sensitive-image="1" data-owc-sensitive-warning="%E6%AD%A4%E7%B1%BB%E5%9B%BE%E7%89%87%E5%8F%AF%E8%83%BD%E5%BC%95%E5%8F%91%E4%B8%8D%E9%80%82%EF%BC%8C%E5%90%91%E5%B7%A6%E6%BB%91%E5%8A%A8%E6%9F%A5%E7%9C%8B">',
+      '<img src="images/herpes.jpg" alt="OWC_SENSITIVE_IMAGE:%E6%AD%A4%E7%B1%BB%E5%9B%BE%E7%89%87%E5%8F%AF%E8%83%BD%E5%BC%95%E5%8F%91%E4%B8%8D%E9%80%82%EF%BC%8C%E5%90%91%E5%B7%A6%E6%BB%91%E5%8A%A8%E6%9F%A5%E7%9C%8B">',
+      '</section>',
+    ].join('');
+
+    const html = serializeObsidianRenderedHtml({ root, converter });
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    expect(container.querySelector('figure')).toBeNull();
+    expect(container.querySelector('img')?.getAttribute('alt')).toBe('');
+    expect(html).not.toContain('herpes</section>');
+  });
+
   it('should keep width suffix in img alt for legacy parity', () => {
     const root = document.createElement('div');
     root.innerHTML = '<p><img src="https://example.com/pic.png" alt="图例" width="400"></p>';

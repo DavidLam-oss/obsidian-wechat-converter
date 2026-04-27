@@ -179,6 +179,7 @@ function pruneObsidianOnlyAttributes(container, { finalStage = false } = {}) {
   const getAllowedAttrs = (tagName) => {
     if (tagName === 'a') return new Set(['href', 'style']);
     if (tagName === 'img') return new Set(['src', 'alt', 'style', 'width', 'height', 'class']);
+    if (tagName === 'section' && !finalStage) return new Set(['style', 'class', 'data-owc-sensitive-image', 'data-owc-sensitive-warning']);
     if (tagName === 'section') return new Set(['style', 'class']);
     if (!finalStage && (tagName === 'pre' || tagName === 'code')) return new Set(['style', 'class']);
     if (SVG_TAGS.has(tagName)) return SVG_ALLOWED_ATTRS;
@@ -192,6 +193,7 @@ function pruneObsidianOnlyAttributes(container, { finalStage = false } = {}) {
     for (const attr of attrs) {
       const name = attr.name.toLowerCase();
       if (name.startsWith('data-') || name === 'id' || name === 'dir') {
+        if (allowed.has(name)) continue;
         el.removeAttribute(attr.name);
         continue;
       }
@@ -553,12 +555,130 @@ function convertPreBlocks(container, converter) {
   }
 }
 
+
+const SENSITIVE_IMAGE_DEFAULT_WARNING = '此类图片可能引发不适，向左滑动查看';
+const SENSITIVE_IMAGE_TITLE_PREFIX = 'OWC_SENSITIVE_IMAGE:';
+
+function decodeSensitiveImageMarkerValue(value) {
+  try {
+    return decodeURIComponent(String(value || ''));
+  } catch (error) {
+    return String(value || '');
+  }
+}
+
+function setSensitiveImageSectionStyle(el, styleText) {
+  if (!el || !styleText) return;
+  el.setAttribute('style', styleText);
+}
+
+function getSensitiveImageEmbeddedWarning(img) {
+  if (!img) return '';
+  const title = String(img.getAttribute('title') || '');
+  const titleIndex = title.indexOf(SENSITIVE_IMAGE_TITLE_PREFIX);
+  if (titleIndex >= 0) {
+    return decodeSensitiveImageMarkerValue(title.slice(titleIndex + SENSITIVE_IMAGE_TITLE_PREFIX.length));
+  }
+
+  const alt = String(img.getAttribute('alt') || '');
+  const altIndex = alt.indexOf(SENSITIVE_IMAGE_TITLE_PREFIX);
+  if (altIndex < 0) return '';
+  img.setAttribute('alt', alt.slice(0, altIndex).trim());
+  return decodeSensitiveImageMarkerValue(alt.slice(altIndex + SENSITIVE_IMAGE_TITLE_PREFIX.length).trim());
+}
+
+function buildSensitiveImageReveal({ img, caption, warning, converter }) {
+  const wrapper = document.createElement('section');
+  setSensitiveImageSectionStyle(wrapper, 'display:block;margin:16px 0;text-align:left;');
+
+  if (caption) {
+    const captionEl = document.createElement('section');
+    setSensitiveImageSectionStyle(captionEl, getTagStyle(converter, 'figcaption') || 'display:block;margin:8px 0;color:#888;font-size:14px;line-height:1.6;text-align:center;');
+    captionEl.textContent = caption;
+    wrapper.appendChild(captionEl);
+  }
+
+  const scroll = document.createElement('section');
+  setSensitiveImageSectionStyle(scroll, 'display:block;width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;box-sizing:border-box;margin:8px 0 0;padding:0;white-space:nowrap;');
+  const row = document.createElement('section');
+  setSensitiveImageSectionStyle(row, 'display:table;table-layout:fixed;width:200%;min-width:200%;border-spacing:0;font-size:0;line-height:0;');
+  const warningPanel = document.createElement('section');
+  setSensitiveImageSectionStyle(warningPanel, 'display:table-cell;vertical-align:middle;width:50%;box-sizing:border-box;white-space:normal;font-size:15px;line-height:1.7;padding:0 20px;margin:0;border:1px solid #e6e8ef;border-radius:16px;background:linear-gradient(135deg,#f8f9fc 0%,#eef1f6 100%);color:#4a4f5a;text-align:center;');
+  const warningContent = document.createElement('section');
+  setSensitiveImageSectionStyle(warningContent, 'display:block;max-width:420px;margin:0 auto;padding:32px 24px;box-sizing:border-box;');
+  const warningLabel = document.createElement('section');
+  setSensitiveImageSectionStyle(warningLabel, 'display:inline-block;margin:0 auto 14px;padding:4px 12px;border-radius:999px;background:#fff;color:#8a6d3b;border:1px solid #efe2c7;font-size:13px;line-height:1.5;');
+  warningLabel.textContent = '敏感图片';
+  const warningText = document.createElement('section');
+  setSensitiveImageSectionStyle(warningText, 'display:block;margin:0;color:#4a4f5a;font-size:16px;line-height:1.8;font-weight:500;');
+  warningText.textContent = warning || SENSITIVE_IMAGE_DEFAULT_WARNING;
+  const warningArrow = document.createElement('section');
+  setSensitiveImageSectionStyle(warningArrow, 'display:inline-block;margin-top:18px;padding:8px 18px;border-radius:999px;background:#ffffff;color:#5d6472;border:1px solid #dde1ea;font-size:14px;line-height:1.4;letter-spacing:0.04em;box-shadow:0 4px 14px rgba(37,45,60,0.08);');
+  warningArrow.textContent = '← 向左滑动查看';
+  warningContent.appendChild(warningLabel);
+  warningContent.appendChild(warningText);
+  warningContent.appendChild(warningArrow);
+  warningPanel.appendChild(warningContent);
+
+  const imagePanel = document.createElement('section');
+  setSensitiveImageSectionStyle(imagePanel, 'display:table-cell;vertical-align:middle;width:50%;box-sizing:border-box;white-space:normal;font-size:0;line-height:0;padding:0;margin:0;text-align:center;');
+  img.setAttribute('data-owc-skip-sensitive-figure', '1');
+  appendInlineStyle(img, getTagStyle(converter, 'img'));
+  imagePanel.appendChild(img);
+
+  row.appendChild(warningPanel);
+  row.appendChild(imagePanel);
+  scroll.appendChild(row);
+  wrapper.appendChild(scroll);
+  return wrapper;
+}
+
+function convertSensitiveImageMarkedSections(container, converter) {
+  const blocks = Array.from(container.querySelectorAll('section[data-owc-sensitive-image="1"]'));
+  for (const block of blocks) {
+    const img = block.querySelector('img');
+    if (!img) {
+      block.removeAttribute('data-owc-sensitive-image');
+      block.removeAttribute('data-owc-sensitive-warning');
+      continue;
+    }
+
+    let src = img.getAttribute('src') || '';
+    src = normalizeObsidianImageSrcForLegacyParity(src);
+    const safeSrc = converter && typeof converter.validateLink === 'function'
+      ? converter.validateLink(src, true)
+      : src;
+    src = safeSrc;
+    if (looksLikeImageSrc(src) && converter && typeof converter.resolveImagePath === 'function') {
+      src = converter.resolveImagePath(src);
+    }
+    img.setAttribute('src', src);
+    img.removeAttribute('title');
+
+    const embeddedWarning = getSensitiveImageEmbeddedWarning(img);
+    const rawAlt = img.getAttribute('alt') || '';
+    const alt = buildLegacyParityImageAlt(img, rawAlt);
+    img.setAttribute('alt', alt);
+    const caption = alt;
+    const rawWarning = block.getAttribute('data-owc-sensitive-warning') || '';
+    const warning = String(embeddedWarning || decodeSensitiveImageMarkerValue(rawWarning) || '').trim() || SENSITIVE_IMAGE_DEFAULT_WARNING;
+    const reveal = buildSensitiveImageReveal({ img, caption, warning, converter });
+    block.replaceWith(reveal);
+  }
+}
+
+function convertSensitiveImageBlocks(container, converter) {
+  if (!container) return;
+  convertSensitiveImageMarkedSections(container, converter);
+}
+
 function convertStandaloneImages(container, converter) {
   if (!container) return;
 
   const imgs = Array.from(container.querySelectorAll('img'));
   for (const img of imgs) {
     if (img.closest('figure')) continue;
+    if (img.getAttribute('data-owc-skip-sensitive-figure') === '1') continue;
     if (img.getAttribute('alt') === 'logo') continue;
     if (img.classList.contains('math-formula-image')) continue;
     if (img.classList.contains('mermaid-diagram-image')) {
@@ -1116,6 +1236,7 @@ function serializeObsidianRenderedHtml({
   sanitizeAnchorAndImageLinks(container, converter);
   normalizeMathPresentation(container);
   convertPreBlocks(container, converter);
+  convertSensitiveImageBlocks(container, converter);
   convertStandaloneImages(container, converter);
   applyThemeInlineStyles(container, converter);
   pruneObsidianOnlyAttributes(container, { finalStage: true });
