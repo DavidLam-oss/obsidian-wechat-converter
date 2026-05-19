@@ -11227,8 +11227,11 @@ var require_image_paste_handler = __commonJS({
 // services/hide-folders.js
 var require_hide_folders = __commonJS({
   "services/hide-folders.js"(exports2, module2) {
+    var { Notice: Notice2 } = require("obsidian");
     var HIDDEN_FOLDER_CLASS = "wechat-converter-hidden-folder";
     var STYLE_ELEMENT_ID = "wechat-converter-hide-folders-style";
+    var folderObserver = null;
+    var cachedFolderPaths = [];
     function escapeRegExp(str) {
       return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
@@ -11262,7 +11265,7 @@ var require_hide_folders = __commonJS({
         styleEl.textContent = "";
       }
     }
-    function toggleFolderDomClass(folderPaths, shouldHide) {
+    function applyHiddenClassToDom(folderPaths) {
       for (const path of folderPaths) {
         const escapedPath = CSS.escape(path);
         const selectors = [
@@ -11271,10 +11274,8 @@ var require_hide_folders = __commonJS({
         ];
         for (const sel of selectors) {
           document.querySelectorAll(sel).forEach((el) => {
-            if (shouldHide) {
+            if (!el.classList.contains(HIDDEN_FOLDER_CLASS)) {
               el.classList.add(HIDDEN_FOLDER_CLASS);
-            } else {
-              el.classList.remove(HIDDEN_FOLDER_CLASS);
             }
           });
         }
@@ -11285,19 +11286,50 @@ var require_hide_folders = __commonJS({
         el.classList.remove(HIDDEN_FOLDER_CLASS);
       });
     }
+    function findFileExplorerContainer() {
+      return document.querySelector(".nav-files-container") || document.querySelector('[data-type="file-explorer"] .tree-item');
+    }
+    function startFolderObserver() {
+      stopFolderObserver();
+      const container = findFileExplorerContainer();
+      if (!container) {
+        setTimeout(() => {
+          if (cachedFolderPaths.length > 0) {
+            startFolderObserver();
+          }
+        }, 1e3);
+        return;
+      }
+      folderObserver = new MutationObserver(() => {
+        applyHiddenClassToDom(cachedFolderPaths);
+      });
+      folderObserver.observe(container, {
+        childList: true,
+        subtree: true
+      });
+      applyHiddenClassToDom(cachedFolderPaths);
+    }
+    function stopFolderObserver() {
+      if (folderObserver) {
+        folderObserver.disconnect();
+        folderObserver = null;
+      }
+    }
     function applyHideImageFolders2(app, settings) {
       if (settings.hideImageFolders) {
-        const folderPaths = collectAssetFolderPaths(app, settings.imageAttachmentLocation || "${filename}_assets");
+        cachedFolderPaths = collectAssetFolderPaths(app, settings.imageAttachmentLocation || "${filename}_assets");
         injectHideFolderStyle(true);
-        setTimeout(() => {
-          toggleFolderDomClass(folderPaths, true);
-        }, 500);
+        startFolderObserver();
       } else {
+        cachedFolderPaths = [];
         injectHideFolderStyle(false);
+        stopFolderObserver();
         removeAllHiddenClasses();
       }
     }
     function cleanupHideImageFolders2() {
+      cachedFolderPaths = [];
+      stopFolderObserver();
       const styleEl = document.getElementById(STYLE_ELEMENT_ID);
       if (styleEl)
         styleEl.remove();
@@ -16520,11 +16552,6 @@ var AppleStylePlugin = class extends Plugin {
     this.app.workspace.onLayoutReady(() => {
       applyHideImageFolders(this.app, this.settings);
     });
-    this.registerEvent(
-      this.app.workspace.on("layout-change", () => {
-        applyHideImageFolders(this.app, this.settings);
-      })
-    );
     this.app.workspace.onLayoutReady(() => {
       this.migrateLegacyConverterLeafTitles().catch((error) => {
         console.warn("\u540C\u6B65\u8F6C\u6362\u5668\u6807\u9898\u5931\u8D25:", error);

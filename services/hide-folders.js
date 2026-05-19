@@ -1,13 +1,21 @@
 /**
  * 隐藏图片附件文件夹
- * 通过 CSS 注入在文件浏览器中隐藏匹配目录模式的文件夹
+ * 通过 CSS 注入 + MutationObserver 在文件浏览器中隐藏匹配目录模式的文件夹
  */
+
+const { Notice } = require('obsidian');
 
 /** 用于标识隐藏文件夹的 CSS 类名 */
 const HIDDEN_FOLDER_CLASS = 'wechat-converter-hidden-folder';
 
 /** 注入到 <head> 的 <style> 元素 ID */
 const STYLE_ELEMENT_ID = 'wechat-converter-hide-folders-style';
+
+/** MutationObserver 实例 */
+let folderObserver = null;
+
+/** 上次隐藏的文件夹路径缓存，避免重复处理 */
+let cachedFolderPaths = [];
 
 /**
  * 转义正则特殊字符
@@ -75,9 +83,8 @@ function injectHideFolderStyle(shouldHide) {
 /**
  * 给匹配的文件夹 DOM 元素添加/移除隐藏类
  * @param {string[]} folderPaths - 需要隐藏的文件夹路径列表
- * @param {boolean} shouldHide - true 添加隐藏类，false 移除
  */
-function toggleFolderDomClass(folderPaths, shouldHide) {
+function applyHiddenClassToDom(folderPaths) {
   for (const path of folderPaths) {
     const escapedPath = CSS.escape(path);
     const selectors = [
@@ -86,10 +93,8 @@ function toggleFolderDomClass(folderPaths, shouldHide) {
     ];
     for (const sel of selectors) {
       document.querySelectorAll(sel).forEach((el) => {
-        if (shouldHide) {
+        if (!el.classList.contains(HIDDEN_FOLDER_CLASS)) {
           el.classList.add(HIDDEN_FOLDER_CLASS);
-        } else {
-          el.classList.remove(HIDDEN_FOLDER_CLASS);
         }
       });
     }
@@ -106,6 +111,57 @@ function removeAllHiddenClasses() {
 }
 
 /**
+ * 查找文件浏览器的容器 DOM 节点
+ * @returns {Element|null}
+ */
+function findFileExplorerContainer() {
+  // Obsidian 文件浏览器的容器选择器
+  return document.querySelector('.nav-files-container')
+    || document.querySelector('[data-type="file-explorer"] .tree-item');
+}
+
+/**
+ * 启动 MutationObserver 监听文件浏览器 DOM 变化
+ * 当新文件夹元素出现时自动添加隐藏类
+ */
+function startFolderObserver() {
+  stopFolderObserver();
+
+  const container = findFileExplorerContainer();
+  if (!container) {
+    // 文件浏览器还没渲染，延迟重试
+    setTimeout(() => {
+      if (cachedFolderPaths.length > 0) {
+        startFolderObserver();
+      }
+    }, 1000);
+    return;
+  }
+
+  folderObserver = new MutationObserver(() => {
+    applyHiddenClassToDom(cachedFolderPaths);
+  });
+
+  folderObserver.observe(container, {
+    childList: true,
+    subtree: true,
+  });
+
+  // 立即应用一次
+  applyHiddenClassToDom(cachedFolderPaths);
+}
+
+/**
+ * 停止 MutationObserver
+ */
+function stopFolderObserver() {
+  if (folderObserver) {
+    folderObserver.disconnect();
+    folderObserver = null;
+  }
+}
+
+/**
  * 初始化隐藏图片文件夹功能
  * 在插件 onload 或设置变更时调用
  * @param {object} app - Obsidian app 实例
@@ -113,14 +169,13 @@ function removeAllHiddenClasses() {
  */
 function applyHideImageFolders(app, settings) {
   if (settings.hideImageFolders) {
-    const folderPaths = collectAssetFolderPaths(app, settings.imageAttachmentLocation || '${filename}_assets');
+    cachedFolderPaths = collectAssetFolderPaths(app, settings.imageAttachmentLocation || '${filename}_assets');
     injectHideFolderStyle(true);
-    // 延迟执行 DOM 操作，确保文件浏览器已渲染
-    setTimeout(() => {
-      toggleFolderDomClass(folderPaths, true);
-    }, 500);
+    startFolderObserver();
   } else {
+    cachedFolderPaths = [];
     injectHideFolderStyle(false);
+    stopFolderObserver();
     removeAllHiddenClasses();
   }
 }
@@ -129,6 +184,8 @@ function applyHideImageFolders(app, settings) {
  * 清理隐藏功能（插件卸载时调用）
  */
 function cleanupHideImageFolders() {
+  cachedFolderPaths = [];
+  stopFolderObserver();
   const styleEl = document.getElementById(STYLE_ELEMENT_ID);
   if (styleEl) styleEl.remove();
   removeAllHiddenClasses();
