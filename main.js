@@ -11079,6 +11079,7 @@ var require_wechat_html_cleaner = __commonJS({
 var require_image_paste_handler = __commonJS({
   "services/image-paste-handler.js"(exports2, module2) {
     var { Notice: Notice2 } = require("obsidian");
+    var { resolveSyncAccount: resolveSyncAccount2 } = require_sync_context();
     var IMAGE_TYPE_MAP = {
       "image/png": "png",
       "image/jpeg": "jpg",
@@ -11122,7 +11123,46 @@ var require_image_paste_handler = __commonJS({
       const ts = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "").replace("T", "").slice(0, 17);
       return `image-${ts}.${extension}`;
     }
-    async function handleImagePaste2(plugin, evt, editor, view) {
+    async function uploadLocalImageToWechat2(plugin, WechatAPI2, filePath) {
+      const account = resolveSyncAccount2({
+        accounts: plugin.settings.wechatAccounts || [],
+        selectedAccountId: "",
+        defaultAccountId: plugin.settings.defaultAccountId
+      });
+      if (!account)
+        return null;
+      const api = new WechatAPI2(account.appId, account.appSecret, plugin.settings.proxyUrl);
+      const abstractFile = plugin.app.vault.getAbstractFileByPath(filePath);
+      if (!abstractFile)
+        return null;
+      const buffer = await plugin.app.vault.readBinary(abstractFile);
+      const ext = filePath.split(".").pop().toLowerCase();
+      const mimeMap = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml", bmp: "image/bmp" };
+      const mimeType = mimeMap[ext] || "image/png";
+      const blob = new Blob([buffer], { type: mimeType });
+      const result = await api.uploadImage(blob);
+      return result.url || null;
+    }
+    function resolveImageReferenceAtCursor2(editor) {
+      const cursor = editor.getCursor();
+      const lineText = editor.getLine(cursor.line);
+      const wikiMatch = lineText.match(/(!\[\[([^\[\]|]+)(?:\|([^\[\]]+))?\]\])/);
+      if (wikiMatch) {
+        const raw = wikiMatch[1];
+        const path = wikiMatch[2].trim();
+        const isLocal = !path.startsWith("http://") && !path.startsWith("https://");
+        return { type: "wiki-link", path, isLocal, raw, line: cursor.line };
+      }
+      const mdMatch = lineText.match(/(!\[[^\]]*\]\(([^)]+)\))/);
+      if (mdMatch) {
+        const raw = mdMatch[1];
+        const path = mdMatch[2].trim();
+        const isLocal = !path.startsWith("http://") && !path.startsWith("https://");
+        return { type: "markdown", path, isLocal, raw, line: cursor.line };
+      }
+      return null;
+    }
+    async function handleImagePaste2(plugin, evt, editor, view, WechatAPI2) {
       var _a;
       if (!plugin.settings.autoSaveImages)
         return;
@@ -11147,6 +11187,24 @@ var require_image_paste_handler = __commonJS({
         const filePath = `${saveDir}/${fileName}`;
         const buffer = await file.arrayBuffer();
         await plugin.app.vault.createBinary(filePath, buffer);
+        if (plugin.settings.uploadOnPaste) {
+          const placeholder = `![\u23F3 \u56FE\u7247\u4E0A\u4F20\u4E2D...]()`;
+          const cursor = editor.getCursor();
+          editor.replaceSelection(placeholder);
+          try {
+            const wxUrl = await uploadLocalImageToWechat2(plugin, WechatAPI2, filePath);
+            if (wxUrl) {
+              editor.replaceRange(`![](${wxUrl})`, cursor, { line: cursor.line, ch: cursor.ch + placeholder.length });
+              new Notice2(`\u56FE\u7247\u5DF2\u4E0A\u4F20\u5FAE\u4FE1\u5E76\u4FDD\u5B58\u672C\u5730: ${fileName}`);
+              return;
+            }
+          } catch (uploadError) {
+            console.error("\u4E0A\u4F20\u5FAE\u4FE1\u5931\u8D25:", uploadError);
+            new Notice2(`\u4E0A\u4F20\u5FAE\u4FE1\u5931\u8D25: ${uploadError.message}\uFF0C\u5DF2\u4FDD\u7559\u672C\u5730\u526F\u672C`);
+          }
+          editor.replaceRange(`![[${fileName}]]`, cursor, { line: cursor.line, ch: cursor.ch + placeholder.length });
+          return;
+        }
         editor.replaceSelection(`![[${fileName}]]`);
         new Notice2(`\u56FE\u7247\u5DF2\u4FDD\u5B58\u81F3: ${filePath}`);
       } catch (error) {
@@ -11156,6 +11214,8 @@ var require_image_paste_handler = __commonJS({
     }
     module2.exports = {
       handleImagePaste: handleImagePaste2,
+      uploadLocalImageToWechat: uploadLocalImageToWechat2,
+      resolveImageReferenceAtCursor: resolveImageReferenceAtCursor2,
       resolveImageSavePath,
       ensureVaultFolder,
       imageExtensionFromMime,
@@ -11478,7 +11538,7 @@ var { resolveSyncAccount, toSyncFriendlyMessage } = require_sync_context();
 var { processAllImages: processAllImagesService, processMathFormulas: processMathFormulasService } = require_wechat_media();
 var { cleanHtmlForDraft: cleanHtmlForDraftService } = require_wechat_html_cleaner();
 var { rasterizeSvgToPngBlob } = require_svg_rasterizer();
-var { handleImagePaste } = require_image_paste_handler();
+var { handleImagePaste, uploadLocalImageToWechat, resolveImageReferenceAtCursor } = require_image_paste_handler();
 var { applyHideImageFolders, cleanupHideImageFolders } = require_hide_folders();
 var { createObsidianFetchAdapter } = require_obsidian_fetch_adapter();
 var APPLE_STYLE_VIEW = "apple-style-converter";
@@ -11585,6 +11645,8 @@ var DEFAULT_SETTINGS = {
   // 图片保存目录模式
   hideImageFolders: false,
   // 隐藏图片附件文件夹
+  uploadOnPaste: false,
+  // 粘贴时自动上传到微信
   // 旧字段保留用于迁移检测
   wechatAppId: "",
   wechatAppSecret: "",
@@ -15852,6 +15914,10 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       await this.plugin.saveSettings();
       applyHideImageFolders(this.plugin.app, this.plugin.settings);
     }));
+    new Setting(containerEl).setName("\u7C98\u8D34\u65F6\u81EA\u52A8\u4E0A\u4F20\u5230\u5FAE\u4FE1").setDesc("\u5F00\u542F\u540E\uFF0C\u7C98\u8D34\u56FE\u7247\u65F6\u81EA\u52A8\u4E0A\u4F20\u5230\u5FAE\u4FE1\u516C\u4F17\u53F7\u5E76\u63D2\u5165\u5FAE\u4FE1 CDN \u94FE\u63A5\u3002\u9700\u8981\u5148\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.uploadOnPaste || false).onChange(async (value) => {
+      this.plugin.settings.uploadOnPaste = value;
+      await this.plugin.saveSettings();
+    }));
     new Setting(containerEl).setName("\u9AD8\u7EA7\u8BBE\u7F6E").setHeading();
     new Setting(containerEl).setName("\u53D1\u9001\u6210\u529F\u540E\u81EA\u52A8\u6E05\u7406\u8D44\u6E90").setDesc("\u9ED8\u8BA4\u5173\u95ED\u3002\u5F00\u542F\u540E\u4F1A\u5728\u521B\u5EFA\u8349\u7A3F\u6210\u529F\u540E\uFF0C\u5220\u9664\u4F60\u5728\u4E0B\u65B9\u914D\u7F6E\u7684\u76EE\u5F55\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.cleanupAfterSync).onChange(async (value) => {
       this.plugin.settings.cleanupAfterSync = value;
@@ -16415,7 +16481,38 @@ var AppleStylePlugin = class extends Plugin {
     this.addSettingTab(new AppleStyleSettingTab(this.app, this));
     this.registerEvent(
       this.app.workspace.on("editor-paste", (evt, editor, view) => {
-        handleImagePaste(this, evt, editor, view);
+        handleImagePaste(this, evt, editor, view, WechatAPI);
+      })
+    );
+    this.registerEvent(
+      this.app.workspace.on("editor-menu", (menu, editor, view) => {
+        const ref = resolveImageReferenceAtCursor(editor);
+        if (!ref || !ref.isLocal)
+          return;
+        menu.addItem((item) => {
+          item.setTitle("\u4E0A\u4F20\u56FE\u7247\u5230\u516C\u4F17\u53F7").setIcon("upload-cloud").onClick(async () => {
+            const lineText = editor.getLine(ref.line);
+            const uploading = lineText.replace(ref.raw, "![\u23F3 \u56FE\u7247\u4E0A\u4F20\u4E2D...]()");
+            editor.replaceRange(uploading, { line: ref.line, ch: 0 }, { line: ref.line, ch: lineText.length });
+            try {
+              const wxUrl = await uploadLocalImageToWechat(this, WechatAPI, ref.path);
+              if (!wxUrl) {
+                editor.replaceRange(lineText, { line: ref.line, ch: 0 }, { line: ref.line, ch: uploading.length });
+                new Notice("\u4E0A\u4F20\u5931\u8D25\uFF1A\u672A\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
+                return;
+              }
+              const currentLine = editor.getLine(ref.line);
+              const done = currentLine.replace("![\u23F3 \u56FE\u7247\u4E0A\u4F20\u4E2D...]()", `![](${wxUrl})`);
+              editor.replaceRange(done, { line: ref.line, ch: 0 }, { line: ref.line, ch: currentLine.length });
+              new Notice("\u56FE\u7247\u5DF2\u4E0A\u4F20\u5230\u5FAE\u4FE1");
+            } catch (error) {
+              const currentLine = editor.getLine(ref.line);
+              editor.replaceRange(lineText, { line: ref.line, ch: 0 }, { line: ref.line, ch: currentLine.length });
+              console.error("\u4E0A\u4F20\u56FE\u7247\u5931\u8D25:", error);
+              new Notice(`\u4E0A\u4F20\u5931\u8D25: ${error.message}`);
+            }
+          });
+        });
       })
     );
     this.app.workspace.onLayoutReady(() => {

@@ -14,3 +14,5 @@ docs/plans/
 # Local skill directories
 .codex/
 .claude/skills/project-release/
+/.idea
+/.spec-workflow

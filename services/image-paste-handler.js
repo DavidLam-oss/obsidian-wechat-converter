@@ -4,6 +4,7 @@
  */
 
 const { Notice } = require('obsidian');
+const { resolveSyncAccount } = require('./sync-context');
 
 /** MIME 类型 → 文件扩展名映射 */
 const IMAGE_TYPE_MAP = {
@@ -85,13 +86,73 @@ function generateImageFileName(extension) {
 }
 
 /**
+ * 将 vault 中的本地图片上传到微信 CDN
+ * @param {object} plugin - AppleStylePlugin 实例
+ * @param {object} WechatAPI - WechatAPI 类
+ * @param {string} filePath - vault 内图片路径
+ * @returns {Promise<string|null>} 微信 CDN URL，失败返回 null
+ */
+async function uploadLocalImageToWechat(plugin, WechatAPI, filePath) {
+  const account = resolveSyncAccount({
+    accounts: plugin.settings.wechatAccounts || [],
+    selectedAccountId: '',
+    defaultAccountId: plugin.settings.defaultAccountId,
+  });
+  if (!account) return null;
+
+  const api = new WechatAPI(account.appId, account.appSecret, plugin.settings.proxyUrl);
+  const abstractFile = plugin.app.vault.getAbstractFileByPath(filePath);
+  if (!abstractFile) return null;
+
+  const buffer = await plugin.app.vault.readBinary(abstractFile);
+  const ext = filePath.split('.').pop().toLowerCase();
+  const mimeMap = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', bmp: 'image/bmp' };
+  const mimeType = mimeMap[ext] || 'image/png';
+  const blob = new Blob([buffer], { type: mimeType });
+
+  const result = await api.uploadImage(blob);
+  return result.url || null;
+}
+
+/**
+ * 解析编辑器光标所在行的图片引用
+ * @param {object} editor - Obsidian Editor 实例
+ * @returns {{ type: 'wiki-link'|'markdown', path: string, isLocal: boolean, lineStart: number, lineEnd: number, raw: string } | null}
+ */
+function resolveImageReferenceAtCursor(editor) {
+  const cursor = editor.getCursor();
+  const lineText = editor.getLine(cursor.line);
+
+  // 匹配 wiki-link 图片：![[path]] 或 ![[path|alt]]
+  const wikiMatch = lineText.match(/(!\[\[([^\[\]|]+)(?:\|([^\[\]]+))?\]\])/);
+  if (wikiMatch) {
+    const raw = wikiMatch[1];
+    const path = wikiMatch[2].trim();
+    const isLocal = !path.startsWith('http://') && !path.startsWith('https://');
+    return { type: 'wiki-link', path, isLocal, raw, line: cursor.line };
+  }
+
+  // 匹配标准 Markdown 图片：![alt](url)
+  const mdMatch = lineText.match(/(!\[[^\]]*\]\(([^)]+)\))/);
+  if (mdMatch) {
+    const raw = mdMatch[1];
+    const path = mdMatch[2].trim();
+    const isLocal = !path.startsWith('http://') && !path.startsWith('https://');
+    return { type: 'markdown', path, isLocal, raw, line: cursor.line };
+  }
+
+  return null;
+}
+
+/**
  * 粘贴事件主处理函数
  * @param {object} plugin - AppleStylePlugin 实例
  * @param {ClipboardEvent} evt - 粘贴事件
  * @param {object} editor - Obsidian Editor 实例
  * @param {object} view - MarkdownView 实例
+ * @param {object} WechatAPI - WechatAPI 类（用于上传）
  */
-async function handleImagePaste(plugin, evt, editor, view) {
+async function handleImagePaste(plugin, evt, editor, view, WechatAPI) {
   // 检查功能开关
   if (!plugin.settings.autoSaveImages) return;
 
@@ -130,9 +191,33 @@ async function handleImagePaste(plugin, evt, editor, view) {
     const buffer = await file.arrayBuffer();
     await plugin.app.vault.createBinary(filePath, buffer);
 
-    // 在编辑器光标位置插入 wiki-link 格式的图片引用
-    editor.replaceSelection(`![[${fileName}]]`);
+    // 检查是否需要上传到微信
+    if (plugin.settings.uploadOnPaste) {
+      // 先插入上传中占位符
+      const placeholder = `![⏳ 图片上传中...]()`;
+      const cursor = editor.getCursor();
+      editor.replaceSelection(placeholder);
 
+      try {
+        const wxUrl = await uploadLocalImageToWechat(plugin, WechatAPI, filePath);
+        if (wxUrl) {
+          // 替换占位符为微信 URL
+          editor.replaceRange(`![](${wxUrl})`, cursor, { line: cursor.line, ch: cursor.ch + placeholder.length });
+          new Notice(`图片已上传微信并保存本地: ${fileName}`);
+          return;
+        }
+      } catch (uploadError) {
+        console.error('上传微信失败:', uploadError);
+        new Notice(`上传微信失败: ${uploadError.message}，已保留本地副本`);
+      }
+
+      // 上传失败，替换占位符为本地引用
+      editor.replaceRange(`![[${fileName}]]`, cursor, { line: cursor.line, ch: cursor.ch + placeholder.length });
+      return;
+    }
+
+    // 未开启上传，插入本地引用
+    editor.replaceSelection(`![[${fileName}]]`);
     new Notice(`图片已保存至: ${filePath}`);
   } catch (error) {
     console.error('保存粘贴图片失败:', error);
@@ -142,6 +227,8 @@ async function handleImagePaste(plugin, evt, editor, view) {
 
 module.exports = {
   handleImagePaste,
+  uploadLocalImageToWechat,
+  resolveImageReferenceAtCursor,
   resolveImageSavePath,
   ensureVaultFolder,
   imageExtensionFromMime,

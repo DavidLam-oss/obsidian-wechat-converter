@@ -40,7 +40,7 @@ const { resolveSyncAccount, toSyncFriendlyMessage } = require('./services/sync-c
 const { processAllImages: processAllImagesService, processMathFormulas: processMathFormulasService } = require('./services/wechat-media');
 const { cleanHtmlForDraft: cleanHtmlForDraftService } = require('./services/wechat-html-cleaner');
 const { rasterizeSvgToPngBlob } = require('./services/svg-rasterizer');
-const { handleImagePaste } = require('./services/image-paste-handler');
+const { handleImagePaste, uploadLocalImageToWechat, resolveImageReferenceAtCursor } = require('./services/image-paste-handler');
 const { applyHideImageFolders, cleanupHideImageFolders } = require('./services/hide-folders');
 const { createObsidianFetchAdapter } = require('./services/obsidian-fetch-adapter');
 
@@ -146,6 +146,7 @@ const DEFAULT_SETTINGS = {
   autoSaveImages: false, // 默认关闭
   imageAttachmentLocation: '${filename}_assets', // 图片保存目录模式
   hideImageFolders: false, // 隐藏图片附件文件夹
+  uploadOnPaste: false, // 粘贴时自动上传到微信
   // 旧字段保留用于迁移检测
   wechatAppId: '',
   wechatAppSecret: '',
@@ -5126,6 +5127,16 @@ class AppleStyleSettingTab extends PluginSettingTab {
           applyHideImageFolders(this.plugin.app, this.plugin.settings);
         }));
 
+    new Setting(containerEl)
+      .setName('粘贴时自动上传到微信')
+      .setDesc('开启后，粘贴图片时自动上传到微信公众号并插入微信 CDN 链接。需要先配置公众号账号。')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.uploadOnPaste || false)
+        .onChange(async (value) => {
+          this.plugin.settings.uploadOnPaste = value;
+          await this.plugin.saveSettings();
+        }));
+
     // 高级设置
     new Setting(containerEl)
       .setName('高级设置')
@@ -5827,7 +5838,47 @@ class AppleStylePlugin extends Plugin {
     // 注册粘贴图片处理
     this.registerEvent(
       this.app.workspace.on('editor-paste', (evt, editor, view) => {
-        handleImagePaste(this, evt, editor, view);
+        handleImagePaste(this, evt, editor, view, WechatAPI);
+      })
+    );
+
+    // 注册右键菜单：上传图片到公众号
+    this.registerEvent(
+      this.app.workspace.on('editor-menu', (menu, editor, view) => {
+        const ref = resolveImageReferenceAtCursor(editor);
+        if (!ref || !ref.isLocal) return;
+        menu.addItem((item) => {
+          item
+            .setTitle('上传图片到公众号')
+            .setIcon('upload-cloud')
+            .onClick(async () => {
+              const lineText = editor.getLine(ref.line);
+              // 先替换为上传中占位符
+              const uploading = lineText.replace(ref.raw, '![⏳ 图片上传中...]()');
+              editor.replaceRange(uploading, { line: ref.line, ch: 0 }, { line: ref.line, ch: lineText.length });
+
+              try {
+                const wxUrl = await uploadLocalImageToWechat(this, WechatAPI, ref.path);
+                if (!wxUrl) {
+                  // 恢复原始引用
+                  editor.replaceRange(lineText, { line: ref.line, ch: 0 }, { line: ref.line, ch: uploading.length });
+                  new Notice('上传失败：未配置公众号账号');
+                  return;
+                }
+                // 替换为微信 URL
+                const currentLine = editor.getLine(ref.line);
+                const done = currentLine.replace('![⏳ 图片上传中...]()', `![](${wxUrl})`);
+                editor.replaceRange(done, { line: ref.line, ch: 0 }, { line: ref.line, ch: currentLine.length });
+                new Notice('图片已上传到微信');
+              } catch (error) {
+                // 恢复原始引用
+                const currentLine = editor.getLine(ref.line);
+                editor.replaceRange(lineText, { line: ref.line, ch: 0 }, { line: ref.line, ch: currentLine.length });
+                console.error('上传图片失败:', error);
+                new Notice(`上传失败: ${error.message}`);
+              }
+            });
+        });
       })
     );
 
