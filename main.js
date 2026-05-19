@@ -11154,8 +11154,24 @@ var require_image_paste_handler = __commonJS({
         new Notice2(`\u4FDD\u5B58\u56FE\u7247\u5931\u8D25: ${error.message}`);
       }
     }
+    module2.exports = {
+      handleImagePaste: handleImagePaste2,
+      resolveImageSavePath,
+      ensureVaultFolder,
+      imageExtensionFromMime,
+      generateImageFileName
+    };
+  }
+});
+
+// services/hide-folders.js
+var require_hide_folders = __commonJS({
+  "services/hide-folders.js"(exports2, module2) {
     var HIDDEN_FOLDER_CLASS = "wechat-converter-hidden-folder";
     var STYLE_ELEMENT_ID = "wechat-converter-hide-folders-style";
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
     function collectAssetFolderPaths(app, pattern) {
       const folders = app.vault.getAllLoadedFiles().filter((f) => f.children !== void 0);
       const normalized = pattern.replace(/\$\{filename\}/g, "{{PLACEHOLDER}}").replace(/\{\{note\}\}/g, "{{PLACEHOLDER}}");
@@ -11166,9 +11182,6 @@ var require_image_paste_handler = __commonJS({
       const [prefix, suffix] = parts;
       const re = new RegExp(`^${escapeRegExp(prefix)}.+${escapeRegExp(suffix)}$`);
       return folders.filter((f) => re.test(f.name)).map((f) => f.path);
-    }
-    function escapeRegExp(str) {
-      return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
     function injectHideFolderStyle(shouldHide) {
       let styleEl = document.getElementById(STYLE_ELEMENT_ID);
@@ -11229,11 +11242,6 @@ var require_image_paste_handler = __commonJS({
       removeAllHiddenClasses();
     }
     module2.exports = {
-      handleImagePaste: handleImagePaste2,
-      resolveImageSavePath,
-      ensureVaultFolder,
-      imageExtensionFromMime,
-      generateImageFileName,
       applyHideImageFolders: applyHideImageFolders2,
       cleanupHideImageFolders: cleanupHideImageFolders2
     };
@@ -11470,7 +11478,8 @@ var { resolveSyncAccount, toSyncFriendlyMessage } = require_sync_context();
 var { processAllImages: processAllImagesService, processMathFormulas: processMathFormulasService } = require_wechat_media();
 var { cleanHtmlForDraft: cleanHtmlForDraftService } = require_wechat_html_cleaner();
 var { rasterizeSvgToPngBlob } = require_svg_rasterizer();
-var { handleImagePaste, applyHideImageFolders, cleanupHideImageFolders } = require_image_paste_handler();
+var { handleImagePaste } = require_image_paste_handler();
+var { applyHideImageFolders, cleanupHideImageFolders } = require_hide_folders();
 var { createObsidianFetchAdapter } = require_obsidian_fetch_adapter();
 var APPLE_STYLE_VIEW = "apple-style-converter";
 var APPLE_STYLE_VIEW_TITLE = "\u5FAE\u4FE1\u516C\u4F17\u53F7\u8F6C\u6362\u5668";

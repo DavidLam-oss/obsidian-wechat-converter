@@ -40,7 +40,8 @@ const { resolveSyncAccount, toSyncFriendlyMessage } = require('./services/sync-c
 const { processAllImages: processAllImagesService, processMathFormulas: processMathFormulasService } = require('./services/wechat-media');
 const { cleanHtmlForDraft: cleanHtmlForDraftService } = require('./services/wechat-html-cleaner');
 const { rasterizeSvgToPngBlob } = require('./services/svg-rasterizer');
-const { handleImagePaste, applyHideImageFolders, cleanupHideImageFolders } = require('./services/image-paste-handler');
+const { handleImagePaste } = require('./services/image-paste-handler');
+const { applyHideImageFolders, cleanupHideImageFolders } = require('./services/hide-folders');
 const { createObsidianFetchAdapter } = require('./services/obsidian-fetch-adapter');
 
 // 视图类型标识
