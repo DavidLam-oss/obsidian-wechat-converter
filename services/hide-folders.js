@@ -115,7 +115,10 @@ function applyHideImageFolders(app, settings) {
   if (settings.hideImageFolders) {
     const folderPaths = collectAssetFolderPaths(app, settings.imageAttachmentLocation || '${filename}_assets');
     injectHideFolderStyle(true);
-    toggleFolderDomClass(folderPaths, true);
+    // 延迟执行 DOM 操作，确保文件浏览器已渲染
+    setTimeout(() => {
+      toggleFolderDomClass(folderPaths, true);
+    }, 500);
   } else {
     injectHideFolderStyle(false);
     removeAllHiddenClasses();

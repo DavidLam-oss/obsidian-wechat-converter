@@ -5887,6 +5887,13 @@ class AppleStylePlugin extends Plugin {
       applyHideImageFolders(this.app, this.settings);
     });
 
+    // 布局变化时重新应用隐藏（文件浏览器可能重新渲染）
+    this.registerEvent(
+      this.app.workspace.on('layout-change', () => {
+        applyHideImageFolders(this.app, this.settings);
+      })
+    );
+
     this.app.workspace.onLayoutReady(() => {
       this.migrateLegacyConverterLeafTitles().catch((error) => {
         console.warn('同步转换器标题失败:', error);

@@ -11289,7 +11289,9 @@ var require_hide_folders = __commonJS({
       if (settings.hideImageFolders) {
         const folderPaths = collectAssetFolderPaths(app, settings.imageAttachmentLocation || "${filename}_assets");
         injectHideFolderStyle(true);
-        toggleFolderDomClass(folderPaths, true);
+        setTimeout(() => {
+          toggleFolderDomClass(folderPaths, true);
+        }, 500);
       } else {
         injectHideFolderStyle(false);
         removeAllHiddenClasses();
@@ -16518,6 +16520,11 @@ var AppleStylePlugin = class extends Plugin {
     this.app.workspace.onLayoutReady(() => {
       applyHideImageFolders(this.app, this.settings);
     });
+    this.registerEvent(
+      this.app.workspace.on("layout-change", () => {
+        applyHideImageFolders(this.app, this.settings);
+      })
+    );
     this.app.workspace.onLayoutReady(() => {
       this.migrateLegacyConverterLeafTitles().catch((error) => {
         console.warn("\u540C\u6B65\u8F6C\u6362\u5668\u6807\u9898\u5931\u8D25:", error);
