@@ -40,6 +40,7 @@ const { resolveSyncAccount, toSyncFriendlyMessage } = require('./services/sync-c
 const { processAllImages: processAllImagesService, processMathFormulas: processMathFormulasService } = require('./services/wechat-media');
 const { cleanHtmlForDraft: cleanHtmlForDraftService } = require('./services/wechat-html-cleaner');
 const { rasterizeSvgToPngBlob } = require('./services/svg-rasterizer');
+const { handleImagePaste, applyHideImageFolders, cleanupHideImageFolders } = require('./services/image-paste-handler');
 const { createObsidianFetchAdapter } = require('./services/obsidian-fetch-adapter');
 
 // 视图类型标识
@@ -140,6 +141,10 @@ const DEFAULT_SETTINGS = {
   cleanupAfterSync: false,
   cleanupUseSystemTrash: true,
   cleanupDirTemplate: '', // 发送成功后要清理的目录（支持 {{note}}）
+  // 粘贴图片自动保存
+  autoSaveImages: false, // 默认关闭
+  imageAttachmentLocation: '${filename}_assets', // 图片保存目录模式
+  hideImageFolders: false, // 隐藏图片附件文件夹
   // 旧字段保留用于迁移检测
   wechatAppId: '',
   wechatAppSecret: '',
@@ -5082,6 +5087,43 @@ class AppleStyleSettingTab extends PluginSettingTab {
     this.renderAiSettingsSection(containerEl);
 
 
+    // 图片粘贴设置
+    new Setting(containerEl)
+      .setName('图片粘贴')
+      .setHeading();
+
+    new Setting(containerEl)
+      .setName('自动保存粘贴图片')
+      .setDesc('开启后，在编辑器中粘贴图片时自动保存到指定目录，并插入 Markdown 引用')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.autoSaveImages || false)
+        .onChange(async (value) => {
+          this.plugin.settings.autoSaveImages = value;
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName('图片保存目录')
+      .setDesc('支持 ${filename} 和 {{note}} 占位符（当前文档名）。不以 / 开头时相对于文档所在目录。例如：${filename}_assets 或 /attachments')
+      .addText(text => text
+        .setPlaceholder('${filename}_assets')
+        .setValue(this.plugin.settings.imageAttachmentLocation || '')
+        .onChange(async (value) => {
+          this.plugin.settings.imageAttachmentLocation = value;
+          await this.plugin.saveSettings();
+          applyHideImageFolders(this.plugin.app, this.plugin.settings);
+        }));
+
+    new Setting(containerEl)
+      .setName('隐藏图片附件文件夹')
+      .setDesc('开启后，在文件浏览器中自动隐藏与上方目录模式匹配的图片附件文件夹')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.hideImageFolders || false)
+        .onChange(async (value) => {
+          this.plugin.settings.hideImageFolders = value;
+          await this.plugin.saveSettings();
+          applyHideImageFolders(this.plugin.app, this.plugin.settings);
+        }));
 
     // 高级设置
     new Setting(containerEl)
@@ -5781,6 +5823,18 @@ class AppleStylePlugin extends Plugin {
 
     this.addSettingTab(new AppleStyleSettingTab(this.app, this));
 
+    // 注册粘贴图片处理
+    this.registerEvent(
+      this.app.workspace.on('editor-paste', (evt, editor, view) => {
+        handleImagePaste(this, evt, editor, view);
+      })
+    );
+
+    // 布局就绪后初始化隐藏图片文件夹
+    this.app.workspace.onLayoutReady(() => {
+      applyHideImageFolders(this.app, this.settings);
+    });
+
     this.app.workspace.onLayoutReady(() => {
       this.migrateLegacyConverterLeafTitles().catch((error) => {
         console.warn('同步转换器标题失败:', error);
@@ -6075,6 +6129,7 @@ class AppleStylePlugin extends Plugin {
   }
 
   onunload() {
+    cleanupHideImageFolders();
     console.log('📝 微信公众号转换器已卸载');
   }
 }

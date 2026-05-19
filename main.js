@@ -11075,6 +11075,171 @@ var require_wechat_html_cleaner = __commonJS({
   }
 });
 
+// services/image-paste-handler.js
+var require_image_paste_handler = __commonJS({
+  "services/image-paste-handler.js"(exports2, module2) {
+    var { Notice: Notice2 } = require("obsidian");
+    var IMAGE_TYPE_MAP = {
+      "image/png": "png",
+      "image/jpeg": "jpg",
+      "image/jpg": "jpg",
+      "image/gif": "gif",
+      "image/svg+xml": "svg",
+      "image/webp": "webp",
+      "image/bmp": "bmp"
+    };
+    function resolveImageSavePath(pattern, file) {
+      const parentPath = file.parent ? file.parent.path : "/";
+      const basename = file.basename;
+      let resolved = pattern.replace(/\$\{filename\}/g, basename).replace(/\{\{note\}\}/g, basename);
+      if (resolved.startsWith("/")) {
+        return resolved.substring(1);
+      }
+      if (parentPath === "/" || parentPath === "") {
+        return resolved;
+      }
+      return `${parentPath}/${resolved}`;
+    }
+    async function ensureVaultFolder(app, folderPath) {
+      const existing = app.vault.getAbstractFileByPath(folderPath);
+      if (existing)
+        return;
+      const parts = folderPath.split("/");
+      let currentPath = "";
+      for (const part of parts) {
+        currentPath += (currentPath ? "/" : "") + part;
+        const folder = app.vault.getAbstractFileByPath(currentPath);
+        if (!folder) {
+          await app.vault.createFolder(currentPath);
+        }
+      }
+    }
+    function imageExtensionFromMime(mimeType) {
+      return IMAGE_TYPE_MAP[mimeType] || "png";
+    }
+    function generateImageFileName(extension) {
+      const now = new Date();
+      const ts = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "").replace("T", "").slice(0, 17);
+      return `image-${ts}.${extension}`;
+    }
+    async function handleImagePaste2(plugin, evt, editor, view) {
+      var _a;
+      if (!plugin.settings.autoSaveImages)
+        return;
+      const files = (_a = evt.clipboardData) == null ? void 0 : _a.files;
+      if (!files || files.length === 0)
+        return;
+      const file = files[0];
+      if (!file.type.startsWith("image/"))
+        return;
+      evt.preventDefault();
+      const activeFile = view == null ? void 0 : view.file;
+      if (!activeFile) {
+        new Notice2("\u65E0\u6CD5\u786E\u5B9A\u5F53\u524D\u6587\u4EF6");
+        return;
+      }
+      try {
+        const pattern = plugin.settings.imageAttachmentLocation || "${filename}_assets";
+        const saveDir = resolveImageSavePath(pattern, activeFile);
+        await ensureVaultFolder(plugin.app, saveDir);
+        const ext = imageExtensionFromMime(file.type);
+        const fileName = generateImageFileName(ext);
+        const filePath = `${saveDir}/${fileName}`;
+        const buffer = await file.arrayBuffer();
+        await plugin.app.vault.createBinary(filePath, buffer);
+        editor.replaceSelection(`![[${fileName}]]`);
+        new Notice2(`\u56FE\u7247\u5DF2\u4FDD\u5B58\u81F3: ${filePath}`);
+      } catch (error) {
+        console.error("\u4FDD\u5B58\u7C98\u8D34\u56FE\u7247\u5931\u8D25:", error);
+        new Notice2(`\u4FDD\u5B58\u56FE\u7247\u5931\u8D25: ${error.message}`);
+      }
+    }
+    var HIDDEN_FOLDER_CLASS = "wechat-converter-hidden-folder";
+    var STYLE_ELEMENT_ID = "wechat-converter-hide-folders-style";
+    function collectAssetFolderPaths(app, pattern) {
+      const folders = app.vault.getAllLoadedFiles().filter((f) => f.children !== void 0);
+      const normalized = pattern.replace(/\$\{filename\}/g, "{{PLACEHOLDER}}").replace(/\{\{note\}\}/g, "{{PLACEHOLDER}}");
+      const parts = normalized.split("{{PLACEHOLDER}}");
+      if (parts.length !== 2) {
+        return folders.filter((f) => f.name === pattern).map((f) => f.path);
+      }
+      const [prefix, suffix] = parts;
+      const re = new RegExp(`^${escapeRegExp(prefix)}.+${escapeRegExp(suffix)}$`);
+      return folders.filter((f) => re.test(f.name)).map((f) => f.path);
+    }
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+    function injectHideFolderStyle(shouldHide) {
+      let styleEl = document.getElementById(STYLE_ELEMENT_ID);
+      if (!styleEl) {
+        styleEl = document.createElement("style");
+        styleEl.id = STYLE_ELEMENT_ID;
+        document.head.appendChild(styleEl);
+      }
+      if (shouldHide) {
+        styleEl.textContent = `
+      .${HIDDEN_FOLDER_CLASS},
+      .${HIDDEN_FOLDER_CLASS} ~ .nav-folder-children,
+      .${HIDDEN_FOLDER_CLASS} ~ .tree-item-children {
+        display: none !important;
+      }
+    `;
+      } else {
+        styleEl.textContent = "";
+      }
+    }
+    function toggleFolderDomClass(folderPaths, shouldHide) {
+      for (const path of folderPaths) {
+        const escapedPath = CSS.escape(path);
+        const selectors = [
+          `.nav-folder-title[data-path="${escapedPath}"]`,
+          `.tree-item-self[data-path="${escapedPath}"]`
+        ];
+        for (const sel of selectors) {
+          document.querySelectorAll(sel).forEach((el) => {
+            if (shouldHide) {
+              el.classList.add(HIDDEN_FOLDER_CLASS);
+            } else {
+              el.classList.remove(HIDDEN_FOLDER_CLASS);
+            }
+          });
+        }
+      }
+    }
+    function removeAllHiddenClasses() {
+      document.querySelectorAll(`.${HIDDEN_FOLDER_CLASS}`).forEach((el) => {
+        el.classList.remove(HIDDEN_FOLDER_CLASS);
+      });
+    }
+    function applyHideImageFolders2(app, settings) {
+      if (settings.hideImageFolders) {
+        const folderPaths = collectAssetFolderPaths(app, settings.imageAttachmentLocation || "${filename}_assets");
+        injectHideFolderStyle(true);
+        toggleFolderDomClass(folderPaths, true);
+      } else {
+        injectHideFolderStyle(false);
+        removeAllHiddenClasses();
+      }
+    }
+    function cleanupHideImageFolders2() {
+      const styleEl = document.getElementById(STYLE_ELEMENT_ID);
+      if (styleEl)
+        styleEl.remove();
+      removeAllHiddenClasses();
+    }
+    module2.exports = {
+      handleImagePaste: handleImagePaste2,
+      resolveImageSavePath,
+      ensureVaultFolder,
+      imageExtensionFromMime,
+      generateImageFileName,
+      applyHideImageFolders: applyHideImageFolders2,
+      cleanupHideImageFolders: cleanupHideImageFolders2
+    };
+  }
+});
+
 // services/obsidian-fetch-adapter.js
 var require_obsidian_fetch_adapter = __commonJS({
   "services/obsidian-fetch-adapter.js"(exports2, module2) {
@@ -11305,6 +11470,7 @@ var { resolveSyncAccount, toSyncFriendlyMessage } = require_sync_context();
 var { processAllImages: processAllImagesService, processMathFormulas: processMathFormulasService } = require_wechat_media();
 var { cleanHtmlForDraft: cleanHtmlForDraftService } = require_wechat_html_cleaner();
 var { rasterizeSvgToPngBlob } = require_svg_rasterizer();
+var { handleImagePaste, applyHideImageFolders, cleanupHideImageFolders } = require_image_paste_handler();
 var { createObsidianFetchAdapter } = require_obsidian_fetch_adapter();
 var APPLE_STYLE_VIEW = "apple-style-converter";
 var APPLE_STYLE_VIEW_TITLE = "\u5FAE\u4FE1\u516C\u4F17\u53F7\u8F6C\u6362\u5668";
@@ -11403,6 +11569,13 @@ var DEFAULT_SETTINGS = {
   cleanupUseSystemTrash: true,
   cleanupDirTemplate: "",
   // 发送成功后要清理的目录（支持 {{note}}）
+  // 粘贴图片自动保存
+  autoSaveImages: false,
+  // 默认关闭
+  imageAttachmentLocation: "${filename}_assets",
+  // 图片保存目录模式
+  hideImageFolders: false,
+  // 隐藏图片附件文件夹
   // 旧字段保留用于迁移检测
   wechatAppId: "",
   wechatAppSecret: "",
@@ -15655,6 +15828,21 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       });
     }
     this.renderAiSettingsSection(containerEl);
+    new Setting(containerEl).setName("\u56FE\u7247\u7C98\u8D34").setHeading();
+    new Setting(containerEl).setName("\u81EA\u52A8\u4FDD\u5B58\u7C98\u8D34\u56FE\u7247").setDesc("\u5F00\u542F\u540E\uFF0C\u5728\u7F16\u8F91\u5668\u4E2D\u7C98\u8D34\u56FE\u7247\u65F6\u81EA\u52A8\u4FDD\u5B58\u5230\u6307\u5B9A\u76EE\u5F55\uFF0C\u5E76\u63D2\u5165 Markdown \u5F15\u7528").addToggle((toggle) => toggle.setValue(this.plugin.settings.autoSaveImages || false).onChange(async (value) => {
+      this.plugin.settings.autoSaveImages = value;
+      await this.plugin.saveSettings();
+    }));
+    new Setting(containerEl).setName("\u56FE\u7247\u4FDD\u5B58\u76EE\u5F55").setDesc("\u652F\u6301 ${filename} \u548C {{note}} \u5360\u4F4D\u7B26\uFF08\u5F53\u524D\u6587\u6863\u540D\uFF09\u3002\u4E0D\u4EE5 / \u5F00\u5934\u65F6\u76F8\u5BF9\u4E8E\u6587\u6863\u6240\u5728\u76EE\u5F55\u3002\u4F8B\u5982\uFF1A${filename}_assets \u6216 /attachments").addText((text) => text.setPlaceholder("${filename}_assets").setValue(this.plugin.settings.imageAttachmentLocation || "").onChange(async (value) => {
+      this.plugin.settings.imageAttachmentLocation = value;
+      await this.plugin.saveSettings();
+      applyHideImageFolders(this.plugin.app, this.plugin.settings);
+    }));
+    new Setting(containerEl).setName("\u9690\u85CF\u56FE\u7247\u9644\u4EF6\u6587\u4EF6\u5939").setDesc("\u5F00\u542F\u540E\uFF0C\u5728\u6587\u4EF6\u6D4F\u89C8\u5668\u4E2D\u81EA\u52A8\u9690\u85CF\u4E0E\u4E0A\u65B9\u76EE\u5F55\u6A21\u5F0F\u5339\u914D\u7684\u56FE\u7247\u9644\u4EF6\u6587\u4EF6\u5939").addToggle((toggle) => toggle.setValue(this.plugin.settings.hideImageFolders || false).onChange(async (value) => {
+      this.plugin.settings.hideImageFolders = value;
+      await this.plugin.saveSettings();
+      applyHideImageFolders(this.plugin.app, this.plugin.settings);
+    }));
     new Setting(containerEl).setName("\u9AD8\u7EA7\u8BBE\u7F6E").setHeading();
     new Setting(containerEl).setName("\u53D1\u9001\u6210\u529F\u540E\u81EA\u52A8\u6E05\u7406\u8D44\u6E90").setDesc("\u9ED8\u8BA4\u5173\u95ED\u3002\u5F00\u542F\u540E\u4F1A\u5728\u521B\u5EFA\u8349\u7A3F\u6210\u529F\u540E\uFF0C\u5220\u9664\u4F60\u5728\u4E0B\u65B9\u914D\u7F6E\u7684\u76EE\u5F55\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.cleanupAfterSync).onChange(async (value) => {
       this.plugin.settings.cleanupAfterSync = value;
@@ -16216,6 +16404,14 @@ var AppleStylePlugin = class extends Plugin {
       }
     });
     this.addSettingTab(new AppleStyleSettingTab(this.app, this));
+    this.registerEvent(
+      this.app.workspace.on("editor-paste", (evt, editor, view) => {
+        handleImagePaste(this, evt, editor, view);
+      })
+    );
+    this.app.workspace.onLayoutReady(() => {
+      applyHideImageFolders(this.app, this.settings);
+    });
     this.app.workspace.onLayoutReady(() => {
       this.migrateLegacyConverterLeafTitles().catch((error) => {
         console.warn("\u540C\u6B65\u8F6C\u6362\u5668\u6807\u9898\u5931\u8D25:", error);
@@ -16473,6 +16669,7 @@ var AppleStylePlugin = class extends Plugin {
     }
   }
   onunload() {
+    cleanupHideImageFolders();
     console.log("\u{1F4DD} \u5FAE\u4FE1\u516C\u4F17\u53F7\u8F6C\u6362\u5668\u5DF2\u5378\u8F7D");
   }
 };
