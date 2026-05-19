@@ -130,6 +130,8 @@ const DEFAULT_SETTINGS = {
   defaultAccountId: '',
   // 代理设置
   proxyUrl: '',  // Cloudflare Worker 等代理地址
+  // 草稿缓存：{ [文件路径]: { mediaId, title, accountId, updatedAt } }
+  draftCache: {},
   // 预览设置
   usePhoneFrame: true, // 是否使用手机框预览
   // 渲染模式已切换为 native-only
@@ -406,6 +408,27 @@ class WechatAPI {
     });
   }
 
+  /**
+   * 获取永久素材列表（分页）
+   * 微信接口：POST cgi-bin/material/batchget_material
+   * @param {string} type - 素材类型：image/voice/video/news
+   * @param {number} offset - 偏移量
+   * @param {number} count - 每页数量（最大 20）
+   */
+  async batchGetMaterials(type, offset, count) {
+    return this.actionWithTokenRetry(async (token) => {
+      const url = `https://api.weixin.qq.com/cgi-bin/material/batchget_material?access_token=${token}`;
+      const data = await this.requestWithRetry(() => this.sendRequest(url, {
+        method: 'POST',
+        body: JSON.stringify({ type, offset, count })
+      }));
+      if (data.item !== undefined) {
+        return data;
+      }
+      throw new Error(`微信API报错: ${data.errmsg || JSON.stringify(data)} (${data.errcode || 'N/A'})`);
+    });
+  }
+
   async createDraft(article) {
     return this.actionWithTokenRetry(async (token) => {
       const url = `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${token}`;
@@ -422,6 +445,74 @@ class WechatAPI {
         return data;
       }
       throw new Error(`创建草稿失败: ${data.errmsg || JSON.stringify(data)} (${data.errcode || 'N/A'})`);
+    });
+  }
+
+  /**
+   * 获取草稿总数
+   * 微信接口：POST cgi-bin/draft/count
+   */
+  async getDraftCount() {
+    return this.actionWithTokenRetry(async (token) => {
+      const url = `https://api.weixin.qq.com/cgi-bin/draft/count?access_token=${token}`;
+      return await this.requestWithRetry(() => this.sendRequest(url, {
+        method: 'POST',
+        body: JSON.stringify({})
+      }));
+    });
+  }
+
+  /**
+   * 获取草稿列表（不含正文内容，用于标题匹配）
+   * 微信接口：POST cgi-bin/draft/batchget
+   * @param {number} offset - 偏移量
+   * @param {number} count - 每页数量（最大 20）
+   * @param {number} noContent - 1=不返回正文，节省流量
+   */
+  async batchGetDrafts(offset, count, noContent) {
+    return this.actionWithTokenRetry(async (token) => {
+      const url = `https://api.weixin.qq.com/cgi-bin/draft/batchget?access_token=${token}`;
+      return await this.requestWithRetry(() => this.sendRequest(url, {
+        method: 'POST',
+        body: JSON.stringify({ offset, count, no_content: noContent })
+      }));
+    });
+  }
+
+  /**
+   * 获取单个草稿详情
+   * 微信接口：POST cgi-bin/draft/get
+   * @param {string} mediaId - 草稿 media_id
+   */
+  async getDraft(mediaId) {
+    return this.actionWithTokenRetry(async (token) => {
+      const url = `https://api.weixin.qq.com/cgi-bin/draft/get?access_token=${token}`;
+      return await this.requestWithRetry(() => this.sendRequest(url, {
+        method: 'POST',
+        body: JSON.stringify({ media_id: mediaId })
+      }));
+    });
+  }
+
+  /**
+   * 更新已有草稿
+   * 微信接口：POST cgi-bin/draft/update
+   * @param {string} mediaId - 草稿 media_id
+   * @param {number} index - 文章在草稿中的位置（单图文为 0）
+   * @param {object} article - 文章内容
+   */
+  async updateDraft(mediaId, index, article) {
+    return this.actionWithTokenRetry(async (token) => {
+      const url = `https://api.weixin.qq.com/cgi-bin/draft/update?access_token=${token}`;
+      // updateDraft 非幂等，不走网络重试
+      const data = await this.sendRequest(url, {
+        method: 'POST',
+        body: JSON.stringify({ media_id: mediaId, index, articles: article })
+      });
+      if (data.errcode === 0 || data.errmsg === 'ok') {
+        return { media_id: mediaId };
+      }
+      throw new Error(`更新草稿失败: ${data.errmsg || JSON.stringify(data)} (${data.errcode || 'N/A'})`);
     });
   }
 
@@ -3719,9 +3810,19 @@ class AppleStyleView extends ItemView {
 
     // 封面逻辑：优先使用缓存 -> frontmatter.cover -> 文章第一张图
     let coverBase64 = cachedState?.coverBase64 || frontmatterMeta.coverSrc || this.getFirstImageFromArticle();
+    // 从微信素材库选择的 media_id（选中后直接使用，无需重新上传）
+    let thumbMediaId = cachedState?.thumbMediaId || '';
 
     // 更新 sessionCoverBase64 以便 onSyncToWechat 使用
     this.sessionCoverBase64 = coverBase64;
+    this.sessionThumbMediaId = thumbMediaId;
+
+    // 草稿缓存：检测当前文章是否已有关联草稿
+    const draftCache = this.plugin.settings.draftCache || {};
+    const cached = currentPath ? draftCache[currentPath] : null;
+    let draftMediaId = cached?.mediaId || '';
+    // 强制新建标记（用户点了"取消关联"后设为 true）
+    let forceNewDraft = false;
 
     // 账号选择器
     const accountSection = modal.contentEl.createDiv({ cls: 'wechat-modal-section' });
@@ -3781,6 +3882,15 @@ class AppleStyleView extends ItemView {
         syncBtn.disabled = false;
         syncBtn.setText('开始同步');
         syncBtn.removeClass('apple-btn-disabled');
+      } else if (thumbMediaId) {
+        // 从素材库选择但无法预览（没有 base64），显示文字标记
+        coverPreview.createEl('div', {
+          text: '已选择素材库图片',
+          cls: 'wechat-modal-cover-from-material'
+        });
+        syncBtn.disabled = false;
+        syncBtn.setText('开始同步');
+        syncBtn.removeClass('apple-btn-disabled');
       } else {
         // UI 优化：去除 emoji，使用纯净的提示样式 (样式在 CSS 中定义)
         coverPreview.createEl('div', {
@@ -3796,6 +3906,7 @@ class AppleStyleView extends ItemView {
 
     const coverBtns = coverContent.createDiv({ cls: 'wechat-modal-cover-btns' });
     const uploadBtn = coverBtns.createEl('button', { text: '上传' });
+    const selectBtn = coverBtns.createEl('button', { text: '选择', cls: 'wechat-cover-select-btn' });
 
     // 摘要设置
     const digestSection = advancedBody.createDiv({ cls: 'wechat-modal-section' });
@@ -3850,13 +3961,33 @@ class AppleStyleView extends ItemView {
     const cancelBtn = btnRow.createEl('button', { text: '取消' });
     cancelBtn.onclick = () => modal.close();
 
-    const syncBtn = btnRow.createEl('button', { text: '开始同步', cls: 'mod-cta' });
+    // 草稿状态提示区域（在同步按钮上方）
+    const draftStatusEl = modal.contentEl.createDiv({ cls: 'wechat-draft-status' });
+    const updateDraftStatusUI = () => {
+      draftStatusEl.empty();
+      if (draftMediaId && !forceNewDraft) {
+        draftStatusEl.createEl('span', { text: '已有草稿关联，同步将更新该草稿' });
+        const unlinkBtn = draftStatusEl.createEl('a', { text: '取消关联', cls: 'wechat-draft-unlink' });
+        unlinkBtn.onclick = (e) => {
+          e.preventDefault();
+          forceNewDraft = true;
+          syncBtn.setText('新建同步');
+          updateDraftStatusUI();
+        };
+      }
+    };
+
+    const syncBtn = btnRow.createEl('button', {
+      text: (draftMediaId && !forceNewDraft) ? '更新草稿' : '开始同步',
+      cls: 'mod-cta'
+    });
     // 初始化时就检查状态
     updatePreview();
+    updateDraftStatusUI();
 
     syncBtn.onclick = async () => {
-      if (!coverBase64) {
-        new Notice('❌ 请先设置封面图');
+      if (!coverBase64 && !thumbMediaId) {
+        new Notice('请先设置封面图');
         return;
       }
       modal.close();
@@ -3864,6 +3995,8 @@ class AppleStyleView extends ItemView {
       this.sessionCoverBase64 = coverBase64;
       // 传递用户输入的摘要，或使用自动提取的摘要
       this.sessionDigest = digestInput.value.trim() || autoDigest || '一键同步自 Obsidian';
+      // 草稿模式：有 mediaId 且非强制新建时走更新
+      this.sessionDraftMediaId = (!forceNewDraft && draftMediaId) ? draftMediaId : '';
       await this.onSyncToWechat();
     };
 
@@ -3878,13 +4011,15 @@ class AppleStyleView extends ItemView {
         const reader = new FileReader();
         reader.onload = (event) => {
           coverBase64 = event.target.result;
+          thumbMediaId = ''; // 上传新图片时清除素材选择
           this.sessionCoverBase64 = coverBase64;
+          this.sessionThumbMediaId = '';
           updatePreview();
 
           // 更新缓存
           if (currentPath) {
             const state = this.articleStates.get(currentPath) || {};
-            this.articleStates.set(currentPath, { ...state, coverBase64: coverBase64 });
+            this.articleStates.set(currentPath, { ...state, coverBase64: coverBase64, thumbMediaId: '' });
           }
         };
         reader.readAsDataURL(file);
@@ -3892,7 +4027,234 @@ class AppleStyleView extends ItemView {
       input.click();
     };
 
+    // 从微信素材库选择封面图
+    selectBtn.onclick = async () => {
+      const account = resolveSyncAccount({
+        accounts: this.plugin.settings.wechatAccounts || [],
+        selectedAccountId,
+        defaultAccountId: this.plugin.settings.defaultAccountId,
+      });
+      if (!account) {
+        new Notice('请先配置公众号账号');
+        return;
+      }
+
+      const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl);
+      await this.showMaterialPickerModal(api, (material) => {
+        // 选择素材后：使用 media_id 直接作为封面（无需重新上传）
+        thumbMediaId = material.media_id;
+        coverBase64 = material.url || ''; // 微信素材 URL 用于预览
+        this.sessionCoverBase64 = coverBase64;
+        this.sessionThumbMediaId = thumbMediaId;
+        updatePreview();
+
+        // 更新缓存
+        if (currentPath) {
+          const state = this.articleStates.get(currentPath) || {};
+          this.articleStates.set(currentPath, { ...state, coverBase64, thumbMediaId });
+        }
+      });
+    };
+
     modal.open();
+  }
+
+  /**
+   * 显示微信素材库选择对话框（图片类型）
+   * @param {WechatAPI} api - 微信 API 实例
+   * @param {Function} onSelect - 选择回调，参数为 { media_id, url, name }
+   */
+  async showMaterialPickerModal(api, onSelect) {
+    const { Modal } = require('obsidian');
+    const modal = new Modal(this.app);
+    modal.titleEl.setText('从素材库选择封面');
+    modal.contentEl.addClass('wechat-material-picker');
+
+    const PAGE_SIZE = 18;
+    let currentPage = 1;
+    let totalCount = 0;
+    let isLoading = false;
+    let selectedItem = null;
+
+    // 顶部工具栏
+    const toolbar = modal.contentEl.createDiv({ cls: 'wechat-material-toolbar' });
+    const uploadToLibBtn = toolbar.createEl('button', { text: '上传到素材库', cls: 'wechat-material-refresh-btn' });
+    const refreshBtn = toolbar.createEl('button', { text: '刷新', cls: 'wechat-material-refresh-btn' });
+
+    // 图片网格容器
+    const gridContainer = modal.contentEl.createDiv({ cls: 'wechat-material-grid' });
+
+    // 底部操作栏：左侧页码导航 + 右侧确认按钮
+    const footerBar = modal.contentEl.createDiv({ cls: 'wechat-material-footer' });
+    const paginationEl = footerBar.createDiv({ cls: 'wechat-material-pagination' });
+    const confirmBtn = footerBar.createEl('button', { text: '确认选择', cls: 'mod-cta wechat-material-confirm-btn' });
+    confirmBtn.disabled = true;
+
+    /**
+     * 渲染图片单元格
+     */
+    const renderCell = (item) => {
+      const cell = gridContainer.createDiv({ cls: 'wechat-material-cell' });
+
+      if (item.url) {
+        const img = cell.createEl('img', {
+          cls: 'wechat-material-thumb',
+          attr: { src: item.url, loading: 'lazy', alt: item.name || '' }
+        });
+        img.onerror = () => {
+          img.style.display = 'none';
+          cell.createDiv({ cls: 'wechat-material-thumb-fallback', text: item.name || '图片' });
+        };
+      } else {
+        cell.createDiv({ cls: 'wechat-material-thumb-fallback', text: item.name || '图片' });
+      }
+
+      const nameDiv = cell.createDiv({ cls: 'wechat-material-name' });
+      nameDiv.textContent = (item.name || '未命名').substring(0, 12);
+
+      // 恢复之前选中的高亮状态
+      if (selectedItem && selectedItem.media_id === item.media_id) {
+        cell.addClass('selected');
+      }
+
+      cell.addEventListener('click', () => {
+        gridContainer.querySelectorAll('.wechat-material-cell.selected').forEach((el) => {
+          el.removeClass('selected');
+        });
+        cell.addClass('selected');
+        selectedItem = item;
+        confirmBtn.disabled = false;
+      });
+    };
+
+    /**
+     * 渲染底部页码导航
+     */
+    const renderPagination = () => {
+      paginationEl.empty();
+      const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+      if (totalPages <= 1) return;
+
+      // 上一页
+      const prevBtn = paginationEl.createEl('button', { text: '上一页', cls: 'wechat-page-btn' });
+      prevBtn.disabled = currentPage <= 1;
+      prevBtn.onclick = () => { if (currentPage > 1) loadPage(currentPage - 1); };
+
+      // 页码按钮（最多显示 5 个）
+      const startPage = Math.max(1, currentPage - 2);
+      const endPage = Math.min(totalPages, startPage + 4);
+
+      for (let p = startPage; p <= endPage; p++) {
+        const pageBtn = paginationEl.createEl('button', {
+          text: String(p),
+          cls: p === currentPage ? 'wechat-page-btn wechat-page-btn-active' : 'wechat-page-btn'
+        });
+        const targetPage = p;
+        pageBtn.onclick = () => loadPage(targetPage);
+      }
+
+      // 下一页
+      const nextBtn = paginationEl.createEl('button', { text: '下一页', cls: 'wechat-page-btn' });
+      nextBtn.disabled = currentPage >= totalPages;
+      nextBtn.onclick = () => { if (currentPage < totalPages) loadPage(currentPage + 1); };
+    };
+
+    /**
+     * 加载指定页的素材数据
+     */
+    const loadPage = async (page) => {
+      if (isLoading) return;
+      isLoading = true;
+      currentPage = page;
+      gridContainer.empty();
+      gridContainer.createDiv({ cls: 'wechat-material-loading', text: '加载中...' });
+      paginationEl.empty();
+
+      try {
+        const offset = (page - 1) * PAGE_SIZE;
+        const data = await api.batchGetMaterials('image', offset, PAGE_SIZE);
+        const items = data.item || [];
+        totalCount = data.total_count || 0;
+
+        gridContainer.empty();
+
+        if (items.length > 0) {
+          items.forEach(renderCell);
+        } else if (page === 1) {
+          gridContainer.createDiv({ cls: 'wechat-material-empty', text: '素材库中暂无图片素材' });
+        }
+
+        renderPagination();
+      } catch (error) {
+        gridContainer.empty();
+        gridContainer.createDiv({ cls: 'wechat-material-empty', text: `加载失败: ${error.message}` });
+        renderPagination();
+      } finally {
+        isLoading = false;
+      }
+    };
+
+    // 事件绑定
+    // 上传本地图片到微信素材库
+    uploadToLibBtn.onclick = () => {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const uploadNotice = new Notice('正在上传到素材库...', 0);
+        try {
+          const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+          await api.uploadCover(blob);
+          uploadNotice.hide();
+          new Notice('上传成功');
+          // 上传成功后刷新到第 1 页
+          selectedItem = null;
+          confirmBtn.disabled = true;
+          await loadPage(1);
+        } catch (err) {
+          uploadNotice.hide();
+          new Notice(`上传失败: ${err.message}`);
+        }
+      };
+      fileInput.click();
+    };
+
+    refreshBtn.onclick = () => {
+      selectedItem = null;
+      confirmBtn.disabled = true;
+      loadPage(1);
+    };
+
+    confirmBtn.onclick = () => {
+      if (!selectedItem) return;
+      modal.close();
+      onSelect({
+        media_id: selectedItem.media_id,
+        url: selectedItem.url || '',
+        name: selectedItem.name || '',
+      });
+    };
+
+    modal.open();
+
+    // 强制扩大弹窗尺寸，覆盖 Obsidian 默认 Modal 限制
+    const modalEl = modal.modalEl;
+    if (modalEl) {
+      modalEl.style.width = '880px';
+      modalEl.style.maxWidth = '92vw';
+      modalEl.style.maxHeight = '88vh';
+    }
+    const containerEl = modal.containerEl;
+    if (containerEl) {
+      containerEl.style.display = 'flex';
+      containerEl.style.justifyContent = 'center';
+      containerEl.style.alignItems = 'center';
+    }
+
+    await loadPage(1);
   }
 
   /**
@@ -3931,19 +4293,21 @@ class AppleStyleView extends ItemView {
         getFirstImageFromArticle: this.getFirstImageFromArticle.bind(this),
       });
 
-      const { cleanupResult, imageUploadFailures, placeholderImageSources } = await syncService.syncToDraft({
+      const result = await syncService.syncToDraft({
         account,
         proxyUrl: this.plugin.settings.proxyUrl,
         currentHtml: this.getCurrentExportHtml(),
         activeFile,
         publishMeta,
         sessionCoverBase64: this.sessionCoverBase64,
+        sessionThumbMediaId: this.sessionThumbMediaId || '',
         sessionDigest: this.sessionDigest,
+        draftMediaId: this.sessionDraftMediaId || '',
         onStatus: (stage) => {
           if (stage === 'cover') notice.setMessage('正在处理封面图...');
           if (stage === 'images') notice.setMessage('正在同步正文图片...');
           if (stage === 'math') notice.setMessage('正在转换矢量图/数学公式...');
-          if (stage === 'draft') notice.setMessage('正在发送到微信草稿箱...');
+          if (stage === 'draft') notice.setMessage(this.sessionDraftMediaId ? '正在更新草稿...' : '正在发送到微信草稿箱...');
         },
         onImageProgress: (current, total) => {
           notice.setMessage(`正在同步正文图片 (${current}/${total})...`);
@@ -3953,8 +4317,27 @@ class AppleStyleView extends ItemView {
         },
       });
 
+      const { cleanupResult, imageUploadFailures, placeholderImageSources, mediaId: resultMediaId, isUpdate } = result;
+
+      // 同步成功后更新 draftCache
+      if (activeFile && resultMediaId) {
+        const filePath = activeFile.path;
+        const cache = this.plugin.settings.draftCache || {};
+        cache[filePath] = {
+          mediaId: resultMediaId,
+          title: activeFile.basename,
+          accountId: account.id || '',
+          updatedAt: Date.now(),
+        };
+        this.plugin.settings.draftCache = cache;
+        await this.plugin.saveSettings();
+      }
+
       notice.hide();
-      new Notice('✅ 同步成功！请前往微信公众号后台草稿箱查看');
+      const successMsg = isUpdate
+        ? '更新成功！草稿已更新'
+        : '同步成功！请前往微信公众号后台草稿箱查看';
+      new Notice(successMsg);
       const failedImageSources = Array.from(new Set([
         ...(Array.isArray(imageUploadFailures) ? imageUploadFailures.map(item => item?.src).filter(Boolean) : []),
         ...(Array.isArray(placeholderImageSources) ? placeholderImageSources.filter(Boolean) : []),
