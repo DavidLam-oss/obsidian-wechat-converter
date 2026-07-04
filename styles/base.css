@@ -1,0 +1,85 @@
+/**
+ * 🍎 Apple Style Formatter - 样式表
+ * 极简、优雅、专业的苹果风格排版
+ */
+
+/* ========================================
+   全局变量 - 苹果配色系统
+   ======================================== */
+:root {
+  /* 核心配色 (Light Mode) */
+  --apple-primary: #1d1d1f;
+  --apple-secondary: #6e6e73;
+  --apple-tertiary: #86868b;
+  --apple-background: #ffffff;
+  --apple-surface: #f5f5f7;
+
+  /* 强调色 */
+  --apple-accent: #0071e3;
+  --apple-accent-hover: #0077ed;
+
+  /* 语义色 */
+  --apple-success: #34c759;
+  --apple-warning: #ff9500;
+  --apple-error: #ff3b30;
+
+  /* 代码配色 */
+  --apple-code-text: #c7254e;
+  --apple-code-bg: #f5f5f7;
+  --apple-code-block-bg: #fafafa;
+  --apple-code-block-border: #e8e8ed;
+
+  /* 边框和分隔线 */
+  --apple-divider: #d2d2d7;
+  --apple-border: #e8e8ed;
+
+  /* 间距 */
+  --apple-spacing-xs: 4px;
+  --apple-spacing-sm: 8px;
+  --apple-spacing-md: 16px;
+  --apple-spacing-lg: 24px;
+  --apple-spacing-xl: 32px;
+  --apple-spacing-xxl: 48px;
+
+  /* 圆角 */
+  --apple-radius-sm: 4px;
+  --apple-radius-md: 8px;
+  --apple-radius-lg: 12px;
+
+  /* 字体 */
+  --apple-font-text: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'PingFang SC', Arial, sans-serif;
+  --apple-font-code: 'SF Mono', Menlo, Monaco, Consolas, monospace;
+}
+
+/* ========================================
+   深色模式适配 (Dark Mode)
+   ======================================== */
+.theme-dark {
+  --apple-primary: #dcddde;
+  --apple-secondary: #b3b3b3;
+  --apple-tertiary: #5c5c5c;
+  --apple-background: var(--background-primary);
+  --apple-surface: var(--background-secondary);
+  --apple-border: var(--background-modifier-border);
+  --apple-divider: var(--background-modifier-border);
+
+  --apple-code-text: #ff6b6b;
+  --apple-code-bg: #2d2d2d;
+  --apple-code-block-bg: #1e1e1e;
+  --apple-code-block-border: #333;
+}
+
+/* ========================================
+   视图容器
+   ======================================== */
+.apple-converter-container {
+  --apple-loading-accent: #7c3aed;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--apple-background);
+  font-family: var(--apple-font-text);
+  color: var(--apple-primary);
+  position: relative; /* 为悬浮层提供定位上下文 */
+}
+

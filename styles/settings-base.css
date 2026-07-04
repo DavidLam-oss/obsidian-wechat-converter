@@ -1,0 +1,45 @@
+/* 统一使用 Obsidian 界面字体 */
+.vertical-tab-content h2,
+.vertical-tab-content h3,
+.vertical-tab-content h4,
+.vertical-tab-content p,
+.vertical-tab-content .setting-item {
+  font-family: var(--font-interface);
+}
+
+/* 主标题 */
+.vertical-tab-content h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin: 0 0 4px 0;
+  padding: 0;
+}
+
+/* 区块标题 h3 */
+.vertical-tab-content h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin: 24px 0 8px 0;
+  padding: 16px 0 0 0;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+/* 首个 h3 不需要上边框 */
+.vertical-tab-content h3:first-of-type {
+  border-top: none;
+  margin-top: 16px;
+  padding-top: 0;
+}
+
+/* 子标题 h4 */
+.vertical-tab-content h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin: 16px 0 8px 0;
+  padding: 0;
+}
+
+

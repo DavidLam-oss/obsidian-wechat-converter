@@ -1,0 +1,127 @@
+/* ========================================
+   设置面板 Tab 导航
+   ======================================== */
+.apple-settings-github-banner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 12px 14px;
+  margin: 2px 0 16px;
+  border: none;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, #f6c343 18%, transparent), transparent 40%),
+    linear-gradient(135deg, color-mix(in srgb, var(--background-primary) 92%, var(--background-secondary)), var(--background-secondary));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--background-modifier-box-shadow) 14%, transparent);
+}
+
+.apple-settings-github-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: color-mix(in srgb, #f6c343 18%, var(--background-primary));
+  color: #b77900;
+}
+
+.apple-settings-github-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.apple-settings-github-copy {
+  min-width: 0;
+}
+
+.apple-settings-github-kicker {
+  color: var(--text-normal);
+  font-size: 13px;
+  font-weight: 720;
+  line-height: 1.25;
+}
+
+.apple-settings-github-desc {
+  margin: 3px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.apple-settings-github-button {
+  padding: 7px 13px;
+  border: 1px solid color-mix(in srgb, var(--text-normal) 14%, transparent);
+  border-radius: 999px;
+  background: var(--text-normal);
+  color: var(--background-primary);
+  font-size: 12px;
+  font-weight: 720;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+}
+
+.apple-settings-github-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--text-normal) 18%, transparent);
+}
+
+.apple-settings-tab-intro {
+  margin: -2px 0 16px;
+  padding: 0;
+}
+
+.apple-settings-tab-intro-desc {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.apple-settings-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--background-modifier-border);
+  margin: 16px 0;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+
+.apple-settings-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .apple-settings-tabs {
+    margin: 12px 0;
+  }
+  .apple-settings-tab {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+.apple-settings-tab:hover {
+  color: var(--text-normal);
+}
+
+.apple-settings-tab.active {
+  color: var(--text-accent);
+  border-bottom-color: var(--text-accent);
+}
+

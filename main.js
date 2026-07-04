@@ -4404,11 +4404,11 @@ var require_apple_theme = __commonJS({
 // converter.js
 var require_converter = __commonJS({
   "converter.js"(exports, module2) {
-    function isRecord10(value) {
+    function isRecord26(value) {
       return !!value && typeof value === "object" && !Array.isArray(value);
     }
-    function toRecord7(value) {
-      return isRecord10(value) ? value : {};
+    function toRecord23(value) {
+      return isRecord26(value) ? value : {};
     }
     function toText3(value) {
       return typeof value === "string" ? value : "";
@@ -4421,16 +4421,16 @@ var require_converter = __commonJS({
         return text;
       }
     }
-    function normalizeVaultPath2(value) {
+    function normalizeVaultPath15(value) {
       return String(value || "").trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/{2,}/g, "/");
     }
     function getVaultDirname(filePath) {
-      const normalized = normalizeVaultPath2(filePath);
+      const normalized = normalizeVaultPath15(filePath);
       const index = normalized.lastIndexOf("/");
       return index > 0 ? normalized.slice(0, index) : "";
     }
     function joinVaultPath2(...parts) {
-      return normalizeVaultPath2(parts.filter(Boolean).join("/"));
+      return normalizeVaultPath15(parts.filter(Boolean).join("/"));
     }
     function getToken(tokens, idx) {
       return tokens[idx] || {};
@@ -4527,7 +4527,7 @@ var require_converter = __commonJS({
       typeof window !== "undefined" ? window : {}
     );
     function getRuntimeDependency(name) {
-      const runtimeWindow = typeof window !== "undefined" ? toRecord7(window) : {};
+      const runtimeWindow = typeof window !== "undefined" ? toRecord23(window) : {};
       if (typeof runtimeWindow[name] !== "undefined") {
         return runtimeWindow[name];
       }
@@ -4620,7 +4620,7 @@ var require_converter = __commonJS({
           }
           const vault = this.app.vault;
           const candidates = [];
-          const normalized = normalizeVaultPath2(linkPath);
+          const normalized = normalizeVaultPath15(linkPath);
           if (normalized)
             candidates.push(normalized);
           const noteDir = getVaultDirname(sourcePath);
@@ -5480,16 +5480,182 @@ __export(input_exports, {
   AppleStylePlugin: () => AppleStylePlugin,
   AppleStyleSettingTab: () => AppleStyleSettingTab,
   AppleStyleView: () => AppleStyleView,
-  WechatAPI: () => WechatAPI,
-  createImageSwipeCalloutMarkdown: () => createImageSwipeCalloutMarkdown,
+  WechatAPI: () => WechatAPI14,
+  createImageSwipeCalloutMarkdown: () => createImageSwipeCalloutMarkdown14,
   default: () => input_default,
-  describeWechatsyncConnectionState: () => describeWechatsyncConnectionState,
-  formatWechatsyncCheckedAt: () => formatWechatsyncCheckedAt,
-  getImageSwipeCommandCopy: () => getImageSwipeCommandCopy,
-  renderWechatsyncConnectionStatusBar: () => renderWechatsyncConnectionStatusBar,
-  stripMarkdownFrontmatter: () => stripMarkdownFrontmatter
+  describeWechatsyncConnectionState: () => describeWechatsyncConnectionState14,
+  formatWechatsyncCheckedAt: () => formatWechatsyncCheckedAt14,
+  getImageSwipeCommandCopy: () => getImageSwipeCommandCopy14,
+  renderWechatsyncConnectionStatusBar: () => renderWechatsyncConnectionStatusBar14,
+  stripMarkdownFrontmatter: () => stripMarkdownFrontmatter14
 });
 module.exports = __toCommonJS(input_exports);
+
+// views/apple-style-view-shared.js
+var apple_style_view_shared_exports = {};
+__export(apple_style_view_shared_exports, {
+  AI_LAYOUT_SCHEMA_VERSION: () => AI_LAYOUT_SCHEMA_VERSION,
+  AI_LAYOUT_SELECTION_AUTO: () => AI_LAYOUT_SELECTION_AUTO,
+  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: () => AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS,
+  AI_PROVIDER_KINDS: () => AI_PROVIDER_KINDS,
+  APPLE_STYLE_VIEW: () => APPLE_STYLE_VIEW,
+  APPLE_STYLE_VIEW_TITLE: () => APPLE_STYLE_VIEW_TITLE,
+  DEFAULT_SETTINGS: () => DEFAULT_SETTINGS,
+  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: () => DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS,
+  GITHUB_REPOSITORY_URL: () => GITHUB_REPOSITORY_URL,
+  IMAGE_SWIPE_COMMAND_COPY: () => IMAGE_SWIPE_COMMAND_COPY,
+  ItemView: () => ItemView,
+  LEGACY_SETTING_RENDER_KEY: () => LEGACY_SETTING_RENDER_KEY2,
+  MAX_ACCOUNTS: () => MAX_ACCOUNTS,
+  MULTI_PLATFORM_TAB_LABEL: () => MULTI_PLATFORM_TAB_LABEL,
+  MarkdownView: () => MarkdownView,
+  Notice: () => Notice,
+  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: () => OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL2,
+  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: () => OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL2,
+  OBSIDIAN_PUBLISHER_GUIDE_URL: () => OBSIDIAN_PUBLISHER_GUIDE_URL,
+  OBSIDIAN_PUBLISHER_PRO_URL: () => OBSIDIAN_PUBLISHER_PRO_URL2,
+  PLACEHOLDER_ICON_DATA_URL: () => PLACEHOLDER_ICON_DATA_URL,
+  Platform: () => Platform,
+  Plugin: () => Plugin,
+  PluginSettingTab: () => PluginSettingTab,
+  Setting: () => Setting,
+  WechatAPI: () => WechatAPI,
+  bufferFromBinary: () => bufferFromBinary2,
+  buildRenderRuntime: () => buildRenderRuntime,
+  canUseNativePreviewFastPath: () => canUseNativePreviewFastPath,
+  cleanHtmlForDraftService: () => cleanHtmlForDraft,
+  clearDraftAssociation: () => clearDraftAssociation,
+  convertRenderedMermaidDiagramsToImages: () => convertRenderedMermaidDiagramsToImages,
+  createDefaultAiSettings: () => createDefaultAiSettings,
+  createDefaultFeishuSyncSettings: () => createDefaultFeishuSyncSettings,
+  createDefaultMultiPlatformSyncSettings: () => createDefaultMultiPlatformSyncSettings,
+  createDefaultSettingsObject: () => createDefaultSettings,
+  createEmptyDraftCache: () => createEmptyDraftCache,
+  createFallbackSvgElement: () => createFallbackSvgElement,
+  createHtmlContainer: () => createHtmlContainer,
+  createImageSwipeCalloutMarkdown: () => createImageSwipeCalloutMarkdown,
+  createObsidianFetchAdapter: () => createObsidianFetchAdapter,
+  createObsidianModal: () => createObsidianModal,
+  createProxyError: () => createProxyError2,
+  createRenderPipelines: () => createRenderPipelines,
+  createWechatSyncBridgeService: () => createWechatSyncBridgeService,
+  createWechatSyncService: () => createWechatSyncService,
+  dataUrlToBlob: () => dataUrlToBlob,
+  deriveArticleLayoutStateForSelection: () => deriveArticleLayoutStateForSelection,
+  describeWechatsyncConnectionState: () => describeWechatsyncConnectionState,
+  extractImageRefsFromHtml: () => extractImageRefsFromHtml,
+  extractRenderedSectionFragments: () => extractRenderedSectionFragments,
+  formatWechatApiError: () => formatWechatApiError2,
+  formatWechatsyncCheckedAt: () => formatWechatsyncCheckedAt,
+  generateArticleLayout: () => generateArticleLayout,
+  generateId: () => generateId,
+  getActiveDocument: () => getActiveDocument,
+  getActiveDocumentCompat: () => getActiveDocumentCompat,
+  getActiveWindowValue: () => getActiveWindowValue,
+  getAiProviderIssues: () => getAiProviderIssues,
+  getAppleThemeApi: () => getAppleThemeApi,
+  getArticleLayoutSelectionState: () => getArticleLayoutSelectionState,
+  getAvailableWechatsyncPlatforms: () => getAvailableWechatsyncPlatforms,
+  getColorPaletteById: () => getColorPaletteById,
+  getColorPaletteList: () => getColorPaletteList,
+  getDraftAssociation: () => getDraftAssociation,
+  getEventTargetValue: () => getEventTargetValue,
+  getFileUrlLocalPath: () => getFileUrlLocalPath,
+  getImageSwipeCommandCopy: () => getImageSwipeCommandCopy,
+  getLayoutFamilyById: () => getLayoutFamilyById,
+  getLayoutFamilyList: () => getLayoutFamilyList,
+  getMultiPlatformResultSummary: () => getMultiPlatformResultSummary,
+  getObsidianLocale: () => getObsidianLocale,
+  getObsidianModalClass: () => getObsidianModalClass,
+  getObsidianRequest: () => getObsidianRequest,
+  getObsidianRequestUrl: () => getObsidianRequestUrl,
+  getObsidianSetIcon: () => getObsidianSetIcon,
+  getPluginSettings: () => getPluginSettings,
+  getProxyErrorMessage: () => getProxyErrorMessage2,
+  getResponseJsonRecord: () => getResponseJsonRecord2,
+  getValueElementFromEvent: () => getValueElementFromEvent,
+  getVaultAdapterBasePath: () => getVaultAdapterBasePath,
+  getVaultDirnameFromPath: () => getVaultDirnameFromPath,
+  getVaultRelativePathFromLocalPath: () => getVaultRelativePathFromLocalPath2,
+  getWechatAccountPublishOptions: () => getWechatAccountPublishOptions,
+  getWechatSyncResultError: () => getWechatSyncResultError,
+  getWechatSyncResultPlatformId: () => getWechatSyncResultPlatformId,
+  getWechatSyncResultUrl: () => getWechatSyncResultUrl,
+  hasWechatSyncCapability: () => hasWechatSyncCapability,
+  hasWechatUploadResult: () => hasWechatUploadResult2,
+  htmlToText: () => htmlToText,
+  inferLocalImageMimeType: () => inferLocalImageMimeType,
+  isAbsolutePathLike: () => isAbsolutePathLike,
+  isAiProviderRunnable: () => isAiProviderRunnable,
+  isChineseObsidianLocale: () => isChineseObsidianLocale,
+  isMobileClient: () => isMobileClient3,
+  isMobileClientBase: () => isMobileClient2,
+  isRecord: () => isRecord10,
+  isWechatSyncUnsupportedMethodError: () => isUnsupportedBridgeMethodError,
+  loadCommonJsDependency: () => loadCommonJsDependency,
+  mapAppUrlImagesToAssetUrls: () => mapAppUrlImagesToAssetUrls,
+  normalizeAbsoluteLocalPath: () => normalizeAbsoluteLocalPath2,
+  normalizeAiProvider: () => normalizeAiProvider,
+  normalizeAiSettings: () => normalizeAiSettings,
+  normalizeArticleLayoutCacheEntry: () => normalizeArticleLayoutCacheEntry,
+  normalizeArticleLayoutState: () => normalizeArticleLayoutState,
+  normalizeDraftCache: () => normalizeDraftCache,
+  normalizeFeishuSyncSettings: () => normalizeFeishuSyncSettings,
+  normalizeHexColor: () => normalizeHexColor,
+  normalizeLayoutSelection: () => normalizeLayoutSelection,
+  normalizeMultiPlatformSyncSettings: () => normalizeMultiPlatformSyncSettings,
+  normalizeRequestUrlResponse: () => normalizeRequestUrlResponse2,
+  normalizeVaultPath: () => normalizeVaultPath,
+  normalizeWechatAccountPublishOptions: () => normalizeWechatAccountPublishOptions,
+  normalizeWechatsyncPlatform: () => normalizeWechatsyncPlatform,
+  obsidianApi: () => obsidianApi,
+  pMap: () => pMap,
+  parseJsonRecord: () => parseJsonRecord2,
+  parseWechatsyncPlatformIds: () => parseWechatsyncPlatformIds,
+  processAllImagesService: () => processAllImages,
+  processMathFormulasService: () => processMathFormulas,
+  quoteLinesForImageSwipeCallout: () => quoteLinesForImageSwipeCallout,
+  rasterizeSvgToPngBlob: () => rasterizeSvgToPngBlob,
+  readBlobAsBase64Payload: () => readBlobAsBase64Payload2,
+  refreshSettingTabCompat: () => refreshSettingTabCompat,
+  removeElementClass: () => removeElementClass,
+  renderArticleLayoutHtml: () => renderArticleLayoutHtml,
+  renderFeishuPublishTab: () => renderFeishuPublishTab,
+  renderFeishuSettingsTab: () => renderFeishuSettingsTab,
+  renderMultiPlatformSettingsTab: () => renderMultiPlatformSettingsTab,
+  renderNativeMarkdown: () => renderNativeMarkdown,
+  renderObsidianTripletMarkdown: () => renderObsidianTripletMarkdown,
+  renderWechatsyncConnectionStatusBar: () => renderWechatsyncConnectionStatusBar,
+  resolveAiProvider: () => resolveAiProvider,
+  resolveColorPaletteForRender: () => resolveColorPaletteForRender,
+  resolveMarkdownSource: () => resolveMarkdownSource,
+  resolveSyncAccount: () => resolveSyncAccount,
+  revealLeafCompat: () => revealLeafCompat,
+  safeDecodeUriText: () => safeDecodeUriText,
+  setDestructiveButtonCompat: () => setDestructiveButtonCompat,
+  setDraftAssociation: () => setDraftAssociation,
+  setElementHtml: () => setElementHtml,
+  setPluginSettings: () => setPluginSettings,
+  showMultiPlatformPublishModal: () => showMultiPlatformPublishModal,
+  sleep: () => sleep2,
+  sortWechatsyncPlatformItemsForDisplay: () => sortWechatsyncPlatformItemsForDisplay,
+  stripMarkdownFrontmatter: () => stripMarkdownFrontmatter,
+  summarizeAiProviderIssues: () => summarizeAiProviderIssues,
+  testAiProviderConnection: () => testAiProviderConnection,
+  toAiLayoutBlock: () => toAiLayoutBlock,
+  toAiLayoutFamilyStates: () => toAiLayoutFamilyStates,
+  toAiLayoutGenerationMeta: () => toAiLayoutGenerationMeta,
+  toAiLayoutJson: () => toAiLayoutJson,
+  toAiLayoutSelection: () => toAiLayoutSelection,
+  toAiLayoutState: () => toAiLayoutState,
+  toImageElements: () => toImageElements,
+  toOptionalNumber: () => toOptionalNumber2,
+  toOptionalText: () => toOptionalText2,
+  toReadableError: () => toReadableError4,
+  toRecord: () => toRecord7,
+  toSyncFriendlyMessage: () => toSyncFriendlyMessage,
+  updateFeishuHistoryPath: () => updateFeishuHistoryPath
+});
 
 // services/render-pipeline.js
 var NativeRenderPipeline = class {
@@ -37554,11 +37720,11 @@ async function renderNativeMarkdown({
 
 // services/obsidian-triplet-renderer.js
 function getDefaultMarkdownRenderer() {
-  const obsidianApi2 = (
+  const obsidianApi15 = (
     /** @type {{ MarkdownRenderer?: MarkdownRendererLike } | undefined} */
     getActiveWindowValue("obsidian")
   );
-  return (obsidianApi2 == null ? void 0 : obsidianApi2.MarkdownRenderer) || null;
+  return (obsidianApi15 == null ? void 0 : obsidianApi15.MarkdownRenderer) || null;
 }
 function isFencedBlockDelimiter(line) {
   return /^\s{0,3}(?:`{3,}|~{3,})/.test(String(line || ""));
@@ -41190,7 +41356,7 @@ function validateAiLayoutPayload(rawLayout) {
   };
 }
 
-// services/ai-layout.js
+// services/ai-layout/constants.js
 var AI_LAYOUT_SCHEMA_VERSION = 1;
 var AI_PROVIDER_KINDS = {
   OPENAI_COMPATIBLE: "openai-compatible",
@@ -41261,6 +41427,8 @@ var AI_PROVIDER_KIND_DEFAULTS = {
     model: "claude-3-5-haiku-latest"
   }
 };
+
+// services/ai-layout/utils.js
 function isRecord(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
@@ -41315,25 +41483,17 @@ function clearAiLayoutTimeout(timer) {
     return;
   window.clearTimeout(timer);
 }
-function createDefaultAiSettings() {
-  return {
-    enabled: true,
-    defaultProviderId: "",
-    defaultLayoutFamily: AI_LAYOUT_SELECTION_AUTO,
-    defaultColorPalette: AI_LAYOUT_SELECTION_AUTO,
-    customColor: "#7c3aed",
-    includeImagesInLayout: true,
-    requestTimeoutMs: DEFAULT_AI_REQUEST_TIMEOUT_MS,
-    providers: [],
-    articleLayoutsByPath: {}
-  };
-}
 function clampNumber(value, fallback, min, max) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed))
     return fallback;
   return Math.min(max, Math.max(min, Math.round(parsed)));
 }
+function coerceString(value, fallback = "") {
+  return typeof value === "string" ? value.trim() : fallback;
+}
+
+// services/ai-layout/color.js
 function normalizeHexColor(value, fallback = "#7c3aed") {
   const raw = String(value || "").trim();
   if (/^#[0-9a-f]{6}$/i.test(raw))
@@ -41385,6 +41545,8 @@ function createColorPaletteFromAccent(accentColor, { id = "custom", label = "\u8
     }
   };
 }
+
+// services/ai-layout/catalog.js
 function normalizeLayoutFamily(value, fallback = AI_LAYOUT_SELECTION_AUTO) {
   const normalized = coerceString(value);
   if (normalized === AI_LAYOUT_SELECTION_AUTO)
@@ -41525,36 +41687,8 @@ function resolveColorPaletteForRender(id, override = {}) {
   }
   return getColorPaletteById(normalizedId);
 }
-function resolveLayoutSelection({
-  requestedSelection = {},
-  rawLayout = {},
-  signals = null,
-  imageRefs = []
-} = {}) {
-  const selection = normalizeLayoutSelection(requestedSelection);
-  const rawLayoutRecord = toRecord(rawLayout);
-  const rawResolved = toSelectionRecord(rawLayoutRecord.resolved);
-  const inferredLayoutFamily = recommendLayoutFamily({ rawLayout, signals, imageRefs });
-  const inferredColorPalette = recommendColorPalette({ rawLayout, signals });
-  const recommendedLayoutFamily = normalizeResolvedLayoutFamily(
-    rawLayoutRecord.recommendedLayoutFamily || rawResolved.layoutFamily || rawLayoutRecord.layoutFamily,
-    inferredLayoutFamily
-  );
-  const recommendedColorPalette = normalizeAutoRecommendedColorPalette(
-    rawLayoutRecord.recommendedColorPalette || rawResolved.colorPalette || rawLayoutRecord.stylePack,
-    inferredColorPalette
-  );
-  const resolved = {
-    layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO ? recommendedLayoutFamily : normalizeResolvedLayoutFamily(selection.layoutFamily, recommendedLayoutFamily),
-    colorPalette: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO ? recommendedColorPalette : normalizeResolvedColorPalette(selection.colorPalette, recommendedColorPalette)
-  };
-  return {
-    selection,
-    resolved,
-    recommendedLayoutFamily,
-    recommendedColorPalette
-  };
-}
+
+// services/ai-layout/providers.js
 function normalizeAiProvider(raw = {}) {
   const source = toRecord(raw);
   const id = typeof source.id === "string" && source.id.trim() ? source.id.trim() : `ai_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -41630,6 +41764,25 @@ function summarizeAiProviderIssues(provider = {}) {
   };
   return issues.map((issue) => labels[issue] || issue).join(" / ");
 }
+function listEnabledAiProviders(aiSettings = {}) {
+  return Array.isArray(aiSettings.providers) ? aiSettings.providers.map(normalizeAiProvider).filter((provider) => provider.enabled !== false && isAiProviderRunnable(provider)) : [];
+}
+function resolveAiProvider(aiSettings = {}, providerId = "") {
+  const providers = listEnabledAiProviders(aiSettings);
+  if (providerId) {
+    const matched = providers.find((provider) => provider.id === providerId);
+    if (matched)
+      return matched;
+  }
+  if (aiSettings.defaultProviderId) {
+    const matched = providers.find((provider) => provider.id === aiSettings.defaultProviderId);
+    if (matched)
+      return matched;
+  }
+  return providers[0] || null;
+}
+
+// services/ai-layout/block-utils.js
 function getLayoutBlockLabel(block = {}) {
   const source = toRecord(block);
   return coerceString(
@@ -41640,6 +41793,8 @@ function getLayoutBlockKey(block = {}) {
   const source = toRecord(block);
   return `${coerceString(source.type)}:${getLayoutBlockLabel(source)}`;
 }
+
+// services/ai-layout/schema-validation.js
 function normalizeGenerationBlockOrigin(raw = {}, fallbackIndex = 0) {
   const rawRecord = toRecord(raw);
   if (!Object.keys(rawRecord).length)
@@ -41745,6 +41900,8 @@ var AiLayoutTimeoutError = class extends Error {
     this.timeoutMs = Number(timeoutMs || 0);
   }
 };
+
+// services/ai-layout/state-cache.js
 function normalizeArticleLayoutState(raw = {}) {
   var _a5;
   const source = toRecord(raw);
@@ -41951,21 +42108,20 @@ function normalizeArticleLayoutCacheEntry(raw = {}) {
     stylePackStates
   };
 }
-function truncateMarkdownForPrompt(markdown = "", maxChars = 12e3) {
-  const content = String(markdown || "").trim();
-  if (!content || content.length <= maxChars)
-    return content;
-  const headLength = Math.max(2e3, Math.floor(maxChars * 0.72));
-  const tailLength = Math.max(800, maxChars - headLength);
-  const head = content.slice(0, headLength).trimEnd();
-  const tail = content.slice(-tailLength).trimStart();
-  return [
-    head,
-    "",
-    "[\u5185\u5BB9\u5DF2\u622A\u65AD\uFF0C\u4E3A\u4E86\u63A7\u5236\u8BF7\u6C42\u89C4\u6A21\uFF0C\u8FD9\u91CC\u7701\u7565\u4E86\u4E2D\u95F4\u90E8\u5206\u6B63\u6587\u3002]",
-    "",
-    tail
-  ].join("\n");
+
+// services/ai-layout/settings.js
+function createDefaultAiSettings() {
+  return {
+    enabled: true,
+    defaultProviderId: "",
+    defaultLayoutFamily: AI_LAYOUT_SELECTION_AUTO,
+    defaultColorPalette: AI_LAYOUT_SELECTION_AUTO,
+    customColor: "#7c3aed",
+    includeImagesInLayout: true,
+    requestTimeoutMs: DEFAULT_AI_REQUEST_TIMEOUT_MS,
+    providers: [],
+    articleLayoutsByPath: {}
+  };
 }
 function normalizeAiSettings(raw = {}) {
   var _a5;
@@ -42003,266 +42159,23 @@ function normalizeAiSettings(raw = {}) {
     articleLayoutsByPath
   };
 }
-function getArticleLayoutSelectionState(entry, selection = {}, defaults = {}) {
-  const normalizedEntry = normalizeArticleLayoutCacheEntry(entry);
-  if (!normalizedEntry)
-    return null;
-  const normalizedSelection = normalizeLayoutSelection(selection, defaults);
-  const requestedLayoutFamily = normalizeLayoutFamily(normalizedSelection.layoutFamily, AI_LAYOUT_SELECTION_AUTO);
-  const familyStates = normalizedEntry.familyStates || {};
-  const familyKeys = Object.keys(familyStates);
-  if (!familyKeys.length)
-    return null;
-  if (requestedLayoutFamily !== AI_LAYOUT_SELECTION_AUTO) {
-    const requestedResolvedLayoutFamily = normalizeResolvedLayoutFamily(requestedLayoutFamily, AI_LAYOUT_DEFAULT_FAMILY);
-    return familyStates[requestedResolvedLayoutFamily] || null;
-  }
-  if (normalizedEntry.lastAutoResolvedFamily && familyStates[normalizedEntry.lastAutoResolvedFamily]) {
-    return familyStates[normalizedEntry.lastAutoResolvedFamily];
-  }
-  if (normalizedEntry.lastLayoutFamily && familyStates[normalizedEntry.lastLayoutFamily]) {
-    return familyStates[normalizedEntry.lastLayoutFamily];
-  }
-  return familyStates[familyKeys[0]] || null;
-}
-function deriveArticleLayoutStateForSelection(state, selection = {}, defaults = {}) {
-  var _a5, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
-  const normalizedState = normalizeArticleLayoutState(state);
-  if (!((_b = (_a5 = normalizedState == null ? void 0 : normalizedState.layoutJson) == null ? void 0 : _a5.blocks) == null ? void 0 : _b.length))
-    return null;
-  if (normalizedState.status !== "ready")
-    return null;
-  const requestedSelection = normalizeLayoutSelection(selection, {
-    layoutFamily: ((_c = normalizedState.selection) == null ? void 0 : _c.layoutFamily) || toSelectionRecord(defaults).layoutFamily || AI_LAYOUT_SELECTION_AUTO,
-    colorPalette: ((_d = normalizedState.selection) == null ? void 0 : _d.colorPalette) || toSelectionRecord(defaults).colorPalette || AI_LAYOUT_SELECTION_AUTO
-  });
-  const requestedColorPalette = normalizeColorPalette(
-    requestedSelection.colorPalette,
-    ((_e = normalizedState.selection) == null ? void 0 : _e.colorPalette) || toSelectionRecord(defaults).colorPalette || AI_LAYOUT_SELECTION_AUTO
-  );
-  if (!requestedColorPalette || requestedColorPalette === AI_LAYOUT_SELECTION_AUTO)
-    return null;
-  const baseResolvedLayoutFamily = normalizeResolvedLayoutFamily(
-    ((_f = normalizedState.resolved) == null ? void 0 : _f.layoutFamily) || normalizedState.layoutFamily,
-    AI_LAYOUT_DEFAULT_FAMILY
-  );
-  const baseSelectedLayoutFamily = normalizeLayoutFamily(
-    (_g = normalizedState.selection) == null ? void 0 : _g.layoutFamily,
-    AI_LAYOUT_SELECTION_AUTO
-  );
-  const requestedLayoutFamily = normalizeLayoutFamily(
-    requestedSelection.layoutFamily,
-    ((_h = normalizedState.selection) == null ? void 0 : _h.layoutFamily) || toSelectionRecord(defaults).layoutFamily || AI_LAYOUT_SELECTION_AUTO
-  );
-  const isCompatibleLayout = requestedLayoutFamily === AI_LAYOUT_SELECTION_AUTO || requestedLayoutFamily === baseSelectedLayoutFamily || requestedLayoutFamily === baseResolvedLayoutFamily;
-  if (!isCompatibleLayout)
-    return null;
-  const nextResolvedColorPalette = normalizeResolvedColorPalette(
-    requestedColorPalette,
-    ((_i = normalizedState.resolved) == null ? void 0 : _i.colorPalette) || AI_LAYOUT_DEFAULT_COLOR_PALETTE
-  );
-  const nextColorPaletteLabel = ((_j = getColorPaletteById(nextResolvedColorPalette)) == null ? void 0 : _j.label) || nextResolvedColorPalette;
-  const nextSelection = {
-    layoutFamily: requestedLayoutFamily || ((_k = normalizedState.selection) == null ? void 0 : _k.layoutFamily) || AI_LAYOUT_SELECTION_AUTO,
-    colorPalette: requestedColorPalette
-  };
-  const nextLayoutJson = {
-    ...toRecord(normalizedState.layoutJson),
-    selection: {
-      ...toRecord(toRecord(normalizedState.layoutJson).selection),
-      ...nextSelection
-    },
-    resolved: {
-      ...toRecord(toRecord(normalizedState.layoutJson).resolved),
-      layoutFamily: baseResolvedLayoutFamily,
-      colorPalette: nextResolvedColorPalette
-    },
-    recommendedLayoutFamily: normalizedState.recommendedLayoutFamily,
-    recommendedColorPalette: normalizedState.recommendedColorPalette,
-    stylePack: nextResolvedColorPalette,
-    layoutFamily: baseResolvedLayoutFamily
-  };
-  const nextGenerationMeta = normalizeLayoutGenerationMeta({
-    ...normalizedState.generationMeta || {},
-    colorPaletteLabel: nextColorPaletteLabel,
-    stylePackLabel: nextColorPaletteLabel
-  }, nextLayoutJson);
-  return normalizeArticleLayoutState({
-    ...normalizedState,
-    selection: nextSelection,
-    resolved: {
-      layoutFamily: baseResolvedLayoutFamily,
-      colorPalette: nextResolvedColorPalette
-    },
-    recommendedLayoutFamily: normalizedState.recommendedLayoutFamily,
-    recommendedColorPalette: normalizedState.recommendedColorPalette,
-    stylePack: nextResolvedColorPalette,
-    layoutFamily: baseResolvedLayoutFamily,
-    generationMeta: nextGenerationMeta,
-    layoutJson: nextLayoutJson
-  });
-}
-function listEnabledAiProviders(aiSettings = {}) {
-  return Array.isArray(aiSettings.providers) ? aiSettings.providers.map(normalizeAiProvider).filter((provider) => provider.enabled !== false && isAiProviderRunnable(provider)) : [];
-}
-function resolveAiProvider(aiSettings = {}, providerId = "") {
-  const providers = listEnabledAiProviders(aiSettings);
-  if (providerId) {
-    const matched = providers.find((provider) => provider.id === providerId);
-    if (matched)
-      return matched;
-  }
-  if (aiSettings.defaultProviderId) {
-    const matched = providers.find((provider) => provider.id === aiSettings.defaultProviderId);
-    if (matched)
-      return matched;
-  }
-  return providers[0] || null;
-}
-function extractJsonPayload(text) {
-  const content = String(text || "").trim();
-  if (!content)
-    throw new Error("AI \u672A\u8FD4\u56DE\u5185\u5BB9");
-  const fencedMatch = content.match(/```json\s*([\s\S]*?)```/i) || content.match(/```\s*([\s\S]*?)```/i);
-  const candidate = fencedMatch ? fencedMatch[1].trim() : content;
-  const firstBrace = candidate.indexOf("{");
-  const lastBrace = candidate.lastIndexOf("}");
-  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-    throw new Error("AI \u8FD4\u56DE\u7ED3\u679C\u4E0D\u662F\u6709\u6548 JSON");
-  }
-  return candidate.slice(firstBrace, lastBrace + 1);
-}
-function sanitizeJsonStringLiteralControls(payload = "") {
-  const raw = String(payload || "");
-  if (!raw)
-    return raw;
-  let sanitized = "";
-  let inString = false;
-  let isEscaped = false;
-  for (let index = 0; index < raw.length; index += 1) {
-    const char = raw[index];
-    const charCode = raw.charCodeAt(index);
-    if (!inString) {
-      sanitized += char;
-      if (char === '"')
-        inString = true;
-      continue;
-    }
-    if (isEscaped) {
-      sanitized += char;
-      isEscaped = false;
-      continue;
-    }
-    if (char === "\\") {
-      sanitized += char;
-      isEscaped = true;
-      continue;
-    }
-    if (char === '"') {
-      sanitized += char;
-      inString = false;
-      continue;
-    }
-    if (charCode <= 31) {
-      if (char === "\n")
-        sanitized += "\\n";
-      else if (char === "\r")
-        sanitized += "\\r";
-      else if (char === "	")
-        sanitized += "\\t";
-      else
-        sanitized += " ";
-      continue;
-    }
-    sanitized += char;
-  }
-  return sanitized;
-}
-function inferBlockType(rawBlock = {}) {
-  if (!isRecord(rawBlock))
-    return "";
-  const blockRecord = rawBlock;
-  const explicitType = coerceString(
-    blockRecord.type || blockRecord.blockType || blockRecord.block_type || blockRecord.kind || blockRecord.component
-  );
-  const allowedTypes = new Set(AI_LAYOUT_ALLOWED_BLOCKS.map((item) => item.type));
-  if (allowedTypes.has(explicitType))
-    return explicitType;
-  if ("sectionIndex" in blockRecord || "paragraphs" in blockRecord || "bulletGroups" in blockRecord)
-    return "section-block";
-  if (Array.isArray(blockRecord.items))
-    return "part-nav";
-  if (typeof blockRecord.imageId === "string")
-    return "phone-frame";
-  if ("coverImageId" in blockRecord || "eyebrow" in blockRecord || "subtitle" in blockRecord || explicitType === "cover")
-    return "hero";
-  if ("buttonText" in blockRecord || "body" in blockRecord)
-    return "cta-card";
-  if ("text" in blockRecord || "quote" in blockRecord)
-    return "lead-quote";
-  if ("summary" in blockRecord || "caseLabel" in blockRecord || "bullets" in blockRecord || "highlight" in blockRecord || "imageIds" in blockRecord)
-    return "case-block";
-  if (typeof blockRecord.title === "string")
-    return "section-block";
-  return "";
-}
-function repairRawLayoutPayload(rawLayout = {}) {
-  if (!isRecord(rawLayout))
-    return rawLayout;
-  const layoutRecord = rawLayout;
-  const blocks = Array.isArray(layoutRecord.blocks) ? layoutRecord.blocks : null;
-  if (!blocks)
-    return rawLayout;
-  const resolvedRecord = toRecord(layoutRecord.resolved);
-  const legacyColorPalette = normalizeResolvedColorPalette(
-    layoutRecord.stylePack || layoutRecord.colorPalette || resolvedRecord.colorPalette,
-    AI_LAYOUT_DEFAULT_COLOR_PALETTE
-  );
-  const legacyLayoutFamily = normalizeResolvedLayoutFamily(
-    layoutRecord.layoutFamily || resolvedRecord.layoutFamily,
-    "tutorial-cards"
-  );
-  const selection = normalizeLayoutSelection(layoutRecord.selection, {
-    layoutFamily: legacyLayoutFamily,
-    colorPalette: legacyColorPalette
-  });
-  const resolved = normalizeResolvedSelection(resolvedRecord, {
-    layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO ? legacyLayoutFamily : selection.layoutFamily,
-    colorPalette: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO ? legacyColorPalette : selection.colorPalette
-  });
-  return {
-    ...layoutRecord,
-    selection,
-    resolved,
-    recommendedLayoutFamily: normalizeResolvedLayoutFamily(
-      layoutRecord.recommendedLayoutFamily || resolvedRecord.layoutFamily || legacyLayoutFamily,
-      resolved.layoutFamily
-    ),
-    recommendedColorPalette: normalizeResolvedColorPalette(
-      layoutRecord.recommendedColorPalette || resolvedRecord.colorPalette || legacyColorPalette,
-      resolved.colorPalette
-    ),
-    stylePack: resolved.colorPalette,
-    layoutFamily: resolved.layoutFamily,
-    blocks: toAiLayoutBlocks(blocks).map((block) => {
-      const blockRecord = block;
-      const inferredType = inferBlockType(blockRecord);
-      if (!inferredType)
-        return blockRecord;
-      const repaired = {
-        ...blockRecord,
-        type: inferredType
-      };
-      delete repaired.blockType;
-      delete repaired.block_type;
-      delete repaired.kind;
-      delete repaired.component;
-      return repaired;
-    })
-  };
-}
-function coerceString(value, fallback = "") {
-  return typeof value === "string" ? value.trim() : fallback;
+
+// services/ai-layout/prompt-context.js
+function truncateMarkdownForPrompt(markdown = "", maxChars = 12e3) {
+  const content = String(markdown || "").trim();
+  if (!content || content.length <= maxChars)
+    return content;
+  const headLength = Math.max(2e3, Math.floor(maxChars * 0.72));
+  const tailLength = Math.max(800, maxChars - headLength);
+  const head = content.slice(0, headLength).trimEnd();
+  const tail = content.slice(-tailLength).trimStart();
+  return [
+    head,
+    "",
+    "[\u5185\u5BB9\u5DF2\u622A\u65AD\uFF0C\u4E3A\u4E86\u63A7\u5236\u8BF7\u6C42\u89C4\u6A21\uFF0C\u8FD9\u91CC\u7701\u7565\u4E86\u4E2D\u95F4\u90E8\u5206\u6B63\u6587\u3002]",
+    "",
+    tail
+  ].join("\n");
 }
 function normalizeTitleKey(value) {
   return coerceString(value).toLowerCase().replace(/\s+/g, "");
@@ -43004,6 +42917,139 @@ function recommendColorPalette({ rawLayout = {}, signals = null } = {}) {
   }
   return "tech-green";
 }
+
+// services/ai-layout/selection.js
+function resolveLayoutSelection({
+  requestedSelection = {},
+  rawLayout = {},
+  signals = null,
+  imageRefs = []
+} = {}) {
+  const selection = normalizeLayoutSelection(requestedSelection);
+  const rawLayoutRecord = toRecord(rawLayout);
+  const rawResolved = toSelectionRecord(rawLayoutRecord.resolved);
+  const inferredLayoutFamily = recommendLayoutFamily({ rawLayout, signals, imageRefs });
+  const inferredColorPalette = recommendColorPalette({ rawLayout, signals });
+  const recommendedLayoutFamily = normalizeResolvedLayoutFamily(
+    rawLayoutRecord.recommendedLayoutFamily || rawResolved.layoutFamily || rawLayoutRecord.layoutFamily,
+    inferredLayoutFamily
+  );
+  const recommendedColorPalette = normalizeAutoRecommendedColorPalette(
+    rawLayoutRecord.recommendedColorPalette || rawResolved.colorPalette || rawLayoutRecord.stylePack,
+    inferredColorPalette
+  );
+  const resolved = {
+    layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO ? recommendedLayoutFamily : normalizeResolvedLayoutFamily(selection.layoutFamily, recommendedLayoutFamily),
+    colorPalette: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO ? recommendedColorPalette : normalizeResolvedColorPalette(selection.colorPalette, recommendedColorPalette)
+  };
+  return {
+    selection,
+    resolved,
+    recommendedLayoutFamily,
+    recommendedColorPalette
+  };
+}
+function getArticleLayoutSelectionState(entry, selection = {}, defaults = {}) {
+  const normalizedEntry = normalizeArticleLayoutCacheEntry(entry);
+  if (!normalizedEntry)
+    return null;
+  const normalizedSelection = normalizeLayoutSelection(selection, defaults);
+  const requestedLayoutFamily = normalizeLayoutFamily(normalizedSelection.layoutFamily, AI_LAYOUT_SELECTION_AUTO);
+  const familyStates = normalizedEntry.familyStates || {};
+  const familyKeys = Object.keys(familyStates);
+  if (!familyKeys.length)
+    return null;
+  if (requestedLayoutFamily !== AI_LAYOUT_SELECTION_AUTO) {
+    const requestedResolvedLayoutFamily = normalizeResolvedLayoutFamily(requestedLayoutFamily, AI_LAYOUT_DEFAULT_FAMILY);
+    return familyStates[requestedResolvedLayoutFamily] || null;
+  }
+  if (normalizedEntry.lastAutoResolvedFamily && familyStates[normalizedEntry.lastAutoResolvedFamily]) {
+    return familyStates[normalizedEntry.lastAutoResolvedFamily];
+  }
+  if (normalizedEntry.lastLayoutFamily && familyStates[normalizedEntry.lastLayoutFamily]) {
+    return familyStates[normalizedEntry.lastLayoutFamily];
+  }
+  return familyStates[familyKeys[0]] || null;
+}
+function deriveArticleLayoutStateForSelection(state, selection = {}, defaults = {}) {
+  var _a5, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
+  const normalizedState = normalizeArticleLayoutState(state);
+  if (!((_b = (_a5 = normalizedState == null ? void 0 : normalizedState.layoutJson) == null ? void 0 : _a5.blocks) == null ? void 0 : _b.length))
+    return null;
+  if (normalizedState.status !== "ready")
+    return null;
+  const requestedSelection = normalizeLayoutSelection(selection, {
+    layoutFamily: ((_c = normalizedState.selection) == null ? void 0 : _c.layoutFamily) || toSelectionRecord(defaults).layoutFamily || AI_LAYOUT_SELECTION_AUTO,
+    colorPalette: ((_d = normalizedState.selection) == null ? void 0 : _d.colorPalette) || toSelectionRecord(defaults).colorPalette || AI_LAYOUT_SELECTION_AUTO
+  });
+  const requestedColorPalette = normalizeColorPalette(
+    requestedSelection.colorPalette,
+    ((_e = normalizedState.selection) == null ? void 0 : _e.colorPalette) || toSelectionRecord(defaults).colorPalette || AI_LAYOUT_SELECTION_AUTO
+  );
+  if (!requestedColorPalette || requestedColorPalette === AI_LAYOUT_SELECTION_AUTO)
+    return null;
+  const baseResolvedLayoutFamily = normalizeResolvedLayoutFamily(
+    ((_f = normalizedState.resolved) == null ? void 0 : _f.layoutFamily) || normalizedState.layoutFamily,
+    AI_LAYOUT_DEFAULT_FAMILY
+  );
+  const baseSelectedLayoutFamily = normalizeLayoutFamily(
+    (_g = normalizedState.selection) == null ? void 0 : _g.layoutFamily,
+    AI_LAYOUT_SELECTION_AUTO
+  );
+  const requestedLayoutFamily = normalizeLayoutFamily(
+    requestedSelection.layoutFamily,
+    ((_h = normalizedState.selection) == null ? void 0 : _h.layoutFamily) || toSelectionRecord(defaults).layoutFamily || AI_LAYOUT_SELECTION_AUTO
+  );
+  const isCompatibleLayout = requestedLayoutFamily === AI_LAYOUT_SELECTION_AUTO || requestedLayoutFamily === baseSelectedLayoutFamily || requestedLayoutFamily === baseResolvedLayoutFamily;
+  if (!isCompatibleLayout)
+    return null;
+  const nextResolvedColorPalette = normalizeResolvedColorPalette(
+    requestedColorPalette,
+    ((_i = normalizedState.resolved) == null ? void 0 : _i.colorPalette) || AI_LAYOUT_DEFAULT_COLOR_PALETTE
+  );
+  const nextColorPaletteLabel = ((_j = getColorPaletteById(nextResolvedColorPalette)) == null ? void 0 : _j.label) || nextResolvedColorPalette;
+  const nextSelection = {
+    layoutFamily: requestedLayoutFamily || ((_k = normalizedState.selection) == null ? void 0 : _k.layoutFamily) || AI_LAYOUT_SELECTION_AUTO,
+    colorPalette: requestedColorPalette
+  };
+  const nextLayoutJson = {
+    ...toRecord(normalizedState.layoutJson),
+    selection: {
+      ...toRecord(toRecord(normalizedState.layoutJson).selection),
+      ...nextSelection
+    },
+    resolved: {
+      ...toRecord(toRecord(normalizedState.layoutJson).resolved),
+      layoutFamily: baseResolvedLayoutFamily,
+      colorPalette: nextResolvedColorPalette
+    },
+    recommendedLayoutFamily: normalizedState.recommendedLayoutFamily,
+    recommendedColorPalette: normalizedState.recommendedColorPalette,
+    stylePack: nextResolvedColorPalette,
+    layoutFamily: baseResolvedLayoutFamily
+  };
+  const nextGenerationMeta = normalizeLayoutGenerationMeta({
+    ...normalizedState.generationMeta || {},
+    colorPaletteLabel: nextColorPaletteLabel,
+    stylePackLabel: nextColorPaletteLabel
+  }, nextLayoutJson);
+  return normalizeArticleLayoutState({
+    ...normalizedState,
+    selection: nextSelection,
+    resolved: {
+      layoutFamily: baseResolvedLayoutFamily,
+      colorPalette: nextResolvedColorPalette
+    },
+    recommendedLayoutFamily: normalizedState.recommendedLayoutFamily,
+    recommendedColorPalette: normalizedState.recommendedColorPalette,
+    stylePack: nextResolvedColorPalette,
+    layoutFamily: baseResolvedLayoutFamily,
+    generationMeta: nextGenerationMeta,
+    layoutJson: nextLayoutJson
+  });
+}
+
+// services/ai-layout/layout-normalization.js
 function buildFallbackLayout(context = {}) {
   var _a5, _b;
   const source = toRecord(context);
@@ -43401,6 +43447,150 @@ function buildLayoutResult(rawLayout = {}, context = {}) {
       normalizedAiBlocks,
       mergedEntries,
       schemaValidation: validation
+    })
+  };
+}
+
+// services/ai-layout/generation.js
+function extractJsonPayload(text) {
+  const content = String(text || "").trim();
+  if (!content)
+    throw new Error("AI \u672A\u8FD4\u56DE\u5185\u5BB9");
+  const fencedMatch = content.match(/```json\s*([\s\S]*?)```/i) || content.match(/```\s*([\s\S]*?)```/i);
+  const candidate = fencedMatch ? fencedMatch[1].trim() : content;
+  const firstBrace = candidate.indexOf("{");
+  const lastBrace = candidate.lastIndexOf("}");
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    throw new Error("AI \u8FD4\u56DE\u7ED3\u679C\u4E0D\u662F\u6709\u6548 JSON");
+  }
+  return candidate.slice(firstBrace, lastBrace + 1);
+}
+function sanitizeJsonStringLiteralControls(payload = "") {
+  const raw = String(payload || "");
+  if (!raw)
+    return raw;
+  let sanitized = "";
+  let inString = false;
+  let isEscaped = false;
+  for (let index = 0; index < raw.length; index += 1) {
+    const char = raw[index];
+    const charCode = raw.charCodeAt(index);
+    if (!inString) {
+      sanitized += char;
+      if (char === '"')
+        inString = true;
+      continue;
+    }
+    if (isEscaped) {
+      sanitized += char;
+      isEscaped = false;
+      continue;
+    }
+    if (char === "\\") {
+      sanitized += char;
+      isEscaped = true;
+      continue;
+    }
+    if (char === '"') {
+      sanitized += char;
+      inString = false;
+      continue;
+    }
+    if (charCode <= 31) {
+      if (char === "\n")
+        sanitized += "\\n";
+      else if (char === "\r")
+        sanitized += "\\r";
+      else if (char === "	")
+        sanitized += "\\t";
+      else
+        sanitized += " ";
+      continue;
+    }
+    sanitized += char;
+  }
+  return sanitized;
+}
+function inferBlockType(rawBlock = {}) {
+  if (!isRecord(rawBlock))
+    return "";
+  const blockRecord = rawBlock;
+  const explicitType = coerceString(
+    blockRecord.type || blockRecord.blockType || blockRecord.block_type || blockRecord.kind || blockRecord.component
+  );
+  const allowedTypes = new Set(AI_LAYOUT_ALLOWED_BLOCKS.map((item) => item.type));
+  if (allowedTypes.has(explicitType))
+    return explicitType;
+  if ("sectionIndex" in blockRecord || "paragraphs" in blockRecord || "bulletGroups" in blockRecord)
+    return "section-block";
+  if (Array.isArray(blockRecord.items))
+    return "part-nav";
+  if (typeof blockRecord.imageId === "string")
+    return "phone-frame";
+  if ("coverImageId" in blockRecord || "eyebrow" in blockRecord || "subtitle" in blockRecord || explicitType === "cover")
+    return "hero";
+  if ("buttonText" in blockRecord || "body" in blockRecord)
+    return "cta-card";
+  if ("text" in blockRecord || "quote" in blockRecord)
+    return "lead-quote";
+  if ("summary" in blockRecord || "caseLabel" in blockRecord || "bullets" in blockRecord || "highlight" in blockRecord || "imageIds" in blockRecord)
+    return "case-block";
+  if (typeof blockRecord.title === "string")
+    return "section-block";
+  return "";
+}
+function repairRawLayoutPayload(rawLayout = {}) {
+  if (!isRecord(rawLayout))
+    return rawLayout;
+  const layoutRecord = rawLayout;
+  const blocks = Array.isArray(layoutRecord.blocks) ? layoutRecord.blocks : null;
+  if (!blocks)
+    return rawLayout;
+  const resolvedRecord = toRecord(layoutRecord.resolved);
+  const legacyColorPalette = normalizeResolvedColorPalette(
+    layoutRecord.stylePack || layoutRecord.colorPalette || resolvedRecord.colorPalette,
+    AI_LAYOUT_DEFAULT_COLOR_PALETTE
+  );
+  const legacyLayoutFamily = normalizeResolvedLayoutFamily(
+    layoutRecord.layoutFamily || resolvedRecord.layoutFamily,
+    "tutorial-cards"
+  );
+  const selection = normalizeLayoutSelection(layoutRecord.selection, {
+    layoutFamily: legacyLayoutFamily,
+    colorPalette: legacyColorPalette
+  });
+  const resolved = normalizeResolvedSelection(resolvedRecord, {
+    layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO ? legacyLayoutFamily : selection.layoutFamily,
+    colorPalette: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO ? legacyColorPalette : selection.colorPalette
+  });
+  return {
+    ...layoutRecord,
+    selection,
+    resolved,
+    recommendedLayoutFamily: normalizeResolvedLayoutFamily(
+      layoutRecord.recommendedLayoutFamily || resolvedRecord.layoutFamily || legacyLayoutFamily,
+      resolved.layoutFamily
+    ),
+    recommendedColorPalette: normalizeResolvedColorPalette(
+      layoutRecord.recommendedColorPalette || resolvedRecord.colorPalette || legacyColorPalette,
+      resolved.colorPalette
+    ),
+    stylePack: resolved.colorPalette,
+    layoutFamily: resolved.layoutFamily,
+    blocks: toAiLayoutBlocks(blocks).map((block) => {
+      const blockRecord = block;
+      const inferredType = inferBlockType(blockRecord);
+      if (!inferredType)
+        return blockRecord;
+      const repaired = {
+        ...blockRecord,
+        type: inferredType
+      };
+      delete repaired.blockType;
+      delete repaired.block_type;
+      delete repaired.kind;
+      delete repaired.component;
+      return repaired;
     })
   };
 }
@@ -43943,6 +44133,8 @@ async function testAiProviderConnection(provider, fetchImpl = getDefaultFetch())
   });
   return !!((_b = (_a5 = result == null ? void 0 : result.layoutJson) == null ? void 0 : _a5.blocks) == null ? void 0 : _b.length);
 }
+
+// services/ai-layout/render.js
 function normalizeWechatTaskMarkerText(text) {
   return String(text || "").replace(
     /(^|\n)(\s*)\[([ xX])\]\s+/g,
@@ -46693,7 +46885,7 @@ async function processAllImages({
   html,
   api,
   progressCallback,
-  pMap: pMap2,
+  pMap: pMap15,
   srcToBlob,
   imageUploadCache,
   cacheNamespace = "",
@@ -46717,7 +46909,7 @@ async function processAllImages({
   let completed = 0;
   const failedImages = [];
   const tasks = Array.from(uniqueUrls);
-  await pMap2(tasks, async (item) => {
+  await pMap15(tasks, async (item) => {
     const src = String(item || "");
     const cacheKey = `${cacheNamespace}::${src}`;
     const cached = getCachedEntry(imageUploadCache, cacheKey);
@@ -46783,7 +46975,7 @@ async function processMathFormulas({
   html,
   api,
   progressCallback,
-  pMap: pMap2,
+  pMap: pMap15,
   simpleHash,
   svgUploadCache,
   svgToPngBlob
@@ -46851,7 +47043,7 @@ async function processMathFormulas({
       return html;
     const total = mathNodes.length;
     let completed = 0;
-    await pMap2(mathNodes, async (item) => {
+    await pMap15(mathNodes, async (item) => {
       const svg = (
         /** @type {SVGElement} */
         item
@@ -48964,7 +49156,7 @@ function refreshSettingTab(tab) {
 }
 function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   var _a5, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p;
-  const { Setting: Setting2, Notice: Notice2 } = getObsidianApi(tab, options);
+  const { Setting: Setting15, Notice: Notice15 } = getObsidianApi(tab, options);
   const { plugin } = tab;
   const pluginSettings = toSettingsRecord(plugin.settings);
   const multiPlatformSettings = normalizeMultiPlatformSyncSettings(pluginSettings.multiPlatformSync);
@@ -48978,7 +49170,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       "\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u5E76\u9009\u62E9\u8981\u4FDD\u5B58\u8349\u7A3F\u7684\u5185\u5BB9\u5E73\u53F0\u3002"
     );
   }
-  new Setting2(containerEl).setName("\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03").setDesc("Obsidian \u8D1F\u8D23\u5199\u4F5C\u3001\u9884\u89C8\u548C\u5E73\u53F0\u9009\u62E9\uFF1B\u6D4F\u89C8\u5668\u63D2\u4EF6\u4F7F\u7528\u5F53\u524D\u7684\u6D4F\u89C8\u5668\u767B\u5F55\u6001\uFF0C\u628A\u6587\u7AE0\u4FDD\u5B58\u5230\u77E5\u4E4E\u3001\u6398\u91D1\u3001CSDN \u7B49\u5E73\u53F0\u8349\u7A3F\u7BB1\u3002\u5FAE\u4FE1\u4ECD\u53EF\u4F7F\u7528\u4E0A\u65B9\u516C\u4F17\u53F7 API\u3002").setHeading();
+  new Setting15(containerEl).setName("\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03").setDesc("Obsidian \u8D1F\u8D23\u5199\u4F5C\u3001\u9884\u89C8\u548C\u5E73\u53F0\u9009\u62E9\uFF1B\u6D4F\u89C8\u5668\u63D2\u4EF6\u4F7F\u7528\u5F53\u524D\u7684\u6D4F\u89C8\u5668\u767B\u5F55\u6001\uFF0C\u628A\u6587\u7AE0\u4FDD\u5B58\u5230\u77E5\u4E4E\u3001\u6398\u91D1\u3001CSDN \u7B49\u5E73\u53F0\u8349\u7A3F\u7BB1\u3002\u5FAE\u4FE1\u4ECD\u53EF\u4F7F\u7528\u4E0A\u65B9\u516C\u4F17\u53F7 API\u3002").setHeading();
   const guide = containerEl.createDiv({
     cls: `wechat-multiplatform-onboarding${isProLicensed ? " is-pro" : ""}`
   });
@@ -49002,7 +49194,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   bridgeGuideBtn.onclick = () => openExternalUrl(tab, OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL);
   const proGuideBtn = guideActions.createEl("button", { text: isProLicensed ? "\u67E5\u770B Pro \u6743\u76CA" : "\u4E86\u89E3 Pro" });
   proGuideBtn.onclick = () => openExternalUrl(tab, OBSIDIAN_PUBLISHER_PRO_URL);
-  new Setting2(containerEl).setName("\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03").setDesc("\u5F00\u542F\u540E\uFF0CObsidian \u4F1A\u628A\u6587\u7AE0\u53D1\u9001\u7ED9\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u7531\u63D2\u4EF6\u4F7F\u7528\u6D4F\u89C8\u5668\u767B\u5F55\u6001\u4FDD\u5B58\u5230\u5404\u5E73\u53F0\u8349\u7A3F\u7BB1\u3002\u5728\u4E0B\u65B9\u586B\u5165\u300C\u8FDE\u63A5\u4EE4\u724C\u300D\u5373\u53EF\u5B8C\u6210\u914D\u5BF9\u3002").addToggle((toggle) => toggle.setValue(multiPlatformSettings.enabled).onChange(async (value) => {
+  new Setting15(containerEl).setName("\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03").setDesc("\u5F00\u542F\u540E\uFF0CObsidian \u4F1A\u628A\u6587\u7AE0\u53D1\u9001\u7ED9\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u7531\u63D2\u4EF6\u4F7F\u7528\u6D4F\u89C8\u5668\u767B\u5F55\u6001\u4FDD\u5B58\u5230\u5404\u5E73\u53F0\u8349\u7A3F\u7BB1\u3002\u5728\u4E0B\u65B9\u586B\u5165\u300C\u8FDE\u63A5\u4EE4\u724C\u300D\u5373\u53EF\u5B8C\u6210\u914D\u5BF9\u3002").addToggle((toggle) => toggle.setValue(multiPlatformSettings.enabled).onChange(async (value) => {
     var _a6;
     plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
       ...toRecord3(plugin.settings.multiPlatformSync),
@@ -49021,7 +49213,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   if (!multiPlatformSettings.enabled) {
     return;
   }
-  new Setting2(containerEl).setName("\u672C\u5730\u670D\u52A1\u7AEF\u53E3").setDesc("\u9ED8\u8BA4 9527\u3002\u53EA\u6709\u5F53\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u7684\u672C\u5730\u670D\u52A1\u5730\u5740\u4F7F\u7528\u4E86\u5176\u4ED6\u7AEF\u53E3\u65F6\u624D\u9700\u8981\u4FEE\u6539\u3002").addText((text) => text.setPlaceholder(String(DEFAULT_WECHATSYNC_PORT)).setValue(String(multiPlatformSettings.port)).onChange(async (value) => {
+  new Setting15(containerEl).setName("\u672C\u5730\u670D\u52A1\u7AEF\u53E3").setDesc("\u9ED8\u8BA4 9527\u3002\u53EA\u6709\u5F53\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u7684\u672C\u5730\u670D\u52A1\u5730\u5740\u4F7F\u7528\u4E86\u5176\u4ED6\u7AEF\u53E3\u65F6\u624D\u9700\u8981\u4FEE\u6539\u3002").addText((text) => text.setPlaceholder(String(DEFAULT_WECHATSYNC_PORT)).setValue(String(multiPlatformSettings.port)).onChange(async (value) => {
     const nextPort = Number(value);
     plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
       ...toRecord3(plugin.settings.multiPlatformSync),
@@ -49031,7 +49223,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     await plugin.saveSettings();
     plugin.startWechatSyncBridgeInBackground("settings-port-change");
   }));
-  new Setting2(containerEl).setName("\u8FDE\u63A5\u4EE4\u724C").setDesc("\u586B\u5165\u6D4F\u89C8\u5668\u63D2\u4EF6\u672C\u5730\u670D\u52A1\u4E2D\u663E\u793A\u7684\u8FDE\u63A5\u4EE4\u724C\uFF0C\u7528\u4E8E\u786E\u8BA4 Obsidian \u4E0E\u63D2\u4EF6\u5C5E\u4E8E\u540C\u4E00\u7EC4\u8FDE\u63A5\u3002").addText((text) => text.setPlaceholder("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx").setValue(toText(multiPlatformSettings.token)).onChange(async (value) => {
+  new Setting15(containerEl).setName("\u8FDE\u63A5\u4EE4\u724C").setDesc("\u586B\u5165\u6D4F\u89C8\u5668\u63D2\u4EF6\u672C\u5730\u670D\u52A1\u4E2D\u663E\u793A\u7684\u8FDE\u63A5\u4EE4\u724C\uFF0C\u7528\u4E8E\u786E\u8BA4 Obsidian \u4E0E\u63D2\u4EF6\u5C5E\u4E8E\u540C\u4E00\u7EC4\u8FDE\u63A5\u3002").addText((text) => text.setPlaceholder("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx").setValue(toText(multiPlatformSettings.token)).onChange(async (value) => {
     plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
       ...toRecord3(plugin.settings.multiPlatformSync),
       token: value,
@@ -49223,7 +49415,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         chip.addClass("is-selected");
         setStatusVisible(true);
         if (authBadge.status === "login_required") {
-          new Notice2(`${platform.name} \u4E0A\u6B21\u72B6\u6001\u4E3A\u9700\u767B\u5F55\u3002\u8BF7\u5148\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u6253\u5F00\u5E73\u53F0\u767B\u5F55\u9875\uFF0C\u6216\u7EE7\u7EED\u5C1D\u8BD5\u7531\u63D2\u4EF6\u8FD4\u56DE\u5B9E\u9645\u7ED3\u679C\u3002`, 8e3);
+          new Notice15(`${platform.name} \u4E0A\u6B21\u72B6\u6001\u4E3A\u9700\u767B\u5F55\u3002\u8BF7\u5148\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u6253\u5F00\u5E73\u53F0\u767B\u5F55\u9875\uFF0C\u6216\u7EE7\u7EED\u5C1D\u8BD5\u7531\u63D2\u4EF6\u8FD4\u56DE\u5B9E\u9645\u7ED3\u679C\u3002`, 8e3);
         }
       } else {
         selectedPlatformSet.delete(platform.id);
@@ -49234,7 +49426,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       await saveSelectedPlatforms();
     };
   }
-  new Setting2(containerEl).setName("\u6D4B\u8BD5\u8FDE\u63A5").setDesc("\u53EA\u9A8C\u8BC1 Obsidian\u3001\u6D4F\u89C8\u5668\u63D2\u4EF6\u548C\u8FDE\u63A5\u4EE4\u724C\u662F\u5426\u8FDE\u901A\uFF0C\u5E76\u8BFB\u53D6\u5E73\u53F0\u6E05\u5355\uFF1B\u4E0D\u4F1A\u5B9E\u65F6\u68C0\u6D4B\u6240\u6709\u5E73\u53F0\u767B\u5F55\u72B6\u6001\u3002").addButton((button) => button.setButtonText("\u6D4B\u8BD5").onClick(async () => {
+  new Setting15(containerEl).setName("\u6D4B\u8BD5\u8FDE\u63A5").setDesc("\u53EA\u9A8C\u8BC1 Obsidian\u3001\u6D4F\u89C8\u5668\u63D2\u4EF6\u548C\u8FDE\u63A5\u4EE4\u724C\u662F\u5426\u8FDE\u901A\uFF0C\u5E76\u8BFB\u53D6\u5E73\u53F0\u6E05\u5355\uFF1B\u4E0D\u4F1A\u5B9E\u65F6\u68C0\u6D4B\u6240\u6709\u5E73\u53F0\u767B\u5F55\u72B6\u6001\u3002").addButton((button) => button.setButtonText("\u6D4B\u8BD5").onClick(async () => {
     var _a6, _b2, _c2, _d2, _e2;
     button.setButtonText("\u7B49\u5F85\u63D2\u4EF6...");
     (_a6 = button.setDisabled) == null ? void 0 : _a6.call(button, true);
@@ -49322,7 +49514,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       });
       await plugin.saveSettings();
       shouldRedisplay = true;
-      new Notice2(health ? "\u2705 \u5DF2\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u8FDE\u63A5\u4EE4\u724C\u6821\u9A8C\u901A\u8FC7" : "\u2705 \u5DF2\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6");
+      new Notice15(health ? "\u2705 \u5DF2\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u8FDE\u63A5\u4EE4\u724C\u6821\u9A8C\u901A\u8FC7" : "\u2705 \u5DF2\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6");
     } catch (error) {
       let bridgeStatusAfterFailure = null;
       let diagnostics = null;
@@ -49380,7 +49572,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         }
       });
       await plugin.saveSettings();
-      new Notice2(`\u274C ${detailedMessage}${hint ? ` ${hint}` : ""}`, 12e3);
+      new Notice15(`\u274C ${detailedMessage}${hint ? ` ${hint}` : ""}`, 12e3);
       shouldRedisplay = true;
     } finally {
       (_e2 = button.setDisabled) == null ? void 0 : _e2.call(button, false);
@@ -49389,7 +49581,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         refreshSettingTab(tab);
     }
   }));
-  new Setting2(containerEl).setName("\u8BFB\u53D6\u5DF2\u9009\u5E73\u53F0\u72B6\u6001").setDesc("\u8BFB\u53D6\u6D4F\u89C8\u5668\u63D2\u4EF6\u7F13\u5B58\u7684\u4E0A\u6B21\u72B6\u6001\uFF0C\u4E0D\u4F1A\u5B9E\u65F6\u68C0\u6D4B\u767B\u5F55\uFF1B\u53D1\u5E03\u65F6\u4ECD\u4EE5\u6D4F\u89C8\u5668\u63D2\u4EF6\u5B9E\u9645\u6267\u884C\u4E3A\u51C6\u3002").addButton((button) => button.setButtonText("\u8BFB\u53D6").onClick(async () => {
+  new Setting15(containerEl).setName("\u8BFB\u53D6\u5DF2\u9009\u5E73\u53F0\u72B6\u6001").setDesc("\u8BFB\u53D6\u6D4F\u89C8\u5668\u63D2\u4EF6\u7F13\u5B58\u7684\u4E0A\u6B21\u72B6\u6001\uFF0C\u4E0D\u4F1A\u5B9E\u65F6\u68C0\u6D4B\u767B\u5F55\uFF1B\u53D1\u5E03\u65F6\u4ECD\u4EE5\u6D4F\u89C8\u5668\u63D2\u4EF6\u5B9E\u9645\u6267\u884C\u4E3A\u51C6\u3002").addButton((button) => button.setButtonText("\u8BFB\u53D6").onClick(async () => {
     var _a6, _b2;
     const current = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
     const platformById = new Map(
@@ -49397,7 +49589,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     );
     const candidates = parseWechatsyncPlatformIds(current.selectedPlatforms || []).map((id) => platformById.get(id) || { id, name: id }).filter((platform) => platform.id);
     if (!candidates.length) {
-      new Notice2("\u8BF7\u5148\u52FE\u9009\u81F3\u5C11\u4E00\u4E2A\u53D1\u5E03\u5E73\u53F0");
+      new Notice15("\u8BF7\u5148\u52FE\u9009\u81F3\u5C11\u4E00\u4E2A\u53D1\u5E03\u5E73\u53F0");
       return;
     }
     button.setButtonText("\u8BFB\u53D6\u4E2D...");
@@ -49439,7 +49631,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       });
       await plugin.saveSettings();
       const authenticatedCount = cachedPlatforms.filter((platform) => platform.authenticated === true).length;
-      new Notice2(`\u2705 \u5DF2\u8BFB\u53D6 ${cachedPlatforms.length} \u4E2A\u5DF2\u9009\u5E73\u53F0\uFF0C${authenticatedCount} \u4E2A\u4E0A\u6B21\u53EF\u7528`);
+      new Notice15(`\u2705 \u5DF2\u8BFB\u53D6 ${cachedPlatforms.length} \u4E2A\u5DF2\u9009\u5E73\u53F0\uFF0C${authenticatedCount} \u4E2A\u4E0A\u6B21\u53EF\u7528`);
       refreshSettingTab(tab);
     } catch (error) {
       const readableError = toReadableError(error);
@@ -49448,7 +49640,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         code: readableError.code,
         message: readableError.message
       });
-      new Notice2(`\u274C \u8BFB\u53D6\u5931\u8D25\uFF1A${readableError.message}`, 1e4);
+      new Notice15(`\u274C \u8BFB\u53D6\u5931\u8D25\uFF1A${readableError.message}`, 1e4);
     } finally {
       (_b2 = button.setDisabled) == null ? void 0 : _b2.call(button, false);
       button.setButtonText("\u8BFB\u53D6");
@@ -49880,15 +50072,15 @@ function getObsidianApi2(view, options = {}) {
 async function showMultiPlatformPublishModal(view, options = {}) {
   var _a5;
   const obsidian = getObsidianApi2(view, options);
-  const { Notice: Notice2, Platform: Platform2 } = obsidian;
+  const { Notice: Notice15, Platform: Platform15 } = obsidian;
   if (!view.currentHtml) {
-    new Notice2(view.getMissingRenderNotice());
+    new Notice15(view.getMissingRenderNotice());
     return;
   }
   const modal = options.modal || new obsidian.Modal(view.app);
   modal.contentEl = asModalElement(modal.contentEl);
   const shouldOpenModal = !options.modal;
-  const mobileSync = isMobileClient(view.app, Platform2);
+  const mobileSync = isMobileClient(view.app, Platform15);
   const bridgeSettings = normalizeMultiPlatformSyncSettings(toRecord4(view.plugin.settings.multiPlatformSync));
   const cachedConnection = bridgeSettings.connection || normalizeMultiPlatformConnection();
   const cachedConnectionRecord = toRecord4(cachedConnection);
@@ -49946,7 +50138,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
     settingsBtn.onclick = () => {
       modal.close();
       if (!view.openPluginSettings()) {
-        new Notice2("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u5F00\u542F\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03");
+        new Notice15("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u5F00\u542F\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03");
       }
     };
     const guideBtn = asModalElement(disabledHint.createEl("button", { text: "\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\u6559\u7A0B" }));
@@ -50054,10 +50246,10 @@ async function showMultiPlatformPublishModal(view, options = {}) {
           (_b = row.classList) == null ? void 0 : _b.add("is-selected");
           setStatusVisible(true);
           if (authBadge.status === "login_required") {
-            new Notice2(`${platform.name} \u4E0A\u6B21\u72B6\u6001\u4E3A\u9700\u767B\u5F55\u3002\u8BF7\u5148\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u6253\u5F00\u5E73\u53F0\u767B\u5F55\u9875\uFF0C\u6216\u7EE7\u7EED\u5C1D\u8BD5\u7531\u63D2\u4EF6\u8FD4\u56DE\u5B9E\u9645\u7ED3\u679C\u3002`, 8e3);
+            new Notice15(`${platform.name} \u4E0A\u6B21\u72B6\u6001\u4E3A\u9700\u767B\u5F55\u3002\u8BF7\u5148\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u6253\u5F00\u5E73\u53F0\u767B\u5F55\u9875\uFF0C\u6216\u7EE7\u7EED\u5C1D\u8BD5\u7531\u63D2\u4EF6\u8FD4\u56DE\u5B9E\u9645\u7ED3\u679C\u3002`, 8e3);
           }
           if (authBadge.status === "unknown") {
-            new Notice2(`${platform.name} \u6B64\u524D\u672A\u68C0\u6D4B\uFF0C\u53D1\u5E03\u7ED3\u679C\u4EE5\u6D4F\u89C8\u5668\u63D2\u4EF6\u5B9E\u9645\u6267\u884C\u4E3A\u51C6\u3002`, 6e3);
+            new Notice15(`${platform.name} \u6B64\u524D\u672A\u68C0\u6D4B\uFF0C\u53D1\u5E03\u7ED3\u679C\u4EE5\u6D4F\u89C8\u5668\u63D2\u4EF6\u5B9E\u9645\u6267\u884C\u4E3A\u51C6\u3002`, 6e3);
           }
         } else {
           selectedPlatforms.delete(platform.id);
@@ -50075,11 +50267,11 @@ async function showMultiPlatformPublishModal(view, options = {}) {
   syncBtn.onclick = async () => {
     var _a6, _b;
     if (!isBridgeReady) {
-      new Notice2("\u8BF7\u5148\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u518D\u53D1\u9001\u591A\u5E73\u53F0\u53D1\u5E03\u4EFB\u52A1\u3002", 8e3);
+      new Notice15("\u8BF7\u5148\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u518D\u53D1\u9001\u591A\u5E73\u53F0\u53D1\u5E03\u4EFB\u52A1\u3002", 8e3);
       return;
     }
     if (selectedPlatforms.size === 0) {
-      new Notice2("\u8BF7\u5148\u9009\u62E9\u81F3\u5C11\u4E00\u4E2A\u5E73\u53F0");
+      new Notice15("\u8BF7\u5148\u9009\u62E9\u81F3\u5C11\u4E00\u4E2A\u5E73\u53F0");
       return;
     }
     const activeFile = view.getPublishContextFile();
@@ -50091,7 +50283,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
     const exportHtml = view.getCurrentExportHtml() || view.currentHtml || "";
     const selectedWechatMaterialCover = !!view.sessionThumbMediaId;
     const rawCover = getBridgeSafeSessionCover(view.sessionCoverBase64) || publishMeta.cover || "";
-    const notice = new Notice2("\u6B63\u5728\u51C6\u5907\u5E76\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6...", 0);
+    const notice = new Notice15("\u6B63\u5728\u51C6\u5907\u5E76\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6...", 0);
     syncBtn.disabled = true;
     (_a6 = syncBtn.addClass) == null ? void 0 : _a6.call(syncBtn, "apple-btn-disabled");
     const sendStartedAt = Date.now();
@@ -50277,7 +50469,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         await view.plugin.saveSettings();
       }
       modal.close();
-      new Notice2(`\u274C \u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6\u5931\u8D25\uFF1A${displayMessage}`, 1e4);
+      new Notice15(`\u274C \u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6\u5931\u8D25\uFF1A${displayMessage}`, 1e4);
       view.showMultiPlatformSyncResultModal({
         requestedPlatformIds,
         fatalError: error
@@ -50353,8 +50545,8 @@ var FeishuApiClient = class {
     this.accessToken = "";
     this.tokenExpiry = 0;
     this.baseUrl = "https://open.feishu.cn/open-apis";
-    const obsidianApi2 = getActiveWindowValue("obsidian");
-    this.requestUrl = requestUrl || (obsidianApi2 && typeof obsidianApi2.requestUrl === "function" ? obsidianApi2.requestUrl : null);
+    const obsidianApi15 = getActiveWindowValue("obsidian");
+    this.requestUrl = requestUrl || (obsidianApi15 && typeof obsidianApi15.requestUrl === "function" ? obsidianApi15.requestUrl : null);
     this.onApiCall = typeof options.onApiCall === "function" ? options.onApiCall : null;
   }
   /**
@@ -51327,7 +51519,7 @@ function formatFeishuUsagePercent(count, limit) {
     return "0%";
   return `${Math.min(100, Math.round(count / limit * 100))}%`;
 }
-function renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, Notice2) {
+function renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, Notice15) {
   const usage = settings.apiUsage;
   const used = Math.max(0, Number(usage.count) || 0);
   const limit = FEISHU_FREE_MONTHLY_API_LIMIT;
@@ -51369,8 +51561,8 @@ function renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, No
   resetBtn.onclick = async () => {
     resetFeishuApiUsage(settings);
     await plugin.saveSettings();
-    if (Notice2)
-      new Notice2("\u2705 \u98DE\u4E66 API \u8C03\u7528\u8BA1\u6570\u5DF2\u91CD\u7F6E");
+    if (Notice15)
+      new Notice15("\u2705 \u98DE\u4E66 API \u8C03\u7528\u8BA1\u6570\u5DF2\u91CD\u7F6E");
     renderFeishuSettingsTab(tab, containerEl, { obsidianApi: obsidian });
   };
   const progressTrack = card.createDiv({ cls: "wechat-feishu-usage-progress" });
@@ -51395,10 +51587,17 @@ function renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, No
 }
 function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   const obsidian = options.obsidianApi || tab.plugin.obsidianApi || getActiveWindowValue("obsidian") || {};
-  const Setting2 = obsidian.Setting;
-  const Notice2 = obsidian.Notice;
+  const Setting15 = obsidian.Setting;
+  const Notice15 = obsidian.Notice;
   const { plugin } = tab;
-  const settings = normalizeFeishuSyncSettings(plugin.settings.feishuSync);
+  const rawFeishuSettings = plugin.settings.feishuSync || {};
+  const settings = normalizeFeishuSyncSettings(rawFeishuSettings);
+  if ((rawFeishuSettings == null ? void 0 : rawFeishuSettings.apiUsage) && typeof rawFeishuSettings.apiUsage === "object") {
+    settings.apiUsage = {
+      ...settings.apiUsage,
+      ...rawFeishuSettings.apiUsage
+    };
+  }
   plugin.settings.feishuSync = settings;
   containerEl.empty();
   if (typeof tab.renderSettingsTabIntro === "function") {
@@ -51412,7 +51611,7 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
     text: "\u901A\u8FC7\u98DE\u4E66\u81EA\u5EFA\u5E94\u7528\u673A\u5668\u4EBA\u63A5\u53E3\uFF0C\u5C06\u5F53\u524D Obsidian \u7B14\u8BB0\u4E00\u952E\u53D1\u5E03\u5E76\u8F6C\u6362\u4E3A\u539F\u751F\u7684\u98DE\u4E66\u4E91\u6587\u6863\uFF08docx\uFF09\uFF0C\u652F\u6301\u4FDD\u7559\u6807\u9898\u3001\u8868\u683C\u3001\u4EE5\u53CA\u56FE\u7247\u4E0A\u4F20\uFF08\u5305\u542B\u672C\u5730\u548C\u56FE\u5E8A\u56FE\u7247\uFF09\u3002",
     cls: "setting-item-description"
   });
-  new Setting2(containerEl).setName("\u542F\u7528\u98DE\u4E66\u540C\u6B65\u529F\u80FD").setDesc("\u5F00\u542F\u540E\uFF0C\u53D1\u5E03\u5F39\u7A97\u4E2D\u4F1A\u51FA\u73B0\u300C\u98DE\u4E66\u300D\u9009\u9879\u5361\uFF0C\u652F\u6301\u5C06\u7B14\u8BB0\u53D1\u5E03\u81F3\u98DE\u4E66\u4E91\u76D8\u3002").addToggle(
+  new Setting15(containerEl).setName("\u542F\u7528\u98DE\u4E66\u540C\u6B65\u529F\u80FD").setDesc("\u5F00\u542F\u540E\uFF0C\u53D1\u5E03\u5F39\u7A97\u4E2D\u4F1A\u51FA\u73B0\u300C\u98DE\u4E66\u300D\u9009\u9879\u5361\uFF0C\u652F\u6301\u5C06\u7B14\u8BB0\u53D1\u5E03\u81F3\u98DE\u4E66\u4E91\u76D8\u3002").addToggle(
     (toggle) => toggle.setValue(settings.enabled).onChange(async (value) => {
       settings.enabled = value;
       await plugin.saveSettings();
@@ -51421,43 +51620,43 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   );
   if (!settings.enabled)
     return;
-  renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, Notice2);
-  new Setting2(containerEl).setName("\u98DE\u4E66\u81EA\u5EFA\u5E94\u7528 App ID").setDesc("\u5728\u98DE\u4E66\u5F00\u653E\u5E73\u53F0\uFF08open.feishu.cn\uFF09\u4E2D\uFF0C\u60A8\u521B\u5EFA\u7684\u4F01\u4E1A\u81EA\u5EFA\u5E94\u7528\u7684 App ID").addText(
+  renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, Notice15);
+  new Setting15(containerEl).setName("\u98DE\u4E66\u81EA\u5EFA\u5E94\u7528 App ID").setDesc("\u5728\u98DE\u4E66\u5F00\u653E\u5E73\u53F0\uFF08open.feishu.cn\uFF09\u4E2D\uFF0C\u60A8\u521B\u5EFA\u7684\u4F01\u4E1A\u81EA\u5EFA\u5E94\u7528\u7684 App ID").addText(
     (text) => text.setPlaceholder("cli_a248xxxxxxxxxxxx").setValue(settings.appId).onChange(async (value) => {
       settings.appId = value.trim();
       await plugin.saveSettings();
     })
   );
-  new Setting2(containerEl).setName("\u98DE\u4E66\u81EA\u5EFA\u5E94\u7528 App Secret").setDesc("\u81EA\u5EFA\u5E94\u7528\u7684 App Secret \u51ED\u8BC1").addText((text) => {
+  new Setting15(containerEl).setName("\u98DE\u4E66\u81EA\u5EFA\u5E94\u7528 App Secret").setDesc("\u81EA\u5EFA\u5E94\u7528\u7684 App Secret \u51ED\u8BC1").addText((text) => {
     text.inputEl.type = "password";
     text.setPlaceholder("xxxxxxxxxxxxxxxxxxxx").setValue(settings.appSecret).onChange(async (value) => {
       settings.appSecret = value.trim();
       await plugin.saveSettings();
     });
   });
-  new Setting2(containerEl).setName("\u540C\u6B65\u76EE\u6807\u6587\u4EF6\u5939 Token").setDesc("\u98DE\u4E66\u6587\u4EF6\u5939\u94FE\u63A5\u4E2D\u7684\u6700\u540E\u4E00\u4E32\u5B57\u7B26\u3002\u4F8B\u5982\uFF1Ahttps://feishu.cn/drive/folder/fldcnXXXXXXXXX \u7684 Token \u662F fldcnXXXXXXXXX").addText(
+  new Setting15(containerEl).setName("\u540C\u6B65\u76EE\u6807\u6587\u4EF6\u5939 Token").setDesc("\u98DE\u4E66\u6587\u4EF6\u5939\u94FE\u63A5\u4E2D\u7684\u6700\u540E\u4E00\u4E32\u5B57\u7B26\u3002\u4F8B\u5982\uFF1Ahttps://feishu.cn/drive/folder/fldcnXXXXXXXXX \u7684 Token \u662F fldcnXXXXXXXXX").addText(
     (text) => text.setPlaceholder("fldcnxxxxxxxxxxxxxxxxxx").setValue(settings.folderToken).onChange(async (value) => {
       settings.folderToken = value.trim();
       await plugin.saveSettings();
     })
   );
-  new Setting2(containerEl).setName("\u98DE\u4E66\u7528\u6237 ID (User ID)").setDesc("\u7528\u4E8E\u5728\u540C\u6B65\u6210\u529F\u540E\uFF0C\u628A\u6587\u6863\u7684\u6240\u6709\u6743\u7531\u673A\u5668\u4EBA\u81EA\u52A8\u8F6C\u79FB\u7ED9\u60A8\u672C\u4EBA\uFF08\u60A8\u7684\u98DE\u4E66\u4E91\u76D8\u4E2D\uFF09\u3002\u5EFA\u8BAE\u4F7F\u7528 user_id \u683C\u5F0F\uFF0C\u5982 abc1234\u3002").addText(
+  new Setting15(containerEl).setName("\u98DE\u4E66\u7528\u6237 ID (User ID)").setDesc("\u7528\u4E8E\u5728\u540C\u6B65\u6210\u529F\u540E\uFF0C\u628A\u6587\u6863\u7684\u6240\u6709\u6743\u7531\u673A\u5668\u4EBA\u81EA\u52A8\u8F6C\u79FB\u7ED9\u60A8\u672C\u4EBA\uFF08\u60A8\u7684\u98DE\u4E66\u4E91\u76D8\u4E2D\uFF09\u3002\u5EFA\u8BAE\u4F7F\u7528 user_id \u683C\u5F0F\uFF0C\u5982 abc1234\u3002").addText(
     (text) => text.setPlaceholder("abc1234").setValue(settings.userId).onChange(async (value) => {
       settings.userId = value.trim();
       await plugin.saveSettings();
     })
   );
-  new Setting2(containerEl).setName("\u6D4B\u8BD5\u8FDE\u63A5").setDesc("\u9A8C\u8BC1\u81EA\u5EFA\u5E94\u7528\u6388\u6743\u548C\u76EE\u6807\u6587\u4EF6\u5939\u8BFB\u53D6\u6743\u9650\u3002\u5B8C\u6574\u4E0A\u4F20/\u5BFC\u5165\u6743\u9650\u4F1A\u5728\u5B9E\u9645\u540C\u6B65\u65F6\u9A8C\u8BC1\u3002").addButton(
+  new Setting15(containerEl).setName("\u6D4B\u8BD5\u8FDE\u63A5").setDesc("\u9A8C\u8BC1\u81EA\u5EFA\u5E94\u7528\u6388\u6743\u548C\u76EE\u6807\u6587\u4EF6\u5939\u8BFB\u53D6\u6743\u9650\u3002\u5B8C\u6574\u4E0A\u4F20/\u5BFC\u5165\u6743\u9650\u4F1A\u5728\u5B9E\u9645\u540C\u6B65\u65F6\u9A8C\u8BC1\u3002").addButton(
     (btn) => btn.setButtonText("\u6D4B\u8BD5\u8FDE\u63A5").onClick(async () => {
       if (!settings.appId || !settings.appSecret) {
-        new Notice2("\u274C \u8BF7\u5148\u586B\u5199 App ID \u548C App Secret\uFF01");
+        new Notice15("\u274C \u8BF7\u5148\u586B\u5199 App ID \u548C App Secret\uFF01");
         return;
       }
       if (!settings.folderToken) {
-        new Notice2("\u274C \u8BF7\u5148\u586B\u5199\u540C\u6B65\u76EE\u6807\u6587\u4EF6\u5939 Token\uFF01");
+        new Notice15("\u274C \u8BF7\u5148\u586B\u5199\u540C\u6B65\u76EE\u6807\u6587\u4EF6\u5939 Token\uFF01");
         return;
       }
-      const notice = new Notice2("\u23F3 \u6B63\u5728\u8FDB\u884C\u98DE\u4E66\u8FDE\u63A5\u6D4B\u8BD5...", 0);
+      const notice = new Notice15("\u23F3 \u6B63\u5728\u8FDB\u884C\u98DE\u4E66\u8FDE\u63A5\u6D4B\u8BD5...", 0);
       try {
         let apiUsageChanged = false;
         const client = new FeishuApiClient(settings.appId, settings.appSecret, obsidian.requestUrl, {
@@ -51471,12 +51670,12 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
         notice.hide();
         if (apiUsageChanged)
           await plugin.saveSettings();
-        new Notice2("\u2705 \u98DE\u4E66\u8FDE\u63A5\u6210\u529F\uFF0C\u4E14\u76EE\u6807\u6587\u4EF6\u5939\u8BBF\u95EE\u6B63\u5E38\uFF01");
+        new Notice15("\u2705 \u98DE\u4E66\u8FDE\u63A5\u6210\u529F\uFF0C\u4E14\u76EE\u6807\u6587\u4EF6\u5939\u8BBF\u95EE\u6B63\u5E38\uFF01");
       } catch (err) {
         notice.hide();
         await plugin.saveSettings();
         console.error("[\u98DE\u4E66\u8FDE\u63A5\u6D4B\u8BD5\u5931\u8D25]:", err);
-        new Notice2(`\u274C \u98DE\u4E66\u8FDE\u63A5\u6D4B\u8BD5\u5931\u8D25: ${err.message || String(err)}`, 7e3);
+        new Notice15(`\u274C \u98DE\u4E66\u8FDE\u63A5\u6D4B\u8BD5\u5931\u8D25: ${err.message || String(err)}`, 7e3);
       }
     })
   );
@@ -52045,8 +52244,8 @@ function decodeBase64ImageBytes(base64) {
   return bytes;
 }
 function getRequestUrlImplementation() {
-  const obsidianApi2 = getActiveWindowValue("obsidian");
-  const requestUrl = obsidianApi2 && typeof obsidianApi2.requestUrl === "function" ? obsidianApi2.requestUrl : null;
+  const obsidianApi15 = getActiveWindowValue("obsidian");
+  const requestUrl = obsidianApi15 && typeof obsidianApi15.requestUrl === "function" ? obsidianApi15.requestUrl : null;
   if (typeof requestUrl !== "function")
     return null;
   return (options) => Promise.resolve(requestUrl(options));
@@ -52652,8 +52851,8 @@ async function syncNoteToFeishu({
       onProgress(stage, msg);
     }
   };
-  const obsidianApi2 = getActiveWindowValue("obsidian");
-  const requestUrlImpl = requestUrl || (obsidianApi2 && typeof obsidianApi2.requestUrl === "function" ? obsidianApi2.requestUrl : null);
+  const obsidianApi15 = getActiveWindowValue("obsidian");
+  const requestUrlImpl = requestUrl || (obsidianApi15 && typeof obsidianApi15.requestUrl === "function" ? obsidianApi15.requestUrl : null);
   let title = parseYamlTitle(markdown);
   if (!title)
     title = activeFile.basename;
@@ -52904,10 +53103,10 @@ async function syncNoteToFeishu({
 }
 
 // views/publish-modal/feishu.js
-function showFeishuNotice(Notice2, message, duration) {
-  if (typeof Notice2 !== "function")
+function showFeishuNotice(Notice15, message, duration) {
+  if (typeof Notice15 !== "function")
     return null;
-  return new Notice2(message, duration);
+  return new Notice15(message, duration);
 }
 function updateFeishuNotice(notice, message) {
   if (notice && typeof notice.setMessage === "function") {
@@ -52965,8 +53164,8 @@ function bindTransientScrollbar(scrollEl) {
 }
 function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
   const obsidian = options.obsidianApi || view.plugin.obsidianApi || getActiveWindowValue("obsidian") || {};
-  const Setting2 = obsidian.Setting;
-  const Notice2 = obsidian.Notice;
+  const Setting15 = obsidian.Setting;
+  const Notice15 = obsidian.Notice;
   const { plugin } = view;
   const settings = plugin.settings.feishuSync;
   containerEl.empty();
@@ -53028,7 +53227,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
   });
   const settingsSection = contentWrapper.createDiv({ cls: "wechat-modal-section wechat-feishu-section wechat-feishu-card-section" });
   let docTitle = activeFile.basename;
-  const titleSetting = new Setting2(settingsSection).setName("\u6587\u6863\u6807\u9898").setDesc("\u53D1\u5E03\u81F3\u98DE\u4E66\u65F6\u7684\u6587\u6863\u6807\u9898\u3002\u9ED8\u8BA4\u4F7F\u7528\u7B14\u8BB0\u6587\u4EF6\u540D\uFF0C\u652F\u6301\u81EA\u5B9A\u4E49\u3002").addText(
+  const titleSetting = new Setting15(settingsSection).setName("\u6587\u6863\u6807\u9898").setDesc("\u53D1\u5E03\u81F3\u98DE\u4E66\u65F6\u7684\u6587\u6863\u6807\u9898\u3002\u9ED8\u8BA4\u4F7F\u7528\u7B14\u8BB0\u6587\u4EF6\u540D\uFF0C\u652F\u6301\u81EA\u5B9A\u4E49\u3002").addText(
     (text) => text.setPlaceholder("\u8BF7\u8F93\u5165\u6587\u6863\u6807\u9898").setValue(docTitle).onChange((val) => {
       docTitle = val.trim();
     })
@@ -53122,7 +53321,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
     if (!parsed) {
       rebindHint.setText("\u8BF7\u8F93\u5165\u6709\u6548\u7684\u98DE\u4E66 docx \u94FE\u63A5\u6216 token\u3002");
       rebindHint.addClass("is-error");
-      showFeishuNotice(Notice2, "\u274C \u98DE\u4E66\u6587\u6863\u94FE\u63A5\u65E0\u6548");
+      showFeishuNotice(Notice15, "\u274C \u98DE\u4E66\u6587\u6863\u94FE\u63A5\u65E0\u6548");
       return;
     }
     const rebound = rebindFeishuHistoryByPath(settings, activeFile.path, {
@@ -53134,11 +53333,11 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
     if (!rebound) {
       rebindHint.setText("\u7ED1\u5B9A\u5931\u8D25\uFF0C\u8BF7\u786E\u8BA4\u5F53\u524D\u7B14\u8BB0\u8DEF\u5F84\u548C\u98DE\u4E66\u94FE\u63A5\u3002");
       rebindHint.addClass("is-error");
-      showFeishuNotice(Notice2, "\u274C \u7ED1\u5B9A\u5931\u8D25");
+      showFeishuNotice(Notice15, "\u274C \u7ED1\u5B9A\u5931\u8D25");
       return;
     }
     await plugin.saveSettings();
-    showFeishuNotice(Notice2, "\u2705 \u5DF2\u91CD\u65B0\u7ED1\u5B9A\u5F53\u524D\u7B14\u8BB0\u7684\u98DE\u4E66\u6587\u6863");
+    showFeishuNotice(Notice15, "\u2705 \u5DF2\u91CD\u65B0\u7ED1\u5B9A\u5F53\u524D\u7B14\u8BB0\u7684\u98DE\u4E66\u6587\u6863");
     renderFeishuPublishTab(view, modal, containerEl, options);
   };
   const resultCard = contentWrapper.createDiv({ cls: "wechat-feishu-result-card" });
@@ -53153,7 +53352,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
     cancelBtn.disabled = true;
     resultCard.addClass("is-hidden");
     const progressNotice = showFeishuNotice(
-      Notice2,
+      Notice15,
       isUpdate ? "\u{1F680} \u6B63\u5728\u66F4\u65B0\u98DE\u4E66\u6587\u6863..." : "\u{1F680} \u6B63\u5728\u540C\u6B65\u5230\u98DE\u4E66\u6587\u6863...",
       0
     );
@@ -53216,10 +53415,10 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
       copyBtn.onclick = async () => {
         try {
           await navigator.clipboard.writeText(result.url);
-          showFeishuNotice(Notice2, "\u2705 \u94FE\u63A5\u5DF2\u590D\u5236\u5230\u526A\u8D34\u677F");
+          showFeishuNotice(Notice15, "\u2705 \u94FE\u63A5\u5DF2\u590D\u5236\u5230\u526A\u8D34\u677F");
         } catch (copyError) {
           console.warn("[\u98DE\u4E66\u540C\u6B65] \u590D\u5236\u94FE\u63A5\u5931\u8D25:", copyError);
-          showFeishuNotice(Notice2, "\u274C \u590D\u5236\u94FE\u63A5\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u6253\u5F00\u540E\u590D\u5236");
+          showFeishuNotice(Notice15, "\u274C \u590D\u5236\u94FE\u63A5\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u6253\u5F00\u540E\u590D\u5236");
         }
       };
       resultCard.removeClass("is-hidden");
@@ -53227,7 +53426,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
       cancelBtn.setText("\u5173\u95ED");
       syncBtn.setCssStyles({ display: "none" });
       showFeishuNotice(
-        Notice2,
+        Notice15,
         warnings.length ? "\u2705 \u98DE\u4E66\u6587\u6863\u5DF2\u540C\u6B65\uFF0C\u90E8\u5206\u4E8B\u9879\u9700\u8981\u786E\u8BA4" : "\u2705 \u98DE\u4E66\u6587\u6863\u540C\u6B65\u6210\u529F\uFF01",
         warnings.length ? 7e3 : void 0
       );
@@ -53237,12 +53436,12 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
       titleSetting.settingEl.removeClass("is-disabled");
       syncBtn.disabled = false;
       cancelBtn.disabled = false;
-      showFeishuNotice(Notice2, `\u274C \u540C\u6B65\u5931\u8D25: ${err.message || String(err)}`, 8e3);
+      showFeishuNotice(Notice15, `\u274C \u540C\u6B65\u5931\u8D25: ${err.message || String(err)}`, 8e3);
     }
   };
 }
 
-// input.js
+// services/obsidian-compat.js
 var loadCommonJsDependency = (specifier) => {
   if (typeof require === "function") {
     const requireFn = (
@@ -53262,82 +53461,61 @@ var loadCommonJsDependency = (specifier) => {
   throw new Error(`CommonJS loader unavailable for ${specifier}`);
 };
 var obsidianApi = (
-  /** @type {ObsidianApiLike} */
+  /** @type {Record<string, unknown>} */
   loadCommonJsDependency("obsidian")
 );
-var { Plugin, MarkdownView, ItemView, Notice, Platform } = obsidianApi;
-var { PluginSettingTab, Setting } = obsidianApi;
-var LEGACY_SETTING_RENDER_KEY2 = ["dis", "play"].join("");
-function getActiveDocumentCompat() {
-  return getActiveDocument();
+var Plugin = obsidianApi.Plugin;
+var MarkdownView = obsidianApi.MarkdownView;
+var ItemView = obsidianApi.ItemView;
+var Notice = obsidianApi.Notice;
+var Platform = obsidianApi.Platform;
+var PluginSettingTab = obsidianApi.PluginSettingTab;
+var Setting = obsidianApi.Setting;
+function getObsidianModalClass() {
+  return obsidianApi.Modal;
 }
-function createFallbackSvgElement() {
-  const activeDocument = getActiveDocumentCompat();
-  if (!activeDocument) {
-    throw new Error("Active document unavailable for SVG fallback");
+function createObsidianModal(app) {
+  const ModalClass = getObsidianModalClass();
+  if (typeof ModalClass !== "function") {
+    throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301 Modal");
   }
-  return activeDocument.createElementNS("http://www.w3.org/2000/svg", "svg");
+  return new ModalClass(app);
 }
-function revealLeafCompat(workspace, leaf) {
-  if (!workspace || !leaf)
-    return Promise.resolve();
-  const revealLeaf = workspace.revealLeaf;
-  if (typeof revealLeaf === "function") {
-    return Promise.resolve(revealLeaf.call(workspace, leaf)).then(() => {
+function getObsidianSetIcon() {
+  return obsidianApi.setIcon;
+}
+function getObsidianRequestUrl() {
+  return obsidianApi.requestUrl;
+}
+function getObsidianRequest() {
+  return obsidianApi.request;
+}
+
+// services/concurrency.js
+var sleep2 = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+async function pMap(array, mapper, concurrency = 3) {
+  const results = [];
+  const executing = [];
+  let isFailed = false;
+  for (const item of array) {
+    if (isFailed)
+      break;
+    const p = Promise.resolve().then(() => mapper(item));
+    results.push(p);
+    const e = p.catch(() => {
+      isFailed = true;
+    }).then(() => {
+      executing.splice(executing.indexOf(e), 1);
     });
+    executing.push(e);
+    if (executing.length >= concurrency) {
+      await Promise.race(executing);
+    }
   }
-  if (typeof workspace.setActiveLeaf === "function") {
-    workspace.setActiveLeaf(leaf, { focus: true });
-    return Promise.resolve();
-  }
-  const leafLike = (
-    /** @type {LeafLike} */
-    leaf
-  );
-  if (typeof leafLike.open === "function") {
-    leafLike.open();
-  }
-  return Promise.resolve();
+  return Promise.all(results);
 }
-function getPluginSettings(plugin) {
-  if (!plugin || typeof plugin !== "object")
-    return {};
-  return plugin.settings || {};
-}
-function setPluginSettings(plugin, settings) {
-  if (!plugin || typeof plugin !== "object")
-    return settings;
-  plugin.settings = settings;
-  return settings;
-}
-function setDestructiveButtonCompat(button) {
-  if (!button)
-    return button;
-  const setDestructive = button.setDestructive;
-  if (typeof setDestructive === "function") {
-    setDestructive.call(button);
-    return button;
-  }
-  const setWarning = button.setWarning;
-  if (typeof setWarning === "function") {
-    setWarning.call(button);
-    return button;
-  }
-  return button;
-}
-function refreshSettingTabCompat(tab) {
-  if (!tab || typeof tab !== "object")
-    return false;
-  if (typeof tab.renderSettingsContent === "function") {
-    tab.renderSettingsContent();
-    return true;
-  }
-  const legacyRender = tab[LEGACY_SETTING_RENDER_KEY2];
-  if (typeof legacyRender !== "function")
-    return false;
-  legacyRender.call(tab);
-  return true;
-}
+
+// services/wechat-api.js
 function toReadableError3(error) {
   if (error instanceof Error)
     return (
@@ -53363,60 +53541,8 @@ function isRecord9(value) {
 function toRecord6(value) {
   return isRecord9(value) ? value : {};
 }
-function toAiLayoutState(value) {
-  return isRecord9(value) ? (
-    /** @type {AiLayoutStateLike} */
-    value
-  ) : null;
-}
-function toAiLayoutJson(value) {
-  return isRecord9(value) ? (
-    /** @type {AiLayoutJsonLike} */
-    value
-  ) : null;
-}
-function toAiLayoutBlock(value) {
-  return isRecord9(value) ? (
-    /** @type {AiLayoutBlockLike} */
-    value
-  ) : {};
-}
-function toAiLayoutGenerationMeta(value) {
-  return isRecord9(value) ? (
-    /** @type {AiLayoutGenerationMetaLike} */
-    value
-  ) : null;
-}
-function toAiLayoutSelection(value) {
-  return isRecord9(value) ? (
-    /** @type {AiLayoutSelectionLike} */
-    value
-  ) : {};
-}
-function toAiLayoutFamilyStates(value) {
-  if (!isRecord9(value))
-    return {};
-  return (
-    /** @type {Record<string, AiLayoutStateLike>} */
-    value
-  );
-}
 function toOptionalText(value) {
   return typeof value === "string" ? value : "";
-}
-function toImageElements(value) {
-  if (!value || typeof value !== "object" || typeof value[Symbol.iterator] !== "function")
-    return [];
-  const images = [];
-  for (const item of value) {
-    if (item instanceof HTMLImageElement)
-      images.push(item);
-  }
-  return images;
-}
-function removeElementClass(element, className) {
-  if (element instanceof HTMLElement)
-    element.classList.remove(className);
 }
 function toOptionalNumber(value) {
   return typeof value === "number" && Number.isFinite(value) ? value : void 0;
@@ -53491,311 +53617,6 @@ function readBlobAsBase64Payload(blob) {
     reader.onerror = () => reject(reader.error || new Error("Failed to read file data"));
     reader.readAsDataURL(blob);
   });
-}
-function dataUrlToBlob(dataUrl) {
-  const source = String(dataUrl || "");
-  const match = source.match(/^data:([^;,]*)(;base64)?,([\s\S]*)$/i);
-  if (!match) {
-    throw new Error("\u65E0\u6548\u7684 data URL \u56FE\u7247\u6765\u6E90");
-  }
-  const mimeType = match[1] || "application/octet-stream";
-  const isBase64 = !!match[2];
-  const payload = match[3] || "";
-  let binary;
-  if (isBase64) {
-    binary = atob(payload);
-  } else {
-    binary = decodeURIComponent(payload);
-  }
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return new Blob([bytes], { type: mimeType });
-}
-function bufferFromBinary2(binary) {
-  if (binary instanceof ArrayBuffer)
-    return binary;
-  if (ArrayBuffer.isView(binary)) {
-    return binary.buffer.slice(binary.byteOffset, binary.byteOffset + binary.byteLength);
-  }
-  if (Array.isArray(binary)) {
-    return new Uint8Array(binary).buffer;
-  }
-  return new ArrayBuffer(0);
-}
-function inferLocalImageMimeType(filename) {
-  const ext = String(filename || "").split("?")[0].split("#")[0].split(".").pop().toLowerCase();
-  if (ext === "png")
-    return "image/png";
-  if (ext === "jpg" || ext === "jpeg")
-    return "image/jpeg";
-  if (ext === "gif")
-    return "image/gif";
-  if (ext === "webp")
-    return "image/webp";
-  if (ext === "svg")
-    return "image/svg+xml";
-  if (ext === "bmp")
-    return "image/bmp";
-  return "application/octet-stream";
-}
-function safeDecodeUriText(value) {
-  const text = String(value || "").trim();
-  try {
-    return decodeURI(text);
-  } catch (e) {
-    return text;
-  }
-}
-function getFileUrlLocalPath(src) {
-  try {
-    const url = new URL(String(src || "").trim());
-    if (url.protocol !== "file:")
-      return "";
-    if (url.hostname && url.hostname !== "localhost")
-      return "";
-    const pathname = decodeURIComponent(url.pathname || "");
-    return /^\/[a-zA-Z]:\//.test(pathname) ? pathname.slice(1) : pathname;
-  } catch (e) {
-    return "";
-  }
-}
-function getVaultAdapterBasePath(app) {
-  var _a5;
-  const adapter = (_a5 = app == null ? void 0 : app.vault) == null ? void 0 : _a5.adapter;
-  if (!adapter || typeof adapter !== "object")
-    return "";
-  const basePath = adapter["basePath"];
-  return typeof basePath === "string" ? basePath : "";
-}
-function normalizeAbsoluteLocalPath2(value) {
-  let pathValue = String(value || "").trim().replace(/\\/g, "/").replace(/\/{2,}/g, "/");
-  const hasDrivePrefix = /^[a-zA-Z]:\//.test(pathValue);
-  if (!hasDrivePrefix) {
-    pathValue = pathValue.replace(/\/+/g, "/");
-  }
-  return pathValue.replace(/\/+$/, "");
-}
-function getVaultRelativePathFromLocalPath2(app, localPath) {
-  const basePath = getVaultAdapterBasePath(app);
-  if (!basePath || !localPath)
-    return "";
-  const normalizedBase = normalizeAbsoluteLocalPath2(basePath);
-  const normalizedLocal = normalizeAbsoluteLocalPath2(localPath);
-  if (!normalizedBase || !normalizedLocal)
-    return "";
-  if (normalizedLocal === normalizedBase)
-    return "";
-  if (!normalizedLocal.startsWith(`${normalizedBase}/`))
-    return "";
-  return normalizeVaultPath(normalizedLocal.slice(normalizedBase.length + 1));
-}
-function getVaultDirnameFromPath(filePath) {
-  const normalized = normalizeVaultPath(String(filePath || ""));
-  const index = normalized.lastIndexOf("/");
-  return index > 0 ? normalized.slice(0, index) : "";
-}
-var APPLE_STYLE_VIEW = "apple-style-converter";
-var APPLE_STYLE_VIEW_TITLE = "Obsidian \u53D1\u5E03\u52A9\u624B";
-var PLACEHOLDER_ICON_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAQKADAAQAAAABAAAAQAAAAABGUUKwAAAWeElEQVRoBZ2aW4xe1XXHz/073zfgsQ0YDCYXQEi9kAQi2qCImxKoiAIUpU1URVSizUsf2ry0apD6UKkvlapQNVWfWqmR+kJLBAkNVEpSBVSkQCmQkmAgAhuMbWzj23hmvsu59vdfa59vxjQXKXvmO2efvdflv9Ze+3pOfG59fVQUWZbNptNRWUZRtJjPx5NJU9dN05CZz2ZxkoxGo+nmZjEqkiSdzabj8aTvu/l8Ppms1HXdNg0ZyuMkHo3K6XSa5zkyp9NNo+yNcoJAxCITFX0UlWWJUsiyPIelHI1QhDoI2ratFovJygrXtuvG4/FsNku2YIzSNNncBMY4S5Mkivqu62Due8RGZHgkBxqVk6JoIIigwQYYLCNKY4nbrjXCwEIhVVA6Abot07vwSKSuNEYROQikuw8ECA+UwIjPk+k40Q9yYZhM8GW0WCywJnhoPOYRDfgSp+ZFkaQJDsBheL2qRFnh9a7Fu4vFHAVFMRKlvE77OGW/JbNtYIEShLQkBFma5llOBhWwz0172zZVVUl4VWEtGW/8oigQzjVNU1oswIBlMqHxY9oO62kRHmhLfIAZeZG3bYdjaFxaPUnjIs+avk7iJOqhbLI0owm6tk2zDGVksxSWBohpmoklgTYhtHjEsU3bEimiRGaWt10T9YESMnzZtFBypyXrPM27qKsXHWYiATcLRl3TFggBJ5SYTQnaM8KDfxohjmJIQQCd3ylKM9oyPncifu9AfPgn0eapaLHRV4uob0Xb0c6EgrV8mvQ8OrfFIyqilsAkRpwS28n2cZrCq8ihqusT6BBCJKIrL/psHO26LLrkQ/Geq/pLrhSspg74EB4QIgjp0hYpvGgyfEYvpMmQS9vR+YgH+vaBH83/98n84IvR5tm+bcWCdeIjOVqTYs+U60HokC5KFYt64FCVyix5tT/LMAplqhkp3snO6EMf6z/xuezKX1F/LcsJUAlLYh7A9HIys+ks3tjYUORm2Xw+I5QRQ8cfT8q66p7+l+6Fx+N6FqUFHVpal+r0YEkwpJcqd4n5yC1QMYAGzEZEgXFQY+XuDhFaCjTyAm3SVFFRxr/x29Ftv09QLeixuJUBjSshSqcCcIxN7hjn1ZVWW8T//lC0/+muKAU9QDPd6HF1jmObAWYGETWAcLMCdQBoTIb8/PLBC1ZlPggGdm1Uz/tfuzW9+0/jfIRZFpFWaTBi2YRwddycvqXumCb5E1/rhH5MMIhsaFiCXi0sMBb6qtKz06g4VFNgpcS4UVuNeDU6i5z8UGPZvvOibeUmTt7Mx/GPnmqf/DsK6OuMNIwKEaMCgLuuJbw2afCSuN9U3Jdl/oNH56/8J20XuqQEeTKVXFxlKNPTUrmZ4mY4SodqNNBLgDPLjpC3XLhI0vKfnBHRKsU4+uF36+cf7yYTG1tjpktNrABObFjt6RZMw13fnDxSP/eNOC3U/c0C0xmE6rZMA2xTsgVUAHliSFtS8mSwlpRBzhaFOATd6SwHsZhMlsCkefTMw+3Jo/WoJJJ6BlMAEzgaxURLcMUxQ/aPvx+tvRfFGumkhiYPMtTGAwLR279nVKyuEwoHLkicxzKGxymVpcZUWHGgs3KrG0qN3tQyaURrJ/qXv9cyBzgz0CHWFEuGGXExn/VN9ubzSUAvHRIgWCZQF/Eau5Wp3nukaZI8JZEHY8TAn5qDO7TKGIuXmBVW6FVwmxRqz0uGgUZ447/j6eaCmc+m5xn9IWM0ZUpjbGJmPn2sfu+dlnnXoNODBVdJV28oIfMS7uYC3aFQuap0p1zJObhZ17Ui4xbZtuSPkuHMVmWItxFJWpJGp4701UZZjGzRoQmhzob5n4VRS/DMNiJWd+gxgX5VdgDuoKXMzDPYhsqUmwnGJH+7q1UWjHJDBr9Qva2jyAz76aIkqT5+hycRz9a7M8faHXuipI1ZyCCK6aCCgPVJ01aztahl3g5tLYfIERoLTSoXN8SfVOd6ws2pjIgLq4OBeskIoVdL8FArMWG8lu1bCQtVJQ7nYgXTRGunKtYerI4WVcWiKFthzV1VhJAy8wWrLS1Ulq6RF9GEM8ICwWF7oVFBoBU1CSr7WfCIZVuJqsQqGonkRhsyMriTRaq/IMmCUKFn5GaVM6kNWzYtWlOsrExms0XGwoHxhwG16RZNJaz2Q4QbYaqk3v6kV8lL7col3HUTu6kfiOSBIW8587I8ZFzBGIc6MOItc1pQYwq8gJLFvNYiM8uIHZblGbMvN+0nWPM2rA/FpTB1btPiPnOFQaPXgsieVWXecjbZ4BUqNmFOaRagQpUkAzU0tvcqFyhZVMIpKvtRxD8tQGRCBGAmgTRPNQrRHN4iccJOT+KdV5yuxHP26KoHBHKVFesiYlZgC4FQ++EFVQYcYjFap9TVyUDWyWVaMr6PxhrKNTgv6NOkhMP2VYTQnG0ru9KUmbluZgGMaQ1NH7TBIuTWN8wEhxLgq4Y6X9N/8vPl1dcnaWaedTJljcukBZG6qRDQ1ax/4cnq9efxqJpec6u3i9Wb8MH2OKrZLUXsuLRNy7Mis+CRn22vqVhUL0a0gUOUmYMiwwLOQZQAWApmM0R0/b1/PP7EPVqTB3plltDdGhVZ8vJg27W/mX3tDzdOvcsWz1Vaa6gJebQu4ahksIwDnSHvddyAOAYimoFaH6qpJpKMTjfPICz8iz+MrmRE0PVt1V364fjGzxSqVBqI/em8Eq/yikBdriS7LmeX6IwIFQ1NytaPfQw+1SOoFEIZsrUWGpVsaxRCtggtq2ZqWl2EYEkKbrKMHrYnL4TBNHFp2m6yg8iR4l8q+XRjSNXu50sRKGuZPib6bekzYh2N9zMWFVjIaoIdJC0BpRqB/2ULB1Hh2WosP+iwOxHYHT1YrZ/uLtzNgPZLmKDNrc9Cg1OEwTR5d0KqsCV0dvzVtELedpxHsLpj981qlK2XjSoQyq8hSdzWox7UkGpVa2WodEdwdPp4/fDfnD532o6SCNVtSSJ+URpixOPF1AqCIoek1bCEKPS5YSzIqVIIYQq7grqdsn/DREELiQzWiTMUaYhQmctaNjW1kGRF9Px3Nt54ef2Ka3POvmQYSZNrf98fXfaBazlWGgT/tDt6cQzbLjJypOwPysXHz4KI6I+jkgMHkHP+kPFjRmA+LsoxR0yCBrs4gxK/I9CfdbchVbIl15V4bVyM0jMn6hNHpmz2+og+JlD3P7h339W/AL0kWaJpbZgxBBq2l3qVxUAOIHAyBylCzgmVTA2QBlIRCq0DVN6leak9hUZQFT8zSr2Mg6mUPXbCJNCnBCiR9sWv7Ln9d3cv7Zfcn5Fkq6ZRtEsg8d/xpxzqTbeiw1HZYGr4OE3hcCIvslHTahSydhSDfoJGEnxNLcjyjPnFHo3IyKy/0Y1SizIO2DoWY7/34O5bf2fV8ATKn3ez4y3Fj2mRVKf2u65CUjdVHI05xdQx43icsAilSodC2QR6dU4z06C7ajXIkJMnoDeZKrN/mWiOwlcpNkRdxoL3i1+55Gehh87c6gC3rkhEOSlo4ISRosHxyvY9sy8dmkMhO7uuMqYwGFjdcSjpsHhkBlETSpS1ndseHhFuOVMj3EEB44PZaU3whT/befPncM1AGjh0o2/Opy2NVYzstGyosu4uH4tLd9OzFKFHPegYnB1yaoekHK7TgyFmdcpkYMzGZuOMnK0iF6kHtY/J9UKrZmPUs+O+cIcGciqrRf/Jeyc/B/250/U/PHjw3OnmfY1gzkYADlEQmQppRwtaNbLYKGQGyALmLobUzF8iEELEUhxvitSXjxrJ5C+ZIBHBUaihSEme1hZpPIlvu+vCPZdnLz07fem5KfPMTfeOVf3/Er4H/Vf/5M23XptmrNven6SbFHiHetmCLjAYlCLjzEdn9yDnbDTjQBc7RuyT27n5VwYjeZDjXKFAMq1xXLWhTz712R17r8xxz6VXcFTWjVb6C3YNyp3Oro7+oS8feOW5jYv3Mpv+9GSekpM0lkuM4FBoqPTM4ZzNAwXIszxTFFIsyNZCIlZP8p/yxmwEXmeSKOTgvpzEn75b6Hnc3Oxeem6DgXM27dbesz6EzCGBfu0Uvj+4//npeKXgCMrUDtV2BwMhGGbcLRze+AYD6YYnsFkIJuNyDCcrpCwZybsKZFsrGIvkmEnGSD48NE3HvHfH3augh2E26/7jsdOHDs45+bjpltXqOO+gFIjDf3z2ZP23X3779Rdmk0nBAMV0cR72AVEwZCv+pZDCAMIGSc4fgFRXFauHtmmzTb0KyMpyXLMaBbtBhAufic3bR0LI2U0bl348Se68Z3XvPqGfz7onHjv1zsE5o8rNn975qx9ZOXOofePp9tJfj/MVjjn6n7w0feTvj7/9Gkf7HHYz2qODActkbru0tc9iGjqlTfGibqtezR9l6gz9QqvRlSK8dBxxPEEA0BfZDWVR3C4FunyqKPE8NxfF8u/2z6xefmWBJnz/xGMn3zk445j11jt2Xnf9SlV3o3Fy+NX6H796aE6ctdGZ4y2Ix2P6CbuVJEr62Vr31v7Frj0cjEs2zjpzojn8ZpXYatygo9l9aKiJLUoNh97tESitXn8RLsPxOq+oEjoWM6gwi8LizdCb+bIEmdT2eR5fvIclSUy4P/HoyUOgL6Lbf2vXdTdcUDd9liXTWfvE40cPHZifOtKePdHxAoXJPo7ocKx8OdLUsvfhh04ceIVTTSWWT//8V8fW3mNg1UmLOU0YLAmQ5UOGV2ogGY7Xu4xtQaFT9TGrUVEKZhgove0oUTLrqeJF0+a0fvq7Zz941ejlH24cfcfQ33nRR2640NDHG+vNtx458u7h+bjUmwcdIPAP9FjoVcK6NeuPvV399ZfevvqjnBPGB19ZnDnelWWxNeqgjhjetqoUNMVwX9WEEBGUcbzOUoLo18aM+ZiyKJqat4VWYxg3qYNXAxWL7clKsmdvduTQ4vX9m6/t30BFXsS33bH7OtDXvEuM19ebbz5y5Ojh2aggIEm8v6PtlSF0JNVFRrQ8R1LNy88w87BFT0Yl0SWATuGelFZQOAw9aIkQOnFdl2Mdr4vNQQ6cagB00mAe8pJhRpTj5K77dl3xgeKFZ9ef+s5ZXnASbzfdsuujHwd9l+YJ6B/7N/mexbr8DXpJ0r95T1dpkTyq0iyNktIKROarQKEEsF3cVu93yoNIqAbAyuh4fa5A1LFKO5evnUt3RlPxuCxGm9VdKR1XEGyAgoKOe821vCfH98n6ufrRfz367uEFL6QtWizcGW2C41EmrJZkkjoDKz+6tXo2b41Ebz4zjcJGL7S8IXCryFoI8WrdJjI/XmePo+P18SRK1jWVeB+QOrdXPqDjnThWPf29tbJMXnxuXW+vo4g3ma++sn7jTatra/W3v3n02JEFoQkOosXdD4238PKOT8ylViMbhFROUTEZK3D3QbL0KPmQGEKYB7pqoW8uKk4X6QBUsTZinTe43IADHmnej4yZgPmfH5xDOE0vTfg2iZ995sz+H5+bTmtGJEWOOitV1lnN5eY5wTQOcWlINIESHyTZMxchNgNlA6bpJ2L4JUjVZlTMOw6Qa3yg+6KSpmg71tVOAA1zitLAZQ6iy+YcA0Me5jhqya+daeqKcLKYAfoWbgHwRI7+ZwOhQ/AqM0RZzwjkkp4ylULuV0NPlhd51NCVQa5PJDgbpYoQytNJNoLFhFgImq0mVBdJCrKcRp0dHfapA291wihJmdlA021xmNvkRRNk9mu3rMaQDxBOhgNSV6NC4xgeFRkqEioWvyMY2dCwfCb4OaReELA6Xm8XLG9AhBaZrh8M9jfYpaWWalRnGaknbIyQwlAuTkvgMqV6MPDLYgFiYBB4kp5EiWbL6nEoBYATqUATSkEL8IFTzkdH+sJAs7Edr7Oh2bGbAk22HplyC2AHdskkL4tCEgFJhfz07yid5Tzj3WiIl8zGuWWVi9XMJQp+Fqhe6oisMIsu2Km2ZQvA9x0cM1oI8ZUW3x3kYz4TKVfcVfBApl8IXBNq8qzKc14ojaB3vX6DJqx9Ra0aSUOUSRMUL4YvaKFAZdSr1jnIi96rrBeNV+K9H5y0jT5QYdjkw5+E4yGUMx/zvvWiy/IrrmGvKR6TJEWSJX0S72ErFaGpB8c7TbiyGhe9t50y9hTGBTGbNBEv0YnIkxfaaB4IXBrx1tTt3qvSySr4/DUrx+uZPjbCDSzuGLn53umG20u+zxE/Npgm95l5wnQbGh69XIY5IGkWIqMUbBkcylygu9NhqRJMIjv/H9WqC+JllAlRYdNE19/OmbTODhT5Ov3T8brOzKq6YjLmM5yP35Fdso9vshCrUHOUZsywywmgBC1gRYwp5dHUL6vQrdDyWpU6i3Dzz5OxwaW751XojrOCUIiprFYu3pfceCf7IS3j7XidbXDDxx4b6GA1yuIujbPL9pV3PcB7ZNuYwT6oR0NQ6Yq3ru5yKbYyg2WMZo9M4l91Fu5OJLjkbMUlc6i19iBvilSk9gkeUYb99z1fumDvPj7G0jdy5ahkHc3gGXMqKhEMYGwUCDcNZt0//eWpp75RjSaMBJoXrYfaxXGaX/2CbqFl3DEYAgWh8ipe0oRSbiqUjnAXoSVnkS4nMvahajHrPvWFyQN/sarZ3yIHAeRwD68ktKzhJFCrCfMD66T7H9xx8315NSfsPCiARCUp3JS1YQY/KcBCjcjIW0hAaz60SmsGKp3Au2WoMEmSJ9mKH+Wk1R5Z6Czm/S33je7/81UOs1DHmI9ziBAAo5wV/DqIWUr4/gBjmJXZvDKwfvvra09+fXH2ZMuiX6+uthpCTjaXuYvCdXsbDRVDc9izJj34nM4nDXO4VZoJ7n+hZ1zhk7N+9aL4sw+s3P0HOzmI5hSLjqrPhPwTTPu+M2ZPQMIgTcb0czulo4tgKBvFA69u/te36he/Pzt+pK75WBH/0Mo+URkQuVuNrrBxeEMumOC0gh2oQvnyNnCZZJVKfD6KL92Xf+yW/NOfv/DKa0bzWaN9jPaDfFlWsIOncdlIMg/EYOVwEANoBDaaCFDGPySKkz5uizxdX2vZcb/7Vn32ZDdb7xdzvrLQeyS1I5/kqjFo2ZTXPihnG0O57WUso2FaH2YoZBUWfZolOnlnCcyHpfrelzVlzHjCmE5Tj8bx7j3Z3g8X+67OVzjYbvnkN7bvT1kv640D8JCP41hHADheP7dejJgQ8hBCLOw4tWOSo830RTQvk2e0hnY8zYzPbdFrGT5Y6Ot2wRKQfQEfsrIsbHvtjZKo5KSe72BxBfvsPD2PsukaZv8u0puUJB433TTjKCLKjVKvSdlX5ekY4NPZYlzqC0vg8i6Dw3RcAIxNe6WEv/wNTYxNNAJNw0jKwo4WgEindrz+TlP6A1920WWYKLTxp7k6dt98HeVfHBcQcLyBaEpgxEmohICFCpK3ZBYjjl8ZMEiw0OsIOtSxK+dwCmcBkfGQFmJeggCBhDQsBIyELxC+BYNjXWLGYCz02SW+tBgdlmKK4tDTyHhSx7NoXZaoYKBcForMKiTQsl61pLSycKHKy43DCodnr1oSLykl0wYC3bUs77WhIY+5da3Pb0h82M0jPMQlX5biSOjo+LifcMWFZLjiGCjpSVBCAyWNQ2wapU54aBkot8tEp85zeD1KiHTs4DSV0rd5QwSlXpimGTJpKIRTAiWqYeHseRsMPvQTDJDD8H+SJXQfoCbppAAAAABJRU5ErkJggg==";
-var GITHUB_REPOSITORY_URL = "https://github.com/DavidLam-oss/obsidian-wechat-converter";
-var OBSIDIAN_PUBLISHER_PRO_URL2 = "https://xiaoweibox.top/obsidian-publisher/pro/";
-var OBSIDIAN_PUBLISHER_GUIDE_URL = "https://xiaoweibox.top/obsidian-publisher/guide/";
-var OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL2 = `${OBSIDIAN_PUBLISHER_GUIDE_URL}?from=obsidian-plugin#install-extension`;
-var OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL2 = `${OBSIDIAN_PUBLISHER_GUIDE_URL}?from=obsidian-plugin#bridge`;
-var MULTI_PLATFORM_TAB_LABEL = "\u5176\u4ED6\u5E73\u53F0\uFF08\u5C0F\u7EA2\u4E66/\u77E5\u4E4E/\u6296\u97F3\u7B49\uFF09";
-function getObsidianModalClass() {
-  return obsidianApi.Modal;
-}
-function createObsidianModal(app) {
-  const ModalClass = getObsidianModalClass();
-  if (typeof ModalClass !== "function") {
-    throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301 Modal");
-  }
-  return new ModalClass(app);
-}
-function getObsidianSetIcon() {
-  return obsidianApi.setIcon;
-}
-function getObsidianRequestUrl() {
-  return obsidianApi.requestUrl;
-}
-function getObsidianRequest() {
-  return obsidianApi.request;
-}
-function getAppleThemeApi() {
-  const api = getActiveWindowValue("AppleTheme");
-  return (
-    /** @type {AppleThemeApiLike} */
-    api
-  );
-}
-function getValueElementFromEvent(event) {
-  const target = event.target;
-  if (target instanceof HTMLInputElement || target instanceof HTMLSelectElement || target instanceof HTMLTextAreaElement) {
-    return target;
-  }
-  return null;
-}
-function getEventTargetValue(event, fallback = "") {
-  var _a5, _b;
-  return (_b = (_a5 = getValueElementFromEvent(event)) == null ? void 0 : _a5.value) != null ? _b : fallback;
-}
-var IMAGE_SWIPE_COMMAND_COPY = {
-  "image-swipe": {
-    commandName: "\u63D2\u5165\u6A2A\u6ED1\u56FE\u7247\u5757",
-    zhTitle: "\u5DE6\u53F3\u6ED1\u52A8\u67E5\u770B\u56FE\u7247",
-    enTitle: "Swipe to view images",
-    zhPlaceholder: ["![[\u56FE\u72471.png]]", "![[\u56FE\u72472.png]]"],
-    enPlaceholder: ["![[image-1.png]]", "![[image-2.png]]"],
-    zhNotice: "\u5DF2\u63D2\u5165\u56FE\u7247\u5757",
-    enNotice: "Image block inserted"
-  },
-  "image-sensitive": {
-    commandName: "\u63D2\u5165\u6A2A\u6ED1\u654F\u611F\u56FE\u7247\u5757",
-    zhTitle: "\u6B64\u7C7B\u56FE\u7247\u53EF\u80FD\u5F15\u53D1\u4E0D\u9002\uFF0C\u5411\u5DE6\u6ED1\u52A8\u67E5\u770B",
-    enTitle: "Sensitive images. Swipe to view.",
-    zhPlaceholder: ["![[\u56FE\u72471.png]]", "![[\u56FE\u72472.png]]"],
-    enPlaceholder: ["![[image-1.png]]", "![[image-2.png]]"],
-    zhNotice: "\u5DF2\u63D2\u5165\u654F\u611F\u56FE\u7247\u5757",
-    enNotice: "Sensitive image block inserted"
-  }
-};
-function getObsidianLocale(app = null) {
-  var _a5, _b, _c, _d;
-  const candidates = [
-    (_b = (_a5 = app == null ? void 0 : app.vault) == null ? void 0 : _a5.getConfig) == null ? void 0 : _b.call(_a5, "language"),
-    (_d = (_c = app == null ? void 0 : app.vault) == null ? void 0 : _c.getConfig) == null ? void 0 : _d.call(_c, "locale"),
-    typeof navigator !== "undefined" ? navigator.language : ""
-  ];
-  return String(candidates.find((value) => typeof value === "string" && value.trim()) || "").trim().toLowerCase();
-}
-function isChineseObsidianLocale(app = null) {
-  const locale = getObsidianLocale(app);
-  return !locale || /^zh(?:-|_|$)/i.test(locale);
-}
-function getImageSwipeCommandCopy(app = null, type = "image-swipe") {
-  const copy = IMAGE_SWIPE_COMMAND_COPY[type] || IMAGE_SWIPE_COMMAND_COPY["image-swipe"];
-  const useChinese = isChineseObsidianLocale(app);
-  return {
-    name: copy.commandName,
-    title: useChinese ? copy.zhTitle : copy.enTitle,
-    placeholder: useChinese ? copy.zhPlaceholder : copy.enPlaceholder,
-    notice: useChinese ? copy.zhNotice : copy.enNotice
-  };
-}
-function quoteLinesForImageSwipeCallout(text) {
-  const lines = String(text || "").split("\n");
-  return lines.map((line) => line ? `> ${line}` : ">").join("\n");
-}
-function createImageSwipeCalloutMarkdown(type = "image-swipe", selectedText = "", app = null) {
-  const copy = getImageSwipeCommandCopy(app, type);
-  const content = String(selectedText || "").trim() ? String(selectedText || "").replace(/\s+$/g, "") : copy.placeholder.join("\n");
-  return `> [!${type}] ${copy.title}
-${quoteLinesForImageSwipeCallout(content)}`;
-}
-var DEFAULT_SETTINGS = {
-  theme: "github",
-  themeColor: "blue",
-  customColor: "#0366d6",
-  quoteCalloutStyleMode: "theme",
-  fontFamily: "sans-serif",
-  fontSize: 3,
-  macCodeBlock: true,
-  codeLineNumber: true,
-  avatarUrl: "",
-  avatarBase64: "",
-  // Base64 编码的本地头像，优先级高于 avatarUrl
-  enableWatermark: false,
-  showImageCaption: true,
-  // 关闭水印时是否显示图片说明文字
-  normalizeChinesePunctuation: true,
-  // 默认开启：仅在渲染结果中将英文标点标准化为中文标点
-  // 多账号支持
-  wechatAccounts: [],
-  // [{ id, name, appId, appSecret }]
-  defaultAccountId: "",
-  // 代理设置
-  proxyUrl: "",
-  // Cloudflare Worker 等代理地址
-  clientId: "",
-  // 自动生成的本地设备唯一ID
-  draftCache: createEmptyDraftCache(),
-  // 预览设置
-  usePhoneFrame: true,
-  // 是否使用手机框预览
-  // 渲染模式已切换为 native-only
-  // 排版设置
-  sidePadding: 16,
-  // 页面两侧留白 (px)
-  coloredHeader: false,
-  // 标题是否使用主题色
-  // 同步后清理资源（默认关闭，避免破坏性行为）
-  cleanupAfterSync: false,
-  cleanupUseSystemTrash: true,
-  cleanupDirTemplate: "",
-  // 发送成功后要清理的目录（支持 {{note}}）
-  multiPlatformSync: createDefaultMultiPlatformSyncSettings(),
-  feishuSync: createDefaultFeishuSyncSettings(),
-  // 旧字段保留用于迁移检测
-  wechatAppId: "",
-  wechatAppSecret: "",
-  ai: createDefaultAiSettings()
-};
-var MAX_ACCOUNTS = 5;
-var AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS = 700;
-var DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS = Object.freeze({
-  contentSourceUrl: "",
-  openComment: true,
-  onlyFansCanComment: false
-});
-function getWechatAccountPublishOptions(account = null) {
-  return {
-    contentSourceUrl: typeof (account == null ? void 0 : account.contentSourceUrl) === "string" ? account.contentSourceUrl : DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS.contentSourceUrl,
-    openComment: typeof (account == null ? void 0 : account.openComment) === "boolean" ? account.openComment : DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS.openComment,
-    onlyFansCanComment: typeof (account == null ? void 0 : account.onlyFansCanComment) === "boolean" ? account.onlyFansCanComment : DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS.onlyFansCanComment
-  };
-}
-function normalizeWechatAccountPublishOptions(values = {}) {
-  const contentSourceUrl = typeof values.contentSourceUrl === "string" ? values.contentSourceUrl.trim() : "";
-  const openComment = !!values.openComment;
-  return {
-    contentSourceUrl,
-    openComment,
-    onlyFansCanComment: openComment && !!values.onlyFansCanComment
-  };
-}
-function isMobileClient2(app) {
-  if (typeof (Platform == null ? void 0 : Platform.isMobile) === "boolean") {
-    return Platform.isMobile;
-  }
-  return !!(app == null ? void 0 : app.isMobile);
-}
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 11);
-}
-var sleep2 = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
-async function pMap(array, mapper, concurrency = 3) {
-  const results = [];
-  const executing = [];
-  let isFailed = false;
-  for (const item of array) {
-    if (isFailed)
-      break;
-    const p = Promise.resolve().then(() => mapper(item));
-    results.push(p);
-    const e = p.catch(() => {
-      isFailed = true;
-    }).then(() => {
-      executing.splice(executing.indexOf(e), 1);
-    });
-    executing.push(e);
-    if (executing.length >= concurrency) {
-      await Promise.race(executing);
-    }
-  }
-  return Promise.all(results);
 }
 var WechatAPI = class {
   /**
@@ -54192,125 +54013,787 @@ var WechatAPI = class {
     });
   }
 };
-var AppleStyleView = class extends ItemView {
-  /**
-   * @param {LeafLike} leaf
-   * @param {AppleStylePluginLike} plugin
-   */
-  constructor(leaf, plugin) {
-    super(leaf);
-    this.plugin = plugin;
-    this.currentHtml = null;
-    this.converter = null;
-    this.nativeRenderPipeline = null;
-    this.theme = null;
-    this.lastActiveFile = null;
-    this.sessionCoverBase64 = "";
-    this.sessionThumbMediaId = "";
-    this.sessionDraftMediaId = "";
-    this.sessionDraftIndex = 0;
-    this.sessionTitle = "";
-    this.sessionDigest = "";
-    this.wechatMaterialCache = /* @__PURE__ */ new Map();
-    this.wechatMaterialCoverAssetCache = /* @__PURE__ */ new Map();
-    this.scrollSyncFrame = null;
-    this.cancelScrollSyncFrame = null;
-    this.pendingScrollSyncSource = "";
-    this.expectedEditorScrollTop = null;
-    this.expectedPreviewScrollTop = null;
-    this.articleStates = /* @__PURE__ */ new Map();
-    this.svgUploadCache = /* @__PURE__ */ new Map();
-    this.imageUploadCache = /* @__PURE__ */ new Map();
-    this.coverUploadCache = /* @__PURE__ */ new Map();
-    this.mermaidImageCache = /* @__PURE__ */ new Map();
-    this.renderGeneration = 0;
-    this.lastRenderError = "";
-    this.lastRenderFailureNoticeKey = "";
-    this.activeLeafRenderTimer = null;
-    this.loadingGeneration = 0;
-    this.loadingVisibilityTimer = null;
-    this.sidePaddingPreviewTimer = null;
-    this.resizeTimeout = null;
-    this.lastResolvedMarkdown = "";
-    this.lastResolvedSourcePath = "";
-    this.lastResolvedSourceHash = "";
-    this.aiLayoutSourceSwitchPath = "";
-    this.aiLayoutStaleSuppressPath = "";
-    this.aiLayoutStaleSuppressUntil = 0;
-    this.aiLayoutStaleSuppressTimer = null;
-    this.baseRenderedHtml = null;
-    this.aiPreviewApplied = false;
-    this.aiLayoutBtn = null;
-    this.settingsBtn = null;
-    this.aiLayoutDebugMode = "";
-    this.aiLayoutActiveGenerationSelection = null;
-    this.previewContainer = null;
-    this.settingsOverlay = null;
-    this.settingsArea = null;
-    this.settingsAdvancedArea = null;
-    this.settingsAdvancedOptions = null;
-    this.activeEditorScroller = null;
-    this.editorScrollListener = null;
-    this.previewScrollListener = null;
-    this.aiLayoutOverlay = null;
-    this.aiLayoutArea = null;
-    this.aiLayoutFamilySelect = null;
-    this.aiColorPaletteSelect = null;
-    this.aiStylePackSelect = null;
-    this.aiCustomColorInput = null;
-    this.aiColorPaletteControls = null;
-    this.aiColorPaletteGrid = null;
-    this.aiLayoutStatus = null;
-    this.aiLayoutStatusBadge = null;
-    this.aiLayoutStatusBody = null;
-    this.aiLayoutStatusText = null;
-    this.aiCachedLayoutList = null;
-    this.aiLayoutSummary = null;
-    this.aiGenerateBtn = null;
-    this.aiRegenerateBtn = null;
-    this.aiResetBtn = null;
-    this.aiRestoreBlocksBtn = null;
-    this.aiResultSection = null;
-    this.aiLayoutMetaNote = null;
-    this.aiBlockList = null;
-    this.aiAdvancedToggleBtn = null;
-    this.aiAdvancedBody = null;
-    this.aiLayoutMetaChips = null;
-    this.aiSchemaIssuePanel = null;
-    this.aiViewJsonBtn = null;
-    this.aiViewErrorBtn = null;
-    this.aiDebugPanel = null;
-    this.aiDebugPanelTitle = null;
-    this.aiCopyPromptBtn = null;
-    this.aiCopyDebugBtn = null;
-    this.aiDebugPanelBody = null;
-    this.aiLayoutLoadingMask = null;
-    this.aiLayoutLoadingSpinner = null;
-    this.aiLayoutLoadingMaskText = null;
-    this.currentDocLabel = null;
-    this.docTitleText = null;
-    this.copyBtn = null;
-    this.selectedAccountId = "";
-    this.isCopying = false;
-    this.captionToggleState = null;
-    this.pendingAiLayoutFamily = "";
-    this.pendingAiColorPalette = "";
-    this.pendingAiStylePack = "";
-    this.aiPrimaryActionMode = "";
-    this.aiLayoutLoading = false;
-    this.aiAdvancedOpen = false;
-    this._sourceFirstRecoveryKey = "";
-    this.aiLayoutPendingAnchor = null;
+
+// views/shared/view-state-utils.js
+var LEGACY_SETTING_RENDER_KEY2 = ["dis", "play"].join("");
+function revealLeafCompat(workspace, leaf) {
+  if (!workspace || !leaf)
+    return Promise.resolve();
+  const revealLeaf = workspace.revealLeaf;
+  if (typeof revealLeaf === "function") {
+    return Promise.resolve(revealLeaf.call(workspace, leaf)).then(() => {
+    });
   }
+  if (typeof workspace.setActiveLeaf === "function") {
+    workspace.setActiveLeaf(leaf, { focus: true });
+    return Promise.resolve();
+  }
+  const leafLike = (
+    /** @type {LeafLike} */
+    leaf
+  );
+  if (typeof leafLike.open === "function") {
+    leafLike.open();
+  }
+  return Promise.resolve();
+}
+function getPluginSettings(plugin) {
+  if (!plugin || typeof plugin !== "object")
+    return {};
+  return plugin.settings || {};
+}
+function setPluginSettings(plugin, settings) {
+  if (!plugin || typeof plugin !== "object")
+    return settings;
+  plugin.settings = settings;
+  return settings;
+}
+function setDestructiveButtonCompat(button) {
+  if (!button)
+    return button;
+  const setDestructive = button.setDestructive;
+  if (typeof setDestructive === "function") {
+    setDestructive.call(button);
+    return button;
+  }
+  const setWarning = button.setWarning;
+  if (typeof setWarning === "function") {
+    setWarning.call(button);
+    return button;
+  }
+  return button;
+}
+function refreshSettingTabCompat(tab) {
+  if (!tab || typeof tab !== "object")
+    return false;
+  if (typeof tab.renderSettingsContent === "function") {
+    tab.renderSettingsContent();
+    return true;
+  }
+  const legacyRender = tab[LEGACY_SETTING_RENDER_KEY2];
+  if (typeof legacyRender !== "function")
+    return false;
+  legacyRender.call(tab);
+  return true;
+}
+function isMobileClient2(app, platformApi = null) {
+  if (typeof (platformApi == null ? void 0 : platformApi.isMobile) === "boolean") {
+    return platformApi.isMobile;
+  }
+  return !!(app == null ? void 0 : app.isMobile);
+}
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 11);
+}
+
+// views/shared/view-dom-helpers.js
+function getActiveDocumentCompat() {
+  return getActiveDocument();
+}
+function createFallbackSvgElement() {
+  const activeDocument = getActiveDocumentCompat();
+  if (!activeDocument) {
+    throw new Error("Active document unavailable for SVG fallback");
+  }
+  return activeDocument.createElementNS("http://www.w3.org/2000/svg", "svg");
+}
+function getAppleThemeApi() {
+  const api = getActiveWindowValue("AppleTheme");
+  return (
+    /** @type {AppleThemeApiLike} */
+    api
+  );
+}
+function getValueElementFromEvent(event) {
+  const target = event.target;
+  if (target instanceof HTMLInputElement || target instanceof HTMLSelectElement || target instanceof HTMLTextAreaElement) {
+    return target;
+  }
+  return null;
+}
+function getEventTargetValue(event, fallback = "") {
+  var _a5, _b;
+  return (_b = (_a5 = getValueElementFromEvent(event)) == null ? void 0 : _a5.value) != null ? _b : fallback;
+}
+function toImageElements(value) {
+  if (!value || typeof value !== "object" || typeof value[Symbol.iterator] !== "function")
+    return [];
+  const images = [];
+  for (const item of value) {
+    if (item instanceof HTMLImageElement)
+      images.push(item);
+  }
+  return images;
+}
+function removeElementClass(element, className) {
+  if (element instanceof HTMLElement)
+    element.classList.remove(className);
+}
+
+// services/readable-error.js
+function toReadableError4(error) {
+  if (error instanceof Error)
+    return (
+      /** @type {{ message: string, isFatal?: boolean, isProxyAuth?: boolean }} */
+      error
+    );
+  if (error && typeof error === "object") {
+    const record = (
+      /** @type {{ message?: unknown, isFatal?: unknown, isProxyAuth?: unknown }} */
+      error
+    );
+    return {
+      message: typeof record.message === "string" ? record.message : String(error),
+      isFatal: record.isFatal === true,
+      isProxyAuth: record.isProxyAuth === true
+    };
+  }
+  return { message: String(error || "") };
+}
+
+// services/record-utils.js
+function isRecord10(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+function toRecord7(value) {
+  return isRecord10(value) ? value : {};
+}
+function toOptionalText2(value) {
+  return typeof value === "string" ? value : "";
+}
+function toOptionalNumber2(value) {
+  return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+}
+function parseJsonRecord2(value) {
+  if (isRecord10(value))
+    return value;
+  if (typeof value !== "string" || !value.trim())
+    return {};
+  try {
+    return toRecord7(JSON.parse(value));
+  } catch (e) {
+    return {};
+  }
+}
+
+// services/ai-layout-records.js
+function toAiLayoutState(value) {
+  return isRecord10(value) ? (
+    /** @type {AiLayoutStateLike} */
+    value
+  ) : null;
+}
+function toAiLayoutJson(value) {
+  return isRecord10(value) ? (
+    /** @type {AiLayoutJsonLike} */
+    value
+  ) : null;
+}
+function toAiLayoutBlock(value) {
+  return isRecord10(value) ? (
+    /** @type {AiLayoutBlockLike} */
+    value
+  ) : {};
+}
+function toAiLayoutGenerationMeta(value) {
+  return isRecord10(value) ? (
+    /** @type {AiLayoutGenerationMetaLike} */
+    value
+  ) : null;
+}
+function toAiLayoutSelection(value) {
+  return isRecord10(value) ? (
+    /** @type {AiLayoutSelectionLike} */
+    value
+  ) : {};
+}
+function toAiLayoutFamilyStates(value) {
+  if (!isRecord10(value))
+    return {};
+  return (
+    /** @type {Record<string, AiLayoutStateLike>} */
+    value
+  );
+}
+
+// services/request-utils.js
+function normalizeRequestUrlResponse2(response) {
+  var _a5;
+  const record = toRecord7(response);
+  const status = (_a5 = toOptionalNumber2(record.status)) != null ? _a5 : 200;
+  const headers = (
+    /** @type {Record<string, string>} */
+    toRecord7(record.headers)
+  );
+  return {
+    status,
+    json: record.json,
+    text: toOptionalText2(record.text),
+    arrayBuffer: typeof record.arrayBuffer === "function" ? (
+      /** @type {() => Promise<ArrayBuffer>} */
+      record.arrayBuffer.bind(response)
+    ) : void 0,
+    headers
+  };
+}
+function getResponseJsonRecord2(response) {
+  return toRecord7(response.json);
+}
+function getProxyErrorMessage2(response) {
+  const body = isRecord10(response.json) ? response.json : parseJsonRecord2(response.text);
+  const bodyError = body.error;
+  if (typeof bodyError === "string" && bodyError)
+    return bodyError;
+  return response.text || `Request failed, status ${response.status}`;
+}
+function createProxyError2(message, isAuthFailure) {
+  const error = (
+    /** @type {Error & { isProxyAuth?: boolean, isFatal?: boolean }} */
+    new Error(message)
+  );
+  if (isAuthFailure) {
+    error.isProxyAuth = true;
+    error.isFatal = true;
+  }
+  return error;
+}
+
+// services/wechat-api-utils.js
+function formatWechatApiError2(data) {
+  var _a5;
+  const errmsg = typeof data.errmsg === "string" ? data.errmsg : JSON.stringify(data);
+  const errcode = (_a5 = data.errcode) != null ? _a5 : "N/A";
+  return `${errmsg} (${errcode})`;
+}
+function hasWechatUploadResult2(data) {
+  return typeof data.media_id === "string" || typeof data.url === "string";
+}
+
+// services/image-source-utils.js
+function readBlobAsBase64Payload2(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      resolve(result.split(",")[1] || "");
+    };
+    reader.onerror = () => reject(reader.error || new Error("Failed to read file data"));
+    reader.readAsDataURL(blob);
+  });
+}
+function dataUrlToBlob(dataUrl) {
+  const source = String(dataUrl || "");
+  const match = source.match(/^data:([^;,]*)(;base64)?,([\s\S]*)$/i);
+  if (!match) {
+    throw new Error("\u65E0\u6548\u7684 data URL \u56FE\u7247\u6765\u6E90");
+  }
+  const mimeType = match[1] || "application/octet-stream";
+  const isBase64 = !!match[2];
+  const payload = match[3] || "";
+  let binary;
+  if (isBase64) {
+    binary = atob(payload);
+  } else {
+    binary = decodeURIComponent(payload);
+  }
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: mimeType });
+}
+function bufferFromBinary2(binary) {
+  if (binary instanceof ArrayBuffer)
+    return binary;
+  if (ArrayBuffer.isView(binary)) {
+    return binary.buffer.slice(binary.byteOffset, binary.byteOffset + binary.byteLength);
+  }
+  if (Array.isArray(binary)) {
+    return new Uint8Array(binary).buffer;
+  }
+  return new ArrayBuffer(0);
+}
+function inferLocalImageMimeType(filename) {
+  const ext = String(filename || "").split("?")[0].split("#")[0].split(".").pop().toLowerCase();
+  if (ext === "png")
+    return "image/png";
+  if (ext === "jpg" || ext === "jpeg")
+    return "image/jpeg";
+  if (ext === "gif")
+    return "image/gif";
+  if (ext === "webp")
+    return "image/webp";
+  if (ext === "svg")
+    return "image/svg+xml";
+  if (ext === "bmp")
+    return "image/bmp";
+  return "application/octet-stream";
+}
+function safeDecodeUriText(value) {
+  const text = String(value || "").trim();
+  try {
+    return decodeURI(text);
+  } catch (e) {
+    return text;
+  }
+}
+function getFileUrlLocalPath(src) {
+  try {
+    const url = new URL(String(src || "").trim());
+    if (url.protocol !== "file:")
+      return "";
+    if (url.hostname && url.hostname !== "localhost")
+      return "";
+    const pathname = decodeURIComponent(url.pathname || "");
+    return /^\/[a-zA-Z]:\//.test(pathname) ? pathname.slice(1) : pathname;
+  } catch (e) {
+    return "";
+  }
+}
+function getVaultAdapterBasePath(app) {
+  var _a5;
+  const adapter = (_a5 = app == null ? void 0 : app.vault) == null ? void 0 : _a5.adapter;
+  if (!adapter || typeof adapter !== "object")
+    return "";
+  const basePath = adapter["basePath"];
+  return typeof basePath === "string" ? basePath : "";
+}
+function normalizeAbsoluteLocalPath2(value) {
+  let pathValue = String(value || "").trim().replace(/\\/g, "/").replace(/\/{2,}/g, "/");
+  const hasDrivePrefix = /^[a-zA-Z]:\//.test(pathValue);
+  if (!hasDrivePrefix) {
+    pathValue = pathValue.replace(/\/+/g, "/");
+  }
+  return pathValue.replace(/\/+$/, "");
+}
+function getVaultRelativePathFromLocalPath2(app, localPath) {
+  const basePath = getVaultAdapterBasePath(app);
+  if (!basePath || !localPath)
+    return "";
+  const normalizedBase = normalizeAbsoluteLocalPath2(basePath);
+  const normalizedLocal = normalizeAbsoluteLocalPath2(localPath);
+  if (!normalizedBase || !normalizedLocal)
+    return "";
+  if (normalizedLocal === normalizedBase)
+    return "";
+  if (!normalizedLocal.startsWith(`${normalizedBase}/`))
+    return "";
+  return normalizeVaultPath(normalizedLocal.slice(normalizedBase.length + 1));
+}
+function getVaultDirnameFromPath(filePath) {
+  const normalized = normalizeVaultPath(String(filePath || ""));
+  const index = normalized.lastIndexOf("/");
+  return index > 0 ? normalized.slice(0, index) : "";
+}
+
+// views/shared/view-constants.js
+var APPLE_STYLE_VIEW = "apple-style-converter";
+var APPLE_STYLE_VIEW_TITLE = "Obsidian \u53D1\u5E03\u52A9\u624B";
+var PLACEHOLDER_ICON_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAQKADAAQAAAABAAAAQAAAAABGUUKwAAAWeElEQVRoBZ2aW4xe1XXHz/073zfgsQ0YDCYXQEi9kAQi2qCImxKoiAIUpU1URVSizUsf2ry0apD6UKkvlapQNVWfWqmR+kJLBAkNVEpSBVSkQCmQkmAgAhuMbWzj23hmvsu59vdfa59vxjQXKXvmO2efvdflv9Ze+3pOfG59fVQUWZbNptNRWUZRtJjPx5NJU9dN05CZz2ZxkoxGo+nmZjEqkiSdzabj8aTvu/l8Ppms1HXdNg0ZyuMkHo3K6XSa5zkyp9NNo+yNcoJAxCITFX0UlWWJUsiyPIelHI1QhDoI2ratFovJygrXtuvG4/FsNku2YIzSNNncBMY4S5Mkivqu62Due8RGZHgkBxqVk6JoIIigwQYYLCNKY4nbrjXCwEIhVVA6Abot07vwSKSuNEYROQikuw8ECA+UwIjPk+k40Q9yYZhM8GW0WCywJnhoPOYRDfgSp+ZFkaQJDsBheL2qRFnh9a7Fu4vFHAVFMRKlvE77OGW/JbNtYIEShLQkBFma5llOBhWwz0172zZVVUl4VWEtGW/8oigQzjVNU1oswIBlMqHxY9oO62kRHmhLfIAZeZG3bYdjaFxaPUnjIs+avk7iJOqhbLI0owm6tk2zDGVksxSWBohpmoklgTYhtHjEsU3bEimiRGaWt10T9YESMnzZtFBypyXrPM27qKsXHWYiATcLRl3TFggBJ5SYTQnaM8KDfxohjmJIQQCd3ylKM9oyPncifu9AfPgn0eapaLHRV4uob0Xb0c6EgrV8mvQ8OrfFIyqilsAkRpwS28n2cZrCq8ihqusT6BBCJKIrL/psHO26LLrkQ/Geq/pLrhSspg74EB4QIgjp0hYpvGgyfEYvpMmQS9vR+YgH+vaBH83/98n84IvR5tm+bcWCdeIjOVqTYs+U60HokC5KFYt64FCVyix5tT/LMAplqhkp3snO6EMf6z/xuezKX1F/LcsJUAlLYh7A9HIys+ks3tjYUORm2Xw+I5QRQ8cfT8q66p7+l+6Fx+N6FqUFHVpal+r0YEkwpJcqd4n5yC1QMYAGzEZEgXFQY+XuDhFaCjTyAm3SVFFRxr/x29Ftv09QLeixuJUBjSshSqcCcIxN7hjn1ZVWW8T//lC0/+muKAU9QDPd6HF1jmObAWYGETWAcLMCdQBoTIb8/PLBC1ZlPggGdm1Uz/tfuzW9+0/jfIRZFpFWaTBi2YRwddycvqXumCb5E1/rhH5MMIhsaFiCXi0sMBb6qtKz06g4VFNgpcS4UVuNeDU6i5z8UGPZvvOibeUmTt7Mx/GPnmqf/DsK6OuMNIwKEaMCgLuuJbw2afCSuN9U3Jdl/oNH56/8J20XuqQEeTKVXFxlKNPTUrmZ4mY4SodqNNBLgDPLjpC3XLhI0vKfnBHRKsU4+uF36+cf7yYTG1tjpktNrABObFjt6RZMw13fnDxSP/eNOC3U/c0C0xmE6rZMA2xTsgVUAHliSFtS8mSwlpRBzhaFOATd6SwHsZhMlsCkefTMw+3Jo/WoJJJ6BlMAEzgaxURLcMUxQ/aPvx+tvRfFGumkhiYPMtTGAwLR279nVKyuEwoHLkicxzKGxymVpcZUWHGgs3KrG0qN3tQyaURrJ/qXv9cyBzgz0CHWFEuGGXExn/VN9ubzSUAvHRIgWCZQF/Eau5Wp3nukaZI8JZEHY8TAn5qDO7TKGIuXmBVW6FVwmxRqz0uGgUZ447/j6eaCmc+m5xn9IWM0ZUpjbGJmPn2sfu+dlnnXoNODBVdJV28oIfMS7uYC3aFQuap0p1zJObhZ17Ui4xbZtuSPkuHMVmWItxFJWpJGp4701UZZjGzRoQmhzob5n4VRS/DMNiJWd+gxgX5VdgDuoKXMzDPYhsqUmwnGJH+7q1UWjHJDBr9Qva2jyAz76aIkqT5+hycRz9a7M8faHXuipI1ZyCCK6aCCgPVJ01aztahl3g5tLYfIERoLTSoXN8SfVOd6ws2pjIgLq4OBeskIoVdL8FArMWG8lu1bCQtVJQ7nYgXTRGunKtYerI4WVcWiKFthzV1VhJAy8wWrLS1Ulq6RF9GEM8ICwWF7oVFBoBU1CSr7WfCIZVuJqsQqGonkRhsyMriTRaq/IMmCUKFn5GaVM6kNWzYtWlOsrExms0XGwoHxhwG16RZNJaz2Q4QbYaqk3v6kV8lL7col3HUTu6kfiOSBIW8587I8ZFzBGIc6MOItc1pQYwq8gJLFvNYiM8uIHZblGbMvN+0nWPM2rA/FpTB1btPiPnOFQaPXgsieVWXecjbZ4BUqNmFOaRagQpUkAzU0tvcqFyhZVMIpKvtRxD8tQGRCBGAmgTRPNQrRHN4iccJOT+KdV5yuxHP26KoHBHKVFesiYlZgC4FQ++EFVQYcYjFap9TVyUDWyWVaMr6PxhrKNTgv6NOkhMP2VYTQnG0ru9KUmbluZgGMaQ1NH7TBIuTWN8wEhxLgq4Y6X9N/8vPl1dcnaWaedTJljcukBZG6qRDQ1ax/4cnq9efxqJpec6u3i9Wb8MH2OKrZLUXsuLRNy7Mis+CRn22vqVhUL0a0gUOUmYMiwwLOQZQAWApmM0R0/b1/PP7EPVqTB3plltDdGhVZ8vJg27W/mX3tDzdOvcsWz1Vaa6gJebQu4ahksIwDnSHvddyAOAYimoFaH6qpJpKMTjfPICz8iz+MrmRE0PVt1V364fjGzxSqVBqI/em8Eq/yikBdriS7LmeX6IwIFQ1NytaPfQw+1SOoFEIZsrUWGpVsaxRCtggtq2ZqWl2EYEkKbrKMHrYnL4TBNHFp2m6yg8iR4l8q+XRjSNXu50sRKGuZPib6bekzYh2N9zMWFVjIaoIdJC0BpRqB/2ULB1Hh2WosP+iwOxHYHT1YrZ/uLtzNgPZLmKDNrc9Cg1OEwTR5d0KqsCV0dvzVtELedpxHsLpj981qlK2XjSoQyq8hSdzWox7UkGpVa2WodEdwdPp4/fDfnD532o6SCNVtSSJ+URpixOPF1AqCIoek1bCEKPS5YSzIqVIIYQq7grqdsn/DREELiQzWiTMUaYhQmctaNjW1kGRF9Px3Nt54ef2Ka3POvmQYSZNrf98fXfaBazlWGgT/tDt6cQzbLjJypOwPysXHz4KI6I+jkgMHkHP+kPFjRmA+LsoxR0yCBrs4gxK/I9CfdbchVbIl15V4bVyM0jMn6hNHpmz2+og+JlD3P7h339W/AL0kWaJpbZgxBBq2l3qVxUAOIHAyBylCzgmVTA2QBlIRCq0DVN6leak9hUZQFT8zSr2Mg6mUPXbCJNCnBCiR9sWv7Ln9d3cv7Zfcn5Fkq6ZRtEsg8d/xpxzqTbeiw1HZYGr4OE3hcCIvslHTahSydhSDfoJGEnxNLcjyjPnFHo3IyKy/0Y1SizIO2DoWY7/34O5bf2fV8ATKn3ez4y3Fj2mRVKf2u65CUjdVHI05xdQx43icsAilSodC2QR6dU4z06C7ajXIkJMnoDeZKrN/mWiOwlcpNkRdxoL3i1+55Gehh87c6gC3rkhEOSlo4ISRosHxyvY9sy8dmkMhO7uuMqYwGFjdcSjpsHhkBlETSpS1ndseHhFuOVMj3EEB44PZaU3whT/befPncM1AGjh0o2/Opy2NVYzstGyosu4uH4tLd9OzFKFHPegYnB1yaoekHK7TgyFmdcpkYMzGZuOMnK0iF6kHtY/J9UKrZmPUs+O+cIcGciqrRf/Jeyc/B/250/U/PHjw3OnmfY1gzkYADlEQmQppRwtaNbLYKGQGyALmLobUzF8iEELEUhxvitSXjxrJ5C+ZIBHBUaihSEme1hZpPIlvu+vCPZdnLz07fem5KfPMTfeOVf3/Er4H/Vf/5M23XptmrNven6SbFHiHetmCLjAYlCLjzEdn9yDnbDTjQBc7RuyT27n5VwYjeZDjXKFAMq1xXLWhTz712R17r8xxz6VXcFTWjVb6C3YNyp3Oro7+oS8feOW5jYv3Mpv+9GSekpM0lkuM4FBoqPTM4ZzNAwXIszxTFFIsyNZCIlZP8p/yxmwEXmeSKOTgvpzEn75b6Hnc3Oxeem6DgXM27dbesz6EzCGBfu0Uvj+4//npeKXgCMrUDtV2BwMhGGbcLRze+AYD6YYnsFkIJuNyDCcrpCwZybsKZFsrGIvkmEnGSD48NE3HvHfH3augh2E26/7jsdOHDs45+bjpltXqOO+gFIjDf3z2ZP23X3779Rdmk0nBAMV0cR72AVEwZCv+pZDCAMIGSc4fgFRXFauHtmmzTb0KyMpyXLMaBbtBhAufic3bR0LI2U0bl348Se68Z3XvPqGfz7onHjv1zsE5o8rNn975qx9ZOXOofePp9tJfj/MVjjn6n7w0feTvj7/9Gkf7HHYz2qODActkbru0tc9iGjqlTfGibqtezR9l6gz9QqvRlSK8dBxxPEEA0BfZDWVR3C4FunyqKPE8NxfF8u/2z6xefmWBJnz/xGMn3zk445j11jt2Xnf9SlV3o3Fy+NX6H796aE6ctdGZ4y2Ix2P6CbuVJEr62Vr31v7Frj0cjEs2zjpzojn8ZpXYatygo9l9aKiJLUoNh97tESitXn8RLsPxOq+oEjoWM6gwi8LizdCb+bIEmdT2eR5fvIclSUy4P/HoyUOgL6Lbf2vXdTdcUDd9liXTWfvE40cPHZifOtKePdHxAoXJPo7ocKx8OdLUsvfhh04ceIVTTSWWT//8V8fW3mNg1UmLOU0YLAmQ5UOGV2ogGY7Xu4xtQaFT9TGrUVEKZhgove0oUTLrqeJF0+a0fvq7Zz941ejlH24cfcfQ33nRR2640NDHG+vNtx458u7h+bjUmwcdIPAP9FjoVcK6NeuPvV399ZfevvqjnBPGB19ZnDnelWWxNeqgjhjetqoUNMVwX9WEEBGUcbzOUoLo18aM+ZiyKJqat4VWYxg3qYNXAxWL7clKsmdvduTQ4vX9m6/t30BFXsS33bH7OtDXvEuM19ebbz5y5Ojh2aggIEm8v6PtlSF0JNVFRrQ8R1LNy88w87BFT0Yl0SWATuGelFZQOAw9aIkQOnFdl2Mdr4vNQQ6cagB00mAe8pJhRpTj5K77dl3xgeKFZ9ef+s5ZXnASbzfdsuujHwd9l+YJ6B/7N/mexbr8DXpJ0r95T1dpkTyq0iyNktIKROarQKEEsF3cVu93yoNIqAbAyuh4fa5A1LFKO5evnUt3RlPxuCxGm9VdKR1XEGyAgoKOe821vCfH98n6ufrRfz367uEFL6QtWizcGW2C41EmrJZkkjoDKz+6tXo2b41Ebz4zjcJGL7S8IXCryFoI8WrdJjI/XmePo+P18SRK1jWVeB+QOrdXPqDjnThWPf29tbJMXnxuXW+vo4g3ma++sn7jTatra/W3v3n02JEFoQkOosXdD4238PKOT8ylViMbhFROUTEZK3D3QbL0KPmQGEKYB7pqoW8uKk4X6QBUsTZinTe43IADHmnej4yZgPmfH5xDOE0vTfg2iZ995sz+H5+bTmtGJEWOOitV1lnN5eY5wTQOcWlINIESHyTZMxchNgNlA6bpJ2L4JUjVZlTMOw6Qa3yg+6KSpmg71tVOAA1zitLAZQ6iy+YcA0Me5jhqya+daeqKcLKYAfoWbgHwRI7+ZwOhQ/AqM0RZzwjkkp4ylULuV0NPlhd51NCVQa5PJDgbpYoQytNJNoLFhFgImq0mVBdJCrKcRp0dHfapA291wihJmdlA021xmNvkRRNk9mu3rMaQDxBOhgNSV6NC4xgeFRkqEioWvyMY2dCwfCb4OaReELA6Xm8XLG9AhBaZrh8M9jfYpaWWalRnGaknbIyQwlAuTkvgMqV6MPDLYgFiYBB4kp5EiWbL6nEoBYATqUATSkEL8IFTzkdH+sJAs7Edr7Oh2bGbAk22HplyC2AHdskkL4tCEgFJhfz07yid5Tzj3WiIl8zGuWWVi9XMJQp+Fqhe6oisMIsu2Km2ZQvA9x0cM1oI8ZUW3x3kYz4TKVfcVfBApl8IXBNq8qzKc14ojaB3vX6DJqx9Ra0aSUOUSRMUL4YvaKFAZdSr1jnIi96rrBeNV+K9H5y0jT5QYdjkw5+E4yGUMx/zvvWiy/IrrmGvKR6TJEWSJX0S72ErFaGpB8c7TbiyGhe9t50y9hTGBTGbNBEv0YnIkxfaaB4IXBrx1tTt3qvSySr4/DUrx+uZPjbCDSzuGLn53umG20u+zxE/Npgm95l5wnQbGh69XIY5IGkWIqMUbBkcylygu9NhqRJMIjv/H9WqC+JllAlRYdNE19/OmbTODhT5Ov3T8brOzKq6YjLmM5yP35Fdso9vshCrUHOUZsywywmgBC1gRYwp5dHUL6vQrdDyWpU6i3Dzz5OxwaW751XojrOCUIiprFYu3pfceCf7IS3j7XidbXDDxx4b6GA1yuIujbPL9pV3PcB7ZNuYwT6oR0NQ6Yq3ru5yKbYyg2WMZo9M4l91Fu5OJLjkbMUlc6i19iBvilSk9gkeUYb99z1fumDvPj7G0jdy5ahkHc3gGXMqKhEMYGwUCDcNZt0//eWpp75RjSaMBJoXrYfaxXGaX/2CbqFl3DEYAgWh8ipe0oRSbiqUjnAXoSVnkS4nMvahajHrPvWFyQN/sarZ3yIHAeRwD68ktKzhJFCrCfMD66T7H9xx8315NSfsPCiARCUp3JS1YQY/KcBCjcjIW0hAaz60SmsGKp3Au2WoMEmSJ9mKH+Wk1R5Z6Czm/S33je7/81UOs1DHmI9ziBAAo5wV/DqIWUr4/gBjmJXZvDKwfvvra09+fXH2ZMuiX6+uthpCTjaXuYvCdXsbDRVDc9izJj34nM4nDXO4VZoJ7n+hZ1zhk7N+9aL4sw+s3P0HOzmI5hSLjqrPhPwTTPu+M2ZPQMIgTcb0czulo4tgKBvFA69u/te36he/Pzt+pK75WBH/0Mo+URkQuVuNrrBxeEMumOC0gh2oQvnyNnCZZJVKfD6KL92Xf+yW/NOfv/DKa0bzWaN9jPaDfFlWsIOncdlIMg/EYOVwEANoBDaaCFDGPySKkz5uizxdX2vZcb/7Vn32ZDdb7xdzvrLQeyS1I5/kqjFo2ZTXPihnG0O57WUso2FaH2YoZBUWfZolOnlnCcyHpfrelzVlzHjCmE5Tj8bx7j3Z3g8X+67OVzjYbvnkN7bvT1kv640D8JCP41hHADheP7dejJgQ8hBCLOw4tWOSo830RTQvk2e0hnY8zYzPbdFrGT5Y6Ot2wRKQfQEfsrIsbHvtjZKo5KSe72BxBfvsPD2PsukaZv8u0puUJB433TTjKCLKjVKvSdlX5ekY4NPZYlzqC0vg8i6Dw3RcAIxNe6WEv/wNTYxNNAJNw0jKwo4WgEindrz+TlP6A1920WWYKLTxp7k6dt98HeVfHBcQcLyBaEpgxEmohICFCpK3ZBYjjl8ZMEiw0OsIOtSxK+dwCmcBkfGQFmJeggCBhDQsBIyELxC+BYNjXWLGYCz02SW+tBgdlmKK4tDTyHhSx7NoXZaoYKBcForMKiTQsl61pLSycKHKy43DCodnr1oSLykl0wYC3bUs77WhIY+5da3Pb0h82M0jPMQlX5biSOjo+LifcMWFZLjiGCjpSVBCAyWNQ2wapU54aBkot8tEp85zeD1KiHTs4DSV0rd5QwSlXpimGTJpKIRTAiWqYeHseRsMPvQTDJDD8H+SJXQfoCbppAAAAABJRU5ErkJggg==";
+var GITHUB_REPOSITORY_URL = "https://github.com/DavidLam-oss/obsidian-wechat-converter";
+var OBSIDIAN_PUBLISHER_PRO_URL2 = "https://xiaoweibox.top/obsidian-publisher/pro/";
+var OBSIDIAN_PUBLISHER_GUIDE_URL = "https://xiaoweibox.top/obsidian-publisher/guide/";
+var OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL2 = `${OBSIDIAN_PUBLISHER_GUIDE_URL}?from=obsidian-plugin#install-extension`;
+var OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL2 = `${OBSIDIAN_PUBLISHER_GUIDE_URL}?from=obsidian-plugin#bridge`;
+var MULTI_PLATFORM_TAB_LABEL = "\u5176\u4ED6\u5E73\u53F0\uFF08\u5C0F\u7EA2\u4E66/\u77E5\u4E4E/\u6296\u97F3\u7B49\uFF09";
+var MAX_ACCOUNTS = 5;
+var AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS = 700;
+var DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS = Object.freeze({
+  contentSourceUrl: "",
+  openComment: true,
+  onlyFansCanComment: false
+});
+
+// services/image-swipe-callout.js
+var IMAGE_SWIPE_COMMAND_COPY = {
+  "image-swipe": {
+    commandName: "\u63D2\u5165\u6A2A\u6ED1\u56FE\u7247\u5757",
+    zhTitle: "\u5DE6\u53F3\u6ED1\u52A8\u67E5\u770B\u56FE\u7247",
+    enTitle: "Swipe to view images",
+    zhPlaceholder: ["![[\u56FE\u72471.png]]", "![[\u56FE\u72472.png]]"],
+    enPlaceholder: ["![[image-1.png]]", "![[image-2.png]]"],
+    zhNotice: "\u5DF2\u63D2\u5165\u56FE\u7247\u5757",
+    enNotice: "Image block inserted"
+  },
+  "image-sensitive": {
+    commandName: "\u63D2\u5165\u6A2A\u6ED1\u654F\u611F\u56FE\u7247\u5757",
+    zhTitle: "\u6B64\u7C7B\u56FE\u7247\u53EF\u80FD\u5F15\u53D1\u4E0D\u9002\uFF0C\u5411\u5DE6\u6ED1\u52A8\u67E5\u770B",
+    enTitle: "Sensitive images. Swipe to view.",
+    zhPlaceholder: ["![[\u56FE\u72471.png]]", "![[\u56FE\u72472.png]]"],
+    enPlaceholder: ["![[image-1.png]]", "![[image-2.png]]"],
+    zhNotice: "\u5DF2\u63D2\u5165\u654F\u611F\u56FE\u7247\u5757",
+    enNotice: "Sensitive image block inserted"
+  }
+};
+function getObsidianLocale(app = null) {
+  var _a5, _b, _c, _d;
+  const candidates = [
+    (_b = (_a5 = app == null ? void 0 : app.vault) == null ? void 0 : _a5.getConfig) == null ? void 0 : _b.call(_a5, "language"),
+    (_d = (_c = app == null ? void 0 : app.vault) == null ? void 0 : _c.getConfig) == null ? void 0 : _d.call(_c, "locale"),
+    typeof navigator !== "undefined" ? navigator.language : ""
+  ];
+  return String(candidates.find((value) => typeof value === "string" && value.trim()) || "").trim().toLowerCase();
+}
+function isChineseObsidianLocale(app = null) {
+  const locale = getObsidianLocale(app);
+  return !locale || /^zh(?:-|_|$)/i.test(locale);
+}
+function getImageSwipeCommandCopy(app = null, type = "image-swipe") {
+  const copy = IMAGE_SWIPE_COMMAND_COPY[type] || IMAGE_SWIPE_COMMAND_COPY["image-swipe"];
+  const useChinese = isChineseObsidianLocale(app);
+  return {
+    name: copy.commandName,
+    title: useChinese ? copy.zhTitle : copy.enTitle,
+    placeholder: useChinese ? copy.zhPlaceholder : copy.enPlaceholder,
+    notice: useChinese ? copy.zhNotice : copy.enNotice
+  };
+}
+function quoteLinesForImageSwipeCallout(text) {
+  const lines = String(text || "").split("\n");
+  return lines.map((line) => line ? `> ${line}` : ">").join("\n");
+}
+function createImageSwipeCalloutMarkdown(type = "image-swipe", selectedText = "", app = null) {
+  const copy = getImageSwipeCommandCopy(app, type);
+  const content = String(selectedText || "").trim() ? String(selectedText || "").replace(/\s+$/g, "") : copy.placeholder.join("\n");
+  return `> [!${type}] ${copy.title}
+${quoteLinesForImageSwipeCallout(content)}`;
+}
+
+// services/plugin-settings.js
+function isRecord11(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+function toRecord8(value) {
+  return isRecord11(value) ? value : {};
+}
+function generateFallbackId() {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
+function createDefaultSettings() {
+  return {
+    theme: "github",
+    themeColor: "blue",
+    customColor: "#0366d6",
+    quoteCalloutStyleMode: "theme",
+    fontFamily: "sans-serif",
+    fontSize: 3,
+    macCodeBlock: true,
+    codeLineNumber: true,
+    avatarUrl: "",
+    avatarBase64: "",
+    enableWatermark: false,
+    showImageCaption: true,
+    normalizeChinesePunctuation: true,
+    wechatAccounts: [],
+    defaultAccountId: "",
+    proxyUrl: "",
+    clientId: "",
+    draftCache: createEmptyDraftCache(),
+    usePhoneFrame: true,
+    sidePadding: 16,
+    coloredHeader: false,
+    cleanupAfterSync: false,
+    cleanupUseSystemTrash: true,
+    cleanupDirTemplate: "",
+    multiPlatformSync: createDefaultMultiPlatformSyncSettings(),
+    feishuSync: createDefaultFeishuSyncSettings(),
+    wechatAppId: "",
+    wechatAppSecret: "",
+    ai: createDefaultAiSettings()
+  };
+}
+function normalizeLoadedSettings(loadedData, options = {}) {
+  const data = toRecord8(loadedData);
+  const settings = Object.assign(createDefaultSettings(), data);
+  const generateId15 = typeof options.generateId === "function" ? options.generateId : generateFallbackId;
+  let didMigrate = false;
+  if (!settings.clientId) {
+    settings.clientId = `wp_dev_${generateId15()}`;
+    didMigrate = true;
+  }
+  settings.multiPlatformSync = normalizeMultiPlatformSyncSettings(settings.multiPlatformSync);
+  settings.feishuSync = normalizeFeishuSyncSettings(settings.feishuSync);
+  const normalizedDraftCache = normalizeDraftCache(settings.draftCache);
+  settings.draftCache = normalizedDraftCache.cache;
+  if (normalizedDraftCache.changed) {
+    didMigrate = true;
+  }
+  const rawAiSettings = data.ai;
+  settings.ai = normalizeAiSettings(rawAiSettings || settings.ai || {});
+  if (rawAiSettings !== void 0) {
+    const normalizedRawAi = normalizeAiSettings(toRecord8(rawAiSettings));
+    if (JSON.stringify(normalizedRawAi) !== JSON.stringify(rawAiSettings)) {
+      didMigrate = true;
+    }
+  }
+  if (!Array.isArray(settings.wechatAccounts)) {
+    settings.wechatAccounts = [];
+    didMigrate = true;
+  }
+  if (settings.wechatAppId && settings.wechatAccounts.length === 0) {
+    const migratedAccount = {
+      id: generateId15(),
+      name: "\u6211\u7684\u516C\u4F17\u53F7",
+      appId: String(settings.wechatAppId || ""),
+      appSecret: String(settings.wechatAppSecret || "")
+    };
+    settings.wechatAccounts.push(migratedAccount);
+    settings.defaultAccountId = migratedAccount.id;
+    settings.wechatAppId = "";
+    settings.wechatAppSecret = "";
+    didMigrate = true;
+    console.log("\u2705 \u5DF2\u5C06\u65E7\u8D26\u53F7\u914D\u7F6E\u8FC1\u79FB\u5230\u65B0\u683C\u5F0F");
+  }
+  settings.wechatAccounts = settings.wechatAccounts.map((account) => {
+    if (!isRecord11(account)) {
+      didMigrate = true;
+      return { id: "", name: "", appId: "", appSecret: "" };
+    }
+    const nextAccount = { ...account };
+    let changed = false;
+    if (Object.prototype.hasOwnProperty.call(nextAccount, "enableOriginal")) {
+      delete nextAccount.enableOriginal;
+      changed = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(nextAccount, "allowReprint")) {
+      delete nextAccount.allowReprint;
+      changed = true;
+    }
+    if (changed) {
+      didMigrate = true;
+    }
+    return nextAccount;
+  });
+  const currentTemplate = normalizeVaultPath(settings.cleanupDirTemplate || "");
+  const legacyRootDir = normalizeVaultPath(settings.cleanupRootDir || "");
+  const legacyTarget = settings.cleanupTarget;
+  if (!currentTemplate && legacyRootDir && legacyTarget === "folder") {
+    settings.cleanupDirTemplate = `${legacyRootDir}/{{note}}_img`;
+    didMigrate = true;
+    console.log("\u2705 \u5DF2\u5C06\u65E7\u6E05\u7406\u914D\u7F6E\u8FC1\u79FB\u4E3A\u76EE\u5F55\u6A21\u677F cleanupDirTemplate");
+  }
+  if (Object.prototype.hasOwnProperty.call(settings, "cleanupRootDir")) {
+    delete settings.cleanupRootDir;
+    didMigrate = true;
+  }
+  if (Object.prototype.hasOwnProperty.call(settings, "cleanupTarget")) {
+    delete settings.cleanupTarget;
+    didMigrate = true;
+  }
+  const deprecatedRenderKeys = [
+    "useTripletPipeline",
+    "tripletFallbackToPhase2",
+    "enforceTripletParity",
+    "tripletParityMaxLengthDelta",
+    "tripletParityMaxSegmentCount",
+    "tripletParityVerboseLog",
+    "useNativePipeline",
+    "enableLegacyFallback",
+    "enforceNativeParity"
+  ];
+  for (const key of deprecatedRenderKeys) {
+    if (Object.prototype.hasOwnProperty.call(settings, key)) {
+      delete settings[key];
+      didMigrate = true;
+    }
+  }
+  return { settings, didMigrate };
+}
+
+// views/apple-style-view-shared.js
+var DEFAULT_SETTINGS = createDefaultSettings();
+function getWechatAccountPublishOptions(account = null) {
+  return {
+    contentSourceUrl: typeof (account == null ? void 0 : account.contentSourceUrl) === "string" ? account.contentSourceUrl : DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS.contentSourceUrl,
+    openComment: typeof (account == null ? void 0 : account.openComment) === "boolean" ? account.openComment : DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS.openComment,
+    onlyFansCanComment: typeof (account == null ? void 0 : account.onlyFansCanComment) === "boolean" ? account.onlyFansCanComment : DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS.onlyFansCanComment
+  };
+}
+function normalizeWechatAccountPublishOptions(values = {}) {
+  const contentSourceUrl = typeof values.contentSourceUrl === "string" ? values.contentSourceUrl.trim() : "";
+  const openComment = !!values.openComment;
+  return {
+    contentSourceUrl,
+    openComment,
+    onlyFansCanComment: openComment && !!values.onlyFansCanComment
+  };
+}
+function isMobileClient3(app) {
+  return isMobileClient2(app, Platform);
+}
+
+// views/converter/core.js
+var {
+  createRenderPipelines: createRenderPipelines2,
+  buildRenderRuntime: buildRenderRuntime2,
+  resolveMarkdownSource: resolveMarkdownSource2,
+  normalizeVaultPath: normalizeVaultPath2,
+  isAbsolutePathLike: isAbsolutePathLike2,
+  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown2,
+  canUseNativePreviewFastPath: canUseNativePreviewFastPath2,
+  renderNativeMarkdown: renderNativeMarkdown2,
+  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages2,
+  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION2,
+  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO2,
+  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS2,
+  createDefaultAiSettings: createDefaultAiSettings2,
+  normalizeAiSettings: normalizeAiSettings2,
+  normalizeAiProvider: normalizeAiProvider2,
+  getAiProviderIssues: getAiProviderIssues2,
+  isAiProviderRunnable: isAiProviderRunnable2,
+  summarizeAiProviderIssues: summarizeAiProviderIssues2,
+  getLayoutFamilyList: getLayoutFamilyList2,
+  getLayoutFamilyById: getLayoutFamilyById2,
+  getColorPaletteList: getColorPaletteList2,
+  getColorPaletteById: getColorPaletteById2,
+  resolveColorPaletteForRender: resolveColorPaletteForRender2,
+  normalizeHexColor: normalizeHexColor2,
+  normalizeLayoutSelection: normalizeLayoutSelection2,
+  getArticleLayoutSelectionState: getArticleLayoutSelectionState2,
+  resolveAiProvider: resolveAiProvider2,
+  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection2,
+  normalizeArticleLayoutState: normalizeArticleLayoutState2,
+  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry2,
+  extractImageRefsFromHtml: extractImageRefsFromHtml2,
+  extractRenderedSectionFragments: extractRenderedSectionFragments2,
+  generateArticleLayout: generateArticleLayout2,
+  renderArticleLayoutHtml: renderArticleLayoutHtml2,
+  testAiProviderConnection: testAiProviderConnection2,
+  createWechatSyncService: createWechatSyncService2,
+  createWechatSyncBridgeService: createWechatSyncBridgeService2,
+  isWechatSyncUnsupportedMethodError,
+  getMultiPlatformResultSummary: getMultiPlatformResultSummary2,
+  getWechatSyncResultError: getWechatSyncResultError2,
+  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId2,
+  getWechatSyncResultUrl: getWechatSyncResultUrl2,
+  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform2,
+  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay2,
+  resolveSyncAccount: resolveSyncAccount2,
+  toSyncFriendlyMessage: toSyncFriendlyMessage2,
+  createEmptyDraftCache: createEmptyDraftCache2,
+  normalizeDraftCache: normalizeDraftCache2,
+  getDraftAssociation: getDraftAssociation2,
+  setDraftAssociation: setDraftAssociation2,
+  clearDraftAssociation: clearDraftAssociation2,
+  processAllImagesService,
+  processMathFormulasService,
+  cleanHtmlForDraftService,
+  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob2,
+  createObsidianFetchAdapter: createObsidianFetchAdapter2,
+  stripMarkdownFrontmatter: stripMarkdownFrontmatter2,
+  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls2,
+  createHtmlContainer: createHtmlContainer2,
+  getActiveDocument: getActiveDocument2,
+  getActiveWindowValue: getActiveWindowValue2,
+  htmlToText: htmlToText2,
+  setElementHtml: setElementHtml2,
+  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings2,
+  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds2,
+  hasWechatSyncCapability: hasWechatSyncCapability2,
+  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings2,
+  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms2,
+  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt2,
+  describeWechatsyncConnectionState: describeWechatsyncConnectionState2,
+  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar2,
+  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab2,
+  showMultiPlatformPublishModal: showMultiPlatformPublishModal2,
+  renderFeishuSettingsTab: renderFeishuSettingsTab2,
+  renderFeishuPublishTab: renderFeishuPublishTab2,
+  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings2,
+  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings2,
+  updateFeishuHistoryPath: updateFeishuHistoryPath2,
+  WechatAPI: WechatAPI2,
+  loadCommonJsDependency: loadCommonJsDependency2,
+  obsidianApi: obsidianApi2,
+  Plugin: Plugin2,
+  MarkdownView: MarkdownView2,
+  ItemView: ItemView2,
+  Notice: Notice2,
+  Platform: Platform2,
+  PluginSettingTab: PluginSettingTab2,
+  Setting: Setting2,
+  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY3,
+  getActiveDocumentCompat: getActiveDocumentCompat2,
+  createFallbackSvgElement: createFallbackSvgElement2,
+  revealLeafCompat: revealLeafCompat2,
+  getPluginSettings: getPluginSettings2,
+  setPluginSettings: setPluginSettings2,
+  setDestructiveButtonCompat: setDestructiveButtonCompat2,
+  refreshSettingTabCompat: refreshSettingTabCompat2,
+  toReadableError: toReadableError5,
+  isRecord: isRecord12,
+  toRecord: toRecord9,
+  toAiLayoutState: toAiLayoutState2,
+  toAiLayoutJson: toAiLayoutJson2,
+  toAiLayoutBlock: toAiLayoutBlock2,
+  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta2,
+  toAiLayoutSelection: toAiLayoutSelection2,
+  toAiLayoutFamilyStates: toAiLayoutFamilyStates2,
+  toOptionalText: toOptionalText3,
+  toImageElements: toImageElements2,
+  removeElementClass: removeElementClass2,
+  toOptionalNumber: toOptionalNumber3,
+  parseJsonRecord: parseJsonRecord3,
+  normalizeRequestUrlResponse: normalizeRequestUrlResponse3,
+  getResponseJsonRecord: getResponseJsonRecord3,
+  getProxyErrorMessage: getProxyErrorMessage3,
+  createProxyError: createProxyError3,
+  formatWechatApiError: formatWechatApiError3,
+  hasWechatUploadResult: hasWechatUploadResult3,
+  readBlobAsBase64Payload: readBlobAsBase64Payload3,
+  dataUrlToBlob: dataUrlToBlob2,
+  bufferFromBinary: bufferFromBinary3,
+  inferLocalImageMimeType: inferLocalImageMimeType2,
+  safeDecodeUriText: safeDecodeUriText2,
+  getFileUrlLocalPath: getFileUrlLocalPath2,
+  getVaultAdapterBasePath: getVaultAdapterBasePath2,
+  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath3,
+  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath3,
+  getVaultDirnameFromPath: getVaultDirnameFromPath2,
+  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW2,
+  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE2,
+  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL2,
+  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL2,
+  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL3,
+  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL2,
+  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL3,
+  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL3,
+  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL2,
+  getObsidianModalClass: getObsidianModalClass2,
+  createObsidianModal: createObsidianModal2,
+  getObsidianSetIcon: getObsidianSetIcon2,
+  getObsidianRequestUrl: getObsidianRequestUrl2,
+  getObsidianRequest: getObsidianRequest2,
+  getAppleThemeApi: getAppleThemeApi2,
+  getValueElementFromEvent: getValueElementFromEvent2,
+  getEventTargetValue: getEventTargetValue2,
+  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY2,
+  getObsidianLocale: getObsidianLocale2,
+  isChineseObsidianLocale: isChineseObsidianLocale2,
+  getImageSwipeCommandCopy: getImageSwipeCommandCopy2,
+  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout2,
+  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown2,
+  DEFAULT_SETTINGS: DEFAULT_SETTINGS2,
+  MAX_ACCOUNTS: MAX_ACCOUNTS2,
+  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS2,
+  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS2,
+  getWechatAccountPublishOptions: getWechatAccountPublishOptions2,
+  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions2,
+  isMobileClient: isMobileClient4,
+  generateId: generateId2,
+  sleep: sleep3,
+  pMap: pMap2
+} = apple_style_view_shared_exports;
+var coreMethods = {
   getViewType() {
-    return APPLE_STYLE_VIEW;
-  }
+    return APPLE_STYLE_VIEW2;
+  },
   getDisplayText() {
-    return APPLE_STYLE_VIEW_TITLE;
-  }
+    return APPLE_STYLE_VIEW_TITLE2;
+  },
   getIcon() {
     return "wand";
-  }
+  },
   async onOpen() {
     console.log("\u{1F34E} \u53D1\u5E03\u52A9\u624B\u9762\u677F\u6253\u5F00");
     const container = (
@@ -54319,12 +54802,12 @@ var AppleStyleView = class extends ItemView {
     );
     container.empty();
     container.addClass("apple-converter-container");
-    if (isMobileClient2(this.app)) {
+    if (isMobileClient4(this.app)) {
       container.addClass("apple-converter-mobile");
     }
     await this.loadDependencies();
     this.createSettingsPanel(container);
-    const usePhoneFrame = this.plugin.settings.usePhoneFrame && !isMobileClient2(this.app);
+    const usePhoneFrame = this.plugin.settings.usePhoneFrame && !isMobileClient4(this.app);
     const previewWrapper = container.createEl("div", {
       cls: `apple-preview-wrapper ${usePhoneFrame ? "mode-phone" : "mode-classic"}`
     });
@@ -54347,23 +54830,20 @@ var AppleStyleView = class extends ItemView {
     }
     this.setPlaceholder();
     this.registerActiveFileChange();
-    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView2);
     if (activeView)
       this.registerScrollSync(activeView);
     window.setTimeout(async () => {
-      const activeView2 = this.app.workspace.getActiveViewOfType(MarkdownView);
+      const activeView2 = this.app.workspace.getActiveViewOfType(MarkdownView2);
       if (activeView2 && this.converter) {
         await this.convertCurrent(true);
       }
     }, 500);
-  }
-  /**
-   * 监听活动文件切换
-   */
+  },
   registerActiveFileChange() {
     this.registerEvent(
       this.app.workspace.on("active-leaf-change", async () => {
-        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView2);
         if (activeView && activeView.file) {
           this.lastActiveFile = activeView.file;
           const nextSourcePath = activeView.file.path || "";
@@ -54390,7 +54870,7 @@ var AppleStyleView = class extends ItemView {
     const debouncedConvert = debounce(async () => {
       if (!this.containerEl.offsetParent)
         return;
-      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView2);
       if (activeView && activeView.file && this.lastActiveFile && activeView.file.path === this.lastActiveFile.path) {
         await this.convertCurrent(true, {
           sourceOverride: {
@@ -54403,10 +54883,7 @@ var AppleStyleView = class extends ItemView {
     this.registerEvent(
       this.app.workspace.on("editor-change", debouncedConvert)
     );
-  }
-  /**
-   * @param {MarkdownViewLike | null} [activeViewOverride]
-   */
+  },
   scheduleActiveLeafRender(activeViewOverride = null) {
     if (this.activeLeafRenderTimer) {
       window.clearTimeout(this.activeLeafRenderTimer);
@@ -54414,7 +54891,7 @@ var AppleStyleView = class extends ItemView {
     }
     this.activeLeafRenderTimer = window.setTimeout(() => {
       this.activeLeafRenderTimer = null;
-      const activeView = activeViewOverride || this.app.workspace.getActiveViewOfType(MarkdownView);
+      const activeView = activeViewOverride || this.app.workspace.getActiveViewOfType(MarkdownView2);
       const sourceOverride = activeView && activeView.file ? {
         markdown: activeView.editor.getValue(),
         sourcePath: activeView.file.path || ""
@@ -54426,7 +54903,7 @@ var AppleStyleView = class extends ItemView {
         sourceOverride
       });
     }, 0);
-  }
+  },
   scheduleSidePaddingPreview(delay = 120) {
     if (this.sidePaddingPreviewTimer) {
       window.clearTimeout(this.sidePaddingPreviewTimer);
@@ -54436,7 +54913,7 @@ var AppleStyleView = class extends ItemView {
       this.sidePaddingPreviewTimer = null;
       this.convertCurrent(true);
     }, delay);
-  }
+  },
   setPreviewLoading(active, text = "\u6B63\u5728\u6E32\u67D3\u9884\u89C8...") {
     if (!this.previewContainer)
       return;
@@ -54447,13 +54924,13 @@ var AppleStyleView = class extends ItemView {
     }
     this.previewContainer.removeClass("apple-preview-loading");
     delete this.previewContainer.dataset.loadingText;
-  }
+  },
   markAiLayoutSourceSwitch(sourcePath = "") {
     if (!sourcePath)
       return;
     this.aiLayoutSourceSwitchPath = sourcePath;
     this.aiLayoutStaleSuppressPath = sourcePath;
-    this.aiLayoutStaleSuppressUntil = Date.now() + AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS;
+    this.aiLayoutStaleSuppressUntil = Date.now() + AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS2;
     if (this.aiLayoutStaleSuppressTimer) {
       window.clearTimeout(this.aiLayoutStaleSuppressTimer);
     }
@@ -54466,13 +54943,13 @@ var AppleStyleView = class extends ItemView {
       if (this.shouldSyncAiLayoutUi()) {
         this.refreshAiLayoutPanel();
       }
-    }, AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS + 40);
-  }
+    }, AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS2 + 40);
+  },
   completeAiLayoutSourceSwitch(sourcePath = "") {
     if (sourcePath && this.aiLayoutSourceSwitchPath === sourcePath) {
       this.aiLayoutSourceSwitchPath = "";
     }
-  }
+  },
   isAiLayoutStaleSuppressedForPath(sourcePath = "") {
     if (!sourcePath || this.aiLayoutStaleSuppressPath !== sourcePath)
       return false;
@@ -54481,12 +54958,7 @@ var AppleStyleView = class extends ItemView {
     this.aiLayoutStaleSuppressPath = "";
     this.aiLayoutStaleSuppressUntil = 0;
     return false;
-  }
-  /**
-   * 注册同步滚动 (双向: Editor <-> Preview)
-   * 用动画帧合并高频事件，并按预期目标位置过滤程序触发的回调。
-   * @param {MarkdownViewLike | null} activeView
-   */
+  },
   registerScrollSync(activeView) {
     if (this.activeEditorScroller && this.editorScrollListener) {
       this.activeEditorScroller.removeEventListener("scroll", this.editorScrollListener);
@@ -54602,10 +55074,7 @@ var AppleStyleView = class extends ItemView {
     };
     editorScroller.addEventListener("scroll", this.editorScrollListener, { passive: true });
     this.previewContainer.addEventListener("scroll", this.previewScrollListener, { passive: true });
-  }
-  /**
-   * 加载依赖库
-   */
+  },
   async loadDependencies() {
     var _a5;
     const adapter = this.app.vault.adapter;
@@ -54613,7 +55082,7 @@ var AppleStyleView = class extends ItemView {
     try {
       const runtime = (
         /** @type {{ theme: ThemeRuntimeLike, converter: ConverterRuntimeLike }} */
-        await buildRenderRuntime({
+        await buildRenderRuntime2({
           settings: this.plugin.settings,
           app: this.app,
           adapter,
@@ -54624,37 +55093,37 @@ var AppleStyleView = class extends ItemView {
       this.converter = runtime.converter;
       const pipelines = (
         /** @type {{ nativePipeline: RenderPipelineLike }} */
-        createRenderPipelines({
+        createRenderPipelines2({
           candidateRenderer: async (markdown, context = {}) => {
             const renderContext = (
               /** @type {RenderCandidateContextLike} */
-              toRecord6(context)
+              toRecord9(context)
             );
-            const contextSettings = isRecord9(renderContext.settings) ? (
+            const contextSettings = isRecord12(renderContext.settings) ? (
               /** @type {PluginSettingsLike} */
               renderContext.settings
             ) : this.plugin.settings;
-            if (canUseNativePreviewFastPath(markdown)) {
+            if (canUseNativePreviewFastPath2(markdown)) {
               const nativeHtml = (
                 /** @type {unknown} */
-                await renderNativeMarkdown({
+                await renderNativeMarkdown2({
                   converter: this.converter,
                   markdown: String(markdown || ""),
-                  sourcePath: toOptionalText(renderContext.sourcePath)
+                  sourcePath: toOptionalText3(renderContext.sourcePath)
                 })
               );
               return String(nativeHtml || "");
             }
             return (
               /** @type {Promise<string>} */
-              renderObsidianTripletMarkdown({
+              renderObsidianTripletMarkdown2({
                 app: this.app,
                 converter: this.converter,
                 markdown: String(markdown || ""),
-                sourcePath: toOptionalText(renderContext.sourcePath),
+                sourcePath: toOptionalText3(renderContext.sourcePath),
                 settings: contextSettings,
                 component: this,
-                markdownRenderer: obsidianApi.MarkdownRenderer,
+                markdownRenderer: obsidianApi2.MarkdownRenderer,
                 rasterizeMermaid: false,
                 preserveSvgStyleTags: true
               })
@@ -54666,19 +55135,541 @@ var AppleStyleView = class extends ItemView {
       console.log("\u2705 \u4F9D\u8D56\u52A0\u8F7D\u5B8C\u6210");
     } catch (error) {
       console.error("\u274C \u4F9D\u8D56\u52A0\u8F7D\u5931\u8D25:", error);
-      new Notice("\u4F9D\u8D56\u52A0\u8F7D\u5931\u8D25: " + toReadableError3(error).message);
+      new Notice2("\u4F9D\u8D56\u52A0\u8F7D\u5931\u8D25: " + toReadableError5(error).message);
     }
+  },
+  async onThemeChange(value, grid) {
+    var _a5;
+    this.plugin.settings.theme = value;
+    await this.plugin.saveSettings();
+    this.updateButtonActive(grid, value);
+    (_a5 = this.theme) == null ? void 0 : _a5.update({ theme: value });
+    await this.convertCurrent(true);
+  },
+  async onFontFamilyChange(value) {
+    var _a5;
+    this.plugin.settings.fontFamily = value;
+    await this.plugin.saveSettings();
+    (_a5 = this.theme) == null ? void 0 : _a5.update({ fontFamily: value });
+    await this.convertCurrent(true);
+  },
+  async onFontSizeChange(value, grid) {
+    var _a5;
+    this.plugin.settings.fontSize = value;
+    await this.plugin.saveSettings();
+    this.updateButtonActive(grid, value);
+    (_a5 = this.theme) == null ? void 0 : _a5.update({ fontSize: value });
+    await this.convertCurrent(true);
+  },
+  async onColorChange(value, grid) {
+    var _a5;
+    this.plugin.settings.themeColor = value;
+    await this.plugin.saveSettings();
+    this.updateButtonActive(grid, value);
+    (_a5 = this.theme) == null ? void 0 : _a5.update({ themeColor: value });
+    await this.convertCurrent(true);
+  },
+  async onQuoteCalloutStyleModeChange(value) {
+    var _a5;
+    const nextValue = value === "neutral" ? "neutral" : "theme";
+    this.plugin.settings.quoteCalloutStyleMode = nextValue;
+    await this.plugin.saveSettings();
+    (_a5 = this.theme) == null ? void 0 : _a5.update({ quoteCalloutStyleMode: nextValue });
+    await this.convertCurrent(true);
+  },
+  async onMacCodeBlockChange(checked) {
+    var _a5;
+    this.plugin.settings.macCodeBlock = checked;
+    await this.plugin.saveSettings();
+    (_a5 = this.theme) == null ? void 0 : _a5.update({ macCodeBlock: checked });
+    if (this.converter) {
+      this.converter.reinit();
+      await this.converter.initMarkdownIt();
+    }
+    await this.convertCurrent(true);
+  },
+  async onCodeLineNumberChange(checked) {
+    var _a5;
+    this.plugin.settings.codeLineNumber = checked;
+    await this.plugin.saveSettings();
+    (_a5 = this.theme) == null ? void 0 : _a5.update({ codeLineNumber: checked });
+    if (this.converter) {
+      this.converter.reinit();
+      await this.converter.initMarkdownIt();
+    }
+    await this.convertCurrent(true);
+  },
+  updateButtonActive(grid, value) {
+    const buttons = Array.from(grid.querySelectorAll("button"));
+    buttons.forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.value == value);
+    });
+  },
+  getActiveRenderPipeline() {
+    return (
+      /** @type {RenderPipelineLike | null} */
+      this.nativeRenderPipeline
+    );
+  },
+  async renderMarkdownForPreview(markdown, sourcePath) {
+    const pipeline = this.getActiveRenderPipeline();
+    if (!pipeline) {
+      throw new Error("\u6E32\u67D3\u7BA1\u7EBF\u672A\u521D\u59CB\u5316");
+    }
+    return pipeline.renderForPreview(markdown, {
+      sourcePath,
+      settings: this.plugin.settings
+    });
+  },
+  updateCurrentDoc() {
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView2);
+    if (activeView && this.docTitleText) {
+      this.docTitleText.setText(activeView.file.basename);
+      this.docTitleText.setCssStyles({ color: "var(--apple-primary)" });
+    } else if (this.lastActiveFile && this.docTitleText) {
+      this.docTitleText.setText(this.lastActiveFile.basename);
+      this.docTitleText.setCssStyles({ color: "var(--apple-primary)" });
+    } else if (this.docTitleText) {
+      this.docTitleText.setText("\u672A\u9009\u62E9\u6587\u6863");
+      this.docTitleText.setCssStyles({ color: "var(--apple-tertiary)" });
+    }
+    this.updateAiToolbarState();
+  },
+  setPlaceholder() {
+    this.previewContainer.empty();
+    this.previewContainer.removeClass("apple-has-content");
+    const placeholder = this.previewContainer.createEl("div", { cls: "apple-placeholder" });
+    const iconDiv = placeholder.createEl("div", { cls: "apple-placeholder-icon" });
+    this.renderPlaceholderIcon(iconDiv);
+    placeholder.createEl("h2", { text: "Obsidian \u53D1\u5E03\u52A9\u624B" });
+    const content = placeholder.createDiv({ cls: "apple-placeholder-content" });
+    content.createEl("p", {
+      text: "\u5F53\u524D\u9762\u677F\u7528\u4E8E\u9884\u89C8\u5FAE\u4FE1\u516C\u4F17\u53F7\u6392\u7248\u3002\u8BF7\u5728\u5DE6\u4FA7\u7F16\u8F91\u5668\u4E2D\u6253\u5F00\u6216\u6FC0\u6D3B\u4EFB\u610F Markdown \u7B14\u8BB0\u4EE5\u81EA\u52A8\u52A0\u8F7D\u9884\u89C8\u3002",
+      cls: "apple-placeholder-desc"
+    });
+    const steps = content.createEl("div", { cls: "apple-steps" });
+    steps.createEl("div", { text: "1. \u6253\u5F00\u6216\u70B9\u51FB\u4EFB\u610F Markdown \u7B14\u8BB0" });
+    steps.createEl("div", { text: "2. \u9884\u89C8\u5FAE\u4FE1\u516C\u4F17\u53F7\u6392\u7248" });
+    steps.createEl("div", { text: "3. \u4E00\u952E\u590D\u5236\u6216\u540C\u6B65\u5230\u5FAE\u4FE1\u3001\u98DE\u4E66\u3001\u5C0F\u7EA2\u4E66\u7B49\u5E73\u53F0" });
+    content.createEl("p", {
+      text: "\u6CE8\uFF1A\u6B64\u9762\u677F\u4EC5\u9884\u89C8\u5FAE\u4FE1\u6392\u7248\u3002\u540C\u6B65\u81F3\u98DE\u4E66\u3001\u5C0F\u7EA2\u4E66\u7B49\u5E73\u53F0\u76F4\u63A5\u4EE5\u6E90 Markdown \u7B14\u8BB0\u4E3A\u51C6\u3002",
+      cls: "apple-placeholder-note"
+    });
+  },
+  renderPlaceholderIcon(iconDiv) {
+    iconDiv.empty();
+    const img = (
+      /** @type {ObsidianElementLike & HTMLImageElement} */
+      iconDiv.createEl("img", { attr: { alt: "Obsidian \u53D1\u5E03\u52A9\u624B" } })
+    );
+    img.src = PLACEHOLDER_ICON_DATA_URL2;
+    img.setCssStyles({
+      width: "64px",
+      height: "64px",
+      display: "block"
+    });
+  },
+  showRenderFailurePlaceholder(message = "") {
+    if (!this.previewContainer || typeof this.previewContainer.createEl !== "function")
+      return;
+    this.previewContainer.empty();
+    this.previewContainer.removeClass("apple-has-content");
+    const placeholder = this.previewContainer.createEl("div", { cls: "apple-placeholder" });
+    placeholder.createEl("div", { cls: "apple-placeholder-icon", text: "\u26A0\uFE0F" });
+    placeholder.createEl("h2", { text: "\u6E32\u67D3\u5931\u8D25" });
+    placeholder.createEl("p", {
+      text: "\u5F53\u524D\u6587\u6863\u5C1A\u672A\u6210\u529F\u6E32\u67D3\uFF0C\u590D\u5236/\u540C\u6B65\u5DF2\u7981\u7528\u3002\u8BF7\u4FEE\u590D\u540E\u91CD\u8BD5\u3002"
+    });
+    if (message) {
+      placeholder.createEl("p", { cls: "apple-placeholder-note", text: `\u9519\u8BEF\u4FE1\u606F\uFF1A${message}` });
+    }
+  },
+  getMissingRenderNotice() {
+    if (this.lastRenderError) {
+      return "\u274C \u5F53\u524D\u6587\u6863\u6E32\u67D3\u5931\u8D25\uFF0C\u8BF7\u4FEE\u590D\u540E\u91CD\u8BD5";
+    }
+    return "\u26A0\uFE0F \u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u6587\u7AE0\u8FDB\u884C\u8F6C\u6362";
+  },
+  async convertCurrent(silent = false, options = {}) {
+    var _a5, _b, _c;
+    const {
+      showLoading = false,
+      loadingText = "\u6B63\u5728\u6E32\u67D3\u9884\u89C8...",
+      loadingDelay = 0,
+      sourceOverride = null
+    } = options;
+    const generation = ++this.renderGeneration;
+    if (showLoading) {
+      this.loadingGeneration = generation;
+      if (this.loadingVisibilityTimer) {
+        window.clearTimeout(this.loadingVisibilityTimer);
+        this.loadingVisibilityTimer = null;
+      }
+      if (loadingDelay > 0) {
+        this.loadingVisibilityTimer = window.setTimeout(() => {
+          if (this.loadingGeneration === generation) {
+            this.setPreviewLoading(true, loadingText);
+          }
+          this.loadingVisibilityTimer = null;
+        }, loadingDelay);
+      } else {
+        this.setPreviewLoading(true, loadingText);
+      }
+    }
+    const source = sourceOverride && typeof sourceOverride === "object" ? {
+      ok: true,
+      markdown: typeof sourceOverride.markdown === "string" ? sourceOverride.markdown : "",
+      sourcePath: typeof sourceOverride.sourcePath === "string" ? sourceOverride.sourcePath : ""
+    } : (
+      /** @type {MarkdownSourceResultLike} */
+      await resolveMarkdownSource2({
+        app: this.app,
+        lastActiveFile: this.lastActiveFile,
+        MarkdownViewType: MarkdownView2
+      })
+    );
+    let markdown = "";
+    let sourcePath = "";
+    if (source.ok) {
+      markdown = source.markdown || "";
+      sourcePath = source.sourcePath || "";
+    } else if (this.lastResolvedMarkdown.trim()) {
+      markdown = this.lastResolvedMarkdown;
+      sourcePath = this.lastResolvedSourcePath || "";
+    } else {
+      if (!silent)
+        new Notice2("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A Markdown \u6587\u4EF6");
+      if (showLoading && this.loadingGeneration === generation) {
+        if (this.loadingVisibilityTimer) {
+          window.clearTimeout(this.loadingVisibilityTimer);
+          this.loadingVisibilityTimer = null;
+        }
+        this.setPreviewLoading(false);
+      }
+      return;
+    }
+    if (!markdown.trim()) {
+      if (!silent)
+        new Notice2("\u5F53\u524D\u6587\u4EF6\u5185\u5BB9\u4E3A\u7A7A");
+      this.completeAiLayoutSourceSwitch(sourcePath);
+      if (showLoading && this.loadingGeneration === generation) {
+        if (this.loadingVisibilityTimer) {
+          window.clearTimeout(this.loadingVisibilityTimer);
+          this.loadingVisibilityTimer = null;
+        }
+        this.setPreviewLoading(false);
+      }
+      return;
+    }
+    try {
+      if (!silent)
+        new Notice2("\u26A1 \u6B63\u5728\u8F6C\u6362...");
+      const html = await this.renderMarkdownForPreview(markdown, sourcePath);
+      if (generation !== this.renderGeneration)
+        return;
+      this.lastResolvedMarkdown = markdown;
+      this.lastResolvedSourcePath = sourcePath;
+      this.lastResolvedSourceHash = String(this.simpleHash(markdown));
+      this.completeAiLayoutSourceSwitch(sourcePath);
+      this.baseRenderedHtml = html;
+      this.currentHtml = html;
+      this.lastRenderError = "";
+      this.lastRenderFailureNoticeKey = "";
+      this.sessionCoverBase64 = null;
+      const scrollTop = this.previewContainer.scrollTop;
+      setElementHtml2(this.previewContainer, html);
+      this.previewContainer.scrollTop = scrollTop;
+      this.previewContainer.addClass("apple-has-content");
+      this.syncPreviewPresentationMode();
+      this.updateCurrentDoc();
+      if (this.shouldSyncAiLayoutUi()) {
+        const activeSelection = this.getCurrentAiLayoutSelection();
+        let layoutState = null;
+        if (sourcePath && typeof ((_a5 = this.plugin) == null ? void 0 : _a5.getArticleLayoutState) === "function") {
+          layoutState = this.plugin.getArticleLayoutState(sourcePath, activeSelection);
+        }
+        const canReuseAiLayout = !!(this.aiPreviewApplied && ((_c = (_b = layoutState == null ? void 0 : layoutState.layoutJson) == null ? void 0 : _b.blocks) == null ? void 0 : _c.length) && this.lastResolvedSourceHash && layoutState.sourceHash === this.lastResolvedSourceHash);
+        if (canReuseAiLayout) {
+          this.applyAiLayoutToPreview();
+        } else if (this.aiPreviewApplied) {
+          this.aiPreviewApplied = false;
+          this.syncPreviewPresentationMode();
+        }
+        this.refreshAiLayoutPanel();
+      }
+      if (!silent)
+        new Notice2("\u2705 \u8F6C\u6362\u6210\u529F\uFF01");
+    } catch (error) {
+      console.error("\u8F6C\u6362\u5931\u8D25:", error);
+      if (generation !== this.renderGeneration)
+        return;
+      this.currentHtml = null;
+      this.baseRenderedHtml = null;
+      this.aiPreviewApplied = false;
+      this.completeAiLayoutSourceSwitch(sourcePath);
+      this.syncPreviewPresentationMode();
+      this.lastRenderError = toReadableError5(error).message || "\u672A\u77E5\u6E32\u67D3\u9519\u8BEF";
+      this.showRenderFailurePlaceholder(this.lastRenderError);
+      this.updateCurrentDoc();
+      if (this.shouldSyncAiLayoutUi()) {
+        this.refreshAiLayoutPanel();
+      }
+      const noticeKey = `${sourcePath || ""}:${this.lastRenderError}`;
+      if (!silent || this.lastRenderFailureNoticeKey !== noticeKey) {
+        new Notice2("\u274C \u8F6C\u6362\u5931\u8D25: " + this.lastRenderError);
+        this.lastRenderFailureNoticeKey = noticeKey;
+      }
+    } finally {
+      if (showLoading && this.loadingGeneration === generation) {
+        if (this.loadingVisibilityTimer) {
+          window.clearTimeout(this.loadingVisibilityTimer);
+          this.loadingVisibilityTimer = null;
+        }
+        this.setPreviewLoading(false);
+      }
+    }
+  },
+  onResize() {
+    if (this.resizeTimeout)
+      window.clearTimeout(this.resizeTimeout);
+    if (!this.containerEl.offsetParent)
+      return;
+    this.resizeTimeout = window.setTimeout(() => {
+      this.convertCurrent(true);
+    }, 300);
+  },
+  async onClose() {
+    var _a5;
+    if (this.activeLeafRenderTimer) {
+      window.clearTimeout(this.activeLeafRenderTimer);
+      this.activeLeafRenderTimer = null;
+    }
+    if (this.loadingVisibilityTimer) {
+      window.clearTimeout(this.loadingVisibilityTimer);
+      this.loadingVisibilityTimer = null;
+    }
+    if (this.sidePaddingPreviewTimer) {
+      window.clearTimeout(this.sidePaddingPreviewTimer);
+      this.sidePaddingPreviewTimer = null;
+    }
+    if (this.aiLayoutStaleSuppressTimer) {
+      window.clearTimeout(this.aiLayoutStaleSuppressTimer);
+      this.aiLayoutStaleSuppressTimer = null;
+    }
+    this.setPreviewLoading(false);
+    if (this.activeEditorScroller && this.editorScrollListener) {
+      this.activeEditorScroller.removeEventListener("scroll", this.editorScrollListener);
+    }
+    if (this.previewContainer && this.previewScrollListener) {
+      this.previewContainer.removeEventListener("scroll", this.previewScrollListener);
+    }
+    if (this.cancelScrollSyncFrame) {
+      this.cancelScrollSyncFrame();
+      this.cancelScrollSyncFrame = null;
+      this.scrollSyncFrame = null;
+      this.pendingScrollSyncSource = "";
+    }
+    this.expectedEditorScrollTop = null;
+    this.expectedPreviewScrollTop = null;
+    (_a5 = this.previewContainer) == null ? void 0 : _a5.empty();
+    this.closeTransientPanels();
+    this.aiLayoutBtn = null;
+    this.settingsBtn = null;
+    if (this.articleStates) {
+      this.articleStates.clear();
+    }
+    if (this.svgUploadCache) {
+      this.svgUploadCache.clear();
+    }
+    if (this.imageUploadCache) {
+      this.imageUploadCache.clear();
+    }
+    if (this.coverUploadCache) {
+      this.coverUploadCache.clear();
+    }
+    if (this.mermaidImageCache) {
+      this.mermaidImageCache.clear();
+    }
+    console.log("\u{1F34E} \u53D1\u5E03\u52A9\u624B\u9762\u677F\u5DF2\u5173\u95ED");
+  },
+  simpleHash(str) {
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+      hash = hash * 33 ^ str.charCodeAt(i);
+    }
+    return hash >>> 0;
   }
-  /**
-   * 创建设置面板（重构为：顶部工具栏 + 悬浮设置层）
-   * @param {ObsidianElementLike} container
-   */
+};
+
+// views/converter/style-panel.js
+var {
+  createRenderPipelines: createRenderPipelines3,
+  buildRenderRuntime: buildRenderRuntime3,
+  resolveMarkdownSource: resolveMarkdownSource3,
+  normalizeVaultPath: normalizeVaultPath3,
+  isAbsolutePathLike: isAbsolutePathLike3,
+  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown3,
+  canUseNativePreviewFastPath: canUseNativePreviewFastPath3,
+  renderNativeMarkdown: renderNativeMarkdown3,
+  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages3,
+  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION3,
+  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO3,
+  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS3,
+  createDefaultAiSettings: createDefaultAiSettings3,
+  normalizeAiSettings: normalizeAiSettings3,
+  normalizeAiProvider: normalizeAiProvider3,
+  getAiProviderIssues: getAiProviderIssues3,
+  isAiProviderRunnable: isAiProviderRunnable3,
+  summarizeAiProviderIssues: summarizeAiProviderIssues3,
+  getLayoutFamilyList: getLayoutFamilyList3,
+  getLayoutFamilyById: getLayoutFamilyById3,
+  getColorPaletteList: getColorPaletteList3,
+  getColorPaletteById: getColorPaletteById3,
+  resolveColorPaletteForRender: resolveColorPaletteForRender3,
+  normalizeHexColor: normalizeHexColor3,
+  normalizeLayoutSelection: normalizeLayoutSelection3,
+  getArticleLayoutSelectionState: getArticleLayoutSelectionState3,
+  resolveAiProvider: resolveAiProvider3,
+  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection3,
+  normalizeArticleLayoutState: normalizeArticleLayoutState3,
+  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry3,
+  extractImageRefsFromHtml: extractImageRefsFromHtml3,
+  extractRenderedSectionFragments: extractRenderedSectionFragments3,
+  generateArticleLayout: generateArticleLayout3,
+  renderArticleLayoutHtml: renderArticleLayoutHtml3,
+  testAiProviderConnection: testAiProviderConnection3,
+  createWechatSyncService: createWechatSyncService3,
+  createWechatSyncBridgeService: createWechatSyncBridgeService3,
+  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError2,
+  getMultiPlatformResultSummary: getMultiPlatformResultSummary3,
+  getWechatSyncResultError: getWechatSyncResultError3,
+  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId3,
+  getWechatSyncResultUrl: getWechatSyncResultUrl3,
+  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform3,
+  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay3,
+  resolveSyncAccount: resolveSyncAccount3,
+  toSyncFriendlyMessage: toSyncFriendlyMessage3,
+  createEmptyDraftCache: createEmptyDraftCache3,
+  normalizeDraftCache: normalizeDraftCache3,
+  getDraftAssociation: getDraftAssociation3,
+  setDraftAssociation: setDraftAssociation3,
+  clearDraftAssociation: clearDraftAssociation3,
+  processAllImagesService: processAllImagesService2,
+  processMathFormulasService: processMathFormulasService2,
+  cleanHtmlForDraftService: cleanHtmlForDraftService2,
+  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob3,
+  createObsidianFetchAdapter: createObsidianFetchAdapter3,
+  stripMarkdownFrontmatter: stripMarkdownFrontmatter3,
+  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls3,
+  createHtmlContainer: createHtmlContainer3,
+  getActiveDocument: getActiveDocument3,
+  getActiveWindowValue: getActiveWindowValue3,
+  htmlToText: htmlToText3,
+  setElementHtml: setElementHtml3,
+  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings3,
+  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds3,
+  hasWechatSyncCapability: hasWechatSyncCapability3,
+  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings3,
+  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms3,
+  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt3,
+  describeWechatsyncConnectionState: describeWechatsyncConnectionState3,
+  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar3,
+  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab3,
+  showMultiPlatformPublishModal: showMultiPlatformPublishModal3,
+  renderFeishuSettingsTab: renderFeishuSettingsTab3,
+  renderFeishuPublishTab: renderFeishuPublishTab3,
+  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings3,
+  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings3,
+  updateFeishuHistoryPath: updateFeishuHistoryPath3,
+  WechatAPI: WechatAPI3,
+  loadCommonJsDependency: loadCommonJsDependency3,
+  obsidianApi: obsidianApi3,
+  Plugin: Plugin3,
+  MarkdownView: MarkdownView3,
+  ItemView: ItemView3,
+  Notice: Notice3,
+  Platform: Platform3,
+  PluginSettingTab: PluginSettingTab3,
+  Setting: Setting3,
+  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY4,
+  getActiveDocumentCompat: getActiveDocumentCompat3,
+  createFallbackSvgElement: createFallbackSvgElement3,
+  revealLeafCompat: revealLeafCompat3,
+  getPluginSettings: getPluginSettings3,
+  setPluginSettings: setPluginSettings3,
+  setDestructiveButtonCompat: setDestructiveButtonCompat3,
+  refreshSettingTabCompat: refreshSettingTabCompat3,
+  toReadableError: toReadableError6,
+  isRecord: isRecord13,
+  toRecord: toRecord10,
+  toAiLayoutState: toAiLayoutState3,
+  toAiLayoutJson: toAiLayoutJson3,
+  toAiLayoutBlock: toAiLayoutBlock3,
+  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta3,
+  toAiLayoutSelection: toAiLayoutSelection3,
+  toAiLayoutFamilyStates: toAiLayoutFamilyStates3,
+  toOptionalText: toOptionalText4,
+  toImageElements: toImageElements3,
+  removeElementClass: removeElementClass3,
+  toOptionalNumber: toOptionalNumber4,
+  parseJsonRecord: parseJsonRecord4,
+  normalizeRequestUrlResponse: normalizeRequestUrlResponse4,
+  getResponseJsonRecord: getResponseJsonRecord4,
+  getProxyErrorMessage: getProxyErrorMessage4,
+  createProxyError: createProxyError4,
+  formatWechatApiError: formatWechatApiError4,
+  hasWechatUploadResult: hasWechatUploadResult4,
+  readBlobAsBase64Payload: readBlobAsBase64Payload4,
+  dataUrlToBlob: dataUrlToBlob3,
+  bufferFromBinary: bufferFromBinary4,
+  inferLocalImageMimeType: inferLocalImageMimeType3,
+  safeDecodeUriText: safeDecodeUriText3,
+  getFileUrlLocalPath: getFileUrlLocalPath3,
+  getVaultAdapterBasePath: getVaultAdapterBasePath3,
+  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath4,
+  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath4,
+  getVaultDirnameFromPath: getVaultDirnameFromPath3,
+  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW3,
+  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE3,
+  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL3,
+  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL3,
+  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL4,
+  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL3,
+  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL4,
+  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL4,
+  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL3,
+  getObsidianModalClass: getObsidianModalClass3,
+  createObsidianModal: createObsidianModal3,
+  getObsidianSetIcon: getObsidianSetIcon3,
+  getObsidianRequestUrl: getObsidianRequestUrl3,
+  getObsidianRequest: getObsidianRequest3,
+  getAppleThemeApi: getAppleThemeApi3,
+  getValueElementFromEvent: getValueElementFromEvent3,
+  getEventTargetValue: getEventTargetValue3,
+  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY3,
+  getObsidianLocale: getObsidianLocale3,
+  isChineseObsidianLocale: isChineseObsidianLocale3,
+  getImageSwipeCommandCopy: getImageSwipeCommandCopy3,
+  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout3,
+  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown3,
+  DEFAULT_SETTINGS: DEFAULT_SETTINGS3,
+  MAX_ACCOUNTS: MAX_ACCOUNTS3,
+  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS3,
+  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS3,
+  getWechatAccountPublishOptions: getWechatAccountPublishOptions3,
+  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions3,
+  isMobileClient: isMobileClient5,
+  generateId: generateId3,
+  sleep: sleep4,
+  pMap: pMap3
+} = apple_style_view_shared_exports;
+var stylePanelMethods = {
   createSettingsPanel(container) {
     const toolbar = container.createEl("div", { cls: "apple-top-toolbar" });
     this.currentDocLabel = toolbar.createEl("div", { cls: "apple-toolbar-title" });
-    if (!isMobileClient2(this.app)) {
+    if (!isMobileClient5(this.app)) {
       const pluginLine = this.currentDocLabel.createDiv({ cls: "apple-toolbar-plugin-line" });
-      pluginLine.createEl("span", { text: APPLE_STYLE_VIEW_TITLE, cls: "apple-toolbar-plugin-name" });
+      pluginLine.createEl("span", { text: APPLE_STYLE_VIEW_TITLE3, cls: "apple-toolbar-plugin-name" });
       pluginLine.createEl("span", { text: "\u516C\u4F17\u53F7\u9884\u89C8", cls: "apple-toolbar-preview-badge" });
     }
     this.docTitleText = this.currentDocLabel.createDiv({ text: "\u672A\u9009\u62E9\u6587\u6863", cls: "apple-toolbar-doc-name" });
@@ -54689,7 +55680,7 @@ var AppleStyleView = class extends ItemView {
         attr: { "aria-label": title }
         // Tooltip
       });
-      const setIcon = getObsidianSetIcon();
+      const setIcon = getObsidianSetIcon3();
       if (typeof setIcon === "function") {
         setIcon(btn, icon);
       }
@@ -54703,7 +55694,7 @@ var AppleStyleView = class extends ItemView {
     settingsButton.setAttribute("title", "\u516C\u4F17\u53F7\u6392\u7248\u6837\u5F0F\u8BBE\u7F6E");
     this.settingsBtn = settingsButton;
     this.aiLayoutBtn = createIconBtn("sparkles", "AI \u7F16\u6392", () => this.onAiLayoutButtonClick());
-    if (!isMobileClient2(this.app)) {
+    if (!isMobileClient5(this.app)) {
       this.copyBtn = createIconBtn("copy", "\u590D\u5236\u5230\u516C\u4F17\u53F7", () => this.copyHTML());
     } else {
       this.copyBtn = null;
@@ -54714,7 +55705,7 @@ var AppleStyleView = class extends ItemView {
     this.settingsArea = settingsArea;
     this.createSection(settingsArea, "\u4E3B\u9898", (section) => {
       const grid = section.createEl("div", { cls: "apple-btn-grid" });
-      const themes = getAppleThemeApi().getThemeList();
+      const themes = getAppleThemeApi3().getThemeList();
       themes.forEach((t) => {
         const btn = grid.createEl("button", {
           cls: `apple-btn-theme ${this.plugin.settings.theme === t.value ? "active" : ""}`,
@@ -54742,7 +55733,7 @@ var AppleStyleView = class extends ItemView {
         if (this.plugin.settings.fontFamily === opt.value)
           option.selected = true;
       });
-      select.addEventListener("change", (e) => this.onFontFamilyChange(getEventTargetValue(e, this.plugin.settings.fontFamily)));
+      select.addEventListener("change", (e) => this.onFontFamilyChange(getEventTargetValue3(e, this.plugin.settings.fontFamily)));
     });
     this.createSection(settingsArea, "\u5B57\u53F7", (section) => {
       const grid = section.createEl("div", { cls: "apple-btn-row" });
@@ -54764,7 +55755,7 @@ var AppleStyleView = class extends ItemView {
     });
     this.createSection(settingsArea, "\u4E3B\u9898\u8272", (section) => {
       const grid = section.createEl("div", { cls: "apple-color-grid" });
-      const colors = getAppleThemeApi().getColorList();
+      const colors = getAppleThemeApi3().getColorList();
       colors.forEach((c) => {
         const btn = grid.createEl("button", {
           cls: `apple-btn-color ${this.plugin.settings.themeColor === c.value ? "active" : ""}`
@@ -54797,10 +55788,10 @@ var AppleStyleView = class extends ItemView {
         colorInput.click();
       });
       colorInput.addEventListener("input", (e) => {
-        customBtn.style.setProperty("--btn-color", getEventTargetValue(e, this.plugin.settings.customColor));
+        customBtn.style.setProperty("--btn-color", getEventTargetValue3(e, this.plugin.settings.customColor));
       });
       colorInput.addEventListener("change", async (e) => {
-        const newColor = getEventTargetValue(e, this.plugin.settings.customColor);
+        const newColor = getEventTargetValue3(e, this.plugin.settings.customColor);
         customBtn.style.setProperty("--btn-color", newColor);
         this.plugin.settings.customColor = newColor;
         this.theme.update({ customColor: newColor });
@@ -54808,7 +55799,7 @@ var AppleStyleView = class extends ItemView {
       });
     });
     this.createSection(settingsArea, "\u9875\u9762\u4E24\u4FA7\u7559\u767D", (section) => {
-      const mobile = isMobileClient2(this.app);
+      const mobile = isMobileClient5(this.app);
       const container2 = section.createEl("div", {
         cls: "apple-slider-container",
         style: "width: 100%; display: flex; align-items: center; gap: 10px;"
@@ -54828,7 +55819,7 @@ var AppleStyleView = class extends ItemView {
         style: "font-size: 12px; color: var(--apple-secondary); min-width: 32px; text-align: right;"
       });
       slider.addEventListener("input", (e) => {
-        const val = parseInt(getEventTargetValue(e, String(this.plugin.settings.sidePadding)), 10);
+        const val = parseInt(getEventTargetValue3(e, String(this.plugin.settings.sidePadding)), 10);
         valueLabel.setText(`${val}px`);
         this.plugin.settings.sidePadding = val;
         this.theme.update({ sidePadding: val });
@@ -54840,7 +55831,7 @@ var AppleStyleView = class extends ItemView {
         this.scheduleSidePaddingPreview(mobile ? 220 : 120);
       });
       slider.addEventListener("change", async (e) => {
-        const val = parseInt(getEventTargetValue(e, String(this.plugin.settings.sidePadding)), 10);
+        const val = parseInt(getEventTargetValue3(e, String(this.plugin.settings.sidePadding)), 10);
         valueLabel.setText(`${val}px`);
         this.plugin.settings.sidePadding = val;
         this.theme.update({ sidePadding: val });
@@ -54876,7 +55867,7 @@ var AppleStyleView = class extends ItemView {
         if (this.plugin.settings.quoteCalloutStyleMode === opt.value)
           option.selected = true;
       });
-      select.addEventListener("change", (e) => this.onQuoteCalloutStyleModeChange(getEventTargetValue(e, this.plugin.settings.quoteCalloutStyleMode)));
+      select.addEventListener("change", (e) => this.onQuoteCalloutStyleModeChange(getEventTargetValue3(e, this.plugin.settings.quoteCalloutStyleMode)));
       section.createEl("span", {
         text: "\u4E2D\u6027\u7070\u66F4\u9002\u5408\u957F\u6587\u9605\u8BFB\uFF1B\u7ECF\u5178\u4E3B\u9898\u8272\u517C\u5BB9\u73B0\u6709\u98CE\u683C\u3002",
         attr: {
@@ -54981,8 +55972,8 @@ var AppleStyleView = class extends ItemView {
     });
     captionSection.classList.add("apple-settings-inline-toggle");
     this.createSection(advancedArea, "\u6A2A\u6ED1\u56FE\u7247\u5757", (section) => {
-      const imageBlockCommand = getImageSwipeCommandCopy(this.app, "image-swipe").name;
-      const sensitiveImageBlockCommand = getImageSwipeCommandCopy(this.app, "image-sensitive").name;
+      const imageBlockCommand = getImageSwipeCommandCopy3(this.app, "image-swipe").name;
+      const sensitiveImageBlockCommand = getImageSwipeCommandCopy3(this.app, "image-sensitive").name;
       section.createEl("span", {
         text: `\u9009\u4E2D\u591A\u5F20\u56FE\u7247\uFF0C\u6253\u5F00\u547D\u4EE4\u9762\u677F\uFF0C\u8FD0\u884C\u300C${imageBlockCommand}\u300D\u6216\u300C${sensitiveImageBlockCommand}\u300D\u3002`,
         attr: {
@@ -55011,13 +56002,7 @@ var AppleStyleView = class extends ItemView {
     this.aiLayoutOverlay = container.createEl("div", { cls: "apple-ai-layout-overlay" });
     this.createAiLayoutPanel(this.aiLayoutOverlay);
     this.updateAiToolbarState();
-  }
-  /**
-   * 创建账号选择器
-   */
-  /**
-   * @param {ObsidianElementLike} parent
-   */
+  },
   createAccountSelector(parent) {
     const accounts = this.plugin.settings.wechatAccounts || [];
     if (accounts.length === 0)
@@ -55043,16 +56028,13 @@ var AppleStyleView = class extends ItemView {
     }
     this.selectedAccountId = defaultId;
     select.addEventListener("change", (event) => {
-      this.selectedAccountId = getEventTargetValue(event, defaultId);
+      this.selectedAccountId = getEventTargetValue3(event, defaultId);
     });
-  }
-  /**
-   * 从文章内容中提取第一张图片作为封面
-   */
+  },
   getFirstImageFromArticle() {
     if (!this.currentHtml)
       return null;
-    const tempDiv = createHtmlContainer("div", this.currentHtml);
+    const tempDiv = createHtmlContainer3("div", this.currentHtml);
     const imgs = Array.from(tempDiv.querySelectorAll("img"));
     for (const img of imgs) {
       if (img.alt === "logo")
@@ -55062,12 +56044,7 @@ var AppleStyleView = class extends ItemView {
         return src;
     }
     return null;
-  }
-  /**
-   * 获取当前发布上下文文件：
-   * 1) 优先当前活动文件
-   * 2) 回退到最近一次活动文件（侧边栏切换 tab 后常见）
-   */
+  },
   getPublishContextFile() {
     var _a5, _b, _c;
     const activeFile = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.workspace) == null ? void 0 : _b.getActiveFile) == null ? void 0 : _c.call(_b);
@@ -55076,15 +56053,7 @@ var AppleStyleView = class extends ItemView {
     if (this.lastActiveFile)
       return this.lastActiveFile;
     return null;
-  }
-  /**
-   * 读取当前文档 frontmatter 中的发布元数据
-   * @returns {{ excerpt: string, cover: string, cover_dir: string, coverSrc: string|null, title: string }}
-   */
-  /**
-   * @param {TFileLike | unknown | null | undefined} activeFile
-   * @returns {{ excerpt: string, cover: string, cover_dir: string, coverSrc: string|null, title: string }}
-   */
+  },
   getFrontmatterPublishMeta(activeFile) {
     var _a5, _b, _c, _d;
     if (!activeFile) {
@@ -55097,14 +56066,9 @@ var AppleStyleView = class extends ItemView {
     const title = this.getFrontmatterString(frontmatter, ["title"]);
     const coverSrc = cover ? this.resolveVaultPathToResourceSrc(cover) : null;
     return { excerpt, cover, cover_dir, coverSrc, title };
-  }
-  /**
-   * @param {Record<string, unknown> | null | undefined} frontmatter
-   * @param {string[]} keys
-   * @returns {string}
-   */
+  },
   getFrontmatterString(frontmatter, keys) {
-    const frontmatterRecord = toRecord6(frontmatter);
+    const frontmatterRecord = toRecord10(frontmatter);
     if (!frontmatterRecord)
       return "";
     if (!Array.isArray(keys) || keys.length === 0)
@@ -55122,22 +56086,13 @@ var AppleStyleView = class extends ItemView {
         return value.trim();
     }
     return "";
-  }
-  /**
-   * @param {unknown} key
-   * @returns {string}
-   */
+  },
   normalizeFrontmatterKey(key) {
     return String(key || "").toLowerCase().replace(/[_-]/g, "");
-  }
-  /**
-   * @param {Record<string, unknown> | null | undefined} frontmatter
-   * @param {string[]} keys
-   * @returns {Record<string, string>}
-   */
+  },
   getFrontmatterKeyMap(frontmatter, keys) {
     const result = {};
-    const frontmatterRecord = toRecord6(frontmatter);
+    const frontmatterRecord = toRecord10(frontmatter);
     if (!frontmatterRecord)
       return result;
     if (!Array.isArray(keys) || keys.length === 0)
@@ -55154,7 +56109,7 @@ var AppleStyleView = class extends ItemView {
       result[key] = normalizedValue;
     }
     return result;
-  }
+  },
   isPathInsideDirectory(filePath, dirPath) {
     const file = this.normalizeVaultPath(filePath);
     const dir = this.normalizeVaultPath(dirPath);
@@ -55163,7 +56118,7 @@ var AppleStyleView = class extends ItemView {
     if (file === dir)
       return true;
     return file.startsWith(`${dir}/`);
-  }
+  },
   isPathInsideDirectoryByTail(filePath, dirPath) {
     const file = this.normalizeVaultPath(filePath);
     const dir = this.normalizeVaultPath(dirPath);
@@ -55179,7 +56134,7 @@ var AppleStyleView = class extends ItemView {
       }
     }
     return false;
-  }
+  },
   shouldClearFrontmatterPathAfterCleanup(pathValue, cleanedDir) {
     const normalized = this.normalizeVaultPath(pathValue);
     if (!normalized)
@@ -55187,14 +56142,9 @@ var AppleStyleView = class extends ItemView {
     if (this.isPathInsideDirectory(normalized, cleanedDir))
       return true;
     return this.isPathInsideDirectoryByTail(normalized, cleanedDir);
-  }
-  /**
-   * @param {Record<string, unknown> | null | undefined} frontmatter
-   * @param {string} cleanedDir
-   * @returns {boolean}
-   */
+  },
   clearInvalidPublishMetaInFrontmatter(frontmatter, cleanedDir) {
-    const frontmatterRecord = toRecord6(frontmatter);
+    const frontmatterRecord = toRecord10(frontmatter);
     if (!frontmatterRecord)
       return false;
     let changed = false;
@@ -55213,7 +56163,7 @@ var AppleStyleView = class extends ItemView {
       }
     }
     return changed;
-  }
+  },
   async clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir) {
     var _a5;
     const vault = (_a5 = this.app) == null ? void 0 : _a5.vault;
@@ -55239,7 +56189,7 @@ var AppleStyleView = class extends ItemView {
       return false;
     await vault.modify(activeFile, `${match[1]}${body}${match[3]}${source.slice(match[0].length)}`);
     return true;
-  }
+  },
   async clearInvalidPublishMetaAfterCleanup(activeFile, cleanedDirPath) {
     var _a5, _b;
     if (!activeFile || !cleanedDirPath)
@@ -55251,19 +56201,16 @@ var AppleStyleView = class extends ItemView {
       const processFrontMatter = (_b = (_a5 = this.app) == null ? void 0 : _a5.fileManager) == null ? void 0 : _b["processFrontMatter"];
       if (typeof processFrontMatter === "function") {
         await processFrontMatter.call(this.app.fileManager, activeFile, (frontmatter) => {
-          this.clearInvalidPublishMetaInFrontmatter(toRecord6(frontmatter), cleanedDir);
+          this.clearInvalidPublishMetaInFrontmatter(toRecord10(frontmatter), cleanedDir);
         });
       } else {
         await this.clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir);
       }
     } catch (error) {
-      return `\u8D44\u6E90\u5DF2\u5220\u9664\uFF0C\u4F46\u6E05\u7406 frontmatter \u4E2D\u5931\u6548\u7684 cover/cover_dir \u5931\u8D25: ${toReadableError3(error).message}`;
+      return `\u8D44\u6E90\u5DF2\u5220\u9664\uFF0C\u4F46\u6E05\u7406 frontmatter \u4E2D\u5931\u6548\u7684 cover/cover_dir \u5931\u8D25: ${toReadableError6(error).message}`;
     }
     return null;
-  }
-  /**
-   * 将 vault 相对路径解析为可预览/上传的资源 src（通常是 app://）
-   */
+  },
   resolveVaultPathToResourceSrc(vaultPath) {
     if (typeof vaultPath !== "string")
       return null;
@@ -55280,24 +56227,20 @@ var AppleStyleView = class extends ItemView {
     } catch (e) {
       return null;
     }
-  }
+  },
   normalizeVaultPath(vaultPath) {
-    return normalizeVaultPath(vaultPath);
-  }
+    return normalizeVaultPath3(vaultPath);
+  },
   getVaultConfigDir() {
     var _a5, _b;
     const configDir = (_b = (_a5 = this.app) == null ? void 0 : _a5.vault) == null ? void 0 : _b.configDir;
     return typeof configDir === "string" ? this.normalizeVaultPath(configDir) : "";
-  }
+  },
   getCleanupDirTemplate() {
     var _a5, _b;
     const raw = typeof ((_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.cleanupDirTemplate) === "string" ? this.plugin.settings.cleanupDirTemplate : "";
     return this.normalizeVaultPath(raw);
-  }
-  /**
-   * @param {TFileLike | null | undefined} activeFile
-   * @returns {{ path: string, warning?: string }}
-   */
+  },
   resolveCleanupDirPath(activeFile) {
     const template = this.getCleanupDirTemplate();
     if (!template) {
@@ -55314,10 +56257,7 @@ var AppleStyleView = class extends ItemView {
       return { path: "", warning: "\u6E05\u7406\u76EE\u5F55\u4E3A\u7A7A\uFF0C\u8BF7\u68C0\u67E5\u8BBE\u7F6E\u503C" };
     }
     return { path: normalized };
-  }
-  /**
-   * 清理目录安全校验：禁止空路径、上跳路径、系统配置目录等危险路径
-   */
+  },
   isSafeCleanupDirPath(vaultPath) {
     const normalized = this.normalizeVaultPath(vaultPath);
     if (!normalized)
@@ -55330,13 +56270,7 @@ var AppleStyleView = class extends ItemView {
     if (configDir && (normalized === configDir || normalized.startsWith(`${configDir}/`)))
       return false;
     return true;
-  }
-  /**
-   * 在同步成功后按配置清理目录
-   * 失败返回 warning，不抛错（避免影响同步成功状态）
-   * @param {TFileLike | null | undefined} activeFile
-   * @returns {Promise<CleanupResultLike>}
-   */
+  },
   async cleanupConfiguredDirectory(activeFile) {
     if (!this.plugin.settings.cleanupAfterSync) {
       return { attempted: false };
@@ -55367,28 +56301,21 @@ var AppleStyleView = class extends ItemView {
         throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301\u5220\u9664\u63A5\u53E3");
       }
     } catch (error) {
-      return { attempted: true, success: false, warning: `\u5220\u9664\u5931\u8D25 (${normalized}): ${toReadableError3(error).message}` };
+      return { attempted: true, success: false, warning: `\u5220\u9664\u5931\u8D25 (${normalized}): ${toReadableError6(error).message}` };
     }
     const frontmatterWarning = await this.clearInvalidPublishMetaAfterCleanup(activeFile, normalized);
     if (frontmatterWarning) {
       return { attempted: true, success: true, cleanedPath: normalized, warning: frontmatterWarning };
     }
     return { attempted: true, success: true, cleanedPath: normalized };
-  }
-  /**
-   * 创建设置区块
-   * @param {ObsidianElementLike} parent
-   * @param {string} label
-   * @param {(content: ObsidianElementLike) => unknown} builder
-   * @returns {ObsidianElementLike}
-   */
+  },
   createSection(parent, label, builder) {
     const section = parent.createEl("div", { cls: "apple-setting-section" });
     section.createEl("label", { cls: "apple-setting-label", text: label });
     const content = section.createEl("div", { cls: "apple-setting-content" });
     builder(content);
     return section;
-  }
+  },
   resetSettingsPanelViewState() {
     var _a5;
     const advancedOptions = this.settingsAdvancedOptions || ((_a5 = this.settingsOverlay) == null ? void 0 : _a5.querySelector(".apple-settings-details"));
@@ -55408,7 +56335,7 @@ var AppleStyleView = class extends ItemView {
     if (typeof requestAnimationFrame === "function") {
       window.requestAnimationFrame(resetScroll);
     }
-  }
+  },
   resetAiLayoutPanelViewState() {
     this.aiAdvancedOpen = false;
     this.aiLayoutDebugMode = "";
@@ -55428,17 +56355,7 @@ var AppleStyleView = class extends ItemView {
     if (typeof requestAnimationFrame === "function") {
       window.requestAnimationFrame(resetScroll);
     }
-  }
-  /**
-   * @param {ObsidianElementLike | null} overlay
-   * @param {ObsidianElementLike | null} button
-   * @param {(() => unknown) | undefined} onOpen
-   */
-  /**
-   * @param {ObsidianElementLike | null} overlay
-   * @param {ObsidianElementLike | null} button
-   * @param {(() => unknown) | undefined} [onOpen]
-   */
+  },
   togglePanel(overlay, button, onOpen) {
     if (!overlay || !button)
       return;
@@ -55450,12 +56367,7 @@ var AppleStyleView = class extends ItemView {
       if (typeof onOpen === "function")
         onOpen();
     }
-  }
-  /**
-   * @param {Element | null} element
-   * @param {number} deltaY
-   * @returns {boolean}
-   */
+  },
   canScrollElementInDirection(element, deltaY) {
     if (!element)
       return false;
@@ -55467,11 +56379,7 @@ var AppleStyleView = class extends ItemView {
     if (deltaY > 0)
       return (element.scrollTop || 0) < maxScroll - 1;
     return true;
-  }
-  /**
-   * @param {ObsidianElementLike | null} overlay
-   * @param {string[]} [nestedSelectors]
-   */
+  },
   attachOverlayScrollGuard(overlay, nestedSelectors = []) {
     if (!overlay || overlay.__appleScrollGuardAttached)
       return;
@@ -55498,43 +56406,205 @@ var AppleStyleView = class extends ItemView {
     overlay.addEventListener("wheel", handleWheel, { passive: false });
     overlay.addEventListener("touchmove", handleTouchMove, { passive: false });
     overlay.__appleScrollGuardAttached = true;
-  }
+  },
   closeTransientPanels() {
-    removeElementClass(this.settingsOverlay, "visible");
-    removeElementClass(this.aiLayoutOverlay, "visible");
-    removeElementClass(this.settingsBtn, "active");
-    removeElementClass(this.aiLayoutBtn, "active");
+    removeElementClass3(this.settingsOverlay, "visible");
+    removeElementClass3(this.aiLayoutOverlay, "visible");
+    removeElementClass3(this.settingsBtn, "active");
+    removeElementClass3(this.aiLayoutBtn, "active");
   }
-  /**
-   * @returns {AiLayoutStateLike | null}
-   */
+};
+
+// views/converter/ai-layout-panel.js
+var {
+  createRenderPipelines: createRenderPipelines4,
+  buildRenderRuntime: buildRenderRuntime4,
+  resolveMarkdownSource: resolveMarkdownSource4,
+  normalizeVaultPath: normalizeVaultPath4,
+  isAbsolutePathLike: isAbsolutePathLike4,
+  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown4,
+  canUseNativePreviewFastPath: canUseNativePreviewFastPath4,
+  renderNativeMarkdown: renderNativeMarkdown4,
+  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages4,
+  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION4,
+  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO4,
+  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS4,
+  createDefaultAiSettings: createDefaultAiSettings4,
+  normalizeAiSettings: normalizeAiSettings4,
+  normalizeAiProvider: normalizeAiProvider4,
+  getAiProviderIssues: getAiProviderIssues4,
+  isAiProviderRunnable: isAiProviderRunnable4,
+  summarizeAiProviderIssues: summarizeAiProviderIssues4,
+  getLayoutFamilyList: getLayoutFamilyList4,
+  getLayoutFamilyById: getLayoutFamilyById4,
+  getColorPaletteList: getColorPaletteList4,
+  getColorPaletteById: getColorPaletteById4,
+  resolveColorPaletteForRender: resolveColorPaletteForRender4,
+  normalizeHexColor: normalizeHexColor4,
+  normalizeLayoutSelection: normalizeLayoutSelection4,
+  getArticleLayoutSelectionState: getArticleLayoutSelectionState4,
+  resolveAiProvider: resolveAiProvider4,
+  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection4,
+  normalizeArticleLayoutState: normalizeArticleLayoutState4,
+  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry4,
+  extractImageRefsFromHtml: extractImageRefsFromHtml4,
+  extractRenderedSectionFragments: extractRenderedSectionFragments4,
+  generateArticleLayout: generateArticleLayout4,
+  renderArticleLayoutHtml: renderArticleLayoutHtml4,
+  testAiProviderConnection: testAiProviderConnection4,
+  createWechatSyncService: createWechatSyncService4,
+  createWechatSyncBridgeService: createWechatSyncBridgeService4,
+  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError3,
+  getMultiPlatformResultSummary: getMultiPlatformResultSummary4,
+  getWechatSyncResultError: getWechatSyncResultError4,
+  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId4,
+  getWechatSyncResultUrl: getWechatSyncResultUrl4,
+  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform4,
+  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay4,
+  resolveSyncAccount: resolveSyncAccount4,
+  toSyncFriendlyMessage: toSyncFriendlyMessage4,
+  createEmptyDraftCache: createEmptyDraftCache4,
+  normalizeDraftCache: normalizeDraftCache4,
+  getDraftAssociation: getDraftAssociation4,
+  setDraftAssociation: setDraftAssociation4,
+  clearDraftAssociation: clearDraftAssociation4,
+  processAllImagesService: processAllImagesService3,
+  processMathFormulasService: processMathFormulasService3,
+  cleanHtmlForDraftService: cleanHtmlForDraftService3,
+  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob4,
+  createObsidianFetchAdapter: createObsidianFetchAdapter4,
+  stripMarkdownFrontmatter: stripMarkdownFrontmatter4,
+  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls4,
+  createHtmlContainer: createHtmlContainer4,
+  getActiveDocument: getActiveDocument4,
+  getActiveWindowValue: getActiveWindowValue4,
+  htmlToText: htmlToText4,
+  setElementHtml: setElementHtml4,
+  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings4,
+  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds4,
+  hasWechatSyncCapability: hasWechatSyncCapability4,
+  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings4,
+  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms4,
+  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt4,
+  describeWechatsyncConnectionState: describeWechatsyncConnectionState4,
+  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar4,
+  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab4,
+  showMultiPlatformPublishModal: showMultiPlatformPublishModal4,
+  renderFeishuSettingsTab: renderFeishuSettingsTab4,
+  renderFeishuPublishTab: renderFeishuPublishTab4,
+  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings4,
+  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings4,
+  updateFeishuHistoryPath: updateFeishuHistoryPath4,
+  WechatAPI: WechatAPI4,
+  loadCommonJsDependency: loadCommonJsDependency4,
+  obsidianApi: obsidianApi4,
+  Plugin: Plugin4,
+  MarkdownView: MarkdownView4,
+  ItemView: ItemView4,
+  Notice: Notice4,
+  Platform: Platform4,
+  PluginSettingTab: PluginSettingTab4,
+  Setting: Setting4,
+  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY5,
+  getActiveDocumentCompat: getActiveDocumentCompat4,
+  createFallbackSvgElement: createFallbackSvgElement4,
+  revealLeafCompat: revealLeafCompat4,
+  getPluginSettings: getPluginSettings4,
+  setPluginSettings: setPluginSettings4,
+  setDestructiveButtonCompat: setDestructiveButtonCompat4,
+  refreshSettingTabCompat: refreshSettingTabCompat4,
+  toReadableError: toReadableError7,
+  isRecord: isRecord14,
+  toRecord: toRecord11,
+  toAiLayoutState: toAiLayoutState4,
+  toAiLayoutJson: toAiLayoutJson4,
+  toAiLayoutBlock: toAiLayoutBlock4,
+  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta4,
+  toAiLayoutSelection: toAiLayoutSelection4,
+  toAiLayoutFamilyStates: toAiLayoutFamilyStates4,
+  toOptionalText: toOptionalText5,
+  toImageElements: toImageElements4,
+  removeElementClass: removeElementClass4,
+  toOptionalNumber: toOptionalNumber5,
+  parseJsonRecord: parseJsonRecord5,
+  normalizeRequestUrlResponse: normalizeRequestUrlResponse5,
+  getResponseJsonRecord: getResponseJsonRecord5,
+  getProxyErrorMessage: getProxyErrorMessage5,
+  createProxyError: createProxyError5,
+  formatWechatApiError: formatWechatApiError5,
+  hasWechatUploadResult: hasWechatUploadResult5,
+  readBlobAsBase64Payload: readBlobAsBase64Payload5,
+  dataUrlToBlob: dataUrlToBlob4,
+  bufferFromBinary: bufferFromBinary5,
+  inferLocalImageMimeType: inferLocalImageMimeType4,
+  safeDecodeUriText: safeDecodeUriText4,
+  getFileUrlLocalPath: getFileUrlLocalPath4,
+  getVaultAdapterBasePath: getVaultAdapterBasePath4,
+  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath5,
+  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath5,
+  getVaultDirnameFromPath: getVaultDirnameFromPath4,
+  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW4,
+  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE4,
+  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL4,
+  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL4,
+  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL5,
+  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL4,
+  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL5,
+  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL5,
+  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL4,
+  getObsidianModalClass: getObsidianModalClass4,
+  createObsidianModal: createObsidianModal4,
+  getObsidianSetIcon: getObsidianSetIcon4,
+  getObsidianRequestUrl: getObsidianRequestUrl4,
+  getObsidianRequest: getObsidianRequest4,
+  getAppleThemeApi: getAppleThemeApi4,
+  getValueElementFromEvent: getValueElementFromEvent4,
+  getEventTargetValue: getEventTargetValue4,
+  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY4,
+  getObsidianLocale: getObsidianLocale4,
+  isChineseObsidianLocale: isChineseObsidianLocale4,
+  getImageSwipeCommandCopy: getImageSwipeCommandCopy4,
+  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout4,
+  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown4,
+  DEFAULT_SETTINGS: DEFAULT_SETTINGS4,
+  MAX_ACCOUNTS: MAX_ACCOUNTS4,
+  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS4,
+  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS4,
+  getWechatAccountPublishOptions: getWechatAccountPublishOptions4,
+  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions4,
+  isMobileClient: isMobileClient6,
+  generateId: generateId4,
+  sleep: sleep5,
+  pMap: pMap4
+} = apple_style_view_shared_exports;
+var aiLayoutPanelMethods = {
   getCurrentArticleAnyLayoutState() {
     var _a5, _b, _c, _d, _e, _f;
     const { sourcePath } = this.getCurrentLayoutContext();
     if (!sourcePath)
       return null;
     if (typeof ((_a5 = this.plugin) == null ? void 0 : _a5.getArticleLayoutState) === "function") {
-      return toAiLayoutState(this.plugin.getArticleLayoutState(sourcePath, {}) || null);
+      return toAiLayoutState4(this.plugin.getArticleLayoutState(sourcePath, {}) || null);
     }
-    const normalizedPath = normalizeVaultPath(sourcePath);
+    const normalizedPath = normalizeVaultPath4(sourcePath);
     const entry = ((_e = (_d = (_c = (_b = this.plugin) == null ? void 0 : _b.settings) == null ? void 0 : _c.ai) == null ? void 0 : _d.articleLayoutsByPath) == null ? void 0 : _e[normalizedPath]) || null;
-    const normalizedEntry = normalizeArticleLayoutCacheEntry(entry);
+    const normalizedEntry = normalizeArticleLayoutCacheEntry4(entry);
     if (!normalizedEntry)
       return null;
-    return toAiLayoutState(((_f = normalizedEntry.familyStates) == null ? void 0 : _f[normalizedEntry.lastLayoutFamily]) || null);
-  }
+    return toAiLayoutState4(((_f = normalizedEntry.familyStates) == null ? void 0 : _f[normalizedEntry.lastLayoutFamily]) || null);
+  },
   hasCurrentArticleAiLayoutCache() {
     var _a5;
     const state = this.getCurrentArticleAnyLayoutState();
     return !!((state == null ? void 0 : state.status) === "ready" && Array.isArray((_a5 = state.layoutJson) == null ? void 0 : _a5.blocks) && state.layoutJson.blocks.length);
-  }
+  },
   updateAiToolbarState() {
     var _a5;
     if (!this.aiLayoutBtn)
       return;
-    const aiSettings = ((_a5 = this.plugin.settings) == null ? void 0 : _a5.ai) || createDefaultAiSettings();
+    const aiSettings = ((_a5 = this.plugin.settings) == null ? void 0 : _a5.ai) || createDefaultAiSettings4();
     const enabled = aiSettings.enabled === true;
-    const hasProvider = !!resolveAiProvider(aiSettings);
+    const hasProvider = !!resolveAiProvider4(aiSettings);
     const hasCachedLayout = this.hasCurrentArticleAiLayoutCache();
     const shouldShow = enabled && (hasProvider || hasCachedLayout);
     this.aiLayoutBtn.classList.toggle("is-disabled", !shouldShow);
@@ -55548,23 +56618,20 @@ var AppleStyleView = class extends ItemView {
         this.aiLayoutOverlay.classList.remove("visible");
       this.aiLayoutBtn.classList.remove("active");
     }
-  }
+  },
   onAiLayoutButtonClick() {
     var _a5, _b;
     if (((_b = (_a5 = this.plugin.settings) == null ? void 0 : _a5.ai) == null ? void 0 : _b.enabled) !== true) {
       this.closeTransientPanels();
       this.updateAiToolbarState();
-      new Notice("AI \u7F16\u6392\u5F53\u524D\u5DF2\u5173\u95ED\uFF0C\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u542F\u7528");
+      new Notice4("AI \u7F16\u6392\u5F53\u524D\u5DF2\u5173\u95ED\uFF0C\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u542F\u7528");
       return;
     }
     this.togglePanel(this.aiLayoutOverlay, this.aiLayoutBtn, () => {
       this.resetAiLayoutPanelViewState();
       this.refreshAiLayoutPanel();
     });
-  }
-  /**
-   * @param {ObsidianElementLike} parent
-   */
+  },
   createAiLayoutPanel(parent) {
     var _a5, _b;
     this.attachOverlayScrollGuard(parent, [".apple-ai-layout-debug-body"]);
@@ -55593,7 +56660,7 @@ var AppleStyleView = class extends ItemView {
     layoutControl.createEl("label", { cls: "apple-setting-label", text: "\u5E03\u5C40" });
     this.aiLayoutFamilySelect = /** @type {ObsidianInputLike} */
     layoutControl.createEl("select", { cls: "apple-select" });
-    getLayoutFamilyList({ includeAuto: true, includeReserved: false }).forEach((family) => {
+    getLayoutFamilyList4({ includeAuto: true, includeReserved: false }).forEach((family) => {
       var _a6;
       const option = (
         /** @type {ObsidianInputLike} */
@@ -55602,7 +56669,7 @@ var AppleStyleView = class extends ItemView {
           text: this.getAiLayoutFamilyLabel(family.value)
         })
       );
-      if ((((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO) === family.value) {
+      if ((((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4) === family.value) {
         option.selected = true;
       }
     });
@@ -55610,7 +56677,7 @@ var AppleStyleView = class extends ItemView {
     paletteControl.createEl("label", { cls: "apple-setting-label", text: "\u989C\u8272" });
     this.aiColorPaletteSelect = /** @type {ObsidianInputLike} */
     paletteControl.createEl("select", { cls: "apple-select apple-ai-layout-color-select" });
-    getColorPaletteList({ includeAuto: true }).forEach((palette) => {
+    getColorPaletteList4({ includeAuto: true }).forEach((palette) => {
       var _a6;
       const option = (
         /** @type {ObsidianInputLike} */
@@ -55619,12 +56686,12 @@ var AppleStyleView = class extends ItemView {
           text: palette.label
         })
       );
-      if ((((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO) === palette.value) {
+      if ((((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4) === palette.value) {
         option.selected = true;
       }
     });
-    this.pendingAiLayoutFamily = this.pendingAiLayoutFamily || ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO;
-    this.pendingAiColorPalette = this.pendingAiColorPalette || ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO;
+    this.pendingAiLayoutFamily = this.pendingAiLayoutFamily || ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4;
+    this.pendingAiColorPalette = this.pendingAiColorPalette || ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4;
     this.pendingAiStylePack = this.pendingAiColorPalette;
     this.aiLayoutFamilySelect.value = this.pendingAiLayoutFamily;
     this.aiColorPaletteSelect.value = this.pendingAiColorPalette;
@@ -55633,9 +56700,9 @@ var AppleStyleView = class extends ItemView {
     const autoPaletteRow = this.aiColorPaletteControls.createDiv({ cls: "apple-ai-color-mode-row" });
     this.aiColorPaletteGrid = this.aiColorPaletteControls.createDiv({ cls: "apple-ai-color-grid" });
     const customPaletteRow = this.aiColorPaletteControls.createDiv({ cls: "apple-ai-color-custom-row" });
-    getColorPaletteList({ includeAuto: true }).forEach((palette) => {
+    getColorPaletteList4({ includeAuto: true }).forEach((palette) => {
       var _a6;
-      const isAuto = palette.value === AI_LAYOUT_SELECTION_AUTO;
+      const isAuto = palette.value === AI_LAYOUT_SELECTION_AUTO4;
       const isCustom = palette.value === "custom";
       const target = isAuto ? autoPaletteRow : isCustom ? customPaletteRow : this.aiColorPaletteGrid;
       const button = target.createEl("button", {
@@ -55645,7 +56712,7 @@ var AppleStyleView = class extends ItemView {
       });
       button.dataset.value = palette.value;
       if (!isAuto && !isCustom) {
-        const pack = getColorPaletteById(palette.value);
+        const pack = getColorPaletteById4(palette.value);
         button.style.setProperty("--btn-color", ((_a6 = pack == null ? void 0 : pack.tokens) == null ? void 0 : _a6.accent) || "#7c3aed");
       }
       button.addEventListener("click", async () => {
@@ -55662,11 +56729,11 @@ var AppleStyleView = class extends ItemView {
     });
     this.aiCustomColorInput.value = this.getAiCustomColor();
     this.aiCustomColorInput.addEventListener("input", (event) => {
-      const nextColor = normalizeHexColor(getEventTargetValue(event, this.getAiCustomColor()), this.getAiCustomColor());
+      const nextColor = normalizeHexColor4(getEventTargetValue4(event, this.getAiCustomColor()), this.getAiCustomColor());
       this.plugin.settings.ai.customColor = nextColor;
     });
     this.aiCustomColorInput.addEventListener("change", async (event) => {
-      const nextColor = normalizeHexColor(getEventTargetValue(event, this.getAiCustomColor()), this.getAiCustomColor());
+      const nextColor = normalizeHexColor4(getEventTargetValue4(event, this.getAiCustomColor()), this.getAiCustomColor());
       this.plugin.settings.ai.customColor = nextColor;
       await this.plugin.saveSettings();
       await this.onAiColorPaletteChange("custom", { skipSave: true });
@@ -55674,11 +56741,11 @@ var AppleStyleView = class extends ItemView {
     this.updateAiColorPaletteControls();
     this.aiLayoutFamilySelect.addEventListener("change", () => {
       var _a6;
-      this.onAiLayoutFamilyChange(this.aiLayoutFamilySelect.value || ((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO);
+      this.onAiLayoutFamilyChange(this.aiLayoutFamilySelect.value || ((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4);
     });
     this.aiColorPaletteSelect.addEventListener("change", () => {
       var _a6;
-      this.onAiColorPaletteChange(this.aiColorPaletteSelect.value || ((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO);
+      this.onAiColorPaletteChange(this.aiColorPaletteSelect.value || ((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4);
     });
     const actionRow = area.createDiv({ cls: "apple-ai-layout-actions" });
     this.aiGenerateBtn = actionRow.createEl("button", { cls: "apple-btn-primary", text: "\u751F\u6210\u5E76\u5E94\u7528" });
@@ -55739,38 +56806,27 @@ var AppleStyleView = class extends ItemView {
       text: "\u6B63\u5728\u751F\u6210 AI \u7F16\u6392..."
     });
     this.refreshAiLayoutPanel();
-  }
-  /**
-   * @returns {string}
-   */
+  },
   getAiCustomColor() {
     var _a5, _b;
-    return normalizeHexColor((_b = (_a5 = this.plugin.settings) == null ? void 0 : _a5.ai) == null ? void 0 : _b.customColor, "#7c3aed");
-  }
-  /**
-   * @param {string} [colorPaletteId]
-   * @returns {{ customColor: string } | null}
-   */
+    return normalizeHexColor4((_b = (_a5 = this.plugin.settings) == null ? void 0 : _a5.ai) == null ? void 0 : _b.customColor, "#7c3aed");
+  },
   getAiColorPaletteOverride(colorPaletteId = "") {
     const targetPalette = colorPaletteId || this.getCurrentAiLayoutSelection().colorPalette;
     if (targetPalette !== "custom")
       return null;
     return { customColor: this.getAiCustomColor() };
-  }
-  /**
-   * @param {string} [colorPaletteId]
-   * @returns {Record<string, unknown>}
-   */
+  },
   getAiRenderColorPalette(colorPaletteId = "") {
     const targetPalette = colorPaletteId || this.getCurrentAiLayoutSelection().colorPalette || "tech-green";
     return (
       /** @type {Record<string, unknown>} */
-      resolveColorPaletteForRender(targetPalette, this.getAiColorPaletteOverride(targetPalette))
+      resolveColorPaletteForRender4(targetPalette, this.getAiColorPaletteOverride(targetPalette))
     );
-  }
+  },
   updateAiColorPaletteControls() {
     var _a5, _b, _c, _d, _e;
-    const selectedValue = this.pendingAiColorPalette || ((_a5 = this.aiColorPaletteSelect) == null ? void 0 : _a5.value) || ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO;
+    const selectedValue = this.pendingAiColorPalette || ((_a5 = this.aiColorPaletteSelect) == null ? void 0 : _a5.value) || ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4;
     if (this.aiColorPaletteSelect && this.aiColorPaletteSelect.value !== selectedValue) {
       this.aiColorPaletteSelect.value = selectedValue;
     }
@@ -55782,18 +56838,13 @@ var AppleStyleView = class extends ItemView {
         return;
       button.classList.toggle("active", button.dataset.value === selectedValue);
     });
-  }
-  /**
-   * @param {AiLayoutJsonLike | null} [layoutJson]
-   * @param {string} [colorPaletteId]
-   * @returns {AiLayoutJsonLike | null}
-   */
+  },
   getAiRenderLayoutJson(layoutJson = null, colorPaletteId = "") {
-    const layoutRecord = toAiLayoutJson(layoutJson);
+    const layoutRecord = toAiLayoutJson4(layoutJson);
     if (!layoutRecord)
       return layoutRecord;
     const selectedPalette = colorPaletteId || this.getCurrentAiLayoutSelection().colorPalette;
-    if (!selectedPalette || selectedPalette === AI_LAYOUT_SELECTION_AUTO)
+    if (!selectedPalette || selectedPalette === AI_LAYOUT_SELECTION_AUTO4)
       return layoutRecord;
     return {
       ...layoutRecord,
@@ -55807,14 +56858,10 @@ var AppleStyleView = class extends ItemView {
       },
       stylePack: selectedPalette
     };
-  }
-  /**
-   * @param {string} value
-   * @param {{ skipSave?: boolean }} [options]
-   */
+  },
   async onAiColorPaletteChange(value, { skipSave = false } = {}) {
     var _a5, _b, _c;
-    const nextValue = value || ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO;
+    const nextValue = value || ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4;
     const previousState = this.getCurrentArticleLayoutState();
     this.pendingAiColorPalette = nextValue;
     this.pendingAiStylePack = this.pendingAiColorPalette;
@@ -55826,7 +56873,7 @@ var AppleStyleView = class extends ItemView {
       await this.plugin.saveSettings();
     }
     await this.ensureAiLayoutSelectionState(previousState, {
-      layoutFamily: this.pendingAiLayoutFamily || ((_b = this.aiLayoutFamilySelect) == null ? void 0 : _b.value) || ((_c = previousState == null ? void 0 : previousState.selection) == null ? void 0 : _c.layoutFamily) || AI_LAYOUT_SELECTION_AUTO,
+      layoutFamily: this.pendingAiLayoutFamily || ((_b = this.aiLayoutFamilySelect) == null ? void 0 : _b.value) || ((_c = previousState == null ? void 0 : previousState.selection) == null ? void 0 : _c.layoutFamily) || AI_LAYOUT_SELECTION_AUTO4,
       colorPalette: this.pendingAiColorPalette
     });
     if (this.aiPreviewApplied) {
@@ -55834,13 +56881,10 @@ var AppleStyleView = class extends ItemView {
       return;
     }
     this.refreshAiLayoutPanel();
-  }
-  /**
-   * @param {string} value
-   */
+  },
   async onAiLayoutFamilyChange(value) {
     var _a5, _b, _c;
-    const nextValue = value || ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO;
+    const nextValue = value || ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4;
     this.pendingAiLayoutFamily = nextValue;
     if (this.aiLayoutFamilySelect && this.aiLayoutFamilySelect.value !== nextValue) {
       this.aiLayoutFamilySelect.value = nextValue;
@@ -55853,38 +56897,26 @@ var AppleStyleView = class extends ItemView {
       }
     }
     this.refreshAiLayoutPanel();
-  }
-  /**
-   * @param {string} colorPaletteId
-   */
+  },
   applyAiLayoutPanelStylePack(colorPaletteId) {
     if (!this.aiLayoutOverlay)
       return;
     const pack = this.getAiRenderColorPalette(colorPaletteId || "tech-green");
-    const tokens = toRecord6(pack.tokens);
+    const tokens = toRecord11(pack.tokens);
     this.aiLayoutOverlay.style.setProperty("--ai-layout-accent", tokens.accent || "#0a84ff");
     this.aiLayoutOverlay.style.setProperty("--ai-layout-accent-deep", tokens.accentDeep || tokens.accent || "#0a84ff");
     this.aiLayoutOverlay.style.setProperty("--ai-layout-accent-soft", tokens.accentSoft || "rgba(0, 122, 255, 0.08)");
     this.aiLayoutOverlay.style.setProperty("--ai-layout-accent-border", tokens.accent || "#0a84ff");
-  }
-  /**
-   * @param {AiLayoutBlockLike | unknown} [block]
-   * @param {number} [index]
-   * @returns {string}
-   */
+  },
   getAiLayoutBlockStateKey(block = {}, index = 0) {
-    const blockRecord = toAiLayoutBlock(block);
+    const blockRecord = toAiLayoutBlock4(block);
     const type = String(blockRecord.type || "").trim();
     const sectionIndex = Number.isInteger(blockRecord.sectionIndex) ? String(blockRecord.sectionIndex) : "";
     const label = String(
       blockRecord.title || blockRecord.caseLabel || blockRecord.text || blockRecord.caption || blockRecord.buttonText || blockRecord.imageId || type
     ).trim();
     return [type, sectionIndex, label, String(index)].join("::");
-  }
-  /**
-   * @param {AiLayoutStateLike | null} state
-   * @returns {VisibleAiLayoutSnapshotLike}
-   */
+  },
   getVisibleAiLayoutSnapshot(state) {
     var _a5, _b;
     if (!((_b = (_a5 = state == null ? void 0 : state.layoutJson) == null ? void 0 : _a5.blocks) == null ? void 0 : _b.length)) {
@@ -55900,7 +56932,7 @@ var AppleStyleView = class extends ItemView {
     let hiddenCount = 0;
     state.layoutJson.blocks.forEach((block, index) => {
       var _a6, _b2;
-      const blockRecord = toAiLayoutBlock(block);
+      const blockRecord = toAiLayoutBlock4(block);
       const blockKey = this.getAiLayoutBlockStateKey(blockRecord, index);
       if (dismissedKeys.has(blockKey)) {
         hiddenCount += 1;
@@ -55933,11 +56965,7 @@ var AppleStyleView = class extends ItemView {
       blockOrigins: visibleOrigins,
       hiddenCount
     };
-  }
-  /**
-   * @param {number} originalIndex
-   * @param {HTMLElement | ObsidianElementLike | null} [itemEl]
-   */
+  },
   queueAiLayoutRemovalAnchor(originalIndex, itemEl = null) {
     const state = this.getCurrentArticleLayoutState();
     const visibleSnapshot = this.getVisibleAiLayoutSnapshot(state);
@@ -55951,7 +56979,7 @@ var AppleStyleView = class extends ItemView {
       relativeTop,
       fallbackScrollTop: (overlay == null ? void 0 : overlay.scrollTop) || 0
     };
-  }
+  },
   restoreAiLayoutPendingAnchor() {
     var _a5, _b;
     const pendingAnchor = this.aiLayoutPendingAnchor;
@@ -55965,18 +56993,14 @@ var AppleStyleView = class extends ItemView {
       this.aiLayoutOverlay.scrollTop = Math.max(0, pendingAnchor.fallbackScrollTop || 0);
     }
     this.aiLayoutPendingAnchor = null;
-  }
-  /**
-   * @param {number} originalIndex
-   * @param {HTMLElement | ObsidianElementLike | null} [itemEl]
-   */
+  },
   async removeAiLayoutBlock(originalIndex, itemEl = null) {
     var _a5, _b;
     const context = this.getCurrentLayoutContext();
     const state = this.getCurrentArticleLayoutState();
     if (!context.sourcePath || !((_b = (_a5 = state == null ? void 0 : state.layoutJson) == null ? void 0 : _a5.blocks) == null ? void 0 : _b.length))
       return;
-    const block = toAiLayoutBlock(state.layoutJson.blocks[originalIndex]);
+    const block = toAiLayoutBlock4(state.layoutJson.blocks[originalIndex]);
     if (!block)
       return;
     this.queueAiLayoutRemovalAnchor(originalIndex, itemEl);
@@ -55994,7 +57018,7 @@ var AppleStyleView = class extends ItemView {
       return;
     }
     this.refreshAiLayoutPanel();
-  }
+  },
   async restoreRemovedAiLayoutBlocks() {
     const context = this.getCurrentLayoutContext();
     const state = this.getCurrentArticleLayoutState();
@@ -56011,7 +57035,7 @@ var AppleStyleView = class extends ItemView {
       return;
     }
     this.refreshAiLayoutPanel();
-  }
+  },
   async handleAiPrimaryAction() {
     const mode = this.aiPrimaryActionMode || "generate-apply";
     if (mode === "apply") {
@@ -56023,18 +57047,12 @@ var AppleStyleView = class extends ItemView {
       return;
     }
     await this.generateAiLayoutForCurrentArticle({ applyAfterGenerate: true });
-  }
-  /**
-   * @param {string} mode
-   */
+  },
   toggleAiLayoutDebugMode(mode) {
     this.aiAdvancedOpen = true;
     this.aiLayoutDebugMode = this.aiLayoutDebugMode === mode ? "" : mode;
     this.refreshAiLayoutPanel();
-  }
-  /**
-   * @returns {AiLayoutContextLike}
-   */
+  },
   getCurrentLayoutContext() {
     var _a5, _b, _c;
     const activeFile = ((_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.workspace) == null ? void 0 : _b.getActiveFile) == null ? void 0 : _c.call(_b)) || this.lastActiveFile || null;
@@ -56059,24 +57077,18 @@ var AppleStyleView = class extends ItemView {
       isStaleSuppressed,
       title
     };
-  }
-  /**
-   * @returns {AiLayoutSelectionLike}
-   */
+  },
   getCurrentAiLayoutSelection() {
     var _a5, _b, _c, _d, _e;
-    const aiSettings = ((_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.ai) || createDefaultAiSettings();
-    return normalizeLayoutSelection({
-      layoutFamily: this.pendingAiLayoutFamily || ((_c = this.aiLayoutFamilySelect) == null ? void 0 : _c.value) || aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO,
-      colorPalette: this.pendingAiStylePack || this.pendingAiColorPalette || ((_d = this.aiColorPaletteSelect) == null ? void 0 : _d.value) || ((_e = this.aiStylePackSelect) == null ? void 0 : _e.value) || aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO
+    const aiSettings = ((_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.ai) || createDefaultAiSettings4();
+    return normalizeLayoutSelection4({
+      layoutFamily: this.pendingAiLayoutFamily || ((_c = this.aiLayoutFamilySelect) == null ? void 0 : _c.value) || aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO4,
+      colorPalette: this.pendingAiStylePack || this.pendingAiColorPalette || ((_d = this.aiColorPaletteSelect) == null ? void 0 : _d.value) || ((_e = this.aiStylePackSelect) == null ? void 0 : _e.value) || aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO4
     }, {
-      layoutFamily: aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO,
-      colorPalette: aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO
+      layoutFamily: aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO4,
+      colorPalette: aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO4
     });
-  }
-  /**
-   * @returns {AiLayoutStateLike | null}
-   */
+  },
   getCurrentArticleLayoutState() {
     var _a5;
     const { sourcePath, sourceHash } = this.getCurrentLayoutContext();
@@ -56084,58 +57096,45 @@ var AppleStyleView = class extends ItemView {
       return null;
     const selection = this.getCurrentAiLayoutSelection();
     if (typeof ((_a5 = this.plugin) == null ? void 0 : _a5.getArticleLayoutState) === "function") {
-      const state = toAiLayoutState(this.plugin.getArticleLayoutState(sourcePath, selection));
+      const state = toAiLayoutState4(this.plugin.getArticleLayoutState(sourcePath, selection));
       if (state) {
         return this.preferFreshAiLayoutState(sourcePath, selection, state, sourceHash);
       }
     }
     return null;
-  }
-  /**
-   * @param {string} [sourcePath]
-   * @param {AiLayoutSelectionLike | Record<string, unknown>} [selection]
-   * @param {AiLayoutStateLike | null} [candidateState]
-   * @param {string} [sourceHash]
-   * @returns {AiLayoutStateLike | null}
-   */
+  },
   preferFreshAiLayoutState(sourcePath = "", selection = {}, candidateState = null, sourceHash = "") {
     var _a5, _b, _c, _d, _e, _f, _g, _h, _i, _j;
     if (!candidateState || !sourceHash || !candidateState.sourceHash || candidateState.sourceHash === sourceHash) {
       return candidateState;
     }
-    const normalizedSelection = normalizeLayoutSelection(selection || {}, {
-      layoutFamily: ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO,
-      colorPalette: ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO
+    const normalizedSelection = normalizeLayoutSelection4(selection || {}, {
+      layoutFamily: ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4,
+      colorPalette: ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4
     });
-    const canUseAnyColor = normalizedSelection.colorPalette === AI_LAYOUT_SELECTION_AUTO;
+    const canUseAnyColor = normalizedSelection.colorPalette === AI_LAYOUT_SELECTION_AUTO4;
     if (!canUseAnyColor)
       return candidateState;
-    const normalizedPath = normalizeVaultPath(sourcePath || "");
-    const entry = normalizeArticleLayoutCacheEntry((_f = (_e = (_d = (_c = this.plugin) == null ? void 0 : _c.settings) == null ? void 0 : _d.ai) == null ? void 0 : _e.articleLayoutsByPath) == null ? void 0 : _f[normalizedPath]);
+    const normalizedPath = normalizeVaultPath4(sourcePath || "");
+    const entry = normalizeArticleLayoutCacheEntry4((_f = (_e = (_d = (_c = this.plugin) == null ? void 0 : _c.settings) == null ? void 0 : _d.ai) == null ? void 0 : _e.articleLayoutsByPath) == null ? void 0 : _f[normalizedPath]);
     const statesByFamily = (entry == null ? void 0 : entry.familyStates) || {};
-    const requestedFamily = normalizedSelection.layoutFamily === AI_LAYOUT_SELECTION_AUTO ? "" : normalizedSelection.layoutFamily;
-    const exactState = requestedFamily ? toAiLayoutState(statesByFamily[requestedFamily]) : null;
+    const requestedFamily = normalizedSelection.layoutFamily === AI_LAYOUT_SELECTION_AUTO4 ? "" : normalizedSelection.layoutFamily;
+    const exactState = requestedFamily ? toAiLayoutState4(statesByFamily[requestedFamily]) : null;
     if ((exactState == null ? void 0 : exactState.sourceHash) === sourceHash && ((_h = (_g = exactState.layoutJson) == null ? void 0 : _g.blocks) == null ? void 0 : _h.length))
       return exactState;
-    const lastState = toAiLayoutState(statesByFamily[entry == null ? void 0 : entry.lastLayoutFamily]);
+    const lastState = toAiLayoutState4(statesByFamily[entry == null ? void 0 : entry.lastLayoutFamily]);
     if ((lastState == null ? void 0 : lastState.sourceHash) === sourceHash && ((_j = (_i = lastState.layoutJson) == null ? void 0 : _i.blocks) == null ? void 0 : _j.length))
       return lastState;
-    return Object.values(statesByFamily).map(toAiLayoutState).find((state) => {
+    return Object.values(statesByFamily).map(toAiLayoutState4).find((state) => {
       var _a6, _b2;
       return (state == null ? void 0 : state.sourceHash) === sourceHash && ((_b2 = (_a6 = state.layoutJson) == null ? void 0 : _a6.blocks) == null ? void 0 : _b2.length);
     }) || candidateState;
-  }
-  /**
-   * @param {AiLayoutStateLike | null} [currentState]
-   * @param {AiLayoutSelectionLike | null} [selection]
-   * @param {AiLayoutContextLike | null} [context]
-   * @returns {Promise<AiLayoutJsonLike | null>}
-   */
+  },
   async recoverSourceFirstLayoutState(currentState = null, selection = null, context = null) {
     var _a5, _b, _c, _d, _e, _f;
-    const requestedSelection = normalizeLayoutSelection(selection || this.getCurrentAiLayoutSelection(), {
-      layoutFamily: ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO,
-      colorPalette: ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO
+    const requestedSelection = normalizeLayoutSelection4(selection || this.getCurrentAiLayoutSelection(), {
+      layoutFamily: ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4,
+      colorPalette: ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4
     });
     if (requestedSelection.layoutFamily !== "source-first")
       return null;
@@ -56152,23 +57151,23 @@ var AppleStyleView = class extends ItemView {
       if (!this.baseRenderedHtml) {
         await this.convertCurrent(true, { showLoading: false });
       }
-      const aiSettings = this.plugin.settings.ai || createDefaultAiSettings();
-      const provider = resolveAiProvider(aiSettings);
-      const imageRefs = aiSettings.includeImagesInLayout === false ? [] : extractImageRefsFromHtml(this.baseRenderedHtml || this.currentHtml || "");
-      const result = await generateArticleLayout({
+      const aiSettings = this.plugin.settings.ai || createDefaultAiSettings4();
+      const provider = resolveAiProvider4(aiSettings);
+      const imageRefs = aiSettings.includeImagesInLayout === false ? [] : extractImageRefsFromHtml4(this.baseRenderedHtml || this.currentHtml || "");
+      const result = await generateArticleLayout4({
         provider,
         title: sourceContext.title,
         markdown: sourceContext.markdown,
         selection: requestedSelection,
         imageRefs,
         timeoutMs: aiSettings.requestTimeoutMs,
-        fetchImpl: createObsidianFetchAdapter({ requestUrl: getObsidianRequestUrl(), request: getObsidianRequest() })
+        fetchImpl: createObsidianFetchAdapter4({ requestUrl: getObsidianRequestUrl4(), request: getObsidianRequest4() })
       });
-      const layoutJson = toAiLayoutJson(result.layoutJson);
+      const layoutJson = toAiLayoutJson4(result.layoutJson);
       if (!Array.isArray(layoutJson == null ? void 0 : layoutJson.blocks) || !layoutJson.blocks.length)
         return null;
       await this.plugin.saveArticleLayoutState(sourceContext.sourcePath, {
-        version: AI_LAYOUT_SCHEMA_VERSION,
+        version: AI_LAYOUT_SCHEMA_VERSION4,
         updatedAt: Date.now(),
         sourceHash: sourceContext.sourceHash,
         providerId: (provider == null ? void 0 : provider.id) || "",
@@ -56185,7 +57184,7 @@ var AppleStyleView = class extends ItemView {
         lastAttemptAt: Date.now(),
         lastAttemptSchemaValidation: null,
         dismissedBlockKeys: [],
-        generationMeta: toAiLayoutGenerationMeta(result.generationMeta),
+        generationMeta: toAiLayoutGenerationMeta4(result.generationMeta),
         layoutJson
       }, layoutJson.selection);
       this.pendingAiLayoutFamily = ((_e = layoutJson.selection) == null ? void 0 : _e.layoutFamily) || requestedSelection.layoutFamily;
@@ -56201,28 +57200,23 @@ var AppleStyleView = class extends ItemView {
         this._sourceFirstRecoveryKey = "";
       }
     }
-  }
-  /**
-   * @param {AiLayoutStateLike | null} [baseState]
-   * @param {AiLayoutSelectionLike | null} [selection]
-   * @returns {Promise<AiLayoutStateLike | null>}
-   */
+  },
   async ensureAiLayoutSelectionState(baseState = null, selection = null) {
     var _a5, _b, _c, _d, _e, _f, _g;
     const context = this.getCurrentLayoutContext();
     if (!context.sourcePath || typeof ((_a5 = this.plugin) == null ? void 0 : _a5.getArticleLayoutState) !== "function")
       return null;
-    const requestedSelection = normalizeLayoutSelection(selection || this.getCurrentAiLayoutSelection(), {
-      layoutFamily: ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO,
-      colorPalette: ((_c = this.plugin.settings.ai) == null ? void 0 : _c.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO
+    const requestedSelection = normalizeLayoutSelection4(selection || this.getCurrentAiLayoutSelection(), {
+      layoutFamily: ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4,
+      colorPalette: ((_c = this.plugin.settings.ai) == null ? void 0 : _c.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4
     });
-    const existingState = toAiLayoutState(this.plugin.getArticleLayoutState(context.sourcePath, requestedSelection));
+    const existingState = toAiLayoutState4(this.plugin.getArticleLayoutState(context.sourcePath, requestedSelection));
     if ((_e = (_d = existingState == null ? void 0 : existingState.layoutJson) == null ? void 0 : _d.blocks) == null ? void 0 : _e.length) {
       return existingState;
     }
-    const derivedState = deriveArticleLayoutStateForSelection(baseState, requestedSelection, {
-      layoutFamily: ((_f = this.plugin.settings.ai) == null ? void 0 : _f.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO,
-      colorPalette: ((_g = this.plugin.settings.ai) == null ? void 0 : _g.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO
+    const derivedState = deriveArticleLayoutStateForSelection4(baseState, requestedSelection, {
+      layoutFamily: ((_f = this.plugin.settings.ai) == null ? void 0 : _f.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4,
+      colorPalette: ((_g = this.plugin.settings.ai) == null ? void 0 : _g.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4
     });
     if (!derivedState)
       return null;
@@ -56230,20 +57224,15 @@ var AppleStyleView = class extends ItemView {
       ...derivedState,
       updatedAt: Date.now()
     }, requestedSelection);
-    return toAiLayoutState(derivedState);
-  }
+    return toAiLayoutState4(derivedState);
+  },
   isAiLayoutPanelVisible() {
     var _a5;
     return !!(this.aiLayoutOverlay && ((_a5 = this.aiLayoutOverlay.classList) == null ? void 0 : _a5.contains("visible")));
-  }
+  },
   shouldSyncAiLayoutUi() {
     return this.aiPreviewApplied === true || this.aiLayoutLoading === true || this.isAiLayoutPanelVisible();
-  }
-  /**
-   * @param {AiLayoutStateLike | null} state
-   * @param {AiSettingsLike | null | undefined} aiSettings
-   * @returns {string}
-   */
+  },
   getArticleLayoutProviderLabel(state, aiSettings) {
     var _a5;
     if (!state)
@@ -56251,12 +57240,7 @@ var AppleStyleView = class extends ItemView {
     const providerList = Array.isArray(aiSettings == null ? void 0 : aiSettings.providers) ? aiSettings.providers : [];
     const matchedProvider = state.providerId ? providerList.find((item) => item.id === state.providerId) : null;
     return ((_a5 = state.generationMeta) == null ? void 0 : _a5.providerName) || (matchedProvider == null ? void 0 : matchedProvider.name) || "";
-  }
-  /**
-   * @param {AiLayoutStateLike | null} state
-   * @param {AiSettingsLike | null | undefined} aiSettings
-   * @returns {string}
-   */
+  },
   getArticleLayoutModelLabel(state, aiSettings) {
     var _a5;
     if (!state)
@@ -56264,41 +57248,25 @@ var AppleStyleView = class extends ItemView {
     const providerList = Array.isArray(aiSettings == null ? void 0 : aiSettings.providers) ? aiSettings.providers : [];
     const matchedProvider = state.providerId ? providerList.find((item) => item.id === state.providerId) : null;
     return ((_a5 = state.generationMeta) == null ? void 0 : _a5.providerModel) || state.model || (matchedProvider == null ? void 0 : matchedProvider.model) || "";
-  }
-  /**
-   * @param {AiLayoutBlockLike | unknown} block
-   * @returns {string}
-   */
+  },
   getAiLayoutBlockLabel(block) {
-    const blockRecord = toAiLayoutBlock(block);
+    const blockRecord = toAiLayoutBlock4(block);
     return blockRecord.title || blockRecord.caseLabel || blockRecord.text || blockRecord.caption || blockRecord.buttonText || blockRecord.type || "\u672A\u547D\u540D\u533A\u5757";
-  }
-  /**
-   * @param {string} value
-   * @returns {string}
-   */
+  },
   getAiLayoutFamilyLabel(value) {
-    if (value === AI_LAYOUT_SELECTION_AUTO)
+    if (value === AI_LAYOUT_SELECTION_AUTO4)
       return "\u81EA\u52A8\u63A8\u8350";
-    const family = getLayoutFamilyById(value);
+    const family = getLayoutFamilyById4(value);
     if (!family)
       return value || "\u81EA\u52A8\u63A8\u8350";
     return family.label || value || "\u81EA\u52A8\u63A8\u8350";
-  }
-  /**
-   * @param {string} value
-   * @returns {string}
-   */
+  },
   getAiColorPaletteLabel(value) {
     var _a5;
-    if (value === AI_LAYOUT_SELECTION_AUTO)
+    if (value === AI_LAYOUT_SELECTION_AUTO4)
       return "\u81EA\u52A8\u914D\u8272";
-    return ((_a5 = getColorPaletteById(value)) == null ? void 0 : _a5.label) || value || "\u81EA\u52A8\u914D\u8272";
-  }
-  /**
-   * @param {AiLayoutStateLike | null} state
-   * @returns {AiSchemaValidationLike | null}
-   */
+    return ((_a5 = getColorPaletteById4(value)) == null ? void 0 : _a5.label) || value || "\u81EA\u52A8\u914D\u8272";
+  },
   getVisibleAiSchemaValidation(state) {
     var _a5, _b;
     if (!state)
@@ -56310,10 +57278,7 @@ var AppleStyleView = class extends ItemView {
       return null;
     }
     return ((_b = state.generationMeta) == null ? void 0 : _b.schemaValidation) || null;
-  }
-  /**
-   * @param {string[]} [chips]
-   */
+  },
   renderAiLayoutMetaChips(chips = []) {
     if (!this.aiLayoutMetaChips)
       return;
@@ -56326,37 +57291,30 @@ var AppleStyleView = class extends ItemView {
         text: chip
       });
     });
-  }
-  /**
-   * @returns {{ familyStates?: Record<string, AiLayoutStateLike>, lastLayoutFamily?: string } | null}
-   */
+  },
   getCurrentArticleLayoutCacheEntry() {
     var _a5, _b, _c, _d;
     const { sourcePath } = this.getCurrentLayoutContext();
     if (!sourcePath)
       return null;
-    const normalizedPath = normalizeVaultPath(sourcePath);
+    const normalizedPath = normalizeVaultPath4(sourcePath);
     return (
       /** @type {{ familyStates?: Record<string, AiLayoutStateLike>, lastLayoutFamily?: string } | null} */
-      normalizeArticleLayoutCacheEntry((_d = (_c = (_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.ai) == null ? void 0 : _c.articleLayoutsByPath) == null ? void 0 : _d[normalizedPath])
+      normalizeArticleLayoutCacheEntry4((_d = (_c = (_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.ai) == null ? void 0 : _c.articleLayoutsByPath) == null ? void 0 : _d[normalizedPath])
     );
-  }
-  /**
-   * @param {AiLayoutContextLike} [context]
-   * @returns {{ layoutFamily: string, state: AiLayoutStateLike, label: string, isCurrentContent: boolean, isStaleContent: boolean, fromAuto: boolean, updatedAt: number }[]}
-   */
+  },
   getCachedAiLayoutFamilyItems(context = this.getCurrentLayoutContext()) {
     const entry = this.getCurrentArticleLayoutCacheEntry();
     if (!(entry == null ? void 0 : entry.familyStates))
       return [];
     return Object.entries(entry.familyStates).map(([layoutFamily, state]) => {
       var _a5, _b, _c;
-      const typedState = toAiLayoutState(state);
+      const typedState = toAiLayoutState4(state);
       if (!((_b = (_a5 = typedState == null ? void 0 : typedState.layoutJson) == null ? void 0 : _a5.blocks) == null ? void 0 : _b.length))
         return null;
       const isCurrentContent = !!(context.sourceHash && typedState.sourceHash && typedState.sourceHash === context.sourceHash);
       const isStaleContent = !!(!context.isStaleSuppressed && context.sourceHash && typedState.sourceHash && typedState.sourceHash !== context.sourceHash);
-      const fromAuto = ((_c = typedState.selection) == null ? void 0 : _c.layoutFamily) === AI_LAYOUT_SELECTION_AUTO;
+      const fromAuto = ((_c = typedState.selection) == null ? void 0 : _c.layoutFamily) === AI_LAYOUT_SELECTION_AUTO4;
       return {
         layoutFamily,
         state: typedState,
@@ -56371,10 +57329,7 @@ var AppleStyleView = class extends ItemView {
         return a.isCurrentContent ? -1 : 1;
       return b.updatedAt - a.updatedAt;
     });
-  }
-  /**
-   * @param {{ context?: AiLayoutContextLike, currentLayoutFamily?: string, isLoading?: boolean }} [options]
-   */
+  },
   renderAiCachedLayoutFamilies({ context, currentLayoutFamily = "", isLoading = false } = {}) {
     if (!this.aiCachedLayoutList)
       return;
@@ -56428,16 +57383,13 @@ var AppleStyleView = class extends ItemView {
       }
       button.addEventListener("click", () => this.previewCachedAiLayoutFamily(item.layoutFamily));
     });
-  }
-  /**
-   * @param {string} [layoutFamily]
-   */
+  },
   previewCachedAiLayoutFamily(layoutFamily = "") {
     var _a5, _b, _c;
     const entry = this.getCurrentArticleLayoutCacheEntry();
     const state = ((_a5 = entry == null ? void 0 : entry.familyStates) == null ? void 0 : _a5[layoutFamily]) || null;
     if (!((_c = (_b = state == null ? void 0 : state.layoutJson) == null ? void 0 : _b.blocks) == null ? void 0 : _c.length)) {
-      new Notice("\u8FD9\u4EFD\u7F13\u5B58\u5DF2\u7ECF\u4E0D\u53EF\u7528\uFF0C\u8BF7\u91CD\u65B0\u751F\u6210");
+      new Notice4("\u8FD9\u4EFD\u7F13\u5B58\u5DF2\u7ECF\u4E0D\u53EF\u7528\uFF0C\u8BF7\u91CD\u65B0\u751F\u6210");
       this.refreshAiLayoutPanel();
       return;
     }
@@ -56445,11 +57397,7 @@ var AppleStyleView = class extends ItemView {
     if (this.aiLayoutFamilySelect)
       this.aiLayoutFamilySelect.value = layoutFamily;
     this.applyAiLayoutToPreview({ stateOverride: state, allowStale: true });
-  }
-  /**
-   * @param {{ hasDoc: boolean, aiFeatureEnabled: boolean, canGenerateForSelection: boolean, state: AiLayoutStateLike | null, visibleLayout: AiLayoutJsonLike | null, hasReusableLayout: boolean, hasLastAttemptFailure: boolean, hasApplied: boolean, isStale: boolean, isLoading: boolean }} options
-   * @returns {{ mode: string, label: string, disabled: boolean }}
-   */
+  },
   getAiPrimaryActionConfig({
     hasDoc,
     aiFeatureEnabled,
@@ -56494,10 +57442,7 @@ var AppleStyleView = class extends ItemView {
       return { mode: "generate-apply", label: "\u91CD\u65B0\u751F\u6210\u5E76\u5E94\u7528", disabled: false };
     }
     return { mode: "generate-apply", label: "\u91CD\u65B0\u751F\u6210\u5E76\u5E94\u7528", disabled: false };
-  }
-  /**
-   * @param {AiSchemaValidationLike | null} [schemaValidation]
-   */
+  },
   refreshAiSchemaIssuePanel(schemaValidation = null) {
     if (!this.aiSchemaIssuePanel)
       return;
@@ -56532,10 +57477,171 @@ var AppleStyleView = class extends ItemView {
       });
     }
   }
-  /**
-   * @param {AiLayoutStateLike | null} state
-   * @returns {string}
-   */
+};
+
+// views/converter/ai-layout-debug.js
+var {
+  createRenderPipelines: createRenderPipelines5,
+  buildRenderRuntime: buildRenderRuntime5,
+  resolveMarkdownSource: resolveMarkdownSource5,
+  normalizeVaultPath: normalizeVaultPath5,
+  isAbsolutePathLike: isAbsolutePathLike5,
+  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown5,
+  canUseNativePreviewFastPath: canUseNativePreviewFastPath5,
+  renderNativeMarkdown: renderNativeMarkdown5,
+  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages5,
+  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION5,
+  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO5,
+  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS5,
+  createDefaultAiSettings: createDefaultAiSettings5,
+  normalizeAiSettings: normalizeAiSettings5,
+  normalizeAiProvider: normalizeAiProvider5,
+  getAiProviderIssues: getAiProviderIssues5,
+  isAiProviderRunnable: isAiProviderRunnable5,
+  summarizeAiProviderIssues: summarizeAiProviderIssues5,
+  getLayoutFamilyList: getLayoutFamilyList5,
+  getLayoutFamilyById: getLayoutFamilyById5,
+  getColorPaletteList: getColorPaletteList5,
+  getColorPaletteById: getColorPaletteById5,
+  resolveColorPaletteForRender: resolveColorPaletteForRender5,
+  normalizeHexColor: normalizeHexColor5,
+  normalizeLayoutSelection: normalizeLayoutSelection5,
+  getArticleLayoutSelectionState: getArticleLayoutSelectionState5,
+  resolveAiProvider: resolveAiProvider5,
+  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection5,
+  normalizeArticleLayoutState: normalizeArticleLayoutState5,
+  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry5,
+  extractImageRefsFromHtml: extractImageRefsFromHtml5,
+  extractRenderedSectionFragments: extractRenderedSectionFragments5,
+  generateArticleLayout: generateArticleLayout5,
+  renderArticleLayoutHtml: renderArticleLayoutHtml5,
+  testAiProviderConnection: testAiProviderConnection5,
+  createWechatSyncService: createWechatSyncService5,
+  createWechatSyncBridgeService: createWechatSyncBridgeService5,
+  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError4,
+  getMultiPlatformResultSummary: getMultiPlatformResultSummary5,
+  getWechatSyncResultError: getWechatSyncResultError5,
+  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId5,
+  getWechatSyncResultUrl: getWechatSyncResultUrl5,
+  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform5,
+  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay5,
+  resolveSyncAccount: resolveSyncAccount5,
+  toSyncFriendlyMessage: toSyncFriendlyMessage5,
+  createEmptyDraftCache: createEmptyDraftCache5,
+  normalizeDraftCache: normalizeDraftCache5,
+  getDraftAssociation: getDraftAssociation5,
+  setDraftAssociation: setDraftAssociation5,
+  clearDraftAssociation: clearDraftAssociation5,
+  processAllImagesService: processAllImagesService4,
+  processMathFormulasService: processMathFormulasService4,
+  cleanHtmlForDraftService: cleanHtmlForDraftService4,
+  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob5,
+  createObsidianFetchAdapter: createObsidianFetchAdapter5,
+  stripMarkdownFrontmatter: stripMarkdownFrontmatter5,
+  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls5,
+  createHtmlContainer: createHtmlContainer5,
+  getActiveDocument: getActiveDocument5,
+  getActiveWindowValue: getActiveWindowValue5,
+  htmlToText: htmlToText5,
+  setElementHtml: setElementHtml5,
+  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings5,
+  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds5,
+  hasWechatSyncCapability: hasWechatSyncCapability5,
+  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings5,
+  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms5,
+  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt5,
+  describeWechatsyncConnectionState: describeWechatsyncConnectionState5,
+  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar5,
+  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab5,
+  showMultiPlatformPublishModal: showMultiPlatformPublishModal5,
+  renderFeishuSettingsTab: renderFeishuSettingsTab5,
+  renderFeishuPublishTab: renderFeishuPublishTab5,
+  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings5,
+  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings5,
+  updateFeishuHistoryPath: updateFeishuHistoryPath5,
+  WechatAPI: WechatAPI5,
+  loadCommonJsDependency: loadCommonJsDependency5,
+  obsidianApi: obsidianApi5,
+  Plugin: Plugin5,
+  MarkdownView: MarkdownView5,
+  ItemView: ItemView5,
+  Notice: Notice5,
+  Platform: Platform5,
+  PluginSettingTab: PluginSettingTab5,
+  Setting: Setting5,
+  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY6,
+  getActiveDocumentCompat: getActiveDocumentCompat5,
+  createFallbackSvgElement: createFallbackSvgElement5,
+  revealLeafCompat: revealLeafCompat5,
+  getPluginSettings: getPluginSettings5,
+  setPluginSettings: setPluginSettings5,
+  setDestructiveButtonCompat: setDestructiveButtonCompat5,
+  refreshSettingTabCompat: refreshSettingTabCompat5,
+  toReadableError: toReadableError8,
+  isRecord: isRecord15,
+  toRecord: toRecord12,
+  toAiLayoutState: toAiLayoutState5,
+  toAiLayoutJson: toAiLayoutJson5,
+  toAiLayoutBlock: toAiLayoutBlock5,
+  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta5,
+  toAiLayoutSelection: toAiLayoutSelection5,
+  toAiLayoutFamilyStates: toAiLayoutFamilyStates5,
+  toOptionalText: toOptionalText6,
+  toImageElements: toImageElements5,
+  removeElementClass: removeElementClass5,
+  toOptionalNumber: toOptionalNumber6,
+  parseJsonRecord: parseJsonRecord6,
+  normalizeRequestUrlResponse: normalizeRequestUrlResponse6,
+  getResponseJsonRecord: getResponseJsonRecord6,
+  getProxyErrorMessage: getProxyErrorMessage6,
+  createProxyError: createProxyError6,
+  formatWechatApiError: formatWechatApiError6,
+  hasWechatUploadResult: hasWechatUploadResult6,
+  readBlobAsBase64Payload: readBlobAsBase64Payload6,
+  dataUrlToBlob: dataUrlToBlob5,
+  bufferFromBinary: bufferFromBinary6,
+  inferLocalImageMimeType: inferLocalImageMimeType5,
+  safeDecodeUriText: safeDecodeUriText5,
+  getFileUrlLocalPath: getFileUrlLocalPath5,
+  getVaultAdapterBasePath: getVaultAdapterBasePath5,
+  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath6,
+  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath6,
+  getVaultDirnameFromPath: getVaultDirnameFromPath5,
+  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW5,
+  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE5,
+  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL5,
+  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL5,
+  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL6,
+  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL5,
+  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL6,
+  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL6,
+  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL5,
+  getObsidianModalClass: getObsidianModalClass5,
+  createObsidianModal: createObsidianModal5,
+  getObsidianSetIcon: getObsidianSetIcon5,
+  getObsidianRequestUrl: getObsidianRequestUrl5,
+  getObsidianRequest: getObsidianRequest5,
+  getAppleThemeApi: getAppleThemeApi5,
+  getValueElementFromEvent: getValueElementFromEvent5,
+  getEventTargetValue: getEventTargetValue5,
+  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY5,
+  getObsidianLocale: getObsidianLocale5,
+  isChineseObsidianLocale: isChineseObsidianLocale5,
+  getImageSwipeCommandCopy: getImageSwipeCommandCopy5,
+  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout5,
+  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown5,
+  DEFAULT_SETTINGS: DEFAULT_SETTINGS5,
+  MAX_ACCOUNTS: MAX_ACCOUNTS5,
+  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS5,
+  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS5,
+  getWechatAccountPublishOptions: getWechatAccountPublishOptions5,
+  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions5,
+  isMobileClient: isMobileClient7,
+  generateId: generateId5,
+  sleep: sleep6,
+  pMap: pMap5
+} = apple_style_view_shared_exports;
+var aiLayoutDebugMethods = {
   buildAiLayoutDebugJson(state) {
     if (!state)
       return "";
@@ -56549,11 +57655,7 @@ var AppleStyleView = class extends ItemView {
         schemaValidation: state.lastAttemptSchemaValidation || null
       }
     }, null, 2);
-  }
-  /**
-   * @param {{ state: AiLayoutStateLike | null, providerLabel?: string, modelLabel?: string, isStale?: boolean }} options
-   * @returns {string}
-   */
+  },
   buildAiLayoutErrorDetails({ state, providerLabel, modelLabel, isStale }) {
     return JSON.stringify({
       status: (state == null ? void 0 : state.status) || "unknown",
@@ -56574,11 +57676,7 @@ var AppleStyleView = class extends ItemView {
         schemaValidation: (state == null ? void 0 : state.lastAttemptSchemaValidation) || null
       }
     }, null, 2);
-  }
-  /**
-   * @param {{ mode?: string, state: AiLayoutStateLike | null, providerLabel?: string, modelLabel?: string, isStale?: boolean, sourcePath?: string }} options
-   * @returns {string}
-   */
+  },
   buildAiLayoutDebugSnapshot({ mode, state, providerLabel, modelLabel, isStale, sourcePath }) {
     if (!state || !mode)
       return "";
@@ -56594,17 +57692,13 @@ var AppleStyleView = class extends ItemView {
       return `${header}${this.buildAiLayoutDebugJson(state)}`;
     }
     return `${header}${this.buildAiLayoutErrorDetails({ state, providerLabel, modelLabel, isStale })}`;
-  }
+  },
   truncateAiPromptMarkdown(markdown, maxLength = 1600) {
     const normalized = String(markdown || "").trim();
     if (!normalized)
       return "";
     return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 1)}\u2026` : normalized;
-  }
-  /**
-   * @param {{ state: AiLayoutStateLike | null, context: AiLayoutContextLike, providerLabel?: string, modelLabel?: string, isStale?: boolean }} options
-   * @returns {string}
-   */
+  },
   buildAiLayoutPromptContext({ state, context, providerLabel, modelLabel, isStale }) {
     var _a5, _b, _c, _d, _e;
     if (!(state == null ? void 0 : state.layoutJson))
@@ -56612,7 +57706,7 @@ var AppleStyleView = class extends ItemView {
     const visibleSchemaValidation = this.getVisibleAiSchemaValidation(state);
     const blockLines = Array.isArray(state.layoutJson.blocks) ? state.layoutJson.blocks.map((block, index) => {
       var _a6, _b2, _c2;
-      const blockRecord = toAiLayoutBlock(block);
+      const blockRecord = toAiLayoutBlock5(block);
       const origin = ((_c2 = (_b2 = (_a6 = state.generationMeta) == null ? void 0 : _a6.blockOrigins) == null ? void 0 : _b2[index]) == null ? void 0 : _c2.source) === "fallback" ? "\u8865\u5168" : "AI";
       return `${index + 1}. [${origin}] ${blockRecord.type || ""} - ${this.getAiLayoutBlockLabel(blockRecord)}`;
     }).join("\n") : "- \u65E0\u533A\u5757";
@@ -56679,11 +57773,7 @@ var AppleStyleView = class extends ItemView {
       markdownExcerpt || "(\u65E0\u53EF\u7528\u6B63\u6587)",
       "```"
     ].join("\n");
-  }
-  /**
-   * @param {string} text
-   * @returns {Promise<boolean>}
-   */
+  },
   async copyPlainTextSnapshot(text) {
     if (!text)
       return false;
@@ -56692,10 +57782,10 @@ var AppleStyleView = class extends ItemView {
       return true;
     }
     return false;
-  }
+  },
   async copyAiLayoutDebugSnapshot() {
     const state = this.getCurrentArticleLayoutState();
-    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings();
+    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings5();
     const context = this.getCurrentLayoutContext();
     const providerLabel = this.getArticleLayoutProviderLabel(state, aiSettings);
     const modelLabel = this.getArticleLayoutModelLabel(state, aiSettings);
@@ -56709,21 +57799,21 @@ var AppleStyleView = class extends ItemView {
       sourcePath: context.sourcePath
     });
     if (!payload) {
-      new Notice("\u8BF7\u5148\u5C55\u5F00\u5E03\u5C40 JSON \u6216\u9519\u8BEF\u8BE6\u60C5\uFF0C\u518D\u590D\u5236\u8C03\u8BD5\u5FEB\u7167");
+      new Notice5("\u8BF7\u5148\u5C55\u5F00\u5E03\u5C40 JSON \u6216\u9519\u8BEF\u8BE6\u60C5\uFF0C\u518D\u590D\u5236\u8C03\u8BD5\u5FEB\u7167");
       return;
     }
     try {
       const copied = await this.copyPlainTextSnapshot(payload);
       if (!copied)
         throw new Error("clipboard unavailable");
-      new Notice("\u2705 \u8C03\u8BD5\u5FEB\u7167\u5DF2\u590D\u5236");
+      new Notice5("\u2705 \u8C03\u8BD5\u5FEB\u7167\u5DF2\u590D\u5236");
     } catch (e) {
-      new Notice("\u274C \u8C03\u8BD5\u5FEB\u7167\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u526A\u8D34\u677F\u6743\u9650");
+      new Notice5("\u274C \u8C03\u8BD5\u5FEB\u7167\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u526A\u8D34\u677F\u6743\u9650");
     }
-  }
+  },
   async copyAiLayoutPromptContext() {
     const state = this.getCurrentArticleLayoutState();
-    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings();
+    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings5();
     const context = this.getCurrentLayoutContext();
     const providerLabel = this.getArticleLayoutProviderLabel(state, aiSettings);
     const modelLabel = this.getArticleLayoutModelLabel(state, aiSettings);
@@ -56736,21 +57826,18 @@ var AppleStyleView = class extends ItemView {
       isStale
     });
     if (!payload) {
-      new Notice("\u5F53\u524D\u8FD8\u6CA1\u6709\u53EF\u7528\u7684 AI \u7F16\u6392\u7ED3\u679C\uFF0C\u6682\u65F6\u65E0\u6CD5\u751F\u6210 Prompt \u4E0A\u4E0B\u6587");
+      new Notice5("\u5F53\u524D\u8FD8\u6CA1\u6709\u53EF\u7528\u7684 AI \u7F16\u6392\u7ED3\u679C\uFF0C\u6682\u65F6\u65E0\u6CD5\u751F\u6210 Prompt \u4E0A\u4E0B\u6587");
       return;
     }
     try {
       const copied = await this.copyPlainTextSnapshot(payload);
       if (!copied)
         throw new Error("clipboard unavailable");
-      new Notice("\u2705 Prompt \u4E0A\u4E0B\u6587\u5DF2\u590D\u5236");
+      new Notice5("\u2705 Prompt \u4E0A\u4E0B\u6587\u5DF2\u590D\u5236");
     } catch (e) {
-      new Notice("\u274C Prompt \u4E0A\u4E0B\u6587\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u526A\u8D34\u677F\u6743\u9650");
+      new Notice5("\u274C Prompt \u4E0A\u4E0B\u6587\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u526A\u8D34\u677F\u6743\u9650");
     }
-  }
-  /**
-   * @param {{ state: AiLayoutStateLike | null, providerLabel?: string, modelLabel?: string, isStale?: boolean }} options
-   */
+  },
   refreshAiLayoutDebugPanel({ state, providerLabel, modelLabel, isStale }) {
     if (!this.aiDebugPanel || !this.aiDebugPanelBody || !this.aiDebugPanelTitle)
       return;
@@ -56813,24 +57900,24 @@ var AppleStyleView = class extends ItemView {
       this.aiCopyDebugBtn.title = "\u53EA\u590D\u5236\u5F53\u524D\u9519\u8BEF\u8BE6\u60C5\u8C03\u8BD5\u5185\u5BB9";
     }
     this.aiDebugPanelBody.setText(this.buildAiLayoutErrorDetails({ state, providerLabel, modelLabel, isStale }));
-  }
+  },
   refreshAiLayoutPanel() {
     var _a5, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
     if (!this.aiLayoutStatusBadge || !this.aiLayoutSummary || !this.aiBlockList)
       return;
-    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings();
-    const provider = resolveAiProvider(aiSettings);
+    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings5();
+    const provider = resolveAiProvider5(aiSettings);
     const configuredProviders = Array.isArray(aiSettings.providers) ? aiSettings.providers.length : 0;
     const context = this.getCurrentLayoutContext();
     const storedState = this.getCurrentArticleLayoutState();
     const currentSelection = this.getCurrentAiLayoutSelection();
-    const activeGenerationSelection = this.aiLayoutLoading === true ? normalizeLayoutSelection(this.aiLayoutActiveGenerationSelection || {}, {
-      layoutFamily: aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO,
-      colorPalette: aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO
+    const activeGenerationSelection = this.aiLayoutLoading === true ? normalizeLayoutSelection5(this.aiLayoutActiveGenerationSelection || {}, {
+      layoutFamily: aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO5,
+      colorPalette: aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO5
     }) : null;
     const effectiveSelection = {
-      layoutFamily: (activeGenerationSelection == null ? void 0 : activeGenerationSelection.layoutFamily) || currentSelection.layoutFamily || ((_a5 = storedState == null ? void 0 : storedState.selection) == null ? void 0 : _a5.layoutFamily) || aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO,
-      colorPalette: (activeGenerationSelection == null ? void 0 : activeGenerationSelection.colorPalette) || currentSelection.colorPalette || ((_b = storedState == null ? void 0 : storedState.selection) == null ? void 0 : _b.colorPalette) || aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO
+      layoutFamily: (activeGenerationSelection == null ? void 0 : activeGenerationSelection.layoutFamily) || currentSelection.layoutFamily || ((_a5 = storedState == null ? void 0 : storedState.selection) == null ? void 0 : _a5.layoutFamily) || aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO5,
+      colorPalette: (activeGenerationSelection == null ? void 0 : activeGenerationSelection.colorPalette) || currentSelection.colorPalette || ((_b = storedState == null ? void 0 : storedState.selection) == null ? void 0 : _b.colorPalette) || aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO5
     };
     const state = storedState;
     if (effectiveSelection.layoutFamily === "source-first" && context.sourcePath && (!state || (state.status === "error" || state.status === "schema-error") && !((_d = (_c = state.layoutJson) == null ? void 0 : _c.blocks) == null ? void 0 : _d.length))) {
@@ -56906,7 +57993,7 @@ var AppleStyleView = class extends ItemView {
     this.aiLayoutStatusText.hidden = hideSuccessStatusText;
     this.aiLayoutStatusText.setText(hideSuccessStatusText ? "" : statusText);
     this.applyAiLayoutPanelStylePack(String(
-      ((_g = state == null ? void 0 : state.resolved) == null ? void 0 : _g.colorPalette) || (effectiveSelection.colorPalette !== AI_LAYOUT_SELECTION_AUTO ? effectiveSelection.colorPalette : "") || aiSettings.defaultStylePack || "tech-green"
+      ((_g = state == null ? void 0 : state.resolved) == null ? void 0 : _g.colorPalette) || (effectiveSelection.colorPalette !== AI_LAYOUT_SELECTION_AUTO5 ? effectiveSelection.colorPalette : "") || aiSettings.defaultStylePack || "tech-green"
     ));
     if (isResolvingSourceState && this.aiCachedLayoutList) {
       this.aiCachedLayoutList.empty();
@@ -57134,12 +58221,12 @@ var AppleStyleView = class extends ItemView {
     this.restoreAiLayoutPendingAnchor();
     this.refreshAiLayoutDebugPanel({ state, providerLabel, modelLabel, isStale });
     this.updateAiToolbarState();
-  }
+  },
   async ensureCurrentArticleContext() {
-    const source = await resolveMarkdownSource({
+    const source = await resolveMarkdownSource5({
       app: this.app,
       lastActiveFile: this.lastActiveFile,
-      MarkdownViewType: MarkdownView
+      MarkdownViewType: MarkdownView5
     });
     if (!source.ok || !String(source.markdown || "").trim()) {
       return null;
@@ -57158,23 +58245,23 @@ var AppleStyleView = class extends ItemView {
       sourceHash: this.lastResolvedSourceHash,
       title
     };
-  }
+  },
   async generateAiLayoutForCurrentArticle({ applyAfterGenerate = false } = {}) {
     var _a5, _b, _c, _d, _e, _f, _g;
-    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings();
+    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings5();
     const context = await this.ensureCurrentArticleContext();
     if (!context) {
-      new Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u7BC7\u6709\u5185\u5BB9\u7684 Markdown \u6587\u7AE0");
+      new Notice5("\u8BF7\u5148\u6253\u5F00\u4E00\u7BC7\u6709\u5185\u5BB9\u7684 Markdown \u6587\u7AE0");
       return;
     }
     if (!this.baseRenderedHtml) {
       await this.convertCurrent(true, { showLoading: true, loadingText: "\u6B63\u5728\u51C6\u5907\u6587\u7AE0\u4E0A\u4E0B\u6587..." });
     }
-    const imageRefs = aiSettings.includeImagesInLayout === false ? [] : extractImageRefsFromHtml(this.baseRenderedHtml || this.currentHtml || "");
+    const imageRefs = aiSettings.includeImagesInLayout === false ? [] : extractImageRefsFromHtml5(this.baseRenderedHtml || this.currentHtml || "");
     const selection = this.getCurrentAiLayoutSelection();
-    const provider = resolveAiProvider(aiSettings);
+    const provider = resolveAiProvider5(aiSettings);
     if (selection.layoutFamily !== "source-first" && !provider) {
-      new Notice("\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u5E76\u542F\u7528 AI Provider");
+      new Notice5("\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u5E76\u542F\u7528 AI Provider");
       return;
     }
     const originalText = (_a5 = this.aiGenerateBtn) == null ? void 0 : _a5.textContent;
@@ -57186,21 +58273,21 @@ var AppleStyleView = class extends ItemView {
         this.aiGenerateBtn.disabled = true;
         this.aiGenerateBtn.setText("\u751F\u6210\u4E2D...");
       }
-      const result = await generateArticleLayout({
+      const result = await generateArticleLayout5({
         provider,
         title: context.title,
         markdown: context.markdown,
         selection,
         imageRefs,
         timeoutMs: aiSettings.requestTimeoutMs,
-        fetchImpl: createObsidianFetchAdapter({ requestUrl: getObsidianRequestUrl(), request: getObsidianRequest() })
+        fetchImpl: createObsidianFetchAdapter5({ requestUrl: getObsidianRequestUrl5(), request: getObsidianRequest5() })
       });
-      const layoutJson = toAiLayoutJson(result.layoutJson);
+      const layoutJson = toAiLayoutJson5(result.layoutJson);
       if (!Array.isArray(layoutJson == null ? void 0 : layoutJson.blocks) || !layoutJson.blocks.length) {
         throw new Error("AI \u8FD4\u56DE\u4E86\u7A7A\u7684\u7F16\u6392\u7ED3\u679C");
       }
       await this.plugin.saveArticleLayoutState(context.sourcePath, {
-        version: AI_LAYOUT_SCHEMA_VERSION,
+        version: AI_LAYOUT_SCHEMA_VERSION5,
         updatedAt: Date.now(),
         sourceHash: context.sourceHash,
         providerId: (provider == null ? void 0 : provider.id) || "",
@@ -57217,7 +58304,7 @@ var AppleStyleView = class extends ItemView {
         lastAttemptAt: Date.now(),
         lastAttemptSchemaValidation: null,
         dismissedBlockKeys: [],
-        generationMeta: toAiLayoutGenerationMeta(result.generationMeta),
+        generationMeta: toAiLayoutGenerationMeta5(result.generationMeta),
         layoutJson
       }, layoutJson.selection);
       this.pendingAiLayoutFamily = ((_b = layoutJson.selection) == null ? void 0 : _b.layoutFamily) || selection.layoutFamily;
@@ -57225,36 +58312,36 @@ var AppleStyleView = class extends ItemView {
       this.pendingAiStylePack = this.pendingAiColorPalette;
       if (applyAfterGenerate) {
         this.applyAiLayoutToPreview();
-        new Notice(
-          ((_d = toAiLayoutGenerationMeta(result.generationMeta)) == null ? void 0 : _d.executionMode) === "local-fallback" ? "\u2705 \u5DF2\u751F\u6210\u5E76\u5E94\u7528\u539F\u6587\u589E\u5F3A\u7ED3\u679C" : "\u2705 \u5DF2\u751F\u6210\u5E76\u5E94\u7528\u65B0\u7684\u7F16\u6392\u7ED3\u679C"
+        new Notice5(
+          ((_d = toAiLayoutGenerationMeta5(result.generationMeta)) == null ? void 0 : _d.executionMode) === "local-fallback" ? "\u2705 \u5DF2\u751F\u6210\u5E76\u5E94\u7528\u539F\u6587\u589E\u5F3A\u7ED3\u679C" : "\u2705 \u5DF2\u751F\u6210\u5E76\u5E94\u7528\u65B0\u7684\u7F16\u6392\u7ED3\u679C"
         );
       } else {
-        new Notice(
-          ((_e = toAiLayoutGenerationMeta(result.generationMeta)) == null ? void 0 : _e.executionMode) === "local-fallback" ? "\u2705 \u5DF2\u751F\u6210\u539F\u6587\u589E\u5F3A\u7ED3\u679C" : "\u2705 AI \u7F16\u6392\u5DF2\u751F\u6210"
+        new Notice5(
+          ((_e = toAiLayoutGenerationMeta5(result.generationMeta)) == null ? void 0 : _e.executionMode) === "local-fallback" ? "\u2705 \u5DF2\u751F\u6210\u539F\u6587\u589E\u5F3A\u7ED3\u679C" : "\u2705 AI \u7F16\u6392\u5DF2\u751F\u6210"
         );
       }
     } catch (error) {
       console.error("AI \u7F16\u6392\u751F\u6210\u5931\u8D25:", error);
-      const readableError = toReadableError3(error);
-      const errorRecord = toRecord6(error);
-      const errorGenerationMeta = toAiLayoutGenerationMeta(errorRecord.generationMeta);
+      const readableError = toReadableError8(error);
+      const errorRecord = toRecord12(error);
+      const errorGenerationMeta = toAiLayoutGenerationMeta5(errorRecord.generationMeta);
       const previousState = this.getCurrentArticleLayoutState();
       const isSchemaError = errorRecord.code === "ai-layout-schema-invalid";
       const hasReusablePreviousLayout = !!((previousState == null ? void 0 : previousState.status) === "ready" && ((_g = (_f = previousState == null ? void 0 : previousState.layoutJson) == null ? void 0 : _f.blocks) == null ? void 0 : _g.length));
       await this.plugin.saveArticleLayoutState(context.sourcePath, {
-        version: AI_LAYOUT_SCHEMA_VERSION,
+        version: AI_LAYOUT_SCHEMA_VERSION5,
         updatedAt: hasReusablePreviousLayout ? previousState.updatedAt : Date.now(),
         sourceHash: hasReusablePreviousLayout ? previousState.sourceHash : context.sourceHash,
         providerId: (provider == null ? void 0 : provider.id) || "",
         model: (provider == null ? void 0 : provider.model) || "",
         selection: hasReusablePreviousLayout ? previousState.selection : selection,
         resolved: hasReusablePreviousLayout ? previousState.resolved : {
-          layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO ? "source-first" : selection.layoutFamily,
-          colorPalette: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO ? "tech-green" : selection.colorPalette
+          layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO5 ? "source-first" : selection.layoutFamily,
+          colorPalette: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO5 ? "tech-green" : selection.colorPalette
         },
         recommendedLayoutFamily: hasReusablePreviousLayout ? previousState.recommendedLayoutFamily : "",
         recommendedColorPalette: hasReusablePreviousLayout ? previousState.recommendedColorPalette : "",
-        stylePack: hasReusablePreviousLayout ? previousState.stylePack : selection.colorPalette === AI_LAYOUT_SELECTION_AUTO ? "tech-green" : selection.colorPalette,
+        stylePack: hasReusablePreviousLayout ? previousState.stylePack : selection.colorPalette === AI_LAYOUT_SELECTION_AUTO5 ? "tech-green" : selection.colorPalette,
         status: hasReusablePreviousLayout ? previousState.status : isSchemaError ? "schema-error" : "error",
         lastError: readableError.message || "\u672A\u77E5\u9519\u8BEF",
         lastAttemptStatus: isSchemaError ? "schema-error" : "error",
@@ -57267,23 +58354,23 @@ var AppleStyleView = class extends ItemView {
         dismissedBlockKeys: hasReusablePreviousLayout ? previousState.dismissedBlockKeys || [] : [],
         generationMeta: hasReusablePreviousLayout ? previousState.generationMeta : errorGenerationMeta || (previousState == null ? void 0 : previousState.generationMeta) || null,
         layoutJson: hasReusablePreviousLayout ? previousState.layoutJson : (previousState == null ? void 0 : previousState.layoutJson) || {
-          version: AI_LAYOUT_SCHEMA_VERSION,
+          version: AI_LAYOUT_SCHEMA_VERSION5,
           articleType: "article",
           selection,
           resolved: {
-            layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO ? "source-first" : selection.layoutFamily,
-            colorPalette: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO ? "tech-green" : selection.colorPalette
+            layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO5 ? "source-first" : selection.layoutFamily,
+            colorPalette: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO5 ? "tech-green" : selection.colorPalette
           },
           recommendedLayoutFamily: "",
           recommendedColorPalette: "",
-          stylePack: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO ? "tech-green" : selection.colorPalette,
-          layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO ? "source-first" : selection.layoutFamily,
+          stylePack: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO5 ? "tech-green" : selection.colorPalette,
+          layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO5 ? "source-first" : selection.layoutFamily,
           title: context.title,
           summary: "",
           blocks: []
         }
       }, selection);
-      new Notice(
+      new Notice5(
         hasReusablePreviousLayout ? "\u274C \u8FD9\u6B21\u751F\u6210\u6CA1\u6709\u6210\u529F\uFF0C\u5DF2\u4E3A\u4F60\u4FDD\u7559\u4E0A\u4E00\u7248\u7ED3\u679C" : isSchemaError ? `\u274C \u751F\u6210\u5931\u8D25\uFF1A${readableError.message}` : `\u274C \u751F\u6210\u5931\u8D25\uFF1A${readableError.message}`
       );
     } finally {
@@ -57295,27 +58382,24 @@ var AppleStyleView = class extends ItemView {
       }
       this.refreshAiLayoutPanel();
     }
-  }
-  /**
-   * @param {{ stateOverride?: AiLayoutStateLike | null, allowStale?: boolean }} [options]
-   */
+  },
   applyAiLayoutToPreview({ stateOverride = null, allowStale = false } = {}) {
     var _a5, _b, _c, _d;
     const context = this.getCurrentLayoutContext();
     const state = stateOverride || this.getCurrentArticleLayoutState();
     const visibleSnapshot = this.getVisibleAiLayoutSnapshot(state);
     if (!state || !((_b = (_a5 = visibleSnapshot.layoutJson) == null ? void 0 : _a5.blocks) == null ? void 0 : _b.length)) {
-      new Notice("\u5F53\u524D\u6587\u7AE0\u8FD8\u6CA1\u6709\u53EF\u7528\u7684 AI \u7F16\u6392\u7ED3\u679C");
+      new Notice5("\u5F53\u524D\u6587\u7AE0\u8FD8\u6CA1\u6709\u53EF\u7528\u7684 AI \u7F16\u6392\u7ED3\u679C");
       return;
     }
     if (!allowStale && context.sourceHash && state.sourceHash && context.sourceHash !== state.sourceHash) {
       this.refreshAiLayoutPanel();
       return;
     }
-    const imageRefs = extractImageRefsFromHtml(this.baseRenderedHtml || this.currentHtml || "");
-    const renderedSectionFragments = extractRenderedSectionFragments(this.baseRenderedHtml || this.currentHtml || "");
+    const imageRefs = extractImageRefsFromHtml5(this.baseRenderedHtml || this.currentHtml || "");
+    const renderedSectionFragments = extractRenderedSectionFragments5(this.baseRenderedHtml || this.currentHtml || "");
     const renderLayout = this.getAiRenderLayoutJson(visibleSnapshot.layoutJson);
-    const html = renderArticleLayoutHtml(renderLayout, {
+    const html = renderArticleLayoutHtml5(renderLayout, {
       imageRefs,
       renderedSectionFragments,
       colorPaletteOverride: this.getAiColorPaletteOverride(((_c = renderLayout == null ? void 0 : renderLayout.resolved) == null ? void 0 : _c.colorPalette) || (renderLayout == null ? void 0 : renderLayout.stylePack))
@@ -57324,13 +58408,913 @@ var AppleStyleView = class extends ItemView {
     this.currentHtml = html;
     this.aiPreviewApplied = true;
     if (this.previewContainer) {
-      setElementHtml(this.previewContainer, html);
+      setElementHtml5(this.previewContainer, html);
       this.previewContainer.scrollTop = scrollTop;
       this.previewContainer.addClass("apple-has-content");
     }
     this.syncPreviewPresentationMode();
     this.refreshAiLayoutPanel();
   }
+};
+
+// views/converter/clipboard.js
+var {
+  createRenderPipelines: createRenderPipelines6,
+  buildRenderRuntime: buildRenderRuntime6,
+  resolveMarkdownSource: resolveMarkdownSource6,
+  normalizeVaultPath: normalizeVaultPath6,
+  isAbsolutePathLike: isAbsolutePathLike6,
+  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown6,
+  canUseNativePreviewFastPath: canUseNativePreviewFastPath6,
+  renderNativeMarkdown: renderNativeMarkdown6,
+  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages6,
+  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION6,
+  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO6,
+  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS6,
+  createDefaultAiSettings: createDefaultAiSettings6,
+  normalizeAiSettings: normalizeAiSettings6,
+  normalizeAiProvider: normalizeAiProvider6,
+  getAiProviderIssues: getAiProviderIssues6,
+  isAiProviderRunnable: isAiProviderRunnable6,
+  summarizeAiProviderIssues: summarizeAiProviderIssues6,
+  getLayoutFamilyList: getLayoutFamilyList6,
+  getLayoutFamilyById: getLayoutFamilyById6,
+  getColorPaletteList: getColorPaletteList6,
+  getColorPaletteById: getColorPaletteById6,
+  resolveColorPaletteForRender: resolveColorPaletteForRender6,
+  normalizeHexColor: normalizeHexColor6,
+  normalizeLayoutSelection: normalizeLayoutSelection6,
+  getArticleLayoutSelectionState: getArticleLayoutSelectionState6,
+  resolveAiProvider: resolveAiProvider6,
+  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection6,
+  normalizeArticleLayoutState: normalizeArticleLayoutState6,
+  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry6,
+  extractImageRefsFromHtml: extractImageRefsFromHtml6,
+  extractRenderedSectionFragments: extractRenderedSectionFragments6,
+  generateArticleLayout: generateArticleLayout6,
+  renderArticleLayoutHtml: renderArticleLayoutHtml6,
+  testAiProviderConnection: testAiProviderConnection6,
+  createWechatSyncService: createWechatSyncService6,
+  createWechatSyncBridgeService: createWechatSyncBridgeService6,
+  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError5,
+  getMultiPlatformResultSummary: getMultiPlatformResultSummary6,
+  getWechatSyncResultError: getWechatSyncResultError6,
+  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId6,
+  getWechatSyncResultUrl: getWechatSyncResultUrl6,
+  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform6,
+  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay6,
+  resolveSyncAccount: resolveSyncAccount6,
+  toSyncFriendlyMessage: toSyncFriendlyMessage6,
+  createEmptyDraftCache: createEmptyDraftCache6,
+  normalizeDraftCache: normalizeDraftCache6,
+  getDraftAssociation: getDraftAssociation6,
+  setDraftAssociation: setDraftAssociation6,
+  clearDraftAssociation: clearDraftAssociation6,
+  processAllImagesService: processAllImagesService5,
+  processMathFormulasService: processMathFormulasService5,
+  cleanHtmlForDraftService: cleanHtmlForDraftService5,
+  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob6,
+  createObsidianFetchAdapter: createObsidianFetchAdapter6,
+  stripMarkdownFrontmatter: stripMarkdownFrontmatter6,
+  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls6,
+  createHtmlContainer: createHtmlContainer6,
+  getActiveDocument: getActiveDocument6,
+  getActiveWindowValue: getActiveWindowValue6,
+  htmlToText: htmlToText6,
+  setElementHtml: setElementHtml6,
+  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings6,
+  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds6,
+  hasWechatSyncCapability: hasWechatSyncCapability6,
+  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings6,
+  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms6,
+  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt6,
+  describeWechatsyncConnectionState: describeWechatsyncConnectionState6,
+  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar6,
+  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab6,
+  showMultiPlatformPublishModal: showMultiPlatformPublishModal6,
+  renderFeishuSettingsTab: renderFeishuSettingsTab6,
+  renderFeishuPublishTab: renderFeishuPublishTab6,
+  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings6,
+  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings6,
+  updateFeishuHistoryPath: updateFeishuHistoryPath6,
+  WechatAPI: WechatAPI6,
+  loadCommonJsDependency: loadCommonJsDependency6,
+  obsidianApi: obsidianApi6,
+  Plugin: Plugin6,
+  MarkdownView: MarkdownView6,
+  ItemView: ItemView6,
+  Notice: Notice6,
+  Platform: Platform6,
+  PluginSettingTab: PluginSettingTab6,
+  Setting: Setting6,
+  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY7,
+  getActiveDocumentCompat: getActiveDocumentCompat6,
+  createFallbackSvgElement: createFallbackSvgElement6,
+  revealLeafCompat: revealLeafCompat6,
+  getPluginSettings: getPluginSettings6,
+  setPluginSettings: setPluginSettings6,
+  setDestructiveButtonCompat: setDestructiveButtonCompat6,
+  refreshSettingTabCompat: refreshSettingTabCompat6,
+  toReadableError: toReadableError9,
+  isRecord: isRecord16,
+  toRecord: toRecord13,
+  toAiLayoutState: toAiLayoutState6,
+  toAiLayoutJson: toAiLayoutJson6,
+  toAiLayoutBlock: toAiLayoutBlock6,
+  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta6,
+  toAiLayoutSelection: toAiLayoutSelection6,
+  toAiLayoutFamilyStates: toAiLayoutFamilyStates6,
+  toOptionalText: toOptionalText7,
+  toImageElements: toImageElements6,
+  removeElementClass: removeElementClass6,
+  toOptionalNumber: toOptionalNumber7,
+  parseJsonRecord: parseJsonRecord7,
+  normalizeRequestUrlResponse: normalizeRequestUrlResponse7,
+  getResponseJsonRecord: getResponseJsonRecord7,
+  getProxyErrorMessage: getProxyErrorMessage7,
+  createProxyError: createProxyError7,
+  formatWechatApiError: formatWechatApiError7,
+  hasWechatUploadResult: hasWechatUploadResult7,
+  readBlobAsBase64Payload: readBlobAsBase64Payload7,
+  dataUrlToBlob: dataUrlToBlob6,
+  bufferFromBinary: bufferFromBinary7,
+  inferLocalImageMimeType: inferLocalImageMimeType6,
+  safeDecodeUriText: safeDecodeUriText6,
+  getFileUrlLocalPath: getFileUrlLocalPath6,
+  getVaultAdapterBasePath: getVaultAdapterBasePath6,
+  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath7,
+  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath7,
+  getVaultDirnameFromPath: getVaultDirnameFromPath6,
+  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW6,
+  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE6,
+  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL6,
+  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL6,
+  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL7,
+  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL6,
+  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL7,
+  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL7,
+  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL6,
+  getObsidianModalClass: getObsidianModalClass6,
+  createObsidianModal: createObsidianModal6,
+  getObsidianSetIcon: getObsidianSetIcon6,
+  getObsidianRequestUrl: getObsidianRequestUrl6,
+  getObsidianRequest: getObsidianRequest6,
+  getAppleThemeApi: getAppleThemeApi6,
+  getValueElementFromEvent: getValueElementFromEvent6,
+  getEventTargetValue: getEventTargetValue6,
+  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY6,
+  getObsidianLocale: getObsidianLocale6,
+  isChineseObsidianLocale: isChineseObsidianLocale6,
+  getImageSwipeCommandCopy: getImageSwipeCommandCopy6,
+  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout6,
+  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown6,
+  DEFAULT_SETTINGS: DEFAULT_SETTINGS6,
+  MAX_ACCOUNTS: MAX_ACCOUNTS6,
+  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS6,
+  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS6,
+  getWechatAccountPublishOptions: getWechatAccountPublishOptions6,
+  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions6,
+  isMobileClient: isMobileClient8,
+  generateId: generateId6,
+  sleep: sleep7,
+  pMap: pMap6
+} = apple_style_view_shared_exports;
+var clipboardMethods = {
+  resolveLocalImageFileForUpload(src) {
+    var _a5, _b, _c, _d, _e, _f;
+    const raw = String(src || "").trim();
+    if (!raw || /^(data:|https?:\/\/|app:\/\/|capacitor:\/\/)/i.test(raw))
+      return null;
+    const activeFile = this.getPublishContextFile();
+    const sourcePath = (activeFile == null ? void 0 : activeFile.path) || this.lastResolvedSourcePath || "";
+    const decoded = safeDecodeUriText6(raw);
+    const fromFileUrl = /^file:\/\//i.test(decoded) ? getVaultRelativePathFromLocalPath7(this.app, getFileUrlLocalPath6(decoded)) : "";
+    if (/^file:\/\//i.test(decoded) && !fromFileUrl) {
+      throw new Error("\u53EA\u652F\u6301\u8BFB\u53D6\u5F53\u524D vault \u5185\u7684 file:// \u56FE\u7247");
+    }
+    const lookupSrc = fromFileUrl || decoded;
+    try {
+      const linked = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.metadataCache) == null ? void 0 : _b.getFirstLinkpathDest) == null ? void 0 : _c.call(_b, lookupSrc, sourcePath);
+      if (linked && typeof linked === "object" && typeof linked["extension"] === "string")
+        return linked;
+    } catch (e) {
+    }
+    const candidates = [];
+    const normalized = normalizeVaultPath6(lookupSrc);
+    if (normalized)
+      candidates.push(normalized);
+    const noteDir = getVaultDirnameFromPath6(sourcePath);
+    if (normalized && noteDir && !isAbsolutePathLike6(normalized)) {
+      candidates.push(normalizeVaultPath6(`${noteDir}/${normalized}`));
+    }
+    for (const candidate of Array.from(new Set(candidates))) {
+      try {
+        const file = (_f = (_e = (_d = this.app) == null ? void 0 : _d.vault) == null ? void 0 : _e.getAbstractFileByPath) == null ? void 0 : _f.call(_e, candidate);
+        if (file && typeof file === "object" && typeof file["extension"] === "string")
+          return file;
+      } catch (e) {
+      }
+    }
+    return null;
+  },
+  async vaultFileToBlob(file) {
+    var _a5, _b;
+    const readBinary = (_b = (_a5 = this.app) == null ? void 0 : _a5.vault) == null ? void 0 : _b.readBinary;
+    if (typeof readBinary !== "function") {
+      throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301\u8BFB\u53D6\u672C\u5730\u56FE\u7247");
+    }
+    const binary = await readBinary.call(this.app.vault, file);
+    const buffer = bufferFromBinary7(binary);
+    const fileName = typeof file === "object" && file && typeof file["name"] === "string" ? file["name"] : typeof file === "object" && file && typeof file["path"] === "string" ? file["path"] : "image";
+    return new Blob([buffer], { type: inferLocalImageMimeType6(fileName) });
+  },
+  async srcToBlob(src) {
+    const localFile = this.resolveLocalImageFileForUpload(src);
+    if (localFile) {
+      return this.vaultFileToBlob(localFile);
+    }
+    if (src.startsWith("data:")) {
+      return dataUrlToBlob6(src);
+    }
+    if (src.startsWith("app://") || src.startsWith("capacitor://")) {
+      const resp = await window.fetch(src);
+      return await resp.blob();
+    }
+    if (src.startsWith("http")) {
+      const requestUrl = getObsidianRequestUrl6();
+      if (typeof requestUrl !== "function") {
+        throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301 requestUrl");
+      }
+      const response = (
+        /** @type {{ arrayBuffer?: ArrayBuffer, headers?: Record<string, string> }} */
+        await requestUrl({ url: src })
+      );
+      const headers = response.headers || {};
+      const contentType = headers["content-type"] || headers["Content-Type"] || "image/jpeg";
+      const buffer = response.arrayBuffer instanceof ArrayBuffer ? response.arrayBuffer : new ArrayBuffer(0);
+      return new Blob([buffer], { type: contentType });
+    }
+    throw new Error(`\u4E0D\u652F\u6301\u7684\u56FE\u7247\u6765\u6E90\u6216\u672C\u5730\u56FE\u7247\u672A\u627E\u5230\uFF1A${src || "\u7A7A\u5730\u5740"}`);
+  },
+  async processAllImages(html, api, progressCallback, cacheContext = {}) {
+    const accountId = (cacheContext == null ? void 0 : cacheContext.accountId) || "";
+    return (
+      /** @type {Promise<string>} */
+      processAllImagesService5({
+        html,
+        api,
+        progressCallback,
+        pMap: pMap6,
+        srcToBlob: (src) => this.srcToBlob(String(src || "")),
+        imageUploadCache: this.imageUploadCache,
+        cacheNamespace: accountId,
+        onImageFailure: cacheContext == null ? void 0 : cacheContext.onImageFailure
+      })
+    );
+  },
+  async processMathFormulas(html, api, progressCallback) {
+    return (
+      /** @type {Promise<string>} */
+      processMathFormulasService5({
+        html,
+        api,
+        progressCallback,
+        pMap: pMap6,
+        simpleHash: (value) => this.simpleHash(String(value || "")),
+        svgUploadCache: this.svgUploadCache,
+        svgToPngBlob: (svgElement, scale) => this.svgToPngBlob(
+          svgElement instanceof SVGElement ? svgElement : createFallbackSvgElement6(),
+          typeof scale === "number" ? scale : 3
+        )
+      })
+    );
+  },
+  async svgToPngBlob(svgElement, scale = 3) {
+    return rasterizeSvgToPngBlob6(svgElement, { scale });
+  },
+  cleanHtmlForDraft(html) {
+    return cleanHtmlForDraftService5(html);
+  },
+  renderHTML(html) {
+    if (!this.previewContainer)
+      return;
+    this.previewContainer.empty();
+    setElementHtml6(this.previewContainer, html);
+  },
+  async copyRichHTMLByClipboard(htmlContent) {
+    if (!navigator.clipboard || typeof navigator.clipboard.write !== "function" || typeof ClipboardItem === "undefined") {
+      return false;
+    }
+    const item = new ClipboardItem({
+      "text/html": new Blob([htmlContent], { type: "text/html" })
+    });
+    await navigator.clipboard.write([item]);
+    return true;
+  },
+  normalizeClipboardText(text) {
+    return String(text || "").replace(/\s+/g, " ").trim();
+  },
+  setCopyButtonIcon(icon) {
+    if (!this.copyBtn)
+      return;
+    this.copyBtn.replaceChildren();
+    const setIcon = getObsidianSetIcon6();
+    if (typeof setIcon === "function") {
+      setIcon(this.copyBtn, icon);
+    }
+  },
+  setCopyButtonSpinner() {
+    if (!this.copyBtn)
+      return;
+    this.copyBtn.replaceChildren();
+    const activeDocument = getActiveDocumentCompat6();
+    if (!activeDocument)
+      return;
+    const spinner = activeDocument.createElement("span");
+    spinner.className = "apple-copy-spinner";
+    spinner.setAttribute("aria-hidden", "true");
+    this.copyBtn.appendChild(spinner);
+  },
+  async enhanceHtmlForWechatPublishing(root) {
+    if (!root)
+      return;
+    const activeDocument = getActiveDocumentCompat6();
+    let mount = null;
+    try {
+      if ((activeDocument == null ? void 0 : activeDocument.body) && !root.isConnected) {
+        mount = activeDocument.createElement("div");
+        mount.setCssStyles({
+          position: "fixed",
+          left: "-99999px",
+          top: "0",
+          width: "760px",
+          opacity: "0",
+          pointerEvents: "none",
+          overflow: "hidden"
+        });
+        activeDocument.body.appendChild(mount);
+        mount.appendChild(root);
+      }
+      await convertRenderedMermaidDiagramsToImages6(root, {
+        simpleHash: (value) => this.simpleHash(String(value || "")),
+        mermaidImageCache: this.mermaidImageCache
+      });
+      this.transformCodeBlocksForClipboard(root);
+    } finally {
+      if (mount) {
+        mount.remove();
+      }
+    }
+  },
+  async prepareHtmlForWechatDraft(html) {
+    const tempDiv = createHtmlContainer6("div", html || "");
+    if (!tempDiv)
+      return "";
+    await this.enhanceHtmlForWechatPublishing(tempDiv);
+    return tempDiv.innerHTML;
+  },
+  async prepareHtmlForWechatsyncArticle(html) {
+    const tempDiv = createHtmlContainer6("div", html || "");
+    if (!tempDiv)
+      return "";
+    await this.processImagesToDataURL(tempDiv);
+    this.transformCodeBlocksForWechatsync(tempDiv);
+    return tempDiv.innerHTML;
+  },
+  async prepareHtmlForWechatsyncArticleViaBridge(html, assets = []) {
+    const mapped = mapAppUrlImagesToAssetUrls6(html || "", assets);
+    const tempDiv = createHtmlContainer6("div", mapped);
+    if (!tempDiv)
+      return "";
+    this.transformCodeBlocksForWechatsync(tempDiv);
+    return tempDiv.innerHTML;
+  },
+  async generateCoverThumbnailFromAsset(asset) {
+    try {
+      if (!asset || typeof asset !== "object")
+        return "";
+      const base64 = typeof asset.base64 === "string" ? asset.base64 : "";
+      const mimeType = typeof asset.mimeType === "string" ? asset.mimeType : "";
+      if (!base64 || !mimeType)
+        return "";
+      if (mimeType === "image/gif")
+        return "";
+      const sourceDataUrl = `data:${mimeType};base64,${base64}`;
+      const image = (
+        /** @type {HTMLImageElement} */
+        await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error("image_decode_failed"));
+          img.src = sourceDataUrl;
+        })
+      );
+      const naturalW = image.naturalWidth || image.width || 0;
+      const naturalH = image.naturalHeight || image.height || 0;
+      if (!naturalW || !naturalH)
+        return "";
+      const MAX_DIM = 256;
+      const scale = Math.min(1, MAX_DIM / Math.max(naturalW, naturalH));
+      const targetW = Math.max(1, Math.round(naturalW * scale));
+      const targetH = Math.max(1, Math.round(naturalH * scale));
+      const activeDocument = getActiveDocumentCompat6();
+      if (!activeDocument)
+        return "";
+      const canvas = activeDocument.createElement("canvas");
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext("2d");
+      if (!ctx)
+        return "";
+      ctx.drawImage(image, 0, 0, targetW, targetH);
+      const MAX_BYTES = 8 * 1024;
+      for (const quality of [0.7, 0.55, 0.4]) {
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        if (typeof dataUrl === "string" && dataUrl.length <= MAX_BYTES) {
+          return dataUrl;
+        }
+      }
+      return "";
+    } catch (err) {
+      console.warn("[Wechatsync] generateCoverThumbnailFromAsset failed", err);
+      return "";
+    }
+  },
+  extractCodeTextForWechatsync(block) {
+    var _a5;
+    const codePre = (_a5 = block == null ? void 0 : block.querySelector) == null ? void 0 : _a5.call(block, "pre");
+    if (!codePre)
+      return "";
+    const sectionNodes = (
+      /** @type {HTMLElement[]} */
+      Array.from(codePre.querySelectorAll("section"))
+    );
+    const codeLinesNode = sectionNodes.filter((node) => {
+      const style = (node.getAttribute("style") || "").toLowerCase();
+      return style.includes("white-space:nowrap") || style.includes("white-space: nowrap");
+    }).sort((a, b) => {
+      const score = (node) => {
+        const html = node.innerHTML || "";
+        return (html.includes("<br") ? 1e4 : 0) + (node.textContent || "").length;
+      };
+      return score(b) - score(a);
+    })[0];
+    if (codeLinesNode) {
+      return (codeLinesNode.innerHTML || "").split(/<br\s*\/?>/i).map((lineHtml) => {
+        return htmlToText6(lineHtml || "").replace(/\u00a0/g, " ");
+      }).join("\n");
+    }
+    const codeEl = codePre.querySelector("code");
+    return ((codeEl ? codeEl.textContent : codePre.textContent) || "").replace(/\u00a0/g, " ");
+  },
+  transformCodeBlocksForWechatsync(root) {
+    if (!root)
+      return;
+    const codeBlocks = (
+      /** @type {HTMLElement[]} */
+      Array.from(root.querySelectorAll(".code-snippet__fix"))
+    );
+    codeBlocks.forEach((block) => {
+      const codeText = this.extractCodeTextForWechatsync(block);
+      const activeDocument = getActiveDocumentCompat6();
+      if (!activeDocument)
+        return;
+      const pre = activeDocument.createElement("pre");
+      pre.setAttribute("style", [
+        "display:block !important",
+        "width:100% !important",
+        "max-width:100% !important",
+        "margin:14px 0 !important",
+        "padding:12px 14px !important",
+        "box-sizing:border-box !important",
+        "background:#f6f8fa !important",
+        "border:1px solid #e5e7eb !important",
+        "border-radius:8px !important",
+        "overflow-x:auto !important",
+        "overflow-y:hidden !important",
+        "-webkit-overflow-scrolling:touch !important",
+        "font-family:'SF Mono',Consolas,Monaco,monospace !important",
+        "font-size:13px !important",
+        "line-height:1.65 !important",
+        "color:#24292f !important",
+        "text-indent:0 !important",
+        "white-space:pre !important"
+      ].join(";"));
+      const code = activeDocument.createElement("code");
+      code.setAttribute("style", [
+        "display:block !important",
+        "margin:0 !important",
+        "padding:0 !important",
+        "background:transparent !important",
+        "color:#24292f !important",
+        "font:inherit !important",
+        "line-height:inherit !important",
+        "white-space:pre !important",
+        "text-indent:0 !important"
+      ].join(";"));
+      code.textContent = codeText;
+      pre.appendChild(code);
+      block.replaceWith(pre);
+    });
+  },
+  transformCodeBlocksForClipboard(root) {
+    if (!root)
+      return;
+    const codeBlocks = (
+      /** @type {HTMLElement[]} */
+      Array.from(root.querySelectorAll(".code-snippet__fix"))
+    );
+    codeBlocks.forEach((block) => {
+      const codePre = block.querySelector("pre");
+      if (!codePre)
+        return;
+      const codeHtml = codePre.innerHTML || "";
+      const styleText = block.getAttribute("style") || "";
+      const backgroundMatch = styleText.match(/background:([^;!]+)(?:\s*!important)?/i);
+      const borderMatch = styleText.match(/border:([^;!]+)(?:\s*!important)?/i);
+      const radiusMatch = styleText.match(/border-radius:([^;!]+)(?:\s*!important)?/i);
+      const background = backgroundMatch ? backgroundMatch[1].trim() : "#0d1117";
+      const border = borderMatch ? borderMatch[1].trim() : "1px solid #30363d";
+      const borderRadius = radiusMatch ? radiusMatch[1].trim() : "8px";
+      const sectionNodes = (
+        /** @type {HTMLElement[]} */
+        Array.from(codePre.querySelectorAll("section"))
+      );
+      const lineNumberColumn = sectionNodes.find((node) => {
+        const style = (node.getAttribute("style") || "").toLowerCase();
+        return style.includes("border-right") && style.includes("user-select");
+      });
+      const codeLinesNode = sectionNodes.filter((node) => {
+        const style = (node.getAttribute("style") || "").toLowerCase();
+        return style.includes("white-space:nowrap") || style.includes("white-space: nowrap");
+      }).sort((a, b) => {
+        const score = (node) => {
+          const html = node.innerHTML || "";
+          return (html.includes("<br") ? 1e4 : 0) + (node.textContent || "").length;
+        };
+        return score(b) - score(a);
+      })[0];
+      const codeLinesHtml = codeLinesNode ? codeLinesNode.innerHTML : codeHtml;
+      const directMacHeader = Array.from(block.children).find(
+        (child) => child !== codePre && !child.querySelector("pre") && child.querySelector("span") && !(child.textContent || "").trim()
+      );
+      const hasMacHeader = !!directMacHeader;
+      const codeLineParts = codeLinesNode ? codeLinesHtml.split(/<br\s*\/?>/i) : [codeLinesHtml];
+      const lineNumberLabels = lineNumberColumn ? Array.from(lineNumberColumn.children).map((node) => (node.textContent || "").trim()).filter(Boolean) : [];
+      const shouldKeepFixedLineNumbers = lineNumberLabels.length > 0 && codeLineParts.length > 0;
+      const activeDocument = getActiveDocumentCompat6();
+      if (!activeDocument)
+        return;
+      const pre = activeDocument.createElement("pre");
+      pre.setAttribute("class", "hljs code__pre");
+      pre.setAttribute("style", `width:100% !important;max-width:100% !important;margin:12px 0 !important;background:${background} !important;border:${border} !important;border-radius:${borderRadius} !important;box-shadow:0 4px 12px rgba(0,0,0,0.3) !important;overflow-x:auto !important;overflow-y:hidden !important;-webkit-overflow-scrolling:touch !important;box-sizing:border-box !important;font-family:'SF Mono',Consolas,Monaco,monospace !important;font-size:13px !important;line-height:1.75 !important;color:#f0f6fc !important;white-space:normal !important;`);
+      if (hasMacHeader) {
+        const toolbar = activeDocument.createElement("section");
+        const toolbarStyle = "display:block !important;background:#161b22 !important;padding:6px 10px 6px 10px !important;border:none !important;border-bottom:1px solid #30363d !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;box-sizing:border-box !important;width:100% !important;";
+        toolbar.setAttribute("style", toolbarStyle);
+        setElementHtml6(toolbar, [
+          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>',
+          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>',
+          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#28c840 !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>'
+        ].join(""));
+        pre.appendChild(toolbar);
+      }
+      const code = activeDocument.createElement("code");
+      if (shouldKeepFixedLineNumbers) {
+        const lineNumbersHtml = codeLineParts.map((_, index) => {
+          const lineNumber = lineNumberLabels[index] || String(index + 1);
+          return `<section style="padding:0 10px 0 0 !important;line-height:1.75 !important;color:#95989C !important;">${lineNumber}</section>`;
+        }).join("");
+        const codeInnerHtml = codeLineParts.map((lineHtml) => lineHtml || "&nbsp;").join("<br/>");
+        const codeWithLineNumbersStyle = "display:block !important;width:100% !important;min-width:100% !important;max-width:100% !important;padding:0 !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:normal !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;";
+        code.setAttribute("style", codeWithLineNumbersStyle);
+        setElementHtml6(code, `<section style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;max-width:100% !important;padding:0 !important;box-sizing:border-box !important;margin:0 !important;">
+        <section class="line-numbers" style="text-align:right !important;padding:12px 0 !important;border-right:1px solid rgba(255,255,255,0.1) !important;user-select:none !important;background:transparent !important;flex:0 0 auto !important;min-width:3.5em !important;box-sizing:border-box !important;margin:0 !important;">${lineNumbersHtml}</section>
+        <section class="code-scroll" style="flex:1 1 auto !important;overflow-x:auto !important;overflow-y:visible !important;-webkit-overflow-scrolling:touch !important;padding:12px 12px 12px 16px !important;min-width:0 !important;box-sizing:border-box !important;margin:0 !important;">
+          <section style="white-space:pre !important;min-width:max-content !important;line-height:1.75 !important;font-size:13px !important;margin:0 !important;">${codeInnerHtml}</section>
+        </section>
+      </section>`);
+      } else {
+        const codeScrollableStyle = "display:block !important;width:max-content !important;min-width:100% !important;max-width:none !important;padding:12px !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:nowrap !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;";
+        code.setAttribute("style", codeScrollableStyle);
+        setElementHtml6(code, codeLinesHtml);
+      }
+      pre.appendChild(code);
+      block.replaceWith(pre);
+    });
+  },
+  async readClipboardTextSnapshot() {
+    if (!navigator.clipboard || typeof navigator.clipboard.readText !== "function") {
+      return { supported: false, text: "" };
+    }
+    try {
+      const text = await navigator.clipboard.readText();
+      return { supported: true, text: this.normalizeClipboardText(text) };
+    } catch (e) {
+      return { supported: false, text: "" };
+    }
+  },
+  async copyHTML() {
+    if (this.isCopying)
+      return;
+    if (!this.currentHtml) {
+      new Notice6(this.getMissingRenderNotice());
+      return;
+    }
+    this.isCopying = true;
+    if (this.copyBtn) {
+      this.copyBtn.classList.add("is-copying");
+      this.setCopyButtonSpinner();
+    }
+    try {
+      const exportHtml = this.getCurrentExportHtml() || this.currentHtml;
+      const tempDiv = createHtmlContainer6("div", exportHtml);
+      await this.processImagesToDataURL(tempDiv);
+      await this.enhanceHtmlForWechatPublishing(tempDiv);
+      const cleanedHtml = this.cleanHtmlForDraft(tempDiv.innerHTML);
+      const htmlContent = cleanedHtml;
+      window.__OWC_LAST_CLIPBOARD_HTML = htmlContent;
+      window.__OWC_LAST_CLIPBOARD_TEXT = htmlToText6(cleanedHtml);
+      const expectedPlainText = this.normalizeClipboardText(window.__OWC_LAST_CLIPBOARD_TEXT);
+      const mobile = isMobileClient8(this.app);
+      let copied = false;
+      try {
+        copied = await this.copyRichHTMLByClipboard(htmlContent);
+      } catch (e) {
+        copied = false;
+      }
+      if (mobile && copied) {
+        const snapshot = await this.readClipboardTextSnapshot();
+        copied = snapshot.supported && snapshot.text === expectedPlainText;
+      }
+      if (!copied) {
+        throw new Error("rich copy unavailable");
+      }
+      new Notice6("\u2705 \u5DF2\u590D\u5236\u516C\u4F17\u53F7\u683C\u5F0F\uFF0C\u8BF7\u76F4\u63A5\u7C98\u8D34\u5230\u516C\u4F17\u53F7\u7F16\u8F91\u5668");
+      if (this.copyBtn) {
+        this.copyBtn.classList.remove("is-copying");
+        this.setCopyButtonIcon("check");
+        window.setTimeout(() => {
+          if (this.copyBtn) {
+            this.setCopyButtonIcon("copy");
+          }
+        }, 2e3);
+      }
+      return;
+    } catch (error) {
+      console.error("\u590D\u5236\u5931\u8D25:", error);
+      new Notice6("\u274C \u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u4F7F\u7528\u300C\u53D1\u5E03\u4E0E\u5206\u53D1\u300D\u53D1\u9001\u6587\u7AE0");
+      if (this.copyBtn) {
+        this.copyBtn.classList.remove("is-copying");
+        this.setCopyButtonIcon("copy");
+      }
+    } finally {
+      this.isCopying = false;
+    }
+  },
+  async processImagesToDataURL(container) {
+    const images = toImageElements6(container.querySelectorAll("img"));
+    const localImages = images.filter((img) => img.src.startsWith("app://") || img.src.startsWith("capacitor://"));
+    if (localImages.length === 0)
+      return false;
+    const startTime = Date.now();
+    const concurrency = 3;
+    for (let i = 0; i < localImages.length; i += concurrency) {
+      const chunk = localImages.slice(i, i + concurrency);
+      await Promise.all(chunk.map((img) => this.convertImageToLocally(img)));
+    }
+    const elapsed = Date.now() - startTime;
+    const minDuration = 800;
+    if (elapsed < minDuration) {
+      await new Promise((resolve) => window.setTimeout(resolve, minDuration - elapsed));
+    }
+    return true;
+  },
+  async convertImageToLocally(img) {
+    try {
+      const response = await window.fetch(img.src);
+      const blob = await response.blob();
+      if (blob.size > 10 * 1024 * 1024) {
+        new Notice6(`\u26A0\uFE0F \u53D1\u73B0\u5927\u56FE (${(blob.size / 1024 / 1024).toFixed(1)}MB)\uFF0C\u5904\u7406\u53EF\u80FD\u8F83\u6162`, 5e3);
+      }
+      let dataUrl;
+      if (blob.type === "image/gif") {
+        dataUrl = await this.blobToDataUrl(blob);
+      } else {
+        dataUrl = await this.blobToJpegDataUrl(blob);
+      }
+      img.src = dataUrl;
+      delete img.dataset.src;
+    } catch (error) {
+      console.error("Image processing failed:", error);
+    }
+  },
+  blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : "");
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  },
+  blobToJpegDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob);
+      const image = new Image();
+      image.onload = () => {
+        const activeDocument = getActiveDocumentCompat6();
+        if (!activeDocument) {
+          URL.revokeObjectURL(url);
+          reject(new Error("Document unavailable"));
+          return;
+        }
+        const canvas = activeDocument.createElement("canvas");
+        let width = image.width;
+        let height = image.height;
+        if (width > 1920) {
+          height = Math.round(height * (1920 / width));
+          width = 1920;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(image, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+        URL.revokeObjectURL(url);
+        resolve(dataUrl);
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Image load failed"));
+      };
+      image.src = url;
+    });
+  }
+};
+
+// views/publish-modal/wechat-preview-export.js
+var {
+  createRenderPipelines: createRenderPipelines7,
+  buildRenderRuntime: buildRenderRuntime7,
+  resolveMarkdownSource: resolveMarkdownSource7,
+  normalizeVaultPath: normalizeVaultPath7,
+  isAbsolutePathLike: isAbsolutePathLike7,
+  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown7,
+  canUseNativePreviewFastPath: canUseNativePreviewFastPath7,
+  renderNativeMarkdown: renderNativeMarkdown7,
+  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages7,
+  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION7,
+  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO7,
+  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS7,
+  createDefaultAiSettings: createDefaultAiSettings7,
+  normalizeAiSettings: normalizeAiSettings7,
+  normalizeAiProvider: normalizeAiProvider7,
+  getAiProviderIssues: getAiProviderIssues7,
+  isAiProviderRunnable: isAiProviderRunnable7,
+  summarizeAiProviderIssues: summarizeAiProviderIssues7,
+  getLayoutFamilyList: getLayoutFamilyList7,
+  getLayoutFamilyById: getLayoutFamilyById7,
+  getColorPaletteList: getColorPaletteList7,
+  getColorPaletteById: getColorPaletteById7,
+  resolveColorPaletteForRender: resolveColorPaletteForRender7,
+  normalizeHexColor: normalizeHexColor7,
+  normalizeLayoutSelection: normalizeLayoutSelection7,
+  getArticleLayoutSelectionState: getArticleLayoutSelectionState7,
+  resolveAiProvider: resolveAiProvider7,
+  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection7,
+  normalizeArticleLayoutState: normalizeArticleLayoutState7,
+  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry7,
+  extractImageRefsFromHtml: extractImageRefsFromHtml7,
+  extractRenderedSectionFragments: extractRenderedSectionFragments7,
+  generateArticleLayout: generateArticleLayout7,
+  renderArticleLayoutHtml: renderArticleLayoutHtml7,
+  testAiProviderConnection: testAiProviderConnection7,
+  createWechatSyncService: createWechatSyncService7,
+  createWechatSyncBridgeService: createWechatSyncBridgeService7,
+  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError6,
+  getMultiPlatformResultSummary: getMultiPlatformResultSummary7,
+  getWechatSyncResultError: getWechatSyncResultError7,
+  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId7,
+  getWechatSyncResultUrl: getWechatSyncResultUrl7,
+  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform7,
+  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay7,
+  resolveSyncAccount: resolveSyncAccount7,
+  toSyncFriendlyMessage: toSyncFriendlyMessage7,
+  createEmptyDraftCache: createEmptyDraftCache7,
+  normalizeDraftCache: normalizeDraftCache7,
+  getDraftAssociation: getDraftAssociation7,
+  setDraftAssociation: setDraftAssociation7,
+  clearDraftAssociation: clearDraftAssociation7,
+  processAllImagesService: processAllImagesService6,
+  processMathFormulasService: processMathFormulasService6,
+  cleanHtmlForDraftService: cleanHtmlForDraftService6,
+  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob7,
+  createObsidianFetchAdapter: createObsidianFetchAdapter7,
+  stripMarkdownFrontmatter: stripMarkdownFrontmatter7,
+  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls7,
+  createHtmlContainer: createHtmlContainer7,
+  getActiveDocument: getActiveDocument7,
+  getActiveWindowValue: getActiveWindowValue7,
+  htmlToText: htmlToText7,
+  setElementHtml: setElementHtml7,
+  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings7,
+  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds7,
+  hasWechatSyncCapability: hasWechatSyncCapability7,
+  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings7,
+  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms7,
+  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt7,
+  describeWechatsyncConnectionState: describeWechatsyncConnectionState7,
+  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar7,
+  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab7,
+  showMultiPlatformPublishModal: showMultiPlatformPublishModal7,
+  renderFeishuSettingsTab: renderFeishuSettingsTab7,
+  renderFeishuPublishTab: renderFeishuPublishTab7,
+  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings7,
+  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings7,
+  updateFeishuHistoryPath: updateFeishuHistoryPath7,
+  WechatAPI: WechatAPI7,
+  loadCommonJsDependency: loadCommonJsDependency7,
+  obsidianApi: obsidianApi7,
+  Plugin: Plugin7,
+  MarkdownView: MarkdownView7,
+  ItemView: ItemView7,
+  Notice: Notice7,
+  Platform: Platform7,
+  PluginSettingTab: PluginSettingTab7,
+  Setting: Setting7,
+  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY8,
+  getActiveDocumentCompat: getActiveDocumentCompat7,
+  createFallbackSvgElement: createFallbackSvgElement7,
+  revealLeafCompat: revealLeafCompat7,
+  getPluginSettings: getPluginSettings7,
+  setPluginSettings: setPluginSettings7,
+  setDestructiveButtonCompat: setDestructiveButtonCompat7,
+  refreshSettingTabCompat: refreshSettingTabCompat7,
+  toReadableError: toReadableError10,
+  isRecord: isRecord17,
+  toRecord: toRecord14,
+  toAiLayoutState: toAiLayoutState7,
+  toAiLayoutJson: toAiLayoutJson7,
+  toAiLayoutBlock: toAiLayoutBlock7,
+  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta7,
+  toAiLayoutSelection: toAiLayoutSelection7,
+  toAiLayoutFamilyStates: toAiLayoutFamilyStates7,
+  toOptionalText: toOptionalText8,
+  toImageElements: toImageElements7,
+  removeElementClass: removeElementClass7,
+  toOptionalNumber: toOptionalNumber8,
+  parseJsonRecord: parseJsonRecord8,
+  normalizeRequestUrlResponse: normalizeRequestUrlResponse8,
+  getResponseJsonRecord: getResponseJsonRecord8,
+  getProxyErrorMessage: getProxyErrorMessage8,
+  createProxyError: createProxyError8,
+  formatWechatApiError: formatWechatApiError8,
+  hasWechatUploadResult: hasWechatUploadResult8,
+  readBlobAsBase64Payload: readBlobAsBase64Payload8,
+  dataUrlToBlob: dataUrlToBlob7,
+  bufferFromBinary: bufferFromBinary8,
+  inferLocalImageMimeType: inferLocalImageMimeType7,
+  safeDecodeUriText: safeDecodeUriText7,
+  getFileUrlLocalPath: getFileUrlLocalPath7,
+  getVaultAdapterBasePath: getVaultAdapterBasePath7,
+  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath8,
+  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath8,
+  getVaultDirnameFromPath: getVaultDirnameFromPath7,
+  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW7,
+  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE7,
+  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL7,
+  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL7,
+  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL8,
+  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL7,
+  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL8,
+  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL8,
+  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL7,
+  getObsidianModalClass: getObsidianModalClass7,
+  createObsidianModal: createObsidianModal7,
+  getObsidianSetIcon: getObsidianSetIcon7,
+  getObsidianRequestUrl: getObsidianRequestUrl7,
+  getObsidianRequest: getObsidianRequest7,
+  getAppleThemeApi: getAppleThemeApi7,
+  getValueElementFromEvent: getValueElementFromEvent7,
+  getEventTargetValue: getEventTargetValue7,
+  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY7,
+  getObsidianLocale: getObsidianLocale7,
+  isChineseObsidianLocale: isChineseObsidianLocale7,
+  getImageSwipeCommandCopy: getImageSwipeCommandCopy7,
+  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout7,
+  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown7,
+  DEFAULT_SETTINGS: DEFAULT_SETTINGS7,
+  MAX_ACCOUNTS: MAX_ACCOUNTS7,
+  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS7,
+  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS7,
+  getWechatAccountPublishOptions: getWechatAccountPublishOptions7,
+  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions7,
+  isMobileClient: isMobileClient9,
+  generateId: generateId7,
+  sleep: sleep8,
+  pMap: pMap7
+} = apple_style_view_shared_exports;
+var wechatPreviewExportMethods = {
   getCurrentExportHtml() {
     var _a5, _b, _c;
     if (!this.currentHtml)
@@ -57346,28 +59330,28 @@ var AppleStyleView = class extends ItemView {
     if (context.sourceHash && state.sourceHash && context.sourceHash !== state.sourceHash) {
       return this.currentHtml;
     }
-    const imageRefs = extractImageRefsFromHtml(this.baseRenderedHtml || this.currentHtml || "");
-    const renderedSectionFragments = extractRenderedSectionFragments(this.baseRenderedHtml || this.currentHtml || "");
+    const imageRefs = extractImageRefsFromHtml7(this.baseRenderedHtml || this.currentHtml || "");
+    const renderedSectionFragments = extractRenderedSectionFragments7(this.baseRenderedHtml || this.currentHtml || "");
     const renderLayout = this.getAiRenderLayoutJson(visibleSnapshot.layoutJson);
-    return renderArticleLayoutHtml(renderLayout, {
+    return renderArticleLayoutHtml7(renderLayout, {
       imageRefs,
       mode: "draft",
       renderedSectionFragments,
       colorPaletteOverride: this.getAiColorPaletteOverride(((_c = renderLayout == null ? void 0 : renderLayout.resolved) == null ? void 0 : _c.colorPalette) || (renderLayout == null ? void 0 : renderLayout.stylePack))
     });
-  }
+  },
   restoreBasePreview() {
     if (!this.baseRenderedHtml || !this.previewContainer)
       return;
     const scrollTop = this.previewContainer.scrollTop;
     this.currentHtml = this.baseRenderedHtml;
     this.aiPreviewApplied = false;
-    setElementHtml(this.previewContainer, this.baseRenderedHtml);
+    setElementHtml7(this.previewContainer, this.baseRenderedHtml);
     this.previewContainer.scrollTop = scrollTop;
     this.previewContainer.addClass("apple-has-content");
     this.syncPreviewPresentationMode();
     this.refreshAiLayoutPanel();
-  }
+  },
   syncPreviewPresentationMode() {
     if (!this.previewContainer)
       return;
@@ -57375,10 +59359,7 @@ var AppleStyleView = class extends ItemView {
     this.previewContainer.classList.toggle("apple-ai-preview-active", hasAiPreview);
     const previewWrapper = this.previewContainer.closest(".apple-preview-wrapper");
     previewWrapper == null ? void 0 : previewWrapper.classList.toggle("apple-ai-preview-active", hasAiPreview);
-  }
-  /**
-   * @returns {boolean}
-   */
+  },
   openPluginSettings() {
     var _a5, _b, _c;
     const settingApi = (_a5 = this.app) == null ? void 0 : _a5.setting;
@@ -57390,24 +59371,19 @@ var AppleStyleView = class extends ItemView {
       settingApi.openTabById(tabId);
     }
     return true;
-  }
-  /**
-   * @param {string} url
-   * @param {{ allowExtensionUrls?: boolean }} [options]
-   * @returns {boolean}
-   */
+  },
   openExternalUrl(url, options = {}) {
     const target = String(url || "").trim();
     const allowExtensionUrls = (options == null ? void 0 : options.allowExtensionUrls) === true;
     const isHttpUrl = /^https?:\/\//i.test(target);
     const isExtensionUrl = /^(chrome|edge|brave|moz)-extension:\/\//i.test(target);
     if (!isHttpUrl && !(allowExtensionUrls && isExtensionUrl)) {
-      new Notice("\u8349\u7A3F\u94FE\u63A5\u4E0D\u53EF\u7528");
+      new Notice7("\u8349\u7A3F\u94FE\u63A5\u4E0D\u53EF\u7528");
       return false;
     }
     if (typeof window !== "undefined") {
       try {
-        const activeDoc = getActiveDocumentCompat();
+        const activeDoc = getActiveDocumentCompat7();
         if (!activeDoc)
           return false;
         const a = activeDoc.createElement("a");
@@ -57422,33 +59398,198 @@ var AppleStyleView = class extends ItemView {
         }
       }
     }
-    new Notice("\u65E0\u6CD5\u6253\u5F00\u8349\u7A3F\u94FE\u63A5\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u67E5\u770B\u540C\u6B65\u7ED3\u679C");
+    new Notice7("\u65E0\u6CD5\u6253\u5F00\u8349\u7A3F\u94FE\u63A5\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u67E5\u770B\u540C\u6B65\u7ED3\u679C");
     return false;
-  }
+  },
   openPublisherProPage() {
-    return this.openExternalUrl(OBSIDIAN_PUBLISHER_PRO_URL2);
-  }
+    return this.openExternalUrl(OBSIDIAN_PUBLISHER_PRO_URL8);
+  },
   openPublisherGuidePage(section = "") {
     if (section === "bridge") {
-      return this.openExternalUrl(OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL2);
+      return this.openExternalUrl(OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL8);
     }
     if (section === "install-extension") {
-      return this.openExternalUrl(OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL2);
+      return this.openExternalUrl(OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL8);
     }
-    return this.openExternalUrl(OBSIDIAN_PUBLISHER_GUIDE_URL);
+    return this.openExternalUrl(OBSIDIAN_PUBLISHER_GUIDE_URL7);
   }
+};
+
+// views/publish-modal/wechat-account-state.js
+var {
+  createRenderPipelines: createRenderPipelines8,
+  buildRenderRuntime: buildRenderRuntime8,
+  resolveMarkdownSource: resolveMarkdownSource8,
+  normalizeVaultPath: normalizeVaultPath8,
+  isAbsolutePathLike: isAbsolutePathLike8,
+  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown8,
+  canUseNativePreviewFastPath: canUseNativePreviewFastPath8,
+  renderNativeMarkdown: renderNativeMarkdown8,
+  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages8,
+  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION8,
+  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO8,
+  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS8,
+  createDefaultAiSettings: createDefaultAiSettings8,
+  normalizeAiSettings: normalizeAiSettings8,
+  normalizeAiProvider: normalizeAiProvider8,
+  getAiProviderIssues: getAiProviderIssues8,
+  isAiProviderRunnable: isAiProviderRunnable8,
+  summarizeAiProviderIssues: summarizeAiProviderIssues8,
+  getLayoutFamilyList: getLayoutFamilyList8,
+  getLayoutFamilyById: getLayoutFamilyById8,
+  getColorPaletteList: getColorPaletteList8,
+  getColorPaletteById: getColorPaletteById8,
+  resolveColorPaletteForRender: resolveColorPaletteForRender8,
+  normalizeHexColor: normalizeHexColor8,
+  normalizeLayoutSelection: normalizeLayoutSelection8,
+  getArticleLayoutSelectionState: getArticleLayoutSelectionState8,
+  resolveAiProvider: resolveAiProvider8,
+  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection8,
+  normalizeArticleLayoutState: normalizeArticleLayoutState8,
+  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry8,
+  extractImageRefsFromHtml: extractImageRefsFromHtml8,
+  extractRenderedSectionFragments: extractRenderedSectionFragments8,
+  generateArticleLayout: generateArticleLayout8,
+  renderArticleLayoutHtml: renderArticleLayoutHtml8,
+  testAiProviderConnection: testAiProviderConnection8,
+  createWechatSyncService: createWechatSyncService8,
+  createWechatSyncBridgeService: createWechatSyncBridgeService8,
+  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError7,
+  getMultiPlatformResultSummary: getMultiPlatformResultSummary8,
+  getWechatSyncResultError: getWechatSyncResultError8,
+  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId8,
+  getWechatSyncResultUrl: getWechatSyncResultUrl8,
+  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform8,
+  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay8,
+  resolveSyncAccount: resolveSyncAccount8,
+  toSyncFriendlyMessage: toSyncFriendlyMessage8,
+  createEmptyDraftCache: createEmptyDraftCache8,
+  normalizeDraftCache: normalizeDraftCache8,
+  getDraftAssociation: getDraftAssociation8,
+  setDraftAssociation: setDraftAssociation8,
+  clearDraftAssociation: clearDraftAssociation8,
+  processAllImagesService: processAllImagesService7,
+  processMathFormulasService: processMathFormulasService7,
+  cleanHtmlForDraftService: cleanHtmlForDraftService7,
+  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob8,
+  createObsidianFetchAdapter: createObsidianFetchAdapter8,
+  stripMarkdownFrontmatter: stripMarkdownFrontmatter8,
+  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls8,
+  createHtmlContainer: createHtmlContainer8,
+  getActiveDocument: getActiveDocument8,
+  getActiveWindowValue: getActiveWindowValue8,
+  htmlToText: htmlToText8,
+  setElementHtml: setElementHtml8,
+  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings8,
+  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds8,
+  hasWechatSyncCapability: hasWechatSyncCapability8,
+  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings8,
+  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms8,
+  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt8,
+  describeWechatsyncConnectionState: describeWechatsyncConnectionState8,
+  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar8,
+  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab8,
+  showMultiPlatformPublishModal: showMultiPlatformPublishModal8,
+  renderFeishuSettingsTab: renderFeishuSettingsTab8,
+  renderFeishuPublishTab: renderFeishuPublishTab8,
+  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings8,
+  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings8,
+  updateFeishuHistoryPath: updateFeishuHistoryPath8,
+  WechatAPI: WechatAPI8,
+  loadCommonJsDependency: loadCommonJsDependency8,
+  obsidianApi: obsidianApi8,
+  Plugin: Plugin8,
+  MarkdownView: MarkdownView8,
+  ItemView: ItemView8,
+  Notice: Notice8,
+  Platform: Platform8,
+  PluginSettingTab: PluginSettingTab8,
+  Setting: Setting8,
+  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY9,
+  getActiveDocumentCompat: getActiveDocumentCompat8,
+  createFallbackSvgElement: createFallbackSvgElement8,
+  revealLeafCompat: revealLeafCompat8,
+  getPluginSettings: getPluginSettings8,
+  setPluginSettings: setPluginSettings8,
+  setDestructiveButtonCompat: setDestructiveButtonCompat8,
+  refreshSettingTabCompat: refreshSettingTabCompat8,
+  toReadableError: toReadableError11,
+  isRecord: isRecord18,
+  toRecord: toRecord15,
+  toAiLayoutState: toAiLayoutState8,
+  toAiLayoutJson: toAiLayoutJson8,
+  toAiLayoutBlock: toAiLayoutBlock8,
+  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta8,
+  toAiLayoutSelection: toAiLayoutSelection8,
+  toAiLayoutFamilyStates: toAiLayoutFamilyStates8,
+  toOptionalText: toOptionalText9,
+  toImageElements: toImageElements8,
+  removeElementClass: removeElementClass8,
+  toOptionalNumber: toOptionalNumber9,
+  parseJsonRecord: parseJsonRecord9,
+  normalizeRequestUrlResponse: normalizeRequestUrlResponse9,
+  getResponseJsonRecord: getResponseJsonRecord9,
+  getProxyErrorMessage: getProxyErrorMessage9,
+  createProxyError: createProxyError9,
+  formatWechatApiError: formatWechatApiError9,
+  hasWechatUploadResult: hasWechatUploadResult9,
+  readBlobAsBase64Payload: readBlobAsBase64Payload9,
+  dataUrlToBlob: dataUrlToBlob8,
+  bufferFromBinary: bufferFromBinary9,
+  inferLocalImageMimeType: inferLocalImageMimeType8,
+  safeDecodeUriText: safeDecodeUriText8,
+  getFileUrlLocalPath: getFileUrlLocalPath8,
+  getVaultAdapterBasePath: getVaultAdapterBasePath8,
+  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath9,
+  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath9,
+  getVaultDirnameFromPath: getVaultDirnameFromPath8,
+  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW8,
+  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE8,
+  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL8,
+  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL8,
+  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL9,
+  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL8,
+  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL9,
+  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL9,
+  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL8,
+  getObsidianModalClass: getObsidianModalClass8,
+  createObsidianModal: createObsidianModal8,
+  getObsidianSetIcon: getObsidianSetIcon8,
+  getObsidianRequestUrl: getObsidianRequestUrl8,
+  getObsidianRequest: getObsidianRequest8,
+  getAppleThemeApi: getAppleThemeApi8,
+  getValueElementFromEvent: getValueElementFromEvent8,
+  getEventTargetValue: getEventTargetValue8,
+  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY8,
+  getObsidianLocale: getObsidianLocale8,
+  isChineseObsidianLocale: isChineseObsidianLocale8,
+  getImageSwipeCommandCopy: getImageSwipeCommandCopy8,
+  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout8,
+  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown8,
+  DEFAULT_SETTINGS: DEFAULT_SETTINGS8,
+  MAX_ACCOUNTS: MAX_ACCOUNTS8,
+  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS8,
+  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS8,
+  getWechatAccountPublishOptions: getWechatAccountPublishOptions8,
+  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions8,
+  isMobileClient: isMobileClient10,
+  generateId: generateId8,
+  sleep: sleep9,
+  pMap: pMap8
+} = apple_style_view_shared_exports;
+var wechatAccountStateMethods = {
   showAccountSetupEmptyState() {
     var _a5;
-    if (typeof getObsidianModalClass() !== "function") {
+    if (typeof getObsidianModalClass8() !== "function") {
       if (!this.openPluginSettings()) {
-        new Notice("\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u6DFB\u52A0\u516C\u4F17\u53F7\u8D26\u53F7\uFF08AppID / AppSecret\uFF09");
+        new Notice8("\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u6DFB\u52A0\u516C\u4F17\u53F7\u8D26\u53F7\uFF08AppID / AppSecret\uFF09");
       }
       return;
     }
-    const modal = createObsidianModal(this.app);
+    const modal = createObsidianModal8(this.app);
     modal.titleEl.setText("\u672A\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
     modal.contentEl.addClass("wechat-sync-modal");
-    if (isMobileClient2(this.app)) {
+    if (isMobileClient10(this.app)) {
       modal.contentEl.addClass("wechat-sync-modal-mobile");
       (_a5 = modal.modalEl) == null ? void 0 : _a5.addClass("wechat-sync-shell-mobile");
     }
@@ -57463,25 +59604,21 @@ var AppleStyleView = class extends ItemView {
     configBtn.onclick = () => {
       modal.close();
       if (!this.openPluginSettings()) {
-        new Notice("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
+        new Notice8("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
       }
     };
     modal.open();
-  }
-  /**
-   * @param {string} message
-   * @param {SyncModalOptionsLike} [options]
-   */
+  },
   showSyncFailureActions(message, options = {}) {
     var _a5, _b, _c;
-    if (typeof getObsidianModalClass() !== "function") {
-      new Notice(`\u274C \u540C\u6B65\u5931\u8D25: ${message}`);
+    if (typeof getObsidianModalClass8() !== "function") {
+      new Notice8(`\u274C \u540C\u6B65\u5931\u8D25: ${message}`);
       return;
     }
-    const modal = createObsidianModal(this.app);
+    const modal = createObsidianModal8(this.app);
     modal.titleEl.setText("\u540C\u6B65\u5931\u8D25");
     modal.contentEl.addClass("wechat-sync-modal");
-    if (isMobileClient2(this.app)) {
+    if (isMobileClient10(this.app)) {
       modal.contentEl.addClass("wechat-sync-modal-mobile");
       (_a5 = modal.modalEl) == null ? void 0 : _a5.addClass("wechat-sync-shell-mobile");
     }
@@ -57506,14 +59643,14 @@ var AppleStyleView = class extends ItemView {
     settingsBtn.onclick = () => {
       modal.close();
       if (!this.openPluginSettings()) {
-        new Notice("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
+        new Notice8("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
       }
     };
     if (hasDraftAssociation) {
       const resetDraftBtn = btnRow.createEl("button", { text: "\u53D6\u6D88\u5173\u8054\u5E76\u65B0\u5EFA\u8349\u7A3F" });
       resetDraftBtn.onclick = async () => {
         modal.close();
-        clearDraftAssociation(this.plugin.settings, options.draftAssociation.sourcePath);
+        clearDraftAssociation8(this.plugin.settings, options.draftAssociation.sourcePath);
         this.sessionDraftMediaId = "";
         this.sessionDraftIndex = 0;
         await this.plugin.saveSettings();
@@ -57526,20 +59663,175 @@ var AppleStyleView = class extends ItemView {
       await this.onSyncToWechat();
     };
     modal.open();
-  }
-  /**
-   * 提示用户先配置公众号账号（空状态 + 引导操作）
-   */
+  },
   promptConfigureWechatAccount() {
     this.showAccountSetupEmptyState();
   }
-  /**
-   * 显示同步选项 Modal
-   */
-  /**
-   * @param {ModalLike} modal
-   * @param {{ mode?: string, mobileSync?: boolean }} [options]
-   */
+};
+
+// views/publish-modal/wechat-modal-shell.js
+var {
+  createRenderPipelines: createRenderPipelines9,
+  buildRenderRuntime: buildRenderRuntime9,
+  resolveMarkdownSource: resolveMarkdownSource9,
+  normalizeVaultPath: normalizeVaultPath9,
+  isAbsolutePathLike: isAbsolutePathLike9,
+  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown9,
+  canUseNativePreviewFastPath: canUseNativePreviewFastPath9,
+  renderNativeMarkdown: renderNativeMarkdown9,
+  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages9,
+  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION9,
+  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO9,
+  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS9,
+  createDefaultAiSettings: createDefaultAiSettings9,
+  normalizeAiSettings: normalizeAiSettings9,
+  normalizeAiProvider: normalizeAiProvider9,
+  getAiProviderIssues: getAiProviderIssues9,
+  isAiProviderRunnable: isAiProviderRunnable9,
+  summarizeAiProviderIssues: summarizeAiProviderIssues9,
+  getLayoutFamilyList: getLayoutFamilyList9,
+  getLayoutFamilyById: getLayoutFamilyById9,
+  getColorPaletteList: getColorPaletteList9,
+  getColorPaletteById: getColorPaletteById9,
+  resolveColorPaletteForRender: resolveColorPaletteForRender9,
+  normalizeHexColor: normalizeHexColor9,
+  normalizeLayoutSelection: normalizeLayoutSelection9,
+  getArticleLayoutSelectionState: getArticleLayoutSelectionState9,
+  resolveAiProvider: resolveAiProvider9,
+  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection9,
+  normalizeArticleLayoutState: normalizeArticleLayoutState9,
+  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry9,
+  extractImageRefsFromHtml: extractImageRefsFromHtml9,
+  extractRenderedSectionFragments: extractRenderedSectionFragments9,
+  generateArticleLayout: generateArticleLayout9,
+  renderArticleLayoutHtml: renderArticleLayoutHtml9,
+  testAiProviderConnection: testAiProviderConnection9,
+  createWechatSyncService: createWechatSyncService9,
+  createWechatSyncBridgeService: createWechatSyncBridgeService9,
+  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError8,
+  getMultiPlatformResultSummary: getMultiPlatformResultSummary9,
+  getWechatSyncResultError: getWechatSyncResultError9,
+  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId9,
+  getWechatSyncResultUrl: getWechatSyncResultUrl9,
+  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform9,
+  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay9,
+  resolveSyncAccount: resolveSyncAccount9,
+  toSyncFriendlyMessage: toSyncFriendlyMessage9,
+  createEmptyDraftCache: createEmptyDraftCache9,
+  normalizeDraftCache: normalizeDraftCache9,
+  getDraftAssociation: getDraftAssociation9,
+  setDraftAssociation: setDraftAssociation9,
+  clearDraftAssociation: clearDraftAssociation9,
+  processAllImagesService: processAllImagesService8,
+  processMathFormulasService: processMathFormulasService8,
+  cleanHtmlForDraftService: cleanHtmlForDraftService8,
+  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob9,
+  createObsidianFetchAdapter: createObsidianFetchAdapter9,
+  stripMarkdownFrontmatter: stripMarkdownFrontmatter9,
+  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls9,
+  createHtmlContainer: createHtmlContainer9,
+  getActiveDocument: getActiveDocument9,
+  getActiveWindowValue: getActiveWindowValue9,
+  htmlToText: htmlToText9,
+  setElementHtml: setElementHtml9,
+  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings9,
+  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds9,
+  hasWechatSyncCapability: hasWechatSyncCapability9,
+  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings9,
+  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms9,
+  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt9,
+  describeWechatsyncConnectionState: describeWechatsyncConnectionState9,
+  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar9,
+  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab9,
+  showMultiPlatformPublishModal: showMultiPlatformPublishModal9,
+  renderFeishuSettingsTab: renderFeishuSettingsTab9,
+  renderFeishuPublishTab: renderFeishuPublishTab9,
+  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings9,
+  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings9,
+  updateFeishuHistoryPath: updateFeishuHistoryPath9,
+  WechatAPI: WechatAPI9,
+  loadCommonJsDependency: loadCommonJsDependency9,
+  obsidianApi: obsidianApi9,
+  Plugin: Plugin9,
+  MarkdownView: MarkdownView9,
+  ItemView: ItemView9,
+  Notice: Notice9,
+  Platform: Platform9,
+  PluginSettingTab: PluginSettingTab9,
+  Setting: Setting9,
+  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY10,
+  getActiveDocumentCompat: getActiveDocumentCompat9,
+  createFallbackSvgElement: createFallbackSvgElement9,
+  revealLeafCompat: revealLeafCompat9,
+  getPluginSettings: getPluginSettings9,
+  setPluginSettings: setPluginSettings9,
+  setDestructiveButtonCompat: setDestructiveButtonCompat9,
+  refreshSettingTabCompat: refreshSettingTabCompat9,
+  toReadableError: toReadableError12,
+  isRecord: isRecord19,
+  toRecord: toRecord16,
+  toAiLayoutState: toAiLayoutState9,
+  toAiLayoutJson: toAiLayoutJson9,
+  toAiLayoutBlock: toAiLayoutBlock9,
+  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta9,
+  toAiLayoutSelection: toAiLayoutSelection9,
+  toAiLayoutFamilyStates: toAiLayoutFamilyStates9,
+  toOptionalText: toOptionalText10,
+  toImageElements: toImageElements9,
+  removeElementClass: removeElementClass9,
+  toOptionalNumber: toOptionalNumber10,
+  parseJsonRecord: parseJsonRecord10,
+  normalizeRequestUrlResponse: normalizeRequestUrlResponse10,
+  getResponseJsonRecord: getResponseJsonRecord10,
+  getProxyErrorMessage: getProxyErrorMessage10,
+  createProxyError: createProxyError10,
+  formatWechatApiError: formatWechatApiError10,
+  hasWechatUploadResult: hasWechatUploadResult10,
+  readBlobAsBase64Payload: readBlobAsBase64Payload10,
+  dataUrlToBlob: dataUrlToBlob9,
+  bufferFromBinary: bufferFromBinary10,
+  inferLocalImageMimeType: inferLocalImageMimeType9,
+  safeDecodeUriText: safeDecodeUriText9,
+  getFileUrlLocalPath: getFileUrlLocalPath9,
+  getVaultAdapterBasePath: getVaultAdapterBasePath9,
+  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath10,
+  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath10,
+  getVaultDirnameFromPath: getVaultDirnameFromPath9,
+  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW9,
+  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE9,
+  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL9,
+  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL9,
+  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL10,
+  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL9,
+  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL10,
+  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL10,
+  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL9,
+  getObsidianModalClass: getObsidianModalClass9,
+  createObsidianModal: createObsidianModal9,
+  getObsidianSetIcon: getObsidianSetIcon9,
+  getObsidianRequestUrl: getObsidianRequestUrl9,
+  getObsidianRequest: getObsidianRequest9,
+  getAppleThemeApi: getAppleThemeApi9,
+  getValueElementFromEvent: getValueElementFromEvent9,
+  getEventTargetValue: getEventTargetValue9,
+  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY9,
+  getObsidianLocale: getObsidianLocale9,
+  isChineseObsidianLocale: isChineseObsidianLocale9,
+  getImageSwipeCommandCopy: getImageSwipeCommandCopy9,
+  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout9,
+  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown9,
+  DEFAULT_SETTINGS: DEFAULT_SETTINGS9,
+  MAX_ACCOUNTS: MAX_ACCOUNTS9,
+  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS9,
+  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS9,
+  getWechatAccountPublishOptions: getWechatAccountPublishOptions9,
+  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions9,
+  isMobileClient: isMobileClient11,
+  generateId: generateId9,
+  sleep: sleep10,
+  pMap: pMap9
+} = apple_style_view_shared_exports;
+var wechatModalShellMethods = {
   preparePublishModalShell(modal, { mode = "wechat", mobileSync = false } = {}) {
     var _a5, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q;
     modal.titleEl.setText("\u53D1\u5E03\u4E0E\u5206\u53D1");
@@ -57564,12 +59856,7 @@ var AppleStyleView = class extends ItemView {
       modal.contentEl.addClass("wechat-multiplatform-modal");
       (_q = modal.modalEl) == null ? void 0 : _q.addClass("wechat-multiplatform-shell");
     }
-  }
-  /**
-   * @param {ModalLike} modal
-   * @param {string} [activeMode]
-   * @returns {{ wechatTab: ObsidianElementLike, multiPlatformTab: ObsidianElementLike }}
-   */
+  },
   createPublishModeTabs(modal, activeMode = "wechat") {
     const publishModeTabs = modal.contentEl.createDiv({ cls: "wechat-publish-mode-tabs" });
     const wechatTab = publishModeTabs.createEl("button", {
@@ -57583,16 +59870,178 @@ var AppleStyleView = class extends ItemView {
     const multiPlatformTab = publishModeTabs.createEl("button", {
       cls: `wechat-publish-mode-tab${activeMode === "multi" ? " is-active" : ""}`
     });
-    multiPlatformTab.createEl("span", { text: MULTI_PLATFORM_TAB_LABEL });
+    multiPlatformTab.createEl("span", { text: MULTI_PLATFORM_TAB_LABEL9 });
     return { wechatTab, feishuTab, multiPlatformTab };
   }
-  /**
-   * @param {SyncModalOptionsLike} [options]
-   */
+};
+
+// views/publish-modal/wechat-sync-modal.js
+var {
+  createRenderPipelines: createRenderPipelines10,
+  buildRenderRuntime: buildRenderRuntime10,
+  resolveMarkdownSource: resolveMarkdownSource10,
+  normalizeVaultPath: normalizeVaultPath10,
+  isAbsolutePathLike: isAbsolutePathLike10,
+  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown10,
+  canUseNativePreviewFastPath: canUseNativePreviewFastPath10,
+  renderNativeMarkdown: renderNativeMarkdown10,
+  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages10,
+  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION10,
+  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO10,
+  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS10,
+  createDefaultAiSettings: createDefaultAiSettings10,
+  normalizeAiSettings: normalizeAiSettings10,
+  normalizeAiProvider: normalizeAiProvider10,
+  getAiProviderIssues: getAiProviderIssues10,
+  isAiProviderRunnable: isAiProviderRunnable10,
+  summarizeAiProviderIssues: summarizeAiProviderIssues10,
+  getLayoutFamilyList: getLayoutFamilyList10,
+  getLayoutFamilyById: getLayoutFamilyById10,
+  getColorPaletteList: getColorPaletteList10,
+  getColorPaletteById: getColorPaletteById10,
+  resolveColorPaletteForRender: resolveColorPaletteForRender10,
+  normalizeHexColor: normalizeHexColor10,
+  normalizeLayoutSelection: normalizeLayoutSelection10,
+  getArticleLayoutSelectionState: getArticleLayoutSelectionState10,
+  resolveAiProvider: resolveAiProvider10,
+  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection10,
+  normalizeArticleLayoutState: normalizeArticleLayoutState10,
+  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry10,
+  extractImageRefsFromHtml: extractImageRefsFromHtml10,
+  extractRenderedSectionFragments: extractRenderedSectionFragments10,
+  generateArticleLayout: generateArticleLayout10,
+  renderArticleLayoutHtml: renderArticleLayoutHtml10,
+  testAiProviderConnection: testAiProviderConnection10,
+  createWechatSyncService: createWechatSyncService10,
+  createWechatSyncBridgeService: createWechatSyncBridgeService10,
+  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError9,
+  getMultiPlatformResultSummary: getMultiPlatformResultSummary10,
+  getWechatSyncResultError: getWechatSyncResultError10,
+  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId10,
+  getWechatSyncResultUrl: getWechatSyncResultUrl10,
+  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform10,
+  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay10,
+  resolveSyncAccount: resolveSyncAccount10,
+  toSyncFriendlyMessage: toSyncFriendlyMessage10,
+  createEmptyDraftCache: createEmptyDraftCache10,
+  normalizeDraftCache: normalizeDraftCache10,
+  getDraftAssociation: getDraftAssociation10,
+  setDraftAssociation: setDraftAssociation10,
+  clearDraftAssociation: clearDraftAssociation10,
+  processAllImagesService: processAllImagesService9,
+  processMathFormulasService: processMathFormulasService9,
+  cleanHtmlForDraftService: cleanHtmlForDraftService9,
+  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob10,
+  createObsidianFetchAdapter: createObsidianFetchAdapter10,
+  stripMarkdownFrontmatter: stripMarkdownFrontmatter10,
+  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls10,
+  createHtmlContainer: createHtmlContainer10,
+  getActiveDocument: getActiveDocument10,
+  getActiveWindowValue: getActiveWindowValue10,
+  htmlToText: htmlToText10,
+  setElementHtml: setElementHtml10,
+  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings10,
+  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds10,
+  hasWechatSyncCapability: hasWechatSyncCapability10,
+  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings10,
+  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms10,
+  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt10,
+  describeWechatsyncConnectionState: describeWechatsyncConnectionState10,
+  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar10,
+  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab10,
+  showMultiPlatformPublishModal: showMultiPlatformPublishModal10,
+  renderFeishuSettingsTab: renderFeishuSettingsTab10,
+  renderFeishuPublishTab: renderFeishuPublishTab10,
+  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings10,
+  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings10,
+  updateFeishuHistoryPath: updateFeishuHistoryPath10,
+  WechatAPI: WechatAPI10,
+  loadCommonJsDependency: loadCommonJsDependency10,
+  obsidianApi: obsidianApi10,
+  Plugin: Plugin10,
+  MarkdownView: MarkdownView10,
+  ItemView: ItemView10,
+  Notice: Notice10,
+  Platform: Platform10,
+  PluginSettingTab: PluginSettingTab10,
+  Setting: Setting10,
+  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY11,
+  getActiveDocumentCompat: getActiveDocumentCompat10,
+  createFallbackSvgElement: createFallbackSvgElement10,
+  revealLeafCompat: revealLeafCompat10,
+  getPluginSettings: getPluginSettings10,
+  setPluginSettings: setPluginSettings10,
+  setDestructiveButtonCompat: setDestructiveButtonCompat10,
+  refreshSettingTabCompat: refreshSettingTabCompat10,
+  toReadableError: toReadableError13,
+  isRecord: isRecord20,
+  toRecord: toRecord17,
+  toAiLayoutState: toAiLayoutState10,
+  toAiLayoutJson: toAiLayoutJson10,
+  toAiLayoutBlock: toAiLayoutBlock10,
+  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta10,
+  toAiLayoutSelection: toAiLayoutSelection10,
+  toAiLayoutFamilyStates: toAiLayoutFamilyStates10,
+  toOptionalText: toOptionalText11,
+  toImageElements: toImageElements10,
+  removeElementClass: removeElementClass10,
+  toOptionalNumber: toOptionalNumber11,
+  parseJsonRecord: parseJsonRecord11,
+  normalizeRequestUrlResponse: normalizeRequestUrlResponse11,
+  getResponseJsonRecord: getResponseJsonRecord11,
+  getProxyErrorMessage: getProxyErrorMessage11,
+  createProxyError: createProxyError11,
+  formatWechatApiError: formatWechatApiError11,
+  hasWechatUploadResult: hasWechatUploadResult11,
+  readBlobAsBase64Payload: readBlobAsBase64Payload11,
+  dataUrlToBlob: dataUrlToBlob10,
+  bufferFromBinary: bufferFromBinary11,
+  inferLocalImageMimeType: inferLocalImageMimeType10,
+  safeDecodeUriText: safeDecodeUriText10,
+  getFileUrlLocalPath: getFileUrlLocalPath10,
+  getVaultAdapterBasePath: getVaultAdapterBasePath10,
+  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath11,
+  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath11,
+  getVaultDirnameFromPath: getVaultDirnameFromPath10,
+  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW10,
+  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE10,
+  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL10,
+  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL10,
+  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL11,
+  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL10,
+  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL11,
+  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL11,
+  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL10,
+  getObsidianModalClass: getObsidianModalClass10,
+  createObsidianModal: createObsidianModal10,
+  getObsidianSetIcon: getObsidianSetIcon10,
+  getObsidianRequestUrl: getObsidianRequestUrl10,
+  getObsidianRequest: getObsidianRequest10,
+  getAppleThemeApi: getAppleThemeApi10,
+  getValueElementFromEvent: getValueElementFromEvent10,
+  getEventTargetValue: getEventTargetValue10,
+  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY10,
+  getObsidianLocale: getObsidianLocale10,
+  isChineseObsidianLocale: isChineseObsidianLocale10,
+  getImageSwipeCommandCopy: getImageSwipeCommandCopy10,
+  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout10,
+  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown10,
+  DEFAULT_SETTINGS: DEFAULT_SETTINGS10,
+  MAX_ACCOUNTS: MAX_ACCOUNTS10,
+  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS10,
+  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS10,
+  getWechatAccountPublishOptions: getWechatAccountPublishOptions10,
+  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions10,
+  isMobileClient: isMobileClient12,
+  generateId: generateId10,
+  sleep: sleep11,
+  pMap: pMap10
+} = apple_style_view_shared_exports;
+var wechatSyncModalMethods = {
   showSyncModal(options = {}) {
     var _a5, _b, _c;
     if (!this.currentHtml) {
-      new Notice(this.getMissingRenderNotice());
+      new Notice10(this.getMissingRenderNotice());
       return;
     }
     const accounts = this.plugin.settings.wechatAccounts || [];
@@ -57607,8 +60056,8 @@ var AppleStyleView = class extends ItemView {
           return;
         }
       }
-      const modal2 = options.modal || createObsidianModal(this.app);
-      const mobileSync2 = isMobileClient2(this.app);
+      const modal2 = options.modal || createObsidianModal10(this.app);
+      const mobileSync2 = isMobileClient12(this.app);
       this.preparePublishModalShell(modal2, { mode: "wechat", mobileSync: mobileSync2 });
       const { feishuTab: feishuTab2, multiPlatformTab: multiPlatformTab2 } = this.createPublishModeTabs(modal2, "wechat");
       if (feishuTab2) {
@@ -57628,9 +60077,9 @@ var AppleStyleView = class extends ItemView {
       }
       return;
     }
-    const modal = options.modal || createObsidianModal(this.app);
+    const modal = options.modal || createObsidianModal10(this.app);
     const shouldOpenModal = !options.modal;
-    const mobileSync = isMobileClient2(this.app);
+    const mobileSync = isMobileClient12(this.app);
     this.preparePublishModalShell(modal, { mode: "wechat", mobileSync });
     const { feishuTab, multiPlatformTab } = this.createPublishModeTabs(modal, "wechat");
     if (feishuTab) {
@@ -57659,13 +60108,13 @@ var AppleStyleView = class extends ItemView {
     const getSelectedAccount = () => {
       const resolvedAccount = (
         /** @type {unknown} */
-        resolveSyncAccount({
+        resolveSyncAccount10({
           accounts: this.plugin.settings.wechatAccounts || [],
           selectedAccountId,
           defaultAccountId: this.plugin.settings.defaultAccountId
         })
       );
-      return isRecord9(resolvedAccount) ? (
+      return isRecord20(resolvedAccount) ? (
         /** @type {WechatAccountLike} */
         resolvedAccount
       ) : null;
@@ -57674,7 +60123,7 @@ var AppleStyleView = class extends ItemView {
       var _a6;
       return currentPath ? (
         /** @type {DraftAssociationLike | null} */
-        getDraftAssociation(this.plugin.settings, currentPath, ((_a6 = getSelectedAccount()) == null ? void 0 : _a6.id) || selectedAccountId)
+        getDraftAssociation10(this.plugin.settings, currentPath, ((_a6 = getSelectedAccount()) == null ? void 0 : _a6.id) || selectedAccountId)
       ) : null;
     };
     let draftAssociation = getSelectedDraftAssociation();
@@ -57705,7 +60154,7 @@ var AppleStyleView = class extends ItemView {
           option.selected = true;
       }
       accountSelect.addEventListener("change", (e) => {
-        selectedAccountId = getEventTargetValue(e, selectedAccountId);
+        selectedAccountId = getEventTargetValue10(e, selectedAccountId);
         draftAssociation = getSelectedDraftAssociation();
         forceNewDraft = false;
         if (typeof updatePreview === "function")
@@ -57802,7 +60251,7 @@ var AppleStyleView = class extends ItemView {
     });
     const digestSection = advancedBody.createDiv({ cls: "wechat-modal-section" });
     digestSection.createEl("label", { text: "\u6587\u7AE0\u6458\u8981\uFF08\u53EF\u9009\uFF09", cls: "wechat-modal-label" });
-    const autoDigest = htmlToText(this.currentHtml || "").replace(/\s+/g, " ").trim().substring(0, 45);
+    const autoDigest = htmlToText10(this.currentHtml || "").replace(/\s+/g, " ").trim().substring(0, 45);
     const initialDigest = (cachedState == null ? void 0 : cachedState.digest) !== void 0 ? cachedState.digest : frontmatterMeta.excerpt || autoDigest;
     const digestInput = (
       /** @type {ObsidianInputLike & { rows: number, maxLength: number }} */
@@ -57857,7 +60306,7 @@ var AppleStyleView = class extends ItemView {
         }
         forceNewDraft = true;
         if (currentPath) {
-          clearDraftAssociation(this.plugin.settings, currentPath);
+          clearDraftAssociation10(this.plugin.settings, currentPath);
           await this.plugin.saveSettings();
         }
         draftAssociation = null;
@@ -57873,7 +60322,7 @@ var AppleStyleView = class extends ItemView {
     updateDraftStatusUI();
     syncBtn.onclick = async () => {
       if (!coverBase64 && !thumbMediaId) {
-        new Notice("\u274C \u8BF7\u5148\u8BBE\u7F6E\u5C01\u9762\u56FE");
+        new Notice10("\u274C \u8BF7\u5148\u8BBE\u7F6E\u5C01\u9762\u56FE");
         return;
       }
       modal.close();
@@ -57887,7 +60336,7 @@ var AppleStyleView = class extends ItemView {
       await this.onSyncToWechat();
     };
     uploadBtn.onclick = () => {
-      const activeDocument = getActiveDocumentCompat();
+      const activeDocument = getActiveDocumentCompat10();
       if (!activeDocument)
         return;
       const input = (
@@ -57928,10 +60377,10 @@ var AppleStyleView = class extends ItemView {
     selectMaterialBtn.onclick = async () => {
       const account = getSelectedAccount();
       if (!account) {
-        new Notice("\u8BF7\u5148\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
+        new Notice10("\u8BF7\u5148\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
         return;
       }
-      const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
+      const api = new WechatAPI10(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
       await this.showMaterialPickerModal(api, (material) => {
         thumbMediaId = material.mediaId;
         coverBase64 = material.url || "";
@@ -57952,13 +60401,1074 @@ var AppleStyleView = class extends ItemView {
     if (shouldOpenModal)
       modal.open();
   }
-  /**
-   * @param {WechatAPI} api
-   * @param {string} type
-   * @param {number} offset
-   * @param {number} count
-   * @returns {string}
-   */
+};
+
+// views/publish-modal/wechat-multiplatform-actions.js
+var {
+  createRenderPipelines: createRenderPipelines11,
+  buildRenderRuntime: buildRenderRuntime11,
+  resolveMarkdownSource: resolveMarkdownSource11,
+  normalizeVaultPath: normalizeVaultPath11,
+  isAbsolutePathLike: isAbsolutePathLike11,
+  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown11,
+  canUseNativePreviewFastPath: canUseNativePreviewFastPath11,
+  renderNativeMarkdown: renderNativeMarkdown11,
+  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages11,
+  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION11,
+  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO11,
+  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS11,
+  createDefaultAiSettings: createDefaultAiSettings11,
+  normalizeAiSettings: normalizeAiSettings11,
+  normalizeAiProvider: normalizeAiProvider11,
+  getAiProviderIssues: getAiProviderIssues11,
+  isAiProviderRunnable: isAiProviderRunnable11,
+  summarizeAiProviderIssues: summarizeAiProviderIssues11,
+  getLayoutFamilyList: getLayoutFamilyList11,
+  getLayoutFamilyById: getLayoutFamilyById11,
+  getColorPaletteList: getColorPaletteList11,
+  getColorPaletteById: getColorPaletteById11,
+  resolveColorPaletteForRender: resolveColorPaletteForRender11,
+  normalizeHexColor: normalizeHexColor11,
+  normalizeLayoutSelection: normalizeLayoutSelection11,
+  getArticleLayoutSelectionState: getArticleLayoutSelectionState11,
+  resolveAiProvider: resolveAiProvider11,
+  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection11,
+  normalizeArticleLayoutState: normalizeArticleLayoutState11,
+  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry11,
+  extractImageRefsFromHtml: extractImageRefsFromHtml11,
+  extractRenderedSectionFragments: extractRenderedSectionFragments11,
+  generateArticleLayout: generateArticleLayout11,
+  renderArticleLayoutHtml: renderArticleLayoutHtml11,
+  testAiProviderConnection: testAiProviderConnection11,
+  createWechatSyncService: createWechatSyncService11,
+  createWechatSyncBridgeService: createWechatSyncBridgeService11,
+  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError10,
+  getMultiPlatformResultSummary: getMultiPlatformResultSummary11,
+  getWechatSyncResultError: getWechatSyncResultError11,
+  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId11,
+  getWechatSyncResultUrl: getWechatSyncResultUrl11,
+  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform11,
+  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay11,
+  resolveSyncAccount: resolveSyncAccount11,
+  toSyncFriendlyMessage: toSyncFriendlyMessage11,
+  createEmptyDraftCache: createEmptyDraftCache11,
+  normalizeDraftCache: normalizeDraftCache11,
+  getDraftAssociation: getDraftAssociation11,
+  setDraftAssociation: setDraftAssociation11,
+  clearDraftAssociation: clearDraftAssociation11,
+  processAllImagesService: processAllImagesService10,
+  processMathFormulasService: processMathFormulasService10,
+  cleanHtmlForDraftService: cleanHtmlForDraftService10,
+  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob11,
+  createObsidianFetchAdapter: createObsidianFetchAdapter11,
+  stripMarkdownFrontmatter: stripMarkdownFrontmatter11,
+  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls11,
+  createHtmlContainer: createHtmlContainer11,
+  getActiveDocument: getActiveDocument11,
+  getActiveWindowValue: getActiveWindowValue11,
+  htmlToText: htmlToText11,
+  setElementHtml: setElementHtml11,
+  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings11,
+  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds11,
+  hasWechatSyncCapability: hasWechatSyncCapability11,
+  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings11,
+  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms11,
+  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt11,
+  describeWechatsyncConnectionState: describeWechatsyncConnectionState11,
+  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar11,
+  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab11,
+  showMultiPlatformPublishModal: showMultiPlatformPublishModal11,
+  renderFeishuSettingsTab: renderFeishuSettingsTab11,
+  renderFeishuPublishTab: renderFeishuPublishTab11,
+  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings11,
+  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings11,
+  updateFeishuHistoryPath: updateFeishuHistoryPath11,
+  WechatAPI: WechatAPI11,
+  loadCommonJsDependency: loadCommonJsDependency11,
+  obsidianApi: obsidianApi11,
+  Plugin: Plugin11,
+  MarkdownView: MarkdownView11,
+  ItemView: ItemView11,
+  Notice: Notice11,
+  Platform: Platform11,
+  PluginSettingTab: PluginSettingTab11,
+  Setting: Setting11,
+  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY12,
+  getActiveDocumentCompat: getActiveDocumentCompat11,
+  createFallbackSvgElement: createFallbackSvgElement11,
+  revealLeafCompat: revealLeafCompat11,
+  getPluginSettings: getPluginSettings11,
+  setPluginSettings: setPluginSettings11,
+  setDestructiveButtonCompat: setDestructiveButtonCompat11,
+  refreshSettingTabCompat: refreshSettingTabCompat11,
+  toReadableError: toReadableError14,
+  isRecord: isRecord21,
+  toRecord: toRecord18,
+  toAiLayoutState: toAiLayoutState11,
+  toAiLayoutJson: toAiLayoutJson11,
+  toAiLayoutBlock: toAiLayoutBlock11,
+  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta11,
+  toAiLayoutSelection: toAiLayoutSelection11,
+  toAiLayoutFamilyStates: toAiLayoutFamilyStates11,
+  toOptionalText: toOptionalText12,
+  toImageElements: toImageElements11,
+  removeElementClass: removeElementClass11,
+  toOptionalNumber: toOptionalNumber12,
+  parseJsonRecord: parseJsonRecord12,
+  normalizeRequestUrlResponse: normalizeRequestUrlResponse12,
+  getResponseJsonRecord: getResponseJsonRecord12,
+  getProxyErrorMessage: getProxyErrorMessage12,
+  createProxyError: createProxyError12,
+  formatWechatApiError: formatWechatApiError12,
+  hasWechatUploadResult: hasWechatUploadResult12,
+  readBlobAsBase64Payload: readBlobAsBase64Payload12,
+  dataUrlToBlob: dataUrlToBlob11,
+  bufferFromBinary: bufferFromBinary12,
+  inferLocalImageMimeType: inferLocalImageMimeType11,
+  safeDecodeUriText: safeDecodeUriText11,
+  getFileUrlLocalPath: getFileUrlLocalPath11,
+  getVaultAdapterBasePath: getVaultAdapterBasePath11,
+  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath12,
+  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath12,
+  getVaultDirnameFromPath: getVaultDirnameFromPath11,
+  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW11,
+  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE11,
+  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL11,
+  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL11,
+  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL12,
+  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL11,
+  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL12,
+  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL12,
+  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL11,
+  getObsidianModalClass: getObsidianModalClass11,
+  createObsidianModal: createObsidianModal11,
+  getObsidianSetIcon: getObsidianSetIcon11,
+  getObsidianRequestUrl: getObsidianRequestUrl11,
+  getObsidianRequest: getObsidianRequest11,
+  getAppleThemeApi: getAppleThemeApi11,
+  getValueElementFromEvent: getValueElementFromEvent11,
+  getEventTargetValue: getEventTargetValue11,
+  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY11,
+  getObsidianLocale: getObsidianLocale11,
+  isChineseObsidianLocale: isChineseObsidianLocale11,
+  getImageSwipeCommandCopy: getImageSwipeCommandCopy11,
+  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout11,
+  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown11,
+  DEFAULT_SETTINGS: DEFAULT_SETTINGS11,
+  MAX_ACCOUNTS: MAX_ACCOUNTS11,
+  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS11,
+  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS11,
+  getWechatAccountPublishOptions: getWechatAccountPublishOptions11,
+  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions11,
+  isMobileClient: isMobileClient13,
+  generateId: generateId11,
+  sleep: sleep12,
+  pMap: pMap11
+} = apple_style_view_shared_exports;
+var wechatMultiPlatformActionMethods = {
+  async openWechatsyncTask(syncId) {
+    const taskId = String(syncId || "").trim();
+    if (!taskId) {
+      new Notice11("\u5F53\u524D\u4EFB\u52A1\u6CA1\u6709 syncId\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u5386\u53F2\u8BB0\u5F55\u4E2D\u67E5\u770B\u6700\u8FD1\u4EFB\u52A1");
+      return false;
+    }
+    const settings = normalizeMultiPlatformSyncSettings11(this.plugin.settings.multiPlatformSync);
+    const bridge = this.plugin.getWechatSyncBridgeService();
+    try {
+      await bridge.start();
+      if (typeof bridge.waitForConnection === "function") {
+        await bridge.waitForConnection(8e3);
+      }
+      const capabilities = settings.connection.capabilities || {};
+      if (capabilities.openSyncTask !== false) {
+        try {
+          const result = typeof bridge.openSyncTask === "function" ? toRecord18(await bridge.openSyncTask(taskId, { timeoutMs: 8e3 })) : {};
+          if ((result == null ? void 0 : result.opened) !== false) {
+            new Notice11("\u5DF2\u6253\u5F00\u6D4F\u89C8\u5668\u63D2\u4EF6\u4EFB\u52A1\u7A97\u53E3");
+            return true;
+          }
+        } catch (error) {
+          if (!isWechatSyncUnsupportedMethodError10(error))
+            throw error;
+          const readableError = toReadableError14(error);
+          const errorRecord = toRecord18(error);
+          console.warn("[Wechatsync] openSyncTask failed, falling back to task link", {
+            code: errorRecord.code,
+            message: readableError.message
+          });
+        }
+      }
+      if (capabilities.getSyncTaskLink !== false) {
+        try {
+          const linkResult = typeof bridge.getSyncTaskLink === "function" ? toRecord18(await bridge.getSyncTaskLink(taskId, { timeoutMs: 5e3 })) : {};
+          const url = String((linkResult == null ? void 0 : linkResult.url) || "").trim();
+          if ((linkResult == null ? void 0 : linkResult.canOpen) !== false && url) {
+            return this.openExternalUrl(url, { allowExtensionUrls: true });
+          }
+          if (typeof (linkResult == null ? void 0 : linkResult.message) === "string" && linkResult.message) {
+            new Notice11(linkResult.message, 8e3);
+            return false;
+          }
+        } catch (error) {
+          if (!isWechatSyncUnsupportedMethodError10(error))
+            throw error;
+          const readableError = toReadableError14(error);
+          const errorRecord = toRecord18(error);
+          console.warn("[Wechatsync] getSyncTaskLink failed", {
+            code: errorRecord.code,
+            message: readableError.message
+          });
+        }
+      }
+      new Notice11(`\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u5386\u53F2\u8BB0\u5F55\u4E2D\u67E5\u770B\u4EFB\u52A1\uFF1A${taskId}`, 1e4);
+      return false;
+    } catch (error) {
+      const readableError = toReadableError14(error);
+      const errorRecord = toRecord18(error);
+      console.error("[Wechatsync] open task failed", {
+        syncId: taskId,
+        code: errorRecord.code,
+        message: readableError.message
+      });
+      new Notice11(`\u65E0\u6CD5\u6253\u5F00\u6D4F\u89C8\u5668\u63D2\u4EF6\u4EFB\u52A1\uFF1A${readableError.message}`, 1e4);
+      return false;
+    }
+  },
+  async getWechatsyncTaskSnapshot(bridge, syncId) {
+    const taskId = String(syncId || "").trim();
+    if (!taskId)
+      return null;
+    const settings = normalizeMultiPlatformSyncSettings11(this.plugin.settings.multiPlatformSync);
+    if (!hasWechatSyncCapability11(settings, "getSyncTask"))
+      return null;
+    try {
+      const task = typeof bridge.getSyncTask === "function" ? toRecord18(await bridge.getSyncTask(taskId, { timeoutMs: 5e3 })) : {};
+      if ((task == null ? void 0 : task.found) === false)
+        return task;
+      return Object.keys(task).length ? (
+        /** @type {WechatsyncTaskSnapshotLike} */
+        task
+      ) : null;
+    } catch (error) {
+      if (isWechatSyncUnsupportedMethodError10(error))
+        return null;
+      const readableError = toReadableError14(error);
+      const errorRecord = toRecord18(error);
+      console.warn("[Wechatsync] getSyncTask failed after enqueue", {
+        syncId: taskId,
+        code: errorRecord.code,
+        message: readableError.message
+      });
+      return null;
+    }
+  },
+  showWechatsyncEnqueueAcceptedModal({
+    syncId = "",
+    title = "",
+    platforms = [],
+    task = null,
+    usedFallbackSend = false,
+    quotaResult = null
+  } = {}) {
+    var _a5, _b, _c, _d, _e, _f;
+    const taskId = String(syncId || "").trim();
+    const quotaRecord = quotaResult || {};
+    const requestedPlatforms = Array.isArray(platforms) ? platforms : [];
+    const skippedPlatformIds = parseWechatsyncPlatformIds11(Array.isArray(quotaRecord.skippedPlatforms) ? quotaRecord.skippedPlatforms : []);
+    const quotaPublishedPlatforms = Array.isArray(quotaRecord.publishedPlatforms) ? quotaRecord.publishedPlatforms : [];
+    const quotaPlatforms = Array.isArray(quotaRecord.platforms) ? quotaRecord.platforms : [];
+    const publishedPlatformIds = parseWechatsyncPlatformIds11(
+      quotaPublishedPlatforms.length ? quotaPublishedPlatforms : quotaPlatforms.length ? quotaPlatforms : requestedPlatforms
+    );
+    const skippedPlatformSet = new Set(skippedPlatformIds);
+    const publishedPlatformSet = new Set(publishedPlatformIds);
+    if (typeof getObsidianModalClass11() !== "function") {
+      const syncIdText = taskId ? `\uFF08\u4EFB\u52A1 ${taskId}\uFF09` : "";
+      const fallbackText = usedFallbackSend ? "\u5F53\u524D\u63D2\u4EF6\u672A\u63D0\u4F9B\u4EFB\u52A1 ID\uFF0C" : "";
+      const quotaText = skippedPlatformIds.length ? `\u5DF2\u8DF3\u8FC7 ${skippedPlatformIds.length} \u4E2A\u8D85\u51FA\u4ECA\u65E5\u989D\u5EA6\u7684\u5E73\u53F0\u3002` : "";
+      new Notice11(`\u2705 \u5DF2\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6${syncIdText}\u3002${fallbackText}${quotaText}\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u7684\u5386\u53F2\u6216\u76EE\u6807\u5E73\u53F0\u8349\u7A3F\u7BB1\u67E5\u770B\u7ED3\u679C\u3002`, 1e4);
+      return;
+    }
+    const modal = createObsidianModal11(this.app);
+    modal.titleEl.setText("\u5DF2\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6");
+    (_b = (_a5 = modal.titleEl).addClass) == null ? void 0 : _b.call(_a5, "wechat-multiplatform-title");
+    modal.contentEl.addClass("wechat-sync-modal");
+    modal.contentEl.addClass("wechat-multiplatform-modal");
+    modal.contentEl.addClass("wechat-multiplatform-result-modal");
+    (_c = modal.modalEl) == null ? void 0 : _c.addClass("wechat-publish-shell");
+    (_d = modal.modalEl) == null ? void 0 : _d.addClass("wechat-multiplatform-shell");
+    const summary = modal.contentEl.createDiv({
+      cls: `wechat-multiplatform-result-summary ${skippedPlatformIds.length ? "is-warning" : "is-success"}`
+    });
+    const multiPlatformSettings = normalizeMultiPlatformSyncSettings11(this.plugin.settings.multiPlatformSync);
+    const platformCatalog = getAvailableWechatsyncPlatforms11(multiPlatformSettings);
+    const platformById = new Map(platformCatalog.map((platform) => [platform.id, platform]));
+    const sortPlatformItems = (items = [], getId = (item) => String(item || "")) => {
+      var _a6;
+      return (
+        /** @type {unknown[]} */
+        sortWechatsyncPlatformItemsForDisplay11(Array.isArray(items) ? items : [], {
+          bridgeConnected: ((_a6 = multiPlatformSettings.connection) == null ? void 0 : _a6.status) === "connected",
+          getPlatformId: getId,
+          getPlatform: (item) => {
+            const id = getId(item);
+            return platformById.get(id) || normalizeWechatsyncPlatform11(
+              item && typeof item === "object" ? { ...item, id } : { id }
+            ) || { id };
+          }
+        })
+      );
+    };
+    const formatPlatformNames = (ids = []) => {
+      const names = sortPlatformItems(parseWechatsyncPlatformIds11(Array.isArray(ids) ? ids : [])).map((id) => {
+        var _a6;
+        return ((_a6 = platformById.get(String(id))) == null ? void 0 : _a6.name) || String(id);
+      }).filter(Boolean);
+      return names.length ? names.join("\u3001") : "\u65E0";
+    };
+    summary.createEl("div", {
+      cls: "wechat-multiplatform-result-summary-title",
+      text: skippedPlatformIds.length ? "\u5DF2\u6309\u514D\u8D39\u7248\u989D\u5EA6\u6295\u9012" : "\u4EFB\u52A1\u5DF2\u4EA4\u7ED9\u6D4F\u89C8\u5668\u63D2\u4EF6"
+    });
+    summary.createEl("p", {
+      text: skippedPlatformIds.length ? `\u5DF2\u53D1\u5E03\u5230\uFF1A${formatPlatformNames(publishedPlatformIds)}\u3002\u8DF3\u8FC7 ${skippedPlatformIds.length} \u4E2A\u8D85\u51FA\u4ECA\u65E5\u989D\u5EA6\u7684\u5E73\u53F0\uFF1A${formatPlatformNames(skippedPlatformIds)}\u3002\u5347\u7EA7 Pro \u53EF\u53D1\u5E03\u5230\u5168\u90E8\u5E73\u53F0\u3002` : taskId ? "Obsidian \u5DF2\u5B8C\u6210\u6295\u9012\uFF0C\u4E0D\u4F1A\u957F\u65F6\u95F4\u7B49\u5F85\u6240\u6709\u5E73\u53F0\u5B8C\u6210\u3002\u540E\u7EED\u8349\u7A3F\u94FE\u63A5\u3001\u5931\u8D25\u539F\u56E0\u548C\u91CD\u8BD5\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4EFB\u52A1\u7A97\u53E3\u91CC\u67E5\u770B\u3002" : "\u5F53\u524D\u63D2\u4EF6\u7248\u672C\u6CA1\u6709\u8FD4\u56DE\u4EFB\u52A1 ID\u3002\u6587\u7AE0\u5DF2\u53D1\u9001\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u5386\u53F2\u8BB0\u5F55\u4E2D\u67E5\u770B\u6700\u8FD1\u4EFB\u52A1\u3002"
+    });
+    const list = modal.contentEl.createDiv({ cls: "wechat-multiplatform-result-list" });
+    let taskPlatformSource = [];
+    if (Array.isArray(task == null ? void 0 : task.platforms) && task.platforms.length) {
+      taskPlatformSource = task.platforms;
+    } else {
+      const queuedPlatformIds = publishedPlatformIds.length ? publishedPlatformIds : requestedPlatforms;
+      taskPlatformSource = queuedPlatformIds.map((id) => (
+        /** @type {Record<string, unknown>} */
+        { id, status: "queued" }
+      ));
+    }
+    const rawTaskPlatforms = taskPlatformSource;
+    const taskPlatforms = sortPlatformItems(rawTaskPlatforms.filter((item) => {
+      const itemRecord = toRecord18(item);
+      const platformId = parseWechatsyncPlatformIds11([itemRecord.id || itemRecord.platform || item])[0] || "";
+      if (!platformId)
+        return false;
+      if (skippedPlatformSet.has(platformId))
+        return false;
+      if (skippedPlatformSet.size > 0 && publishedPlatformSet.size > 0) {
+        return publishedPlatformSet.has(platformId);
+      }
+      return true;
+    }), (item) => {
+      const itemRecord = toRecord18(item);
+      return parseWechatsyncPlatformIds11([itemRecord.id || itemRecord.platform || item])[0] || "";
+    });
+    if (taskId) {
+      const taskRow = list.createDiv({ cls: "wechat-multiplatform-result-row" });
+      taskRow.createEl("div", { text: "\u4EFB\u52A1", cls: "wechat-multiplatform-result-pill is-success" });
+      const taskBody = taskRow.createDiv({ cls: "wechat-multiplatform-result-body" });
+      taskBody.createEl("div", {
+        text: (task == null ? void 0 : task.found) === false ? "\u63D2\u4EF6\u6682\u672A\u8FD4\u56DE\u4EFB\u52A1\u8BE6\u60C5" : title || (task == null ? void 0 : task.title) || "\u591A\u5E73\u53F0\u53D1\u5E03\u4EFB\u52A1",
+        cls: "wechat-multiplatform-result-name"
+      });
+      if ((task == null ? void 0 : task.found) === false) {
+        taskBody.createEl("div", {
+          text: "\u8BF7\u6253\u5F00\u63D2\u4EF6\u5386\u53F2\u67E5\u770B\u3002",
+          cls: "wechat-multiplatform-result-detail"
+        });
+      }
+    }
+    for (const item of taskPlatforms) {
+      const itemRecord = toRecord18(item);
+      const platformId = String(itemRecord.id || itemRecord.platform || item || "").trim();
+      if (!platformId)
+        continue;
+      const platformName = typeof itemRecord.name === "string" ? itemRecord.name : ((_e = platformById.get(platformId)) == null ? void 0 : _e.name) || platformId;
+      const row = list.createDiv({ cls: "wechat-multiplatform-result-row" });
+      row.createEl("div", { text: "\u5DF2\u6295\u9012", cls: "wechat-multiplatform-result-pill" });
+      const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
+      body.createEl("div", { text: platformName, cls: "wechat-multiplatform-result-name" });
+    }
+    for (const platformItem of sortPlatformItems(skippedPlatformIds)) {
+      const platformId = String(platformItem || "");
+      const platformName = ((_f = platformById.get(platformId)) == null ? void 0 : _f.name) || platformId;
+      const row = list.createDiv({ cls: "wechat-multiplatform-result-row is-warning" });
+      row.createEl("div", {
+        text: "\u5DF2\u8DF3\u8FC7",
+        cls: "wechat-multiplatform-result-pill is-warning"
+      });
+      const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
+      body.createEl("div", { text: platformName, cls: "wechat-multiplatform-result-name" });
+      body.createEl("div", {
+        text: "\u514D\u8D39\u7248\u6BCF\u5929 3 \u4E2A\u5E73\u53F0\u989D\u5EA6\uFF0C\u5F53\u524D\u5E73\u53F0\u672A\u5165\u961F\u3002",
+        cls: "wechat-multiplatform-result-detail"
+      });
+    }
+    const btnRow = modal.contentEl.createDiv({ cls: "wechat-modal-buttons" });
+    if (quotaRecord.quotaBlocked) {
+      const upgradeBtn = btnRow.createEl("button", { text: "\u5347\u7EA7 Pro" });
+      upgradeBtn.onclick = () => this.openPublisherProPage();
+    }
+    const closeBtn = btnRow.createEl("button", { text: "\u5173\u95ED" });
+    closeBtn.onclick = () => modal.close();
+    if (taskId) {
+      const openBtn = btnRow.createEl("button", { text: "\u67E5\u770B\u4EFB\u52A1", cls: "mod-cta" });
+      openBtn.onclick = () => {
+        this.openWechatsyncTask(taskId);
+      };
+    }
+    modal.open();
+  },
+  showMultiPlatformQuotaBlockedModal({ quotaResult = {}, requestedPlatformIds = [] } = {}) {
+    var _a5, _b, _c, _d;
+    const multiPlatformSettings = normalizeMultiPlatformSyncSettings11(this.plugin.settings.multiPlatformSync);
+    const platformCatalog = getAvailableWechatsyncPlatforms11(multiPlatformSettings);
+    const platformById = new Map(platformCatalog.map((platform) => [platform.id, platform]));
+    const sortPlatformIds = (ids = []) => {
+      var _a6;
+      return sortWechatsyncPlatformItemsForDisplay11(parseWechatsyncPlatformIds11(ids), {
+        bridgeConnected: ((_a6 = multiPlatformSettings.connection) == null ? void 0 : _a6.status) === "connected",
+        getPlatformId: (id) => id,
+        getPlatform: (id) => platformById.get(id) || { id }
+      });
+    };
+    const skippedPlatforms = Array.isArray(quotaResult.skippedPlatforms) && quotaResult.skippedPlatforms.length ? quotaResult.skippedPlatforms : requestedPlatformIds;
+    const skippedPlatformIds = parseWechatsyncPlatformIds11(skippedPlatforms);
+    const formatPlatformNames = (ids = []) => {
+      const names = sortPlatformIds(ids).map((id) => {
+        var _a6;
+        return ((_a6 = platformById.get(id)) == null ? void 0 : _a6.name) || id;
+      }).filter(Boolean);
+      return names.length ? names.join("\u3001") : "\u65E0";
+    };
+    const reason = (quotaResult == null ? void 0 : quotaResult.reason) || "";
+    const rawMessage = typeof (quotaResult == null ? void 0 : quotaResult.message) === "string" ? quotaResult.message.trim() : "";
+    const legacyQuotaMessage = /单次最多|每次最多|每天最多发布\s*1\s*次|每天最多\s*1\s*次/.test(rawMessage);
+    const summaryText = rawMessage && !legacyQuotaMessage ? rawMessage : "\u514D\u8D39\u7248\u4ECA\u65E5\u5E73\u53F0\u989D\u5EA6\u4E0D\u8DB3\uFF0C\u660E\u5929 0:00 \u91CD\u7F6E\uFF0C\u6216\u5347\u7EA7 Pro\u3002";
+    if (typeof getObsidianModalClass11() !== "function") {
+      new Notice11(summaryText, 1e4);
+      return;
+    }
+    const modal = createObsidianModal11(this.app);
+    modal.titleEl.setText("\u53D1\u5E03\u53D7\u9650");
+    (_b = (_a5 = modal.titleEl).addClass) == null ? void 0 : _b.call(_a5, "wechat-multiplatform-title");
+    modal.contentEl.addClass("wechat-sync-modal");
+    modal.contentEl.addClass("wechat-multiplatform-modal");
+    modal.contentEl.addClass("wechat-multiplatform-result-modal");
+    (_c = modal.modalEl) == null ? void 0 : _c.addClass("wechat-publish-shell");
+    (_d = modal.modalEl) == null ? void 0 : _d.addClass("wechat-multiplatform-shell");
+    const summary = modal.contentEl.createDiv({ cls: "wechat-multiplatform-result-summary is-warning is-quota-blocked" });
+    summary.createEl("div", {
+      cls: "wechat-multiplatform-result-summary-title",
+      text: reason === "daily_limit" ? "\u4ECA\u65E5\u5E73\u53F0\u989D\u5EA6\u4E0D\u8DB3" : "\u514D\u8D39\u7248\u5E73\u53F0\u989D\u5EA6\u4E0D\u8DB3"
+    });
+    summary.createEl("p", { text: summaryText });
+    summary.createEl("div", {
+      text: skippedPlatformIds.length ? `\u672C\u6B21\u672A\u5165\u961F\uFF1A${formatPlatformNames(skippedPlatformIds)}` : "\u672C\u6B21\u672A\u5165\u961F\uFF1A\u6D4F\u89C8\u5668\u63D2\u4EF6\u6CA1\u6709\u8FD4\u56DE\u5E73\u53F0\u660E\u7EC6\u3002",
+      cls: "wechat-multiplatform-result-detail wechat-multiplatform-quota-platforms"
+    });
+    const btnRow = modal.contentEl.createDiv({ cls: "wechat-modal-buttons" });
+    const upgradeBtn = btnRow.createEl("button", { text: "\u5347\u7EA7 Pro", cls: "mod-cta" });
+    upgradeBtn.onclick = () => this.openPublisherProPage();
+    const closeBtn = btnRow.createEl("button", { text: "\u5173\u95ED" });
+    closeBtn.onclick = () => modal.close();
+    modal.open();
+  },
+  showMultiPlatformSyncResultModal({ results = [], requestedPlatformIds = [], fatalError = null } = {}) {
+    var _a5, _b, _c, _d, _e, _f;
+    if (typeof getObsidianModalClass11() !== "function") {
+      const message = fatalError ? `\u6D4F\u89C8\u5668\u63D2\u4EF6\u540C\u6B65\u5931\u8D25\uFF1A${fatalError.message || String(fatalError)}` : "\u540C\u6B65\u5B8C\u6210\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u67E5\u770B\u7ED3\u679C";
+      new Notice11(message, 1e4);
+      return;
+    }
+    const modal = createObsidianModal11(this.app);
+    const mobileSync = isMobileClient13(this.app);
+    const bridgeSettings = normalizeMultiPlatformSyncSettings11(this.plugin.settings.multiPlatformSync);
+    const platformCatalog = getAvailableWechatsyncPlatforms11(bridgeSettings);
+    const platformById = new Map(platformCatalog.map((platform) => [platform.id, platform]));
+    const {
+      normalizedResults,
+      successCount,
+      failedResults,
+      isAllSuccess
+    } = getMultiPlatformResultSummary11(results, requestedPlatformIds, fatalError);
+    modal.titleEl.setText("\u540C\u6B65\u7ED3\u679C");
+    (_b = (_a5 = modal.titleEl).addClass) == null ? void 0 : _b.call(_a5, "wechat-multiplatform-title");
+    modal.contentEl.addClass("wechat-sync-modal");
+    modal.contentEl.addClass("wechat-multiplatform-modal");
+    modal.contentEl.addClass("wechat-multiplatform-result-modal");
+    (_c = modal.modalEl) == null ? void 0 : _c.addClass("wechat-publish-shell");
+    (_d = modal.modalEl) == null ? void 0 : _d.addClass("wechat-multiplatform-shell");
+    if (mobileSync) {
+      modal.contentEl.addClass("wechat-sync-modal-mobile");
+      (_e = modal.modalEl) == null ? void 0 : _e.addClass("wechat-sync-shell-mobile");
+    }
+    const getPlatformName = (result = {}) => {
+      var _a6;
+      const id = getWechatSyncResultPlatformId11(result);
+      return result.platformName || result.name || ((_a6 = platformById.get(id)) == null ? void 0 : _a6.name) || id || "\u672A\u77E5\u5E73\u53F0";
+    };
+    const summary = modal.contentEl.createDiv({
+      cls: `wechat-multiplatform-result-summary ${fatalError ? "is-error" : isAllSuccess ? "is-success" : "is-warning"}`
+    });
+    summary.createEl("div", {
+      cls: "wechat-multiplatform-result-summary-title",
+      text: fatalError ? "\u540C\u6B65\u6CA1\u6709\u5B8C\u6210" : isAllSuccess ? "\u8349\u7A3F\u5DF2\u4FDD\u5B58" : "\u90E8\u5206\u5E73\u53F0\u9700\u8981\u5904\u7406"
+    });
+    summary.createEl("p", {
+      text: fatalError ? fatalError.code === "SYNC_TIMEOUT" ? "Obsidian \u6CA1\u6709\u7B49\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6\u7684\u6700\u7EC8\u56DE\u8C03\u3002\u63D2\u4EF6\u53EF\u80FD\u4ECD\u5728\u540E\u53F0\u540C\u6B65\uFF0C\u8BF7\u5148\u67E5\u770B\u63D2\u4EF6\u5386\u53F2\u6216\u76EE\u6807\u5E73\u53F0\u8349\u7A3F\u7BB1\uFF1B\u4E4B\u540E\u53EF\u4EE5\u51CF\u5C11\u5E73\u53F0\u540E\u91CD\u8BD5\u3002" : fatalError.message || "\u6D4F\u89C8\u5668\u63D2\u4EF6\u8FDE\u63A5\u4E2D\u65AD\uFF0C\u8BF7\u68C0\u67E5\u63D2\u4EF6\u3001\u8FDE\u63A5\u4EE4\u724C\u6216\u6D4F\u89C8\u5668\u767B\u5F55\u6001\u540E\u91CD\u8BD5\u3002" : normalizedResults.length > 0 ? `${successCount}/${normalizedResults.length} \u4E2A\u5E73\u53F0\u5DF2\u4FDD\u5B58\u4E3A\u8349\u7A3F\u3002\u6210\u529F\u7684\u5E73\u53F0\u53EF\u4EE5\u76F4\u63A5\u6253\u5F00\u8349\u7A3F\u68C0\u67E5\uFF0C\u5931\u8D25\u7684\u5E73\u53F0\u4FEE\u590D\u540E\u91CD\u65B0\u540C\u6B65\u3002` : "\u8BF7\u6C42\u5DF2\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6\u3002\u82E5\u8FD9\u91CC\u6CA1\u6709\u8FD4\u56DE\u5E73\u53F0\u660E\u7EC6\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u67E5\u770B\u7ED3\u679C\u3002"
+    });
+    const list = modal.contentEl.createDiv({ cls: "wechat-multiplatform-result-list" });
+    if (fatalError) {
+      const row = list.createDiv({ cls: "wechat-multiplatform-result-row is-error" });
+      const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
+      body.createEl("div", { text: "\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03", cls: "wechat-multiplatform-result-name" });
+      body.createEl("div", {
+        text: fatalError.code === "SYNC_TIMEOUT" ? "\u540C\u6B65\u8BF7\u6C42\u5DF2\u8D85\u65F6\uFF0C\u6682\u65F6\u65E0\u6CD5\u62FF\u5230\u9010\u5E73\u53F0\u8FDB\u5EA6\u3002\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4FA7\u786E\u8BA4\u662F\u5426\u5DF2\u7ECF\u751F\u6210\u8349\u7A3F\u3002" : fatalError.message || "\u8FDE\u63A5\u4E0D\u53EF\u7528",
+        cls: "wechat-multiplatform-result-detail"
+      });
+    } else if (normalizedResults.length === 0) {
+      const row = list.createDiv({ cls: "wechat-multiplatform-result-row" });
+      const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
+      body.createEl("div", { text: "\u7B49\u5F85\u63D2\u4EF6\u7ED3\u679C", cls: "wechat-multiplatform-result-name" });
+      body.createEl("div", {
+        text: "\u5F53\u524D\u8FDE\u63A5\u6CA1\u6709\u8FD4\u56DE\u5E73\u53F0\u660E\u7EC6\u3002\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4FA7\u786E\u8BA4\u8349\u7A3F\u662F\u5426\u5DF2\u751F\u6210\u3002",
+        cls: "wechat-multiplatform-result-detail"
+      });
+    } else {
+      const sortedResults = sortWechatsyncPlatformItemsForDisplay11(normalizedResults, {
+        bridgeConnected: ((_f = bridgeSettings.connection) == null ? void 0 : _f.status) === "connected",
+        getPlatformId: (result) => getWechatSyncResultPlatformId11(result),
+        getPlatform: (result) => {
+          const id = getWechatSyncResultPlatformId11(result);
+          return platformById.get(id) || normalizeWechatsyncPlatform11({ ...result, id }) || { id };
+        }
+      });
+      for (const result of sortedResults) {
+        const draftUrl = getWechatSyncResultUrl11(result);
+        const errorMessage = getWechatSyncResultError11(result);
+        const isSuccess = (result == null ? void 0 : result.success) === true;
+        const row = list.createDiv({
+          cls: `wechat-multiplatform-result-row ${isSuccess ? "is-success" : "is-error"}`
+        });
+        row.createEl("div", {
+          text: isSuccess ? "\u6210\u529F" : "\u5931\u8D25",
+          cls: `wechat-multiplatform-result-pill ${isSuccess ? "is-success" : "is-error"}`
+        });
+        const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
+        body.createEl("div", {
+          text: getPlatformName(result),
+          cls: "wechat-multiplatform-result-name"
+        });
+        body.createEl("div", {
+          text: isSuccess ? draftUrl ? "\u5DF2\u4FDD\u5B58\u4E3A\u8349\u7A3F\uFF0C\u8BF7\u6253\u5F00\u540E\u68C0\u67E5\u6392\u7248\u5E76\u624B\u52A8\u53D1\u5E03\u3002" : "\u5DF2\u540C\u6B65\u6210\u529F\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u67E5\u770B\u8349\u7A3F\u3002" : errorMessage || "\u540C\u6B65\u5931\u8D25\uFF0C\u8BF7\u4FEE\u590D\u540E\u91CD\u8BD5\u3002",
+          cls: "wechat-multiplatform-result-detail"
+        });
+        if (isSuccess && draftUrl) {
+          const openBtn = row.createEl("button", {
+            text: "\u6253\u5F00\u8349\u7A3F",
+            cls: "wechat-multiplatform-inline-btn"
+          });
+          openBtn.onclick = () => this.openExternalUrl(draftUrl);
+        }
+      }
+    }
+    const btnRow = modal.contentEl.createDiv({ cls: "wechat-modal-buttons" });
+    if (fatalError || failedResults.length > 0) {
+      const retryBtn = btnRow.createEl("button", { text: "\u91CD\u65B0\u9009\u62E9\u5E73\u53F0" });
+      retryBtn.onclick = () => {
+        modal.close();
+        this.showMultiPlatformSyncModal();
+      };
+    }
+    const closeBtn = btnRow.createEl("button", {
+      text: isAllSuccess ? "\u5B8C\u6210" : "\u5173\u95ED",
+      cls: "mod-cta"
+    });
+    closeBtn.onclick = () => modal.close();
+    modal.open();
+  },
+  async showMultiPlatformSyncModal(options = {}) {
+    return (
+      /** @type {Promise<unknown>} */
+      showMultiPlatformPublishModal11(this, { ...options, obsidianApi: obsidianApi11 })
+    );
+  },
+  showFeishuSyncModal(options = {}) {
+    const modal = options.modal || createObsidianModal11(this.app);
+    const mobileSync = isMobileClient13(this.app);
+    this.preparePublishModalShell(modal, { mode: "feishu", mobileSync });
+    const { wechatTab, multiPlatformTab } = this.createPublishModeTabs(modal, "feishu");
+    if (wechatTab) {
+      wechatTab.onclick = () => {
+        this.showSyncModal({ modal });
+      };
+    }
+    if (multiPlatformTab) {
+      multiPlatformTab.onclick = () => {
+        this.showMultiPlatformSyncModal({ modal });
+      };
+    }
+    renderFeishuPublishTab11(this, modal, modal.contentEl, { obsidianApi: obsidianApi11 });
+    if (!options.modal) {
+      modal.open();
+    }
+  }
+};
+
+// views/publish-modal/wechat-sync-action.js
+var {
+  createRenderPipelines: createRenderPipelines12,
+  buildRenderRuntime: buildRenderRuntime12,
+  resolveMarkdownSource: resolveMarkdownSource12,
+  normalizeVaultPath: normalizeVaultPath12,
+  isAbsolutePathLike: isAbsolutePathLike12,
+  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown12,
+  canUseNativePreviewFastPath: canUseNativePreviewFastPath12,
+  renderNativeMarkdown: renderNativeMarkdown12,
+  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages12,
+  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION12,
+  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO12,
+  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS12,
+  createDefaultAiSettings: createDefaultAiSettings12,
+  normalizeAiSettings: normalizeAiSettings12,
+  normalizeAiProvider: normalizeAiProvider12,
+  getAiProviderIssues: getAiProviderIssues12,
+  isAiProviderRunnable: isAiProviderRunnable12,
+  summarizeAiProviderIssues: summarizeAiProviderIssues12,
+  getLayoutFamilyList: getLayoutFamilyList12,
+  getLayoutFamilyById: getLayoutFamilyById12,
+  getColorPaletteList: getColorPaletteList12,
+  getColorPaletteById: getColorPaletteById12,
+  resolveColorPaletteForRender: resolveColorPaletteForRender12,
+  normalizeHexColor: normalizeHexColor12,
+  normalizeLayoutSelection: normalizeLayoutSelection12,
+  getArticleLayoutSelectionState: getArticleLayoutSelectionState12,
+  resolveAiProvider: resolveAiProvider12,
+  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection12,
+  normalizeArticleLayoutState: normalizeArticleLayoutState12,
+  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry12,
+  extractImageRefsFromHtml: extractImageRefsFromHtml12,
+  extractRenderedSectionFragments: extractRenderedSectionFragments12,
+  generateArticleLayout: generateArticleLayout12,
+  renderArticleLayoutHtml: renderArticleLayoutHtml12,
+  testAiProviderConnection: testAiProviderConnection12,
+  createWechatSyncService: createWechatSyncService12,
+  createWechatSyncBridgeService: createWechatSyncBridgeService12,
+  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError11,
+  getMultiPlatformResultSummary: getMultiPlatformResultSummary12,
+  getWechatSyncResultError: getWechatSyncResultError12,
+  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId12,
+  getWechatSyncResultUrl: getWechatSyncResultUrl12,
+  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform12,
+  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay12,
+  resolveSyncAccount: resolveSyncAccount12,
+  toSyncFriendlyMessage: toSyncFriendlyMessage12,
+  createEmptyDraftCache: createEmptyDraftCache12,
+  normalizeDraftCache: normalizeDraftCache12,
+  getDraftAssociation: getDraftAssociation12,
+  setDraftAssociation: setDraftAssociation12,
+  clearDraftAssociation: clearDraftAssociation12,
+  processAllImagesService: processAllImagesService11,
+  processMathFormulasService: processMathFormulasService11,
+  cleanHtmlForDraftService: cleanHtmlForDraftService11,
+  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob12,
+  createObsidianFetchAdapter: createObsidianFetchAdapter12,
+  stripMarkdownFrontmatter: stripMarkdownFrontmatter12,
+  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls12,
+  createHtmlContainer: createHtmlContainer12,
+  getActiveDocument: getActiveDocument12,
+  getActiveWindowValue: getActiveWindowValue12,
+  htmlToText: htmlToText12,
+  setElementHtml: setElementHtml12,
+  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings12,
+  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds12,
+  hasWechatSyncCapability: hasWechatSyncCapability12,
+  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings12,
+  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms12,
+  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt12,
+  describeWechatsyncConnectionState: describeWechatsyncConnectionState12,
+  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar12,
+  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab12,
+  showMultiPlatformPublishModal: showMultiPlatformPublishModal12,
+  renderFeishuSettingsTab: renderFeishuSettingsTab12,
+  renderFeishuPublishTab: renderFeishuPublishTab12,
+  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings12,
+  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings12,
+  updateFeishuHistoryPath: updateFeishuHistoryPath12,
+  WechatAPI: WechatAPI12,
+  loadCommonJsDependency: loadCommonJsDependency12,
+  obsidianApi: obsidianApi12,
+  Plugin: Plugin12,
+  MarkdownView: MarkdownView12,
+  ItemView: ItemView12,
+  Notice: Notice12,
+  Platform: Platform12,
+  PluginSettingTab: PluginSettingTab12,
+  Setting: Setting12,
+  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY13,
+  getActiveDocumentCompat: getActiveDocumentCompat12,
+  createFallbackSvgElement: createFallbackSvgElement12,
+  revealLeafCompat: revealLeafCompat12,
+  getPluginSettings: getPluginSettings12,
+  setPluginSettings: setPluginSettings12,
+  setDestructiveButtonCompat: setDestructiveButtonCompat12,
+  refreshSettingTabCompat: refreshSettingTabCompat12,
+  toReadableError: toReadableError15,
+  isRecord: isRecord22,
+  toRecord: toRecord19,
+  toAiLayoutState: toAiLayoutState12,
+  toAiLayoutJson: toAiLayoutJson12,
+  toAiLayoutBlock: toAiLayoutBlock12,
+  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta12,
+  toAiLayoutSelection: toAiLayoutSelection12,
+  toAiLayoutFamilyStates: toAiLayoutFamilyStates12,
+  toOptionalText: toOptionalText13,
+  toImageElements: toImageElements12,
+  removeElementClass: removeElementClass12,
+  toOptionalNumber: toOptionalNumber13,
+  parseJsonRecord: parseJsonRecord13,
+  normalizeRequestUrlResponse: normalizeRequestUrlResponse13,
+  getResponseJsonRecord: getResponseJsonRecord13,
+  getProxyErrorMessage: getProxyErrorMessage13,
+  createProxyError: createProxyError13,
+  formatWechatApiError: formatWechatApiError13,
+  hasWechatUploadResult: hasWechatUploadResult13,
+  readBlobAsBase64Payload: readBlobAsBase64Payload13,
+  dataUrlToBlob: dataUrlToBlob12,
+  bufferFromBinary: bufferFromBinary13,
+  inferLocalImageMimeType: inferLocalImageMimeType12,
+  safeDecodeUriText: safeDecodeUriText12,
+  getFileUrlLocalPath: getFileUrlLocalPath12,
+  getVaultAdapterBasePath: getVaultAdapterBasePath12,
+  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath13,
+  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath13,
+  getVaultDirnameFromPath: getVaultDirnameFromPath12,
+  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW12,
+  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE12,
+  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL12,
+  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL12,
+  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL13,
+  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL12,
+  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL13,
+  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL13,
+  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL12,
+  getObsidianModalClass: getObsidianModalClass12,
+  createObsidianModal: createObsidianModal12,
+  getObsidianSetIcon: getObsidianSetIcon12,
+  getObsidianRequestUrl: getObsidianRequestUrl12,
+  getObsidianRequest: getObsidianRequest12,
+  getAppleThemeApi: getAppleThemeApi12,
+  getValueElementFromEvent: getValueElementFromEvent12,
+  getEventTargetValue: getEventTargetValue12,
+  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY12,
+  getObsidianLocale: getObsidianLocale12,
+  isChineseObsidianLocale: isChineseObsidianLocale12,
+  getImageSwipeCommandCopy: getImageSwipeCommandCopy12,
+  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout12,
+  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown12,
+  DEFAULT_SETTINGS: DEFAULT_SETTINGS12,
+  MAX_ACCOUNTS: MAX_ACCOUNTS12,
+  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS12,
+  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS12,
+  getWechatAccountPublishOptions: getWechatAccountPublishOptions12,
+  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions12,
+  isMobileClient: isMobileClient14,
+  generateId: generateId12,
+  sleep: sleep13,
+  pMap: pMap12
+} = apple_style_view_shared_exports;
+var wechatSyncActionMethods = {
+  async onSyncToWechat() {
+    const accountRecord = (
+      /** @type {unknown} */
+      resolveSyncAccount12({
+        accounts: this.plugin.settings.wechatAccounts || [],
+        selectedAccountId: this.selectedAccountId,
+        defaultAccountId: this.plugin.settings.defaultAccountId
+      })
+    );
+    const account = isRecord22(accountRecord) ? (
+      /** @type {WechatAccountLike} */
+      accountRecord
+    ) : null;
+    if (!account) {
+      this.promptConfigureWechatAccount();
+      return;
+    }
+    if (!this.currentHtml) {
+      new Notice12(this.getMissingRenderNotice());
+      return;
+    }
+    const notice = new Notice12(`\u{1F680} \u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65...`, 0);
+    const activeFile = this.getPublishContextFile();
+    const publishMeta = this.getFrontmatterPublishMeta(activeFile);
+    try {
+      const syncService = (
+        /** @type {WechatSyncServiceLike} */
+        createWechatSyncService12({
+          createApi: (appId, appSecret, proxyUrl) => new WechatAPI12(appId, appSecret, proxyUrl, this.plugin.settings.clientId),
+          srcToBlob: (src) => this.srcToBlob(String(src || "")),
+          coverUploadCache: this.coverUploadCache,
+          processAllImages: (html, api, progressCallback, options) => this.processAllImages(String(html || ""), api, progressCallback, options),
+          processMathFormulas: (html, api, progressCallback) => this.processMathFormulas(String(html || ""), api, progressCallback),
+          prepareHtmlForDraft: (html) => this.prepareHtmlForWechatDraft(String(html || "")),
+          cleanHtmlForDraft: (html) => this.cleanHtmlForDraft(String(html || "")),
+          cleanupConfiguredDirectory: (file) => this.cleanupConfiguredDirectory(isRecord22(file) ? (
+            /** @type {TFileLike} */
+            file
+          ) : null),
+          getFirstImageFromArticle: () => this.getFirstImageFromArticle()
+        })
+      );
+      const result = await syncService.syncToDraft({
+        account,
+        proxyUrl: this.plugin.settings.proxyUrl,
+        currentHtml: this.getCurrentExportHtml() || "",
+        activeFile,
+        publishMeta,
+        sessionTitle: this.sessionTitle,
+        sessionCoverBase64: this.sessionCoverBase64 || "",
+        sessionThumbMediaId: this.sessionThumbMediaId || "",
+        sessionDigest: this.sessionDigest,
+        draftMediaId: this.sessionDraftMediaId || "",
+        draftIndex: this.sessionDraftIndex || 0,
+        onStatus: (stage) => {
+          if (stage === "cover")
+            notice.setMessage("\u6B63\u5728\u5904\u7406\u5C01\u9762\u56FE...");
+          if (stage === "images")
+            notice.setMessage("\u6B63\u5728\u540C\u6B65\u6B63\u6587\u56FE\u7247...");
+          if (stage === "math")
+            notice.setMessage("\u6B63\u5728\u8F6C\u6362\u77E2\u91CF\u56FE/\u6570\u5B66\u516C\u5F0F...");
+          if (stage === "draft")
+            notice.setMessage(this.sessionDraftMediaId ? "\u6B63\u5728\u66F4\u65B0\u5FAE\u4FE1\u8349\u7A3F..." : "\u6B63\u5728\u53D1\u9001\u5230\u5FAE\u4FE1\u8349\u7A3F\u7BB1...");
+        },
+        onImageProgress: (current, total) => {
+          notice.setMessage(`\u6B63\u5728\u540C\u6B65\u6B63\u6587\u56FE\u7247 (${current}/${total})...`);
+        },
+        onMathProgress: (current, total) => {
+          notice.setMessage(`\u6B63\u5728\u8F6C\u6362\u77E2\u91CF\u56FE/\u6570\u5B66\u516C\u5F0F (${current}/${total})...`);
+        }
+      });
+      const { cleanupResult, imageUploadFailures, placeholderImageSources, draftWarnings, mediaId, isUpdate, draftIndex } = result;
+      if (activeFile && mediaId) {
+        setDraftAssociation12(this.plugin.settings, {
+          sourcePath: activeFile.path,
+          mediaId,
+          accountId: account.id || "",
+          title: publishMeta.title || activeFile.basename,
+          index: draftIndex || 0,
+          updatedAt: Date.now()
+        });
+        await this.plugin.saveSettings();
+      }
+      notice.hide();
+      new Notice12(isUpdate ? "\u2705 \u66F4\u65B0\u6210\u529F\uFF01\u5FAE\u4FE1\u8349\u7A3F\u5DF2\u66F4\u65B0" : "\u2705 \u540C\u6B65\u6210\u529F\uFF01\u8BF7\u524D\u5F80\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0\u8349\u7A3F\u7BB1\u67E5\u770B");
+      const failedImageSources = Array.from(/* @__PURE__ */ new Set([
+        ...Array.isArray(imageUploadFailures) ? imageUploadFailures.map((item) => item == null ? void 0 : item.src).filter(Boolean) : [],
+        ...Array.isArray(placeholderImageSources) ? placeholderImageSources.filter(Boolean) : []
+      ]));
+      if (failedImageSources.length > 0) {
+        const preview = failedImageSources.slice(0, 3).join("\u3001");
+        const suffix = failedImageSources.length > 3 ? ` \u7B49 ${failedImageSources.length} \u5F20` : "";
+        new Notice12(`\u26A0\uFE0F \u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6709 ${failedImageSources.length} \u5F20\u6B63\u6587\u56FE\u7247\u672A\u540C\u6B65\uFF1A${preview}${suffix}\u3002\u8BF7\u5728\u5FAE\u4FE1\u540E\u53F0\u624B\u52A8\u8865\u4F20\u3002`, 1e4);
+      }
+      if (Array.isArray(draftWarnings) && draftWarnings.length > 0) {
+        const preview = draftWarnings.slice(0, 3).map((item) => `${(item == null ? void 0 : item.message) || "\u6B63\u6587\u5B58\u5728\u53EF\u7591\u5185\u5BB9"}${(item == null ? void 0 : item.value) ? `\uFF1A${item.value}` : ""}`).join("\uFF1B");
+        const suffix = draftWarnings.length > 3 ? `\uFF1B\u53E6\u6709 ${draftWarnings.length - 3} \u9879` : "";
+        new Notice12(`\u26A0\uFE0F \u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6B63\u6587\u68C0\u67E5\u53D1\u73B0 ${draftWarnings.length} \u9879\u63D0\u9192\uFF1A${preview}${suffix}`, 1e4);
+      }
+      if (cleanupResult == null ? void 0 : cleanupResult.warning) {
+        new Notice12(`\u26A0\uFE0F \u8D44\u6E90\u6E05\u7406\u5931\u8D25\uFF1A${cleanupResult.warning}`, 7e3);
+      }
+    } catch (error) {
+      notice.hide();
+      console.error("Wechat Sync Error:", error);
+      const readableError = toReadableError15(error);
+      const isProxyAuth = readableError.isProxyAuth || /token|服务已于|安全警报/i.test(readableError.message);
+      const friendlyMsg = toSyncFriendlyMessage12(readableError.message);
+      this.showSyncFailureActions(friendlyMsg, {
+        isProxyAuth,
+        draftAssociation: this.sessionDraftMediaId && activeFile ? {
+          sourcePath: activeFile.path,
+          mediaId: this.sessionDraftMediaId,
+          accountId: account.id || ""
+        } : null
+      });
+    }
+  }
+};
+
+// views/publish-modal/wechat.js
+var wechatPublishMethods = {
+  ...wechatPreviewExportMethods,
+  ...wechatAccountStateMethods,
+  ...wechatModalShellMethods,
+  ...wechatSyncModalMethods,
+  ...wechatMultiPlatformActionMethods,
+  ...wechatSyncActionMethods
+};
+
+// views/publish-modal/material-picker.js
+var {
+  createRenderPipelines: createRenderPipelines13,
+  buildRenderRuntime: buildRenderRuntime13,
+  resolveMarkdownSource: resolveMarkdownSource13,
+  normalizeVaultPath: normalizeVaultPath13,
+  isAbsolutePathLike: isAbsolutePathLike13,
+  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown13,
+  canUseNativePreviewFastPath: canUseNativePreviewFastPath13,
+  renderNativeMarkdown: renderNativeMarkdown13,
+  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages13,
+  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION13,
+  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO13,
+  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS13,
+  createDefaultAiSettings: createDefaultAiSettings13,
+  normalizeAiSettings: normalizeAiSettings13,
+  normalizeAiProvider: normalizeAiProvider13,
+  getAiProviderIssues: getAiProviderIssues13,
+  isAiProviderRunnable: isAiProviderRunnable13,
+  summarizeAiProviderIssues: summarizeAiProviderIssues13,
+  getLayoutFamilyList: getLayoutFamilyList13,
+  getLayoutFamilyById: getLayoutFamilyById13,
+  getColorPaletteList: getColorPaletteList13,
+  getColorPaletteById: getColorPaletteById13,
+  resolveColorPaletteForRender: resolveColorPaletteForRender13,
+  normalizeHexColor: normalizeHexColor13,
+  normalizeLayoutSelection: normalizeLayoutSelection13,
+  getArticleLayoutSelectionState: getArticleLayoutSelectionState13,
+  resolveAiProvider: resolveAiProvider13,
+  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection13,
+  normalizeArticleLayoutState: normalizeArticleLayoutState13,
+  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry13,
+  extractImageRefsFromHtml: extractImageRefsFromHtml13,
+  extractRenderedSectionFragments: extractRenderedSectionFragments13,
+  generateArticleLayout: generateArticleLayout13,
+  renderArticleLayoutHtml: renderArticleLayoutHtml13,
+  testAiProviderConnection: testAiProviderConnection13,
+  createWechatSyncService: createWechatSyncService13,
+  createWechatSyncBridgeService: createWechatSyncBridgeService13,
+  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError12,
+  getMultiPlatformResultSummary: getMultiPlatformResultSummary13,
+  getWechatSyncResultError: getWechatSyncResultError13,
+  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId13,
+  getWechatSyncResultUrl: getWechatSyncResultUrl13,
+  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform13,
+  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay13,
+  resolveSyncAccount: resolveSyncAccount13,
+  toSyncFriendlyMessage: toSyncFriendlyMessage13,
+  createEmptyDraftCache: createEmptyDraftCache13,
+  normalizeDraftCache: normalizeDraftCache13,
+  getDraftAssociation: getDraftAssociation13,
+  setDraftAssociation: setDraftAssociation13,
+  clearDraftAssociation: clearDraftAssociation13,
+  processAllImagesService: processAllImagesService12,
+  processMathFormulasService: processMathFormulasService12,
+  cleanHtmlForDraftService: cleanHtmlForDraftService12,
+  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob13,
+  createObsidianFetchAdapter: createObsidianFetchAdapter13,
+  stripMarkdownFrontmatter: stripMarkdownFrontmatter13,
+  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls13,
+  createHtmlContainer: createHtmlContainer13,
+  getActiveDocument: getActiveDocument13,
+  getActiveWindowValue: getActiveWindowValue13,
+  htmlToText: htmlToText13,
+  setElementHtml: setElementHtml13,
+  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings13,
+  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds13,
+  hasWechatSyncCapability: hasWechatSyncCapability13,
+  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings13,
+  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms13,
+  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt13,
+  describeWechatsyncConnectionState: describeWechatsyncConnectionState13,
+  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar13,
+  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab13,
+  showMultiPlatformPublishModal: showMultiPlatformPublishModal13,
+  renderFeishuSettingsTab: renderFeishuSettingsTab13,
+  renderFeishuPublishTab: renderFeishuPublishTab13,
+  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings13,
+  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings13,
+  updateFeishuHistoryPath: updateFeishuHistoryPath13,
+  WechatAPI: WechatAPI13,
+  loadCommonJsDependency: loadCommonJsDependency13,
+  obsidianApi: obsidianApi13,
+  Plugin: Plugin13,
+  MarkdownView: MarkdownView13,
+  ItemView: ItemView13,
+  Notice: Notice13,
+  Platform: Platform13,
+  PluginSettingTab: PluginSettingTab13,
+  Setting: Setting13,
+  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY14,
+  getActiveDocumentCompat: getActiveDocumentCompat13,
+  createFallbackSvgElement: createFallbackSvgElement13,
+  revealLeafCompat: revealLeafCompat13,
+  getPluginSettings: getPluginSettings13,
+  setPluginSettings: setPluginSettings13,
+  setDestructiveButtonCompat: setDestructiveButtonCompat13,
+  refreshSettingTabCompat: refreshSettingTabCompat13,
+  toReadableError: toReadableError16,
+  isRecord: isRecord23,
+  toRecord: toRecord20,
+  toAiLayoutState: toAiLayoutState13,
+  toAiLayoutJson: toAiLayoutJson13,
+  toAiLayoutBlock: toAiLayoutBlock13,
+  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta13,
+  toAiLayoutSelection: toAiLayoutSelection13,
+  toAiLayoutFamilyStates: toAiLayoutFamilyStates13,
+  toOptionalText: toOptionalText14,
+  toImageElements: toImageElements13,
+  removeElementClass: removeElementClass13,
+  toOptionalNumber: toOptionalNumber14,
+  parseJsonRecord: parseJsonRecord14,
+  normalizeRequestUrlResponse: normalizeRequestUrlResponse14,
+  getResponseJsonRecord: getResponseJsonRecord14,
+  getProxyErrorMessage: getProxyErrorMessage14,
+  createProxyError: createProxyError14,
+  formatWechatApiError: formatWechatApiError14,
+  hasWechatUploadResult: hasWechatUploadResult14,
+  readBlobAsBase64Payload: readBlobAsBase64Payload14,
+  dataUrlToBlob: dataUrlToBlob13,
+  bufferFromBinary: bufferFromBinary14,
+  inferLocalImageMimeType: inferLocalImageMimeType13,
+  safeDecodeUriText: safeDecodeUriText13,
+  getFileUrlLocalPath: getFileUrlLocalPath13,
+  getVaultAdapterBasePath: getVaultAdapterBasePath13,
+  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath14,
+  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath14,
+  getVaultDirnameFromPath: getVaultDirnameFromPath13,
+  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW13,
+  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE13,
+  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL13,
+  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL13,
+  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL14,
+  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL13,
+  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL14,
+  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL14,
+  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL13,
+  getObsidianModalClass: getObsidianModalClass13,
+  createObsidianModal: createObsidianModal13,
+  getObsidianSetIcon: getObsidianSetIcon13,
+  getObsidianRequestUrl: getObsidianRequestUrl13,
+  getObsidianRequest: getObsidianRequest13,
+  getAppleThemeApi: getAppleThemeApi13,
+  getValueElementFromEvent: getValueElementFromEvent13,
+  getEventTargetValue: getEventTargetValue13,
+  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY13,
+  getObsidianLocale: getObsidianLocale13,
+  isChineseObsidianLocale: isChineseObsidianLocale13,
+  getImageSwipeCommandCopy: getImageSwipeCommandCopy13,
+  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout13,
+  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown13,
+  DEFAULT_SETTINGS: DEFAULT_SETTINGS13,
+  MAX_ACCOUNTS: MAX_ACCOUNTS13,
+  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS13,
+  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS13,
+  getWechatAccountPublishOptions: getWechatAccountPublishOptions13,
+  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions13,
+  isMobileClient: isMobileClient15,
+  generateId: generateId13,
+  sleep: sleep14,
+  pMap: pMap13
+} = apple_style_view_shared_exports;
+var materialPickerMethods = {
   getWechatMaterialCacheKey(api, type, offset, count) {
     return [
       (api == null ? void 0 : api.appId) || "",
@@ -57967,15 +61477,7 @@ var AppleStyleView = class extends ItemView {
       Number(offset) || 0,
       Number(count) || 20
     ].join("::");
-  }
-  /**
-   * @param {WechatAPI} api
-   * @param {string} type
-   * @param {number} offset
-   * @param {number} count
-   * @param {{ forceRefresh?: boolean, ttlMs?: number }} [options]
-   * @returns {Promise<WechatMaterialPageLike>}
-   */
+  },
   async loadWechatMaterialPage(api, type, offset, count, options = {}) {
     const forceRefresh = options.forceRefresh === true;
     const ttlMs = Number.isFinite(options.ttlMs) ? options.ttlMs : 5 * 60 * 1e3;
@@ -58004,18 +61506,14 @@ var AppleStyleView = class extends ItemView {
       ...data,
       fromCache: false
     };
-  }
-  /**
-   * @param {WechatAPI} api
-   * @param {(material: WechatMaterialSelectionLike) => unknown} onSelect
-   */
+  },
   async showMaterialPickerModal(api, onSelect) {
     var _a5, _b, _c;
-    const modal = createObsidianModal(this.app);
+    const modal = createObsidianModal13(this.app);
     modal.titleEl.setText("\u4ECE\u7D20\u6750\u5E93\u9009\u62E9\u5C01\u9762");
     (_a5 = modal.modalEl) == null ? void 0 : _a5.addClass("wechat-material-picker-modal");
     modal.contentEl.addClass("wechat-material-picker");
-    if (isMobileClient2(this.app)) {
+    if (isMobileClient15(this.app)) {
       (_b = modal.modalEl) == null ? void 0 : _b.addClass("wechat-material-picker-modal-mobile");
       modal.contentEl.addClass("wechat-material-picker-mobile");
     }
@@ -58130,7 +61628,7 @@ var AppleStyleView = class extends ItemView {
         grid.empty();
         grid.removeClass("is-loading");
         countLabel.setText("\u52A0\u8F7D\u5931\u8D25");
-        grid.createDiv({ cls: "wechat-material-empty", text: `\u52A0\u8F7D\u5931\u8D25\uFF1A${toReadableError3(error).message}` });
+        grid.createDiv({ cls: "wechat-material-empty", text: `\u52A0\u8F7D\u5931\u8D25\uFF1A${toReadableError16(error).message}` });
       } finally {
         isLoading = false;
       }
@@ -58150,1804 +61648,133 @@ var AppleStyleView = class extends ItemView {
     (_c = modal.modalEl) == null ? void 0 : _c.addClass("wechat-material-picker-modal");
     await loadPage(1);
   }
-  /**
-   * @param {unknown} syncId
-   * @returns {Promise<boolean>}
-   */
-  async openWechatsyncTask(syncId) {
-    const taskId = String(syncId || "").trim();
-    if (!taskId) {
-      new Notice("\u5F53\u524D\u4EFB\u52A1\u6CA1\u6709 syncId\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u5386\u53F2\u8BB0\u5F55\u4E2D\u67E5\u770B\u6700\u8FD1\u4EFB\u52A1");
-      return false;
-    }
-    const settings = normalizeMultiPlatformSyncSettings(this.plugin.settings.multiPlatformSync);
-    const bridge = this.plugin.getWechatSyncBridgeService();
-    try {
-      await bridge.start();
-      if (typeof bridge.waitForConnection === "function") {
-        await bridge.waitForConnection(8e3);
-      }
-      const capabilities = settings.connection.capabilities || {};
-      if (capabilities.openSyncTask !== false) {
-        try {
-          const result = typeof bridge.openSyncTask === "function" ? toRecord6(await bridge.openSyncTask(taskId, { timeoutMs: 8e3 })) : {};
-          if ((result == null ? void 0 : result.opened) !== false) {
-            new Notice("\u5DF2\u6253\u5F00\u6D4F\u89C8\u5668\u63D2\u4EF6\u4EFB\u52A1\u7A97\u53E3");
-            return true;
-          }
-        } catch (error) {
-          if (!isUnsupportedBridgeMethodError(error))
-            throw error;
-          const readableError = toReadableError3(error);
-          const errorRecord = toRecord6(error);
-          console.warn("[Wechatsync] openSyncTask failed, falling back to task link", {
-            code: errorRecord.code,
-            message: readableError.message
-          });
-        }
-      }
-      if (capabilities.getSyncTaskLink !== false) {
-        try {
-          const linkResult = typeof bridge.getSyncTaskLink === "function" ? toRecord6(await bridge.getSyncTaskLink(taskId, { timeoutMs: 5e3 })) : {};
-          const url = String((linkResult == null ? void 0 : linkResult.url) || "").trim();
-          if ((linkResult == null ? void 0 : linkResult.canOpen) !== false && url) {
-            return this.openExternalUrl(url, { allowExtensionUrls: true });
-          }
-          if (typeof (linkResult == null ? void 0 : linkResult.message) === "string" && linkResult.message) {
-            new Notice(linkResult.message, 8e3);
-            return false;
-          }
-        } catch (error) {
-          if (!isUnsupportedBridgeMethodError(error))
-            throw error;
-          const readableError = toReadableError3(error);
-          const errorRecord = toRecord6(error);
-          console.warn("[Wechatsync] getSyncTaskLink failed", {
-            code: errorRecord.code,
-            message: readableError.message
-          });
-        }
-      }
-      new Notice(`\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u5386\u53F2\u8BB0\u5F55\u4E2D\u67E5\u770B\u4EFB\u52A1\uFF1A${taskId}`, 1e4);
-      return false;
-    } catch (error) {
-      const readableError = toReadableError3(error);
-      const errorRecord = toRecord6(error);
-      console.error("[Wechatsync] open task failed", {
-        syncId: taskId,
-        code: errorRecord.code,
-        message: readableError.message
-      });
-      new Notice(`\u65E0\u6CD5\u6253\u5F00\u6D4F\u89C8\u5668\u63D2\u4EF6\u4EFB\u52A1\uFF1A${readableError.message}`, 1e4);
-      return false;
-    }
-  }
-  /**
-   * @param {WechatSyncBridgeServiceLike} bridge
-   * @param {unknown} syncId
-   * @returns {Promise<WechatsyncTaskSnapshotLike | null>}
-   */
-  async getWechatsyncTaskSnapshot(bridge, syncId) {
-    const taskId = String(syncId || "").trim();
-    if (!taskId)
-      return null;
-    const settings = normalizeMultiPlatformSyncSettings(this.plugin.settings.multiPlatformSync);
-    if (!hasWechatSyncCapability(settings, "getSyncTask"))
-      return null;
-    try {
-      const task = typeof bridge.getSyncTask === "function" ? toRecord6(await bridge.getSyncTask(taskId, { timeoutMs: 5e3 })) : {};
-      if ((task == null ? void 0 : task.found) === false)
-        return task;
-      return Object.keys(task).length ? (
-        /** @type {WechatsyncTaskSnapshotLike} */
-        task
-      ) : null;
-    } catch (error) {
-      if (isUnsupportedBridgeMethodError(error))
-        return null;
-      const readableError = toReadableError3(error);
-      const errorRecord = toRecord6(error);
-      console.warn("[Wechatsync] getSyncTask failed after enqueue", {
-        syncId: taskId,
-        code: errorRecord.code,
-        message: readableError.message
-      });
-      return null;
-    }
-  }
-  /**
-   * @param {{ syncId?: string, title?: string, platforms?: unknown[], task?: WechatsyncTaskSnapshotLike | null, usedFallbackSend?: boolean, quotaResult?: WechatsyncQuotaResultLike | null }} [options]
-   */
-  showWechatsyncEnqueueAcceptedModal({
-    syncId = "",
-    title = "",
-    platforms = [],
-    task = null,
-    usedFallbackSend = false,
-    quotaResult = null
-  } = {}) {
-    var _a5, _b, _c, _d, _e, _f;
-    const taskId = String(syncId || "").trim();
-    const quotaRecord = quotaResult || {};
-    const requestedPlatforms = Array.isArray(platforms) ? platforms : [];
-    const skippedPlatformIds = parseWechatsyncPlatformIds(Array.isArray(quotaRecord.skippedPlatforms) ? quotaRecord.skippedPlatforms : []);
-    const quotaPublishedPlatforms = Array.isArray(quotaRecord.publishedPlatforms) ? quotaRecord.publishedPlatforms : [];
-    const quotaPlatforms = Array.isArray(quotaRecord.platforms) ? quotaRecord.platforms : [];
-    const publishedPlatformIds = parseWechatsyncPlatformIds(
-      quotaPublishedPlatforms.length ? quotaPublishedPlatforms : quotaPlatforms.length ? quotaPlatforms : requestedPlatforms
-    );
-    const skippedPlatformSet = new Set(skippedPlatformIds);
-    const publishedPlatformSet = new Set(publishedPlatformIds);
-    if (typeof getObsidianModalClass() !== "function") {
-      const syncIdText = taskId ? `\uFF08\u4EFB\u52A1 ${taskId}\uFF09` : "";
-      const fallbackText = usedFallbackSend ? "\u5F53\u524D\u63D2\u4EF6\u672A\u63D0\u4F9B\u4EFB\u52A1 ID\uFF0C" : "";
-      const quotaText = skippedPlatformIds.length ? `\u5DF2\u8DF3\u8FC7 ${skippedPlatformIds.length} \u4E2A\u8D85\u51FA\u4ECA\u65E5\u989D\u5EA6\u7684\u5E73\u53F0\u3002` : "";
-      new Notice(`\u2705 \u5DF2\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6${syncIdText}\u3002${fallbackText}${quotaText}\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u7684\u5386\u53F2\u6216\u76EE\u6807\u5E73\u53F0\u8349\u7A3F\u7BB1\u67E5\u770B\u7ED3\u679C\u3002`, 1e4);
-      return;
-    }
-    const modal = createObsidianModal(this.app);
-    modal.titleEl.setText("\u5DF2\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6");
-    (_b = (_a5 = modal.titleEl).addClass) == null ? void 0 : _b.call(_a5, "wechat-multiplatform-title");
-    modal.contentEl.addClass("wechat-sync-modal");
-    modal.contentEl.addClass("wechat-multiplatform-modal");
-    modal.contentEl.addClass("wechat-multiplatform-result-modal");
-    (_c = modal.modalEl) == null ? void 0 : _c.addClass("wechat-publish-shell");
-    (_d = modal.modalEl) == null ? void 0 : _d.addClass("wechat-multiplatform-shell");
-    const summary = modal.contentEl.createDiv({
-      cls: `wechat-multiplatform-result-summary ${skippedPlatformIds.length ? "is-warning" : "is-success"}`
-    });
-    const multiPlatformSettings = normalizeMultiPlatformSyncSettings(this.plugin.settings.multiPlatformSync);
-    const platformCatalog = getAvailableWechatsyncPlatforms(multiPlatformSettings);
-    const platformById = new Map(platformCatalog.map((platform) => [platform.id, platform]));
-    const sortPlatformItems = (items = [], getId = (item) => String(item || "")) => {
-      var _a6;
-      return (
-        /** @type {unknown[]} */
-        sortWechatsyncPlatformItemsForDisplay(Array.isArray(items) ? items : [], {
-          bridgeConnected: ((_a6 = multiPlatformSettings.connection) == null ? void 0 : _a6.status) === "connected",
-          getPlatformId: getId,
-          getPlatform: (item) => {
-            const id = getId(item);
-            return platformById.get(id) || normalizeWechatsyncPlatform(
-              item && typeof item === "object" ? { ...item, id } : { id }
-            ) || { id };
-          }
-        })
-      );
-    };
-    const formatPlatformNames = (ids = []) => {
-      const names = sortPlatformItems(parseWechatsyncPlatformIds(Array.isArray(ids) ? ids : [])).map((id) => {
-        var _a6;
-        return ((_a6 = platformById.get(String(id))) == null ? void 0 : _a6.name) || String(id);
-      }).filter(Boolean);
-      return names.length ? names.join("\u3001") : "\u65E0";
-    };
-    summary.createEl("div", {
-      cls: "wechat-multiplatform-result-summary-title",
-      text: skippedPlatformIds.length ? "\u5DF2\u6309\u514D\u8D39\u7248\u989D\u5EA6\u6295\u9012" : "\u4EFB\u52A1\u5DF2\u4EA4\u7ED9\u6D4F\u89C8\u5668\u63D2\u4EF6"
-    });
-    summary.createEl("p", {
-      text: skippedPlatformIds.length ? `\u5DF2\u53D1\u5E03\u5230\uFF1A${formatPlatformNames(publishedPlatformIds)}\u3002\u8DF3\u8FC7 ${skippedPlatformIds.length} \u4E2A\u8D85\u51FA\u4ECA\u65E5\u989D\u5EA6\u7684\u5E73\u53F0\uFF1A${formatPlatformNames(skippedPlatformIds)}\u3002\u5347\u7EA7 Pro \u53EF\u53D1\u5E03\u5230\u5168\u90E8\u5E73\u53F0\u3002` : taskId ? "Obsidian \u5DF2\u5B8C\u6210\u6295\u9012\uFF0C\u4E0D\u4F1A\u957F\u65F6\u95F4\u7B49\u5F85\u6240\u6709\u5E73\u53F0\u5B8C\u6210\u3002\u540E\u7EED\u8349\u7A3F\u94FE\u63A5\u3001\u5931\u8D25\u539F\u56E0\u548C\u91CD\u8BD5\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4EFB\u52A1\u7A97\u53E3\u91CC\u67E5\u770B\u3002" : "\u5F53\u524D\u63D2\u4EF6\u7248\u672C\u6CA1\u6709\u8FD4\u56DE\u4EFB\u52A1 ID\u3002\u6587\u7AE0\u5DF2\u53D1\u9001\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u5386\u53F2\u8BB0\u5F55\u4E2D\u67E5\u770B\u6700\u8FD1\u4EFB\u52A1\u3002"
-    });
-    const list = modal.contentEl.createDiv({ cls: "wechat-multiplatform-result-list" });
-    let taskPlatformSource = [];
-    if (Array.isArray(task == null ? void 0 : task.platforms) && task.platforms.length) {
-      taskPlatformSource = task.platforms;
-    } else {
-      const queuedPlatformIds = publishedPlatformIds.length ? publishedPlatformIds : requestedPlatforms;
-      taskPlatformSource = queuedPlatformIds.map((id) => (
-        /** @type {Record<string, unknown>} */
-        { id, status: "queued" }
-      ));
-    }
-    const rawTaskPlatforms = taskPlatformSource;
-    const taskPlatforms = sortPlatformItems(rawTaskPlatforms.filter((item) => {
-      const itemRecord = toRecord6(item);
-      const platformId = parseWechatsyncPlatformIds([itemRecord.id || itemRecord.platform || item])[0] || "";
-      if (!platformId)
-        return false;
-      if (skippedPlatformSet.has(platformId))
-        return false;
-      if (skippedPlatformSet.size > 0 && publishedPlatformSet.size > 0) {
-        return publishedPlatformSet.has(platformId);
-      }
-      return true;
-    }), (item) => {
-      const itemRecord = toRecord6(item);
-      return parseWechatsyncPlatformIds([itemRecord.id || itemRecord.platform || item])[0] || "";
-    });
-    if (taskId) {
-      const taskRow = list.createDiv({ cls: "wechat-multiplatform-result-row" });
-      taskRow.createEl("div", { text: "\u4EFB\u52A1", cls: "wechat-multiplatform-result-pill is-success" });
-      const taskBody = taskRow.createDiv({ cls: "wechat-multiplatform-result-body" });
-      taskBody.createEl("div", {
-        text: (task == null ? void 0 : task.found) === false ? "\u63D2\u4EF6\u6682\u672A\u8FD4\u56DE\u4EFB\u52A1\u8BE6\u60C5" : title || (task == null ? void 0 : task.title) || "\u591A\u5E73\u53F0\u53D1\u5E03\u4EFB\u52A1",
-        cls: "wechat-multiplatform-result-name"
-      });
-      if ((task == null ? void 0 : task.found) === false) {
-        taskBody.createEl("div", {
-          text: "\u8BF7\u6253\u5F00\u63D2\u4EF6\u5386\u53F2\u67E5\u770B\u3002",
-          cls: "wechat-multiplatform-result-detail"
-        });
-      }
-    }
-    for (const item of taskPlatforms) {
-      const itemRecord = toRecord6(item);
-      const platformId = String(itemRecord.id || itemRecord.platform || item || "").trim();
-      if (!platformId)
-        continue;
-      const platformName = typeof itemRecord.name === "string" ? itemRecord.name : ((_e = platformById.get(platformId)) == null ? void 0 : _e.name) || platformId;
-      const row = list.createDiv({ cls: "wechat-multiplatform-result-row" });
-      row.createEl("div", { text: "\u5DF2\u6295\u9012", cls: "wechat-multiplatform-result-pill" });
-      const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
-      body.createEl("div", { text: platformName, cls: "wechat-multiplatform-result-name" });
-    }
-    for (const platformItem of sortPlatformItems(skippedPlatformIds)) {
-      const platformId = String(platformItem || "");
-      const platformName = ((_f = platformById.get(platformId)) == null ? void 0 : _f.name) || platformId;
-      const row = list.createDiv({ cls: "wechat-multiplatform-result-row is-warning" });
-      row.createEl("div", {
-        text: "\u5DF2\u8DF3\u8FC7",
-        cls: "wechat-multiplatform-result-pill is-warning"
-      });
-      const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
-      body.createEl("div", { text: platformName, cls: "wechat-multiplatform-result-name" });
-      body.createEl("div", {
-        text: "\u514D\u8D39\u7248\u6BCF\u5929 3 \u4E2A\u5E73\u53F0\u989D\u5EA6\uFF0C\u5F53\u524D\u5E73\u53F0\u672A\u5165\u961F\u3002",
-        cls: "wechat-multiplatform-result-detail"
-      });
-    }
-    const btnRow = modal.contentEl.createDiv({ cls: "wechat-modal-buttons" });
-    if (quotaRecord.quotaBlocked) {
-      const upgradeBtn = btnRow.createEl("button", { text: "\u5347\u7EA7 Pro" });
-      upgradeBtn.onclick = () => this.openPublisherProPage();
-    }
-    const closeBtn = btnRow.createEl("button", { text: "\u5173\u95ED" });
-    closeBtn.onclick = () => modal.close();
-    if (taskId) {
-      const openBtn = btnRow.createEl("button", { text: "\u67E5\u770B\u4EFB\u52A1", cls: "mod-cta" });
-      openBtn.onclick = () => {
-        this.openWechatsyncTask(taskId);
-      };
-    }
-    modal.open();
-  }
-  /**
-   * @param {{ quotaResult?: WechatsyncQuotaResultLike, requestedPlatformIds?: unknown[] }} [options]
-   */
-  showMultiPlatformQuotaBlockedModal({ quotaResult = {}, requestedPlatformIds = [] } = {}) {
-    var _a5, _b, _c, _d;
-    const multiPlatformSettings = normalizeMultiPlatformSyncSettings(this.plugin.settings.multiPlatformSync);
-    const platformCatalog = getAvailableWechatsyncPlatforms(multiPlatformSettings);
-    const platformById = new Map(platformCatalog.map((platform) => [platform.id, platform]));
-    const sortPlatformIds = (ids = []) => {
-      var _a6;
-      return sortWechatsyncPlatformItemsForDisplay(parseWechatsyncPlatformIds(ids), {
-        bridgeConnected: ((_a6 = multiPlatformSettings.connection) == null ? void 0 : _a6.status) === "connected",
-        getPlatformId: (id) => id,
-        getPlatform: (id) => platformById.get(id) || { id }
-      });
-    };
-    const skippedPlatforms = Array.isArray(quotaResult.skippedPlatforms) && quotaResult.skippedPlatforms.length ? quotaResult.skippedPlatforms : requestedPlatformIds;
-    const skippedPlatformIds = parseWechatsyncPlatformIds(skippedPlatforms);
-    const formatPlatformNames = (ids = []) => {
-      const names = sortPlatformIds(ids).map((id) => {
-        var _a6;
-        return ((_a6 = platformById.get(id)) == null ? void 0 : _a6.name) || id;
-      }).filter(Boolean);
-      return names.length ? names.join("\u3001") : "\u65E0";
-    };
-    const reason = (quotaResult == null ? void 0 : quotaResult.reason) || "";
-    const rawMessage = typeof (quotaResult == null ? void 0 : quotaResult.message) === "string" ? quotaResult.message.trim() : "";
-    const legacyQuotaMessage = /单次最多|每次最多|每天最多发布\s*1\s*次|每天最多\s*1\s*次/.test(rawMessage);
-    const summaryText = rawMessage && !legacyQuotaMessage ? rawMessage : "\u514D\u8D39\u7248\u4ECA\u65E5\u5E73\u53F0\u989D\u5EA6\u4E0D\u8DB3\uFF0C\u660E\u5929 0:00 \u91CD\u7F6E\uFF0C\u6216\u5347\u7EA7 Pro\u3002";
-    if (typeof getObsidianModalClass() !== "function") {
-      new Notice(summaryText, 1e4);
-      return;
-    }
-    const modal = createObsidianModal(this.app);
-    modal.titleEl.setText("\u53D1\u5E03\u53D7\u9650");
-    (_b = (_a5 = modal.titleEl).addClass) == null ? void 0 : _b.call(_a5, "wechat-multiplatform-title");
-    modal.contentEl.addClass("wechat-sync-modal");
-    modal.contentEl.addClass("wechat-multiplatform-modal");
-    modal.contentEl.addClass("wechat-multiplatform-result-modal");
-    (_c = modal.modalEl) == null ? void 0 : _c.addClass("wechat-publish-shell");
-    (_d = modal.modalEl) == null ? void 0 : _d.addClass("wechat-multiplatform-shell");
-    const summary = modal.contentEl.createDiv({ cls: "wechat-multiplatform-result-summary is-warning is-quota-blocked" });
-    summary.createEl("div", {
-      cls: "wechat-multiplatform-result-summary-title",
-      text: reason === "daily_limit" ? "\u4ECA\u65E5\u5E73\u53F0\u989D\u5EA6\u4E0D\u8DB3" : "\u514D\u8D39\u7248\u5E73\u53F0\u989D\u5EA6\u4E0D\u8DB3"
-    });
-    summary.createEl("p", { text: summaryText });
-    summary.createEl("div", {
-      text: skippedPlatformIds.length ? `\u672C\u6B21\u672A\u5165\u961F\uFF1A${formatPlatformNames(skippedPlatformIds)}` : "\u672C\u6B21\u672A\u5165\u961F\uFF1A\u6D4F\u89C8\u5668\u63D2\u4EF6\u6CA1\u6709\u8FD4\u56DE\u5E73\u53F0\u660E\u7EC6\u3002",
-      cls: "wechat-multiplatform-result-detail wechat-multiplatform-quota-platforms"
-    });
-    const btnRow = modal.contentEl.createDiv({ cls: "wechat-modal-buttons" });
-    const upgradeBtn = btnRow.createEl("button", { text: "\u5347\u7EA7 Pro", cls: "mod-cta" });
-    upgradeBtn.onclick = () => this.openPublisherProPage();
-    const closeBtn = btnRow.createEl("button", { text: "\u5173\u95ED" });
-    closeBtn.onclick = () => modal.close();
-    modal.open();
-  }
-  /**
-   * @param {{ results?: WechatsyncPlatformResultLike[], requestedPlatformIds?: unknown[], fatalError?: ReadableErrorLike | null }} [options]
-   */
-  showMultiPlatformSyncResultModal({ results = [], requestedPlatformIds = [], fatalError = null } = {}) {
-    var _a5, _b, _c, _d, _e, _f;
-    if (typeof getObsidianModalClass() !== "function") {
-      const message = fatalError ? `\u6D4F\u89C8\u5668\u63D2\u4EF6\u540C\u6B65\u5931\u8D25\uFF1A${fatalError.message || String(fatalError)}` : "\u540C\u6B65\u5B8C\u6210\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u67E5\u770B\u7ED3\u679C";
-      new Notice(message, 1e4);
-      return;
-    }
-    const modal = createObsidianModal(this.app);
-    const mobileSync = isMobileClient2(this.app);
-    const bridgeSettings = normalizeMultiPlatformSyncSettings(this.plugin.settings.multiPlatformSync);
-    const platformCatalog = getAvailableWechatsyncPlatforms(bridgeSettings);
-    const platformById = new Map(platformCatalog.map((platform) => [platform.id, platform]));
-    const {
-      normalizedResults,
-      successCount,
-      failedResults,
-      isAllSuccess
-    } = getMultiPlatformResultSummary(results, requestedPlatformIds, fatalError);
-    modal.titleEl.setText("\u540C\u6B65\u7ED3\u679C");
-    (_b = (_a5 = modal.titleEl).addClass) == null ? void 0 : _b.call(_a5, "wechat-multiplatform-title");
-    modal.contentEl.addClass("wechat-sync-modal");
-    modal.contentEl.addClass("wechat-multiplatform-modal");
-    modal.contentEl.addClass("wechat-multiplatform-result-modal");
-    (_c = modal.modalEl) == null ? void 0 : _c.addClass("wechat-publish-shell");
-    (_d = modal.modalEl) == null ? void 0 : _d.addClass("wechat-multiplatform-shell");
-    if (mobileSync) {
-      modal.contentEl.addClass("wechat-sync-modal-mobile");
-      (_e = modal.modalEl) == null ? void 0 : _e.addClass("wechat-sync-shell-mobile");
-    }
-    const getPlatformName = (result = {}) => {
-      var _a6;
-      const id = getWechatSyncResultPlatformId(result);
-      return result.platformName || result.name || ((_a6 = platformById.get(id)) == null ? void 0 : _a6.name) || id || "\u672A\u77E5\u5E73\u53F0";
-    };
-    const summary = modal.contentEl.createDiv({
-      cls: `wechat-multiplatform-result-summary ${fatalError ? "is-error" : isAllSuccess ? "is-success" : "is-warning"}`
-    });
-    summary.createEl("div", {
-      cls: "wechat-multiplatform-result-summary-title",
-      text: fatalError ? "\u540C\u6B65\u6CA1\u6709\u5B8C\u6210" : isAllSuccess ? "\u8349\u7A3F\u5DF2\u4FDD\u5B58" : "\u90E8\u5206\u5E73\u53F0\u9700\u8981\u5904\u7406"
-    });
-    summary.createEl("p", {
-      text: fatalError ? fatalError.code === "SYNC_TIMEOUT" ? "Obsidian \u6CA1\u6709\u7B49\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6\u7684\u6700\u7EC8\u56DE\u8C03\u3002\u63D2\u4EF6\u53EF\u80FD\u4ECD\u5728\u540E\u53F0\u540C\u6B65\uFF0C\u8BF7\u5148\u67E5\u770B\u63D2\u4EF6\u5386\u53F2\u6216\u76EE\u6807\u5E73\u53F0\u8349\u7A3F\u7BB1\uFF1B\u4E4B\u540E\u53EF\u4EE5\u51CF\u5C11\u5E73\u53F0\u540E\u91CD\u8BD5\u3002" : fatalError.message || "\u6D4F\u89C8\u5668\u63D2\u4EF6\u8FDE\u63A5\u4E2D\u65AD\uFF0C\u8BF7\u68C0\u67E5\u63D2\u4EF6\u3001\u8FDE\u63A5\u4EE4\u724C\u6216\u6D4F\u89C8\u5668\u767B\u5F55\u6001\u540E\u91CD\u8BD5\u3002" : normalizedResults.length > 0 ? `${successCount}/${normalizedResults.length} \u4E2A\u5E73\u53F0\u5DF2\u4FDD\u5B58\u4E3A\u8349\u7A3F\u3002\u6210\u529F\u7684\u5E73\u53F0\u53EF\u4EE5\u76F4\u63A5\u6253\u5F00\u8349\u7A3F\u68C0\u67E5\uFF0C\u5931\u8D25\u7684\u5E73\u53F0\u4FEE\u590D\u540E\u91CD\u65B0\u540C\u6B65\u3002` : "\u8BF7\u6C42\u5DF2\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6\u3002\u82E5\u8FD9\u91CC\u6CA1\u6709\u8FD4\u56DE\u5E73\u53F0\u660E\u7EC6\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u67E5\u770B\u7ED3\u679C\u3002"
-    });
-    const list = modal.contentEl.createDiv({ cls: "wechat-multiplatform-result-list" });
-    if (fatalError) {
-      const row = list.createDiv({ cls: "wechat-multiplatform-result-row is-error" });
-      const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
-      body.createEl("div", { text: "\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03", cls: "wechat-multiplatform-result-name" });
-      body.createEl("div", {
-        text: fatalError.code === "SYNC_TIMEOUT" ? "\u540C\u6B65\u8BF7\u6C42\u5DF2\u8D85\u65F6\uFF0C\u6682\u65F6\u65E0\u6CD5\u62FF\u5230\u9010\u5E73\u53F0\u8FDB\u5EA6\u3002\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4FA7\u786E\u8BA4\u662F\u5426\u5DF2\u7ECF\u751F\u6210\u8349\u7A3F\u3002" : fatalError.message || "\u8FDE\u63A5\u4E0D\u53EF\u7528",
-        cls: "wechat-multiplatform-result-detail"
-      });
-    } else if (normalizedResults.length === 0) {
-      const row = list.createDiv({ cls: "wechat-multiplatform-result-row" });
-      const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
-      body.createEl("div", { text: "\u7B49\u5F85\u63D2\u4EF6\u7ED3\u679C", cls: "wechat-multiplatform-result-name" });
-      body.createEl("div", {
-        text: "\u5F53\u524D\u8FDE\u63A5\u6CA1\u6709\u8FD4\u56DE\u5E73\u53F0\u660E\u7EC6\u3002\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4FA7\u786E\u8BA4\u8349\u7A3F\u662F\u5426\u5DF2\u751F\u6210\u3002",
-        cls: "wechat-multiplatform-result-detail"
-      });
-    } else {
-      const sortedResults = sortWechatsyncPlatformItemsForDisplay(normalizedResults, {
-        bridgeConnected: ((_f = bridgeSettings.connection) == null ? void 0 : _f.status) === "connected",
-        getPlatformId: (result) => getWechatSyncResultPlatformId(result),
-        getPlatform: (result) => {
-          const id = getWechatSyncResultPlatformId(result);
-          return platformById.get(id) || normalizeWechatsyncPlatform({ ...result, id }) || { id };
-        }
-      });
-      for (const result of sortedResults) {
-        const draftUrl = getWechatSyncResultUrl(result);
-        const errorMessage = getWechatSyncResultError(result);
-        const isSuccess = (result == null ? void 0 : result.success) === true;
-        const row = list.createDiv({
-          cls: `wechat-multiplatform-result-row ${isSuccess ? "is-success" : "is-error"}`
-        });
-        row.createEl("div", {
-          text: isSuccess ? "\u6210\u529F" : "\u5931\u8D25",
-          cls: `wechat-multiplatform-result-pill ${isSuccess ? "is-success" : "is-error"}`
-        });
-        const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
-        body.createEl("div", {
-          text: getPlatformName(result),
-          cls: "wechat-multiplatform-result-name"
-        });
-        body.createEl("div", {
-          text: isSuccess ? draftUrl ? "\u5DF2\u4FDD\u5B58\u4E3A\u8349\u7A3F\uFF0C\u8BF7\u6253\u5F00\u540E\u68C0\u67E5\u6392\u7248\u5E76\u624B\u52A8\u53D1\u5E03\u3002" : "\u5DF2\u540C\u6B65\u6210\u529F\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u67E5\u770B\u8349\u7A3F\u3002" : errorMessage || "\u540C\u6B65\u5931\u8D25\uFF0C\u8BF7\u4FEE\u590D\u540E\u91CD\u8BD5\u3002",
-          cls: "wechat-multiplatform-result-detail"
-        });
-        if (isSuccess && draftUrl) {
-          const openBtn = row.createEl("button", {
-            text: "\u6253\u5F00\u8349\u7A3F",
-            cls: "wechat-multiplatform-inline-btn"
-          });
-          openBtn.onclick = () => this.openExternalUrl(draftUrl);
-        }
-      }
-    }
-    const btnRow = modal.contentEl.createDiv({ cls: "wechat-modal-buttons" });
-    if (fatalError || failedResults.length > 0) {
-      const retryBtn = btnRow.createEl("button", { text: "\u91CD\u65B0\u9009\u62E9\u5E73\u53F0" });
-      retryBtn.onclick = () => {
-        modal.close();
-        this.showMultiPlatformSyncModal();
-      };
-    }
-    const closeBtn = btnRow.createEl("button", {
-      text: isAllSuccess ? "\u5B8C\u6210" : "\u5173\u95ED",
-      cls: "mod-cta"
-    });
-    closeBtn.onclick = () => modal.close();
-    modal.open();
-  }
-  /**
-   * @param {Record<string, unknown>} [options]
-   * @returns {Promise<unknown>}
-   */
-  async showMultiPlatformSyncModal(options = {}) {
-    return (
-      /** @type {Promise<unknown>} */
-      showMultiPlatformPublishModal(this, { ...options, obsidianApi })
-    );
-  }
-  /**
-   * @param {{ modal?: ModalLike }} [options]
-   */
-  showFeishuSyncModal(options = {}) {
-    const modal = options.modal || createObsidianModal(this.app);
-    const mobileSync = isMobileClient2(this.app);
-    this.preparePublishModalShell(modal, { mode: "feishu", mobileSync });
-    const { wechatTab, multiPlatformTab } = this.createPublishModeTabs(modal, "feishu");
-    if (wechatTab) {
-      wechatTab.onclick = () => {
-        this.showSyncModal({ modal });
-      };
-    }
-    if (multiPlatformTab) {
-      multiPlatformTab.onclick = () => {
-        this.showMultiPlatformSyncModal({ modal });
-      };
-    }
-    renderFeishuPublishTab(this, modal, modal.contentEl, { obsidianApi });
-    if (!options.modal) {
-      modal.open();
-    }
-  }
-  /**
-   * 处理同步到微信逻辑
-   */
-  async onSyncToWechat() {
-    const accountRecord = (
-      /** @type {unknown} */
-      resolveSyncAccount({
-        accounts: this.plugin.settings.wechatAccounts || [],
-        selectedAccountId: this.selectedAccountId,
-        defaultAccountId: this.plugin.settings.defaultAccountId
-      })
-    );
-    const account = isRecord9(accountRecord) ? (
-      /** @type {WechatAccountLike} */
-      accountRecord
-    ) : null;
-    if (!account) {
-      this.promptConfigureWechatAccount();
-      return;
-    }
-    if (!this.currentHtml) {
-      new Notice(this.getMissingRenderNotice());
-      return;
-    }
-    const notice = new Notice(`\u{1F680} \u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65...`, 0);
-    const activeFile = this.getPublishContextFile();
-    const publishMeta = this.getFrontmatterPublishMeta(activeFile);
-    try {
-      const syncService = (
-        /** @type {WechatSyncServiceLike} */
-        createWechatSyncService({
-          createApi: (appId, appSecret, proxyUrl) => new WechatAPI(appId, appSecret, proxyUrl, this.plugin.settings.clientId),
-          srcToBlob: (src) => this.srcToBlob(String(src || "")),
-          coverUploadCache: this.coverUploadCache,
-          processAllImages: (html, api, progressCallback, options) => this.processAllImages(String(html || ""), api, progressCallback, options),
-          processMathFormulas: (html, api, progressCallback) => this.processMathFormulas(String(html || ""), api, progressCallback),
-          prepareHtmlForDraft: (html) => this.prepareHtmlForWechatDraft(String(html || "")),
-          cleanHtmlForDraft: (html) => this.cleanHtmlForDraft(String(html || "")),
-          cleanupConfiguredDirectory: (file) => this.cleanupConfiguredDirectory(isRecord9(file) ? (
-            /** @type {TFileLike} */
-            file
-          ) : null),
-          getFirstImageFromArticle: () => this.getFirstImageFromArticle()
-        })
-      );
-      const result = await syncService.syncToDraft({
-        account,
-        proxyUrl: this.plugin.settings.proxyUrl,
-        currentHtml: this.getCurrentExportHtml() || "",
-        activeFile,
-        publishMeta,
-        sessionTitle: this.sessionTitle,
-        sessionCoverBase64: this.sessionCoverBase64 || "",
-        sessionThumbMediaId: this.sessionThumbMediaId || "",
-        sessionDigest: this.sessionDigest,
-        draftMediaId: this.sessionDraftMediaId || "",
-        draftIndex: this.sessionDraftIndex || 0,
-        onStatus: (stage) => {
-          if (stage === "cover")
-            notice.setMessage("\u6B63\u5728\u5904\u7406\u5C01\u9762\u56FE...");
-          if (stage === "images")
-            notice.setMessage("\u6B63\u5728\u540C\u6B65\u6B63\u6587\u56FE\u7247...");
-          if (stage === "math")
-            notice.setMessage("\u6B63\u5728\u8F6C\u6362\u77E2\u91CF\u56FE/\u6570\u5B66\u516C\u5F0F...");
-          if (stage === "draft")
-            notice.setMessage(this.sessionDraftMediaId ? "\u6B63\u5728\u66F4\u65B0\u5FAE\u4FE1\u8349\u7A3F..." : "\u6B63\u5728\u53D1\u9001\u5230\u5FAE\u4FE1\u8349\u7A3F\u7BB1...");
-        },
-        onImageProgress: (current, total) => {
-          notice.setMessage(`\u6B63\u5728\u540C\u6B65\u6B63\u6587\u56FE\u7247 (${current}/${total})...`);
-        },
-        onMathProgress: (current, total) => {
-          notice.setMessage(`\u6B63\u5728\u8F6C\u6362\u77E2\u91CF\u56FE/\u6570\u5B66\u516C\u5F0F (${current}/${total})...`);
-        }
-      });
-      const { cleanupResult, imageUploadFailures, placeholderImageSources, draftWarnings, mediaId, isUpdate, draftIndex } = result;
-      if (activeFile && mediaId) {
-        setDraftAssociation(this.plugin.settings, {
-          sourcePath: activeFile.path,
-          mediaId,
-          accountId: account.id || "",
-          title: publishMeta.title || activeFile.basename,
-          index: draftIndex || 0,
-          updatedAt: Date.now()
-        });
-        await this.plugin.saveSettings();
-      }
-      notice.hide();
-      new Notice(isUpdate ? "\u2705 \u66F4\u65B0\u6210\u529F\uFF01\u5FAE\u4FE1\u8349\u7A3F\u5DF2\u66F4\u65B0" : "\u2705 \u540C\u6B65\u6210\u529F\uFF01\u8BF7\u524D\u5F80\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0\u8349\u7A3F\u7BB1\u67E5\u770B");
-      const failedImageSources = Array.from(/* @__PURE__ */ new Set([
-        ...Array.isArray(imageUploadFailures) ? imageUploadFailures.map((item) => item == null ? void 0 : item.src).filter(Boolean) : [],
-        ...Array.isArray(placeholderImageSources) ? placeholderImageSources.filter(Boolean) : []
-      ]));
-      if (failedImageSources.length > 0) {
-        const preview = failedImageSources.slice(0, 3).join("\u3001");
-        const suffix = failedImageSources.length > 3 ? ` \u7B49 ${failedImageSources.length} \u5F20` : "";
-        new Notice(`\u26A0\uFE0F \u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6709 ${failedImageSources.length} \u5F20\u6B63\u6587\u56FE\u7247\u672A\u540C\u6B65\uFF1A${preview}${suffix}\u3002\u8BF7\u5728\u5FAE\u4FE1\u540E\u53F0\u624B\u52A8\u8865\u4F20\u3002`, 1e4);
-      }
-      if (Array.isArray(draftWarnings) && draftWarnings.length > 0) {
-        const preview = draftWarnings.slice(0, 3).map((item) => `${(item == null ? void 0 : item.message) || "\u6B63\u6587\u5B58\u5728\u53EF\u7591\u5185\u5BB9"}${(item == null ? void 0 : item.value) ? `\uFF1A${item.value}` : ""}`).join("\uFF1B");
-        const suffix = draftWarnings.length > 3 ? `\uFF1B\u53E6\u6709 ${draftWarnings.length - 3} \u9879` : "";
-        new Notice(`\u26A0\uFE0F \u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6B63\u6587\u68C0\u67E5\u53D1\u73B0 ${draftWarnings.length} \u9879\u63D0\u9192\uFF1A${preview}${suffix}`, 1e4);
-      }
-      if (cleanupResult == null ? void 0 : cleanupResult.warning) {
-        new Notice(`\u26A0\uFE0F \u8D44\u6E90\u6E05\u7406\u5931\u8D25\uFF1A${cleanupResult.warning}`, 7e3);
-      }
-    } catch (error) {
-      notice.hide();
-      console.error("Wechat Sync Error:", error);
-      const readableError = toReadableError3(error);
-      const isProxyAuth = readableError.isProxyAuth || /token|服务已于|安全警报/i.test(readableError.message);
-      const friendlyMsg = toSyncFriendlyMessage(readableError.message);
-      this.showSyncFailureActions(friendlyMsg, {
-        isProxyAuth,
-        draftAssociation: this.sessionDraftMediaId && activeFile ? {
-          sourcePath: activeFile.path,
-          mediaId: this.sessionDraftMediaId,
-          accountId: account.id || ""
-        } : null
-      });
-    }
-  }
-  /**
-   * @param {string} src
-   * @returns {unknown | null}
-   */
-  resolveLocalImageFileForUpload(src) {
-    var _a5, _b, _c, _d, _e, _f;
-    const raw = String(src || "").trim();
-    if (!raw || /^(data:|https?:\/\/|app:\/\/|capacitor:\/\/)/i.test(raw))
-      return null;
-    const activeFile = this.getPublishContextFile();
-    const sourcePath = (activeFile == null ? void 0 : activeFile.path) || this.lastResolvedSourcePath || "";
-    const decoded = safeDecodeUriText(raw);
-    const fromFileUrl = /^file:\/\//i.test(decoded) ? getVaultRelativePathFromLocalPath2(this.app, getFileUrlLocalPath(decoded)) : "";
-    if (/^file:\/\//i.test(decoded) && !fromFileUrl) {
-      throw new Error("\u53EA\u652F\u6301\u8BFB\u53D6\u5F53\u524D vault \u5185\u7684 file:// \u56FE\u7247");
-    }
-    const lookupSrc = fromFileUrl || decoded;
-    try {
-      const linked = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.metadataCache) == null ? void 0 : _b.getFirstLinkpathDest) == null ? void 0 : _c.call(_b, lookupSrc, sourcePath);
-      if (linked && typeof linked === "object" && typeof linked["extension"] === "string")
-        return linked;
-    } catch (e) {
-    }
-    const candidates = [];
-    const normalized = normalizeVaultPath(lookupSrc);
-    if (normalized)
-      candidates.push(normalized);
-    const noteDir = getVaultDirnameFromPath(sourcePath);
-    if (normalized && noteDir && !isAbsolutePathLike(normalized)) {
-      candidates.push(normalizeVaultPath(`${noteDir}/${normalized}`));
-    }
-    for (const candidate of Array.from(new Set(candidates))) {
-      try {
-        const file = (_f = (_e = (_d = this.app) == null ? void 0 : _d.vault) == null ? void 0 : _e.getAbstractFileByPath) == null ? void 0 : _f.call(_e, candidate);
-        if (file && typeof file === "object" && typeof file["extension"] === "string")
-          return file;
-      } catch (e) {
-      }
-    }
-    return null;
-  }
-  /**
-   * @param {unknown} file
-   * @returns {Promise<Blob>}
-   */
-  async vaultFileToBlob(file) {
-    var _a5, _b;
-    const readBinary = (_b = (_a5 = this.app) == null ? void 0 : _a5.vault) == null ? void 0 : _b.readBinary;
-    if (typeof readBinary !== "function") {
-      throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301\u8BFB\u53D6\u672C\u5730\u56FE\u7247");
-    }
-    const binary = await readBinary.call(this.app.vault, file);
-    const buffer = bufferFromBinary2(binary);
-    const fileName = typeof file === "object" && file && typeof file["name"] === "string" ? file["name"] : typeof file === "object" && file && typeof file["path"] === "string" ? file["path"] : "image";
-    return new Blob([buffer], { type: inferLocalImageMimeType(fileName) });
-  }
-  /**
-   * 将各种形式的 src (Base64, URL, 路径) 转为 Blob
-   */
-  /**
-   * @param {string} src
-   * @returns {Promise<Blob>}
-   */
-  async srcToBlob(src) {
-    const localFile = this.resolveLocalImageFileForUpload(src);
-    if (localFile) {
-      return this.vaultFileToBlob(localFile);
-    }
-    if (src.startsWith("data:")) {
-      return dataUrlToBlob(src);
-    }
-    if (src.startsWith("app://") || src.startsWith("capacitor://")) {
-      const resp = await window.fetch(src);
-      return await resp.blob();
-    }
-    if (src.startsWith("http")) {
-      const requestUrl = getObsidianRequestUrl();
-      if (typeof requestUrl !== "function") {
-        throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301 requestUrl");
-      }
-      const response = (
-        /** @type {{ arrayBuffer?: ArrayBuffer, headers?: Record<string, string> }} */
-        await requestUrl({ url: src })
-      );
-      const headers = response.headers || {};
-      const contentType = headers["content-type"] || headers["Content-Type"] || "image/jpeg";
-      const buffer = response.arrayBuffer instanceof ArrayBuffer ? response.arrayBuffer : new ArrayBuffer(0);
-      return new Blob([buffer], { type: contentType });
-    }
-    throw new Error(`\u4E0D\u652F\u6301\u7684\u56FE\u7247\u6765\u6E90\u6216\u672C\u5730\u56FE\u7247\u672A\u627E\u5230\uFF1A${src || "\u7A7A\u5730\u5740"}`);
-  }
-  /**
-   * 处理 HTML 中的所有图片，上传到微信并替换链接
-   * 支持并发上传 (Limit 3) 和进度回调
-   */
-  /**
-   * @param {string} html
-   * @param {WechatAPI} api
-   * @param {((current: number, total: number) => unknown) | undefined} progressCallback
-   * @param {{ accountId?: string, onImageFailure?: (failure: ImageUploadFailureLike) => unknown }} [cacheContext]
-   * @returns {Promise<string>}
-   */
-  async processAllImages(html, api, progressCallback, cacheContext = {}) {
-    const accountId = (cacheContext == null ? void 0 : cacheContext.accountId) || "";
-    return (
-      /** @type {Promise<string>} */
-      processAllImages({
-        html,
-        api,
-        progressCallback,
-        pMap,
-        srcToBlob: (src) => this.srcToBlob(String(src || "")),
-        imageUploadCache: this.imageUploadCache,
-        cacheNamespace: accountId,
-        onImageFailure: cacheContext == null ? void 0 : cacheContext.onImageFailure
-      })
-    );
-  }
-  /**
-   * 处理 HTML 中的数学公式 (MathJax SVG -> Wechat Image)
-   * 解决微信接口内容长度限制问题
-   */
-  /**
-   * @param {string} html
-   * @param {WechatAPI} api
-   * @param {((current: number, total: number) => unknown) | undefined} progressCallback
-   * @returns {Promise<string>}
-   */
-  async processMathFormulas(html, api, progressCallback) {
-    return (
-      /** @type {Promise<string>} */
-      processMathFormulas({
-        html,
-        api,
-        progressCallback,
-        pMap,
-        simpleHash: (value) => this.simpleHash(String(value || "")),
-        svgUploadCache: this.svgUploadCache,
-        svgToPngBlob: (svgElement, scale) => this.svgToPngBlob(
-          svgElement instanceof SVGElement ? svgElement : createFallbackSvgElement(),
-          typeof scale === "number" ? scale : 3
-        )
-      })
-    );
-  }
-  /**
-   * 将 SVG 元素转换为高分辨率 PNG Blob
-   * 返回: { blob, width, height, style }
-   */
-  /**
-   * @param {SVGElement} svgElement
-   * @param {number} [scale]
-   * @returns {Promise<{ blob: Blob, width: number, height: number, style?: string }>}
-   */
-  async svgToPngBlob(svgElement, scale = 3) {
-    return rasterizeSvgToPngBlob(svgElement, { scale });
-  }
-  /**
-   * 清理 HTML 以适配微信编辑器
-   * 微信编辑器对嵌套列表支持不佳，需要：
-   * 1. 处理嵌套列表父级 li 内的段落与行内内容（避免嵌套层级被打散）
-   * 2. 将深层嵌套列表转为伪列表（避免微信扁平化）
-   * 3. 移除嵌套 ul/ol 的 margin（避免被当成独立块）
-   * 4. 移除空的 li 元素和空白文本节点
-   */
-  /**
-   * @param {string} html
-   * @returns {string}
-   */
-  cleanHtmlForDraft(html) {
-    return cleanHtmlForDraft(html);
-  }
-  // === 设置变更处理 ===
-  /**
-   * @param {string} value
-   * @param {Element} grid
-   */
-  async onThemeChange(value, grid) {
-    var _a5;
-    this.plugin.settings.theme = value;
-    await this.plugin.saveSettings();
-    this.updateButtonActive(grid, value);
-    (_a5 = this.theme) == null ? void 0 : _a5.update({ theme: value });
-    await this.convertCurrent(true);
-  }
-  /**
-   * @param {string} value
-   */
-  async onFontFamilyChange(value) {
-    var _a5;
-    this.plugin.settings.fontFamily = value;
-    await this.plugin.saveSettings();
-    (_a5 = this.theme) == null ? void 0 : _a5.update({ fontFamily: value });
-    await this.convertCurrent(true);
-  }
-  /**
-   * @param {number} value
-   * @param {Element} grid
-   */
-  async onFontSizeChange(value, grid) {
-    var _a5;
-    this.plugin.settings.fontSize = value;
-    await this.plugin.saveSettings();
-    this.updateButtonActive(grid, value);
-    (_a5 = this.theme) == null ? void 0 : _a5.update({ fontSize: value });
-    await this.convertCurrent(true);
-  }
-  /**
-   * @param {string} value
-   * @param {Element} grid
-   */
-  async onColorChange(value, grid) {
-    var _a5;
-    this.plugin.settings.themeColor = value;
-    await this.plugin.saveSettings();
-    this.updateButtonActive(grid, value);
-    (_a5 = this.theme) == null ? void 0 : _a5.update({ themeColor: value });
-    await this.convertCurrent(true);
-  }
-  /**
-   * @param {string} value
-   */
-  async onQuoteCalloutStyleModeChange(value) {
-    var _a5;
-    const nextValue = value === "neutral" ? "neutral" : "theme";
-    this.plugin.settings.quoteCalloutStyleMode = nextValue;
-    await this.plugin.saveSettings();
-    (_a5 = this.theme) == null ? void 0 : _a5.update({ quoteCalloutStyleMode: nextValue });
-    await this.convertCurrent(true);
-  }
-  /**
-   * @param {boolean} checked
-   */
-  async onMacCodeBlockChange(checked) {
-    var _a5;
-    this.plugin.settings.macCodeBlock = checked;
-    await this.plugin.saveSettings();
-    (_a5 = this.theme) == null ? void 0 : _a5.update({ macCodeBlock: checked });
-    if (this.converter) {
-      this.converter.reinit();
-      await this.converter.initMarkdownIt();
-    }
-    await this.convertCurrent(true);
-  }
-  /**
-   * @param {boolean} checked
-   */
-  async onCodeLineNumberChange(checked) {
-    var _a5;
-    this.plugin.settings.codeLineNumber = checked;
-    await this.plugin.saveSettings();
-    (_a5 = this.theme) == null ? void 0 : _a5.update({ codeLineNumber: checked });
-    if (this.converter) {
-      this.converter.reinit();
-      await this.converter.initMarkdownIt();
-    }
-    await this.convertCurrent(true);
-  }
-  /**
-   * @param {Element} grid
-   * @param {string | number | boolean} value
-   */
-  updateButtonActive(grid, value) {
-    const buttons = Array.from(grid.querySelectorAll("button"));
-    buttons.forEach((btn) => {
-      btn.classList.toggle("active", btn.dataset.value == value);
-    });
-  }
-  /**
-   * @returns {RenderPipelineLike | null}
-   */
-  getActiveRenderPipeline() {
-    return (
-      /** @type {RenderPipelineLike | null} */
-      this.nativeRenderPipeline
-    );
-  }
-  /**
-   * @param {string} markdown
-   * @param {string} sourcePath
-   * @returns {Promise<string>}
-   */
-  async renderMarkdownForPreview(markdown, sourcePath) {
-    const pipeline = this.getActiveRenderPipeline();
-    if (!pipeline) {
-      throw new Error("\u6E32\u67D3\u7BA1\u7EBF\u672A\u521D\u59CB\u5316");
-    }
-    return pipeline.renderForPreview(markdown, {
-      sourcePath,
-      settings: this.plugin.settings
-    });
-  }
-  /**
-   * 更新当前文档显示
-   */
-  updateCurrentDoc() {
-    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (activeView && this.docTitleText) {
-      this.docTitleText.setText(activeView.file.basename);
-      this.docTitleText.setCssStyles({ color: "var(--apple-primary)" });
-    } else if (this.lastActiveFile && this.docTitleText) {
-      this.docTitleText.setText(this.lastActiveFile.basename);
-      this.docTitleText.setCssStyles({ color: "var(--apple-primary)" });
-    } else if (this.docTitleText) {
-      this.docTitleText.setText("\u672A\u9009\u62E9\u6587\u6863");
-      this.docTitleText.setCssStyles({ color: "var(--apple-tertiary)" });
-    }
-    this.updateAiToolbarState();
-  }
-  /**
-   * 设置占位符
-   */
-  setPlaceholder() {
-    this.previewContainer.empty();
-    this.previewContainer.removeClass("apple-has-content");
-    const placeholder = this.previewContainer.createEl("div", { cls: "apple-placeholder" });
-    const iconDiv = placeholder.createEl("div", { cls: "apple-placeholder-icon" });
-    this.renderPlaceholderIcon(iconDiv);
-    placeholder.createEl("h2", { text: "Obsidian \u53D1\u5E03\u52A9\u624B" });
-    const content = placeholder.createDiv({ cls: "apple-placeholder-content" });
-    content.createEl("p", {
-      text: "\u5F53\u524D\u9762\u677F\u7528\u4E8E\u9884\u89C8\u5FAE\u4FE1\u516C\u4F17\u53F7\u6392\u7248\u3002\u8BF7\u5728\u5DE6\u4FA7\u7F16\u8F91\u5668\u4E2D\u6253\u5F00\u6216\u6FC0\u6D3B\u4EFB\u610F Markdown \u7B14\u8BB0\u4EE5\u81EA\u52A8\u52A0\u8F7D\u9884\u89C8\u3002",
-      cls: "apple-placeholder-desc"
-    });
-    const steps = content.createEl("div", { cls: "apple-steps" });
-    steps.createEl("div", { text: "1. \u6253\u5F00\u6216\u70B9\u51FB\u4EFB\u610F Markdown \u7B14\u8BB0" });
-    steps.createEl("div", { text: "2. \u9884\u89C8\u5FAE\u4FE1\u516C\u4F17\u53F7\u6392\u7248" });
-    steps.createEl("div", { text: "3. \u4E00\u952E\u590D\u5236\u6216\u540C\u6B65\u5230\u5FAE\u4FE1\u3001\u98DE\u4E66\u3001\u5C0F\u7EA2\u4E66\u7B49\u5E73\u53F0" });
-    content.createEl("p", {
-      text: "\u6CE8\uFF1A\u6B64\u9762\u677F\u4EC5\u9884\u89C8\u5FAE\u4FE1\u6392\u7248\u3002\u540C\u6B65\u81F3\u98DE\u4E66\u3001\u5C0F\u7EA2\u4E66\u7B49\u5E73\u53F0\u76F4\u63A5\u4EE5\u6E90 Markdown \u7B14\u8BB0\u4E3A\u51C6\u3002",
-      cls: "apple-placeholder-note"
-    });
-  }
-  /**
-   * @param {ObsidianElementLike} iconDiv
-   * @returns {Promise<void>}
-   */
-  renderPlaceholderIcon(iconDiv) {
-    iconDiv.empty();
-    const img = (
-      /** @type {ObsidianElementLike & HTMLImageElement} */
-      iconDiv.createEl("img", { attr: { alt: "Obsidian \u53D1\u5E03\u52A9\u624B" } })
-    );
-    img.src = PLACEHOLDER_ICON_DATA_URL;
-    img.setCssStyles({
-      width: "64px",
-      height: "64px",
-      display: "block"
-    });
-  }
-  showRenderFailurePlaceholder(message = "") {
-    if (!this.previewContainer || typeof this.previewContainer.createEl !== "function")
-      return;
-    this.previewContainer.empty();
-    this.previewContainer.removeClass("apple-has-content");
-    const placeholder = this.previewContainer.createEl("div", { cls: "apple-placeholder" });
-    placeholder.createEl("div", { cls: "apple-placeholder-icon", text: "\u26A0\uFE0F" });
-    placeholder.createEl("h2", { text: "\u6E32\u67D3\u5931\u8D25" });
-    placeholder.createEl("p", {
-      text: "\u5F53\u524D\u6587\u6863\u5C1A\u672A\u6210\u529F\u6E32\u67D3\uFF0C\u590D\u5236/\u540C\u6B65\u5DF2\u7981\u7528\u3002\u8BF7\u4FEE\u590D\u540E\u91CD\u8BD5\u3002"
-    });
-    if (message) {
-      placeholder.createEl("p", { cls: "apple-placeholder-note", text: `\u9519\u8BEF\u4FE1\u606F\uFF1A${message}` });
-    }
-  }
-  getMissingRenderNotice() {
-    if (this.lastRenderError) {
-      return "\u274C \u5F53\u524D\u6587\u6863\u6E32\u67D3\u5931\u8D25\uFF0C\u8BF7\u4FEE\u590D\u540E\u91CD\u8BD5";
-    }
-    return "\u26A0\uFE0F \u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u6587\u7AE0\u8FDB\u884C\u8F6C\u6362";
-  }
-  /**
-   * 转换当前文档
-   * @param {boolean} [silent]
-   * @param {ConvertCurrentOptionsLike} [options]
-   */
-  async convertCurrent(silent = false, options = {}) {
-    var _a5, _b, _c;
-    const {
-      showLoading = false,
-      loadingText = "\u6B63\u5728\u6E32\u67D3\u9884\u89C8...",
-      loadingDelay = 0,
-      sourceOverride = null
-    } = options;
-    const generation = ++this.renderGeneration;
-    if (showLoading) {
-      this.loadingGeneration = generation;
-      if (this.loadingVisibilityTimer) {
-        window.clearTimeout(this.loadingVisibilityTimer);
-        this.loadingVisibilityTimer = null;
-      }
-      if (loadingDelay > 0) {
-        this.loadingVisibilityTimer = window.setTimeout(() => {
-          if (this.loadingGeneration === generation) {
-            this.setPreviewLoading(true, loadingText);
-          }
-          this.loadingVisibilityTimer = null;
-        }, loadingDelay);
-      } else {
-        this.setPreviewLoading(true, loadingText);
-      }
-    }
-    const source = sourceOverride && typeof sourceOverride === "object" ? {
-      ok: true,
-      markdown: typeof sourceOverride.markdown === "string" ? sourceOverride.markdown : "",
-      sourcePath: typeof sourceOverride.sourcePath === "string" ? sourceOverride.sourcePath : ""
-    } : (
-      /** @type {MarkdownSourceResultLike} */
-      await resolveMarkdownSource({
-        app: this.app,
-        lastActiveFile: this.lastActiveFile,
-        MarkdownViewType: MarkdownView
-      })
-    );
-    let markdown = "";
-    let sourcePath = "";
-    if (source.ok) {
-      markdown = source.markdown || "";
-      sourcePath = source.sourcePath || "";
-    } else if (this.lastResolvedMarkdown.trim()) {
-      markdown = this.lastResolvedMarkdown;
-      sourcePath = this.lastResolvedSourcePath || "";
-    } else {
-      if (!silent)
-        new Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A Markdown \u6587\u4EF6");
-      if (showLoading && this.loadingGeneration === generation) {
-        if (this.loadingVisibilityTimer) {
-          window.clearTimeout(this.loadingVisibilityTimer);
-          this.loadingVisibilityTimer = null;
-        }
-        this.setPreviewLoading(false);
-      }
-      return;
-    }
-    if (!markdown.trim()) {
-      if (!silent)
-        new Notice("\u5F53\u524D\u6587\u4EF6\u5185\u5BB9\u4E3A\u7A7A");
-      this.completeAiLayoutSourceSwitch(sourcePath);
-      if (showLoading && this.loadingGeneration === generation) {
-        if (this.loadingVisibilityTimer) {
-          window.clearTimeout(this.loadingVisibilityTimer);
-          this.loadingVisibilityTimer = null;
-        }
-        this.setPreviewLoading(false);
-      }
-      return;
-    }
-    try {
-      if (!silent)
-        new Notice("\u26A1 \u6B63\u5728\u8F6C\u6362...");
-      const html = await this.renderMarkdownForPreview(markdown, sourcePath);
-      if (generation !== this.renderGeneration)
-        return;
-      this.lastResolvedMarkdown = markdown;
-      this.lastResolvedSourcePath = sourcePath;
-      this.lastResolvedSourceHash = String(this.simpleHash(markdown));
-      this.completeAiLayoutSourceSwitch(sourcePath);
-      this.baseRenderedHtml = html;
-      this.currentHtml = html;
-      this.lastRenderError = "";
-      this.lastRenderFailureNoticeKey = "";
-      this.sessionCoverBase64 = null;
-      const scrollTop = this.previewContainer.scrollTop;
-      setElementHtml(this.previewContainer, html);
-      this.previewContainer.scrollTop = scrollTop;
-      this.previewContainer.addClass("apple-has-content");
-      this.syncPreviewPresentationMode();
-      this.updateCurrentDoc();
-      if (this.shouldSyncAiLayoutUi()) {
-        const activeSelection = this.getCurrentAiLayoutSelection();
-        let layoutState = null;
-        if (sourcePath && typeof ((_a5 = this.plugin) == null ? void 0 : _a5.getArticleLayoutState) === "function") {
-          layoutState = this.plugin.getArticleLayoutState(sourcePath, activeSelection);
-        }
-        const canReuseAiLayout = !!(this.aiPreviewApplied && ((_c = (_b = layoutState == null ? void 0 : layoutState.layoutJson) == null ? void 0 : _b.blocks) == null ? void 0 : _c.length) && this.lastResolvedSourceHash && layoutState.sourceHash === this.lastResolvedSourceHash);
-        if (canReuseAiLayout) {
-          this.applyAiLayoutToPreview();
-        } else if (this.aiPreviewApplied) {
-          this.aiPreviewApplied = false;
-          this.syncPreviewPresentationMode();
-        }
-        this.refreshAiLayoutPanel();
-      }
-      if (!silent)
-        new Notice("\u2705 \u8F6C\u6362\u6210\u529F\uFF01");
-    } catch (error) {
-      console.error("\u8F6C\u6362\u5931\u8D25:", error);
-      if (generation !== this.renderGeneration)
-        return;
-      this.currentHtml = null;
-      this.baseRenderedHtml = null;
-      this.aiPreviewApplied = false;
-      this.completeAiLayoutSourceSwitch(sourcePath);
-      this.syncPreviewPresentationMode();
-      this.lastRenderError = toReadableError3(error).message || "\u672A\u77E5\u6E32\u67D3\u9519\u8BEF";
-      this.showRenderFailurePlaceholder(this.lastRenderError);
-      this.updateCurrentDoc();
-      if (this.shouldSyncAiLayoutUi()) {
-        this.refreshAiLayoutPanel();
-      }
-      const noticeKey = `${sourcePath || ""}:${this.lastRenderError}`;
-      if (!silent || this.lastRenderFailureNoticeKey !== noticeKey) {
-        new Notice("\u274C \u8F6C\u6362\u5931\u8D25: " + this.lastRenderError);
-        this.lastRenderFailureNoticeKey = noticeKey;
-      }
-    } finally {
-      if (showLoading && this.loadingGeneration === generation) {
-        if (this.loadingVisibilityTimer) {
-          window.clearTimeout(this.loadingVisibilityTimer);
-          this.loadingVisibilityTimer = null;
-        }
-        this.setPreviewLoading(false);
-      }
-    }
-  }
-  /**
-   * 视图改变大小时触发 (包括侧边栏展开、Tab切换等导致的大小变化)
-   */
-  onResize() {
-    if (this.resizeTimeout)
-      window.clearTimeout(this.resizeTimeout);
-    if (!this.containerEl.offsetParent)
-      return;
-    this.resizeTimeout = window.setTimeout(() => {
-      this.convertCurrent(true);
-    }, 300);
-  }
-  /**
-   * 渲染 HTML
-   * @param {string} html
-   */
-  renderHTML(html) {
-    if (!this.previewContainer)
-      return;
-    this.previewContainer.empty();
-    setElementHtml(this.previewContainer, html);
-  }
-  /**
-   * @param {string} htmlContent
-   * @returns {Promise<boolean>}
-   */
-  async copyRichHTMLByClipboard(htmlContent) {
-    if (!navigator.clipboard || typeof navigator.clipboard.write !== "function" || typeof ClipboardItem === "undefined") {
-      return false;
-    }
-    const item = new ClipboardItem({
-      "text/html": new Blob([htmlContent], { type: "text/html" })
-    });
-    await navigator.clipboard.write([item]);
-    return true;
-  }
-  /**
-   * @param {unknown} text
-   * @returns {string}
-   */
-  normalizeClipboardText(text) {
-    return String(text || "").replace(/\s+/g, " ").trim();
-  }
-  /**
-   * @param {string} icon
-   */
-  setCopyButtonIcon(icon) {
-    if (!this.copyBtn)
-      return;
-    this.copyBtn.replaceChildren();
-    const setIcon = getObsidianSetIcon();
-    if (typeof setIcon === "function") {
-      setIcon(this.copyBtn, icon);
-    }
-  }
-  setCopyButtonSpinner() {
-    if (!this.copyBtn)
-      return;
-    this.copyBtn.replaceChildren();
-    const activeDocument = getActiveDocumentCompat();
-    if (!activeDocument)
-      return;
-    const spinner = activeDocument.createElement("span");
-    spinner.className = "apple-copy-spinner";
-    spinner.setAttribute("aria-hidden", "true");
-    this.copyBtn.appendChild(spinner);
-  }
-  /**
-   * @param {HTMLElement | null} root
-   */
-  async enhanceHtmlForWechatPublishing(root) {
-    if (!root)
-      return;
-    const activeDocument = getActiveDocumentCompat();
-    let mount = null;
-    try {
-      if ((activeDocument == null ? void 0 : activeDocument.body) && !root.isConnected) {
-        mount = activeDocument.createElement("div");
-        mount.setCssStyles({
-          position: "fixed",
-          left: "-99999px",
-          top: "0",
-          width: "760px",
-          opacity: "0",
-          pointerEvents: "none",
-          overflow: "hidden"
-        });
-        activeDocument.body.appendChild(mount);
-        mount.appendChild(root);
-      }
-      await convertRenderedMermaidDiagramsToImages(root, {
-        simpleHash: (value) => this.simpleHash(String(value || "")),
-        mermaidImageCache: this.mermaidImageCache
-      });
-      this.transformCodeBlocksForClipboard(root);
-    } finally {
-      if (mount) {
-        mount.remove();
-      }
-    }
-  }
-  /**
-   * @param {string} html
-   * @returns {Promise<string>}
-   */
-  async prepareHtmlForWechatDraft(html) {
-    const tempDiv = createHtmlContainer("div", html || "");
-    if (!tempDiv)
-      return "";
-    await this.enhanceHtmlForWechatPublishing(tempDiv);
-    return tempDiv.innerHTML;
-  }
-  /**
-   * @param {string} html
-   * @returns {Promise<string>}
-   */
-  async prepareHtmlForWechatsyncArticle(html) {
-    const tempDiv = createHtmlContainer("div", html || "");
-    if (!tempDiv)
-      return "";
-    await this.processImagesToDataURL(tempDiv);
-    this.transformCodeBlocksForWechatsync(tempDiv);
-    return tempDiv.innerHTML;
-  }
-  // Bridge publish flow only. Unlike prepareHtmlForWechatsyncArticle (which
-  // inlines local images as data: URLs for the legacy WeChat clipboard
-  // flow), the bridge protocol carries image bytes via assets[] separately.
-  // Inlining base64 here would double-encode every local image: once into
-  // assets[] (correct), once into content[] (~33% inflated). The latter
-  // also breaks retry, because the extension has to redact base64 before
-  // persisting history (storage quota), and a redacted data: URL cannot be
-  // re-published. So: rewrite app:// img srcs back to asset://<id> using
-  // the assets[] metadata resolveArticleImages already produced. Do NOT
-  // call processImagesToDataURL.
-  /**
-   * @param {string} html
-   * @param {unknown[]} [assets]
-   * @returns {Promise<string>}
-   */
-  async prepareHtmlForWechatsyncArticleViaBridge(html, assets = []) {
-    const mapped = mapAppUrlImagesToAssetUrls(html || "", assets);
-    const tempDiv = createHtmlContainer("div", mapped);
-    if (!tempDiv)
-      return "";
-    this.transformCodeBlocksForWechatsync(tempDiv);
-    return tempDiv.innerHTML;
-  }
-  // Bridge publish flow: produce a small inline JPEG data URL for the
-  // cover asset, suitable for direct <img src> use in the extension's
-  // popup History list (which cannot resolve asset:// URLs in plain DOM).
-  // Budget: longest edge ≤ COVER_THUMBNAIL_MAX_DIM (256px), JPEG quality
-  // tries 0.7 → 0.55 → 0.4 until size ≤ COVER_THUMBNAIL_MAX_BYTES (~8KB).
-  // Returns '' on any failure — the extension will fall back to its own
-  // local-thumbnail path. Never throws into the publish pipeline.
-  /**
-   * @param {WechatsyncAssetLike | null | undefined} asset
-   * @returns {Promise<string>}
-   */
-  async generateCoverThumbnailFromAsset(asset) {
-    try {
-      if (!asset || typeof asset !== "object")
-        return "";
-      const base64 = typeof asset.base64 === "string" ? asset.base64 : "";
-      const mimeType = typeof asset.mimeType === "string" ? asset.mimeType : "";
-      if (!base64 || !mimeType)
-        return "";
-      if (mimeType === "image/gif")
-        return "";
-      const sourceDataUrl = `data:${mimeType};base64,${base64}`;
-      const image = (
-        /** @type {HTMLImageElement} */
-        await new Promise((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => resolve(img);
-          img.onerror = () => reject(new Error("image_decode_failed"));
-          img.src = sourceDataUrl;
-        })
-      );
-      const naturalW = image.naturalWidth || image.width || 0;
-      const naturalH = image.naturalHeight || image.height || 0;
-      if (!naturalW || !naturalH)
-        return "";
-      const MAX_DIM = 256;
-      const scale = Math.min(1, MAX_DIM / Math.max(naturalW, naturalH));
-      const targetW = Math.max(1, Math.round(naturalW * scale));
-      const targetH = Math.max(1, Math.round(naturalH * scale));
-      const activeDocument = getActiveDocumentCompat();
-      if (!activeDocument)
-        return "";
-      const canvas = activeDocument.createElement("canvas");
-      canvas.width = targetW;
-      canvas.height = targetH;
-      const ctx = canvas.getContext("2d");
-      if (!ctx)
-        return "";
-      ctx.drawImage(image, 0, 0, targetW, targetH);
-      const MAX_BYTES = 8 * 1024;
-      for (const quality of [0.7, 0.55, 0.4]) {
-        const dataUrl = canvas.toDataURL("image/jpeg", quality);
-        if (typeof dataUrl === "string" && dataUrl.length <= MAX_BYTES) {
-          return dataUrl;
-        }
-      }
-      return "";
-    } catch (err) {
-      console.warn("[Wechatsync] generateCoverThumbnailFromAsset failed", err);
-      return "";
-    }
-  }
-  /**
-   * @param {Element | null | undefined} block
-   * @returns {string}
-   */
-  extractCodeTextForWechatsync(block) {
-    var _a5;
-    const codePre = (_a5 = block == null ? void 0 : block.querySelector) == null ? void 0 : _a5.call(block, "pre");
-    if (!codePre)
-      return "";
-    const sectionNodes = (
-      /** @type {HTMLElement[]} */
-      Array.from(codePre.querySelectorAll("section"))
-    );
-    const codeLinesNode = sectionNodes.filter((node) => {
-      const style = (node.getAttribute("style") || "").toLowerCase();
-      return style.includes("white-space:nowrap") || style.includes("white-space: nowrap");
-    }).sort((a, b) => {
-      const score = (node) => {
-        const html = node.innerHTML || "";
-        return (html.includes("<br") ? 1e4 : 0) + (node.textContent || "").length;
-      };
-      return score(b) - score(a);
-    })[0];
-    if (codeLinesNode) {
-      return (codeLinesNode.innerHTML || "").split(/<br\s*\/?>/i).map((lineHtml) => {
-        return htmlToText(lineHtml || "").replace(/\u00a0/g, " ");
-      }).join("\n");
-    }
-    const codeEl = codePre.querySelector("code");
-    return ((codeEl ? codeEl.textContent : codePre.textContent) || "").replace(/\u00a0/g, " ");
-  }
-  /**
-   * @param {Element | null} root
-   */
-  transformCodeBlocksForWechatsync(root) {
-    if (!root)
-      return;
-    const codeBlocks = (
-      /** @type {HTMLElement[]} */
-      Array.from(root.querySelectorAll(".code-snippet__fix"))
-    );
-    codeBlocks.forEach((block) => {
-      const codeText = this.extractCodeTextForWechatsync(block);
-      const activeDocument = getActiveDocumentCompat();
-      if (!activeDocument)
-        return;
-      const pre = activeDocument.createElement("pre");
-      pre.setAttribute("style", [
-        "display:block !important",
-        "width:100% !important",
-        "max-width:100% !important",
-        "margin:14px 0 !important",
-        "padding:12px 14px !important",
-        "box-sizing:border-box !important",
-        "background:#f6f8fa !important",
-        "border:1px solid #e5e7eb !important",
-        "border-radius:8px !important",
-        "overflow-x:auto !important",
-        "overflow-y:hidden !important",
-        "-webkit-overflow-scrolling:touch !important",
-        "font-family:'SF Mono',Consolas,Monaco,monospace !important",
-        "font-size:13px !important",
-        "line-height:1.65 !important",
-        "color:#24292f !important",
-        "text-indent:0 !important",
-        "white-space:pre !important"
-      ].join(";"));
-      const code = activeDocument.createElement("code");
-      code.setAttribute("style", [
-        "display:block !important",
-        "margin:0 !important",
-        "padding:0 !important",
-        "background:transparent !important",
-        "color:#24292f !important",
-        "font:inherit !important",
-        "line-height:inherit !important",
-        "white-space:pre !important",
-        "text-indent:0 !important"
-      ].join(";"));
-      code.textContent = codeText;
-      pre.appendChild(code);
-      block.replaceWith(pre);
-    });
-  }
-  /**
-   * @param {Element | null} root
-   */
-  transformCodeBlocksForClipboard(root) {
-    if (!root)
-      return;
-    const codeBlocks = (
-      /** @type {HTMLElement[]} */
-      Array.from(root.querySelectorAll(".code-snippet__fix"))
-    );
-    codeBlocks.forEach((block) => {
-      const codePre = block.querySelector("pre");
-      if (!codePre)
-        return;
-      const codeHtml = codePre.innerHTML || "";
-      const styleText = block.getAttribute("style") || "";
-      const backgroundMatch = styleText.match(/background:([^;!]+)(?:\s*!important)?/i);
-      const borderMatch = styleText.match(/border:([^;!]+)(?:\s*!important)?/i);
-      const radiusMatch = styleText.match(/border-radius:([^;!]+)(?:\s*!important)?/i);
-      const background = backgroundMatch ? backgroundMatch[1].trim() : "#0d1117";
-      const border = borderMatch ? borderMatch[1].trim() : "1px solid #30363d";
-      const borderRadius = radiusMatch ? radiusMatch[1].trim() : "8px";
-      const sectionNodes = (
-        /** @type {HTMLElement[]} */
-        Array.from(codePre.querySelectorAll("section"))
-      );
-      const lineNumberColumn = sectionNodes.find((node) => {
-        const style = (node.getAttribute("style") || "").toLowerCase();
-        return style.includes("border-right") && style.includes("user-select");
-      });
-      const codeLinesNode = sectionNodes.filter((node) => {
-        const style = (node.getAttribute("style") || "").toLowerCase();
-        return style.includes("white-space:nowrap") || style.includes("white-space: nowrap");
-      }).sort((a, b) => {
-        const score = (node) => {
-          const html = node.innerHTML || "";
-          return (html.includes("<br") ? 1e4 : 0) + (node.textContent || "").length;
-        };
-        return score(b) - score(a);
-      })[0];
-      const codeLinesHtml = codeLinesNode ? codeLinesNode.innerHTML : codeHtml;
-      const directMacHeader = Array.from(block.children).find(
-        (child) => child !== codePre && !child.querySelector("pre") && child.querySelector("span") && !(child.textContent || "").trim()
-      );
-      const hasMacHeader = !!directMacHeader;
-      const codeLineParts = codeLinesNode ? codeLinesHtml.split(/<br\s*\/?>/i) : [codeLinesHtml];
-      const lineNumberLabels = lineNumberColumn ? Array.from(lineNumberColumn.children).map((node) => (node.textContent || "").trim()).filter(Boolean) : [];
-      const shouldKeepFixedLineNumbers = lineNumberLabels.length > 0 && codeLineParts.length > 0;
-      const activeDocument = getActiveDocumentCompat();
-      if (!activeDocument)
-        return;
-      const pre = activeDocument.createElement("pre");
-      pre.setAttribute("class", "hljs code__pre");
-      pre.setAttribute("style", `width:100% !important;max-width:100% !important;margin:12px 0 !important;background:${background} !important;border:${border} !important;border-radius:${borderRadius} !important;box-shadow:0 4px 12px rgba(0,0,0,0.3) !important;overflow-x:auto !important;overflow-y:hidden !important;-webkit-overflow-scrolling:touch !important;box-sizing:border-box !important;font-family:'SF Mono',Consolas,Monaco,monospace !important;font-size:13px !important;line-height:1.75 !important;color:#f0f6fc !important;white-space:normal !important;`);
-      if (hasMacHeader) {
-        const toolbar = activeDocument.createElement("section");
-        const toolbarStyle = "display:block !important;background:#161b22 !important;padding:6px 10px 6px 10px !important;border:none !important;border-bottom:1px solid #30363d !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;box-sizing:border-box !important;width:100% !important;";
-        toolbar.setAttribute("style", toolbarStyle);
-        setElementHtml(toolbar, [
-          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>',
-          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>',
-          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#28c840 !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>'
-        ].join(""));
-        pre.appendChild(toolbar);
-      }
-      const code = activeDocument.createElement("code");
-      if (shouldKeepFixedLineNumbers) {
-        const lineNumbersHtml = codeLineParts.map((_, index) => {
-          const lineNumber = lineNumberLabels[index] || String(index + 1);
-          return `<section style="padding:0 10px 0 0 !important;line-height:1.75 !important;color:#95989C !important;">${lineNumber}</section>`;
-        }).join("");
-        const codeInnerHtml = codeLineParts.map((lineHtml) => lineHtml || "&nbsp;").join("<br/>");
-        const codeWithLineNumbersStyle = "display:block !important;width:100% !important;min-width:100% !important;max-width:100% !important;padding:0 !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:normal !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;";
-        code.setAttribute("style", codeWithLineNumbersStyle);
-        setElementHtml(code, `<section style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;max-width:100% !important;padding:0 !important;box-sizing:border-box !important;margin:0 !important;">
-          <section class="line-numbers" style="text-align:right !important;padding:12px 0 !important;border-right:1px solid rgba(255,255,255,0.1) !important;user-select:none !important;background:transparent !important;flex:0 0 auto !important;min-width:3.5em !important;box-sizing:border-box !important;margin:0 !important;">${lineNumbersHtml}</section>
-          <section class="code-scroll" style="flex:1 1 auto !important;overflow-x:auto !important;overflow-y:visible !important;-webkit-overflow-scrolling:touch !important;padding:12px 12px 12px 16px !important;min-width:0 !important;box-sizing:border-box !important;margin:0 !important;">
-            <section style="white-space:pre !important;min-width:max-content !important;line-height:1.75 !important;font-size:13px !important;margin:0 !important;">${codeInnerHtml}</section>
-          </section>
-        </section>`);
-      } else {
-        const codeScrollableStyle = "display:block !important;width:max-content !important;min-width:100% !important;max-width:none !important;padding:12px !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:nowrap !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;";
-        code.setAttribute("style", codeScrollableStyle);
-        setElementHtml(code, codeLinesHtml);
-      }
-      pre.appendChild(code);
-      block.replaceWith(pre);
-    });
-  }
-  async readClipboardTextSnapshot() {
-    if (!navigator.clipboard || typeof navigator.clipboard.readText !== "function") {
-      return { supported: false, text: "" };
-    }
-    try {
-      const text = await navigator.clipboard.readText();
-      return { supported: true, text: this.normalizeClipboardText(text) };
-    } catch (e) {
-      return { supported: false, text: "" };
-    }
-  }
-  /**
-   * 复制 HTML
-   */
-  async copyHTML() {
-    if (this.isCopying)
-      return;
-    if (!this.currentHtml) {
-      new Notice(this.getMissingRenderNotice());
-      return;
-    }
-    this.isCopying = true;
-    if (this.copyBtn) {
-      this.copyBtn.classList.add("is-copying");
-      this.setCopyButtonSpinner();
-    }
-    try {
-      const exportHtml = this.getCurrentExportHtml() || this.currentHtml;
-      const tempDiv = createHtmlContainer("div", exportHtml);
-      await this.processImagesToDataURL(tempDiv);
-      await this.enhanceHtmlForWechatPublishing(tempDiv);
-      const cleanedHtml = this.cleanHtmlForDraft(tempDiv.innerHTML);
-      const htmlContent = cleanedHtml;
-      window.__OWC_LAST_CLIPBOARD_HTML = htmlContent;
-      window.__OWC_LAST_CLIPBOARD_TEXT = htmlToText(cleanedHtml);
-      const expectedPlainText = this.normalizeClipboardText(window.__OWC_LAST_CLIPBOARD_TEXT);
-      const mobile = isMobileClient2(this.app);
-      let copied = false;
-      try {
-        copied = await this.copyRichHTMLByClipboard(htmlContent);
-      } catch (e) {
-        copied = false;
-      }
-      if (mobile && copied) {
-        const snapshot = await this.readClipboardTextSnapshot();
-        copied = snapshot.supported && snapshot.text === expectedPlainText;
-      }
-      if (!copied) {
-        throw new Error("rich copy unavailable");
-      }
-      new Notice("\u2705 \u5DF2\u590D\u5236\u516C\u4F17\u53F7\u683C\u5F0F\uFF0C\u8BF7\u76F4\u63A5\u7C98\u8D34\u5230\u516C\u4F17\u53F7\u7F16\u8F91\u5668");
-      if (this.copyBtn) {
-        this.copyBtn.classList.remove("is-copying");
-        this.setCopyButtonIcon("check");
-        window.setTimeout(() => {
-          if (this.copyBtn) {
-            this.setCopyButtonIcon("copy");
-          }
-        }, 2e3);
-      }
-      return;
-    } catch (error) {
-      console.error("\u590D\u5236\u5931\u8D25:", error);
-      new Notice("\u274C \u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u4F7F\u7528\u300C\u53D1\u5E03\u4E0E\u5206\u53D1\u300D\u53D1\u9001\u6587\u7AE0");
-      if (this.copyBtn) {
-        this.copyBtn.classList.remove("is-copying");
-        this.setCopyButtonIcon("copy");
-      }
-    } finally {
-      this.isCopying = false;
-    }
-  }
-  /**
-   * 将 HTML 中的本地图片转换为 Base64 (Canvas Compressed)
-   */
-  /**
-   * @param {Element} container
-   * @returns {Promise<boolean>}
-   */
-  async processImagesToDataURL(container) {
-    const images = toImageElements(container.querySelectorAll("img"));
-    const localImages = images.filter((img) => img.src.startsWith("app://") || img.src.startsWith("capacitor://"));
-    if (localImages.length === 0)
-      return false;
-    const startTime = Date.now();
-    const concurrency = 3;
-    for (let i = 0; i < localImages.length; i += concurrency) {
-      const chunk = localImages.slice(i, i + concurrency);
-      await Promise.all(chunk.map((img) => this.convertImageToLocally(img)));
-    }
-    const elapsed = Date.now() - startTime;
-    const minDuration = 800;
-    if (elapsed < minDuration) {
-      await new Promise((resolve) => window.setTimeout(resolve, minDuration - elapsed));
-    }
-    return true;
-  }
-  /**
-   * @param {HTMLImageElement} img
-   * @returns {Promise<void>}
-   */
-  async convertImageToLocally(img) {
-    try {
-      const response = await window.fetch(img.src);
-      const blob = await response.blob();
-      if (blob.size > 10 * 1024 * 1024) {
-        new Notice(`\u26A0\uFE0F \u53D1\u73B0\u5927\u56FE (${(blob.size / 1024 / 1024).toFixed(1)}MB)\uFF0C\u5904\u7406\u53EF\u80FD\u8F83\u6162`, 5e3);
-      }
-      let dataUrl;
-      if (blob.type === "image/gif") {
-        dataUrl = await this.blobToDataUrl(blob);
-      } else {
-        dataUrl = await this.blobToJpegDataUrl(blob);
-      }
-      img.src = dataUrl;
-      delete img.dataset.src;
-    } catch (error) {
-      console.error("Image processing failed:", error);
-    }
-  }
-  // Helper: Direct Blob to Base64 (for GIFs)
-  /**
-   * @param {Blob} blob
-   * @returns {Promise<string>}
-   */
-  blobToDataUrl(blob) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : "");
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  }
-  /**
-   * @param {Blob} blob
-   * @returns {Promise<string>}
-   */
-  blobToJpegDataUrl(blob) {
-    return new Promise((resolve, reject) => {
-      const url = URL.createObjectURL(blob);
-      const image = new Image();
-      image.onload = () => {
-        const activeDocument = getActiveDocumentCompat();
-        if (!activeDocument) {
-          URL.revokeObjectURL(url);
-          reject(new Error("Document unavailable"));
-          return;
-        }
-        const canvas = activeDocument.createElement("canvas");
-        let width = image.width;
-        let height = image.height;
-        if (width > 1920) {
-          height = Math.round(height * (1920 / width));
-          width = 1920;
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(image, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
-        URL.revokeObjectURL(url);
-        resolve(dataUrl);
-      };
-      image.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error("Image load failed"));
-      };
-      image.src = url;
-    });
-  }
-  async onClose() {
-    var _a5;
-    if (this.activeLeafRenderTimer) {
-      window.clearTimeout(this.activeLeafRenderTimer);
-      this.activeLeafRenderTimer = null;
-    }
-    if (this.loadingVisibilityTimer) {
-      window.clearTimeout(this.loadingVisibilityTimer);
-      this.loadingVisibilityTimer = null;
-    }
-    if (this.sidePaddingPreviewTimer) {
-      window.clearTimeout(this.sidePaddingPreviewTimer);
-      this.sidePaddingPreviewTimer = null;
-    }
-    if (this.aiLayoutStaleSuppressTimer) {
-      window.clearTimeout(this.aiLayoutStaleSuppressTimer);
-      this.aiLayoutStaleSuppressTimer = null;
-    }
-    this.setPreviewLoading(false);
-    if (this.activeEditorScroller && this.editorScrollListener) {
-      this.activeEditorScroller.removeEventListener("scroll", this.editorScrollListener);
-    }
-    if (this.previewContainer && this.previewScrollListener) {
-      this.previewContainer.removeEventListener("scroll", this.previewScrollListener);
-    }
-    if (this.cancelScrollSyncFrame) {
-      this.cancelScrollSyncFrame();
-      this.cancelScrollSyncFrame = null;
-      this.scrollSyncFrame = null;
-      this.pendingScrollSyncSource = "";
-    }
-    this.expectedEditorScrollTop = null;
-    this.expectedPreviewScrollTop = null;
-    (_a5 = this.previewContainer) == null ? void 0 : _a5.empty();
-    this.closeTransientPanels();
-    this.aiLayoutBtn = null;
-    this.settingsBtn = null;
-    if (this.articleStates) {
-      this.articleStates.clear();
-    }
-    if (this.svgUploadCache) {
-      this.svgUploadCache.clear();
-    }
-    if (this.imageUploadCache) {
-      this.imageUploadCache.clear();
-    }
-    if (this.coverUploadCache) {
-      this.coverUploadCache.clear();
-    }
-    if (this.mermaidImageCache) {
-      this.mermaidImageCache.clear();
-    }
-    console.log("\u{1F34E} \u53D1\u5E03\u52A9\u624B\u9762\u677F\u5DF2\u5173\u95ED");
-  }
-  /**
-   * 简单的字符串哈希函数 (DJB2算法)
-   * @param {string} str
-   * @returns {number}
-   */
-  simpleHash(str) {
-    let hash = 5381;
-    for (let i = 0; i < str.length; i++) {
-      hash = hash * 33 ^ str.charCodeAt(i);
-    }
-    return hash >>> 0;
-  }
 };
-var AppleStyleSettingTab = class extends PluginSettingTab {
+
+// views/apple-style-view.js
+var AppleStyleView = class extends ItemView {
   /**
-   * @param {AppLike} app
+   * @param {LeafLike} leaf
    * @param {AppleStylePluginLike} plugin
    */
-  constructor(app, plugin) {
-    super(app, plugin);
+  constructor(leaf, plugin) {
+    super(leaf);
     this.plugin = plugin;
+    this.currentHtml = null;
+    this.converter = null;
+    this.nativeRenderPipeline = null;
+    this.theme = null;
+    this.lastActiveFile = null;
+    this.sessionCoverBase64 = "";
+    this.sessionThumbMediaId = "";
+    this.sessionDraftMediaId = "";
+    this.sessionDraftIndex = 0;
+    this.sessionTitle = "";
+    this.sessionDigest = "";
+    this.wechatMaterialCache = /* @__PURE__ */ new Map();
+    this.wechatMaterialCoverAssetCache = /* @__PURE__ */ new Map();
+    this.scrollSyncFrame = null;
+    this.cancelScrollSyncFrame = null;
+    this.pendingScrollSyncSource = "";
+    this.expectedEditorScrollTop = null;
+    this.expectedPreviewScrollTop = null;
+    this.articleStates = /* @__PURE__ */ new Map();
+    this.svgUploadCache = /* @__PURE__ */ new Map();
+    this.imageUploadCache = /* @__PURE__ */ new Map();
+    this.coverUploadCache = /* @__PURE__ */ new Map();
+    this.mermaidImageCache = /* @__PURE__ */ new Map();
+    this.renderGeneration = 0;
+    this.lastRenderError = "";
+    this.lastRenderFailureNoticeKey = "";
+    this.activeLeafRenderTimer = null;
+    this.loadingGeneration = 0;
+    this.loadingVisibilityTimer = null;
+    this.sidePaddingPreviewTimer = null;
+    this.resizeTimeout = null;
+    this.lastResolvedMarkdown = "";
+    this.lastResolvedSourcePath = "";
+    this.lastResolvedSourceHash = "";
+    this.aiLayoutSourceSwitchPath = "";
+    this.aiLayoutStaleSuppressPath = "";
+    this.aiLayoutStaleSuppressUntil = 0;
+    this.aiLayoutStaleSuppressTimer = null;
+    this.baseRenderedHtml = null;
+    this.aiPreviewApplied = false;
+    this.aiLayoutBtn = null;
+    this.settingsBtn = null;
+    this.aiLayoutDebugMode = "";
+    this.aiLayoutActiveGenerationSelection = null;
+    this.previewContainer = null;
+    this.settingsOverlay = null;
+    this.settingsArea = null;
+    this.settingsAdvancedArea = null;
+    this.settingsAdvancedOptions = null;
+    this.activeEditorScroller = null;
+    this.editorScrollListener = null;
+    this.previewScrollListener = null;
+    this.aiLayoutOverlay = null;
+    this.aiLayoutArea = null;
+    this.aiLayoutFamilySelect = null;
+    this.aiColorPaletteSelect = null;
+    this.aiStylePackSelect = null;
+    this.aiCustomColorInput = null;
+    this.aiColorPaletteControls = null;
+    this.aiColorPaletteGrid = null;
+    this.aiLayoutStatus = null;
+    this.aiLayoutStatusBadge = null;
+    this.aiLayoutStatusBody = null;
+    this.aiLayoutStatusText = null;
+    this.aiCachedLayoutList = null;
+    this.aiLayoutSummary = null;
+    this.aiGenerateBtn = null;
+    this.aiRegenerateBtn = null;
+    this.aiResetBtn = null;
+    this.aiRestoreBlocksBtn = null;
+    this.aiResultSection = null;
+    this.aiLayoutMetaNote = null;
+    this.aiBlockList = null;
+    this.aiAdvancedToggleBtn = null;
+    this.aiAdvancedBody = null;
+    this.aiLayoutMetaChips = null;
+    this.aiSchemaIssuePanel = null;
+    this.aiViewJsonBtn = null;
+    this.aiViewErrorBtn = null;
+    this.aiDebugPanel = null;
+    this.aiDebugPanelTitle = null;
+    this.aiCopyPromptBtn = null;
+    this.aiCopyDebugBtn = null;
+    this.aiDebugPanelBody = null;
+    this.aiLayoutLoadingMask = null;
+    this.aiLayoutLoadingSpinner = null;
+    this.aiLayoutLoadingMaskText = null;
+    this.currentDocLabel = null;
+    this.docTitleText = null;
+    this.copyBtn = null;
+    this.selectedAccountId = "";
+    this.isCopying = false;
+    this.captionToggleState = null;
+    this.pendingAiLayoutFamily = "";
+    this.pendingAiColorPalette = "";
+    this.pendingAiStylePack = "";
+    this.aiPrimaryActionMode = "";
+    this.aiLayoutLoading = false;
+    this.aiAdvancedOpen = false;
+    this._sourceFirstRecoveryKey = "";
+    this.aiLayoutPendingAnchor = null;
   }
-  /**
-   * @param {string} vaultPath
-   * @returns {string}
-   */
-  normalizeVaultPath(vaultPath) {
-    return normalizeVaultPath(vaultPath);
-  }
-  /**
-   * @param {string} vaultPath
-   * @returns {boolean}
-   */
-  isAbsolutePathLike(vaultPath) {
-    return isAbsolutePathLike(vaultPath);
-  }
-  refreshOpenConverterAiState() {
-    var _a5, _b;
-    const view = (
-      /** @type {ConverterViewRefreshLike | null} */
-      ((_b = (_a5 = this.plugin).getConverterView) == null ? void 0 : _b.call(_a5)) || null
-    );
-    if (view && typeof view.updateAiToolbarState === "function") {
-      view.updateAiToolbarState();
-    }
-    if (view && typeof view.refreshAiLayoutPanel === "function") {
-      view.refreshAiLayoutPanel();
-    }
-  }
-  /**
-   * @param {{ title?: string, message?: string, confirmText?: string, cancelText?: string }} options
-   * @returns {Promise<boolean>}
-   */
-  confirmDestructiveAction({ title, message, confirmText = "\u786E\u8BA4", cancelText = "\u53D6\u6D88" }) {
-    return new Promise((resolve) => {
-      const modal = createObsidianModal(this.app);
-      let settled = false;
-      const settle = (value) => {
-        if (settled)
-          return;
-        settled = true;
-        modal.close();
-        resolve(value);
-      };
-      modal.titleEl.setText(title || "\u786E\u8BA4\u64CD\u4F5C");
-      const body = modal.contentEl.createDiv({ cls: "wechat-confirm-modal" });
-      body.createEl("p", { text: message || "\u786E\u5B9A\u8981\u7EE7\u7EED\u5417\uFF1F" });
-      const actions = modal.contentEl.createDiv({ cls: "wechat-modal-buttons" });
-      actions.createEl("button", { text: cancelText }).onclick = () => settle(false);
-      const confirmBtn = actions.createEl("button", { text: confirmText, cls: "mod-warning" });
-      confirmBtn.onclick = () => settle(true);
-      const originalOnClose = typeof modal.onClose === "function" ? (
-        /** @type {() => void} */
-        modal.onClose.bind(modal)
-      ) : null;
-      modal.onClose = () => {
-        if (originalOnClose)
-          originalOnClose();
-        if (!settled) {
-          settled = true;
-          resolve(false);
-        }
-      };
-      modal.open();
-    });
-  }
+};
+Object.assign(
+  AppleStyleView.prototype,
+  coreMethods,
+  stylePanelMethods,
+  aiLayoutPanelMethods,
+  aiLayoutDebugMethods,
+  clipboardMethods,
+  wechatPublishMethods,
+  materialPickerMethods
+);
+
+// views/settings/settings-tab-shell.js
+var settingsTabShellMethods = {
   /** @returns {SettingDefinitionRenderLike[]} */
   getSettingDefinitions() {
     return [{
@@ -59958,7 +61785,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
         this.renderSettingsContent();
       }
     }];
-  }
+  },
   /**
    * @param {ObsidianElementLike} containerEl
    */
@@ -59987,7 +61814,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
         openExternalUrl2.call(this.plugin, GITHUB_REPOSITORY_URL);
       }
     };
-  }
+  },
   /**
    * @param {ObsidianElementLike} containerEl
    * @param {string} description
@@ -59995,7 +61822,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
   renderSettingsTabIntro(containerEl, description) {
     const intro = containerEl.createDiv({ cls: "apple-settings-tab-intro" });
     intro.createEl("p", { text: description, cls: "apple-settings-tab-intro-desc" });
-  }
+  },
   renderSettingsContent() {
     const { containerEl } = this;
     containerEl.empty();
@@ -60043,249 +61870,260 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
     } else if (this._activeSettingsTab === "multi") {
       multiTab.onclick();
     }
-    {
-      const containerEl2 = wechatContent;
-      this.renderSettingsTabIntro(
-        containerEl2,
-        "\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7\u3001\u5C01\u9762\u6458\u8981\u548C\u5FAE\u4FE1\u9884\u89C8\u76F8\u5173\u9009\u9879\u3002"
-      );
-      new Setting(containerEl2).setName("\u9884\u89C8\u6A21\u5F0F").setHeading();
-      new Setting(containerEl2).setName("\u4F7F\u7528\u624B\u673A\u4EFF\u771F\u6846").setDesc("\u5F00\u542F\u540E\uFF0C\u9884\u89C8\u533A\u57DF\u5C06\u663E\u793A\u4E3A iPhone X \u624B\u673A\u6846\u6837\u5F0F\uFF1B\u5173\u95ED\u5219\u6062\u590D\u4E3A\u7ECF\u5178\u5168\u5BBD\u9884\u89C8\u6A21\u5F0F\uFF08\u9700\u91CD\u542F\u63D2\u4EF6\u9762\u677F\u751F\u6548\uFF09").addToggle((toggle) => toggle.setValue(this.plugin.settings.usePhoneFrame).onChange(async (value) => {
-        this.plugin.settings.usePhoneFrame = value;
-        await this.plugin.saveSettings();
-        new Notice("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58\uFF0C\u8BF7\u5173\u95ED\u5E76\u91CD\u65B0\u6253\u5F00\u53D1\u5E03\u52A9\u624B\u9762\u677F\u4EE5\u751F\u6548");
-      }));
-      new Setting(containerEl2).setName("\u56FE\u7247\u6C34\u5370").setHeading();
-      new Setting(containerEl2).setName("\u542F\u7528\u56FE\u7247\u6C34\u5370").setDesc("\u5728\u6BCF\u5F20\u56FE\u7247\u4E0A\u65B9\u663E\u793A\u5934\u50CF\uFF08\u9700\u91CD\u542F\u63D2\u4EF6\u9762\u677F\u751F\u6548\uFF09").addToggle((toggle) => toggle.setValue(this.plugin.settings.enableWatermark).onChange(async (value) => {
-        this.plugin.settings.enableWatermark = value;
-        await this.plugin.saveSettings();
-        new Notice("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58\uFF0C\u8BF7\u5173\u95ED\u5E76\u91CD\u65B0\u6253\u5F00\u53D1\u5E03\u52A9\u624B\u9762\u677F\u4EE5\u751F\u6548");
-      }));
-      const uploadSetting = new Setting(containerEl2).setName("\u4E0A\u4F20\u672C\u5730\u5934\u50CF").setDesc(this.plugin.settings.avatarBase64 ? "\u2705 \u5DF2\u4E0A\u4F20\u672C\u5730\u5934\u50CF\uFF08\u4F18\u5148\u4F7F\u7528\uFF09" : "\u9009\u62E9\u672C\u5730\u56FE\u7247\uFF0C\u8F6C\u6362\u4E3A Base64 \u5B58\u50A8\uFF0C\u65E0\u9700\u7F51\u7EDC\u8BF7\u6C42");
-      uploadSetting.addButton((button) => button.setButtonText(this.plugin.settings.avatarBase64 ? "\u91CD\u65B0\u4E0A\u4F20" : "\u9009\u62E9\u56FE\u7247").onClick(() => {
-        const activeDocument = getActiveDocumentCompat();
-        if (!activeDocument)
+    this.renderWechatSettingsTab(wechatContent);
+    renderMultiPlatformSettingsTab(this, multiContent, { obsidianApi });
+  }
+};
+
+// views/settings/wechat-tab.js
+var wechatSettingsMethods = {
+  /**
+   * @param {ObsidianElementLike} containerEl
+   */
+  renderWechatSettingsTab(containerEl) {
+    this.renderSettingsTabIntro(
+      containerEl,
+      "\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7\u3001\u5C01\u9762\u6458\u8981\u548C\u5FAE\u4FE1\u9884\u89C8\u76F8\u5173\u9009\u9879\u3002"
+    );
+    new Setting(containerEl).setName("\u9884\u89C8\u6A21\u5F0F").setHeading();
+    new Setting(containerEl).setName("\u4F7F\u7528\u624B\u673A\u4EFF\u771F\u6846").setDesc("\u5F00\u542F\u540E\uFF0C\u9884\u89C8\u533A\u57DF\u5C06\u663E\u793A\u4E3A iPhone X \u624B\u673A\u6846\u6837\u5F0F\uFF1B\u5173\u95ED\u5219\u6062\u590D\u4E3A\u7ECF\u5178\u5168\u5BBD\u9884\u89C8\u6A21\u5F0F\uFF08\u9700\u91CD\u542F\u63D2\u4EF6\u9762\u677F\u751F\u6548\uFF09").addToggle((toggle) => toggle.setValue(this.plugin.settings.usePhoneFrame).onChange(async (value) => {
+      this.plugin.settings.usePhoneFrame = value;
+      await this.plugin.saveSettings();
+      new Notice("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58\uFF0C\u8BF7\u5173\u95ED\u5E76\u91CD\u65B0\u6253\u5F00\u53D1\u5E03\u52A9\u624B\u9762\u677F\u4EE5\u751F\u6548");
+    }));
+    new Setting(containerEl).setName("\u56FE\u7247\u6C34\u5370").setHeading();
+    new Setting(containerEl).setName("\u542F\u7528\u56FE\u7247\u6C34\u5370").setDesc("\u5728\u6BCF\u5F20\u56FE\u7247\u4E0A\u65B9\u663E\u793A\u5934\u50CF\uFF08\u9700\u91CD\u542F\u63D2\u4EF6\u9762\u677F\u751F\u6548\uFF09").addToggle((toggle) => toggle.setValue(this.plugin.settings.enableWatermark).onChange(async (value) => {
+      this.plugin.settings.enableWatermark = value;
+      await this.plugin.saveSettings();
+      new Notice("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58\uFF0C\u8BF7\u5173\u95ED\u5E76\u91CD\u65B0\u6253\u5F00\u53D1\u5E03\u52A9\u624B\u9762\u677F\u4EE5\u751F\u6548");
+    }));
+    const uploadSetting = new Setting(containerEl).setName("\u4E0A\u4F20\u672C\u5730\u5934\u50CF").setDesc(this.plugin.settings.avatarBase64 ? "\u2705 \u5DF2\u4E0A\u4F20\u672C\u5730\u5934\u50CF\uFF08\u4F18\u5148\u4F7F\u7528\uFF09" : "\u9009\u62E9\u672C\u5730\u56FE\u7247\uFF0C\u8F6C\u6362\u4E3A Base64 \u5B58\u50A8\uFF0C\u65E0\u9700\u7F51\u7EDC\u8BF7\u6C42");
+    uploadSetting.addButton((button) => button.setButtonText(this.plugin.settings.avatarBase64 ? "\u91CD\u65B0\u4E0A\u4F20" : "\u9009\u62E9\u56FE\u7247").onClick(() => {
+      const activeDocument = getActiveDocumentCompat();
+      if (!activeDocument)
+        return;
+      const input = activeDocument.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = async (e) => {
+        var _a5;
+        const target = e.target instanceof HTMLInputElement ? e.target : null;
+        const file = ((_a5 = target == null ? void 0 : target.files) == null ? void 0 : _a5[0]) || null;
+        if (!file)
           return;
-        const input = activeDocument.createElement("input");
-        input.type = "file";
-        input.accept = "image/*";
-        input.onchange = async (e) => {
-          var _a5;
-          const target = e.target instanceof HTMLInputElement ? e.target : null;
-          const file = ((_a5 = target == null ? void 0 : target.files) == null ? void 0 : _a5[0]) || null;
-          if (!file)
-            return;
-          if (file.size > 100 * 1024) {
-            new Notice("\u274C \u56FE\u7247\u592A\u5927\uFF0C\u8BF7\u9009\u62E9\u5C0F\u4E8E 100KB \u7684\u56FE\u7247");
-            return;
-          }
-          const reader = new FileReader();
-          reader.onload = async (event) => {
-            var _a6;
-            const result = (_a6 = event.target) == null ? void 0 : _a6.result;
-            this.plugin.settings.avatarBase64 = typeof result === "string" ? result : "";
-            await this.plugin.saveSettings();
-            new Notice("\u2705 \u5934\u50CF\u5DF2\u4E0A\u4F20");
-            refreshSettingTabCompat(this);
-          };
-          reader.readAsDataURL(file);
-        };
-        input.click();
-      }));
-      if (this.plugin.settings.avatarBase64) {
-        uploadSetting.addButton((button) => {
-          const clearButton = setDestructiveButtonCompat(button.setButtonText("\u6E05\u9664"));
-          clearButton.onClick(async () => {
-            this.plugin.settings.avatarBase64 = "";
-            await this.plugin.saveSettings();
-            new Notice("\u5DF2\u6E05\u9664\u672C\u5730\u5934\u50CF");
-            refreshSettingTabCompat(this);
-          });
-        });
-      }
-      new Setting(containerEl2).setName("\u5934\u50CF URL\uFF08\u5907\u7528\uFF09").setDesc("\u5982\u672A\u4E0A\u4F20\u672C\u5730\u5934\u50CF\uFF0C\u5C06\u4F7F\u7528\u6B64 URL").addText((text) => text.setPlaceholder("https://example.com/avatar.jpg").setValue(this.plugin.settings.avatarUrl).onChange(async (value) => {
-        this.plugin.settings.avatarUrl = value;
-        await this.plugin.saveSettings();
-      }));
-      new Setting(containerEl2).setName("\u5FAE\u4FE1\u516C\u4F17\u53F7\u8D26\u53F7").setDesc("\u8BF7\u5728\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0 [\u8BBE\u7F6E\u4E0E\u5F00\u53D1] -> [\u57FA\u672C\u914D\u7F6E] \u4E2D\u83B7\u53D6 AppID \u548C AppSecret\uFF0C\u5E76\u786E\u4FDD\u5DF2\u5C06\u5F53\u524D IP \u52A0\u5165\u767D\u540D\u5355\u3002").setHeading();
-      const accounts = this.plugin.settings.wechatAccounts || [];
-      const defaultId = this.plugin.settings.defaultAccountId;
-      if (accounts.length === 0) {
-        containerEl2.createEl("p", {
-          text: "\u6682\u65E0\u8D26\u53F7\uFF0C\u8BF7\u70B9\u51FB\u4E0B\u65B9\u6309\u94AE\u6DFB\u52A0",
-          cls: "setting-item-description",
-          attr: { style: "color: var(--text-muted); font-style: italic;" }
-        });
-      } else {
-        const listContainer = containerEl2.createDiv({ cls: "wechat-account-list" });
-        for (const account of accounts) {
-          const isDefault = account.id === defaultId;
-          const card2 = listContainer.createDiv({ cls: "wechat-account-card" });
-          const info = card2.createDiv({ cls: "wechat-account-info" });
-          const nameRow = info.createDiv({ cls: "wechat-account-name-row" });
-          nameRow.createSpan({ text: account.name, cls: "wechat-account-name" });
-          if (isDefault) {
-            nameRow.createSpan({ text: "\u9ED8\u8BA4", cls: "wechat-account-badge" });
-          }
-          info.createDiv({
-            text: `AppID: ${account.appId.substring(0, 8)}...`,
-            cls: "wechat-account-appid"
-          });
-          const actions = card2.createDiv({ cls: "wechat-account-actions" });
-          if (!isDefault) {
-            const defaultBtn = actions.createEl("button", { text: "\u8BBE\u4E3A\u9ED8\u8BA4", cls: "wechat-btn-small" });
-            defaultBtn.onclick = async () => {
-              this.plugin.settings.defaultAccountId = account.id;
-              await this.plugin.saveSettings();
-              refreshSettingTabCompat(this);
-            };
-          }
-          const editBtn = actions.createEl("button", { text: "\u7F16\u8F91", cls: "wechat-btn-small" });
-          editBtn.onclick = () => this.showEditAccountModal(account);
-          const testBtn = actions.createEl("button", { text: "\u6D4B\u8BD5", cls: "wechat-btn-small wechat-btn-test" });
-          testBtn.onclick = async () => {
-            testBtn.disabled = true;
-            testBtn.textContent = "\u6D4B\u8BD5\u4E2D...";
-            try {
-              const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
-              await api.getAccessToken();
-              new Notice(`\u2705 ${account.name} \u8FDE\u63A5\u6210\u529F\uFF01`);
-            } catch (err) {
-              new Notice(`\u274C ${account.name} \u8FDE\u63A5\u5931\u8D25: ${toReadableError3(err).message}`);
-            }
-            testBtn.disabled = false;
-            testBtn.textContent = "\u6D4B\u8BD5";
-          };
-          const deleteBtn = actions.createEl("button", { text: "\u5220\u9664", cls: "wechat-btn-small wechat-btn-danger" });
-          deleteBtn.onclick = async () => {
-            const confirmed = await this.confirmDestructiveAction({
-              title: "\u5220\u9664\u516C\u4F17\u53F7\u8D26\u53F7",
-              message: `\u786E\u5B9A\u8981\u5220\u9664\u8D26\u53F7 "${account.name}" \u5417\uFF1F`,
-              confirmText: "\u5220\u9664"
-            });
-            if (!confirmed)
-              return;
-            this.plugin.settings.wechatAccounts = accounts.filter((a) => a.id !== account.id);
-            if (account.id === defaultId && this.plugin.settings.wechatAccounts.length > 0) {
-              this.plugin.settings.defaultAccountId = this.plugin.settings.wechatAccounts[0].id;
-            } else if (this.plugin.settings.wechatAccounts.length === 0) {
-              this.plugin.settings.defaultAccountId = "";
-            }
-            await this.plugin.saveSettings();
-            refreshSettingTabCompat(this);
-          };
+        if (file.size > 100 * 1024) {
+          new Notice("\u274C \u56FE\u7247\u592A\u5927\uFF0C\u8BF7\u9009\u62E9\u5C0F\u4E8E 100KB \u7684\u56FE\u7247");
+          return;
         }
-      }
-      const addBtnContainer = containerEl2.createDiv({ cls: "wechat-add-account-container" });
-      if (accounts.length < MAX_ACCOUNTS) {
-        const addBtn = addBtnContainer.createEl("button", {
-          text: "+ \u6DFB\u52A0\u8D26\u53F7",
-          cls: "wechat-btn-add"
-        });
-        addBtn.onclick = () => this.showEditAccountModal(null);
-      } else {
-        addBtnContainer.createEl("p", {
-          text: `\u5DF2\u8FBE\u5230\u6700\u5927\u8D26\u53F7\u6570\u91CF (${MAX_ACCOUNTS})`,
-          cls: "setting-item-description",
-          attr: { style: "color: var(--text-muted);" }
-        });
-      }
-      this.renderAiSettingsSection(containerEl2);
-      new Setting(containerEl2).setName("\u9AD8\u7EA7\u8BBE\u7F6E").setHeading();
-      new Setting(containerEl2).setName("\u53D1\u9001\u6210\u529F\u540E\u81EA\u52A8\u6E05\u7406\u8D44\u6E90").setDesc("\u9ED8\u8BA4\u5173\u95ED\u3002\u5F00\u542F\u540E\u4F1A\u5728\u521B\u5EFA\u8349\u7A3F\u6210\u529F\u540E\uFF0C\u5220\u9664\u4F60\u5728\u4E0B\u65B9\u914D\u7F6E\u7684\u76EE\u5F55\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.cleanupAfterSync).onChange(async (value) => {
-        this.plugin.settings.cleanupAfterSync = value;
-        await this.plugin.saveSettings();
-      }));
-      let hasWarnedAbsoluteCleanupPath = false;
-      new Setting(containerEl2).setName("\u6E05\u7406\u76EE\u5F55").setDesc("\u586B\u5199 vault \u5185\u76F8\u5BF9\u8DEF\u5F84\uFF08\u4E0D\u8981\u586B /Users/... \u8FD9\u7C7B\u7EDD\u5BF9\u8DEF\u5F84\uFF09\uFF0C\u652F\u6301 {{note}} \u5360\u4F4D\u7B26\uFF0C\u4F8B\u5982 published/{{note}}_img\u3002").addText((text) => text.setPlaceholder("published/{{note}}_img").setValue(this.plugin.settings.cleanupDirTemplate || "").onChange(async (value) => {
-        if (this.isAbsolutePathLike(value)) {
-          if (!hasWarnedAbsoluteCleanupPath) {
-            new Notice("\u26A0\uFE0F \u6E05\u7406\u76EE\u5F55\u8BF7\u586B\u5199 vault \u5185\u76F8\u5BF9\u8DEF\u5F84\uFF0C\u4E0D\u8981\u4F7F\u7528\u7EDD\u5BF9\u8DEF\u5F84\uFF08\u5982 /Users/... \u6216 C:\\...\uFF09");
-            hasWarnedAbsoluteCleanupPath = true;
-          }
-        } else {
-          hasWarnedAbsoluteCleanupPath = false;
-        }
-        const normalized = this.normalizeVaultPath(value);
-        this.plugin.settings.cleanupDirTemplate = normalized;
-        await this.plugin.saveSettings();
-      }));
-      new Setting(containerEl2).setName("\u4F7F\u7528\u7CFB\u7EDF\u56DE\u6536\u7AD9").setDesc("\u5F00\u542F\u65F6\u4F18\u5148\u79FB\u52A8\u5230\u7CFB\u7EDF\u56DE\u6536\u7AD9\uFF1B\u5173\u95ED\u65F6\u76F4\u63A5\u4ECE vault \u5220\u9664\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.cleanupUseSystemTrash !== false).onChange(async (value) => {
-        this.plugin.settings.cleanupUseSystemTrash = value;
-        await this.plugin.saveSettings();
-      }));
-      let hasWarnedInsecureProxy = false;
-      new Setting(containerEl2).setName("API \u4EE3\u7406\u5730\u5740").setDesc("\u5982\u679C\u60A8\u7684\u7F51\u7EDC IP \u7ECF\u5E38\u53D8\u5316\uFF08\u5982\u591A\u5730\u529E\u516C\u6216\u4F7F\u7528\u79FB\u52A8\u70ED\u70B9\uFF09\uFF0C\u53EF\u914D\u7F6E\u4EE3\u7406\u670D\u52A1\u4EE5\u89E3\u51B3\u5FAE\u4FE1 IP \u767D\u540D\u5355\u6F02\u79FB\u5BFC\u81F4\u7684\u540C\u6B65\u5931\u8D25\u95EE\u9898\u3002").addText((text) => {
-        var _a5, _b;
-        text.setPlaceholder("https://your-proxy.workers.dev").setValue(this.plugin.settings.proxyUrl || "").onChange(async (value) => {
-          const trimmedValue = value.trim();
-          if (trimmedValue && !trimmedValue.toLowerCase().startsWith("https://")) {
-            if (!hasWarnedInsecureProxy) {
-              new Notice("\u26A0\uFE0F \u5B89\u5168\u98CE\u9669\uFF1A\u4EE3\u7406\u5730\u5740\u5FC5\u987B\u4F7F\u7528 HTTPS \u4EE5\u4FDD\u62A4\u60A8\u7684 AppSecret\u3002");
-              hasWarnedInsecureProxy = true;
-            }
-          } else {
-            hasWarnedInsecureProxy = false;
-          }
-          this.plugin.settings.proxyUrl = trimmedValue;
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          var _a6;
+          const result = (_a6 = event.target) == null ? void 0 : _a6.result;
+          this.plugin.settings.avatarBase64 = typeof result === "string" ? result : "";
           await this.plugin.saveSettings();
+          new Notice("\u2705 \u5934\u50CF\u5DF2\u4E0A\u4F20");
+          refreshSettingTabCompat(this);
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    }));
+    if (this.plugin.settings.avatarBase64) {
+      uploadSetting.addButton((button) => {
+        const clearButton = setDestructiveButtonCompat(button.setButtonText("\u6E05\u9664"));
+        clearButton.onClick(async () => {
+          this.plugin.settings.avatarBase64 = "";
+          await this.plugin.saveSettings();
+          new Notice("\u5DF2\u6E05\u9664\u672C\u5730\u5934\u50CF");
+          refreshSettingTabCompat(this);
         });
-        if (text.inputEl && typeof text.inputEl.setAttribute === "function") {
-          (_b = (_a5 = text.inputEl).setCssStyles) == null ? void 0 : _b.call(_a5, { width: "320px", maxWidth: "100%" });
+      });
+    }
+    new Setting(containerEl).setName("\u5934\u50CF URL\uFF08\u5907\u7528\uFF09").setDesc("\u5982\u672A\u4E0A\u4F20\u672C\u5730\u5934\u50CF\uFF0C\u5C06\u4F7F\u7528\u6B64 URL").addText((text) => text.setPlaceholder("https://example.com/avatar.jpg").setValue(this.plugin.settings.avatarUrl).onChange(async (value) => {
+      this.plugin.settings.avatarUrl = value;
+      await this.plugin.saveSettings();
+    }));
+    new Setting(containerEl).setName("\u5FAE\u4FE1\u516C\u4F17\u53F7\u8D26\u53F7").setDesc("\u8BF7\u5728\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0 [\u8BBE\u7F6E\u4E0E\u5F00\u53D1] -> [\u57FA\u672C\u914D\u7F6E] \u4E2D\u83B7\u53D6 AppID \u548C AppSecret\uFF0C\u5E76\u786E\u4FDD\u5DF2\u5C06\u5F53\u524D IP \u52A0\u5165\u767D\u540D\u5355\u3002").setHeading();
+    const accounts = this.plugin.settings.wechatAccounts || [];
+    const defaultId = this.plugin.settings.defaultAccountId;
+    if (accounts.length === 0) {
+      containerEl.createEl("p", {
+        text: "\u6682\u65E0\u8D26\u53F7\uFF0C\u8BF7\u70B9\u51FB\u4E0B\u65B9\u6309\u94AE\u6DFB\u52A0",
+        cls: "setting-item-description",
+        attr: { style: "color: var(--text-muted); font-style: italic;" }
+      });
+    } else {
+      const listContainer = containerEl.createDiv({ cls: "wechat-account-list" });
+      for (const account of accounts) {
+        const isDefault = account.id === defaultId;
+        const card2 = listContainer.createDiv({ cls: "wechat-account-card" });
+        const info = card2.createDiv({ cls: "wechat-account-info" });
+        const nameRow = info.createDiv({ cls: "wechat-account-name-row" });
+        nameRow.createSpan({ text: account.name, cls: "wechat-account-name" });
+        if (isDefault) {
+          nameRow.createSpan({ text: "\u9ED8\u8BA4", cls: "wechat-account-badge" });
         }
-      });
-      const card = containerEl2.createDiv({
-        cls: "wechat-proxy-info-card",
-        attr: {
-          style: "margin-top: 8px; margin-bottom: 16px; padding: 12px; border: 1px solid var(--background-modifier-border); border-radius: 6px; background-color: var(--background-primary-alt); font-size: 12px; line-height: 1.6; display: flex; flex-direction: column; gap: 8px;"
+        info.createDiv({
+          text: `AppID: ${account.appId.substring(0, 8)}...`,
+          cls: "wechat-account-appid"
+        });
+        const actions = card2.createDiv({ cls: "wechat-account-actions" });
+        if (!isDefault) {
+          const defaultBtn = actions.createEl("button", { text: "\u8BBE\u4E3A\u9ED8\u8BA4", cls: "wechat-btn-small" });
+          defaultBtn.onclick = async () => {
+            this.plugin.settings.defaultAccountId = account.id;
+            await this.plugin.saveSettings();
+            refreshSettingTabCompat(this);
+          };
         }
+        const editBtn = actions.createEl("button", { text: "\u7F16\u8F91", cls: "wechat-btn-small" });
+        editBtn.onclick = () => this.showEditAccountModal(account);
+        const testBtn = actions.createEl("button", { text: "\u6D4B\u8BD5", cls: "wechat-btn-small wechat-btn-test" });
+        testBtn.onclick = async () => {
+          testBtn.disabled = true;
+          testBtn.textContent = "\u6D4B\u8BD5\u4E2D...";
+          try {
+            const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
+            await api.getAccessToken();
+            new Notice(`\u2705 ${account.name} \u8FDE\u63A5\u6210\u529F\uFF01`);
+          } catch (err) {
+            new Notice(`\u274C ${account.name} \u8FDE\u63A5\u5931\u8D25: ${toReadableError4(err).message}`);
+          }
+          testBtn.disabled = false;
+          testBtn.textContent = "\u6D4B\u8BD5";
+        };
+        const deleteBtn = actions.createEl("button", { text: "\u5220\u9664", cls: "wechat-btn-small wechat-btn-danger" });
+        deleteBtn.onclick = async () => {
+          const confirmed = await this.confirmDestructiveAction({
+            title: "\u5220\u9664\u516C\u4F17\u53F7\u8D26\u53F7",
+            message: `\u786E\u5B9A\u8981\u5220\u9664\u8D26\u53F7 "${account.name}" \u5417\uFF1F`,
+            confirmText: "\u5220\u9664"
+          });
+          if (!confirmed)
+            return;
+          this.plugin.settings.wechatAccounts = accounts.filter((a) => a.id !== account.id);
+          if (account.id === defaultId && this.plugin.settings.wechatAccounts.length > 0) {
+            this.plugin.settings.defaultAccountId = this.plugin.settings.wechatAccounts[0].id;
+          } else if (this.plugin.settings.wechatAccounts.length === 0) {
+            this.plugin.settings.defaultAccountId = "";
+          }
+          await this.plugin.saveSettings();
+          refreshSettingTabCompat(this);
+        };
+      }
+    }
+    const addBtnContainer = containerEl.createDiv({ cls: "wechat-add-account-container" });
+    if (accounts.length < MAX_ACCOUNTS) {
+      const addBtn = addBtnContainer.createEl("button", {
+        text: "+ \u6DFB\u52A0\u8D26\u53F7",
+        cls: "wechat-btn-add"
       });
-      const officialRow = card.createDiv({ attr: { style: "display: flex; gap: 6px; align-items: flex-start;" } });
-      officialRow.createSpan({ text: "\u{1F4A1}", attr: { style: "flex-shrink: 0; line-height: 1.6;" } });
-      const officialText = officialRow.createDiv();
-      officialText.createEl("strong", {
-        text: "\u5B98\u65B9\u4E2D\u8F6C",
-        attr: { style: "color: var(--text-normal); font-weight: 600;" }
-      });
-      officialText.createSpan({
-        text: "\uFF1A\u5DF2\u4E0A\u7EBF\u7A33\u5B9A\u4E2D\u8F6C\u4EE3\u7406\uFF0C\u5F7B\u5E95\u89E3\u51B3\u5FAE\u4FE1 IP \u767D\u540D\u5355\u9891\u7E41\u6F02\u79FB\u95EE\u9898\u3002",
-        attr: { style: "color: var(--text-muted);" }
-      });
-      officialText.createEl("a", {
-        text: "\u83B7\u53D6\u5B98\u65B9\u4E2D\u8F6C Token \u2794",
-        href: "https://xiaoweibox.top/chats/wechat-proxy-service",
-        attr: { style: "margin-left: 6px; color: var(--text-muted); text-decoration: underline;" }
-      });
-      const selfHostedRow = card.createDiv({ attr: { style: "display: flex; gap: 6px; align-items: flex-start;" } });
-      selfHostedRow.createSpan({ text: "\u{1F6E0}\uFE0F", attr: { style: "flex-shrink: 0; line-height: 1.6;" } });
-      const selfHostedText = selfHostedRow.createDiv();
-      selfHostedText.createEl("strong", {
-        text: "\u624B\u5DE5\u81EA\u5EFA",
-        attr: { style: "color: var(--text-normal); font-weight: 600;" }
-      });
-      selfHostedText.createSpan({
-        text: "\uFF1A\u5982\u679C\u60A8\u60F3\u62E5\u6709\u5B8C\u5168\u81EA\u4E3B\u7684\u63A7\u5236\u6743\uFF0C\u4E5F\u53EF\u4EE5\u57FA\u4E8E Cloudflare Worker \u6216\u4E2A\u4EBA VPS \u81EA\u5EFA\u3002",
-        attr: { style: "color: var(--text-muted);" }
-      });
-      selfHostedText.createEl("a", {
-        text: "\u67E5\u770B\u81EA\u5EFA\u90E8\u7F72\u6307\u5357 \u2794",
-        href: "https://xiaoweibox.top/chats/wechat-proxy",
-        attr: { style: "margin-left: 6px; color: var(--text-muted); text-decoration: underline;" }
-      });
-      const securityRow = card.createDiv({ attr: { style: "display: flex; gap: 6px; align-items: flex-start;" } });
-      securityRow.createSpan({ text: "\u{1F512}", attr: { style: "flex-shrink: 0; line-height: 1.6;" } });
-      const securityText = securityRow.createDiv();
-      securityText.createEl("strong", {
-        text: "\u5B89\u5168\u58F0\u660E",
-        attr: { style: "color: var(--text-warning); font-weight: 600;" }
-      });
-      securityText.createSpan({
-        text: "\uFF1A\u4EE3\u7406\u670D\u52A1\u5C06\u4E2D\u8F6C\u60A8\u7684\u8BF7\u6C42\u3002\u8BF7\u786E\u4FDD\u4F7F\u7528\u53D7\u4FE1\u4EFB\u7684\u4EE3\u7406\uFF08\u81EA\u5EFA\u6216\u5B98\u65B9\uFF09\uFF0C\u4EE5\u4FDD\u62A4 AppSecret \u5B89\u5168\u3002\u4E2D\u8F6C\u670D\u52A1\u4EC5\u5728\u5185\u5B58\u4E2D\u8F6C\u53D1\uFF0C\u4E0D\u5B58\u50A8\u60A8\u7684\u4EFB\u4F55\u654F\u611F\u51ED\u8BC1\u3002",
+      addBtn.onclick = () => this.showEditAccountModal(null);
+    } else {
+      addBtnContainer.createEl("p", {
+        text: `\u5DF2\u8FBE\u5230\u6700\u5927\u8D26\u53F7\u6570\u91CF (${MAX_ACCOUNTS})`,
+        cls: "setting-item-description",
         attr: { style: "color: var(--text-muted);" }
       });
     }
-    renderMultiPlatformSettingsTab(this, multiContent, { obsidianApi });
+    this.renderAiSettingsSection(containerEl);
+    new Setting(containerEl).setName("\u9AD8\u7EA7\u8BBE\u7F6E").setHeading();
+    new Setting(containerEl).setName("\u53D1\u9001\u6210\u529F\u540E\u81EA\u52A8\u6E05\u7406\u8D44\u6E90").setDesc("\u9ED8\u8BA4\u5173\u95ED\u3002\u5F00\u542F\u540E\u4F1A\u5728\u521B\u5EFA\u8349\u7A3F\u6210\u529F\u540E\uFF0C\u5220\u9664\u4F60\u5728\u4E0B\u65B9\u914D\u7F6E\u7684\u76EE\u5F55\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.cleanupAfterSync).onChange(async (value) => {
+      this.plugin.settings.cleanupAfterSync = value;
+      await this.plugin.saveSettings();
+    }));
+    let hasWarnedAbsoluteCleanupPath = false;
+    new Setting(containerEl).setName("\u6E05\u7406\u76EE\u5F55").setDesc("\u586B\u5199 vault \u5185\u76F8\u5BF9\u8DEF\u5F84\uFF08\u4E0D\u8981\u586B /Users/... \u8FD9\u7C7B\u7EDD\u5BF9\u8DEF\u5F84\uFF09\uFF0C\u652F\u6301 {{note}} \u5360\u4F4D\u7B26\uFF0C\u4F8B\u5982 published/{{note}}_img\u3002").addText((text) => text.setPlaceholder("published/{{note}}_img").setValue(this.plugin.settings.cleanupDirTemplate || "").onChange(async (value) => {
+      if (this.isAbsolutePathLike(value)) {
+        if (!hasWarnedAbsoluteCleanupPath) {
+          new Notice("\u26A0\uFE0F \u6E05\u7406\u76EE\u5F55\u8BF7\u586B\u5199 vault \u5185\u76F8\u5BF9\u8DEF\u5F84\uFF0C\u4E0D\u8981\u4F7F\u7528\u7EDD\u5BF9\u8DEF\u5F84\uFF08\u5982 /Users/... \u6216 C:\\...\uFF09");
+          hasWarnedAbsoluteCleanupPath = true;
+        }
+      } else {
+        hasWarnedAbsoluteCleanupPath = false;
+      }
+      const normalized = this.normalizeVaultPath(value);
+      this.plugin.settings.cleanupDirTemplate = normalized;
+      await this.plugin.saveSettings();
+    }));
+    new Setting(containerEl).setName("\u4F7F\u7528\u7CFB\u7EDF\u56DE\u6536\u7AD9").setDesc("\u5F00\u542F\u65F6\u4F18\u5148\u79FB\u52A8\u5230\u7CFB\u7EDF\u56DE\u6536\u7AD9\uFF1B\u5173\u95ED\u65F6\u76F4\u63A5\u4ECE vault \u5220\u9664\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.cleanupUseSystemTrash !== false).onChange(async (value) => {
+      this.plugin.settings.cleanupUseSystemTrash = value;
+      await this.plugin.saveSettings();
+    }));
+    let hasWarnedInsecureProxy = false;
+    new Setting(containerEl).setName("API \u4EE3\u7406\u5730\u5740").setDesc("\u5982\u679C\u60A8\u7684\u7F51\u7EDC IP \u7ECF\u5E38\u53D8\u5316\uFF08\u5982\u591A\u5730\u529E\u516C\u6216\u4F7F\u7528\u79FB\u52A8\u70ED\u70B9\uFF09\uFF0C\u53EF\u914D\u7F6E\u4EE3\u7406\u670D\u52A1\u4EE5\u89E3\u51B3\u5FAE\u4FE1 IP \u767D\u540D\u5355\u6F02\u79FB\u5BFC\u81F4\u7684\u540C\u6B65\u5931\u8D25\u95EE\u9898\u3002").addText((text) => {
+      var _a5, _b;
+      text.setPlaceholder("https://your-proxy.workers.dev").setValue(this.plugin.settings.proxyUrl || "").onChange(async (value) => {
+        const trimmedValue = value.trim();
+        if (trimmedValue && !trimmedValue.toLowerCase().startsWith("https://")) {
+          if (!hasWarnedInsecureProxy) {
+            new Notice("\u26A0\uFE0F \u5B89\u5168\u98CE\u9669\uFF1A\u4EE3\u7406\u5730\u5740\u5FC5\u987B\u4F7F\u7528 HTTPS \u4EE5\u4FDD\u62A4\u60A8\u7684 AppSecret\u3002");
+            hasWarnedInsecureProxy = true;
+          }
+        } else {
+          hasWarnedInsecureProxy = false;
+        }
+        this.plugin.settings.proxyUrl = trimmedValue;
+        await this.plugin.saveSettings();
+      });
+      if (text.inputEl && typeof text.inputEl.setAttribute === "function") {
+        (_b = (_a5 = text.inputEl).setCssStyles) == null ? void 0 : _b.call(_a5, { width: "320px", maxWidth: "100%" });
+      }
+    });
+    const card = containerEl.createDiv({
+      cls: "wechat-proxy-info-card",
+      attr: {
+        style: "margin-top: 8px; margin-bottom: 16px; padding: 12px; border: 1px solid var(--background-modifier-border); border-radius: 6px; background-color: var(--background-primary-alt); font-size: 12px; line-height: 1.6; display: flex; flex-direction: column; gap: 8px;"
+      }
+    });
+    const officialRow = card.createDiv({ attr: { style: "display: flex; gap: 6px; align-items: flex-start;" } });
+    officialRow.createSpan({ text: "\u{1F4A1}", attr: { style: "flex-shrink: 0; line-height: 1.6;" } });
+    const officialText = officialRow.createDiv();
+    officialText.createEl("strong", {
+      text: "\u5B98\u65B9\u4E2D\u8F6C",
+      attr: { style: "color: var(--text-normal); font-weight: 600;" }
+    });
+    officialText.createSpan({
+      text: "\uFF1A\u5DF2\u4E0A\u7EBF\u7A33\u5B9A\u4E2D\u8F6C\u4EE3\u7406\uFF0C\u5F7B\u5E95\u89E3\u51B3\u5FAE\u4FE1 IP \u767D\u540D\u5355\u9891\u7E41\u6F02\u79FB\u95EE\u9898\u3002",
+      attr: { style: "color: var(--text-muted);" }
+    });
+    officialText.createEl("a", {
+      text: "\u83B7\u53D6\u5B98\u65B9\u4E2D\u8F6C Token \u2794",
+      href: "https://xiaoweibox.top/chats/wechat-proxy-service",
+      attr: { style: "margin-left: 6px; color: var(--text-muted); text-decoration: underline;" }
+    });
+    const selfHostedRow = card.createDiv({ attr: { style: "display: flex; gap: 6px; align-items: flex-start;" } });
+    selfHostedRow.createSpan({ text: "\u{1F6E0}\uFE0F", attr: { style: "flex-shrink: 0; line-height: 1.6;" } });
+    const selfHostedText = selfHostedRow.createDiv();
+    selfHostedText.createEl("strong", {
+      text: "\u624B\u5DE5\u81EA\u5EFA",
+      attr: { style: "color: var(--text-normal); font-weight: 600;" }
+    });
+    selfHostedText.createSpan({
+      text: "\uFF1A\u5982\u679C\u60A8\u60F3\u62E5\u6709\u5B8C\u5168\u81EA\u4E3B\u7684\u63A7\u5236\u6743\uFF0C\u4E5F\u53EF\u4EE5\u57FA\u4E8E Cloudflare Worker \u6216\u4E2A\u4EBA VPS \u81EA\u5EFA\u3002",
+      attr: { style: "color: var(--text-muted);" }
+    });
+    selfHostedText.createEl("a", {
+      text: "\u67E5\u770B\u81EA\u5EFA\u90E8\u7F72\u6307\u5357 \u2794",
+      href: "https://xiaoweibox.top/chats/wechat-proxy",
+      attr: { style: "margin-left: 6px; color: var(--text-muted); text-decoration: underline;" }
+    });
+    const securityRow = card.createDiv({ attr: { style: "display: flex; gap: 6px; align-items: flex-start;" } });
+    securityRow.createSpan({ text: "\u{1F512}", attr: { style: "flex-shrink: 0; line-height: 1.6;" } });
+    const securityText = securityRow.createDiv();
+    securityText.createEl("strong", {
+      text: "\u5B89\u5168\u58F0\u660E",
+      attr: { style: "color: var(--text-warning); font-weight: 600;" }
+    });
+    securityText.createSpan({
+      text: "\uFF1A\u4EE3\u7406\u670D\u52A1\u5C06\u4E2D\u8F6C\u60A8\u7684\u8BF7\u6C42\u3002\u8BF7\u786E\u4FDD\u4F7F\u7528\u53D7\u4FE1\u4EFB\u7684\u4EE3\u7406\uFF08\u81EA\u5EFA\u6216\u5B98\u65B9\uFF09\uFF0C\u4EE5\u4FDD\u62A4 AppSecret \u5B89\u5168\u3002\u4E2D\u8F6C\u670D\u52A1\u4EC5\u5728\u5185\u5B58\u4E2D\u8F6C\u53D1\uFF0C\u4E0D\u5B58\u50A8\u60A8\u7684\u4EFB\u4F55\u654F\u611F\u51ED\u8BC1\u3002",
+      attr: { style: "color: var(--text-muted);" }
+    });
   }
+};
+
+// views/settings/ai-section.js
+var aiSettingsMethods = {
   /**
    * @param {ObsidianElementLike} containerEl
    */
@@ -60392,7 +62230,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
             await testAiProviderConnection(provider, createObsidianFetchAdapter({ requestUrl: getObsidianRequestUrl(), request: getObsidianRequest() }));
             new Notice(`\u2705 ${provider.name} \u8FDE\u63A5\u6210\u529F\uFF01`);
           } catch (error) {
-            new Notice(`\u274C ${provider.name} \u8FDE\u63A5\u5931\u8D25: ${toReadableError3(error).message}`);
+            new Notice(`\u274C ${provider.name} \u8FDE\u63A5\u5931\u8D25: ${toReadableError4(error).message}`);
           }
           testBtn.disabled = false;
           testBtn.textContent = "\u6D4B\u8BD5";
@@ -60468,7 +62306,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
         });
       });
     }
-  }
+  },
   /**
    * 显示添加/编辑账号的模态框
    */
@@ -60617,7 +62455,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
         await testAiProviderConnection(candidate, createObsidianFetchAdapter({ requestUrl: getObsidianRequestUrl(), request: getObsidianRequest() }));
         new Notice("\u2705 AI Provider \u8FDE\u63A5\u6210\u529F\uFF01");
       } catch (error) {
-        new Notice(`\u274C \u8FDE\u63A5\u5931\u8D25: ${toReadableError3(error).message}`);
+        new Notice(`\u274C \u8FDE\u63A5\u5931\u8D25: ${toReadableError4(error).message}`);
       }
       testBtn.disabled = false;
       testBtn.textContent = "\u6D4B\u8BD5\u8FDE\u63A5";
@@ -60658,6 +62496,10 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
     };
     modal.open();
   }
+};
+
+// views/settings/wechat-account-modal.js
+var wechatAccountModalMethods = {
   /**
    * 显示添加/编辑账号的模态框
    */
@@ -60774,7 +62616,7 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
         await api.getAccessToken();
         new Notice("\u2705 \u8FDE\u63A5\u6210\u529F\uFF01");
       } catch (err) {
-        new Notice(`\u274C \u8FDE\u63A5\u5931\u8D25: ${toReadableError3(err).message}`);
+        new Notice(`\u274C \u8FDE\u63A5\u5931\u8D25: ${toReadableError4(err).message}`);
       }
       testBtn.disabled = false;
       testBtn.textContent = "\u6D4B\u8BD5\u8FDE\u63A5";
@@ -60821,38 +62663,409 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
     modal.open();
   }
 };
+
+// views/settings/confirm-modal.js
+var confirmModalMethods = {
+  /**
+   * @param {{ title?: string, message?: string, confirmText?: string, cancelText?: string }} options
+   * @returns {Promise<boolean>}
+   */
+  confirmDestructiveAction({ title, message, confirmText = "\u786E\u8BA4", cancelText = "\u53D6\u6D88" }) {
+    return new Promise((resolve) => {
+      const modal = createObsidianModal(this.app);
+      let settled = false;
+      const settle = (value) => {
+        if (settled)
+          return;
+        settled = true;
+        modal.close();
+        resolve(value);
+      };
+      modal.titleEl.setText(title || "\u786E\u8BA4\u64CD\u4F5C");
+      const body = modal.contentEl.createDiv({ cls: "wechat-confirm-modal" });
+      body.createEl("p", { text: message || "\u786E\u5B9A\u8981\u7EE7\u7EED\u5417\uFF1F" });
+      const actions = modal.contentEl.createDiv({ cls: "wechat-modal-buttons" });
+      actions.createEl("button", { text: cancelText }).onclick = () => settle(false);
+      const confirmBtn = actions.createEl("button", { text: confirmText, cls: "mod-warning" });
+      confirmBtn.onclick = () => settle(true);
+      const originalOnClose = typeof modal.onClose === "function" ? (
+        /** @type {() => void} */
+        modal.onClose.bind(modal)
+      ) : null;
+      modal.onClose = () => {
+        if (originalOnClose)
+          originalOnClose();
+        if (!settled) {
+          settled = true;
+          resolve(false);
+        }
+      };
+      modal.open();
+    });
+  }
+};
+
+// views/settings/apple-style-setting-tab.js
+var AppleStyleSettingTab = class extends PluginSettingTab {
+  /**
+   * @param {AppLike} app
+   * @param {AppleStylePluginLike} plugin
+   */
+  constructor(app, plugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+  /**
+   * @param {string} vaultPath
+   * @returns {string}
+   */
+  normalizeVaultPath(vaultPath) {
+    return normalizeVaultPath(vaultPath);
+  }
+  /**
+   * @param {string} vaultPath
+   * @returns {boolean}
+   */
+  isAbsolutePathLike(vaultPath) {
+    return isAbsolutePathLike(vaultPath);
+  }
+  refreshOpenConverterAiState() {
+    var _a5, _b;
+    const view = (
+      /** @type {ConverterViewRefreshLike | null} */
+      ((_b = (_a5 = this.plugin).getConverterView) == null ? void 0 : _b.call(_a5)) || null
+    );
+    if (view && typeof view.updateAiToolbarState === "function") {
+      view.updateAiToolbarState();
+    }
+    if (view && typeof view.refreshAiLayoutPanel === "function") {
+      view.refreshAiLayoutPanel();
+    }
+  }
+};
+Object.assign(
+  AppleStyleSettingTab.prototype,
+  confirmModalMethods,
+  settingsTabShellMethods,
+  wechatSettingsMethods,
+  aiSettingsMethods,
+  wechatAccountModalMethods
+);
 AppleStyleSettingTab.prototype[LEGACY_SETTING_RENDER_KEY2] = function legacySettingsFallback() {
   this.renderSettingsContent();
 };
-var AppleStylePlugin = class extends Plugin {
+
+// services/ai-layout-cache.js
+function isRecord24(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+function toRecord21(value) {
+  return isRecord24(value) ? value : {};
+}
+function toAiLayoutState14(value) {
+  return isRecord24(value) ? value : null;
+}
+function toAiLayoutSelection14(value) {
+  return isRecord24(value) ? value : {};
+}
+function toAiLayoutFamilyStates14(value) {
+  if (!isRecord24(value))
+    return {};
+  return value;
+}
+function getArticleLayoutStateFromSettings(pluginSettings, sourcePath = "", selection = {}) {
+  const normalizedPath = normalizeVaultPath(sourcePath || "");
+  if (!normalizedPath)
+    return null;
+  const aiSettings = normalizeAiSettings(toRecord21(pluginSettings.ai));
+  const articleLayoutsByPath = toRecord21(aiSettings.articleLayoutsByPath);
+  const entry = articleLayoutsByPath[normalizedPath] || null;
+  const normalizedEntry = normalizeArticleLayoutCacheEntry(entry);
+  if (!normalizedEntry)
+    return null;
+  if (!selection || Object.keys(selection).length === 0) {
+    const familyStates = toAiLayoutFamilyStates14(normalizedEntry.familyStates);
+    return familyStates[normalizedEntry.lastLayoutFamily] || null;
+  }
+  return toAiLayoutState14(getArticleLayoutSelectionState(normalizedEntry, toAiLayoutSelection14(selection), {
+    layoutFamily: aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO,
+    colorPalette: aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO
+  }));
+}
+function saveArticleLayoutStateToSettings(pluginSettings, sourcePath = "", nextState = null, selection = {}) {
+  var _a5, _b, _c, _d, _e, _f, _g;
+  const normalizedPath = normalizeVaultPath(sourcePath || "");
+  if (!normalizedPath)
+    return false;
+  if (!pluginSettings.ai) {
+    pluginSettings.ai = createDefaultAiSettings();
+  }
+  const aiSettings = pluginSettings.ai;
+  if (!isRecord24(aiSettings.articleLayoutsByPath)) {
+    aiSettings.articleLayoutsByPath = {};
+  }
+  const articleLayoutsByPath = aiSettings.articleLayoutsByPath;
+  const existingEntry = normalizeArticleLayoutCacheEntry(articleLayoutsByPath[normalizedPath]) || {
+    lastLayoutFamily: "",
+    lastAutoResolvedFamily: "",
+    familyStates: {}
+  };
+  const existingFamilyStates = toAiLayoutFamilyStates14(existingEntry.familyStates);
+  existingEntry.familyStates = existingFamilyStates;
+  const nextLayoutState = toAiLayoutState14(nextState);
+  const hasExplicitSelection = typeof selection === "string" || selection && typeof selection === "object" && Object.keys(selection).length > 0;
+  const requestedSelection = normalizeLayoutSelection(
+    (nextLayoutState == null ? void 0 : nextLayoutState.selection) || (hasExplicitSelection ? toAiLayoutSelection14(selection) : null) || {
+      layoutFamily: (nextLayoutState == null ? void 0 : nextLayoutState.layoutFamily) || ((_a5 = nextLayoutState == null ? void 0 : nextLayoutState.resolved) == null ? void 0 : _a5.layoutFamily),
+      colorPalette: (nextLayoutState == null ? void 0 : nextLayoutState.stylePack) || ((_b = nextLayoutState == null ? void 0 : nextLayoutState.resolved) == null ? void 0 : _b.colorPalette) || ((_c = nextLayoutState == null ? void 0 : nextLayoutState.layoutJson) == null ? void 0 : _c.stylePack)
+    },
+    {
+      layoutFamily: aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO,
+      colorPalette: aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO
+    }
+  );
+  const getCacheFamily = (state = null) => {
+    var _a6, _b2;
+    const stateRecord = toAiLayoutState14(state);
+    const normalizedState = normalizeArticleLayoutState(stateRecord || {});
+    const rawFamily = ((_a6 = normalizedState == null ? void 0 : normalizedState.resolved) == null ? void 0 : _a6.layoutFamily) || (normalizedState == null ? void 0 : normalizedState.layoutFamily) || ((_b2 = stateRecord == null ? void 0 : stateRecord.resolved) == null ? void 0 : _b2.layoutFamily) || (stateRecord == null ? void 0 : stateRecord.layoutFamily) || (requestedSelection.layoutFamily !== AI_LAYOUT_SELECTION_AUTO ? requestedSelection.layoutFamily : "");
+    const normalizedFamily = normalizeLayoutSelection({ layoutFamily: rawFamily }).layoutFamily;
+    return normalizedFamily === AI_LAYOUT_SELECTION_AUTO ? "" : normalizedFamily;
+  };
+  const effectiveLayoutFamily = getCacheFamily(nextLayoutState);
+  if (!nextLayoutState) {
+    if (selection && Object.keys(selection).length && effectiveLayoutFamily) {
+      delete existingFamilyStates[effectiveLayoutFamily];
+      const remainingFamilies = Object.keys(existingFamilyStates);
+      if (!remainingFamilies.length) {
+        delete articleLayoutsByPath[normalizedPath];
+      } else {
+        existingEntry.lastLayoutFamily = existingFamilyStates[existingEntry.lastLayoutFamily] ? existingEntry.lastLayoutFamily : remainingFamilies[0];
+        if (existingEntry.lastAutoResolvedFamily && !existingFamilyStates[existingEntry.lastAutoResolvedFamily]) {
+          existingEntry.lastAutoResolvedFamily = "";
+        }
+        articleLayoutsByPath[normalizedPath] = normalizeArticleLayoutCacheEntry(existingEntry) || existingEntry;
+      }
+    } else {
+      delete articleLayoutsByPath[normalizedPath];
+    }
+  } else {
+    const resolvedLayoutFamily = effectiveLayoutFamily || "source-first";
+    const inferredSkillId = nextLayoutState.skillId || resolvedLayoutFamily || requestedSelection.layoutFamily;
+    const inferredSkillVersion = nextLayoutState.skillVersion || ((_d = nextLayoutState.generationMeta) == null ? void 0 : _d.skillVersion) || ((_e = getLayoutFamilyById(inferredSkillId)) == null ? void 0 : _e.version) || "";
+    existingFamilyStates[resolvedLayoutFamily] = {
+      ...nextLayoutState,
+      skillId: inferredSkillId,
+      skillVersion: inferredSkillVersion,
+      selection: requestedSelection,
+      resolved: {
+        ...nextLayoutState.resolved || {},
+        layoutFamily: resolvedLayoutFamily,
+        colorPalette: nextLayoutState.stylePack || ((_f = nextLayoutState.resolved) == null ? void 0 : _f.colorPalette) || "tech-green"
+      },
+      layoutFamily: resolvedLayoutFamily,
+      stylePack: nextLayoutState.stylePack || ((_g = nextLayoutState.resolved) == null ? void 0 : _g.colorPalette) || "tech-green"
+    };
+    existingEntry.lastLayoutFamily = resolvedLayoutFamily;
+    if (requestedSelection.layoutFamily === AI_LAYOUT_SELECTION_AUTO) {
+      existingEntry.lastAutoResolvedFamily = resolvedLayoutFamily;
+    }
+    articleLayoutsByPath[normalizedPath] = normalizeArticleLayoutCacheEntry(existingEntry) || existingEntry;
+  }
+  return true;
+}
+
+// input.js
+var {
+  createRenderPipelines: createRenderPipelines14,
+  buildRenderRuntime: buildRenderRuntime14,
+  resolveMarkdownSource: resolveMarkdownSource14,
+  normalizeVaultPath: normalizeVaultPath14,
+  isAbsolutePathLike: isAbsolutePathLike14,
+  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown14,
+  canUseNativePreviewFastPath: canUseNativePreviewFastPath14,
+  renderNativeMarkdown: renderNativeMarkdown14,
+  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages14,
+  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION14,
+  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO14,
+  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS14,
+  createDefaultAiSettings: createDefaultAiSettings14,
+  normalizeAiSettings: normalizeAiSettings14,
+  normalizeAiProvider: normalizeAiProvider14,
+  getAiProviderIssues: getAiProviderIssues14,
+  isAiProviderRunnable: isAiProviderRunnable14,
+  summarizeAiProviderIssues: summarizeAiProviderIssues14,
+  getLayoutFamilyList: getLayoutFamilyList14,
+  getLayoutFamilyById: getLayoutFamilyById14,
+  getColorPaletteList: getColorPaletteList14,
+  getColorPaletteById: getColorPaletteById14,
+  resolveColorPaletteForRender: resolveColorPaletteForRender14,
+  normalizeHexColor: normalizeHexColor14,
+  normalizeLayoutSelection: normalizeLayoutSelection14,
+  getArticleLayoutSelectionState: getArticleLayoutSelectionState14,
+  resolveAiProvider: resolveAiProvider14,
+  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection14,
+  normalizeArticleLayoutState: normalizeArticleLayoutState14,
+  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry14,
+  extractImageRefsFromHtml: extractImageRefsFromHtml14,
+  extractRenderedSectionFragments: extractRenderedSectionFragments14,
+  generateArticleLayout: generateArticleLayout14,
+  renderArticleLayoutHtml: renderArticleLayoutHtml14,
+  testAiProviderConnection: testAiProviderConnection14,
+  createWechatSyncService: createWechatSyncService14,
+  createWechatSyncBridgeService: createWechatSyncBridgeService14,
+  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError13,
+  getMultiPlatformResultSummary: getMultiPlatformResultSummary14,
+  getWechatSyncResultError: getWechatSyncResultError14,
+  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId14,
+  getWechatSyncResultUrl: getWechatSyncResultUrl14,
+  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform14,
+  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay14,
+  resolveSyncAccount: resolveSyncAccount14,
+  toSyncFriendlyMessage: toSyncFriendlyMessage14,
+  createEmptyDraftCache: createEmptyDraftCache14,
+  normalizeDraftCache: normalizeDraftCache14,
+  getDraftAssociation: getDraftAssociation14,
+  setDraftAssociation: setDraftAssociation14,
+  clearDraftAssociation: clearDraftAssociation14,
+  processAllImagesService: processAllImagesService13,
+  processMathFormulasService: processMathFormulasService13,
+  cleanHtmlForDraftService: cleanHtmlForDraftService13,
+  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob14,
+  createObsidianFetchAdapter: createObsidianFetchAdapter14,
+  stripMarkdownFrontmatter: stripMarkdownFrontmatter14,
+  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls14,
+  createHtmlContainer: createHtmlContainer14,
+  getActiveDocument: getActiveDocument14,
+  getActiveWindowValue: getActiveWindowValue14,
+  htmlToText: htmlToText14,
+  setElementHtml: setElementHtml14,
+  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings14,
+  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds14,
+  hasWechatSyncCapability: hasWechatSyncCapability14,
+  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings14,
+  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms14,
+  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt14,
+  describeWechatsyncConnectionState: describeWechatsyncConnectionState14,
+  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar14,
+  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab14,
+  showMultiPlatformPublishModal: showMultiPlatformPublishModal14,
+  renderFeishuSettingsTab: renderFeishuSettingsTab14,
+  renderFeishuPublishTab: renderFeishuPublishTab14,
+  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings14,
+  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings14,
+  updateFeishuHistoryPath: updateFeishuHistoryPath14,
+  WechatAPI: WechatAPI14,
+  loadCommonJsDependency: loadCommonJsDependency14,
+  obsidianApi: obsidianApi14,
+  Plugin: Plugin14,
+  MarkdownView: MarkdownView14,
+  ItemView: ItemView14,
+  Notice: Notice14,
+  Platform: Platform14,
+  PluginSettingTab: PluginSettingTab14,
+  Setting: Setting14,
+  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY15,
+  getActiveDocumentCompat: getActiveDocumentCompat14,
+  createFallbackSvgElement: createFallbackSvgElement14,
+  revealLeafCompat: revealLeafCompat14,
+  getPluginSettings: getPluginSettings14,
+  setPluginSettings: setPluginSettings14,
+  setDestructiveButtonCompat: setDestructiveButtonCompat14,
+  refreshSettingTabCompat: refreshSettingTabCompat14,
+  toReadableError: toReadableError17,
+  isRecord: isRecord25,
+  toRecord: toRecord22,
+  toAiLayoutState: toAiLayoutState15,
+  toAiLayoutJson: toAiLayoutJson14,
+  toAiLayoutBlock: toAiLayoutBlock14,
+  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta14,
+  toAiLayoutSelection: toAiLayoutSelection15,
+  toAiLayoutFamilyStates: toAiLayoutFamilyStates15,
+  toOptionalText: toOptionalText15,
+  toImageElements: toImageElements14,
+  removeElementClass: removeElementClass14,
+  toOptionalNumber: toOptionalNumber15,
+  parseJsonRecord: parseJsonRecord15,
+  normalizeRequestUrlResponse: normalizeRequestUrlResponse15,
+  getResponseJsonRecord: getResponseJsonRecord15,
+  getProxyErrorMessage: getProxyErrorMessage15,
+  createProxyError: createProxyError15,
+  formatWechatApiError: formatWechatApiError15,
+  hasWechatUploadResult: hasWechatUploadResult15,
+  readBlobAsBase64Payload: readBlobAsBase64Payload15,
+  dataUrlToBlob: dataUrlToBlob14,
+  bufferFromBinary: bufferFromBinary15,
+  inferLocalImageMimeType: inferLocalImageMimeType14,
+  safeDecodeUriText: safeDecodeUriText14,
+  getFileUrlLocalPath: getFileUrlLocalPath14,
+  getVaultAdapterBasePath: getVaultAdapterBasePath14,
+  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath15,
+  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath15,
+  getVaultDirnameFromPath: getVaultDirnameFromPath14,
+  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW14,
+  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE14,
+  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL14,
+  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL14,
+  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL15,
+  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL14,
+  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL15,
+  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL15,
+  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL14,
+  getObsidianModalClass: getObsidianModalClass14,
+  createObsidianModal: createObsidianModal14,
+  getObsidianSetIcon: getObsidianSetIcon14,
+  getObsidianRequestUrl: getObsidianRequestUrl14,
+  getObsidianRequest: getObsidianRequest14,
+  getAppleThemeApi: getAppleThemeApi14,
+  getValueElementFromEvent: getValueElementFromEvent14,
+  getEventTargetValue: getEventTargetValue14,
+  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY14,
+  getObsidianLocale: getObsidianLocale14,
+  isChineseObsidianLocale: isChineseObsidianLocale14,
+  getImageSwipeCommandCopy: getImageSwipeCommandCopy14,
+  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout14,
+  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown14,
+  DEFAULT_SETTINGS: DEFAULT_SETTINGS14,
+  MAX_ACCOUNTS: MAX_ACCOUNTS14,
+  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS14,
+  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS14,
+  getWechatAccountPublishOptions: getWechatAccountPublishOptions14,
+  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions14,
+  isMobileClient: isMobileClient16,
+  generateId: generateId14,
+  sleep: sleep15,
+  pMap: pMap14
+} = apple_style_view_shared_exports;
+var AppleStylePlugin = class extends Plugin14 {
   async onload() {
     console.log("\u{1F4DD} \u6B63\u5728\u52A0\u8F7D Obsidian \u53D1\u5E03\u52A9\u624B...");
-    this.obsidianApi = obsidianApi;
+    this.obsidianApi = obsidianApi14;
     await this.loadSettings();
     this.registerView(
-      APPLE_STYLE_VIEW,
+      APPLE_STYLE_VIEW14,
       (leaf) => new AppleStyleView(leaf, this)
     );
-    this.addRibbonIcon("wand", APPLE_STYLE_VIEW_TITLE, async () => {
+    this.addRibbonIcon("wand", APPLE_STYLE_VIEW_TITLE14, async () => {
       await this.openConverter();
     });
     this.addCommand({
       id: "open-apple-converter",
-      name: `\u6253\u5F00${APPLE_STYLE_VIEW_TITLE}`,
+      name: `\u6253\u5F00${APPLE_STYLE_VIEW_TITLE14}`,
       callback: async () => {
         await this.openConverter();
       }
     });
     this.addCommand({
       id: "insert-image-swipe-block",
-      name: getImageSwipeCommandCopy(this.app, "image-swipe").name,
+      name: getImageSwipeCommandCopy14(this.app, "image-swipe").name,
       callback: () => {
         this.insertImageSwipeCalloutFromActiveEditor("image-swipe");
       }
     });
     this.addCommand({
       id: "insert-image-sensitive-block",
-      name: getImageSwipeCommandCopy(this.app, "image-sensitive").name,
+      name: getImageSwipeCommandCopy14(this.app, "image-sensitive").name,
       callback: () => {
         this.insertImageSwipeCalloutFromActiveEditor("image-sensitive");
       }
@@ -60867,7 +63080,7 @@ var AppleStylePlugin = class extends Plugin {
       this.registerEvent(
         this.app.vault.on("rename", (file, oldPath) => {
           if (this.settings.feishuSync) {
-            const changed = updateFeishuHistoryPath(this.settings.feishuSync, oldPath, file.path);
+            const changed = updateFeishuHistoryPath14(this.settings.feishuSync, oldPath, file.path);
             if (changed) {
               this.saveSettings().catch((err) => {
                 console.error("\u4FDD\u5B58\u91CD\u547D\u540D\u8BBE\u7F6E\u5931\u8D25:", err);
@@ -60885,7 +63098,7 @@ var AppleStylePlugin = class extends Plugin {
    */
   insertImageSwipeCalloutFromActiveEditor(type = "image-swipe") {
     var _a5, _b, _c;
-    const activeView = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.workspace) == null ? void 0 : _b.getActiveViewOfType) == null ? void 0 : _c.call(_b, MarkdownView);
+    const activeView = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.workspace) == null ? void 0 : _b.getActiveViewOfType) == null ? void 0 : _c.call(_b, MarkdownView14);
     this.insertImageSwipeCallout(activeView == null ? void 0 : activeView.editor, type);
   }
   /**
@@ -60894,13 +63107,13 @@ var AppleStylePlugin = class extends Plugin {
    */
   insertImageSwipeCallout(editor, type = "image-swipe") {
     if (!editor || typeof editor.replaceSelection !== "function") {
-      new Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u7BC7 Markdown \u6587\u6863");
+      new Notice14("\u8BF7\u5148\u6253\u5F00\u4E00\u7BC7 Markdown \u6587\u6863");
       return;
     }
     const selectedText = typeof editor.getSelection === "function" ? editor.getSelection() : "";
-    const markdown = createImageSwipeCalloutMarkdown(type, selectedText, this.app);
+    const markdown = createImageSwipeCalloutMarkdown14(type, selectedText, this.app);
     editor.replaceSelection(markdown);
-    new Notice(getImageSwipeCommandCopy(this.app, type).notice);
+    new Notice14(getImageSwipeCommandCopy14(this.app, type).notice);
   }
   /**
    * @param {ViewStateLike | Record<string, unknown>} [baseState]
@@ -60912,20 +63125,20 @@ var AppleStylePlugin = class extends Plugin {
     const shouldActivate = options && typeof options === "object" && options.active === true;
     return {
       ...safeState,
-      type: APPLE_STYLE_VIEW,
+      type: APPLE_STYLE_VIEW14,
       state: safeState.state && typeof safeState.state === "object" ? safeState.state : {},
       icon: "wand",
-      title: APPLE_STYLE_VIEW_TITLE,
+      title: APPLE_STYLE_VIEW_TITLE14,
       active: shouldActivate
     };
   }
   async migrateLegacyConverterLeafTitles() {
-    const leaves = this.app.workspace.getLeavesOfType(APPLE_STYLE_VIEW);
+    const leaves = this.app.workspace.getLeavesOfType(APPLE_STYLE_VIEW14);
     if (!Array.isArray(leaves) || leaves.length === 0)
       return;
     for (const leaf of leaves) {
       const currentViewState = typeof leaf.getViewState === "function" ? leaf.getViewState() : null;
-      if (!currentViewState || currentViewState.title === APPLE_STYLE_VIEW_TITLE)
+      if (!currentViewState || currentViewState.title === APPLE_STYLE_VIEW_TITLE14)
         continue;
       await leaf.setViewState(
         this.toConverterViewState(currentViewState, { active: currentViewState.active === true })
@@ -60934,23 +63147,23 @@ var AppleStylePlugin = class extends Plugin {
   }
   async openConverter() {
     var _a5, _b, _c, _d;
-    let leaf = this.app.workspace.getLeavesOfType(APPLE_STYLE_VIEW)[0];
+    let leaf = this.app.workspace.getLeavesOfType(APPLE_STYLE_VIEW14)[0];
     if (!leaf) {
-      const targetLeaf = isMobileClient2(this.app) ? ((_b = (_a5 = this.app.workspace).getLeaf) == null ? void 0 : _b.call(_a5, "tab")) || ((_d = (_c = this.app.workspace).getLeaf) == null ? void 0 : _d.call(_c, false)) : this.app.workspace.getRightLeaf(false);
+      const targetLeaf = isMobileClient16(this.app) ? ((_b = (_a5 = this.app.workspace).getLeaf) == null ? void 0 : _b.call(_a5, "tab")) || ((_d = (_c = this.app.workspace).getLeaf) == null ? void 0 : _d.call(_c, false)) : this.app.workspace.getRightLeaf(false);
       if (!targetLeaf)
         return;
       await targetLeaf.setViewState(this.toConverterViewState({}, { active: true }));
       leaf = targetLeaf;
     } else {
       const currentViewState = typeof leaf.getViewState === "function" ? leaf.getViewState() : null;
-      if (!currentViewState || currentViewState.title !== APPLE_STYLE_VIEW_TITLE) {
+      if (!currentViewState || currentViewState.title !== APPLE_STYLE_VIEW_TITLE14) {
         await leaf.setViewState(this.toConverterViewState(currentViewState || {}, { active: true }));
       }
     }
-    await revealLeafCompat(this.app.workspace, leaf);
+    await revealLeafCompat14(this.app.workspace, leaf);
   }
   getConverterView() {
-    const leaves = this.app.workspace.getLeavesOfType(APPLE_STYLE_VIEW);
+    const leaves = this.app.workspace.getLeavesOfType(APPLE_STYLE_VIEW14);
     if (leaves.length > 0) {
       return leaves[0].view;
     }
@@ -60975,7 +63188,7 @@ var AppleStylePlugin = class extends Plugin {
     }
     if (typeof window !== "undefined") {
       try {
-        const activeDoc = getActiveDocumentCompat();
+        const activeDoc = getActiveDocumentCompat14();
         if (!activeDoc)
           return false;
         const a = activeDoc.createElement("a");
@@ -60994,8 +63207,8 @@ var AppleStylePlugin = class extends Plugin {
   }
   getWechatSyncBridgeService() {
     var _a5, _b;
-    const pluginSettings = getPluginSettings(this);
-    const settings = normalizeMultiPlatformSyncSettings(pluginSettings["multiPlatformSync"]);
+    const pluginSettings = getPluginSettings14(this);
+    const settings = normalizeMultiPlatformSyncSettings14(pluginSettings["multiPlatformSync"]);
     const cacheKey = `${settings.port}:${settings.token}:${settings.allowRemote ? 1 : 0}`;
     if (this._wechatSyncBridgeService && this._wechatSyncBridgeCacheKey === cacheKey) {
       return this._wechatSyncBridgeService;
@@ -61006,7 +63219,7 @@ var AppleStylePlugin = class extends Plugin {
       });
     }
     this._wechatSyncBridgeCacheKey = cacheKey;
-    this._wechatSyncBridgeService = createWechatSyncBridgeService({
+    this._wechatSyncBridgeService = createWechatSyncBridgeService14({
       port: settings.port,
       token: settings.token,
       allowRemote: settings.allowRemote,
@@ -61014,13 +63227,13 @@ var AppleStylePlugin = class extends Plugin {
       initialConnectedClients: settings.connectedClients || [],
       onClientRegistryChange: async (clients) => {
         var _a6, _b2;
-        const currentSettings = getPluginSettings(this);
-        currentSettings["multiPlatformSync"] = normalizeMultiPlatformSyncSettings({
-          ...toRecord6(currentSettings["multiPlatformSync"]),
+        const currentSettings = getPluginSettings14(this);
+        currentSettings["multiPlatformSync"] = normalizeMultiPlatformSyncSettings14({
+          ...toRecord22(currentSettings["multiPlatformSync"]),
           connectedClients: Array.isArray(clients) ? clients : []
         });
         await this.saveSettings();
-        refreshSettingTabCompat(
+        refreshSettingTabCompat14(
           /** @type {SettingTabCompatLike | null | undefined} */
           (_b2 = (_a6 = this.app) == null ? void 0 : _a6.setting) == null ? void 0 : _b2.activeTab
         );
@@ -61029,8 +63242,8 @@ var AppleStylePlugin = class extends Plugin {
     return this._wechatSyncBridgeService;
   }
   startWechatSyncBridgeInBackground(reason = "manual") {
-    const pluginSettings = getPluginSettings(this);
-    const settings = normalizeMultiPlatformSyncSettings(pluginSettings["multiPlatformSync"]);
+    const pluginSettings = getPluginSettings14(this);
+    const settings = normalizeMultiPlatformSyncSettings14(pluginSettings["multiPlatformSync"]);
     if (!settings.enabled)
       return;
     const bridge = this.getWechatSyncBridgeService();
@@ -61041,8 +63254,8 @@ var AppleStylePlugin = class extends Plugin {
         status
       });
     }).catch((error) => {
-      const errorRecord = toRecord6(error);
-      const readableError = toReadableError3(error);
+      const errorRecord = toRecord22(error);
+      const readableError = toReadableError17(error);
       console.warn("[Wechatsync] bridge warm start failed", {
         reason,
         port: settings.port,
@@ -61052,225 +63265,31 @@ var AppleStylePlugin = class extends Plugin {
     });
   }
   async loadSettings() {
-    const loadedData = toRecord6(await this.loadData());
-    const settings = setPluginSettings(this, Object.assign({}, DEFAULT_SETTINGS, loadedData));
-    let didMigrate = false;
-    if (!settings["clientId"]) {
-      settings["clientId"] = "wp_dev_" + Math.random().toString(36).substring(2) + Date.now().toString(36);
-      didMigrate = true;
-    }
-    settings["multiPlatformSync"] = normalizeMultiPlatformSyncSettings(settings["multiPlatformSync"]);
-    settings["feishuSync"] = normalizeFeishuSyncSettings(settings["feishuSync"]);
-    const normalizedDraftCache = normalizeDraftCache(settings["draftCache"]);
-    settings["draftCache"] = normalizedDraftCache.cache;
-    if (normalizedDraftCache.changed) {
-      didMigrate = true;
-    }
-    const rawAiSettings = loadedData.ai;
-    settings["ai"] = normalizeAiSettings(rawAiSettings || settings["ai"] || {});
-    if (rawAiSettings !== void 0) {
-      const normalizedRawAi = normalizeAiSettings(toRecord6(rawAiSettings));
-      if (JSON.stringify(normalizedRawAi) !== JSON.stringify(rawAiSettings)) {
-        didMigrate = true;
-      }
-    }
-    if (settings["wechatAppId"] && settings["wechatAccounts"].length === 0) {
-      const migratedAccount = {
-        id: generateId(),
-        name: "\u6211\u7684\u516C\u4F17\u53F7",
-        appId: String(settings["wechatAppId"] || ""),
-        appSecret: String(settings["wechatAppSecret"] || "")
-      };
-      settings["wechatAccounts"].push(migratedAccount);
-      settings["defaultAccountId"] = migratedAccount.id;
-      settings["wechatAppId"] = "";
-      settings["wechatAppSecret"] = "";
-      didMigrate = true;
-      console.log("\u2705 \u5DF2\u5C06\u65E7\u8D26\u53F7\u914D\u7F6E\u8FC1\u79FB\u5230\u65B0\u683C\u5F0F");
-    }
-    if (Array.isArray(settings["wechatAccounts"])) {
-      settings["wechatAccounts"] = /** @type {WechatAccountLike[]} */
-      settings["wechatAccounts"].map((account) => {
-        if (!isRecord9(account))
-          return (
-            /** @type {WechatAccountLike} */
-            { id: "", name: "", appId: "", appSecret: "" }
-          );
-        const nextAccount = { ...account };
-        let changed = false;
-        if (Object.prototype.hasOwnProperty.call(nextAccount, "enableOriginal")) {
-          delete nextAccount.enableOriginal;
-          changed = true;
-        }
-        if (Object.prototype.hasOwnProperty.call(nextAccount, "allowReprint")) {
-          delete nextAccount.allowReprint;
-          changed = true;
-        }
-        if (changed) {
-          didMigrate = true;
-        }
-        return (
-          /** @type {WechatAccountLike} */
-          nextAccount
-        );
-      });
-    }
-    const currentTemplate = normalizeVaultPath(settings["cleanupDirTemplate"] || "");
-    const legacyRootDir = normalizeVaultPath(settings["cleanupRootDir"] || "");
-    const legacyTarget = settings["cleanupTarget"];
-    if (!currentTemplate && legacyRootDir && legacyTarget === "folder") {
-      settings["cleanupDirTemplate"] = `${legacyRootDir}/{{note}}_img`;
-      didMigrate = true;
-      console.log("\u2705 \u5DF2\u5C06\u65E7\u6E05\u7406\u914D\u7F6E\u8FC1\u79FB\u4E3A\u76EE\u5F55\u6A21\u677F cleanupDirTemplate");
-    }
-    if (Object.prototype.hasOwnProperty.call(settings, "cleanupRootDir")) {
-      delete settings["cleanupRootDir"];
-      didMigrate = true;
-    }
-    if (Object.prototype.hasOwnProperty.call(settings, "cleanupTarget")) {
-      delete settings["cleanupTarget"];
-      didMigrate = true;
-    }
-    const deprecatedRenderKeys = [
-      "useTripletPipeline",
-      "tripletFallbackToPhase2",
-      "enforceTripletParity",
-      "tripletParityMaxLengthDelta",
-      "tripletParityMaxSegmentCount",
-      "tripletParityVerboseLog",
-      "useNativePipeline",
-      "enableLegacyFallback",
-      "enforceNativeParity"
-    ];
-    for (const key of deprecatedRenderKeys) {
-      if (Object.prototype.hasOwnProperty.call(settings, key)) {
-        delete settings[key];
-        didMigrate = true;
-      }
-    }
+    const { settings, didMigrate } = normalizeLoadedSettings(await this.loadData(), { generateId: generateId14 });
+    setPluginSettings14(this, settings);
     if (didMigrate) {
       await this.saveSettings();
     }
   }
   getArticleLayoutState(sourcePath = "", selection = {}) {
-    const normalizedPath = normalizeVaultPath(sourcePath || "");
-    if (!normalizedPath)
-      return null;
-    const pluginSettings = getPluginSettings(this);
-    const aiSettings = normalizeAiSettings(toRecord6(pluginSettings["ai"]));
-    const articleLayoutsByPath = toRecord6(aiSettings.articleLayoutsByPath);
-    const entry = articleLayoutsByPath[normalizedPath] || null;
-    const normalizedEntry = normalizeArticleLayoutCacheEntry(entry);
-    if (!normalizedEntry)
-      return null;
-    if (!selection || Object.keys(selection).length === 0) {
-      const familyStates = toAiLayoutFamilyStates(normalizedEntry.familyStates);
-      return familyStates[normalizedEntry.lastLayoutFamily] || null;
-    }
-    return toAiLayoutState(getArticleLayoutSelectionState(normalizedEntry, toAiLayoutSelection(selection), {
-      layoutFamily: aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO,
-      colorPalette: aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO
-    }));
+    return getArticleLayoutStateFromSettings(getPluginSettings14(this), sourcePath, selection);
   }
   async saveArticleLayoutState(sourcePath = "", nextState = null, selection = {}) {
-    var _a5, _b, _c, _d, _e, _f, _g;
-    const normalizedPath = normalizeVaultPath(sourcePath || "");
-    if (!normalizedPath)
+    const saved = saveArticleLayoutStateToSettings(getPluginSettings14(this), sourcePath, nextState, selection);
+    if (!saved)
       return false;
-    const pluginSettings = getPluginSettings(this);
-    if (!pluginSettings["ai"]) {
-      pluginSettings["ai"] = createDefaultAiSettings();
-    }
-    const aiSettings = (
-      /** @type {AiSettingsLike} */
-      pluginSettings["ai"]
-    );
-    if (!isRecord9(aiSettings.articleLayoutsByPath)) {
-      aiSettings.articleLayoutsByPath = {};
-    }
-    const articleLayoutsByPath = (
-      /** @type {Record<string, unknown>} */
-      aiSettings.articleLayoutsByPath
-    );
-    const existingEntry = normalizeArticleLayoutCacheEntry(articleLayoutsByPath[normalizedPath]) || {
-      lastLayoutFamily: "",
-      lastAutoResolvedFamily: "",
-      familyStates: {}
-    };
-    const existingFamilyStates = toAiLayoutFamilyStates(existingEntry.familyStates);
-    existingEntry.familyStates = existingFamilyStates;
-    const nextLayoutState = toAiLayoutState(nextState);
-    const hasExplicitSelection = typeof selection === "string" || selection && typeof selection === "object" && Object.keys(selection).length > 0;
-    const requestedSelection = normalizeLayoutSelection(
-      (nextLayoutState == null ? void 0 : nextLayoutState.selection) || (hasExplicitSelection ? toAiLayoutSelection(selection) : null) || {
-        layoutFamily: (nextLayoutState == null ? void 0 : nextLayoutState.layoutFamily) || ((_a5 = nextLayoutState == null ? void 0 : nextLayoutState.resolved) == null ? void 0 : _a5.layoutFamily),
-        colorPalette: (nextLayoutState == null ? void 0 : nextLayoutState.stylePack) || ((_b = nextLayoutState == null ? void 0 : nextLayoutState.resolved) == null ? void 0 : _b.colorPalette) || ((_c = nextLayoutState == null ? void 0 : nextLayoutState.layoutJson) == null ? void 0 : _c.stylePack)
-      },
-      {
-        layoutFamily: aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO,
-        colorPalette: aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO
-      }
-    );
-    const getCacheFamily = (state = null) => {
-      var _a6, _b2;
-      const stateRecord = toAiLayoutState(state);
-      const normalizedState = normalizeArticleLayoutState(stateRecord || {});
-      const rawFamily = ((_a6 = normalizedState == null ? void 0 : normalizedState.resolved) == null ? void 0 : _a6.layoutFamily) || (normalizedState == null ? void 0 : normalizedState.layoutFamily) || ((_b2 = stateRecord == null ? void 0 : stateRecord.resolved) == null ? void 0 : _b2.layoutFamily) || (stateRecord == null ? void 0 : stateRecord.layoutFamily) || (requestedSelection.layoutFamily !== AI_LAYOUT_SELECTION_AUTO ? requestedSelection.layoutFamily : "");
-      const normalizedFamily = normalizeLayoutSelection({ layoutFamily: rawFamily }).layoutFamily;
-      return normalizedFamily === AI_LAYOUT_SELECTION_AUTO ? "" : normalizedFamily;
-    };
-    const effectiveLayoutFamily = getCacheFamily(nextLayoutState);
-    if (!nextLayoutState) {
-      if (selection && Object.keys(selection).length && effectiveLayoutFamily) {
-        delete existingFamilyStates[effectiveLayoutFamily];
-        const remainingFamilies = Object.keys(existingFamilyStates);
-        if (!remainingFamilies.length) {
-          delete articleLayoutsByPath[normalizedPath];
-        } else {
-          existingEntry.lastLayoutFamily = existingFamilyStates[existingEntry.lastLayoutFamily] ? existingEntry.lastLayoutFamily : remainingFamilies[0];
-          if (existingEntry.lastAutoResolvedFamily && !existingFamilyStates[existingEntry.lastAutoResolvedFamily]) {
-            existingEntry.lastAutoResolvedFamily = "";
-          }
-          articleLayoutsByPath[normalizedPath] = normalizeArticleLayoutCacheEntry(existingEntry) || existingEntry;
-        }
-      } else {
-        delete articleLayoutsByPath[normalizedPath];
-      }
-    } else {
-      const resolvedLayoutFamily = effectiveLayoutFamily || "source-first";
-      const inferredSkillId = nextLayoutState.skillId || resolvedLayoutFamily || requestedSelection.layoutFamily;
-      const inferredSkillVersion = nextLayoutState.skillVersion || ((_d = nextLayoutState.generationMeta) == null ? void 0 : _d.skillVersion) || ((_e = getLayoutFamilyById(inferredSkillId)) == null ? void 0 : _e.version) || "";
-      existingFamilyStates[resolvedLayoutFamily] = {
-        ...nextLayoutState,
-        skillId: inferredSkillId,
-        skillVersion: inferredSkillVersion,
-        selection: requestedSelection,
-        resolved: {
-          ...nextLayoutState.resolved || {},
-          layoutFamily: resolvedLayoutFamily,
-          colorPalette: nextLayoutState.stylePack || ((_f = nextLayoutState.resolved) == null ? void 0 : _f.colorPalette) || "tech-green"
-        },
-        layoutFamily: resolvedLayoutFamily,
-        stylePack: nextLayoutState.stylePack || ((_g = nextLayoutState.resolved) == null ? void 0 : _g.colorPalette) || "tech-green"
-      };
-      existingEntry.lastLayoutFamily = resolvedLayoutFamily;
-      if (requestedSelection.layoutFamily === AI_LAYOUT_SELECTION_AUTO) {
-        existingEntry.lastAutoResolvedFamily = resolvedLayoutFamily;
-      }
-      articleLayoutsByPath[normalizedPath] = normalizeArticleLayoutCacheEntry(existingEntry) || existingEntry;
-    }
     return this.saveSettings();
   }
   async saveSettings() {
     try {
-      await this.saveData(getPluginSettings(this));
+      await this.saveData(getPluginSettings14(this));
       return true;
     } catch (error) {
       console.error("\u4FDD\u5B58\u63D2\u4EF6\u8BBE\u7F6E\u5931\u8D25:", error);
       const now = Date.now();
       if (!this._lastSaveSettingsErrorAt || now - this._lastSaveSettingsErrorAt > 3e3) {
         this._lastSaveSettingsErrorAt = now;
-        new Notice("\u26A0\uFE0F \u8BBE\u7F6E\u4FDD\u5B58\u5931\u8D25\uFF0C\u672C\u6B21\u4FEE\u6539\u4EC5\u5728\u5F53\u524D\u4F1A\u8BDD\u751F\u6548");
+        new Notice14("\u26A0\uFE0F \u8BBE\u7F6E\u4FDD\u5B58\u5931\u8D25\uFF0C\u672C\u6B21\u4FEE\u6539\u4EC5\u5728\u5F53\u524D\u4F1A\u8BDD\u751F\u6548");
       }
       return false;
     }
@@ -61288,14 +63307,14 @@ var AppleStylePlugin = class extends Plugin {
 AppleStylePlugin.default = AppleStylePlugin;
 AppleStylePlugin.AppleStylePlugin = AppleStylePlugin;
 AppleStylePlugin.AppleStyleView = AppleStyleView;
-AppleStylePlugin.WechatAPI = WechatAPI;
+AppleStylePlugin.WechatAPI = WechatAPI14;
 AppleStylePlugin.AppleStyleSettingTab = AppleStyleSettingTab;
-AppleStylePlugin.createImageSwipeCalloutMarkdown = createImageSwipeCalloutMarkdown;
-AppleStylePlugin.getImageSwipeCommandCopy = getImageSwipeCommandCopy;
-AppleStylePlugin.stripMarkdownFrontmatter = stripMarkdownFrontmatter;
-AppleStylePlugin.describeWechatsyncConnectionState = describeWechatsyncConnectionState;
-AppleStylePlugin.renderWechatsyncConnectionStatusBar = renderWechatsyncConnectionStatusBar;
-AppleStylePlugin.formatWechatsyncCheckedAt = formatWechatsyncCheckedAt;
+AppleStylePlugin.createImageSwipeCalloutMarkdown = createImageSwipeCalloutMarkdown14;
+AppleStylePlugin.getImageSwipeCommandCopy = getImageSwipeCommandCopy14;
+AppleStylePlugin.stripMarkdownFrontmatter = stripMarkdownFrontmatter14;
+AppleStylePlugin.describeWechatsyncConnectionState = describeWechatsyncConnectionState14;
+AppleStylePlugin.renderWechatsyncConnectionStatusBar = renderWechatsyncConnectionStatusBar14;
+AppleStylePlugin.formatWechatsyncCheckedAt = formatWechatsyncCheckedAt14;
 var input_default = AppleStylePlugin;
 /*! markdown-it 14.2.0 https://github.com/markdown-it/markdown-it @license MIT */
 /*! Bundled license information:

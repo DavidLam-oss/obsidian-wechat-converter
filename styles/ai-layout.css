@@ -1,0 +1,804 @@
+/* ========================================
+   AI 编排面板 (Floating AI Layout Panel)
+   ======================================== */
+.apple-ai-layout-overlay {
+  --ai-layout-accent: #0a84ff;
+  --ai-layout-accent-deep: #0a84ff;
+  --ai-layout-accent-soft: color-mix(in srgb, var(--ai-layout-accent) 10%, transparent);
+  --ai-layout-accent-border: color-mix(in srgb, var(--ai-layout-accent) 72%, transparent);
+  position: absolute;
+  top: 48px;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 10px 40px -10px rgba(0, 0, 0, 0.15),
+    0 2px 10px rgba(0, 0, 0, 0.05);
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+  z-index: 100;
+  padding: 24px 12px 32px 12px;
+  max-height: 60%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-20px);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow-x: hidden;
+}
+
+.apple-ai-layout-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.apple-ai-layout-overlay.is-loading .apple-ai-layout-area {
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+.apple-ai-layout-overlay.is-loading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.18));
+}
+
+.apple-ai-layout-overlay.is-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(120px, calc(100% - 48px));
+  height: 2px;
+  z-index: 4;
+  border-radius: 999px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--apple-loading-accent, #7c3aed) 14%, transparent) 0%,
+    var(--apple-loading-accent, #7c3aed) 50%,
+    color-mix(in srgb, var(--apple-loading-accent, #7c3aed) 14%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: apple-ai-layout-loading-strip 1.1s linear infinite;
+}
+
+.apple-converter-container.apple-ai-layout-panel-loading .apple-converter-preview.apple-preview-loading::before {
+  content: none;
+}
+
+.theme-dark .apple-ai-layout-overlay {
+  background: rgba(30, 30, 30, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 10px 40px -10px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.theme-dark .apple-ai-layout-overlay.is-loading::before {
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.88), rgba(30, 30, 30, 0.24));
+}
+
+.theme-dark .apple-converter-container.apple-converter-mobile .apple-ai-layout-overlay {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.apple-ai-layout-overlay::-webkit-scrollbar {
+  width: 4px;
+}
+
+.apple-ai-layout-overlay::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.apple-ai-layout-overlay::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 128, 0.5);
+  border-radius: 999px;
+}
+
+.apple-ai-layout-area {
+  max-width: 360px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 2px 16px 0;
+  box-sizing: border-box;
+}
+
+.apple-ai-layout-loading-mask {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.22));
+  backdrop-filter: blur(10px) saturate(118%);
+  -webkit-backdrop-filter: blur(10px) saturate(118%);
+  z-index: 2;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.apple-ai-layout-loading-mask.visible {
+  display: flex;
+}
+
+.apple-ai-layout-loading-mask.visible::before {
+  content: none;
+}
+
+.theme-dark .apple-ai-layout-loading-mask {
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.34), rgba(30, 30, 30, 0.24));
+}
+
+.apple-ai-layout-loading-bar {
+  display: none;
+}
+
+.apple-ai-layout-loading-bar-fill {
+  display: none;
+}
+
+.apple-ai-layout-loading-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--apple-loading-accent, #7c3aed) 20%, transparent);
+  border-top-color: var(--apple-loading-accent, #7c3aed);
+  animation: apple-ai-layout-spin 0.8s linear infinite;
+}
+
+.apple-ai-layout-loading-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--apple-loading-accent, #7c3aed);
+}
+
+@keyframes apple-ai-layout-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes apple-ai-layout-loading-strip {
+  0% {
+    background-position: 200% 0;
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    background-position: -100% 0;
+    opacity: 0.55;
+  }
+}
+
+.apple-ai-layout-header {
+  margin-bottom: 0;
+}
+
+.apple-ai-layout-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--apple-primary);
+  line-height: 1.2;
+}
+
+.apple-ai-layout-subtitle {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--apple-secondary);
+}
+
+.apple-ai-layout-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--apple-surface);
+  border: 1px solid var(--apple-border);
+}
+
+.apple-ai-layout-status-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.apple-ai-layout-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ai-layout-accent) 12%, transparent);
+  color: var(--ai-layout-accent-deep);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.apple-ai-layout-badge.is-applied {
+  background: color-mix(in srgb, var(--ai-layout-accent) 18%, transparent);
+}
+
+.apple-ai-layout-badge.is-stale {
+  background: rgba(245, 158, 11, 0.18);
+  color: #b45309;
+}
+
+.apple-ai-layout-badge.is-error {
+  background: rgba(239, 68, 68, 0.18);
+  color: #b91c1c;
+}
+
+.apple-ai-layout-badge.is-disabled {
+  background: rgba(107, 114, 128, 0.16);
+  color: #4b5563;
+}
+
+.apple-ai-layout-status-text {
+  order: 2;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--apple-secondary);
+}
+
+.apple-ai-layout-status .apple-ai-layout-summary {
+  order: 3;
+}
+
+.apple-ai-layout-section {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.apple-ai-layout-advanced {
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.apple-ai-layout-advanced-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--apple-border);
+  background: var(--apple-surface);
+  color: var(--apple-primary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.apple-ai-layout-advanced-toggle::after {
+  content: '展开';
+  color: var(--apple-secondary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.apple-ai-layout-advanced-toggle.is-open::after {
+  content: '收起';
+}
+
+.apple-ai-layout-advanced-body {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.apple-ai-layout-advanced-body.visible {
+  display: flex;
+}
+
+.apple-ai-layout-control {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.apple-ai-layout-controls-section {
+  gap: 14px;
+}
+
+.apple-ai-layout-color-select {
+  display: none;
+}
+
+.apple-ai-color-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  align-items: flex-start;
+}
+
+.apple-ai-color-mode-row,
+.apple-ai-color-custom-row {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+}
+
+.apple-ai-color-grid {
+  display: grid;
+  grid-template-columns: repeat(6, max-content);
+  gap: 8px 9px;
+  align-items: center;
+}
+
+.apple-ai-color-btn {
+  width: 26px;
+  height: 26px;
+}
+
+.apple-ai-color-btn::after {
+  width: 16px;
+  height: 16px;
+}
+
+.apple-ai-color-pill {
+  height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--apple-border);
+  border-radius: 13px;
+  background: var(--apple-background);
+  color: var(--apple-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.apple-ai-color-pill:hover {
+  color: var(--apple-primary);
+  border-color: color-mix(in srgb, var(--ai-layout-accent-border) 28%, var(--apple-border));
+}
+
+.apple-ai-color-pill.active {
+  background: color-mix(in srgb, var(--ai-layout-accent) 10%, transparent);
+  color: var(--ai-layout-accent-deep);
+  border-color: color-mix(in srgb, var(--ai-layout-accent-border) 30%, var(--apple-border));
+}
+
+.apple-ai-layout-cache-list {
+  order: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  align-items: flex-start;
+  width: 100%;
+  min-height: 18px;
+}
+
+.apple-ai-layout-cache-list[hidden] {
+  display: none;
+}
+
+.apple-ai-layout-cache-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  color: var(--apple-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.apple-ai-layout-cache-switch-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.apple-ai-layout-cache-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  padding: 2px 8px;
+  border: 1px solid var(--apple-border);
+  border-radius: 7px;
+  background: var(--apple-background);
+  color: var(--apple-primary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.apple-ai-layout-cache-chip:hover {
+  border-color: color-mix(in srgb, var(--ai-layout-accent-border) 34%, var(--apple-border));
+  background: color-mix(in srgb, var(--ai-layout-accent) 6%, transparent);
+}
+
+.apple-ai-layout-cache-chip:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.apple-ai-layout-cache-caption {
+  color: var(--apple-tertiary, var(--apple-secondary));
+  font-size: 11px;
+}
+
+.apple-ai-layout-cache-name {
+  font-weight: 650;
+  color: var(--apple-primary);
+}
+
+.apple-ai-layout-cache-separator {
+  color: var(--apple-tertiary, var(--apple-secondary));
+}
+
+.apple-ai-layout-cache-state {
+  font-size: 11px;
+  color: var(--apple-secondary);
+}
+
+.apple-ai-layout-cache-state.is-stale {
+  color: var(--apple-warning, #b45309);
+}
+
+.apple-ai-custom-color-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  visibility: hidden;
+}
+
+.apple-ai-layout-summary {
+  color: var(--apple-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.apple-ai-layout-result-section {
+  margin-top: 2px;
+}
+
+.apple-ai-layout-meta-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.apple-ai-layout-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ai-layout-accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ai-layout-accent-border) 12%, transparent);
+  color: var(--ai-layout-accent-deep);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.apple-ai-layout-mini-note {
+  margin-top: 0;
+  color: var(--apple-secondary);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.apple-ai-layout-issues {
+  display: none;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.16);
+}
+
+.apple-ai-layout-issues.visible {
+  display: block;
+}
+
+.apple-ai-layout-issues-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #b45309;
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+}
+
+.apple-ai-layout-issue-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px dashed rgba(245, 158, 11, 0.18);
+}
+
+.apple-ai-layout-issue-item:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.apple-ai-layout-issue-item.is-fatal .apple-ai-layout-issue-path {
+  background: rgba(220, 38, 38, 0.14);
+  color: #b91c1c;
+}
+
+.apple-ai-layout-issue-path {
+  flex: 0 0 auto;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(180, 83, 9, 0.12);
+  color: #92400e;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.apple-ai-layout-issue-message {
+  flex: 1;
+  min-width: 0;
+  color: #7c4a03;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.apple-ai-layout-block-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.apple-ai-layout-block-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: var(--apple-surface);
+  border: 1px solid var(--apple-border);
+}
+
+.apple-ai-layout-block-item.is-skeleton {
+  align-items: center;
+}
+
+.apple-ai-layout-block-index {
+  width: 26px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--ai-layout-accent-deep);
+}
+
+.apple-ai-layout-block-skeleton-index,
+.apple-ai-layout-block-skeleton-line,
+.apple-ai-layout-block-skeleton-badge {
+  position: relative;
+  overflow: hidden;
+  background: rgba(120, 120, 128, 0.14);
+  border-radius: 999px;
+}
+
+.apple-ai-layout-block-skeleton-index {
+  width: 26px;
+  height: 14px;
+}
+
+.apple-ai-layout-block-skeleton-line.is-title {
+  width: 72%;
+  height: 14px;
+  border-radius: 8px;
+}
+
+.apple-ai-layout-block-skeleton-line.is-meta {
+  width: 38%;
+  height: 10px;
+  margin-top: 6px;
+  border-radius: 8px;
+}
+
+.apple-ai-layout-block-skeleton-badge {
+  width: 42px;
+  height: 22px;
+}
+
+.apple-ai-layout-block-skeleton-index::after,
+.apple-ai-layout-block-skeleton-line::after,
+.apple-ai-layout-block-skeleton-badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%);
+  animation: apple-ai-layout-skeleton 1.2s ease-in-out infinite;
+}
+
+@keyframes apple-ai-layout-skeleton {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.apple-ai-layout-block-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.apple-ai-layout-block-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--apple-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apple-ai-layout-block-remove {
+  flex: 0 0 auto;
+  border: 1px solid var(--apple-border);
+  background: var(--apple-background);
+  color: var(--apple-secondary);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.apple-ai-layout-block-remove:hover {
+  border-color: color-mix(in srgb, var(--ai-layout-accent-border) 24%, var(--apple-border));
+  color: var(--ai-layout-accent-deep);
+}
+
+.apple-ai-layout-empty {
+  padding: 14px;
+  border-radius: 12px;
+  color: var(--apple-secondary);
+  font-size: 12px;
+  background: var(--apple-surface);
+  border: 1px dashed var(--apple-border);
+}
+
+.apple-ai-layout-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.apple-ai-layout-debug-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.apple-ai-layout-debug-btn {
+  flex: 1 1 0;
+}
+
+.apple-ai-layout-debug-btn.is-active {
+  background: color-mix(in srgb, var(--ai-layout-accent) 12%, transparent);
+  color: var(--ai-layout-accent-deep);
+  border: 1px solid color-mix(in srgb, var(--ai-layout-accent-border) 18%, transparent);
+}
+
+.apple-ai-layout-debug-panel {
+  display: none;
+  margin-top: 12px;
+  border-radius: 14px;
+  background: #111827;
+  border: 1px solid rgba(17, 24, 39, 0.36);
+  overflow: hidden;
+}
+
+.apple-ai-layout-debug-panel.visible {
+  display: block;
+}
+
+.apple-ai-layout-debug-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 10px 10px 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.apple-ai-layout-debug-title {
+  min-width: 0;
+  color: #f3f4f6;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.apple-ai-layout-debug-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+.apple-ai-layout-debug-copy {
+  min-height: 24px;
+  padding: 3px 8px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.apple-ai-layout-debug-copy:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+.apple-ai-layout-debug-copy:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.apple-ai-layout-debug-body {
+  margin: 0;
+  padding: 12px;
+  max-height: 240px;
+  overflow: auto;
+  color: #d1d5db;
+  font-size: 11px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-monospace), SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-ai-layout-area {
+  max-width: 360px;
+  padding: 2px 6px 0;
+  gap: 16px;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-ai-layout-section {
+  gap: 10px;
+}
+

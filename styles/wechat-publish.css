@@ -1,0 +1,521 @@
+/* ========================================
+   同步选项区
+   ======================================== */
+.apple-sync-options {
+  padding: var(--apple-spacing-md);
+  border-top: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+}
+
+.apple-sync-options .apple-setting-section {
+  margin-bottom: 12px;
+}
+
+.apple-sync-options .apple-setting-section:last-child {
+  margin-bottom: 0;
+}
+
+.apple-sync-options .apple-setting-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+/* ========================================
+   同步 Modal 样式
+   ======================================== */
+.wechat-sync-modal {
+  min-width: 320px;
+  font-family: var(--apple-font-text);
+  color: var(--apple-primary);
+}
+
+div.modal.wechat-sync-shell-mobile {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  margin: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
+  height: calc(100vh - 80px);
+  max-height: calc(100vh - 80px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.wechat-sync-account-single {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  color: var(--text-normal);
+  background: var(--background-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.wechat-sync-mobile-quick-hint {
+  margin: -4px 0 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.wechat-sync-advanced {
+  border: 1px solid color-mix(in srgb, var(--apple-border) 88%, transparent);
+  border-radius: var(--apple-radius-md);
+  background: color-mix(in srgb, var(--apple-background) 96%, var(--background-secondary));
+  overflow: hidden;
+}
+
+.wechat-sync-advanced-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--apple-primary);
+  background: color-mix(in srgb, var(--background-secondary) 72%, transparent);
+  user-select: none;
+}
+
+.wechat-sync-advanced-summary::-webkit-details-marker {
+  display: none;
+}
+
+.wechat-sync-advanced-summary::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid var(--apple-secondary);
+  border-bottom: 2px solid var(--apple-secondary);
+  transform: rotate(45deg);
+  transition: transform 0.18s ease;
+}
+
+.wechat-sync-advanced[open] .wechat-sync-advanced-summary::after {
+  transform: rotate(-135deg);
+}
+
+.wechat-sync-advanced-body {
+  padding: 12px 14px 14px;
+  border-top: 1px solid color-mix(in srgb, var(--apple-border) 88%, transparent);
+}
+
+.wechat-publish-shell .wechat-sync-advanced-body {
+  padding: 10px 16px 16px;
+}
+
+.wechat-sync-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 12px 4px 8px;
+}
+
+.wechat-sync-empty-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.wechat-sync-empty-state h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.wechat-sync-empty-state p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.wechat-sync-failure-state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0 4px;
+}
+
+.wechat-sync-failure-message {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-normal);
+  line-height: 1.5;
+}
+
+.wechat-sync-failure-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.wechat-modal-section {
+  margin-bottom: 0;
+  padding: 14px 0;
+  border-top: 1px solid color-mix(in srgb, var(--background-modifier-border) 82%, transparent);
+}
+
+.wechat-modal-section:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.wechat-modal-section:last-child {
+  padding-bottom: 0;
+}
+
+.wechat-modal-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--apple-primary);
+  margin-bottom: 8px;
+  letter-spacing: 0.1px;
+}
+
+.wechat-modal-cover-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wechat-publish-shell .wechat-modal-cover-content {
+  gap: 14px;
+}
+
+.wechat-modal-cover-preview {
+  width: 160px;
+  height: 100px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-secondary);
+}
+
+.wechat-publish-shell .wechat-modal-cover-preview {
+  width: 180px;
+  height: 112px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--apple-surface) 78%, var(--apple-background));
+}
+
+.wechat-modal-cover-preview.has-material-cover {
+  height: auto;
+  min-height: 0;
+  align-items: stretch;
+  justify-content: flex-start;
+  border: none;
+  background: transparent;
+  overflow: visible;
+}
+
+.wechat-modal-cover-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.wechat-modal-no-cover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  text-align: center;
+  user-select: none;
+}
+
+.wechat-modal-cover-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.wechat-modal-cover-btns button {
+  min-height: 32px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid color-mix(in srgb, var(--apple-border) 88%, transparent);
+  border-radius: var(--apple-radius-sm);
+  background: var(--apple-background);
+  color: var(--apple-secondary);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.wechat-modal-cover-btns button:hover {
+  color: var(--apple-primary);
+  border-color: var(--apple-accent);
+  background: color-mix(in srgb, var(--apple-accent) 5%, var(--apple-background));
+}
+
+.wechat-publish-shell .wechat-modal-digest-input {
+  min-height: 78px;
+  padding: 9px 10px;
+  border: 1px solid color-mix(in srgb, var(--apple-border) 88%, transparent);
+  border-radius: var(--apple-radius-md);
+  background: var(--apple-background);
+  color: var(--apple-primary);
+  line-height: 1.5;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wechat-publish-shell .wechat-modal-digest-input:focus {
+  border-color: color-mix(in srgb, var(--apple-accent) 62%, var(--apple-border));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--apple-accent) 12%, transparent);
+}
+
+.wechat-publish-shell .wechat-modal-title-input {
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--apple-border) 88%, transparent);
+  border-radius: var(--apple-radius-md);
+  background: var(--apple-background);
+  color: var(--apple-primary);
+  line-height: 1.5;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wechat-publish-shell .wechat-modal-title-input:focus {
+  border-color: color-mix(in srgb, var(--apple-accent) 62%, var(--apple-border));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--apple-accent) 12%, transparent);
+}
+
+.wechat-publish-shell .wechat-account-select {
+  min-height: 34px;
+  border-color: color-mix(in srgb, var(--apple-border) 88%, transparent);
+  border-radius: var(--apple-radius-sm);
+  background-color: var(--apple-background);
+  color: var(--apple-primary);
+}
+
+.wechat-publish-shell .wechat-account-select:hover {
+  border-color: color-mix(in srgb, var(--apple-accent) 42%, var(--apple-border));
+}
+
+/* ========================================
+   Obsidian-Native 极简按钮样式
+   ======================================== */
+
+/* 账号卡片操作按钮 - 极简文字链接风格 */
+.wechat-account-actions button {
+  padding: 4px 8px;
+  font-size: 13px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  font-weight: 400;
+}
+
+/* 普通按钮 (编辑、设为默认、测试) */
+.wechat-account-actions button:not(.wechat-btn-danger) {
+  color: var(--text-muted);
+}
+
+.wechat-account-actions button:not(.wechat-btn-danger):hover {
+  color: var(--interactive-accent);
+}
+
+/* 删除按钮 - 红色文字 */
+.wechat-account-actions .wechat-btn-danger {
+  color: var(--text-error);
+}
+
+.wechat-account-actions .wechat-btn-danger:hover {
+  color: #ff3b30;
+}
+
+/* Modal 按钮区 */
+.wechat-modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.wechat-publish-shell .wechat-modal-buttons,
+.wechat-feishu-publish-shell .wechat-modal-buttons {
+  position: sticky;
+  bottom: -1px;
+  z-index: 4;
+  margin: auto 0 0;
+  padding: 14px 0 0;
+  border-top: none;
+  background: transparent;
+}
+
+.wechat-feishu-publish-shell .wechat-modal-buttons {
+  position: static;
+  flex: 0 0 auto;
+  margin: 0;
+  padding-inline: 2px;
+}
+
+.wechat-modal-buttons button {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+/* 取消/测试连接 - 文字链接风格 */
+.wechat-modal-buttons button:not(.mod-cta) {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+}
+
+.wechat-modal-buttons button:not(.mod-cta):hover {
+  color: var(--interactive-accent);
+}
+
+/* CTA 按钮 (保存、开始同步) - 使用 Obsidian 主题色 */
+.wechat-modal-buttons .mod-cta {
+  background: var(--interactive-accent);
+  border: none;
+  color: var(--text-on-accent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease;
+}
+
+.wechat-modal-buttons .mod-cta:hover {
+  background: var(--interactive-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* 测试连接按钮 - 绿色文字 */
+.wechat-modal-buttons .wechat-btn-test {
+  color: var(--text-success);
+}
+
+.wechat-modal-buttons .wechat-btn-test:hover {
+  color: #2ecc71;
+}
+
+.wechat-sync-modal-mobile .wechat-modal-buttons {
+  position: relative;
+  z-index: 2;
+  background: transparent;
+  padding-top: 10px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  gap: 10px;
+  flex-direction: column-reverse;
+  border-top: 1px solid var(--background-modifier-border);
+  margin-top: auto;
+}
+
+.wechat-sync-modal-mobile .wechat-modal-buttons button {
+  width: 100%;
+  min-height: 44px;
+  font-size: 14px;
+}
+
+.wechat-sync-modal-mobile .wechat-account-select,
+.wechat-sync-modal-mobile .wechat-sync-account-single,
+.wechat-sync-modal-mobile .wechat-modal-cover-btns button {
+  min-height: 42px;
+  font-size: 14px;
+}
+
+.wechat-sync-modal-mobile .wechat-modal-cover-content {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.wechat-sync-modal-mobile .wechat-modal-cover-preview {
+  width: 100%;
+  height: 120px;
+}
+
+.wechat-sync-modal-mobile .wechat-sync-advanced-body {
+  height: calc(100vh - 450px - var(--keyboard-height, 0px));
+  max-height: calc(100vh - 450px - var(--keyboard-height, 0px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 14px 14px;
+}
+
+.wechat-publish-shell {
+  width: min(720px, calc(100vw - 48px));
+  max-width: min(720px, calc(100vw - 48px));
+}
+
+.wechat-publish-shell .modal-title {
+  font-family: var(--apple-font-text);
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: 0;
+  color: var(--apple-primary);
+}
+
+.wechat-publish-shell .modal-content {
+  display: flex;
+  flex-direction: column;
+  height: min(72vh, 720px);
+  min-height: 560px;
+  overflow-y: auto;
+  padding-top: 2px;
+}
+
+@media (max-height: 640px) {
+  .wechat-publish-shell .modal-content {
+    min-height: 0;
+    height: auto;
+  }
+}
+
+.wechat-publish-shell .modal-content.wechat-feishu-modal-content {
+  overflow: hidden;
+}
+
+.wechat-publish-shell .modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.wechat-publish-shell .modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.wechat-publish-shell .modal-content::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--apple-tertiary) 36%, transparent);
+}
+
+.wechat-multiplatform-shell .modal-content.wechat-multiplatform-modal:not(.wechat-multiplatform-result-modal) {
+  overflow: hidden;
+}
+

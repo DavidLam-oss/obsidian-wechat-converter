@@ -128,7 +128,14 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   const Notice = obsidian.Notice;
 
   const { plugin } = tab;
-  const settings = normalizeFeishuSyncSettings(plugin.settings.feishuSync);
+  const rawFeishuSettings = plugin.settings.feishuSync || {};
+  const settings = normalizeFeishuSyncSettings(rawFeishuSettings);
+  if (rawFeishuSettings?.apiUsage && typeof rawFeishuSettings.apiUsage === 'object') {
+    settings.apiUsage = {
+      ...settings.apiUsage,
+      ...rawFeishuSettings.apiUsage,
+    };
+  }
   plugin.settings.feishuSync = settings;
 
   containerEl.empty();

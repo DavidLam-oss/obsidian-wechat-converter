@@ -1,0 +1,182 @@
+/* ========================================
+   顶部工具栏 (Top Toolbar)
+   ======================================== */
+.apple-top-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px; /* 增加高度以容纳双行 */
+  padding: 0 16px;
+  border-bottom: 1px solid var(--apple-divider);
+  background: var(--apple-background);
+  flex-shrink: 0;
+  z-index: 200; /* 确保在最上层 */
+}
+
+.apple-toolbar-title {
+  flex: 1;
+  margin-right: 16px;
+  display: flex;
+  flex-direction: column; /* 双行布局 */
+  justify-content: center;
+  align-items: flex-start;
+  overflow: hidden; /* 关键：确保子元素截断生效 */
+}
+
+.apple-toolbar-plugin-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  margin-bottom: 2px;
+}
+
+.apple-toolbar-plugin-name {
+  font-size: 11px;
+  color: var(--apple-tertiary);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.apple-toolbar-preview-badge {
+  padding: 0 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-muted) 6%, transparent);
+  color: color-mix(in srgb, var(--text-muted) 84%, transparent);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.apple-toolbar-doc-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--apple-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%; /* 确保占据全宽以触发截断 */
+  line-height: 1.2;
+}
+
+.apple-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-top-toolbar {
+  height: 52px;
+  padding: 0 10px;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-toolbar-title {
+  margin-right: 8px;
+  min-width: 0;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-toolbar-plugin-name {
+  display: none;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-toolbar-doc-name {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-toolbar-actions {
+  gap: 6px;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-icon-btn {
+  width: 34px;
+  height: 34px;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-ai-layout-overlay {
+  top: 56px;
+  left: clamp(10px, 3.2vw, 16px);
+  right: clamp(10px, 3.2vw, 16px);
+  width: auto;
+  max-height: calc(100% - 56px - max(8px, env(safe-area-inset-bottom)));
+  border-radius: 14px;
+  border: 1px solid var(--apple-border);
+  box-shadow:
+    0 16px 36px -24px rgba(0, 0, 0, 0.38),
+    0 4px 14px rgba(0, 0, 0, 0.1);
+  padding: 12px 12px calc(24px + env(safe-area-inset-bottom)) 12px;
+  scrollbar-gutter: stable;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-ai-layout-overlay.is-loading {
+  left: 0;
+  right: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.apple-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--apple-radius-sm);
+  color: var(--apple-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.apple-icon-btn:hover {
+  background: var(--apple-surface);
+  color: var(--apple-primary);
+}
+
+.apple-icon-btn.active {
+  background: var(--apple-accent);
+  color: white;
+}
+
+.apple-icon-btn.is-copying {
+  color: var(--apple-accent);
+  background: transparent;
+  cursor: pointer;
+}
+
+.apple-icon-btn.is-copying:hover {
+  color: var(--apple-accent);
+  background: var(--apple-surface);
+}
+
+.apple-copy-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  box-sizing: border-box;
+  animation: apple-copy-spinner-rotate 0.7s linear infinite;
+}
+
+@keyframes apple-copy-spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.apple-icon-btn.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.apple-icon-btn.is-disabled:hover {
+  background: transparent;
+  color: var(--apple-secondary);
+}
+

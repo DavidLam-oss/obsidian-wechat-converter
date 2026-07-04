@@ -1,0 +1,797 @@
+/* ========================================
+   悬浮设置面板 (Floating Settings Overlay)
+   ======================================== */
+.apple-settings-overlay {
+  position: absolute;
+  top: 48px; /* 紧贴工具栏下方 */
+  left: 0;
+  right: 0;
+  /* 调整透明度：0.85 -> 0.72，增加通透感 */
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  /* 视觉区分增强 */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 10px 40px -10px rgba(0, 0, 0, 0.15), /* 大阴影营造悬浮感 */
+    0 2px 10px rgba(0, 0, 0, 0.05); /* 小阴影增加层次 */
+
+  /* 底部圆角，像一张从顶部滑出的纸 */
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+
+  z-index: 100;
+  /* 调整内边距：20px -> 12px，让内容更紧凑，两侧留白减少 */
+  padding: 24px 12px 32px 12px;
+
+  /* === 核心修改：高度限制与动画 === */
+  max-height: 60%; /* 限制高度为 60%，内部自动滚动 */
+  overflow-y: auto;
+  /* 保持滚动可感知（移动端也允许惯性滚动） */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+
+  /* 初始状态：向上隐去 (收起) */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-20px); /* 向上位移，模拟收起状态 */
+
+  /* 丝滑的物理缓动动画 */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.theme-dark .apple-settings-overlay {
+  /* 调整深色模式透明度：0.95 -> 0.8，也增加通透感 */
+  background: rgba(30, 30, 30, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 10px 40px -10px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05); /* 内描边高光 */
+}
+
+.apple-settings-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0); /* 向下展开，回到原位 */
+}
+
+.apple-converter-container.apple-converter-mobile .apple-settings-overlay {
+  top: 56px;
+  left: clamp(10px, 3.2vw, 16px);
+  right: clamp(10px, 3.2vw, 16px);
+  max-height: calc(100% - 56px - max(8px, env(safe-area-inset-bottom)));
+  border-radius: 14px;
+  border: 1px solid var(--apple-border);
+  box-shadow:
+    0 16px 36px -24px rgba(0, 0, 0, 0.38),
+    0 4px 14px rgba(0, 0, 0, 0.1);
+  padding: 12px 12px calc(24px + env(safe-area-inset-bottom)) 12px;
+  scrollbar-gutter: stable;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-settings-area {
+  max-width: 360px;
+  width: 100%;
+  margin: 0 auto;
+  gap: 12px;
+  padding: 2px 2px 0;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-setting-section {
+  gap: 7px;
+  padding: 8px 10px 10px;
+  border: 1px solid var(--apple-border);
+  border-radius: 10px;
+  background: var(--apple-surface);
+}
+
+.apple-converter-container.apple-converter-mobile .apple-setting-content {
+  width: 100%;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-settings-area > .setting-item {
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--apple-border);
+  border-radius: 10px;
+  background: var(--apple-surface);
+}
+
+/* 移动端底部预留，避免被 Obsidian 底栏覆盖 */
+.apple-converter-container.apple-converter-mobile .apple-settings-area::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: max(88px, calc(56px + env(safe-area-inset-bottom)));
+  flex-shrink: 0;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-setting-label {
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0.1px;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-btn-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-btn-theme {
+  min-height: 32px;
+  font-size: 12px;
+  padding: 5px 6px;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-btn-size {
+  min-height: 32px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-select {
+  min-height: 34px;
+  font-size: 13px;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-btn-row {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.theme-dark .apple-converter-container.apple-converter-mobile .apple-settings-overlay {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.theme-dark .apple-converter-container.apple-converter-mobile .apple-setting-section,
+.theme-dark .apple-converter-container.apple-converter-mobile .apple-settings-area > .setting-item {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 统一 Obsidian 原生 Setting Toggle 颜色，避免出现宿主题紫色 */
+.apple-settings-overlay .setting-item .checkbox-container.is-enabled {
+  background-color: var(--apple-accent);
+  border-color: var(--apple-accent);
+}
+
+.apple-settings-overlay::-webkit-scrollbar {
+  width: 4px;
+}
+
+.apple-settings-overlay::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.apple-settings-overlay::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 128, 0.5);
+  border-radius: 999px;
+}
+
+/* 隐藏旧的折叠样式，直接平铺 */
+.apple-settings-area {
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* 收紧间距，原32px */
+  max-width: 320px; /* 稍微收窄宽度 */
+  margin: 0 auto; /* 居中显示 */
+}
+
+.apple-setting-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.apple-setting-label {
+  font-size: 12px; /* 恢复精致的小字号 */
+  font-weight: 600;
+  color: var(--apple-secondary); /* 使用次级颜色，不喧宾夺主 */
+  text-transform: uppercase; /* 大写增强标题感 */
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+/* ========================================
+   预览区域 (占据剩余空间)
+   ======================================== */
+.apple-preview-wrapper {
+  flex: 1; /* 占据所有剩余高度 */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--apple-surface);
+  overflow: auto;
+  padding: 40px;
+  position: relative; /* 建立层叠上下文 */
+  z-index: 1;
+}
+
+/* 移除旧的设置面板样式，避免冲突 */
+.apple-settings-panel {
+  display: block;
+}
+
+/* === 设置变更处理 === */
+/* ... (保留滑块等其他组件样式) ... */
+
+/* === 主题按钮网格 === */
+.apple-btn-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.apple-btn-theme {
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--apple-border);
+  border-radius: var(--apple-radius-sm);
+  background: var(--apple-background);
+  color: var(--apple-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.apple-btn-theme:hover {
+  color: var(--apple-primary);
+  border-color: var(--apple-accent);
+}
+
+.apple-btn-theme.active {
+  background: rgba(0, 113, 227, 0.1);
+  color: var(--apple-accent);
+  border-color: rgba(0, 113, 227, 0.3);
+  box-shadow: 0 1px 2px rgba(0, 113, 227, 0.1);
+}
+
+/* === 字号按钮行 === */
+.apple-btn-row {
+  display: flex;
+  gap: 4px;
+}
+
+.apple-btn-size {
+  padding: 6px 10px;
+  border: 1px solid var(--apple-border);
+  border-radius: var(--apple-radius-sm);
+  background: var(--apple-background);
+  color: var(--apple-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.apple-btn-size:hover {
+  color: var(--apple-primary);
+  border-color: var(--apple-accent);
+}
+
+.apple-btn-size.active {
+  background: rgba(0, 113, 227, 0.1);
+  color: var(--apple-accent);
+  border-color: rgba(0, 113, 227, 0.3);
+}
+
+/* === 颜色选择器 === */
+.apple-color-grid {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.apple-btn-color {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.apple-btn-color::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--btn-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* Custom Color Button (Text) */
+.apple-btn-custom-text {
+  padding: 0 10px;
+  height: 28px;
+  border: 1px solid var(--apple-border);
+  border-radius: 14px;
+  /* Pill shape */
+  background: var(--apple-background);
+  color: var(--apple-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+}
+
+.apple-btn-custom-text:hover {
+  color: var(--apple-primary);
+  border-color: var(--apple-accent);
+}
+
+.apple-btn-custom-text.active {
+  background: rgba(0, 113, 227, 0.1);
+  color: var(--apple-accent);
+  border-color: rgba(0, 113, 227, 0.3);
+}
+
+
+
+.apple-btn-color:hover {
+  transform: scale(1.1);
+}
+
+.apple-btn-color.active {
+  border-color: var(--btn-color);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+/* === Settings Collapsible === */
+.apple-settings-details {
+  border: 1px solid color-mix(in srgb, var(--apple-border) 88%, transparent);
+  border-radius: var(--apple-radius-md);
+  margin-bottom: var(--apple-spacing-md);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--apple-background) 96%, var(--background-secondary));
+}
+
+.apple-settings-summary {
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: color-mix(in srgb, var(--background-secondary) 72%, transparent);
+  transition: all 0.2s ease;
+  user-select: none;
+  color: var(--text-normal);
+}
+
+.apple-settings-summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Chevron Arrow */
+.apple-settings-summary::after {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid var(--apple-secondary);
+  border-bottom: 2px solid var(--apple-secondary);
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+  margin-right: 4px;
+}
+
+.apple-settings-details[open] .apple-settings-summary::after {
+  transform: rotate(-135deg);
+  /* Point up */
+}
+
+.apple-settings-summary:hover {
+  background: color-mix(in srgb, var(--background-modifier-hover) 70%, transparent);
+}
+
+.apple-settings-details[open] .apple-settings-summary {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--apple-border) 88%, transparent);
+}
+
+.apple-settings-details .apple-settings-area {
+  padding: 10px 14px 14px;
+  background: transparent;
+}
+
+.apple-settings-details .apple-settings-advanced-area {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  gap: 0;
+}
+
+.apple-settings-details .apple-setting-section {
+  gap: 8px;
+  padding: 12px 0;
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--background-modifier-border) 82%, transparent);
+  border-radius: 0;
+  background: transparent;
+  margin-bottom: 0;
+}
+
+.apple-settings-details .apple-setting-section:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.apple-settings-details .apple-setting-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-normal);
+  text-transform: none;
+  letter-spacing: 0.1px;
+  margin-bottom: 0;
+}
+
+.apple-settings-details .apple-setting-content {
+  width: 100%;
+}
+
+.apple-settings-details .apple-setting-content > span {
+  line-height: 1.45;
+}
+
+.apple-settings-details .apple-settings-featured {
+  gap: 10px;
+  padding: 12px 12px 11px;
+  border: 1px solid color-mix(in srgb, var(--apple-border) 72%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--apple-background) 92%, var(--background-secondary));
+  margin-bottom: 10px;
+}
+
+.apple-settings-details .apple-settings-featured + .apple-setting-section {
+  border-top: none;
+}
+
+.apple-settings-details .apple-settings-inline-toggle {
+  gap: 10px;
+}
+
+.apple-settings-details .apple-settings-inline-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.apple-settings-details .apple-settings-inline-toggle .apple-setting-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.apple-settings-details .apple-settings-inline-toggle .apple-setting-content > span {
+  margin-top: 2px;
+}
+
+.apple-settings-details .setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 0;
+  border-top: 1px solid color-mix(in srgb, var(--background-modifier-border) 82%, transparent);
+}
+
+.apple-settings-details .setting-item:first-child {
+  border-top: none;
+}
+
+.apple-settings-details .setting-item-info {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  padding-right: 0;
+}
+
+.apple-settings-details .setting-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.apple-settings-details .setting-item-description {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.apple-settings-details .setting-item-control {
+  margin-left: auto;
+  flex: 0 0 auto;
+  justify-self: end;
+  align-self: center;
+}
+
+.apple-settings-details .setting-item-control input[type="text"] {
+  width: 112px;
+  text-align: center;
+}
+
+.apple-settings-details .setting-item-control > * {
+  margin-left: 0;
+}
+
+.apple-settings-details .apple-select {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+
+.apple-settings-details .setting-item-control .checkbox-container,
+.apple-settings-details .setting-item-control .clickable-icon {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .apple-settings-details .setting-item {
+    display: block;
+    gap: 10px;
+  }
+
+  .apple-settings-details .setting-item-control {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+}
+
+/* === 下拉选择器 === */
+/* === 下拉选择器 === */
+.apple-select {
+  width: auto;
+  min-width: 80px;
+  max-width: 120px;
+  padding: 6px 28px 6px 10px;
+  border: 1px solid var(--apple-border);
+  border-radius: var(--apple-radius-sm);
+  background: var(--apple-background);
+  color: var(--apple-primary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  /* 显示下拉箭头 */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236e6e73' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px;
+}
+
+.theme-dark .apple-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23b3b3b3' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-color: #2c2c2e;
+  /* 明确的深色背景 */
+  border-color: #424244;
+  color: #dcddde;
+}
+
+.apple-select:hover {
+  border-color: var(--apple-accent);
+}
+
+.theme-dark .apple-select:hover {
+  border-color: var(--apple-accent);
+}
+
+.apple-select:focus {
+  outline: none;
+  border-color: var(--apple-accent);
+  box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.1);
+}
+
+/* === 开关切换 === */
+.apple-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 40px;
+  height: 22px;
+  cursor: pointer;
+}
+
+.apple-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 40px;
+  height: 22px;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+  z-index: 10;
+  margin: 0;
+  padding: 0;
+}
+
+.apple-toggle-slider {
+  position: absolute;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--apple-border);
+  transition: 0.2s;
+  border-radius: 22px;
+}
+
+body.theme-dark .apple-toggle-slider,
+.theme-dark .apple-toggle-slider {
+  background-color: #2e2e2e;
+  border: 1px solid #555;
+}
+
+body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
+.theme-dark .apple-toggle-input:checked+.apple-toggle-slider {
+  background-color: var(--apple-accent);
+  border-color: var(--apple-accent);
+}
+
+.apple-toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: 0.2s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.apple-toggle-input:checked+.apple-toggle-slider {
+  background-color: var(--apple-accent);
+}
+
+.apple-toggle-input:checked+.apple-toggle-slider:before {
+  transform: translateX(18px);
+}
+
+/* === 滑块 (Slider) - 回归原生样式 === */
+/* 仅保留容器布局，移除所有自定义的 range input 样式，让浏览器/Obsidian 默认样式接管 */
+.apple-slider-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+/* 仅微调颜色以匹配主题，不修改尺寸和布局 */
+input[type="range"].apple-slider {
+  accent-color: var(--apple-accent); /* 现代浏览器支持的强调色属性 */
+  cursor: pointer;
+  flex: 1;
+}
+
+.apple-converter-container.apple-converter-mobile input[type="range"].apple-slider {
+  min-height: 26px;
+  touch-action: pan-y;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 26px;
+  background: transparent;
+}
+
+.apple-converter-container.apple-converter-mobile input[type="range"].apple-slider::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(120, 120, 128, 0.36);
+}
+
+.apple-converter-container.apple-converter-mobile input[type="range"].apple-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 30px;
+  height: 18px;
+  margin-top: 0px;
+  border-radius: 999px;
+  background: #f8f8f8;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+}
+
+.apple-converter-container.apple-converter-mobile input[type="range"].apple-slider:active::-webkit-slider-thumb {
+  background: var(--apple-accent);
+  border-color: var(--apple-accent);
+}
+
+.theme-dark .apple-converter-container.apple-converter-mobile input[type="range"].apple-slider::-webkit-slider-runnable-track {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.theme-dark .apple-converter-container.apple-converter-mobile input[type="range"].apple-slider::-webkit-slider-thumb {
+  background: #ececef;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.apple-converter-container.apple-converter-mobile input[type="range"].apple-slider::-webkit-slider-thumb:hover {
+  transform: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+}
+
+/* 深色模式适配 */
+.theme-dark input[type="range"].apple-slider::-webkit-slider-runnable-track {
+  background: #424244;
+}
+
+/* 交互状态 */
+input[type="range"].apple-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+input[type="range"].apple-slider:active::-webkit-slider-thumb {
+  background: var(--apple-accent);
+}
+
+/* === 操作按钮区 === */
+.apple-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: var(--apple-spacing-md);
+  padding-top: var(--apple-spacing-md);
+  border-top: 1px dashed var(--apple-border);
+  /* Dashed separator */
+}
+
+/* Unified Button Style */
+.apple-btn-primary,
+.apple-btn-secondary {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--apple-radius-sm);
+  background: var(--apple-accent);
+  /* Default blue */
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.apple-btn-primary:hover,
+.apple-btn-secondary:hover {
+  opacity: 0.9;
+}
+
+/* Full Width Variant */
+.apple-btn-full {
+  width: 100%;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  height: 38px;
+  background: var(--apple-accent);
+  /* Blue */
+}
+

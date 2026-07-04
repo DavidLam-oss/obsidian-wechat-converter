@@ -1,0 +1,348 @@
+/* ========================================
+   预览区域 - 手机仿真模式 (Canvas Mode)
+   ======================================== */
+.apple-preview-wrapper {
+  flex: 1;
+  display: flex;
+  /* 使用 grid 布局特性或 margin:auto 实现完美的居中+滚动体验 */
+  justify-content: center;
+  align-items: flex-start; /* 关键：防止高度不够时顶部被裁剪 */
+  background: var(--apple-surface);
+  overflow: auto; /* 开启画布滚动 */
+  padding: 40px;
+}
+
+/* 深色模式下背景适配 */
+.theme-dark .apple-preview-wrapper {
+  background: #1e1e1e; /* 深灰色背景，突显白色手机 */
+}
+
+/* 深色模式下为手机增加高光边框，防止融为一体 */
+.theme-dark .apple-phone-frame {
+  box-shadow:
+    inset 0 0 0 2px #e5e5e5,
+    0 0 0 10px #1d1d1f,
+    0 0 0 11px rgba(255, 255, 255, 0.1), /* 1px 微弱高光外描边 */
+    0 40px 80px -20px rgba(0, 0, 0, 0.8); /* 更深的投影 */
+}
+
+.apple-phone-frame {
+  /* === 核心修复：严格锁定尺寸，禁止变形 === */
+  width: 375px;
+  height: 812px;
+  min-width: 375px;
+  min-height: 812px;
+  flex: 0 0 auto; /* 禁止 Flex 压缩或拉伸 */
+  margin: auto; /* 在 flex 容器中自动居中 */
+
+  border-radius: 56px;
+  background: #ffffff;
+  /* 拟态边框 + 深邃阴影 */
+  box-shadow:
+    inset 0 0 0 2px #e5e5e5,
+    0 0 0 10px #1d1d1f,
+    0 40px 80px -20px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease; /* 仅阴影过渡，尺寸不再过渡 */
+}
+
+/* 手机顶部状态栏/导航栏区域 */
+.apple-phone-header {
+  height: 44px;
+  min-height: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+  color: #1d1d1f;
+  font-size: 16px;
+  font-weight: 600;
+  position: relative;
+
+  /* UI 微调：大幅上移，贴近刘海 */
+  margin-top: 12px; /* 原 26px -> 12px */
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.apple-phone-header .title {
+  text-align: center;
+  transform: translateY(-2px);
+}
+
+.apple-phone-header .dots {
+  position: absolute;
+  right: 24px;
+  font-size: 20px;
+  line-height: 1;
+  /* 颜色调浅 */
+  color: rgba(0, 0, 0, 0.2);
+  letter-spacing: 1px;
+  transform: translateY(-2px);
+}
+
+.apple-phone-header .back {
+  display: none;
+}
+
+/* 底部 Home Indicator */
+.apple-home-indicator {
+  height: 34px;
+  min-height: 34px;
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.apple-home-indicator::after {
+  content: '';
+  width: 134px;
+  height: 5px;
+  background: #000000;
+  border-radius: 100px;
+  opacity: 0.1; /* 调浅一点，不抢眼 */
+}
+
+.apple-converter-preview {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 16px; /* 恢复边距 */
+  background: #ffffff;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: #1d1d1f;
+
+  /* === 移除整体缩放，恢复清晰度 === */
+  /* zoom: 0.85;  用户反馈太小，移除 */
+}
+
+.apple-converter-preview .code-snippet__fix,
+.apple-converter-preview .code-snippet__fix pre,
+.apple-converter-preview .code-snippet__fix .code-with-line-numbers {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.apple-converter-preview .code-snippet__fix .code-with-line-numbers {
+  min-width: 0;
+}
+
+.apple-converter-preview .code-snippet__fix .code-line-numbers {
+  flex: 0 0 3.5em;
+  width: 3.5em;
+  max-width: 3.5em;
+}
+
+.apple-converter-preview .code-snippet__fix .code-scroll {
+  flex: 1 1 0%;
+  width: 0;
+  min-width: 0;
+  max-width: calc(100% - 3.5em);
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+.apple-converter-preview .code-snippet__fix .code-lines {
+  width: max-content;
+  max-width: none;
+}
+
+.apple-converter-preview.apple-preview-loading {
+  position: relative;
+}
+
+.apple-converter-preview.apple-preview-loading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 4;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--apple-loading-accent, #7c3aed) 34%, transparent) 24%,
+    var(--apple-loading-accent, #7c3aed) 50%,
+    color-mix(in srgb, var(--apple-loading-accent, #7c3aed) 34%, transparent) 76%,
+    transparent 100%
+  );
+  animation: apple-preview-loading-bar 1.1s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes apple-preview-loading-bar {
+  0% {
+    transform: translateX(-40%);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(40%);
+    opacity: 0.45;
+  }
+}
+
+/* 处理表格：优先换行，仅在极个别长单词情况下滚动 */
+.apple-converter-preview table {
+  width: 100%;
+  table-layout: auto; /* 自动宽度 */
+  border-collapse: collapse;
+  margin: 16px 0;
+  display: table; /* 恢复表格显示属性 */
+}
+
+/* 单元格内容自动换行 */
+.apple-converter-preview td,
+.apple-converter-preview th {
+  white-space: normal; /* 强制换行 */
+  word-wrap: break-word;
+  word-break: break-all; /* 允许在单词内换行，防止长链接撑破 */
+  max-width: 300px; /* 限制最大宽度，触发换行 */
+}
+
+/* 隐藏滚动条，获得更像 App 的体验 */
+.apple-converter-preview::-webkit-scrollbar {
+  display: none;
+}
+
+/* ========================================
+   占位符 (调整以适应手机框)
+   ======================================== */
+.apple-placeholder-note {
+  font-size: 12px;
+  color: #86868b;
+  margin-top: 18px;
+  opacity: 0.8;
+}
+
+.apple-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  text-align: center;
+  color: var(--text-normal);
+  background: transparent;
+  padding: 32px 18px;
+}
+
+.apple-placeholder-icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 22px;
+}
+
+.apple-placeholder h2 {
+  font-size: 21px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin: 0 0 28px 0;
+}
+
+.apple-placeholder-content {
+  text-align: left;
+  width: 100%;
+  max-width: 310px;
+  margin: 0 auto;
+}
+
+.apple-placeholder-desc {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0 0 22px 0;
+}
+
+.apple-placeholder .apple-placeholder-note {
+  margin: 28px 0 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+
+.apple-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  font-size: 13.5px;
+  color: var(--text-normal);
+}
+
+/* ========================================
+   响应式设计
+   ======================================== */
+@media (max-width: 400px) {
+  .apple-btn-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .apple-actions {
+    flex-direction: column;
+  }
+}
+
+/* ========================================
+   Classic Mode (No Phone Frame)
+   ======================================== */
+.apple-preview-wrapper.mode-classic {
+  padding: 0;
+  background: var(--apple-background);
+  overflow: hidden;
+  align-items: stretch;
+}
+
+.apple-preview-wrapper.mode-classic .apple-converter-preview {
+  width: 100%;
+  height: 100%;
+  /* max-width: 1000px;  Removed to match legacy behavior perfectly */
+  margin: 0; /* Reset margin */
+  padding: 32px 40px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.apple-preview-wrapper.mode-classic.apple-ai-preview-active .apple-converter-preview,
+.apple-preview-wrapper.mode-classic .apple-converter-preview.apple-ai-preview-active {
+  padding: 0;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-preview-wrapper.mode-classic {
+  padding: 0;
+  overflow: auto;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-preview-wrapper.mode-classic .apple-converter-preview {
+  padding: 10px 8px calc(14px + env(safe-area-inset-bottom));
+}
+
+.apple-converter-container.apple-converter-mobile .apple-preview-wrapper.mode-classic.apple-ai-preview-active .apple-converter-preview,
+.apple-converter-container.apple-converter-mobile .apple-preview-wrapper.mode-classic .apple-converter-preview.apple-ai-preview-active {
+  padding: 0 0 calc(8px + env(safe-area-inset-bottom)) 0;
+}
+
+.theme-dark .apple-preview-wrapper.mode-classic {
+  background: var(--apple-background);
+}
+

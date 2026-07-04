@@ -8,6 +8,8 @@
 		"check:embedded": "node scripts/generate-embedded-deps.mjs --check",
 		"generate:ai-layout-runtime": "node scripts/build-ai-layout-runtime.mjs",
 		"check:ai-layout-runtime": "node scripts/build-ai-layout-runtime.mjs --check",
+		"generate:styles": "node scripts/build-styles.mjs",
+		"check:styles": "node scripts/build-styles.mjs --check",
 		"generate:runtime": "npm run generate:embedded && npm run generate:ai-layout-runtime",
 		"check:runtime": "npm run check:embedded && npm run check:ai-layout-runtime",
 		"check:build-artifacts": "node scripts/check-build-artifacts.mjs",
