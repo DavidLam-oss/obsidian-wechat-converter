@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-const { replaceUnuploadedDraftImagesWithPlaceholders, createWechatSyncService } = require('../services/wechat-sync');
+const { inspectWechatDraftContent, replaceUnuploadedDraftImagesWithPlaceholders, createWechatSyncService } = require('../services/wechat-sync');
 
 describe('Wechat Sync Service', () => {
   function createMockApi() {
@@ -469,6 +469,135 @@ describe('Wechat Sync Service', () => {
     expect(output.html).toContain('http://mmbiz.qlogo.cn/logo/0');
     expect(output.html).not.toContain('https://example.com/not-uploaded.png"');
     expect(output.html).toContain('图片未同步，请在微信后台手动补传');
+  });
+
+  it('inspectWechatDraftContent should block leftover local resources and unconverted vectors', () => {
+    const result = inspectWechatDraftContent([
+      '<p><a href="obsidian://open">local</a></p>',
+      '<p><img src="https://mmbiz.qpic.cn/mmbiz_png/ok/0"></p>',
+      '<svg></svg>',
+    ].join(''));
+
+    expect(result.blockingIssues.map((issue) => issue.code)).toEqual([
+      'draft_local_resource',
+      'draft_unconverted_vector',
+    ]);
+  });
+
+  it('inspectWechatDraftContent should warn about suspicious urls without blocking', () => {
+    const result = inspectWechatDraftContent([
+      '<p>https://mp.weixin.qq.com/s/abc DEF</p>',
+      '<p>https://mp.weixin.qq.com/，</p>',
+    ].join(''));
+
+    expect(result.blockingIssues).toEqual([]);
+    expect(result.warnings.map((issue) => issue.code)).toEqual([
+      'draft_suspicious_url_space',
+      'draft_suspicious_url_punctuation',
+    ]);
+  });
+
+  it('inspectWechatDraftContent should block WeChat backend and developer platform links', () => {
+    const result = inspectWechatDraftContent([
+      '<p><a href="https://developers.weixin.qq.com/platform?aibot=1&utm_source=community">开发者平台</a></p>',
+      '<p><a href="https://mp.weixin.qq.com/">公众号后台</a></p>',
+      '<p><code>https://mp.weixin.qq.com/</code></p>',
+      '<p><a href="https://mp.weixin.qq.com/s/public-article">公开文章</a></p>',
+      '<p><a href="https://mp.weixin.qq.com/mp/appmsgalbum?__biz=MzA">合集</a></p>',
+    ].join(''));
+
+    expect(result.blockingIssues).toEqual([
+      expect.objectContaining({
+        code: 'draft_unsupported_wechat_link',
+        value: 'https://developers.weixin.qq.com/platform?aibot=1&utm_source=community',
+      }),
+      expect.objectContaining({
+        code: 'draft_unsupported_wechat_link',
+        value: 'https://mp.weixin.qq.com/',
+      }),
+    ]);
+    expect(result.blockingIssues.map((issue) => issue.value)).not.toContain('https://mp.weixin.qq.com/s/public-article');
+    expect(result.blockingIssues.map((issue) => issue.value)).not.toContain('https://mp.weixin.qq.com/mp/appmsgalbum?__biz=MzA');
+  });
+
+  it('should block draft creation when final html keeps unconverted svg', async () => {
+    const api = createMockApi();
+    const service = createWechatSyncService({
+      createApi: vi.fn(() => api),
+      srcToBlob: vi.fn(async () => new Blob(['cover'], { type: 'image/png' })),
+      prepareHtmlForDraft: vi.fn(async (html) => html),
+      processAllImages: vi.fn(async () => '<p>x</p>'),
+      processMathFormulas: vi.fn(async (html) => html),
+      cleanHtmlForDraft: vi.fn(() => '<svg></svg>'),
+      cleanupConfiguredDirectory: vi.fn(async () => ({})),
+      getFirstImageFromArticle: vi.fn(() => 'app://fallback-cover'),
+    });
+
+    await expect(service.syncToDraft({
+      account: { appId: 'wx1', appSecret: 'sec' },
+      proxyUrl: '',
+      currentHtml: '<p>x</p>',
+      activeFile: { basename: 't' },
+      publishMeta: { coverSrc: null },
+      sessionCoverBase64: 'data:image/png;base64,abc',
+      sessionDigest: '',
+    })).rejects.toThrow('微信草稿内容检查未通过');
+    expect(api.createDraft).not.toHaveBeenCalled();
+  });
+
+  it('should block draft creation before API call when final html has unsupported WeChat links', async () => {
+    const api = createMockApi();
+    const service = createWechatSyncService({
+      createApi: vi.fn(() => api),
+      srcToBlob: vi.fn(async () => new Blob(['cover'], { type: 'image/png' })),
+      prepareHtmlForDraft: vi.fn(async (html) => html),
+      processAllImages: vi.fn(async () => '<p><a href="https://developers.weixin.qq.com/platform?aibot=1&utm_source=community">开发者平台</a></p>'),
+      processMathFormulas: vi.fn(async (html) => html),
+      cleanHtmlForDraft: vi.fn((html) => html),
+      cleanupConfiguredDirectory: vi.fn(async () => ({})),
+      getFirstImageFromArticle: vi.fn(() => 'app://fallback-cover'),
+    });
+
+    await expect(service.syncToDraft({
+      account: { appId: 'wx1', appSecret: 'sec' },
+      proxyUrl: '',
+      currentHtml: '<p>x</p>',
+      activeFile: { basename: 't' },
+      publishMeta: { coverSrc: null },
+      sessionCoverBase64: 'data:image/png;base64,abc',
+      sessionDigest: '',
+    })).rejects.toThrow('后台/开发者平台链接');
+    expect(api.createDraft).not.toHaveBeenCalled();
+    expect(api.updateDraft).not.toHaveBeenCalled();
+  });
+
+  it('should return draft warnings for suspicious links while creating draft', async () => {
+    const api = createMockApi();
+    const service = createWechatSyncService({
+      createApi: vi.fn(() => api),
+      srcToBlob: vi.fn(async () => new Blob(['cover'], { type: 'image/png' })),
+      prepareHtmlForDraft: vi.fn(async (html) => html),
+      processAllImages: vi.fn(async () => '<p>https://mp.weixin.qq.com/s/abc DEF</p>'),
+      processMathFormulas: vi.fn(async (html) => html),
+      cleanHtmlForDraft: vi.fn((html) => html),
+      cleanupConfiguredDirectory: vi.fn(async () => ({})),
+      getFirstImageFromArticle: vi.fn(() => 'app://fallback-cover'),
+    });
+
+    const result = await service.syncToDraft({
+      account: { appId: 'wx1', appSecret: 'sec' },
+      proxyUrl: '',
+      currentHtml: '<p>x</p>',
+      activeFile: { basename: 't' },
+      publishMeta: { coverSrc: null },
+      sessionCoverBase64: 'data:image/png;base64,abc',
+      sessionDigest: '',
+    });
+
+    expect(api.createDraft).toHaveBeenCalled();
+    expect(result.draftWarnings).toEqual([
+      expect.objectContaining({ code: 'draft_suspicious_url_space' }),
+    ]);
   });
 
   it('should keep issue #23 fragment syncable by replacing invalid image srcs', () => {

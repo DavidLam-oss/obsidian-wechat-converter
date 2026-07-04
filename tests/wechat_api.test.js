@@ -21,6 +21,16 @@ describe('WechatAPI - Upload & MIME Logic', () => {
     });
   };
 
+  const blobToArrayBuffer = async (blob) => {
+    if (blob && typeof blob.arrayBuffer === 'function') return blob.arrayBuffer();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error || new Error('Failed to read Blob'));
+      reader.readAsArrayBuffer(blob);
+    });
+  };
+
   beforeEach(async () => {
     // 1. Reset modules to ensure we get a fresh import of input.js
     vi.resetModules();
@@ -124,6 +134,45 @@ describe('WechatAPI - Upload & MIME Logic', () => {
     const view = new AppleStyleView(null, null);
 
     await expect(view.srcToBlob('data:not-valid')).rejects.toThrow('无效的 data URL 图片来源');
+  });
+
+  it('should read note-relative local images from the vault', async () => {
+    const imageFile = {
+      path: 'notes/images/local.png',
+      name: 'local.png',
+      extension: 'png',
+      bytes: new Uint8Array([1, 2, 3]).buffer,
+    };
+    const view = new AppleStyleView(null, null);
+    view.lastResolvedSourcePath = 'notes/post.md';
+    view.app = {
+      metadataCache: {
+        getFirstLinkpathDest: vi.fn(() => null),
+      },
+      vault: {
+        getAbstractFileByPath: vi.fn((filePath) => (filePath === imageFile.path ? imageFile : null)),
+        readBinary: vi.fn(async (file) => file.bytes),
+      },
+    };
+
+    const blob = await view.srcToBlob('images/local.png');
+
+    expect(blob.type).toBe('image/png');
+    expect(await blobToArrayBuffer(blob)).toEqual(imageFile.bytes);
+    expect(view.app.vault.readBinary).toHaveBeenCalledWith(imageFile);
+  });
+
+  it('should reject file URLs outside the current vault', async () => {
+    const view = new AppleStyleView(null, null);
+    view.app = {
+      vault: {
+        adapter: { basePath: '/tmp/vault' },
+        getAbstractFileByPath: vi.fn(),
+        readBinary: vi.fn(),
+      },
+    };
+
+    await expect(view.srcToBlob('file:///tmp/outside/local.png')).rejects.toThrow('只支持读取当前 vault 内的 file:// 图片');
   });
 
   it('should request permanent image materials with pagination', async () => {

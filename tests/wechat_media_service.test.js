@@ -26,6 +26,24 @@ describe('Wechat Media Service', () => {
     expect(output.match(/https:\/\/wx\/image\.png/g)?.length).toBe(2);
   });
 
+  it('processAllImages should use raw src attributes for relative images', async () => {
+    const html = '<p><img src="images/a.png"><img src="images/a.png"></p>';
+    const srcToBlob = vi.fn(async () => new Blob(['x'], { type: 'image/png' }));
+    const uploadImage = vi.fn(async () => ({ url: 'https://wx/relative.png' }));
+
+    const output = await processAllImages({
+      html,
+      api: { uploadImage },
+      progressCallback: null,
+      pMap: serialPMap,
+      srcToBlob,
+    });
+
+    expect(srcToBlob).toHaveBeenCalledTimes(1);
+    expect(srcToBlob).toHaveBeenCalledWith('images/a.png');
+    expect(output).toContain('src="https://wx/relative.png"');
+  });
+
   it('processMathFormulas should return original html when no svg exists', async () => {
     const html = '<p>plain text</p>';
     const output = await processMathFormulas({
@@ -220,6 +238,26 @@ describe('Wechat Media Service', () => {
       expect.objectContaining({ src: 'app://missing-image.png' }),
     ]);
     expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  it('processAllImages should replace failed relative images without leaving img tags', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const html = '<p><img src="images/missing.png"></p>';
+    const srcToBlob = vi.fn().mockRejectedValue(new Error('not found'));
+    const uploadImage = vi.fn();
+
+    const output = await processAllImages({
+      html,
+      api: { uploadImage },
+      progressCallback: null,
+      pMap: serialPMap,
+      srcToBlob,
+    });
+
+    expect(srcToBlob).toHaveBeenCalledWith('images/missing.png');
+    expect(output).toContain('图片上传失败，请在微信后台手动补传：images/missing.png');
+    expect(output).not.toContain('<img');
     errorSpy.mockRestore();
   });
 });

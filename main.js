@@ -4413,6 +4413,25 @@ var require_converter = __commonJS({
     function toText3(value) {
       return typeof value === "string" ? value : "";
     }
+    function safeDecodeUri(value) {
+      const text = String(value || "").trim();
+      try {
+        return decodeURI(text);
+      } catch (e) {
+        return text;
+      }
+    }
+    function normalizeVaultPath2(value) {
+      return String(value || "").trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/{2,}/g, "/");
+    }
+    function getVaultDirname(filePath) {
+      const normalized = normalizeVaultPath2(filePath);
+      const index = normalized.lastIndexOf("/");
+      return index > 0 ? normalized.slice(0, index) : "";
+    }
+    function joinVaultPath2(...parts) {
+      return normalizeVaultPath2(parts.filter(Boolean).join("/"));
+    }
     function getToken(tokens, idx) {
       return tokens[idx] || {};
     }
@@ -4587,17 +4606,31 @@ var require_converter = __commonJS({
        * @returns {string}
        */
       resolveImagePath(src) {
-        var _a5, _b, _c, _d;
+        var _a5, _b, _c, _d, _e, _f;
         if (!this.app)
           return src;
-        if (/^(https?:\/\/|data:)/i.test(src))
+        if (/^(https?:\/\/|data:|app:\/\/|capacitor:\/\/)/i.test(src))
           return src;
         try {
-          const linkPath = decodeURI(src);
+          const linkPath = safeDecodeUri(src);
           const sourcePath = this.sourcePath;
           const tFile = (_b = (_a5 = this.app.metadataCache) == null ? void 0 : _a5.getFirstLinkpathDest) == null ? void 0 : _b.call(_a5, linkPath, sourcePath);
           if (tFile) {
             return ((_d = (_c = this.app.vault) == null ? void 0 : _c.getResourcePath) == null ? void 0 : _d.call(_c, tFile)) || src;
+          }
+          const vault = this.app.vault;
+          const candidates = [];
+          const normalized = normalizeVaultPath2(linkPath);
+          if (normalized)
+            candidates.push(normalized);
+          const noteDir = getVaultDirname(sourcePath);
+          if (normalized && noteDir)
+            candidates.push(joinVaultPath2(noteDir, normalized));
+          for (const candidate of Array.from(new Set(candidates))) {
+            const file = (_e = vault == null ? void 0 : vault.getAbstractFileByPath) == null ? void 0 : _e.call(vault, candidate);
+            if (file == null ? void 0 : file.extension) {
+              return ((_f = vault == null ? void 0 : vault.getResourcePath) == null ? void 0 : _f.call(vault, file)) || src;
+            }
           }
         } catch (e) {
           console.error("Image resolution failed:", src, e);
@@ -44398,6 +44431,133 @@ function renderArticleLayoutHtml(layout, { imageRefs = [], mode = "preview", ren
 }
 
 // services/wechat-sync.js
+function createDraftContentIssue(code, message, value = "") {
+  return {
+    code,
+    message,
+    value: String(value || "")
+  };
+}
+function isWechatDraftImageSrc(src) {
+  const value = String(src || "").trim();
+  return /^https?:\/\/mmbiz\.qpic\.cn\//i.test(value) || /^https?:\/\/mmbiz\.qlogo\.cn\//i.test(value);
+}
+function isWechatUnsafeLocalResource(value) {
+  const text = String(value || "").trim();
+  if (!text)
+    return false;
+  if (/^(app|capacitor|file|obsidian):\/\//i.test(text))
+    return true;
+  if (/^data:/i.test(text))
+    return true;
+  if (/^(https?:|mailto:|tel:|#)/i.test(text))
+    return false;
+  return !/^[a-z][a-z0-9+.-]*:/i.test(text);
+}
+function parseHttpUrl(value) {
+  const text = String(value || "").trim();
+  if (!/^https?:\/\//i.test(text))
+    return null;
+  try {
+    return new URL(text);
+  } catch (e) {
+    return null;
+  }
+}
+function isPublicWechatArticleUrl(url) {
+  const pathname = url.pathname || "/";
+  if (pathname === "/s" || pathname.startsWith("/s/"))
+    return true;
+  if (pathname === "/mp/appmsgalbum")
+    return true;
+  if (pathname === "/mp/profile_ext" && url.searchParams.has("__biz"))
+    return true;
+  return false;
+}
+function isUnsupportedWechatDraftLink(value) {
+  const url = parseHttpUrl(value);
+  if (!url)
+    return false;
+  const host = url.hostname.toLowerCase();
+  if (host === "developers.weixin.qq.com")
+    return true;
+  if (host !== "mp.weixin.qq.com")
+    return false;
+  return !isPublicWechatArticleUrl(url);
+}
+function inspectWechatDraftContent(html) {
+  const blockingIssues = [];
+  const warnings = [];
+  const source = String(html || "");
+  const div = createHtmlContainer("div", source);
+  if (div) {
+    Array.from(div.querySelectorAll("img")).forEach((img) => {
+      const src = String(img.getAttribute("src") || "").trim();
+      if (src && isWechatDraftImageSrc(src))
+        return;
+      blockingIssues.push(createDraftContentIssue(
+        "draft_image_not_uploaded",
+        "\u6B63\u6587\u4ECD\u6709\u672A\u4E0A\u4F20\u5230\u5FAE\u4FE1\u7684\u56FE\u7247",
+        src
+      ));
+    });
+    Array.from(div.querySelectorAll("[src], [href]")).forEach((element) => {
+      for (const attrName of ["src", "href"]) {
+        const value = String(element.getAttribute(attrName) || "").trim();
+        if (!value || element.tagName === "IMG" && attrName === "src")
+          continue;
+        if (isWechatUnsafeLocalResource(value)) {
+          blockingIssues.push(createDraftContentIssue(
+            "draft_local_resource",
+            "\u6B63\u6587\u4ECD\u6709\u5FAE\u4FE1\u8349\u7A3F\u4E0D\u652F\u6301\u7684\u672C\u5730\u8D44\u6E90\u94FE\u63A5",
+            value
+          ));
+          continue;
+        }
+        if (attrName === "href" && isUnsupportedWechatDraftLink(value)) {
+          blockingIssues.push(createDraftContentIssue(
+            "draft_unsupported_wechat_link",
+            "\u6B63\u6587\u91CC\u6709\u5FAE\u4FE1\u8349\u7A3F\u63A5\u53E3\u53EF\u80FD\u62D2\u6536\u7684\u540E\u53F0/\u5F00\u53D1\u8005\u5E73\u53F0\u94FE\u63A5\uFF0C\u8BF7\u6539\u6210\u7EAF\u6587\u672C\u6216\u4EE3\u7801\u683C\u5F0F",
+            value
+          ));
+        }
+      }
+    });
+    if (div.querySelector("svg, mjx-container")) {
+      blockingIssues.push(createDraftContentIssue(
+        "draft_unconverted_vector",
+        "\u6B63\u6587\u4ECD\u6709\u672A\u8F6C\u6362\u7684 SVG \u6216\u6570\u5B66\u516C\u5F0F\u8282\u70B9",
+        ""
+      ));
+    }
+  }
+  const brokenUrlPattern = /https?:\/\/[^\s<>"']+\s+[A-Za-z0-9][^\s<>"']*/g;
+  const punctuationUrlPattern = /https?:\/\/[^\s<>"']+[，。；、]/g;
+  Array.from(source.matchAll(brokenUrlPattern)).forEach((match) => {
+    warnings.push(createDraftContentIssue(
+      "draft_suspicious_url_space",
+      "\u6B63\u6587\u91CC\u6709\u7591\u4F3C\u88AB\u7A7A\u683C\u622A\u65AD\u7684\u94FE\u63A5",
+      match[0]
+    ));
+  });
+  Array.from(source.matchAll(punctuationUrlPattern)).forEach((match) => {
+    warnings.push(createDraftContentIssue(
+      "draft_suspicious_url_punctuation",
+      "\u6B63\u6587\u91CC\u6709 URL \u4E0E\u4E2D\u6587\u6807\u70B9\u7D27\u8D34\u7684\u53EF\u7591\u94FE\u63A5",
+      match[0]
+    ));
+  });
+  return { blockingIssues, warnings };
+}
+function formatDraftContentIssues(issues) {
+  const list = Array.isArray(issues) ? issues : [];
+  const preview = list.slice(0, 3).map((issue) => {
+    const value = issue.value ? `\uFF1A${issue.value}` : "";
+    return `${issue.message}${value}`;
+  }).join("\uFF1B");
+  const suffix = list.length > 3 ? `\uFF1B\u53E6\u6709 ${list.length - 3} \u9879` : "";
+  return `\u5FAE\u4FE1\u8349\u7A3F\u5185\u5BB9\u68C0\u67E5\u672A\u901A\u8FC7\uFF0C\u5171 ${list.length} \u9879\u95EE\u9898\u3002${preview}${suffix}`;
+}
 function replaceUnuploadedDraftImagesWithPlaceholders(html) {
   const activeDocument = getActiveDocument();
   if (!activeDocument) {
@@ -44409,8 +44569,7 @@ function replaceUnuploadedDraftImagesWithPlaceholders(html) {
   const imageSources = [];
   Array.from(div.querySelectorAll("img")).forEach((img) => {
     const src = String(img.getAttribute("src") || "").trim();
-    const isWechatImage = /^https?:\/\/mmbiz\.qpic\.cn\//i.test(src) || /^https?:\/\/mmbiz\.qlogo\.cn\//i.test(src);
-    if (src && isWechatImage)
+    if (src && isWechatDraftImageSrc(src))
       return;
     imageSources.push(src);
     const placeholder = activeDocument.createElement("p");
@@ -44544,6 +44703,10 @@ function createWechatSyncService(deps) {
       }
       const cleanedResult = replaceUnuploadedDraftImagesWithPlaceholders(cleanHtmlForDraft2(processedHtml));
       const cleanedHtml = cleanedResult.html;
+      const draftInspection = inspectWechatDraftContent(cleanedHtml);
+      if (draftInspection.blockingIssues.length > 0) {
+        throw new Error(formatDraftContentIssues(draftInspection.blockingIssues));
+      }
       const title = String(sessionTitle || (publishMeta == null ? void 0 : publishMeta.title) || (activeFile == null ? void 0 : activeFile.basename) || "\u65E0\u6807\u9898\u6587\u7AE0");
       const article = {
         title: title.substring(0, 64),
@@ -44582,7 +44745,8 @@ function createWechatSyncService(deps) {
         draftIndex,
         cleanupResult,
         imageUploadFailures,
-        placeholderImageSources: cleanedResult.imageSources
+        placeholderImageSources: cleanedResult.imageSources,
+        draftWarnings: draftInspection.warnings
       };
     }
   };
@@ -46490,6 +46654,9 @@ function getErrorMessage(error) {
   }
   return String(error || "");
 }
+function getImageSourceKey(img) {
+  return String(img.getAttribute("src") || img.src || "").trim();
+}
 function hashBytesFNV1a2(bytes) {
   let hash = 2166136261;
   for (let i = 0; i < bytes.length; i++) {
@@ -46540,8 +46707,11 @@ async function processAllImages({
   const uniqueUrls = /* @__PURE__ */ new Set();
   const urlMap = /* @__PURE__ */ new Map();
   for (const img of imgs) {
-    if (img instanceof HTMLImageElement && img.src)
-      uniqueUrls.add(img.src);
+    if (img instanceof HTMLImageElement) {
+      const src = getImageSourceKey(img);
+      if (src)
+        uniqueUrls.add(src);
+    }
   }
   const total = uniqueUrls.size;
   let completed = 0;
@@ -46593,13 +46763,14 @@ async function processAllImages({
   for (const img of imgs) {
     if (!(img instanceof HTMLImageElement))
       continue;
-    if (urlMap.has(img.src)) {
-      img.src = urlMap.get(img.src) || img.src;
-    } else if (failedSrcs.has(img.src)) {
+    const src = getImageSourceKey(img);
+    if (urlMap.has(src)) {
+      img.setAttribute("src", urlMap.get(src) || src);
+    } else if (failedSrcs.has(src)) {
       const placeholder = activeDocument.createElement("p");
       const failedImagePlaceholderStyle = "margin:12px 0;padding:10px 12px;border:1px dashed #d0d7de;border-radius:6px;color:#8c6d1f;background:#fff8e5;font-size:13px;line-height:1.7;";
       placeholder.setAttribute("style", failedImagePlaceholderStyle);
-      placeholder.textContent = `\u56FE\u7247\u4E0A\u4F20\u5931\u8D25\uFF0C\u8BF7\u5728\u5FAE\u4FE1\u540E\u53F0\u624B\u52A8\u8865\u4F20\uFF1A${img.getAttribute("src") || img.src}`;
+      placeholder.textContent = `\u56FE\u7247\u4E0A\u4F20\u5931\u8D25\uFF0C\u8BF7\u5728\u5FAE\u4FE1\u540E\u53F0\u624B\u52A8\u8865\u4F20\uFF1A${src}`;
       img.replaceWith(placeholder);
     }
   }
@@ -53342,6 +53513,89 @@ function dataUrlToBlob(dataUrl) {
   }
   return new Blob([bytes], { type: mimeType });
 }
+function bufferFromBinary2(binary) {
+  if (binary instanceof ArrayBuffer)
+    return binary;
+  if (ArrayBuffer.isView(binary)) {
+    return binary.buffer.slice(binary.byteOffset, binary.byteOffset + binary.byteLength);
+  }
+  if (Array.isArray(binary)) {
+    return new Uint8Array(binary).buffer;
+  }
+  return new ArrayBuffer(0);
+}
+function inferLocalImageMimeType(filename) {
+  const ext = String(filename || "").split("?")[0].split("#")[0].split(".").pop().toLowerCase();
+  if (ext === "png")
+    return "image/png";
+  if (ext === "jpg" || ext === "jpeg")
+    return "image/jpeg";
+  if (ext === "gif")
+    return "image/gif";
+  if (ext === "webp")
+    return "image/webp";
+  if (ext === "svg")
+    return "image/svg+xml";
+  if (ext === "bmp")
+    return "image/bmp";
+  return "application/octet-stream";
+}
+function safeDecodeUriText(value) {
+  const text = String(value || "").trim();
+  try {
+    return decodeURI(text);
+  } catch (e) {
+    return text;
+  }
+}
+function getFileUrlLocalPath(src) {
+  try {
+    const url = new URL(String(src || "").trim());
+    if (url.protocol !== "file:")
+      return "";
+    if (url.hostname && url.hostname !== "localhost")
+      return "";
+    const pathname = decodeURIComponent(url.pathname || "");
+    return /^\/[a-zA-Z]:\//.test(pathname) ? pathname.slice(1) : pathname;
+  } catch (e) {
+    return "";
+  }
+}
+function getVaultAdapterBasePath(app) {
+  var _a5;
+  const adapter = (_a5 = app == null ? void 0 : app.vault) == null ? void 0 : _a5.adapter;
+  if (!adapter || typeof adapter !== "object")
+    return "";
+  const basePath = adapter["basePath"];
+  return typeof basePath === "string" ? basePath : "";
+}
+function normalizeAbsoluteLocalPath2(value) {
+  let pathValue = String(value || "").trim().replace(/\\/g, "/").replace(/\/{2,}/g, "/");
+  const hasDrivePrefix = /^[a-zA-Z]:\//.test(pathValue);
+  if (!hasDrivePrefix) {
+    pathValue = pathValue.replace(/\/+/g, "/");
+  }
+  return pathValue.replace(/\/+$/, "");
+}
+function getVaultRelativePathFromLocalPath2(app, localPath) {
+  const basePath = getVaultAdapterBasePath(app);
+  if (!basePath || !localPath)
+    return "";
+  const normalizedBase = normalizeAbsoluteLocalPath2(basePath);
+  const normalizedLocal = normalizeAbsoluteLocalPath2(localPath);
+  if (!normalizedBase || !normalizedLocal)
+    return "";
+  if (normalizedLocal === normalizedBase)
+    return "";
+  if (!normalizedLocal.startsWith(`${normalizedBase}/`))
+    return "";
+  return normalizeVaultPath(normalizedLocal.slice(normalizedBase.length + 1));
+}
+function getVaultDirnameFromPath(filePath) {
+  const normalized = normalizeVaultPath(String(filePath || ""));
+  const index = normalized.lastIndexOf("/");
+  return index > 0 ? normalized.slice(0, index) : "";
+}
 var APPLE_STYLE_VIEW = "apple-style-converter";
 var APPLE_STYLE_VIEW_TITLE = "Obsidian \u53D1\u5E03\u52A9\u624B";
 var PLACEHOLDER_ICON_DATA_URL = "data:image/png;base64,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";
@@ -54803,8 +55057,9 @@ var AppleStyleView = class extends ItemView {
     for (const img of imgs) {
       if (img.alt === "logo")
         continue;
-      if (img.src)
-        return img.src;
+      const src = String(img.getAttribute("src") || img.src || "").trim();
+      if (src)
+        return src;
     }
     return null;
   }
@@ -58439,7 +58694,7 @@ var AppleStyleView = class extends ItemView {
           notice.setMessage(`\u6B63\u5728\u8F6C\u6362\u77E2\u91CF\u56FE/\u6570\u5B66\u516C\u5F0F (${current}/${total})...`);
         }
       });
-      const { cleanupResult, imageUploadFailures, placeholderImageSources, mediaId, isUpdate, draftIndex } = result;
+      const { cleanupResult, imageUploadFailures, placeholderImageSources, draftWarnings, mediaId, isUpdate, draftIndex } = result;
       if (activeFile && mediaId) {
         setDraftAssociation(this.plugin.settings, {
           sourcePath: activeFile.path,
@@ -58462,6 +58717,11 @@ var AppleStyleView = class extends ItemView {
         const suffix = failedImageSources.length > 3 ? ` \u7B49 ${failedImageSources.length} \u5F20` : "";
         new Notice(`\u26A0\uFE0F \u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6709 ${failedImageSources.length} \u5F20\u6B63\u6587\u56FE\u7247\u672A\u540C\u6B65\uFF1A${preview}${suffix}\u3002\u8BF7\u5728\u5FAE\u4FE1\u540E\u53F0\u624B\u52A8\u8865\u4F20\u3002`, 1e4);
       }
+      if (Array.isArray(draftWarnings) && draftWarnings.length > 0) {
+        const preview = draftWarnings.slice(0, 3).map((item) => `${(item == null ? void 0 : item.message) || "\u6B63\u6587\u5B58\u5728\u53EF\u7591\u5185\u5BB9"}${(item == null ? void 0 : item.value) ? `\uFF1A${item.value}` : ""}`).join("\uFF1B");
+        const suffix = draftWarnings.length > 3 ? `\uFF1B\u53E6\u6709 ${draftWarnings.length - 3} \u9879` : "";
+        new Notice(`\u26A0\uFE0F \u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6B63\u6587\u68C0\u67E5\u53D1\u73B0 ${draftWarnings.length} \u9879\u63D0\u9192\uFF1A${preview}${suffix}`, 1e4);
+      }
       if (cleanupResult == null ? void 0 : cleanupResult.warning) {
         new Notice(`\u26A0\uFE0F \u8D44\u6E90\u6E05\u7406\u5931\u8D25\uFF1A${cleanupResult.warning}`, 7e3);
       }
@@ -58482,6 +58742,62 @@ var AppleStyleView = class extends ItemView {
     }
   }
   /**
+   * @param {string} src
+   * @returns {unknown | null}
+   */
+  resolveLocalImageFileForUpload(src) {
+    var _a5, _b, _c, _d, _e, _f;
+    const raw = String(src || "").trim();
+    if (!raw || /^(data:|https?:\/\/|app:\/\/|capacitor:\/\/)/i.test(raw))
+      return null;
+    const activeFile = this.getPublishContextFile();
+    const sourcePath = (activeFile == null ? void 0 : activeFile.path) || this.lastResolvedSourcePath || "";
+    const decoded = safeDecodeUriText(raw);
+    const fromFileUrl = /^file:\/\//i.test(decoded) ? getVaultRelativePathFromLocalPath2(this.app, getFileUrlLocalPath(decoded)) : "";
+    if (/^file:\/\//i.test(decoded) && !fromFileUrl) {
+      throw new Error("\u53EA\u652F\u6301\u8BFB\u53D6\u5F53\u524D vault \u5185\u7684 file:// \u56FE\u7247");
+    }
+    const lookupSrc = fromFileUrl || decoded;
+    try {
+      const linked = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.metadataCache) == null ? void 0 : _b.getFirstLinkpathDest) == null ? void 0 : _c.call(_b, lookupSrc, sourcePath);
+      if (linked && typeof linked === "object" && typeof linked["extension"] === "string")
+        return linked;
+    } catch (e) {
+    }
+    const candidates = [];
+    const normalized = normalizeVaultPath(lookupSrc);
+    if (normalized)
+      candidates.push(normalized);
+    const noteDir = getVaultDirnameFromPath(sourcePath);
+    if (normalized && noteDir && !isAbsolutePathLike(normalized)) {
+      candidates.push(normalizeVaultPath(`${noteDir}/${normalized}`));
+    }
+    for (const candidate of Array.from(new Set(candidates))) {
+      try {
+        const file = (_f = (_e = (_d = this.app) == null ? void 0 : _d.vault) == null ? void 0 : _e.getAbstractFileByPath) == null ? void 0 : _f.call(_e, candidate);
+        if (file && typeof file === "object" && typeof file["extension"] === "string")
+          return file;
+      } catch (e) {
+      }
+    }
+    return null;
+  }
+  /**
+   * @param {unknown} file
+   * @returns {Promise<Blob>}
+   */
+  async vaultFileToBlob(file) {
+    var _a5, _b;
+    const readBinary = (_b = (_a5 = this.app) == null ? void 0 : _a5.vault) == null ? void 0 : _b.readBinary;
+    if (typeof readBinary !== "function") {
+      throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301\u8BFB\u53D6\u672C\u5730\u56FE\u7247");
+    }
+    const binary = await readBinary.call(this.app.vault, file);
+    const buffer = bufferFromBinary2(binary);
+    const fileName = typeof file === "object" && file && typeof file["name"] === "string" ? file["name"] : typeof file === "object" && file && typeof file["path"] === "string" ? file["path"] : "image";
+    return new Blob([buffer], { type: inferLocalImageMimeType(fileName) });
+  }
+  /**
    * 将各种形式的 src (Base64, URL, 路径) 转为 Blob
    */
   /**
@@ -58489,6 +58805,10 @@ var AppleStyleView = class extends ItemView {
    * @returns {Promise<Blob>}
    */
   async srcToBlob(src) {
+    const localFile = this.resolveLocalImageFileForUpload(src);
+    if (localFile) {
+      return this.vaultFileToBlob(localFile);
+    }
     if (src.startsWith("data:")) {
       return dataUrlToBlob(src);
     }
@@ -58510,7 +58830,7 @@ var AppleStyleView = class extends ItemView {
       const buffer = response.arrayBuffer instanceof ArrayBuffer ? response.arrayBuffer : new ArrayBuffer(0);
       return new Blob([buffer], { type: contentType });
     }
-    throw new Error("\u4E0D\u652F\u6301\u7684\u56FE\u7247\u6765\u6E90\uFF0C\u8BF7\u5C1D\u8BD5\u91CD\u65B0\u4E0A\u4F20\u5C01\u9762");
+    throw new Error(`\u4E0D\u652F\u6301\u7684\u56FE\u7247\u6765\u6E90\u6216\u672C\u5730\u56FE\u7247\u672A\u627E\u5230\uFF1A${src || "\u7A7A\u5730\u5740"}`);
   }
   /**
    * 处理 HTML 中的所有图片，上传到微信并替换链接

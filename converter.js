@@ -12,8 +12,8 @@
  * @typedef {{ type?: string, tag?: string, content?: string, info?: string, hidden?: boolean, children?: MarkdownTokenLike[], attrGet?: (name: string) => string | null }} MarkdownTokenLike
  * @typedef {{ renderer: { rules: Record<string, (tokens: MarkdownTokenLike[], idx: number, options?: unknown, env?: Record<string, unknown>, self?: unknown) => string> }, render: (markdown: string) => string }} MarkdownItLike
  * @typedef {{ getLanguage?: (language: string) => unknown, highlight?: (code: string, options: { language: string }) => { value: string }, highlightAuto?: (code: string) => { value: string } }} HighlightJsLike
- * @typedef {{ path?: string }} TFileLike
- * @typedef {{ metadataCache?: { getFirstLinkpathDest?: (linkPath: string, sourcePath: string) => TFileLike | null }, vault?: { getResourcePath?: (file: TFileLike) => string } }} AppLike
+ * @typedef {{ path?: string, extension?: string }} TFileLike
+ * @typedef {{ metadataCache?: { getFirstLinkpathDest?: (linkPath: string, sourcePath: string) => TFileLike | null }, vault?: { getAbstractFileByPath?: (path: string) => TFileLike | null, getResourcePath?: (file: TFileLike) => string } }} AppLike
  * @typedef {{ showImageCaption?: boolean, avatarUrl?: string }} ConverterConfigLike
  */
 
@@ -39,6 +39,49 @@ function toRecord(value) {
  */
 function toText(value) {
   return typeof value === 'string' ? value : '';
+}
+
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
+function safeDecodeUri(value) {
+  const text = String(value || '').trim();
+  try {
+    return decodeURI(text);
+  } catch {
+    return text;
+  }
+}
+
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
+function normalizeVaultPath(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\\/g, '/')
+    .replace(/^\/+/, '')
+    .replace(/\/{2,}/g, '/');
+}
+
+/**
+ * @param {unknown} filePath
+ * @returns {string}
+ */
+function getVaultDirname(filePath) {
+  const normalized = normalizeVaultPath(filePath);
+  const index = normalized.lastIndexOf('/');
+  return index > 0 ? normalized.slice(0, index) : '';
+}
+
+/**
+ * @param {...unknown} parts
+ * @returns {string}
+ */
+function joinVaultPath(...parts) {
+  return normalizeVaultPath(parts.filter(Boolean).join('/'));
 }
 
 /**
@@ -243,16 +286,30 @@ class AppleStyleConverter {
   resolveImagePath(src) {
     if (!this.app) return src;
     // IF remote url, bypass
-    if (/^(https?:\/\/|data:)/i.test(src)) return src;
+    if (/^(https?:\/\/|data:|app:\/\/|capacitor:\/\/)/i.test(src)) return src;
 
     try {
       // Markdown-it might encode the URL (e.g. %20 for space), but Obsidian expects decoded paths
-      const linkPath = decodeURI(src);
+      const linkPath = safeDecodeUri(src);
       const sourcePath = this.sourcePath;
       // Resolve using Obsidian's standard API
       const tFile = this.app.metadataCache?.getFirstLinkpathDest?.(linkPath, sourcePath);
       if (tFile) {
         return this.app.vault?.getResourcePath?.(tFile) || src;
+      }
+
+      const vault = this.app.vault;
+      const candidates = [];
+      const normalized = normalizeVaultPath(linkPath);
+      if (normalized) candidates.push(normalized);
+      const noteDir = getVaultDirname(sourcePath);
+      if (normalized && noteDir) candidates.push(joinVaultPath(noteDir, normalized));
+
+      for (const candidate of Array.from(new Set(candidates))) {
+        const file = vault?.getAbstractFileByPath?.(candidate);
+        if (file?.extension) {
+          return vault?.getResourcePath?.(file) || src;
+        }
       }
     } catch (e) {
       console.error('Image resolution failed:', src, e);

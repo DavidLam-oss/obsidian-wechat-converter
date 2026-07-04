@@ -35,6 +35,14 @@ function getErrorMessage(error) {
 }
 
 /**
+ * @param {HTMLImageElement} img
+ * @returns {string}
+ */
+function getImageSourceKey(img) {
+  return String(img.getAttribute('src') || img.src || '').trim();
+}
+
+/**
  * @param {Uint8Array} bytes
  * @returns {string}
  */
@@ -118,7 +126,10 @@ export async function processAllImages({
     const urlMap = new Map();
 
     for (const img of imgs) {
-        if (img instanceof HTMLImageElement && img.src) uniqueUrls.add(img.src);
+        if (img instanceof HTMLImageElement) {
+          const src = getImageSourceKey(img);
+          if (src) uniqueUrls.add(src);
+        }
     }
 
     const total = uniqueUrls.size;
@@ -187,13 +198,14 @@ export async function processAllImages({
     // 3. 替换 DOM 中的图片链接
     for (const img of imgs) {
       if (!(img instanceof HTMLImageElement)) continue;
-      if (urlMap.has(img.src)) {
-        img.src = urlMap.get(img.src) || img.src;
-      } else if (failedSrcs.has(img.src)) {
+      const src = getImageSourceKey(img);
+      if (urlMap.has(src)) {
+        img.setAttribute('src', urlMap.get(src) || src);
+      } else if (failedSrcs.has(src)) {
         const placeholder = activeDocument.createElement('p');
         const failedImagePlaceholderStyle = 'margin:12px 0;padding:10px 12px;border:1px dashed #d0d7de;border-radius:6px;color:#8c6d1f;background:#fff8e5;font-size:13px;line-height:1.7;';
         placeholder.setAttribute('style', failedImagePlaceholderStyle);
-        placeholder.textContent = `图片上传失败，请在微信后台手动补传：${img.getAttribute('src') || img.src}`;
+        placeholder.textContent = `图片上传失败，请在微信后台手动补传：${src}`;
         img.replaceWith(placeholder);
       }
     }

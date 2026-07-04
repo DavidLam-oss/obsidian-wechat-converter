@@ -3,6 +3,7 @@ import { createHtmlContainer, getActiveDocument } from './dom-utils.js';
 /**
  * @typedef {{ mediaId: string, fingerprint?: string, uploadedAt?: number }} CoverCacheEntry
  * @typedef {{ src: string, message?: string }} ImageUploadFailure
+ * @typedef {{ code: string, message: string, value: string }} DraftContentIssue
  * @typedef {{
  *   id?: string,
  *   appId: string,
@@ -50,6 +51,171 @@ import { createHtmlContainer, getActiveDocument } from './dom-utils.js';
  */
 
 /**
+ * @param {string} code
+ * @param {string} message
+ * @param {unknown} value
+ * @returns {DraftContentIssue}
+ */
+function createDraftContentIssue(code, message, value = '') {
+  return {
+    code,
+    message,
+    value: String(value || ''),
+  };
+}
+
+/**
+ * @param {unknown} src
+ * @returns {boolean}
+ */
+function isWechatDraftImageSrc(src) {
+  const value = String(src || '').trim();
+  return /^https?:\/\/mmbiz\.qpic\.cn\//i.test(value)
+    || /^https?:\/\/mmbiz\.qlogo\.cn\//i.test(value);
+}
+
+/**
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+function isWechatUnsafeLocalResource(value) {
+  const text = String(value || '').trim();
+  if (!text) return false;
+  if (/^(app|capacitor|file|obsidian):\/\//i.test(text)) return true;
+  if (/^data:/i.test(text)) return true;
+  if (/^(https?:|mailto:|tel:|#)/i.test(text)) return false;
+  return !/^[a-z][a-z0-9+.-]*:/i.test(text);
+}
+
+/**
+ * @param {unknown} value
+ * @returns {URL | null}
+ */
+function parseHttpUrl(value) {
+  const text = String(value || '').trim();
+  if (!/^https?:\/\//i.test(text)) return null;
+  try {
+    return new URL(text);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * @param {URL} url
+ * @returns {boolean}
+ */
+function isPublicWechatArticleUrl(url) {
+  const pathname = url.pathname || '/';
+  if (pathname === '/s' || pathname.startsWith('/s/')) return true;
+  if (pathname === '/mp/appmsgalbum') return true;
+  if (pathname === '/mp/profile_ext' && url.searchParams.has('__biz')) return true;
+  return false;
+}
+
+/**
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+function isUnsupportedWechatDraftLink(value) {
+  const url = parseHttpUrl(value);
+  if (!url) return false;
+
+  const host = url.hostname.toLowerCase();
+  if (host === 'developers.weixin.qq.com') return true;
+  if (host !== 'mp.weixin.qq.com') return false;
+  return !isPublicWechatArticleUrl(url);
+}
+
+/**
+ * @param {string} html
+ * @returns {{ blockingIssues: DraftContentIssue[], warnings: DraftContentIssue[] }}
+ */
+export function inspectWechatDraftContent(html) {
+  /** @type {DraftContentIssue[]} */
+  const blockingIssues = [];
+  /** @type {DraftContentIssue[]} */
+  const warnings = [];
+  const source = String(html || '');
+  const div = createHtmlContainer('div', source);
+
+  if (div) {
+    Array.from(div.querySelectorAll('img')).forEach((img) => {
+      const src = String(img.getAttribute('src') || '').trim();
+      if (src && isWechatDraftImageSrc(src)) return;
+      blockingIssues.push(createDraftContentIssue(
+        'draft_image_not_uploaded',
+        '正文仍有未上传到微信的图片',
+        src,
+      ));
+    });
+
+    Array.from(div.querySelectorAll('[src], [href]')).forEach((element) => {
+      for (const attrName of ['src', 'href']) {
+        const value = String(element.getAttribute(attrName) || '').trim();
+        if (!value || (element.tagName === 'IMG' && attrName === 'src')) continue;
+        if (isWechatUnsafeLocalResource(value)) {
+          blockingIssues.push(createDraftContentIssue(
+            'draft_local_resource',
+            '正文仍有微信草稿不支持的本地资源链接',
+            value,
+          ));
+          continue;
+        }
+        if (attrName === 'href' && isUnsupportedWechatDraftLink(value)) {
+          blockingIssues.push(createDraftContentIssue(
+            'draft_unsupported_wechat_link',
+            '正文里有微信草稿接口可能拒收的后台/开发者平台链接，请改成纯文本或代码格式',
+            value,
+          ));
+        }
+      }
+    });
+
+    if (div.querySelector('svg, mjx-container')) {
+      blockingIssues.push(createDraftContentIssue(
+        'draft_unconverted_vector',
+        '正文仍有未转换的 SVG 或数学公式节点',
+        '',
+      ));
+    }
+  }
+
+  const brokenUrlPattern = /https?:\/\/[^\s<>"']+\s+[A-Za-z0-9][^\s<>"']*/g;
+  const punctuationUrlPattern = /https?:\/\/[^\s<>"']+[，。；、]/g;
+  Array.from(source.matchAll(brokenUrlPattern)).forEach((match) => {
+    warnings.push(createDraftContentIssue(
+      'draft_suspicious_url_space',
+      '正文里有疑似被空格截断的链接',
+      match[0],
+    ));
+  });
+  Array.from(source.matchAll(punctuationUrlPattern)).forEach((match) => {
+    warnings.push(createDraftContentIssue(
+      'draft_suspicious_url_punctuation',
+      '正文里有 URL 与中文标点紧贴的可疑链接',
+      match[0],
+    ));
+  });
+
+  return { blockingIssues, warnings };
+}
+
+/**
+ * @param {DraftContentIssue[]} issues
+ * @returns {string}
+ */
+function formatDraftContentIssues(issues) {
+  const list = Array.isArray(issues) ? issues : [];
+  const preview = list.slice(0, 3).map((issue) => {
+    const value = issue.value ? `：${issue.value}` : '';
+    return `${issue.message}${value}`;
+  }).join('；');
+  const suffix = list.length > 3 ? `；另有 ${list.length - 3} 项` : '';
+  return `微信草稿内容检查未通过，共 ${list.length} 项问题。${preview}${suffix}`;
+}
+
+/**
  * @param {string} html
  * @returns {{ html: string, imageSources: string[] }}
  */
@@ -66,9 +232,7 @@ export function replaceUnuploadedDraftImagesWithPlaceholders(html) {
 
   Array.from(div.querySelectorAll('img')).forEach((img) => {
     const src = String(img.getAttribute('src') || '').trim();
-    const isWechatImage = /^https?:\/\/mmbiz\.qpic\.cn\//i.test(src)
-        || /^https?:\/\/mmbiz\.qlogo\.cn\//i.test(src);
-    if (src && isWechatImage) return;
+    if (src && isWechatDraftImageSrc(src)) return;
 
     imageSources.push(src);
     const placeholder = activeDocument.createElement('p');
@@ -239,6 +403,10 @@ export function createWechatSyncService(deps) {
 
       const cleanedResult = replaceUnuploadedDraftImagesWithPlaceholders(cleanHtmlForDraft(processedHtml));
       const cleanedHtml = cleanedResult.html;
+      const draftInspection = inspectWechatDraftContent(cleanedHtml);
+      if (draftInspection.blockingIssues.length > 0) {
+        throw new Error(formatDraftContentIssues(draftInspection.blockingIssues));
+      }
 
       const title = String(sessionTitle || publishMeta?.title || activeFile?.basename || '无标题文章');
       const article = {
@@ -282,6 +450,7 @@ export function createWechatSyncService(deps) {
         cleanupResult,
         imageUploadFailures,
         placeholderImageSources: cleanedResult.imageSources,
+        draftWarnings: draftInspection.warnings,
       };
     },
   };

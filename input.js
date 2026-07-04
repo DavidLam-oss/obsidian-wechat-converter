@@ -20,9 +20,9 @@
  * @typedef {{ type?: string, state?: Record<string, unknown>, icon?: string, title?: string, active?: boolean }} ViewStateLike
  * @typedef {{ open?: () => void, view?: unknown, getViewState?: () => ViewStateLike, setViewState?: (state: ViewStateLike) => Promise<void> }} LeafLike
  * @typedef {{ on: (name: string, callback: (...args: unknown[]) => unknown) => unknown, getActiveViewOfType: (viewType: unknown) => MarkdownViewLike | null, getActiveFile?: () => TFileLike | null, getLeavesOfType: (viewType: string) => LeafLike[], getRightLeaf: (split?: boolean) => LeafLike | null, getLeaf?: (type?: string | boolean) => LeafLike | null, onLayoutReady: (callback: () => void) => void, revealLeaf?: (leaf: unknown) => Promise<void>, setActiveLeaf?: (leaf: unknown, options?: Record<string, unknown>) => void }} WorkspaceLike
- * @typedef {{ adapter?: unknown, configDir?: string, on?: (name: string, callback: (...args: unknown[]) => unknown) => unknown, getConfig?: (key: string) => unknown, getAbstractFileByPath?: (path: string) => unknown, getResourcePath?: (file: unknown) => string, trash?: (file: unknown, useSystemTrash?: boolean) => Promise<void>, delete?: (file: unknown, force?: boolean) => Promise<void>, read?: (file: unknown) => Promise<string>, modify?: (file: unknown, data: string) => Promise<void> }} VaultLike
+ * @typedef {{ adapter?: unknown, configDir?: string, on?: (name: string, callback: (...args: unknown[]) => unknown) => unknown, getConfig?: (key: string) => unknown, getAbstractFileByPath?: (path: string) => unknown, getResourcePath?: (file: unknown) => string, trash?: (file: unknown, useSystemTrash?: boolean) => Promise<void>, delete?: (file: unknown, force?: boolean) => Promise<void>, read?: (file: unknown) => Promise<string>, readBinary?: (file: unknown) => Promise<unknown>, modify?: (file: unknown, data: string) => Promise<void> }} VaultLike
  * @typedef {{ processFrontMatter?: (file: unknown, callback: (frontmatter: Record<string, unknown>) => void) => Promise<void> }} FileManagerLike
- * @typedef {{ getFileCache?: (file: unknown) => { frontmatter?: Record<string, unknown> } | null }} MetadataCacheLike
+ * @typedef {{ getFileCache?: (file: unknown) => { frontmatter?: Record<string, unknown> } | null, getFirstLinkpathDest?: (linkpath: string, sourcePath: string) => unknown }} MetadataCacheLike
  * @typedef {{ activeTab?: Record<string, unknown>, open?: () => void, openTabById?: (id: string) => void }} AppSettingLike
  * @typedef {{ vault: VaultLike, workspace: WorkspaceLike, fileManager?: FileManagerLike, metadataCache?: MetadataCacheLike, setting?: AppSettingLike, isMobile?: boolean }} AppLike
  * @typedef {{ id: string, name: string, callback?: () => unknown, editorCallback?: (editor: EditorLike) => unknown }} CommandLike
@@ -55,7 +55,8 @@
  * @typedef {{ start: () => Promise<unknown>, stop?: () => Promise<void>, waitForConnection?: (timeoutMs?: number) => Promise<unknown>, openSyncTask?: (taskId: string, options?: Record<string, unknown>) => Promise<Record<string, unknown>>, getSyncTaskLink?: (taskId: string, options?: Record<string, unknown>) => Promise<Record<string, unknown>>, getSyncTask?: (taskId: string, options?: Record<string, unknown>) => Promise<WechatsyncTaskSnapshotLike | Record<string, unknown>> }} WechatSyncBridgeServiceLike
  * @typedef {{ warning?: string, attempted?: boolean, success?: boolean, cleanedPath?: string }} CleanupResultLike
  * @typedef {{ src?: string, [key: string]: unknown }} ImageUploadFailureLike
- * @typedef {{ cleanupResult?: CleanupResultLike, imageUploadFailures?: ImageUploadFailureLike[], placeholderImageSources?: string[], mediaId?: string, isUpdate?: boolean, draftIndex?: number, [key: string]: unknown }} WechatDraftSyncResultLike
+ * @typedef {{ code?: string, message?: string, value?: string }} DraftContentIssueLike
+ * @typedef {{ cleanupResult?: CleanupResultLike, imageUploadFailures?: ImageUploadFailureLike[], placeholderImageSources?: string[], draftWarnings?: DraftContentIssueLike[], mediaId?: string, isUpdate?: boolean, draftIndex?: number, [key: string]: unknown }} WechatDraftSyncResultLike
  * @typedef {{ account: WechatAccountLike, proxyUrl?: string, currentHtml: string, activeFile?: TFileLike | null, publishMeta?: Record<string, unknown> | null, sessionTitle?: string, sessionCoverBase64?: string, sessionThumbMediaId?: string, sessionDigest?: string, draftMediaId?: string, draftIndex?: number, onStatus?: (stage: string) => void, onImageProgress?: (current: number, total: number) => void, onMathProgress?: (current: number, total: number) => void }} WechatSyncToDraftOptionsLike
  * @typedef {{ syncToDraft: (options: WechatSyncToDraftOptionsLike) => Promise<WechatDraftSyncResultLike> }} WechatSyncServiceLike
  * @typedef {{ mediaId?: string, fingerprint?: string, [key: string]: unknown }} CoverCacheEntry
@@ -513,6 +514,82 @@ function dataUrlToBlob(dataUrl) {
     bytes[i] = binary.charCodeAt(i);
   }
   return new Blob([bytes], { type: mimeType });
+}
+
+function bufferFromBinary(binary) {
+  if (binary instanceof ArrayBuffer) return binary;
+  if (ArrayBuffer.isView(binary)) {
+    return binary.buffer.slice(binary.byteOffset, binary.byteOffset + binary.byteLength);
+  }
+  if (Array.isArray(binary)) {
+    return new Uint8Array(binary).buffer;
+  }
+  return new ArrayBuffer(0);
+}
+
+function inferLocalImageMimeType(filename) {
+  const ext = String(filename || '').split('?')[0].split('#')[0].split('.').pop().toLowerCase();
+  if (ext === 'png') return 'image/png';
+  if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
+  if (ext === 'gif') return 'image/gif';
+  if (ext === 'webp') return 'image/webp';
+  if (ext === 'svg') return 'image/svg+xml';
+  if (ext === 'bmp') return 'image/bmp';
+  return 'application/octet-stream';
+}
+
+function safeDecodeUriText(value) {
+  const text = String(value || '').trim();
+  try {
+    return decodeURI(text);
+  } catch {
+    return text;
+  }
+}
+
+function getFileUrlLocalPath(src) {
+  try {
+    const url = new URL(String(src || '').trim());
+    if (url.protocol !== 'file:') return '';
+    if (url.hostname && url.hostname !== 'localhost') return '';
+    const pathname = decodeURIComponent(url.pathname || '');
+    return /^\/[a-zA-Z]:\//.test(pathname) ? pathname.slice(1) : pathname;
+  } catch {
+    return '';
+  }
+}
+
+function getVaultAdapterBasePath(app) {
+  const adapter = app?.vault?.adapter;
+  if (!adapter || typeof adapter !== 'object') return '';
+  const basePath = adapter['basePath'];
+  return typeof basePath === 'string' ? basePath : '';
+}
+
+function normalizeAbsoluteLocalPath(value) {
+  let pathValue = String(value || '').trim().replace(/\\/g, '/').replace(/\/{2,}/g, '/');
+  const hasDrivePrefix = /^[a-zA-Z]:\//.test(pathValue);
+  if (!hasDrivePrefix) {
+    pathValue = pathValue.replace(/\/+/g, '/');
+  }
+  return pathValue.replace(/\/+$/, '');
+}
+
+function getVaultRelativePathFromLocalPath(app, localPath) {
+  const basePath = getVaultAdapterBasePath(app);
+  if (!basePath || !localPath) return '';
+  const normalizedBase = normalizeAbsoluteLocalPath(basePath);
+  const normalizedLocal = normalizeAbsoluteLocalPath(localPath);
+  if (!normalizedBase || !normalizedLocal) return '';
+  if (normalizedLocal === normalizedBase) return '';
+  if (!normalizedLocal.startsWith(`${normalizedBase}/`)) return '';
+  return normalizeVaultPath(normalizedLocal.slice(normalizedBase.length + 1));
+}
+
+function getVaultDirnameFromPath(filePath) {
+  const normalized = normalizeVaultPath(String(filePath || ''));
+  const index = normalized.lastIndexOf('/');
+  return index > 0 ? normalized.slice(0, index) : '';
 }
 
 // 视图类型标识
@@ -2366,7 +2443,8 @@ class AppleStyleView extends ItemView {
     // 遍历所有图片，跳过头像（alt="logo"）
     for (const img of imgs) {
       if (img.alt === 'logo') continue;
-      if (img.src) return img.src;
+      const src = String(img.getAttribute('src') || img.src || '').trim();
+      if (src) return src;
     }
     return null;
   }
@@ -6268,7 +6346,7 @@ class AppleStyleView extends ItemView {
         },
       });
 
-      const { cleanupResult, imageUploadFailures, placeholderImageSources, mediaId, isUpdate, draftIndex } = result;
+      const { cleanupResult, imageUploadFailures, placeholderImageSources, draftWarnings, mediaId, isUpdate, draftIndex } = result;
       if (activeFile && mediaId) {
         setDraftAssociation(this.plugin.settings, {
           sourcePath: activeFile.path,
@@ -6292,6 +6370,14 @@ class AppleStyleView extends ItemView {
         const suffix = failedImageSources.length > 3 ? ` 等 ${failedImageSources.length} 张` : '';
         new Notice(`⚠️ 草稿已创建，但有 ${failedImageSources.length} 张正文图片未同步：${preview}${suffix}。请在微信后台手动补传。`, 10000);
       }
+      if (Array.isArray(draftWarnings) && draftWarnings.length > 0) {
+        const preview = draftWarnings
+          .slice(0, 3)
+          .map((item) => `${item?.message || '正文存在可疑内容'}${item?.value ? `：${item.value}` : ''}`)
+          .join('；');
+        const suffix = draftWarnings.length > 3 ? `；另有 ${draftWarnings.length - 3} 项` : '';
+        new Notice(`⚠️ 草稿已创建，但正文检查发现 ${draftWarnings.length} 项提醒：${preview}${suffix}`, 10000);
+      }
       if (cleanupResult?.warning) {
         new Notice(`⚠️ 资源清理失败：${cleanupResult.warning}`, 7000);
       }
@@ -6313,6 +6399,70 @@ class AppleStyleView extends ItemView {
   }
 
   /**
+   * @param {string} src
+   * @returns {unknown | null}
+   */
+  resolveLocalImageFileForUpload(src) {
+    const raw = String(src || '').trim();
+    if (!raw || /^(data:|https?:\/\/|app:\/\/|capacitor:\/\/)/i.test(raw)) return null;
+
+    const activeFile = this.getPublishContextFile();
+    const sourcePath = activeFile?.path || this.lastResolvedSourcePath || '';
+    const decoded = safeDecodeUriText(raw);
+    const fromFileUrl = /^file:\/\//i.test(decoded)
+      ? getVaultRelativePathFromLocalPath(this.app, getFileUrlLocalPath(decoded))
+      : '';
+
+    if (/^file:\/\//i.test(decoded) && !fromFileUrl) {
+      throw new Error('只支持读取当前 vault 内的 file:// 图片');
+    }
+
+    const lookupSrc = fromFileUrl || decoded;
+    try {
+      const linked = this.app?.metadataCache?.getFirstLinkpathDest?.(lookupSrc, sourcePath);
+      if (linked && typeof linked === 'object' && typeof linked['extension'] === 'string') return linked;
+    } catch {
+      // Continue with direct path candidates.
+    }
+
+    const candidates = [];
+    const normalized = normalizeVaultPath(lookupSrc);
+    if (normalized) candidates.push(normalized);
+    const noteDir = getVaultDirnameFromPath(sourcePath);
+    if (normalized && noteDir && !isAbsolutePathLike(normalized)) {
+      candidates.push(normalizeVaultPath(`${noteDir}/${normalized}`));
+    }
+
+    for (const candidate of Array.from(new Set(candidates))) {
+      try {
+        const file = this.app?.vault?.getAbstractFileByPath?.(candidate);
+        if (file && typeof file === 'object' && typeof file['extension'] === 'string') return file;
+      } catch {
+        // Try the next candidate.
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * @param {unknown} file
+   * @returns {Promise<Blob>}
+   */
+  async vaultFileToBlob(file) {
+    const readBinary = this.app?.vault?.readBinary;
+    if (typeof readBinary !== 'function') {
+      throw new Error('当前 Obsidian 版本不支持读取本地图片');
+    }
+    const binary = await readBinary.call(this.app.vault, file);
+    const buffer = bufferFromBinary(binary);
+    const fileName = typeof file === 'object' && file && typeof file['name'] === 'string'
+      ? file['name']
+      : (typeof file === 'object' && file && typeof file['path'] === 'string' ? file['path'] : 'image');
+    return new Blob([buffer], { type: inferLocalImageMimeType(fileName) });
+  }
+
+  /**
    * 将各种形式的 src (Base64, URL, 路径) 转为 Blob
    */
   /**
@@ -6320,6 +6470,11 @@ class AppleStyleView extends ItemView {
    * @returns {Promise<Blob>}
    */
   async srcToBlob(src) {
+    const localFile = this.resolveLocalImageFileForUpload(src);
+    if (localFile) {
+      return this.vaultFileToBlob(localFile);
+    }
+
     // Base64/data URL 图片直接本地解析，避免对 data: URL 发起 fetch。
     if (src.startsWith('data:')) {
       return dataUrlToBlob(src);
@@ -6345,7 +6500,7 @@ class AppleStyleView extends ItemView {
       return new Blob([buffer], { type: contentType });
     }
 
-    throw new Error('不支持的图片来源，请尝试重新上传封面');
+    throw new Error(`不支持的图片来源或本地图片未找到：${src || '空地址'}`);
   }
 
   /**
