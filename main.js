@@ -49179,7 +49179,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     text: isProLicensed ? "Pro \u5DF2\u6FC0\u6D3B\uFF1A\u591A\u5E73\u53F0\u53D1\u5E03\u5DF2\u89E3\u9501" : "\u4E0B\u4E00\u6B65\uFF1A\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\u5E76\u5B8C\u6210\u914D\u7F6E"
   });
   guide.createEl("p", {
-    text: isProLicensed ? "\u5F53\u524D\u6D4F\u89C8\u5668\u63D2\u4EF6\u6388\u6743\u5DF2\u540C\u6B65\u5230 Obsidian\uFF0C\u53D1\u5E03\u5230\u5176\u4ED6\u5E73\u53F0\u65F6\u4E0D\u518D\u53D7\u514D\u8D39\u7248\u6BCF\u65E5\u5E73\u53F0\u6570\u91CF\u9650\u5236\u3002" : "\u514D\u8D39\u7248\u6BCF\u5929\u53EF\u53D1\u5E03\u5230 3 \u4E2A\u5E73\u53F0\u3002\u60F3\u5148\u8BD5\u7528\uFF0C\u5148\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF1B\u5DF2\u7ECF\u8D2D\u4E70\u6216\u5DF2\u7ECF\u88C5\u597D\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u53EF\u76F4\u63A5\u67E5\u770B\u914D\u7F6E\u6B65\u9AA4\u3002"
+    text: isProLicensed ? "\u5F53\u524D\u6D4F\u89C8\u5668\u63D2\u4EF6\u6388\u6743\u5DF2\u540C\u6B65\u5230 Obsidian\uFF0C\u53D1\u5E03\u5230\u5176\u4ED6\u5E73\u53F0\u65F6\u4E0D\u518D\u53D7\u514D\u8D39\u7248\u6BCF\u65E5\u5E73\u53F0\u6570\u91CF\u9650\u5236\u3002" : "\u514D\u8D39\u7248\u6BCF\u5929 1 \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002\u60F3\u5148\u8BD5\u7528\uFF0C\u5148\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF1B\u5DF2\u7ECF\u8D2D\u4E70\u6216\u5DF2\u7ECF\u88C5\u597D\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u53EF\u76F4\u63A5\u67E5\u770B\u914D\u7F6E\u6B65\u9AA4\u3002"
   });
   if (isProLicensed) {
     guide.createEl("span", {
@@ -49650,7 +49650,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
 
 // views/publish-modal/multi-platform.js
 var QUOTA_POLICY = "truncate";
-var FREE_DAILY_PLATFORM_QUOTA = 3;
+var FREE_DAILY_PLATFORM_QUOTA = 1;
 var MODAL_SELECTED_PLATFORM_IDS = "__wechatMultiPlatformSelectedPlatformIds";
 var MATERIAL_COVER_ASSET_TTL_MS = 5 * 60 * 1e3;
 var MAX_MATERIAL_COVER_ASSET_CACHE_ENTRIES = 3;
@@ -50133,7 +50133,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
   if (!bridgeSettings.enabled) {
     const disabledHint = asModalElement(modal.contentEl.createDiv({ cls: "wechat-sync-empty-state" }));
     disabledHint.createEl("h3", { text: "\u5C1A\u672A\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03" });
-    disabledHint.createEl("p", { text: "\u8BF7\u5148\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u518D\u5230\u8BBE\u7F6E\u4E2D\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03\u3001\u6D4B\u8BD5\u8FDE\u63A5\u5E76\u9009\u62E9\u5E73\u53F0\u3002\u514D\u8D39\u7248\u6BCF\u5929\u53EF\u53D1\u5E03\u5230 3 \u4E2A\u5E73\u53F0\u3002" });
+    disabledHint.createEl("p", { text: "\u8BF7\u5148\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u518D\u5230\u8BBE\u7F6E\u4E2D\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03\u3001\u6D4B\u8BD5\u8FDE\u63A5\u5E76\u9009\u62E9\u5E73\u53F0\u3002\u514D\u8D39\u7248\u6BCF\u5929 1 \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002" });
     const settingsBtn = asModalElement(disabledHint.createEl("button", { text: "\u53BB\u8BBE\u7F6E", cls: "mod-cta" }));
     settingsBtn.onclick = () => {
       modal.close();
@@ -60797,7 +60797,7 @@ var wechatMultiPlatformActionMethods = {
       const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
       body.createEl("div", { text: platformName, cls: "wechat-multiplatform-result-name" });
       body.createEl("div", {
-        text: "\u514D\u8D39\u7248\u6BCF\u5929 3 \u4E2A\u5E73\u53F0\u989D\u5EA6\uFF0C\u5F53\u524D\u5E73\u53F0\u672A\u5165\u961F\u3002",
+        text: "\u514D\u8D39\u7248\u6BCF\u5929 1 \u4E2A\u5E73\u53F0\u989D\u5EA6\uFF0C\u5F53\u524D\u5E73\u53F0\u672A\u5165\u961F\u3002",
         cls: "wechat-multiplatform-result-detail"
       });
     }

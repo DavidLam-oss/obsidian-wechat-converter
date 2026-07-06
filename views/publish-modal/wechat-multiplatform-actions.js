@@ -407,7 +407,7 @@ showWechatsyncEnqueueAcceptedModal({
     const body = row.createDiv({ cls: 'wechat-multiplatform-result-body' });
     body.createEl('div', { text: platformName, cls: 'wechat-multiplatform-result-name' });
     body.createEl('div', {
-      text: '免费版每天 3 个平台额度，当前平台未入队。',
+      text: '免费版每天 1 个平台额度，当前平台未入队。',
       cls: 'wechat-multiplatform-result-detail',
     });
   }

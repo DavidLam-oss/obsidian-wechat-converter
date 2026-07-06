@@ -48,7 +48,7 @@ import {
 import { getActiveWindowValue } from '../../services/dom-utils.js';
 
 const QUOTA_POLICY = 'truncate';
-const FREE_DAILY_PLATFORM_QUOTA = 3;
+const FREE_DAILY_PLATFORM_QUOTA = 1;
 const MODAL_SELECTED_PLATFORM_IDS = '__wechatMultiPlatformSelectedPlatformIds';
 const MATERIAL_COVER_ASSET_TTL_MS = 5 * 60 * 1000;
 const MAX_MATERIAL_COVER_ASSET_CACHE_ENTRIES = 3;
@@ -700,7 +700,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
   if (!bridgeSettings.enabled) {
     const disabledHint = asModalElement(modal.contentEl.createDiv({ cls: 'wechat-sync-empty-state' }));
     disabledHint.createEl('h3', { text: '尚未启用浏览器插件发布' });
-    disabledHint.createEl('p', { text: '请先安装浏览器插件，再到设置中启用浏览器插件发布、测试连接并选择平台。免费版每天可发布到 3 个平台。' });
+    disabledHint.createEl('p', { text: '请先安装浏览器插件，再到设置中启用浏览器插件发布、测试连接并选择平台。免费版每天 1 个平台额度。' });
     const settingsBtn = asModalElement(disabledHint.createEl('button', { text: '去设置', cls: 'mod-cta' }));
     settingsBtn.onclick = () => {
       modal.close();

@@ -323,7 +323,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   guide.createEl('p', {
     text: isProLicensed
       ? '当前浏览器插件授权已同步到 Obsidian，发布到其他平台时不再受免费版每日平台数量限制。'
-      : '免费版每天可发布到 3 个平台。想先试用，先安装浏览器插件；已经购买或已经装好浏览器插件，可直接查看配置步骤。',
+      : '免费版每天 1 个平台额度。想先试用，先安装浏览器插件；已经购买或已经装好浏览器插件，可直接查看配置步骤。',
   });
   if (isProLicensed) {
     guide.createEl('span', {
