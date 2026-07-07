@@ -37723,17 +37723,7 @@ async function renderNativeMarkdown({
   return cleanupNativeRenderedHtml(html);
 }
 
-// services/obsidian-triplet-renderer.js
-function getDefaultMarkdownRenderer() {
-  const obsidianApi15 = (
-    /** @type {{ MarkdownRenderer?: MarkdownRendererLike } | undefined} */
-    getActiveWindowValue("obsidian")
-  );
-  return (obsidianApi15 == null ? void 0 : obsidianApi15.MarkdownRenderer) || null;
-}
-function isFencedBlockDelimiter(line) {
-  return /^\s{0,3}(?:`{3,}|~{3,})/.test(String(line || ""));
-}
+// services/obsidian-triplet-renderer-images.js
 function parseFencedBlockDelimiter(line) {
   const value = String(line || "");
   const match = value.match(/^\s{0,3}((`{3,})|(~{3,}))(.*)$/);
@@ -37753,443 +37743,6 @@ function isMathFenceDelimiter(line) {
 }
 function isQuoteLine(line) {
   return /^\s{0,3}(?:>\s?)+/.test(String(line || ""));
-}
-function stripQuotePrefix(line) {
-  return String(line || "").replace(/^\s{0,3}(?:>\s?)+/, "");
-}
-function isQuotePrefix(prefix) {
-  return /^\s{0,3}(?:>\s?)+$/.test(String(prefix || ""));
-}
-function startsNewBlock(trimmedLine) {
-  if (!trimmedLine)
-    return true;
-  if (/^#{1,6}\s/.test(trimmedLine))
-    return true;
-  if (/^>/.test(trimmedLine))
-    return true;
-  if (/^([-*_])(?:\s*\1){2,}\s*$/.test(trimmedLine))
-    return true;
-  if (/^(?:[*+-]|\d+[.)])\s+/.test(trimmedLine))
-    return true;
-  if (/^\|/.test(trimmedLine))
-    return true;
-  if (/^<[^>]+>/.test(trimmedLine))
-    return true;
-  if (isFencedBlockDelimiter(trimmedLine))
-    return true;
-  return false;
-}
-function isListItemLine(trimmedLine) {
-  return /^(?:[*+-]|\d+[.)])\s+/.test(String(trimmedLine || ""));
-}
-function appendLegacyHardBreak(line) {
-  const value = String(line || "");
-  if (!value)
-    return value;
-  if (/<br\s*\/?>\s*$/i.test(value))
-    return value;
-  return `${value.replace(/[ \t]+$/, "")}<br>`;
-}
-function appendQuoteHardBreak(line) {
-  const value = String(line || "");
-  if (!value)
-    return value;
-  if (/<br\s*\/?>\s*$/i.test(value))
-    return value;
-  return `${value.replace(/[ \t]+$/, "")}<br>`;
-}
-function injectHardBreaksForLegacyParity(markdown) {
-  const lines = String(markdown || "").split("\n");
-  let fenceState = null;
-  let inMathFence = false;
-  for (let i = 0; i < lines.length - 1; i += 1) {
-    const line = lines[i];
-    const nextLine = lines[i + 1];
-    const fenceDelimiter = parseFencedBlockDelimiter(line);
-    if (fenceDelimiter) {
-      if (!fenceState) {
-        fenceState = fenceDelimiter;
-      } else if (fenceDelimiter.marker === fenceState.marker && fenceDelimiter.length >= fenceState.length) {
-        fenceState = null;
-      }
-      continue;
-    }
-    if (!fenceState && isMathFenceDelimiter(line)) {
-      inMathFence = !inMathFence;
-      continue;
-    }
-    if (fenceState || inMathFence)
-      continue;
-    if (!line || !nextLine)
-      continue;
-    if (/[ \t]{2,}$/.test(line) || /\\$/.test(line))
-      continue;
-    if (isQuoteLine(line) && isQuoteLine(nextLine)) {
-      const currentQuoteContent = stripQuotePrefix(line).trim();
-      const nextQuoteContent = stripQuotePrefix(nextLine).trim();
-      if (!currentQuoteContent || !nextQuoteContent)
-        continue;
-      if (/^\[!/.test(currentQuoteContent) || /^\[!/.test(nextQuoteContent))
-        continue;
-      lines[i] = appendQuoteHardBreak(line);
-      continue;
-    }
-    const currentTrimmed = line.trim();
-    if (startsNewBlock(currentTrimmed) && !isListItemLine(currentTrimmed))
-      continue;
-    if (startsNewBlock(nextLine.trim()))
-      continue;
-    lines[i] = appendLegacyHardBreak(line);
-  }
-  return lines.join("\n");
-}
-function neutralizeUnsafeMarkdownLinks(markdown) {
-  const source = String(markdown || "");
-  if (!source)
-    return source;
-  const unsafeLinkPattern = /\[[^\]]+\]\(((?:javascript|vbscript|data):[^)\r\n]*)\)/gi;
-  return source.replace(unsafeLinkPattern, (match, _href, offset, fullText) => {
-    const sourceText = String(fullText || "");
-    const safeOffset = Number(offset) || 0;
-    const prevChar = safeOffset > 0 ? sourceText[safeOffset - 1] : "";
-    if (prevChar === "!" || prevChar === "\\") {
-      return match;
-    }
-    return `\\${match}`;
-  });
-}
-function neutralizePlainWikilinks(markdown) {
-  const source = String(markdown || "");
-  if (!source)
-    return source;
-  const escapePlainWikilinks = (value) => String(value || "").replace(/(^|[^!\\])(\[\[[^[\]\r\n]+?\]\])/g, (_match, prefix, wikilink) => {
-    return `${prefix}\\${wikilink}`;
-  });
-  const neutralizeLineOutsideInlineCode = (line) => {
-    const value = String(line || "");
-    if (!value || !value.includes("[["))
-      return value;
-    let result = "";
-    let cursor = 0;
-    const codeSpanPattern = /(`+)([\s\S]*?)(\1)/g;
-    let match = codeSpanPattern.exec(value);
-    while (match) {
-      const [segment] = match;
-      const start = match.index;
-      const end = start + segment.length;
-      result += escapePlainWikilinks(value.slice(cursor, start));
-      result += segment;
-      cursor = end;
-      match = codeSpanPattern.exec(value);
-    }
-    result += escapePlainWikilinks(value.slice(cursor));
-    return result;
-  };
-  const lines = source.split("\n");
-  let fenceState = null;
-  let inMathFence = false;
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
-    const fenceDelimiter = parseFencedBlockDelimiter(line);
-    if (fenceDelimiter) {
-      if (!fenceState) {
-        fenceState = fenceDelimiter;
-      } else if (fenceDelimiter.marker === fenceState.marker && fenceDelimiter.length >= fenceState.length) {
-        fenceState = null;
-      }
-      continue;
-    }
-    if (!fenceState && isMathFenceDelimiter(line)) {
-      inMathFence = !inMathFence;
-      continue;
-    }
-    if (fenceState || inMathFence)
-      continue;
-    lines[i] = neutralizeLineOutsideInlineCode(line);
-  }
-  return lines.join("\n");
-}
-function normalizeWechatUnsafeTaskListMarkers(markdown) {
-  const source = String(markdown || "");
-  if (!source)
-    return source;
-  const lines = source.split("\n");
-  let fenceState = null;
-  let inMathFence = false;
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
-    const fenceDelimiter = parseFencedBlockDelimiter(line);
-    if (fenceDelimiter) {
-      if (!fenceState) {
-        fenceState = fenceDelimiter;
-      } else if (fenceDelimiter.marker === fenceState.marker && fenceDelimiter.length >= fenceState.length) {
-        fenceState = null;
-      }
-      continue;
-    }
-    if (!fenceState && isMathFenceDelimiter(line)) {
-      inMathFence = !inMathFence;
-      continue;
-    }
-    if (fenceState || inMathFence)
-      continue;
-    lines[i] = line.replace(
-      /^(\s*)([-*+])\s+\[([ xX])\]\s+/,
-      (_match, indent, marker, state) => `${indent}${marker} ${String(state || "").trim().toLowerCase() === "x" ? "\u2611" : "\u2610"} `
-    );
-  }
-  return lines.join("\n");
-}
-var KNOWN_HTML_TAGS = /* @__PURE__ */ new Set([
-  // Block elements
-  "div",
-  "p",
-  "h1",
-  "h2",
-  "h3",
-  "h4",
-  "h5",
-  "h6",
-  "blockquote",
-  "pre",
-  "hr",
-  "br",
-  "ul",
-  "ol",
-  "li",
-  "dl",
-  "dt",
-  "dd",
-  "figure",
-  "figcaption",
-  "main",
-  "section",
-  "article",
-  "aside",
-  "header",
-  "footer",
-  "nav",
-  "address",
-  // Inline elements
-  "a",
-  "strong",
-  "b",
-  "em",
-  "i",
-  "u",
-  "s",
-  "strike",
-  "del",
-  "ins",
-  "code",
-  "kbd",
-  "samp",
-  "var",
-  "mark",
-  "small",
-  "sub",
-  "sup",
-  "span",
-  "abbr",
-  "cite",
-  "q",
-  "time",
-  "ruby",
-  "rt",
-  "rp",
-  "bdi",
-  "bdo",
-  "dfn",
-  "wbr",
-  // Media elements
-  "img",
-  "picture",
-  "source",
-  "video",
-  "audio",
-  "track",
-  "canvas",
-  "svg",
-  "math",
-  // Table elements
-  "table",
-  "thead",
-  "tbody",
-  "tfoot",
-  "tr",
-  "th",
-  "td",
-  "caption",
-  "colgroup",
-  "col",
-  // Form elements (though these are stripped by sanitizer)
-  "form",
-  "input",
-  "button",
-  "select",
-  "option",
-  "optgroup",
-  "textarea",
-  "label",
-  "fieldset",
-  "legend",
-  "datalist",
-  "output",
-  "progress",
-  "meter",
-  // Other common elements
-  "details",
-  "summary",
-  "dialog",
-  "menu",
-  "menuitem",
-  "noscript",
-  "template",
-  // MathJax specific
-  "mjx-container",
-  "mjx-math"
-]);
-function escapePseudoHtmlTags(markdown) {
-  const lines = markdown.split("\n");
-  const result = [];
-  let inCodeBlock = false;
-  let codeBlockFence = null;
-  for (const line of lines) {
-    const parsed = parseFencedBlockDelimiter(line);
-    if (parsed) {
-      if (!inCodeBlock) {
-        inCodeBlock = true;
-        codeBlockFence = { marker: parsed.marker, length: parsed.length };
-      } else if (parsed.marker === codeBlockFence.marker && parsed.length >= codeBlockFence.length) {
-        inCodeBlock = false;
-        codeBlockFence = null;
-      }
-      result.push(line);
-      continue;
-    }
-    if (inCodeBlock) {
-      result.push(line);
-      continue;
-    }
-    const processed = escapeLinePreservingInlineCode(line);
-    result.push(processed);
-  }
-  return result.join("\n");
-}
-function escapeLinePreservingInlineCode(line) {
-  const segments = [];
-  let lastIndex = 0;
-  let i = 0;
-  while (i < line.length) {
-    if (line[i] === "`") {
-      if (i === 0 && line.match(/^`{3,}/)) {
-        i++;
-        continue;
-      }
-      const startIndex = i;
-      let openLen = 0;
-      while (i < line.length && line[i] === "`") {
-        openLen++;
-        i++;
-      }
-      let foundClose = false;
-      while (i < line.length) {
-        if (line[i] === "`") {
-          let closeLen = 0;
-          while (i < line.length && line[i] === "`") {
-            closeLen++;
-            i++;
-          }
-          if (closeLen === openLen) {
-            foundClose = true;
-            break;
-          }
-        } else {
-          i++;
-        }
-      }
-      if (foundClose) {
-        segments.push(line.slice(lastIndex, startIndex));
-        segments.push(line.slice(startIndex, i));
-        lastIndex = i;
-      }
-    } else {
-      i++;
-    }
-  }
-  if (lastIndex < line.length) {
-    segments.push(line.slice(lastIndex));
-  }
-  if (segments.length === 0) {
-    return escapePseudoHtmlInText(line);
-  }
-  return segments.map((seg, idx) => {
-    if (idx % 2 === 1)
-      return seg;
-    return escapePseudoHtmlInText(seg);
-  }).join("");
-}
-function escapePseudoHtmlInText(text) {
-  return text.replace(/<\/?([a-zA-Z][a-zA-Z0-9-]*)([^>]*)>/g, (match, tagName, attrs) => {
-    const rawMatch = String(match || "");
-    const rawTagName = String(tagName || "");
-    const rawAttrs = String(attrs || "");
-    const lowerTag = rawTagName.toLowerCase();
-    if (KNOWN_HTML_TAGS.has(lowerTag)) {
-      return rawMatch;
-    }
-    if (rawMatch.startsWith("</")) {
-      return `&lt;/${rawTagName}&gt;`;
-    }
-    return `&lt;${rawTagName}${rawAttrs}&gt;`;
-  });
-}
-var MATH_PLACEHOLDER_SESSION = `M${Date.now().toString(36)}X`;
-var mathPlaceholderCounter = 0;
-function generateMathPlaceholder(type) {
-  const id = `${MATH_PLACEHOLDER_SESSION}_${mathPlaceholderCounter}_${Math.random().toString(36).slice(2, 6)}`;
-  mathPlaceholderCounter += 1;
-  return `\u200B${id}_${type}\u200B`;
-}
-function preRenderMathFormulas(markdown, converter) {
-  const formulas = [];
-  if (!converter || !converter.md)
-    return { markdown, formulas };
-  if (typeof converter.md.render !== "function")
-    return { markdown, formulas };
-  let output = markdown;
-  const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
-  output = output.replace(blockMathPattern, (match, formula, offset, fullText) => {
-    const placeholder = generateMathPlaceholder("BLOCK");
-    try {
-      let normalizedFormula = String(formula || "");
-      const safeOffset = Number(offset) || 0;
-      const source = String(fullText || "");
-      const lineStart = source.lastIndexOf("\n", Math.max(0, safeOffset - 1)) + 1;
-      const openingPrefix = source.slice(lineStart, safeOffset);
-      if (isQuotePrefix(openingPrefix)) {
-        normalizedFormula = String(formula || "").split("\n").map((line) => stripQuotePrefix(line)).join("\n");
-      }
-      const rendered = converter.md.render(`$$${normalizedFormula}$$`);
-      const cleaned = rendered.replace(/^<p>|<\/p>$/g, "").trim();
-      formulas.push({ placeholder, rendered: cleaned, isBlock: true });
-      return placeholder;
-    } catch (e) {
-      return match;
-    }
-  });
-  const inlineMathPattern = /(^|[^$])\$(?!\$)([^$\n]+?)\$(?!\$)/g;
-  output = output.replace(inlineMathPattern, (match, prefix, formula) => {
-    const placeholder = generateMathPlaceholder("INLINE");
-    try {
-      const rendered = converter.md.renderInline(`$${formula}$`);
-      formulas.push({ placeholder, rendered, isBlock: false });
-      return `${prefix}${placeholder}`;
-    } catch (e) {
-      return match;
-    }
-  });
-  return { markdown: output, formulas };
 }
 var IMAGE_SWIPE_DEFAULT_WARNING2 = "\u6B64\u7C7B\u56FE\u7247\u53EF\u80FD\u5F15\u53D1\u4E0D\u9002\uFF0C\u5411\u5DE6\u6ED1\u52A8\u67E5\u770B";
 var IMAGE_SWIPE_DEFAULT_HINT2 = "\u5DE6\u53F3\u6ED1\u52A8\u67E5\u770B\u56FE\u7247";
@@ -38757,6 +38310,475 @@ function preprocessImageSwipeCallouts(markdown) {
   }
   return output.join("\n");
 }
+
+// services/obsidian-triplet-renderer.js
+function getDefaultMarkdownRenderer() {
+  const obsidianApi15 = (
+    /** @type {{ MarkdownRenderer?: MarkdownRendererLike } | undefined} */
+    getActiveWindowValue("obsidian")
+  );
+  return (obsidianApi15 == null ? void 0 : obsidianApi15.MarkdownRenderer) || null;
+}
+function isFencedBlockDelimiter(line) {
+  return /^\s{0,3}(?:`{3,}|~{3,})/.test(String(line || ""));
+}
+function parseFencedBlockDelimiter2(line) {
+  const value = String(line || "");
+  const match = value.match(/^\s{0,3}((`{3,})|(~{3,}))(.*)$/);
+  if (!match)
+    return null;
+  const markerRun = match[1] || "";
+  const markerChar = markerRun.charAt(0);
+  if (markerChar !== "`" && markerChar !== "~")
+    return null;
+  return {
+    marker: markerChar,
+    length: markerRun.length
+  };
+}
+function isMathFenceDelimiter2(line) {
+  return /^\s*\$\$\s*$/.test(String(line || ""));
+}
+function isQuoteLine2(line) {
+  return /^\s{0,3}(?:>\s?)+/.test(String(line || ""));
+}
+function stripQuotePrefix(line) {
+  return String(line || "").replace(/^\s{0,3}(?:>\s?)+/, "");
+}
+function isQuotePrefix(prefix) {
+  return /^\s{0,3}(?:>\s?)+$/.test(String(prefix || ""));
+}
+function startsNewBlock(trimmedLine) {
+  if (!trimmedLine)
+    return true;
+  if (/^#{1,6}\s/.test(trimmedLine))
+    return true;
+  if (/^>/.test(trimmedLine))
+    return true;
+  if (/^([-*_])(?:\s*\1){2,}\s*$/.test(trimmedLine))
+    return true;
+  if (/^(?:[*+-]|\d+[.)])\s+/.test(trimmedLine))
+    return true;
+  if (/^\|/.test(trimmedLine))
+    return true;
+  if (/^<[^>]+>/.test(trimmedLine))
+    return true;
+  if (isFencedBlockDelimiter(trimmedLine))
+    return true;
+  return false;
+}
+function isListItemLine(trimmedLine) {
+  return /^(?:[*+-]|\d+[.)])\s+/.test(String(trimmedLine || ""));
+}
+function appendLegacyHardBreak(line) {
+  const value = String(line || "");
+  if (!value)
+    return value;
+  if (/<br\s*\/?>\s*$/i.test(value))
+    return value;
+  return `${value.replace(/[ \t]+$/, "")}<br>`;
+}
+function appendQuoteHardBreak(line) {
+  const value = String(line || "");
+  if (!value)
+    return value;
+  if (/<br\s*\/?>\s*$/i.test(value))
+    return value;
+  return `${value.replace(/[ \t]+$/, "")}<br>`;
+}
+function injectHardBreaksForLegacyParity(markdown) {
+  const lines = String(markdown || "").split("\n");
+  let fenceState = null;
+  let inMathFence = false;
+  for (let i = 0; i < lines.length - 1; i += 1) {
+    const line = lines[i];
+    const nextLine = lines[i + 1];
+    const fenceDelimiter = parseFencedBlockDelimiter2(line);
+    if (fenceDelimiter) {
+      if (!fenceState) {
+        fenceState = fenceDelimiter;
+      } else if (fenceDelimiter.marker === fenceState.marker && fenceDelimiter.length >= fenceState.length) {
+        fenceState = null;
+      }
+      continue;
+    }
+    if (!fenceState && isMathFenceDelimiter2(line)) {
+      inMathFence = !inMathFence;
+      continue;
+    }
+    if (fenceState || inMathFence)
+      continue;
+    if (!line || !nextLine)
+      continue;
+    if (/[ \t]{2,}$/.test(line) || /\\$/.test(line))
+      continue;
+    if (isQuoteLine2(line) && isQuoteLine2(nextLine)) {
+      const currentQuoteContent = stripQuotePrefix(line).trim();
+      const nextQuoteContent = stripQuotePrefix(nextLine).trim();
+      if (!currentQuoteContent || !nextQuoteContent)
+        continue;
+      if (/^\[!/.test(currentQuoteContent) || /^\[!/.test(nextQuoteContent))
+        continue;
+      lines[i] = appendQuoteHardBreak(line);
+      continue;
+    }
+    const currentTrimmed = line.trim();
+    if (startsNewBlock(currentTrimmed) && !isListItemLine(currentTrimmed))
+      continue;
+    if (startsNewBlock(nextLine.trim()))
+      continue;
+    lines[i] = appendLegacyHardBreak(line);
+  }
+  return lines.join("\n");
+}
+function neutralizeUnsafeMarkdownLinks(markdown) {
+  const source = String(markdown || "");
+  if (!source)
+    return source;
+  const unsafeLinkPattern = /\[[^\]]+\]\(((?:javascript|vbscript|data):[^)\r\n]*)\)/gi;
+  return source.replace(unsafeLinkPattern, (match, _href, offset, fullText) => {
+    const sourceText = String(fullText || "");
+    const safeOffset = Number(offset) || 0;
+    const prevChar = safeOffset > 0 ? sourceText[safeOffset - 1] : "";
+    if (prevChar === "!" || prevChar === "\\") {
+      return match;
+    }
+    return `\\${match}`;
+  });
+}
+function neutralizePlainWikilinks(markdown) {
+  const source = String(markdown || "");
+  if (!source)
+    return source;
+  const escapePlainWikilinks = (value) => String(value || "").replace(/(^|[^!\\])(\[\[[^[\]\r\n]+?\]\])/g, (_match, prefix, wikilink) => {
+    return `${prefix}\\${wikilink}`;
+  });
+  const neutralizeLineOutsideInlineCode = (line) => {
+    const value = String(line || "");
+    if (!value || !value.includes("[["))
+      return value;
+    let result = "";
+    let cursor = 0;
+    const codeSpanPattern = /(`+)([\s\S]*?)(\1)/g;
+    let match = codeSpanPattern.exec(value);
+    while (match) {
+      const [segment] = match;
+      const start = match.index;
+      const end = start + segment.length;
+      result += escapePlainWikilinks(value.slice(cursor, start));
+      result += segment;
+      cursor = end;
+      match = codeSpanPattern.exec(value);
+    }
+    result += escapePlainWikilinks(value.slice(cursor));
+    return result;
+  };
+  const lines = source.split("\n");
+  let fenceState = null;
+  let inMathFence = false;
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const fenceDelimiter = parseFencedBlockDelimiter2(line);
+    if (fenceDelimiter) {
+      if (!fenceState) {
+        fenceState = fenceDelimiter;
+      } else if (fenceDelimiter.marker === fenceState.marker && fenceDelimiter.length >= fenceState.length) {
+        fenceState = null;
+      }
+      continue;
+    }
+    if (!fenceState && isMathFenceDelimiter2(line)) {
+      inMathFence = !inMathFence;
+      continue;
+    }
+    if (fenceState || inMathFence)
+      continue;
+    lines[i] = neutralizeLineOutsideInlineCode(line);
+  }
+  return lines.join("\n");
+}
+function normalizeWechatUnsafeTaskListMarkers(markdown) {
+  const source = String(markdown || "");
+  if (!source)
+    return source;
+  const lines = source.split("\n");
+  let fenceState = null;
+  let inMathFence = false;
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const fenceDelimiter = parseFencedBlockDelimiter2(line);
+    if (fenceDelimiter) {
+      if (!fenceState) {
+        fenceState = fenceDelimiter;
+      } else if (fenceDelimiter.marker === fenceState.marker && fenceDelimiter.length >= fenceState.length) {
+        fenceState = null;
+      }
+      continue;
+    }
+    if (!fenceState && isMathFenceDelimiter2(line)) {
+      inMathFence = !inMathFence;
+      continue;
+    }
+    if (fenceState || inMathFence)
+      continue;
+    lines[i] = line.replace(
+      /^(\s*)([-*+])\s+\[([ xX])\]\s+/,
+      (_match, indent, marker, state) => `${indent}${marker} ${String(state || "").trim().toLowerCase() === "x" ? "\u2611" : "\u2610"} `
+    );
+  }
+  return lines.join("\n");
+}
+var KNOWN_HTML_TAGS = /* @__PURE__ */ new Set([
+  // Block elements
+  "div",
+  "p",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "blockquote",
+  "pre",
+  "hr",
+  "br",
+  "ul",
+  "ol",
+  "li",
+  "dl",
+  "dt",
+  "dd",
+  "figure",
+  "figcaption",
+  "main",
+  "section",
+  "article",
+  "aside",
+  "header",
+  "footer",
+  "nav",
+  "address",
+  // Inline elements
+  "a",
+  "strong",
+  "b",
+  "em",
+  "i",
+  "u",
+  "s",
+  "strike",
+  "del",
+  "ins",
+  "code",
+  "kbd",
+  "samp",
+  "var",
+  "mark",
+  "small",
+  "sub",
+  "sup",
+  "span",
+  "abbr",
+  "cite",
+  "q",
+  "time",
+  "ruby",
+  "rt",
+  "rp",
+  "bdi",
+  "bdo",
+  "dfn",
+  "wbr",
+  // Media elements
+  "img",
+  "picture",
+  "source",
+  "video",
+  "audio",
+  "track",
+  "canvas",
+  "svg",
+  "math",
+  // Table elements
+  "table",
+  "thead",
+  "tbody",
+  "tfoot",
+  "tr",
+  "th",
+  "td",
+  "caption",
+  "colgroup",
+  "col",
+  // Form elements (though these are stripped by sanitizer)
+  "form",
+  "input",
+  "button",
+  "select",
+  "option",
+  "optgroup",
+  "textarea",
+  "label",
+  "fieldset",
+  "legend",
+  "datalist",
+  "output",
+  "progress",
+  "meter",
+  // Other common elements
+  "details",
+  "summary",
+  "dialog",
+  "menu",
+  "menuitem",
+  "noscript",
+  "template",
+  // MathJax specific
+  "mjx-container",
+  "mjx-math"
+]);
+function escapePseudoHtmlTags(markdown) {
+  const lines = markdown.split("\n");
+  const result = [];
+  let inCodeBlock = false;
+  let codeBlockFence = null;
+  for (const line of lines) {
+    const parsed = parseFencedBlockDelimiter2(line);
+    if (parsed) {
+      if (!inCodeBlock) {
+        inCodeBlock = true;
+        codeBlockFence = { marker: parsed.marker, length: parsed.length };
+      } else if (parsed.marker === codeBlockFence.marker && parsed.length >= codeBlockFence.length) {
+        inCodeBlock = false;
+        codeBlockFence = null;
+      }
+      result.push(line);
+      continue;
+    }
+    if (inCodeBlock) {
+      result.push(line);
+      continue;
+    }
+    const processed = escapeLinePreservingInlineCode(line);
+    result.push(processed);
+  }
+  return result.join("\n");
+}
+function escapeLinePreservingInlineCode(line) {
+  const segments = [];
+  let lastIndex = 0;
+  let i = 0;
+  while (i < line.length) {
+    if (line[i] === "`") {
+      if (i === 0 && line.match(/^`{3,}/)) {
+        i++;
+        continue;
+      }
+      const startIndex = i;
+      let openLen = 0;
+      while (i < line.length && line[i] === "`") {
+        openLen++;
+        i++;
+      }
+      let foundClose = false;
+      while (i < line.length) {
+        if (line[i] === "`") {
+          let closeLen = 0;
+          while (i < line.length && line[i] === "`") {
+            closeLen++;
+            i++;
+          }
+          if (closeLen === openLen) {
+            foundClose = true;
+            break;
+          }
+        } else {
+          i++;
+        }
+      }
+      if (foundClose) {
+        segments.push(line.slice(lastIndex, startIndex));
+        segments.push(line.slice(startIndex, i));
+        lastIndex = i;
+      }
+    } else {
+      i++;
+    }
+  }
+  if (lastIndex < line.length) {
+    segments.push(line.slice(lastIndex));
+  }
+  if (segments.length === 0) {
+    return escapePseudoHtmlInText(line);
+  }
+  return segments.map((seg, idx) => {
+    if (idx % 2 === 1)
+      return seg;
+    return escapePseudoHtmlInText(seg);
+  }).join("");
+}
+function escapePseudoHtmlInText(text) {
+  return text.replace(/<\/?([a-zA-Z][a-zA-Z0-9-]*)([^>]*)>/g, (match, tagName, attrs) => {
+    const rawMatch = String(match || "");
+    const rawTagName = String(tagName || "");
+    const rawAttrs = String(attrs || "");
+    const lowerTag = rawTagName.toLowerCase();
+    if (KNOWN_HTML_TAGS.has(lowerTag)) {
+      return rawMatch;
+    }
+    if (rawMatch.startsWith("</")) {
+      return `&lt;/${rawTagName}&gt;`;
+    }
+    return `&lt;${rawTagName}${rawAttrs}&gt;`;
+  });
+}
+var MATH_PLACEHOLDER_SESSION = `M${Date.now().toString(36)}X`;
+var mathPlaceholderCounter = 0;
+function generateMathPlaceholder(type) {
+  const id = `${MATH_PLACEHOLDER_SESSION}_${mathPlaceholderCounter}_${Math.random().toString(36).slice(2, 6)}`;
+  mathPlaceholderCounter += 1;
+  return `\u200B${id}_${type}\u200B`;
+}
+function preRenderMathFormulas(markdown, converter) {
+  const formulas = [];
+  if (!converter || !converter.md)
+    return { markdown, formulas };
+  if (typeof converter.md.render !== "function")
+    return { markdown, formulas };
+  let output = markdown;
+  const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
+  output = output.replace(blockMathPattern, (match, formula, offset, fullText) => {
+    const placeholder = generateMathPlaceholder("BLOCK");
+    try {
+      let normalizedFormula = String(formula || "");
+      const safeOffset = Number(offset) || 0;
+      const source = String(fullText || "");
+      const lineStart = source.lastIndexOf("\n", Math.max(0, safeOffset - 1)) + 1;
+      const openingPrefix = source.slice(lineStart, safeOffset);
+      if (isQuotePrefix(openingPrefix)) {
+        normalizedFormula = String(formula || "").split("\n").map((line) => stripQuotePrefix(line)).join("\n");
+      }
+      const rendered = converter.md.render(`$$${normalizedFormula}$$`);
+      const cleaned = rendered.replace(/^<p>|<\/p>$/g, "").trim();
+      formulas.push({ placeholder, rendered: cleaned, isBlock: true });
+      return placeholder;
+    } catch (e) {
+      return match;
+    }
+  });
+  const inlineMathPattern = /(^|[^$])\$(?!\$)([^$\n]+?)\$(?!\$)/g;
+  output = output.replace(inlineMathPattern, (match, prefix, formula) => {
+    const placeholder = generateMathPlaceholder("INLINE");
+    try {
+      const rendered = converter.md.renderInline(`$${formula}$`);
+      formulas.push({ placeholder, rendered, isBlock: false });
+      return `${prefix}${placeholder}`;
+    } catch (e) {
+      return match;
+    }
+  });
+  return { markdown: output, formulas };
+}
 function preprocessMarkdownForTriplet(markdown, converter) {
   let output = preprocessImageSwipeCallouts(markdown);
   output = normalizeAdjacentMarkdownBlockHeadings(output);
@@ -38796,7 +38818,7 @@ function shouldObserveMermaidRenderWindow(markdown) {
   const lines = String(markdown || "").split("\n");
   let fenceState = null;
   for (const line of lines) {
-    const delimiter = parseFencedBlockDelimiter(line);
+    const delimiter = parseFencedBlockDelimiter2(line);
     if (!delimiter)
       continue;
     if (!fenceState) {

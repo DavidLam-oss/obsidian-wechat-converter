@@ -10,7 +10,7 @@
 
 ## 输出
 
-输出渲染结果、triplet serializer 子模块、同步 payload、媒体上传结果、清洗 HTML、设置模型和错误消息。
+输出渲染结果、triplet renderer/serializer 子模块、同步 payload、媒体上传结果、清洗 HTML、设置模型和错误消息。
 
 ## 定位
 

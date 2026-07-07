@@ -155,6 +155,7 @@ export default [
       "services/obsidian-fetch-adapter.js",
       "services/native-renderer.js",
       "services/obsidian-triplet-renderer.js",
+      "services/obsidian-triplet-renderer-images.js",
       "services/obsidian-triplet-serializer-images.js",
       "services/obsidian-triplet-serializer-utils.js",
       "services/obsidian-triplet-serializer.js",
