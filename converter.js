@@ -913,7 +913,7 @@ class AppleStyleConverter {
       // 注意 flex 容器的 padding 0，内部 padding 分别在 lineNumberColumn 和 code section
       codeHtml = `<section class="code-with-line-numbers" style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;max-width:100% !important;padding:0 !important;margin:0 !important;box-sizing:border-box !important;">
         <section class="code-line-numbers" style="${lineNumberColumnStyles}">${lineNumbersHtml}</section>
-        <section class="code-scroll" style="flex:1 1 0% !important;width:0 !important;max-width:calc(100% - 3.5em) !important;overflow-x:auto !important;overflow-y:visible !important;-webkit-overflow-scrolling:touch !important;padding:12px 12px 12px 16px !important;margin:0 !important;min-width:0 !important;box-sizing:border-box !important;">${codeLinesHtml}</section>
+        <section class="code-scroll" style="flex:1 1 0% !important;width:0 !important;max-width:calc(100% - 3.5em) !important;overflow-x:scroll !important;overflow-y:visible !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;padding:12px 12px 16px 16px !important;margin:0 !important;min-width:0 !important;box-sizing:border-box !important;">${codeLinesHtml}</section>
       </section>`;
     } else {
       // 无行号
@@ -922,10 +922,10 @@ class AppleStyleConverter {
       // preserveNewlines=true -> 包含 <br>
       const formatted = this.formatHighlightedCode(styled, true);
       // 改动：white-space: nowrap !important
-      const codeLinesHtml = `<section style="white-space:nowrap !important;display:inline-block !important;min-width:100% !important;word-break:keep-all !important;overflow-wrap:normal !important;line-height:${lineHeight} !important;font-size:13px !important;margin:0 !important;">${formatted}</section>`;
+      const codeLinesHtml = `<section class="code-lines" style="white-space:nowrap !important;display:inline-block !important;min-width:100% !important;word-break:keep-all !important;overflow-wrap:normal !important;line-height:${lineHeight} !important;font-size:13px !important;margin:0 !important;">${formatted}</section>`;
 
-      codeHtml = `<section style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;padding:0 !important;margin:0 !important;">
-        <section style="flex:1 1 auto !important;overflow-x:auto !important;overflow-y:visible !important;padding:12px !important;min-width:0 !important;margin:0 !important;">${codeLinesHtml}</section>
+      codeHtml = `<section class="code-without-line-numbers" style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;padding:0 !important;margin:0 !important;">
+        <section class="code-scroll" style="flex:1 1 auto !important;width:100% !important;max-width:100% !important;overflow-x:scroll !important;overflow-y:visible !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;padding:12px 12px 16px 12px !important;min-width:0 !important;margin:0 !important;box-sizing:border-box !important;">${codeLinesHtml}</section>
       </section>`;
     }
 

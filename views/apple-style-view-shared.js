@@ -115,6 +115,7 @@ export {
 } from '../services/native-renderer.js';
 export {
   convertRenderedMermaidDiagramsToImages,
+  renderMermaidCodeBlocks,
 } from '../services/rendered-mermaid.js';
 export {
   AI_LAYOUT_SCHEMA_VERSION,

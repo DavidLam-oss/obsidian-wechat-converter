@@ -1995,12 +1995,14 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 
 .apple-converter-preview .code-snippet__fix,
 .apple-converter-preview .code-snippet__fix pre,
-.apple-converter-preview .code-snippet__fix .code-with-line-numbers {
+.apple-converter-preview .code-snippet__fix .code-with-line-numbers,
+.apple-converter-preview .code-snippet__fix .code-without-line-numbers {
   box-sizing: border-box;
   max-width: 100%;
 }
 
-.apple-converter-preview .code-snippet__fix .code-with-line-numbers {
+.apple-converter-preview .code-snippet__fix .code-with-line-numbers,
+.apple-converter-preview .code-snippet__fix .code-without-line-numbers {
   min-width: 0;
 }
 
@@ -2011,13 +2013,39 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 }
 
 .apple-converter-preview .code-snippet__fix .code-scroll {
-  flex: 1 1 0%;
-  width: 0;
   min-width: 0;
-  max-width: calc(100% - 3.5em);
-  overflow-x: auto;
+  overflow-x: scroll;
   overflow-y: visible;
   -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+  scrollbar-color: rgba(255, 255, 255, 0.58) rgba(255, 255, 255, 0.18);
+}
+
+.apple-converter-preview .code-snippet__fix .code-with-line-numbers > .code-scroll {
+  flex: 1 1 0%;
+  width: 0;
+  max-width: calc(100% - 3.5em);
+}
+
+.apple-converter-preview .code-snippet__fix .code-without-line-numbers > .code-scroll {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 100%;
+}
+
+.apple-converter-preview .code-snippet__fix .code-scroll::-webkit-scrollbar {
+  display: block;
+  height: 8px;
+}
+
+.apple-converter-preview .code-snippet__fix .code-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+.apple-converter-preview .code-snippet__fix .code-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.58);
+  border-radius: 999px;
 }
 
 .apple-converter-preview .code-snippet__fix .code-lines {
@@ -2213,7 +2241,6 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 .theme-dark .apple-preview-wrapper.mode-classic {
   background: var(--apple-background);
 }
-
 /* 统一使用 Obsidian 界面字体 */
 .vertical-tab-content h2,
 .vertical-tab-content h3,

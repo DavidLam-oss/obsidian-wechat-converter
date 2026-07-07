@@ -113,6 +113,21 @@ describe('AppleTheme Color Logic', () => {
     });
   });
 
+  describe('Chinese paragraph wrapping', () => {
+    it('should keep paragraph styles from orphaning closing punctuation', () => {
+      const theme = new AppleTheme({ theme: 'grid' });
+      const paragraphStyle = theme.getStyle('p');
+      const sectionStyle = theme.getStyle('section');
+
+      expect(paragraphStyle).toContain('text-align-last: left');
+      expect(paragraphStyle).toContain('word-break: normal');
+      expect(paragraphStyle).toContain('overflow-wrap: break-word');
+      expect(paragraphStyle).toContain('line-break: strict');
+      expect(sectionStyle).toContain('word-break: normal');
+      expect(sectionStyle).toContain('line-break: strict');
+    });
+  });
+
   describe('Consolidated Theme List', () => {
     it('should expose only the consolidated built-in theme set', () => {
       const themeList = AppleTheme.getThemeList();

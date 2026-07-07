@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Alias configured in vitest.config.mjs handles the mock
@@ -113,7 +114,9 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
     const html = await blobToText(item.items['text/html']);
     expect(html).toContain('<pre class="hljs code__pre"');
     expect(html).toContain('<code style=');
-    expect(html).toContain('overflow-x:auto');
+    expect(html).toContain('overflow-x:scroll');
+    expect(html).toContain('scrollbar-gutter:stable');
+    expect(html).toContain('scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18)');
     expect(html).toContain('width:max-content');
     expect(html).toContain('background:#161b22');
     expect(html).toContain('background:#ff5f57');
@@ -142,9 +145,22 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
     expect(codeLines).not.toBeNull();
     expect(codeScroll.contains(lineNumbers)).toBe(false);
     expect(codeScroll.contains(codeLines)).toBe(true);
-    expect(codeScroll.getAttribute('style')).toContain('overflow-x:auto');
+    expect(codeScroll.getAttribute('style')).toContain('overflow-x:scroll');
     expect(codeScroll.getAttribute('style')).toContain('width:0');
+    expect(codeScroll.getAttribute('style')).toContain('scrollbar-gutter:stable');
+    expect(codeScroll.getAttribute('style')).toContain('scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18)');
+    expect(codeScroll.getAttribute('style')).toContain('padding:12px 12px 16px 16px');
     expect(codeLines.getAttribute('style')).toContain('width:max-content');
+  });
+
+  it('should keep preview code scrollbars visible inside the hidden preview scrollbar container', () => {
+    const css = readFileSync('styles/preview.css', 'utf8');
+    expect(css).toContain('.apple-converter-preview::-webkit-scrollbar');
+    expect(css).toContain('.apple-converter-preview .code-snippet__fix .code-scroll::-webkit-scrollbar');
+    expect(css).toContain('display: block');
+    expect(css).toContain('height: 8px');
+    expect(css).toContain('scrollbar-gutter: stable');
+    expect(css).toContain('scrollbar-color: rgba(255, 255, 255, 0.58) rgba(255, 255, 255, 0.18)');
   });
 
   it('should render visible URL links as their own mobile-friendly line', async () => {
@@ -221,14 +237,52 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
     const item = writeMock.mock.calls[0][0][0];
     const html = await blobToText(item.items['text/html']);
     expect(html).toContain('<pre class="hljs code__pre"');
-    expect(html).toContain('overflow-x:auto');
+    expect(html).toContain('overflow-x:scroll');
     expect(html).toContain('-webkit-overflow-scrolling:touch');
+    expect(html).toContain('scrollbar-gutter:stable');
+    expect(html).toContain('scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18)');
     expect(html).toContain('class="line-numbers"');
     expect(html).toContain('class="code-scroll"');
     expect(html).toContain('min-width:max-content');
+    expect(html).toContain('padding:12px 12px 16px 16px');
+    expect(html).toContain('height:1.75em');
+    expect(html).toContain('<br');
     expect(html).toContain('color:#95989C');
     expect(html).toContain('really_long_identifier');
     expect(html).not.toContain('<table');
+    expect(html).not.toMatch(/<code\b[^>]*>\s+<section/i);
+  });
+
+  it('should preserve blank code lines and avoid a leading empty clipboard line', async () => {
+    const converter = await createLegacyConverter({
+      themeOptions: {
+        macCodeBlock: true,
+        codeLineNumber: true,
+      },
+    });
+    view.currentHtml = await converter.convert([
+      '```js',
+      'const first = 1;',
+      '',
+      'const third = 3;',
+      '```',
+    ].join('\n'));
+    view.cleanHtmlForDraft = vi.fn((html) => html);
+
+    await view.copyHTML();
+
+    const item = writeMock.mock.calls[0][0][0];
+    const html = await blobToText(item.items['text/html']);
+    const codeMatch = html.match(/<code\b[^>]*>([\s\S]*?)<\/code>/i);
+    expect(codeMatch).not.toBeNull();
+    expect(codeMatch[1].startsWith('<section')).toBe(true);
+    expect(codeMatch[1]).toContain('first&nbsp;=');
+    expect(codeMatch[1]).toContain('&nbsp;<br');
+    expect(codeMatch[1]).toContain('third&nbsp;=');
+    expect(html).toContain('<section class="line-numbers"');
+    expect(html).toContain('>1</section>');
+    expect(html).toContain('>2</section>');
+    expect(html).toContain('>3</section>');
   });
 
   it('should convert Mermaid diagrams to images before writing clipboard html', async () => {

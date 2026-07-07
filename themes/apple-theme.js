@@ -476,12 +476,12 @@ class AppleTheme {
         // 使用配置的 sidePadding
         if (config.sectionBgStyle !== 'grid') {
           return this.joinStyleStrings(
-            `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; background: ${config.sectionBg || '#ffffff'}; ${this.getSectionBoxSizingStyle(config)}max-width: 100%; word-wrap: break-word; text-align: justify`
+            `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; background: ${config.sectionBg || '#ffffff'}; ${this.getSectionBoxSizingStyle(config)}max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; text-align: justify`
           );
         }
 
         return this.joinStyleStrings(
-          `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; box-sizing: border-box; max-width: 100%; word-wrap: break-word; text-align: justify`,
+          `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; box-sizing: border-box; max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; text-align: justify`,
           `background-color: ${config.sectionBg || '#ffffff'}`,
           `background-image: linear-gradient(${this.hexToRgba(color, config.gridLineAlpha || '09')} 1px, transparent 1px), linear-gradient(90deg, ${this.hexToRgba(color, config.gridLineAlpha || '09')} 1px, transparent 1px)`,
           config.sectionBgSize ? `background-size: ${config.sectionBgSize}` : ''
@@ -508,7 +508,7 @@ class AppleTheme {
 
       case 'p':
         return this.joinStyleStrings(
-          `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; margin: 0 0 ${config.paragraphGap}px 0; text-align: justify; letter-spacing: 0`,
+          `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; margin: 0 0 ${config.paragraphGap}px 0; text-align: justify; text-align-last: left; letter-spacing: 0; word-break: normal; overflow-wrap: break-word; line-break: strict`,
           config.paragraphTextIndent ? `text-indent: ${config.paragraphTextIndent}` : ''
         );
 

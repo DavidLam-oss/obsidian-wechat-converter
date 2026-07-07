@@ -3700,11 +3700,11 @@ var require_apple_theme = __commonJS({
           case "section":
             if (config.sectionBgStyle !== "grid") {
               return this.joinStyleStrings(
-                `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; background: ${config.sectionBg || "#ffffff"}; ${this.getSectionBoxSizingStyle(config)}max-width: 100%; word-wrap: break-word; text-align: justify`
+                `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; background: ${config.sectionBg || "#ffffff"}; ${this.getSectionBoxSizingStyle(config)}max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; text-align: justify`
               );
             }
             return this.joinStyleStrings(
-              `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; box-sizing: border-box; max-width: 100%; word-wrap: break-word; text-align: justify`,
+              `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; box-sizing: border-box; max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; text-align: justify`,
               `background-color: ${config.sectionBg || "#ffffff"}`,
               `background-image: linear-gradient(${this.hexToRgba(color, config.gridLineAlpha || "09")} 1px, transparent 1px), linear-gradient(90deg, ${this.hexToRgba(color, config.gridLineAlpha || "09")} 1px, transparent 1px)`,
               config.sectionBgSize ? `background-size: ${config.sectionBgSize}` : ""
@@ -3723,7 +3723,7 @@ var require_apple_theme = __commonJS({
             return this.getH6Style(config.h6Decoration, color, sizes.h6, font, headingColor, mutedTextColor);
           case "p":
             return this.joinStyleStrings(
-              `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; margin: 0 0 ${config.paragraphGap}px 0; text-align: justify; letter-spacing: 0`,
+              `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; margin: 0 0 ${config.paragraphGap}px 0; text-align: justify; text-align-last: left; letter-spacing: 0; word-break: normal; overflow-wrap: break-word; line-break: strict`,
               config.paragraphTextIndent ? `text-indent: ${config.paragraphTextIndent}` : ""
             );
           case "blockquote":
@@ -5147,15 +5147,15 @@ var require_converter = __commonJS({
           const lineNumberColumnStyles = `text-align:right !important;padding:12px 0 12px 0 !important;border-right:1px solid rgba(255,255,255,0.1) !important;user-select:none !important;background:transparent !important;flex:0 0 auto !important;min-width:3.5em !important;margin:0 !important;`;
           codeHtml = `<section class="code-with-line-numbers" style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;max-width:100% !important;padding:0 !important;margin:0 !important;box-sizing:border-box !important;">
         <section class="code-line-numbers" style="${lineNumberColumnStyles}">${lineNumbersHtml}</section>
-        <section class="code-scroll" style="flex:1 1 0% !important;width:0 !important;max-width:calc(100% - 3.5em) !important;overflow-x:auto !important;overflow-y:visible !important;-webkit-overflow-scrolling:touch !important;padding:12px 12px 12px 16px !important;margin:0 !important;min-width:0 !important;box-sizing:border-box !important;">${codeLinesHtml}</section>
+        <section class="code-scroll" style="flex:1 1 0% !important;width:0 !important;max-width:calc(100% - 3.5em) !important;overflow-x:scroll !important;overflow-y:visible !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;padding:12px 12px 16px 16px !important;margin:0 !important;min-width:0 !important;box-sizing:border-box !important;">${codeLinesHtml}</section>
       </section>`;
         } else {
           const highlighted = this.highlightCode(lines.join("\n"), lang);
           const styled = this.inlineHighlightStyles(highlighted);
           const formatted = this.formatHighlightedCode(styled, true);
-          const codeLinesHtml = `<section style="white-space:nowrap !important;display:inline-block !important;min-width:100% !important;word-break:keep-all !important;overflow-wrap:normal !important;line-height:${lineHeight} !important;font-size:13px !important;margin:0 !important;">${formatted}</section>`;
-          codeHtml = `<section style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;padding:0 !important;margin:0 !important;">
-        <section style="flex:1 1 auto !important;overflow-x:auto !important;overflow-y:visible !important;padding:12px !important;min-width:0 !important;margin:0 !important;">${codeLinesHtml}</section>
+          const codeLinesHtml = `<section class="code-lines" style="white-space:nowrap !important;display:inline-block !important;min-width:100% !important;word-break:keep-all !important;overflow-wrap:normal !important;line-height:${lineHeight} !important;font-size:13px !important;margin:0 !important;">${formatted}</section>`;
+          codeHtml = `<section class="code-without-line-numbers" style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;padding:0 !important;margin:0 !important;">
+        <section class="code-scroll" style="flex:1 1 auto !important;width:100% !important;max-width:100% !important;overflow-x:scroll !important;overflow-y:visible !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;padding:12px 12px 16px 12px !important;min-width:0 !important;margin:0 !important;box-sizing:border-box !important;">${codeLinesHtml}</section>
       </section>`;
         }
         return `<section class="code-snippet__fix" style="width:100% !important;margin:12px 0 !important;background:${background} !important;border:1px solid ${borderColor} !important;border-radius:8px !important;overflow:hidden !important;box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;display:block !important;">
@@ -5622,6 +5622,7 @@ __export(apple_style_view_shared_exports, {
   renderArticleLayoutHtml: () => renderArticleLayoutHtml,
   renderFeishuPublishTab: () => renderFeishuPublishTab,
   renderFeishuSettingsTab: () => renderFeishuSettingsTab,
+  renderMermaidCodeBlocks: () => renderMermaidCodeBlocks,
   renderMultiPlatformSettingsTab: () => renderMultiPlatformSettingsTab,
   renderNativeMarkdown: () => renderNativeMarkdown,
   renderObsidianTripletMarkdown: () => renderObsidianTripletMarkdown,
@@ -39299,6 +39300,47 @@ async function rasterizeSvgToPngDataUrl(svgElement, options = {}) {
 }
 
 // services/rendered-mermaid.js
+var MERMAID_COMPAT_THEME = {
+  theme: "base",
+  flowchart: {
+    htmlLabels: false,
+    useMaxWidth: true,
+    curve: "basis"
+  },
+  themeVariables: {
+    background: "#ffffff",
+    primaryColor: "#efeaff",
+    primaryBorderColor: "#b197fc",
+    primaryTextColor: "#2f2f2f",
+    secondaryColor: "#efeaff",
+    secondaryBorderColor: "#b197fc",
+    secondaryTextColor: "#2f2f2f",
+    tertiaryColor: "#fff7cc",
+    tertiaryBorderColor: "#d6c978",
+    tertiaryTextColor: "#2f2f2f",
+    clusterBkg: "#fff7cc",
+    clusterBorder: "#d6c978",
+    lineColor: "#555555",
+    defaultLinkColor: "#555555",
+    edgeLabelBackground: "#ffffff",
+    mainBkg: "#efeaff",
+    nodeBorder: "#b197fc",
+    textColor: "#2f2f2f",
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+  }
+};
+function hasMermaidInitDirective(source) {
+  return /^\s*%%\{init:/m.test(String(source || ""));
+}
+function buildMermaidCompatSource(source) {
+  const normalized = String(source || "").trim();
+  if (!normalized)
+    return "";
+  if (hasMermaidInitDirective(normalized))
+    return normalized;
+  return `%%{init: ${JSON.stringify(MERMAID_COMPAT_THEME)}}%%
+${normalized}`;
+}
 function normalizeMermaidPreviewHost(host) {
   var _a5;
   if (!host || typeof host.setAttribute !== "function")
@@ -39650,6 +39692,77 @@ function looksLikeMermaidSvg(svg) {
   return !!svg.querySelector(
     "g.node,g.edgePath,g.cluster,g.edgeLabel,g.messageText,g.actor,.node,.edgePath,.cluster,.edgeLabel"
   );
+}
+function isMermaidCodeBlock(codeEl) {
+  var _a5, _b;
+  if (!codeEl || ((_b = (_a5 = codeEl.tagName) == null ? void 0 : _a5.toLowerCase) == null ? void 0 : _b.call(_a5)) !== "code")
+    return false;
+  const className = String(codeEl.getAttribute("class") || "").toLowerCase();
+  if (className.split(/\s+/).includes("language-mermaid"))
+    return true;
+  if (className.includes("language-mermaid"))
+    return true;
+  return !!codeEl.closest(".block-language-mermaid");
+}
+function resolveMermaidApi(options = {}) {
+  if (options.mermaidApi && typeof options.mermaidApi.render === "function") {
+    return options.mermaidApi;
+  }
+  const globalApi = typeof window !== "undefined" ? (
+    /** @type {{ mermaid?: MermaidApiLike } & Window} */
+    window.mermaid
+  ) : null;
+  if (globalApi && typeof globalApi.render === "function") {
+    return globalApi;
+  }
+  return null;
+}
+var mermaidRenderNonce = 0;
+async function renderMermaidCodeBlocks(root, options = {}) {
+  if (!root)
+    return 0;
+  const mermaidApi = resolveMermaidApi(options);
+  if (!mermaidApi)
+    return 0;
+  const codeBlocks = (
+    /** @type {HTMLElement[]} */
+    findAllElements(root, "pre > code").filter(isMermaidCodeBlock)
+  );
+  let renderedCount = 0;
+  for (const codeEl of codeBlocks) {
+    const source = String(codeEl.textContent || "").trim();
+    if (!source)
+      continue;
+    try {
+      mermaidRenderNonce += 1;
+      const renderSource = buildMermaidCompatSource(source);
+      const renderResult = await mermaidApi.render(`obsidian-wechat-mermaid-${mermaidRenderNonce}`, renderSource);
+      const renderObject = typeof renderResult === "string" ? null : (
+        /** @type {MermaidRenderResultLike} */
+        renderResult
+      );
+      const svg = typeof renderResult === "string" ? renderResult : (renderObject == null ? void 0 : renderObject.svg) || "";
+      if (!svg)
+        continue;
+      const activeDocument = getActiveDocument();
+      if (!activeDocument)
+        continue;
+      const host = activeDocument.createElement("div");
+      host.setAttribute("class", "mermaid");
+      host.setAttribute("data-obsidian-wechat-mermaid", "true");
+      setElementHtml(host, svg);
+      normalizeRenderedMermaidDiagrams(host);
+      if (typeof (renderObject == null ? void 0 : renderObject.bindFunctions) === "function") {
+        renderObject.bindFunctions(host);
+      }
+      const pre = codeEl.closest("pre");
+      (pre || codeEl).replaceWith(host);
+      renderedCount += 1;
+    } catch (error) {
+      console.error("Mermaid \u4EE3\u7801\u5757\u6E32\u67D3\u5931\u8D25\uFF0C\u4FDD\u7559\u539F\u59CB\u4EE3\u7801\u5757:", error);
+    }
+  }
+  return renderedCount;
 }
 
 // services/ai-layout-runtime/generated-skills.js
@@ -55218,6 +55331,7 @@ var {
   normalizeVaultPath: normalizeVaultPath2,
   isAbsolutePathLike: isAbsolutePathLike2,
   renderObsidianTripletMarkdown: renderObsidianTripletMarkdown2,
+  renderMermaidCodeBlocks: renderMermaidCodeBlocks2,
   canUseNativePreviewFastPath: canUseNativePreviewFastPath2,
   renderNativeMarkdown: renderNativeMarkdown2,
   convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages2,
@@ -55712,6 +55826,7 @@ var coreMethods = {
                 settings: contextSettings,
                 component: this,
                 markdownRenderer: obsidianApi2.MarkdownRenderer,
+                mermaidCodeRenderer: renderMermaidCodeBlocks2,
                 rasterizeMermaid: false,
                 preserveSvgStyleTags: true
               })
@@ -59555,7 +59670,7 @@ var clipboardMethods = {
         return;
       const pre = activeDocument.createElement("pre");
       pre.setAttribute("class", "hljs code__pre");
-      pre.setAttribute("style", `width:100% !important;max-width:100% !important;margin:12px 0 !important;background:${background} !important;border:${border} !important;border-radius:${borderRadius} !important;box-shadow:0 4px 12px rgba(0,0,0,0.3) !important;overflow-x:auto !important;overflow-y:hidden !important;-webkit-overflow-scrolling:touch !important;box-sizing:border-box !important;font-family:'SF Mono',Consolas,Monaco,monospace !important;font-size:13px !important;line-height:1.75 !important;color:#f0f6fc !important;white-space:normal !important;`);
+      pre.setAttribute("style", `width:100% !important;max-width:100% !important;margin:12px 0 !important;background:${background} !important;border:${border} !important;border-radius:${borderRadius} !important;box-shadow:0 4px 12px rgba(0,0,0,0.3) !important;overflow-x:scroll !important;overflow-y:hidden !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;box-sizing:border-box !important;font-family:'SF Mono',Consolas,Monaco,monospace !important;font-size:13px !important;line-height:1.75 !important;color:#f0f6fc !important;white-space:normal !important;`);
       if (hasMacHeader) {
         const toolbar = activeDocument.createElement("section");
         const toolbarStyle = "display:block !important;background:#161b22 !important;padding:6px 10px 6px 10px !important;border:none !important;border-bottom:1px solid #30363d !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;box-sizing:border-box !important;width:100% !important;";
@@ -59571,19 +59686,14 @@ var clipboardMethods = {
       if (shouldKeepFixedLineNumbers) {
         const lineNumbersHtml = codeLineParts.map((_, index) => {
           const lineNumber = lineNumberLabels[index] || String(index + 1);
-          return `<section style="padding:0 10px 0 0 !important;line-height:1.75 !important;color:#95989C !important;">${lineNumber}</section>`;
+          return `<section style="display:block !important;height:1.75em !important;line-height:1.75 !important;padding:0 10px 0 0 !important;margin:0 !important;color:#95989C !important;white-space:nowrap !important;box-sizing:border-box !important;">${lineNumber}</section>`;
         }).join("");
         const codeInnerHtml = codeLineParts.map((lineHtml) => lineHtml || "&nbsp;").join("<br/>");
         const codeWithLineNumbersStyle = "display:block !important;width:100% !important;min-width:100% !important;max-width:100% !important;padding:0 !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:normal !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;";
         code.setAttribute("style", codeWithLineNumbersStyle);
-        setElementHtml6(code, `<section style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;max-width:100% !important;padding:0 !important;box-sizing:border-box !important;margin:0 !important;">
-        <section class="line-numbers" style="text-align:right !important;padding:12px 0 !important;border-right:1px solid rgba(255,255,255,0.1) !important;user-select:none !important;background:transparent !important;flex:0 0 auto !important;min-width:3.5em !important;box-sizing:border-box !important;margin:0 !important;">${lineNumbersHtml}</section>
-        <section class="code-scroll" style="flex:1 1 auto !important;overflow-x:auto !important;overflow-y:visible !important;-webkit-overflow-scrolling:touch !important;padding:12px 12px 12px 16px !important;min-width:0 !important;box-sizing:border-box !important;margin:0 !important;">
-          <section style="white-space:pre !important;min-width:max-content !important;line-height:1.75 !important;font-size:13px !important;margin:0 !important;">${codeInnerHtml}</section>
-        </section>
-      </section>`);
+        setElementHtml6(code, `<section style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;max-width:100% !important;padding:0 !important;box-sizing:border-box !important;margin:0 !important;"><section class="line-numbers" style="text-align:right !important;padding:12px 0 !important;border-right:1px solid rgba(255,255,255,0.1) !important;user-select:none !important;background:transparent !important;flex:0 0 auto !important;min-width:3.5em !important;box-sizing:border-box !important;margin:0 !important;">${lineNumbersHtml}</section><section class="code-scroll" style="flex:1 1 auto !important;overflow-x:scroll !important;overflow-y:visible !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;padding:12px 12px 16px 16px !important;min-width:0 !important;box-sizing:border-box !important;margin:0 !important;"><section style="white-space:pre !important;min-width:max-content !important;line-height:1.75 !important;font-size:13px !important;margin:0 !important;">${codeInnerHtml}</section></section></section>`);
       } else {
-        const codeScrollableStyle = "display:block !important;width:max-content !important;min-width:100% !important;max-width:none !important;padding:12px !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:nowrap !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;";
+        const codeScrollableStyle = "display:block !important;width:max-content !important;min-width:100% !important;max-width:none !important;padding:12px 12px 16px 12px !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:nowrap !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;";
         code.setAttribute("style", codeScrollableStyle);
         setElementHtml6(code, codeLinesHtml);
       }

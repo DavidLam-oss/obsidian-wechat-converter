@@ -8,6 +8,7 @@ const {
   normalizeVaultPath,
   isAbsolutePathLike,
   renderObsidianTripletMarkdown,
+  renderMermaidCodeBlocks,
   canUseNativePreviewFastPath,
   renderNativeMarkdown,
   convertRenderedMermaidDiagramsToImages,
@@ -570,6 +571,7 @@ async loadDependencies() {
           settings: contextSettings,
           component: this,
           markdownRenderer: obsidianApi.MarkdownRenderer,
+          mermaidCodeRenderer: renderMermaidCodeBlocks,
           rasterizeMermaid: false,
           preserveSvgStyleTags: true,
         }));
