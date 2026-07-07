@@ -1,3 +1,30 @@
+/*
+## 核心功能
+
+为 Vitest 和 Node 测试环境提供 Obsidian API mock，隔离真实 Obsidian 客户端依赖。
+
+## 输入
+
+接收测试用例对 Obsidian 类、Notice、requestUrl、DOM helper 和插件基类的调用。
+
+## 输出
+
+对外暴露可被测试导入的 Obsidian 兼容 mock、调用记录和重置工具。
+
+## 定位
+
+位于 __mocks__，只服务测试运行时，不承载生产插件逻辑。
+
+## 依赖
+
+关键依赖：无直接模块导入；依赖当前运行环境或同文件内工具函数。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 __mocks__ 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 // __mocks__/obsidian.js
 //
 // Extra over the bare-minimum stub:

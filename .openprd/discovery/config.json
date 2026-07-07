@@ -1,0 +1,21 @@
+{
+  "activeChange": null,
+  "taskSharding": {
+    "maxItemsPerFile": 25,
+    "handoffRequired": true,
+    "firstFile": "tasks.md",
+    "nextFilePattern": "tasks-###.md"
+  },
+  "taskMetadata": {
+    "stableIdPattern": "T###.##",
+    "required": [
+      "done",
+      "verify"
+    ],
+    "optional": [
+      "deps",
+      "type"
+    ],
+    "dependencyOrder": "dependencies must appear before dependents"
+  }
+}

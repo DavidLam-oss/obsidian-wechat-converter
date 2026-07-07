@@ -1,3 +1,30 @@
+/*
+## 核心功能
+
+归一化和维护插件设置相关的 plugin settings 能力。
+
+## 输入
+
+接收持久化设置、默认值、历史版本字段和用户表单输入。
+
+## 输出
+
+输出 `createDefaultSettings`、`normalizeLoadedSettings`，供入口、设置页和同步服务共享。
+
+## 定位
+
+位于 services/，属于设置数据层；不直接渲染 UI。
+
+## 依赖
+
+关键依赖：`./path-utils.js`、`./wechatsync-settings.js`、`./feishu-settings.js`、`./wechat-draft-cache.js`、`./ai-layout.js`。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 services 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 import { normalizeVaultPath } from './path-utils.js';
 import {
   createDefaultMultiPlatformSyncSettings,

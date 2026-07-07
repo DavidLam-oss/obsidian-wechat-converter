@@ -1,3 +1,30 @@
+/*
+## 核心功能
+
+素材选择器弹窗的布局、列表和操作区样式
+
+## 输入
+
+接收 Obsidian DOM 结构、插件视图类名、发布弹窗状态和主题变量。
+
+## 输出
+
+输出 CSS 选择器、布局规则、颜色变量和响应式表现。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、插件 DOM class 命名和对应 views/ 结构。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 .wechat-feishu-section .setting-item:last-of-type {
   padding-bottom: 0;
 }

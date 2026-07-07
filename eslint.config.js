@@ -1,3 +1,30 @@
+/*
+## 核心功能
+
+定义仓库 ESLint 规则、扫描边界和 Obsidian review 风险约束。
+
+## 输入
+
+接收 ESLint flat config 运行上下文、源码路径和项目 lint 脚本。
+
+## 输出
+
+输出 lint 配置数组，供 npm run lint 与 scan:guard 使用。
+
+## 定位
+
+位于根目录，是质量工具配置，不参与插件运行时。
+
+## 依赖
+
+关键依赖：`@eslint/js`、`globals`、`eslint-plugin-obsidianmd`、`@microsoft/eslint-plugin-sdl`、`@typescript-eslint/eslint-plugin`。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 根目录 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 import js from "@eslint/js";
 import globals from "globals";
 import obsidianmd from "eslint-plugin-obsidianmd";
@@ -128,6 +155,9 @@ export default [
       "services/obsidian-fetch-adapter.js",
       "services/native-renderer.js",
       "services/obsidian-triplet-renderer.js",
+      "services/obsidian-triplet-renderer-images.js",
+      "services/obsidian-triplet-serializer-images.js",
+      "services/obsidian-triplet-serializer-utils.js",
       "services/obsidian-triplet-serializer.js",
       "services/rendered-mermaid.js",
       "services/svg-rasterizer.js",
@@ -139,6 +169,7 @@ export default [
       "services/wechat-media.js",
       "services/wechat-sync.js",
       "services/wechatsync-bridge.js",
+      "services/wechatsync-bridge-runtime.js",
       "services/wechatsync-constants.js",
       "services/wechatsync-results.js",
       "services/wechatsync-settings.js",

@@ -17,12 +17,31 @@ OBSIDIAN_REVIEW_*.md
 
 docs/*
 !docs/support.md
+!docs/basic/
+!docs/basic/**
 
 # Local skill directories
-.codex/
+.codex/*
+!.codex/config.toml
+!.codex/hooks.json
+!.codex/hooks/
+!.codex/hooks/**
+!.codex/prompts/
+!.codex/prompts/**
+!.codex/skills/
+!.codex/skills/**
+.codex/**/.DS_Store
+.codex/skills/project-release
 .claude/skills/project-release/
 
 # Generated vendored dependencies
 lib/markdown-it.min.js
 lib/highlight.min.js
 lib/mathjax-plugin.js
+.openprd/harness/
+.openprd/learning/
+.openprd/quality/reports/
+.openprd/knowledge/candidates/
+.openprd/knowledge/drafts/
+.openprd/knowledge/review-signals.jsonl
+.openprd/growth/preferences.local.json

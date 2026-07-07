@@ -1,0 +1,76 @@
+{
+  "type": "product-flow",
+  "locale": "zh-CN",
+  "title": "示例产品流程评审",
+  "subtitle": "说明预期用户与系统顺序，便于确认",
+  "actors": [
+    "用户",
+    "系统"
+  ],
+  "steps": [
+    {
+      "id": "step-1",
+      "name": "用户进入流程",
+      "type": "user_action",
+      "lane": "用户",
+      "description": "流程从这里开始"
+    },
+    {
+      "id": "step-2",
+      "name": "系统处理请求",
+      "type": "system_process",
+      "lane": "系统",
+      "details": [
+        "核心系统响应"
+      ]
+    },
+    {
+      "id": "step-3",
+      "name": "决策点",
+      "type": "decision",
+      "lane": "系统",
+      "description": "根据结果分支"
+    },
+    {
+      "id": "step-4",
+      "name": "成功完成",
+      "type": "success",
+      "lane": "系统",
+      "description": "顺利路径结果"
+    }
+  ],
+  "transitions": [
+    {
+      "from_step_id": "step-1",
+      "to_step_id": "step-2",
+      "label": "开始"
+    },
+    {
+      "from_step_id": "step-2",
+      "to_step_id": "step-3",
+      "label": "继续"
+    },
+    {
+      "from_step_id": "step-3",
+      "to_step_id": "step-4",
+      "label": "成功",
+      "type": "standard"
+    }
+  ],
+  "summaryCards": [
+    {
+      "title": "评审重点",
+      "color": "decision",
+      "items": [
+        "确认步骤顺序",
+        "确认缺失的恢复路径"
+      ]
+    }
+  ],
+  "reviewInstructions": [
+    "确认缺失步骤、决策点和错误路径。"
+  ],
+  "metadata": {
+    "reviewStatus": "pending-confirmation"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-07T15:59:58.777Z",
+  "summary": {
+    "eventCount": 2,
+    "observed": 0,
+    "pendingObserved": 0,
+    "autoApplied": 0,
+    "manualApplied": 0,
+    "reconciledAutoApplied": 0,
+    "rejected": 0,
+    "skipped": 0,
+    "completionCheckpoints": 2,
+    "skippedReasons": {},
+    "current": {
+      "total": 0,
+      "pending": 0,
+      "applied": 0,
+      "rejected": 0
+    }
+  },
+  "recentEvents": [
+    {
+      "version": 1,
+      "at": "2026-07-07T14:23:39.436Z",
+      "action": "checkpoint",
+      "outcome": "quality-verify",
+      "candidateId": null,
+      "candidateType": null,
+      "scope": "project",
+      "autoApplied": false,
+      "applyMode": null,
+      "reason": "README.md|lib/highlight.min.js|lib/markdown-it.min.js|lib/math-entry.js",
+      "changed": [
+        "README.md",
+        "lib/highlight.min.js",
+        "lib/markdown-it.min.js",
+        "lib/math-entry.js",
+        "lib/mathjax-plugin.js",
+        "lib/obsidian-wechat-converter_lib_README.md",
+        "package.json",
+        "scripts/build-ai-layout-runtime.mjs",
+        "scripts/build-styles.mjs",
+        "scripts/check-build-artifacts.mjs",
+        "scripts/check-scan-risk-patterns.mjs",
+        "scripts/generate-embedded-deps.mjs"
+      ]
+    },
+    {
+      "version": 1,
+      "at": "2026-07-07T14:06:25.602Z",
+      "action": "checkpoint",
+      "outcome": "doctor-passed",
+      "candidateId": null,
+      "candidateType": null,
+      "scope": "project",
+      "autoApplied": false,
+      "applyMode": null,
+      "reason": "doctor-post-completion",
+      "changed": []
+    }
+  ]
+}

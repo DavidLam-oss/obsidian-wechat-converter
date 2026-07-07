@@ -1,0 +1,415 @@
+<!-- starter-defaults: lens=editorial-contrast theme=warm-editorial layout=story-map -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>内容型首页模板</title>
+    <style>
+      :root {
+        --bg: #f3ecdf;
+        --panel: rgba(255, 251, 244, 0.88);
+        --ink: #241b16;
+        --muted: #6a564c;
+        --line: rgba(52, 36, 27, 0.16);
+        --accent: #8f5b3f;
+        --accent-soft: rgba(143, 91, 63, 0.14);
+        --shadow: 0 18px 48px rgba(43, 28, 20, 0.12);
+        --radius: 24px;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "PingFang SC", "Noto Sans SC", "Helvetica Neue", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(165, 118, 83, 0.16), transparent 34%),
+          linear-gradient(180deg, #f6f0e4 0%, var(--bg) 100%);
+      }
+
+      .page {
+        width: min(1180px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 32px 0 56px;
+      }
+
+      .hero,
+      .section,
+      .cta {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 24px;
+        padding: 28px;
+      }
+
+      .eyebrow,
+      .kicker {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 13px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p { margin: 0; }
+
+      h1 {
+        margin-top: 18px;
+        font-family: "Songti SC", "STSong", serif;
+        font-size: clamp(34px, 5vw, 58px);
+        line-height: 1.06;
+        font-weight: 600;
+      }
+
+      .lede {
+        margin-top: 16px;
+        max-width: 52ch;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+
+      .hero-actions,
+      .stat-row,
+      .card-grid,
+      .mini-grid,
+      .timeline {
+        display: grid;
+        gap: 14px;
+      }
+
+      .hero-actions {
+        margin-top: 24px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .button,
+      .ghost {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 48px;
+        padding: 0 18px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        text-decoration: none;
+      }
+
+      .button {
+        background: var(--ink);
+        color: #fff;
+      }
+
+      .ghost {
+        color: var(--ink);
+        background: rgba(255, 255, 255, 0.56);
+      }
+
+      .feature-panel {
+        min-height: 100%;
+        padding: 22px;
+        border-radius: 20px;
+        border: 1px dashed rgba(56, 42, 32, 0.22);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(245, 235, 222, 0.7)),
+          repeating-linear-gradient(135deg, rgba(126, 95, 70, 0.06) 0 14px, transparent 14px 28px);
+        display: grid;
+        gap: 16px;
+        align-content: start;
+      }
+
+      .feature-panel ul {
+        padding-left: 18px;
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .feature-copy {
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .feature-media,
+      .card-media {
+        overflow: hidden;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.54);
+      }
+
+      .feature-media {
+        min-height: 260px;
+      }
+
+      .card-media {
+        aspect-ratio: 4 / 3;
+        margin-bottom: 14px;
+      }
+
+      .media-frame,
+      .media-fallback {
+        height: 100%;
+        min-height: inherit;
+      }
+
+      .media-frame {
+        display: grid;
+      }
+
+      .media-frame img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+
+      .media-frame figcaption,
+      .media-fallback span {
+        padding: 12px 14px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .media-frame figcaption {
+        border-top: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .media-fallback {
+        display: grid;
+        place-items: center;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(243, 233, 219, 0.86)),
+          repeating-linear-gradient(135deg, rgba(126, 95, 70, 0.08) 0 16px, transparent 16px 32px);
+      }
+
+      .stat-row {
+        margin-top: 22px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .stat,
+      .card,
+      .mini-card,
+      .timeline-card {
+        padding: 18px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.56);
+      }
+
+      .stat strong,
+      .timeline-card strong {
+        display: block;
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+
+      .section {
+        margin-top: 20px;
+        padding: 24px;
+      }
+
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .section-head p {
+        max-width: 42ch;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .card h3,
+      .mini-card h3 {
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      .card p,
+      .mini-card p,
+      .timeline-card p {
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .mini-grid {
+        grid-template-columns: 1.1fr 0.9fr;
+      }
+
+      .timeline {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .cta {
+        margin-top: 20px;
+        padding: 24px 26px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .cta p {
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      @media (max-width: 920px) {
+        .hero,
+        .mini-grid,
+        .timeline,
+        .card-grid,
+        .stat-row,
+        .cta {
+          grid-template-columns: 1fr;
+          display: grid;
+        }
+
+        .cta {
+          align-items: start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <div>
+          <span class="eyebrow">内容型首页模板</span>
+          <h1>[品牌名 / 首页主题]</h1>
+          <p class="lede">[这里放一句能说明这次首页体验目标的引导文案。它应该同时带出内容气质、用户第一步动作和页面的核心价值。]</p>
+          <div class="hero-actions">
+            <a class="button" href="#">[主动作]</a>
+            <a class="ghost" href="#">[次动作]</a>
+          </div>
+          <div class="stat-row">
+            <article class="stat">
+              <span class="kicker">事实卡</span>
+              <strong>[关键事实]</strong>
+              <p>[事实说明或时间/价格/地点]</p>
+            </article>
+            <article class="stat">
+              <span class="kicker">结构卡</span>
+              <strong>[模块入口]</strong>
+              <p>[说明该入口为什么重要]</p>
+            </article>
+            <article class="stat">
+              <span class="kicker">提醒卡</span>
+              <strong>[准备事项]</strong>
+              <p>[到访提醒 / 条件 / 风险]</p>
+            </article>
+          </div>
+        </div>
+        <aside class="feature-panel">
+          <div class="feature-media">[视觉锚点媒体]</div>
+          <div>
+            <span class="kicker">视觉锚点</span>
+            <h2 style="margin-top: 14px;">[内容型封面区 / 示意图 / 地图 / 馆藏编号]</h2>
+          </div>
+          <p class="feature-copy">[这里不必是真实摄影，但要有清楚的内容暗示]</p>
+          <ul>
+            <li>[用纸张、纹理、编号、导览标签或卡片秩序承接气质]</li>
+            <li>[避免把它做成通用 SaaS hero]</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <span class="kicker">推荐内容</span>
+            <h2 style="margin-top: 10px;">[今日推荐 / 值得先看的内容]</h2>
+          </div>
+          <p>[这里解释这一组内容是按什么逻辑排序，帮助用户快速进入当前主题。]</p>
+        </div>
+        <div class="card-grid">
+          <article class="card">
+            <div class="card-media">[推荐媒体一]</div>
+            <h3>[推荐项一]</h3>
+            <p>[一句说明内容价值、位置或推荐理由。]</p>
+          </article>
+          <article class="card">
+            <div class="card-media">[推荐媒体二]</div>
+            <h3>[推荐项二]</h3>
+            <p>[一句说明内容价值、位置或推荐理由。]</p>
+          </article>
+          <article class="card">
+            <div class="card-media">[推荐媒体三]</div>
+            <h3>[推荐项三]</h3>
+            <p>[一句说明内容价值、位置或推荐理由。]</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section mini-grid">
+        <article class="mini-card">
+          <span class="kicker">浏览结构</span>
+          <h2 style="margin-top: 12px;">[楼层 / 栏目 / 导览分区]</h2>
+          <p style="margin-top: 10px;">[用清楚的浏览结构告诉用户怎么从“看什么”过渡到“怎么去”。]</p>
+        </article>
+        <article class="mini-card">
+          <span class="kicker">路线与准备</span>
+          <h2 style="margin-top: 12px;">[路线 / 门票 / 到访准备]</h2>
+          <p style="margin-top: 10px;">[把行动入口放在内容之后，但别藏得太深。]</p>
+        </article>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <span class="kicker">行动流程</span>
+            <h2 style="margin-top: 10px;">[从浏览到出发的时间轴]</h2>
+          </div>
+          <p>[适合路线规划、参观准备、报名、到访前后流程这类需要顺序感的内容。]</p>
+        </div>
+        <div class="timeline">
+          <article class="timeline-card">
+            <strong>01</strong>
+            <p>[步骤一]</p>
+          </article>
+          <article class="timeline-card">
+            <strong>02</strong>
+            <p>[步骤二]</p>
+          </article>
+          <article class="timeline-card">
+            <strong>03</strong>
+            <p>[步骤三]</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="cta">
+        <div>
+          <span class="kicker">最终动作</span>
+          <h2 style="margin-top: 10px;">[最后一段转化区标题]</h2>
+          <p style="margin-top: 8px;">[用一句人话把内容价值和下一步动作收拢起来。]</p>
+        </div>
+        <a class="button" href="#">[确认动作]</a>
+      </section>
+    </main>
+  </body>
+</html>

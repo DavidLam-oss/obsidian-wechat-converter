@@ -1,0 +1,146 @@
+name: prd-core
+version: 1
+description: Canonical PRD schema for OpenPrd
+
+sections:
+  meta:
+    requiredFields:
+      - title
+      - owner
+      - version
+      - status
+      - productType
+
+  problem:
+    requiredFields:
+      - problemStatement
+      - whyNow
+      - evidence
+
+  users:
+    requiredFields:
+      - primaryUsers
+      - stakeholders
+
+  goals:
+    requiredFields:
+      - successMetrics
+      - acceptanceGoals
+
+  validation:
+    requiredFields:
+      - community
+      - seedUsers
+      - communityFit
+      - currentAlternative
+      - painEvidence
+      - manualPath
+      - manualPlaybook
+      - commitmentSignals
+      - firstValidationStep
+      - defaultAlivePlan
+      - paymentProof
+      - mvpSlice
+      - weekendTest
+      - smallestExecution
+      - productizeGate
+      - firstCustomerPath
+      - pricingHypothesis
+      - customerOneProfitability
+      - growthDiscipline
+      - reversibility
+      - customerTruth
+      - valuesFit
+
+  scope:
+    requiredFields:
+      - inScope
+      - outOfScope
+
+  scenarios:
+    requiredFields:
+      - primaryFlows
+      - edgeCases
+      - failureModes
+
+  requirements:
+    requiredFields:
+      - functional
+      - nonFunctional
+
+  businessGuardrails:
+    conditional:
+      when:
+        - free users
+        - usage limits
+        - metered cost
+        - AI or third-party cost
+    requiredFields:
+      - costDrivers
+      - usageLimits
+      - abusePrevention
+      - monitoringSignals
+      - alertThresholds
+      - stopLossActions
+
+  constraints:
+    requiredFields:
+      - technical
+      - compliance
+      - dependency
+
+  risks:
+    requiredFields:
+      - assumptions
+      - risks
+      - openQuestions
+
+  handoff:
+    requiredFields:
+      - owner
+      - nextStep
+      - targetSystem
+
+extensions:
+  consumer:
+    requiredFields:
+      - persona
+      - journey
+      - activationMetric
+      - retentionMetric
+
+  b2b:
+    requiredFields:
+      - roles
+      - asIs
+      - toBe
+      - permissionMatrix
+      - approvalFlow
+
+  agent:
+    requiredFields:
+      - humanAgentContract
+      - autonomyBoundary
+      - toolBoundary
+      - stateModel
+      - evalPlan
+
+validation:
+  freeze:
+    mustHaveSections:
+      - meta
+      - problem
+      - users
+      - goals
+      - scope
+      - scenarios
+      - requirements
+      - businessGuardrails
+      - constraints
+      - risks
+
+  versioning:
+    strategy: semver
+    allowBreakingOnlyWith:
+      - explicitApproval
+      - migrationNote

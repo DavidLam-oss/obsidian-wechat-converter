@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "themes": [
+    {
+      "id": "quiet-sand",
+      "useFor": ["editorial-contrast", "catalog-clarity"],
+      "summary": "Warm neutral editorial theme with restrained contrast.",
+      "bodyFont": "\"Avenir Next\", \"Noto Sans SC\", \"PingFang SC\", sans-serif",
+      "headlineFont": "\"Iowan Old Style\", \"Noto Serif SC\", \"Songti SC\", serif",
+      "surfacePreset": "paper-grid",
+      "tokens": {
+        "background": "#F6F1E8",
+        "surface": "#FFFDF8",
+        "text": "#1F1A17",
+        "muted": "#6B625C",
+        "accent": "#A64B2A",
+        "border": "#D8CEC1",
+        "radius": "8px",
+        "shadow": "0 12px 32px rgba(31,26,23,0.08)"
+      }
+    },
+    {
+      "id": "deep-launch",
+      "useFor": ["product-launch", "immersive-showcase"],
+      "summary": "Dark, cinematic launch theme with controlled highlight color.",
+      "bodyFont": "\"Avenir Next\", \"Noto Sans SC\", \"PingFang SC\", sans-serif",
+      "headlineFont": "\"DIN Condensed\", \"Avenir Next Condensed\", \"Noto Sans SC\", \"PingFang SC\", sans-serif",
+      "surfacePreset": "dark-mesh",
+      "tokens": {
+        "background": "#0D1117",
+        "surface": "#131A23",
+        "text": "#F5F7FA",
+        "muted": "#A0A8B3",
+        "accent": "#34D3A2",
+        "border": "#243140",
+        "radius": "8px",
+        "shadow": "0 16px 40px rgba(0,0,0,0.35)"
+      }
+    },
+    {
+      "id": "warm-editorial",
+      "useFor": ["editorial-contrast", "product-launch"],
+      "summary": "Bright magazine-like theme with warmer accents and layered typography.",
+      "bodyFont": "\"Avenir Next\", \"PingFang SC\", sans-serif",
+      "headlineFont": "\"Iowan Old Style\", \"Noto Serif SC\", \"Songti SC\", serif",
+      "surfacePreset": "paper-grid",
+      "tokens": {
+        "background": "#FFF9F1",
+        "surface": "#FFFFFF",
+        "text": "#1B1714",
+        "muted": "#6A6258",
+        "accent": "#D96B34",
+        "border": "#E7D8C7",
+        "radius": "6px",
+        "shadow": "0 10px 24px rgba(27,23,20,0.07)"
+      }
+    },
+    {
+      "id": "warm-invitation",
+      "useFor": ["warm-invitation", "editorial-contrast", "product-launch"],
+      "summary": "Welcoming paper-neutral theme with terracotta action color, brass support accents, serif-led headings, and soft-line surfaces.",
+      "bodyFont": "\"Noto Sans SC\", \"Avenir Next\", \"PingFang SC\", sans-serif",
+      "headlineFont": "\"Noto Serif SC\", \"Iowan Old Style\", \"Songti SC\", serif",
+      "surfacePreset": "paper-grid",
+      "tokens": {
+        "background": "#F7F5F2",
+        "surface": "#FFFDFB",
+        "text": "#2C2C2C",
+        "muted": "#6F6A63",
+        "accent": "#CC7D5E",
+        "border": "#E6E2DC",
+        "radius": "20px",
+        "shadow": "0 14px 34px rgba(44,44,44,0.08)"
+      }
+    },
+    {
+      "id": "tool-neutral",
+      "useFor": ["operational-density", "catalog-clarity"],
+      "summary": "Quiet operational theme for work-focused interfaces.",
+      "bodyFont": "\"Aptos\", \"Avenir Next\", \"Noto Sans SC\", \"PingFang SC\", sans-serif",
+      "headlineFont": "\"Aptos Display\", \"Avenir Next\", \"Noto Sans SC\", \"PingFang SC\", sans-serif",
+      "surfacePreset": "workbench-grid",
+      "tokens": {
+        "background": "#F4F6F8",
+        "surface": "#FFFFFF",
+        "text": "#17212B",
+        "muted": "#5F6B76",
+        "accent": "#2F80ED",
+        "border": "#D9E1E8",
+        "radius": "6px",
+        "shadow": "0 6px 18px rgba(23,33,43,0.06)"
+      }
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+version: 1
+schema: openprd.benchmarks.v1
+updatedAt: 2026-06-09 12:58:27
+sources:
+  - id: github-com-slavingia-skills
+    title: slavingia/skills
+    scope: project
+    status: approved
+    sourceType: github
+    sourceKey: github.com/slavingia/skills
+    url: https://github.com/slavingia/skills
+    path: null
+    repo: slavingia/skills
+    researchMethod: deepwiki_then_github
+    scenarios:
+      - skill-design
+    triggerWhen:
+      - 设计 skill 触发、metadata、安装方式、自动识别或项目级覆盖规则
+    notFor:
+      - 普通 PRD / 产品流程设计
+      - 与 CLI 无关的一次性 UI 视觉问题
+      - 单次脚本报错或纯环境权限问题
+    note: DeepWiki read_wiki_structure + ask_question showed a reusable community -> workaround ->
+      manual-first -> commitment -> productize -> default-alive framework for L2 requirement
+      validation and brainstorm.
+    value: DeepWiki read_wiki_structure + ask_question showed a reusable community -> workaround ->
+      manual-first -> commitment -> productize -> default-alive framework for L2 requirement
+      validation and brainstorm.
+    adoptedCount: 2
+    lastUsedAt: 2026-06-09 12:58:27
+    evidence:
+      - observedAt: 2026-06-09 11:21:58
+        task: null
+        reason: DeepWiki read_wiki_structure + ask_question showed a reusable community -> workaround ->
+          manual-first -> commitment -> productize -> default-alive framework for L2 requirement
+          validation and brainstorm.
+        adoptedSignal: user-adopted
+        source: https://github.com/slavingia/skills
+      - observedAt: 2026-06-09 12:58:27
+        task: null
+        reason: "DeepWiki structure + targeted questions completed on 2026-06-09; key extracted principles:
+          community-first, 10 specific people, current workaround as competition, processize before
+          productize, spreadsheet/no-code first, 10+ paying before automation, 100 paying before
+          launch, spend time before money."
+        adoptedSignal: user-adopted
+        source: https://github.com/slavingia/skills
+    recentAdoptedCount: 2
+    promotion:
+      threshold: 3
+      windowDays: 7
+      recommended: false
+      recommendedAt: null
+      approveCommand: null
+    addedAt: 2026-06-09 11:21:58
+    approvedAt: 2026-06-09 12:01:15
+    lastVerified: null
+  - id: milvus-io-ai-code-review-gets-better-when-models-debate-claude-vs-gemini-vs-code
+    title: milvus.io/ai-code-review-gets-better-when-models-debate-claude-vs-gemini-vs-codex-vs-qwen-vs-minimax.md
+    scope: project
+    status: approved
+    sourceType: engineering-article
+    sourceKey: null
+    url: https://milvus.io/ar/blog/ai-code-review-gets-better-when-models-debate-claude-vs-gemini-vs-codex-vs-qwen-vs-minimax.md
+    path: null
+    repo: null
+    researchMethod: official_page_first
+    scenarios:
+      - agent-harness
+      - pr-review-harness
+    triggerWhen:
+      - 设计 Agent harness、长程任务、状态持久化、验证门禁或人工接管
+      - 设计 merge 前高风险复核、独立 reviewer 交叉验证、误报过滤、reviewer agreement 或 merge recommendation
+    notFor:
+      - 普通 PRD / 产品流程设计
+      - 与 CLI 无关的一次性 UI 视觉问题
+      - 默认给每个低风险 PR 拉起多 reviewer 并行审查
+    note: AI code review / PR review harness；reviewer agreement、交叉验证、误报过滤、hallucination filter、merge
+      recommendation
+    value: AI code review / PR review harness；reviewer agreement、交叉验证、误报过滤、hallucination filter、merge
+      recommendation
+    adoptedCount: 0
+    lastUsedAt: null
+    evidence: []
+    recentAdoptedCount: 0
+    promotion:
+      threshold: 3
+      windowDays: 7
+      recommended: false
+      recommendedAt: null
+      approveCommand: null
+    addedAt: 2026-05-28 11:01:00
+    approvedAt: 2026-05-28 11:01:06
+    lastVerified: 2026-06-01 11:56:02
+  - id: nolanlawson-com-using-ai-to-write-better-code-more-slowly
+    title: nolanlawson.com/using-ai-to-write-better-code-more-slowly
+    scope: project
+    status: approved
+    sourceType: web
+    sourceKey: null
+    url: https://nolanlawson.com/2026/05/25/using-ai-to-write-better-code-more-slowly/
+    path: null
+    repo: null
+    researchMethod: official_page_first
+    scenarios:
+      - agent-harness
+      - pr-review-harness
+    triggerWhen:
+      - 设计 Agent harness、长程任务、状态持久化、验证门禁或人工接管
+      - 设计 merge 前高风险复核、独立 reviewer 交叉验证、误报过滤、reviewer agreement 或 merge recommendation
+    notFor:
+      - 普通 PRD / 产品流程设计
+      - 与 CLI 无关的一次性 UI 视觉问题
+      - 默认给每个低风险 PR 拉起多 reviewer 并行审查
+    note: AI code review / PR review harness；独立审查、主代理先不站队、汇总后再验证、critical/high/medium/low 分级、merge
+      recommendation
+    value: AI code review / PR review harness；独立审查、主代理先不站队、汇总后再验证、critical/high/medium/low 分级、merge
+      recommendation
+    adoptedCount: 0
+    lastUsedAt: null
+    evidence: []
+    recentAdoptedCount: 0
+    promotion:
+      threshold: 3
+      windowDays: 7
+      recommended: false
+      recommendedAt: null
+      approveCommand: null
+    addedAt: 2026-05-28 11:00:52
+    approvedAt: 2026-05-28 11:01:06
+    lastVerified: 2026-06-01 11:56:05

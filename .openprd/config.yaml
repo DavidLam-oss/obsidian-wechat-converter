@@ -1,0 +1,60 @@
+version: 1
+schema: prd-core
+activeTemplatePack: consumer
+supportedProductTypes:
+  - consumer
+  - b2b
+  - agent
+templateInheritance:
+  - base
+  - industry
+  - company
+  - project
+  - session
+workflow:
+  discovery:
+    steps:
+      - classify
+      - interview
+      - synthesize
+      - standards
+      - validate
+      - freeze
+  handoff:
+    target: openspec
+learningReview:
+  enabled: true
+  autoOpen: true
+  defaultGenre: internet-product
+  sourceScope: workspace
+quality:
+  enabled: true
+  command: openprd quality . --verify
+  reportFormat: html
+design:
+  enabled: true
+  frameworkRoot: .openprd/design
+  templateRoot: .openprd/design/templates
+  activeArtifacts:
+    facts: .openprd/design/active/facts-sheet.md
+    assets: .openprd/design/active/asset-spec.md
+    imagePreflight: .openprd/design/active/image-preflight.md
+    directions: .openprd/design/active/direction-plan.md
+    selectedDirection: .openprd/design/active/selected-direction.md
+qualityGates:
+  standards:
+    docsRoot: docs/basic
+    command: openprd standards . --verify
+  quality:
+    command: openprd quality . --verify
+    enforcement: advisory
+  freezeRequires:
+    - meta
+    - problem
+    - users
+    - goals
+    - scope
+    - scenarios
+    - requirements
+    - constraints
+    - risks

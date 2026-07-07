@@ -1,0 +1,23 @@
+[features]
+hooks = true
+
+# OPENPRD:CODEX-HOOKS:START
+[[hooks.UserPromptSubmit]]
+[[hooks.UserPromptSubmit.hooks]]
+type = "command"
+command = "node '/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.codex/hooks/openprd-hook.mjs' UserPromptSubmit"
+timeout = 15000
+
+[[hooks.PreToolUse]]
+matcher = "^(Bash|Read|Write|Edit|MultiEdit|apply_patch|WebSearch|web_search)$"
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "node '/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.codex/hooks/openprd-hook.mjs' PreToolUse"
+timeout = 15000
+
+[[hooks.Stop]]
+[[hooks.Stop.hooks]]
+type = "command"
+command = "node '/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.codex/hooks/openprd-hook.mjs' Stop"
+timeout = 15000
+# OPENPRD:CODEX-HOOKS:END

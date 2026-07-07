@@ -1,3 +1,30 @@
+/*
+## 核心功能
+
+实现飞书云文档同步链路的 feishu api 服务能力。
+
+## 输入
+
+接收飞书设置、Markdown/HTML 内容、本地图片、Mermaid 图和飞书 API 响应。
+
+## 输出
+
+输出 `FeishuApiClient`，用于文档创建/更新、媒体上传、块写入或错误恢复。
+
+## 定位
+
+位于 services/，属于飞书发布服务层；不承载微信专属逻辑。
+
+## 依赖
+
+关键依赖：`./dom-utils.js`、`./feishu-multipart.js`。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 services 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: JS file handles dynamic API responses without strict typescript type annotations */
 // services/feishu-api.js
 //

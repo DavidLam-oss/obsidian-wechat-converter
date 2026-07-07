@@ -1,3 +1,30 @@
+/*
+## 核心功能
+
+插件基础布局、变量和通用控件样式
+
+## 输入
+
+接收 Obsidian DOM 结构、插件视图类名、发布弹窗状态和主题变量。
+
+## 输出
+
+输出 CSS 选择器、布局规则、颜色变量和响应式表现。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、插件 DOM class 命名和对应 views/ 结构。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 /**
  * 🍎 Apple Style Formatter - 样式表
  * 极简、优雅、专业的苹果风格排版
@@ -82,6 +109,33 @@
   color: var(--apple-primary);
   position: relative; /* 为悬浮层提供定位上下文 */
 }
+
+/*
+## 核心功能
+
+转换器顶部工具栏与动作按钮的视觉样式
+
+## 输入
+
+接收 Obsidian DOM 结构、插件视图类名、发布弹窗状态和主题变量。
+
+## 输出
+
+输出 CSS 选择器、布局规则、颜色变量和响应式表现。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、插件 DOM class 命名和对应 views/ 结构。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
 
 /* ========================================
    顶部工具栏 (Top Toolbar)
@@ -264,6 +318,33 @@
   background: transparent;
   color: var(--apple-secondary);
 }
+
+/*
+## 核心功能
+
+AI layout 面板和生成结果的视觉样式
+
+## 输入
+
+接收 Obsidian DOM 结构、插件视图类名、发布弹窗状态和主题变量。
+
+## 输出
+
+输出 CSS 选择器、布局规则、颜色变量和响应式表现。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、插件 DOM class 命名和对应 views/ 结构。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
 
 /* ========================================
    AI 编排面板 (Floating AI Layout Panel)
@@ -1069,6 +1150,33 @@
   gap: 10px;
 }
 
+/*
+## 核心功能
+
+样式面板、主题控制和自定义选项的视觉样式
+
+## 输入
+
+接收 Obsidian DOM 结构、插件视图类名、发布弹窗状态和主题变量。
+
+## 输出
+
+输出 CSS 选择器、布局规则、颜色变量和响应式表现。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、插件 DOM class 命名和对应 views/ 结构。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 /* ========================================
    悬浮设置面板 (Floating Settings Overlay)
    ======================================== */
@@ -1866,6 +1974,33 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   /* Blue */
 }
 
+/*
+## 核心功能
+
+转换器预览区和文章渲染容器的视觉样式
+
+## 输入
+
+接收 Obsidian DOM 结构、插件视图类名、发布弹窗状态和主题变量。
+
+## 输出
+
+输出 CSS 选择器、布局规则、颜色变量和响应式表现。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、插件 DOM class 命名和对应 views/ 结构。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 /* ========================================
    预览区域 - 手机仿真模式 (Canvas Mode)
    ======================================== */
@@ -2241,6 +2376,33 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 .theme-dark .apple-preview-wrapper.mode-classic {
   background: var(--apple-background);
 }
+/*
+## 核心功能
+
+插件设置页的分组、标签和表单样式
+
+## 输入
+
+接收 Obsidian DOM 结构、插件视图类名、发布弹窗状态和主题变量。
+
+## 输出
+
+输出 CSS 选择器、布局规则、颜色变量和响应式表现。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、插件 DOM class 命名和对应 views/ 结构。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 /* 统一使用 Obsidian 界面字体 */
 .vertical-tab-content h2,
 .vertical-tab-content h3,
@@ -2285,6 +2447,33 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   padding: 0;
 }
 
+
+/*
+## 核心功能
+
+插件设置页的分组、标签和表单样式
+
+## 输入
+
+接收 Obsidian DOM 结构、插件视图类名、发布弹窗状态和主题变量。
+
+## 输出
+
+输出 CSS 选择器、布局规则、颜色变量和响应式表现。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、插件 DOM class 命名和对应 views/ 结构。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
 
 /* ========================================
    多账号管理样式
@@ -2927,6 +3116,33 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.15);
 }
 
+/*
+## 核心功能
+
+微信公众号发布弹窗和账号配置的视觉样式
+
+## 输入
+
+接收 Obsidian DOM 结构、插件视图类名、发布弹窗状态和主题变量。
+
+## 输出
+
+输出 CSS 选择器、布局规则、颜色变量和响应式表现。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、插件 DOM class 命名和对应 views/ 结构。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 /* ========================================
    同步选项区
    ======================================== */
@@ -3447,6 +3663,33 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
 .wechat-multiplatform-shell .modal-content.wechat-multiplatform-modal:not(.wechat-multiplatform-result-modal) {
   overflow: hidden;
 }
+
+/*
+## 核心功能
+
+多平台发布弹窗的状态、列表和操作区样式
+
+## 输入
+
+接收 Obsidian DOM 结构、插件视图类名、发布弹窗状态和主题变量。
+
+## 输出
+
+输出 CSS 选择器、布局规则、颜色变量和响应式表现。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、插件 DOM class 命名和对应 views/ 结构。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
 
 .wechat-multiplatform-shell {
   width: min(720px, calc(100vw - 48px));
@@ -4022,6 +4265,33 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   color: var(--interactive-accent);
 }
 
+/*
+## 核心功能
+
+插件设置页的分组、标签和表单样式
+
+## 输入
+
+接收 Obsidian DOM 结构、插件视图类名、发布弹窗状态和主题变量。
+
+## 输出
+
+输出 CSS 选择器、布局规则、颜色变量和响应式表现。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、插件 DOM class 命名和对应 views/ 结构。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 /* ========================================
    设置面板 Tab 导航
    ======================================== */
@@ -4148,6 +4418,33 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   color: var(--text-accent);
   border-bottom-color: var(--text-accent);
 }
+
+/*
+## 核心功能
+
+飞书同步设置与发布交互的视觉样式
+
+## 输入
+
+接收 Obsidian DOM 结构、插件视图类名、发布弹窗状态和主题变量。
+
+## 输出
+
+输出 CSS 选择器、布局规则、颜色变量和响应式表现。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、插件 DOM class 命名和对应 views/ 结构。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
 
 .apple-settings-tab-content {
   padding: 0;
@@ -4397,6 +4694,33 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   border-top: none;
   padding-top: 0;
 }
+
+/*
+## 核心功能
+
+素材选择器弹窗的布局、列表和操作区样式
+
+## 输入
+
+接收 Obsidian DOM 结构、插件视图类名、发布弹窗状态和主题变量。
+
+## 输出
+
+输出 CSS 选择器、布局规则、颜色变量和响应式表现。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、插件 DOM class 命名和对应 views/ 结构。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
 
 .wechat-feishu-section .setting-item:last-of-type {
   padding-bottom: 0;
