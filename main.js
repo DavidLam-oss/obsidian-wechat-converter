@@ -49713,19 +49713,17 @@ function canonicalizePolicyPayload(value) {
 function resolveNodeLoader() {
   if (typeof require === "function")
     return require;
-  const globalRequire = toRecord4(globalThis).require;
-  if (typeof globalRequire === "function")
-    return globalRequire;
-  const windowRequire = typeof window !== "undefined" ? toRecord4(window).require : null;
+  const windowRequire = getActiveWindowValue("require");
   return typeof windowRequire === "function" ? windowRequire : null;
 }
 function resolveCryptoRuntime() {
+  var _a5;
   const loader = resolveNodeLoader();
   if (!loader)
     return null;
   try {
     const crypto = loader(["cr", "ypto"].join(""));
-    const BufferCtor = toRecord4(globalThis).Buffer || loader("buffer").Buffer;
+    const BufferCtor = (_a5 = loader("buffer")) == null ? void 0 : _a5.Buffer;
     if (!(crypto == null ? void 0 : crypto.createPublicKey) || !(crypto == null ? void 0 : crypto.verify) || !BufferCtor)
       return null;
     return { crypto, BufferCtor };

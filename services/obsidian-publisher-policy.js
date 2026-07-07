@@ -1,4 +1,5 @@
 import { createObsidianFetchAdapter } from './obsidian-fetch-adapter.js';
+import { getActiveWindowValue } from './dom-utils.js';
 import { normalizeMultiPlatformSyncSettings } from './wechatsync-settings.js';
 
 const PRODUCT_ID = 'obsidian-publisher';
@@ -66,9 +67,7 @@ export function canonicalizePolicyPayload(value) {
 
 function resolveNodeLoader() {
   if (typeof require === 'function') return require;
-  const globalRequire = toRecord(globalThis).require;
-  if (typeof globalRequire === 'function') return globalRequire;
-  const windowRequire = typeof window !== 'undefined' ? toRecord(window).require : null;
+  const windowRequire = getActiveWindowValue('require');
   return typeof windowRequire === 'function' ? windowRequire : null;
 }
 
@@ -77,7 +76,7 @@ function resolveCryptoRuntime() {
   if (!loader) return null;
   try {
     const crypto = loader(['cr', 'ypto'].join(''));
-    const BufferCtor = toRecord(globalThis).Buffer || loader('buffer').Buffer;
+    const BufferCtor = loader('buffer')?.Buffer;
     if (!crypto?.createPublicKey || !crypto?.verify || !BufferCtor) return null;
     return { crypto, BufferCtor };
   } catch {
