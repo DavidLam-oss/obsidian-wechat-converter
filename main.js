@@ -45098,34 +45098,9 @@ var HELLO_ERROR_TIMEOUT = "hello_timeout";
 var HELLO_ERROR_TOO_MANY_CLIENTS = "too_many_clients";
 var DEFAULT_MAX_CLIENTS = 4;
 
-// services/wechatsync-bridge.js
+// services/wechatsync-bridge-runtime.js
 var WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 var BASE64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-var MAX_CONNECTED_CLIENT_REGISTRY = 20;
-function isRecord2(value) {
-  return !!value && typeof value === "object" && !Array.isArray(value);
-}
-function toRecord2(value) {
-  return isRecord2(value) ? (
-    /** @type {Record<string, unknown>} */
-    value
-  ) : {};
-}
-function toBridgeString(value, fallback = "") {
-  return typeof value === "string" ? value : fallback;
-}
-function setBridgeTimeout(handler, ms) {
-  if (typeof window === "undefined" || typeof window.setTimeout !== "function")
-    return null;
-  return window.setTimeout(handler, ms);
-}
-function clearBridgeTimeout(timer) {
-  if (!timer)
-    return;
-  if (typeof window === "undefined" || typeof window.clearTimeout !== "function")
-    return;
-  window.clearTimeout(timer);
-}
 function utf8Bytes(input) {
   const text = String(input || "");
   if (typeof TextEncoder !== "undefined") {
@@ -45230,63 +45205,6 @@ function base64EncodeBytes(bytes) {
 }
 function createWebSocketAcceptKey(key) {
   return base64EncodeBytes(sha1Bytes(`${key}${WS_GUID}`));
-}
-function toBridgeErrorLike(error) {
-  if (error instanceof Error)
-    return (
-      /** @type {BridgeErrorLike} */
-      error
-    );
-  if (error && typeof error === "object")
-    return (
-      /** @type {BridgeErrorLike} */
-      error
-    );
-  return { message: String(error || "") };
-}
-function isUnsupportedBridgeMethodError(error = {}) {
-  const readableError = toBridgeErrorLike(error);
-  const message = String(readableError.message || error || "");
-  return /unknown method|unknown tool|method not found|not supported|unsupported/i.test(message);
-}
-function isRecoverableBridgeConnectionError(error = {}) {
-  const code = toBridgeErrorLike(error).code || "";
-  return ["EXTENSION_NOT_CONNECTED", "EXTENSION_NOT_AUTHENTICATED", "BRIDGE_UNAVAILABLE", "BRIDGE_REQUEST_TIMEOUT"].includes(code);
-}
-function sleep(ms) {
-  return new Promise((resolve) => setBridgeTimeout(resolve, ms));
-}
-async function retryRecoverableBridgeOperation(operation, options = {}) {
-  var _a5;
-  const {
-    retries = 2,
-    delayMs = 1e3,
-    delay = sleep,
-    shouldRetry = isRecoverableBridgeConnectionError,
-    logger = console,
-    label = "bridge request"
-  } = options;
-  let attempt = 0;
-  while (true) {
-    try {
-      return await operation({ attempt });
-    } catch (error) {
-      const readableError = createReadableBridgeError(error);
-      if (attempt >= retries || !shouldRetry(readableError, attempt)) {
-        throw readableError;
-      }
-      attempt += 1;
-      (_a5 = logger.debug) == null ? void 0 : _a5.call(logger, "[WechatsyncBridge] retrying recoverable operation", {
-        label,
-        attempt,
-        retries,
-        delayMs,
-        code: readableError == null ? void 0 : readableError.code,
-        message: (readableError == null ? void 0 : readableError.message) || String(readableError)
-      });
-      await delay(delayMs, attempt, readableError);
-    }
-  }
 }
 function createEmitter() {
   const listeners = /* @__PURE__ */ new Map();
@@ -45547,6 +45465,120 @@ function getWebSocketOpenState(WebSocketServer) {
   var _a5;
   return (WebSocketServer == null ? void 0 : WebSocketServer.OPEN) || ((_a5 = WebSocketServer == null ? void 0 : WebSocketServer.WebSocket) == null ? void 0 : _a5.OPEN) || 1;
 }
+function readRequestBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += Buffer.isBuffer(chunk) ? chunk.toString("utf8") : String(chunk || "");
+    });
+    req.on("end", () => resolve(body));
+    req.on("error", reject);
+  });
+}
+function defaultConnectionIdFactory() {
+  const windowCrypto = typeof window !== "undefined" ? window.crypto : null;
+  if (windowCrypto && typeof windowCrypto.randomUUID === "function") {
+    return windowCrypto.randomUUID();
+  }
+  return `conn-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+async function loadDefaultHttpModule() {
+  const loader = typeof require === "function" ? require : null;
+  if (!loader)
+    return null;
+  const loadedHttp = (
+    /** @type {unknown} */
+    loader(["h", "ttp"].join(""))
+  );
+  return (
+    /** @type {BridgeHttpModuleLike} */
+    loadedHttp
+  );
+}
+
+// services/wechatsync-bridge.js
+var MAX_CONNECTED_CLIENT_REGISTRY = 20;
+function isRecord2(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+function toRecord2(value) {
+  return isRecord2(value) ? (
+    /** @type {Record<string, unknown>} */
+    value
+  ) : {};
+}
+function toBridgeString(value, fallback = "") {
+  return typeof value === "string" ? value : fallback;
+}
+function setBridgeTimeout(handler, ms) {
+  if (typeof window === "undefined" || typeof window.setTimeout !== "function")
+    return null;
+  return window.setTimeout(handler, ms);
+}
+function clearBridgeTimeout(timer) {
+  if (!timer)
+    return;
+  if (typeof window === "undefined" || typeof window.clearTimeout !== "function")
+    return;
+  window.clearTimeout(timer);
+}
+function toBridgeErrorLike(error) {
+  if (error instanceof Error)
+    return (
+      /** @type {BridgeErrorLike} */
+      error
+    );
+  if (error && typeof error === "object")
+    return (
+      /** @type {BridgeErrorLike} */
+      error
+    );
+  return { message: String(error || "") };
+}
+function isUnsupportedBridgeMethodError(error = {}) {
+  const readableError = toBridgeErrorLike(error);
+  const message = String(readableError.message || error || "");
+  return /unknown method|unknown tool|method not found|not supported|unsupported/i.test(message);
+}
+function isRecoverableBridgeConnectionError(error = {}) {
+  const code = toBridgeErrorLike(error).code || "";
+  return ["EXTENSION_NOT_CONNECTED", "EXTENSION_NOT_AUTHENTICATED", "BRIDGE_UNAVAILABLE", "BRIDGE_REQUEST_TIMEOUT"].includes(code);
+}
+function sleep(ms) {
+  return new Promise((resolve) => setBridgeTimeout(resolve, ms));
+}
+async function retryRecoverableBridgeOperation(operation, options = {}) {
+  var _a5;
+  const {
+    retries = 2,
+    delayMs = 1e3,
+    delay = sleep,
+    shouldRetry = isRecoverableBridgeConnectionError,
+    logger = console,
+    label = "bridge request"
+  } = options;
+  let attempt = 0;
+  while (true) {
+    try {
+      return await operation({ attempt });
+    } catch (error) {
+      const readableError = createReadableBridgeError(error);
+      if (attempt >= retries || !shouldRetry(readableError, attempt)) {
+        throw readableError;
+      }
+      attempt += 1;
+      (_a5 = logger.debug) == null ? void 0 : _a5.call(logger, "[WechatsyncBridge] retrying recoverable operation", {
+        label,
+        attempt,
+        retries,
+        delayMs,
+        code: readableError == null ? void 0 : readableError.code,
+        message: (readableError == null ? void 0 : readableError.message) || String(readableError)
+      });
+      await delay(delayMs, attempt, readableError);
+    }
+  }
+}
 function createReadableBridgeError(error) {
   const readableError = toBridgeErrorLike(error);
   const message = String(readableError.message || error || "");
@@ -45593,36 +45625,6 @@ function createReadableBridgeError(error) {
     return friendly;
   }
   return error instanceof Error ? error : new Error(message || "\u6D4F\u89C8\u5668\u63D2\u4EF6\u8FDE\u63A5\u8BF7\u6C42\u5931\u8D25\u3002");
-}
-function readRequestBody(req) {
-  return new Promise((resolve, reject) => {
-    let body = "";
-    req.on("data", (chunk) => {
-      body += Buffer.isBuffer(chunk) ? chunk.toString("utf8") : String(chunk || "");
-    });
-    req.on("end", () => resolve(body));
-    req.on("error", reject);
-  });
-}
-function defaultConnectionIdFactory() {
-  const windowCrypto = typeof window !== "undefined" ? window.crypto : null;
-  if (windowCrypto && typeof windowCrypto.randomUUID === "function") {
-    return windowCrypto.randomUUID();
-  }
-  return `conn-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
-}
-async function loadDefaultHttpModule() {
-  const loader = typeof require === "function" ? require : null;
-  if (!loader)
-    return null;
-  const loadedHttp = (
-    /** @type {unknown} */
-    loader(["h", "ttp"].join(""))
-  );
-  return (
-    /** @type {BridgeHttpModuleLike} */
-    loadedHttp
-  );
 }
 function createWechatSyncBridgeService(options = {}) {
   const {
