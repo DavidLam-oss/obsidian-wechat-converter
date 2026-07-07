@@ -110,6 +110,7 @@ export default [
       "services/image-swipe-callout.js",
       "services/obsidian-compat.js",
       "services/plugin-settings.js",
+      "services/obsidian-publisher-policy.js",
       "services/readable-error.js",
       "services/record-utils.js",
       "services/request-utils.js",

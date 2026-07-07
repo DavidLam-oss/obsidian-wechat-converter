@@ -281,6 +281,9 @@ showWechatsyncEnqueueAcceptedModal({
   const skippedPlatformIds = parseWechatsyncPlatformIds(Array.isArray(quotaRecord.skippedPlatforms) ? quotaRecord.skippedPlatforms : []);
   const quotaPublishedPlatforms = Array.isArray(quotaRecord.publishedPlatforms) ? quotaRecord.publishedPlatforms : [];
   const quotaPlatforms = Array.isArray(quotaRecord.platforms) ? quotaRecord.platforms : [];
+  const quotaLimit = Number.isFinite(Number(quotaRecord.maxPlatforms))
+    ? Math.max(0, Math.floor(Number(quotaRecord.maxPlatforms)))
+    : 1;
   const publishedPlatformIds = parseWechatsyncPlatformIds(
     quotaPublishedPlatforms.length ? quotaPublishedPlatforms : (quotaPlatforms.length ? quotaPlatforms : requestedPlatforms)
   );
@@ -407,7 +410,7 @@ showWechatsyncEnqueueAcceptedModal({
     const body = row.createDiv({ cls: 'wechat-multiplatform-result-body' });
     body.createEl('div', { text: platformName, cls: 'wechat-multiplatform-result-name' });
     body.createEl('div', {
-      text: '免费版每天 1 个平台额度，当前平台未入队。',
+      text: `免费版每天 ${quotaLimit} 个平台额度，当前平台未入队。`,
       cls: 'wechat-multiplatform-result-detail',
     });
   }

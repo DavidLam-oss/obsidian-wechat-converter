@@ -45,6 +45,14 @@ import {
   formatArticleImageWarnings,
   resolveArticleImages,
 } from '../../services/article-image-assets.js';
+import {
+  checkExtensionPolicyGate,
+  checkObsidianPluginPolicyGate,
+  getDailyPlatformQuotaLimit,
+  getEffectiveObsidianPublisherPolicy,
+  getObsidianPluginVersion,
+  normalizePolicyQuota,
+} from '../../services/obsidian-publisher-policy.js';
 import { getActiveWindowValue } from '../../services/dom-utils.js';
 
 const QUOTA_POLICY = 'truncate';
@@ -64,7 +72,7 @@ const MAX_MATERIAL_COVER_ASSET_CACHE_ENTRIES = 3;
  * @typedef {HTMLElement & { createDiv: (options?: { cls?: string }) => ModalContentElementLike, createEl: (tagName: string, options?: { text?: string, cls?: string, attr?: Record<string, string> }) => ModalContentElementLike, empty?: () => void, addClass?: (className: string) => void, removeClass?: (className: string) => void }} ModalContentElementLike
  * @typedef {{ status?: string, checkedAt?: number, message?: string, platforms?: unknown, capabilities?: unknown }} ConnectionLike
  * @typedef {{ id?: string, name?: string, status?: string, authenticated?: boolean, username?: string, success?: boolean, error?: string, message?: string, platform?: string }} PlatformLikeRecord
- * @typedef {{ syncId?: string, requestId?: string, accepted?: boolean, quotaBlocked?: boolean, skippedPlatforms?: unknown, message?: string, publishedPlatforms?: unknown, platforms?: unknown }} EnqueueResultLike
+ * @typedef {{ syncId?: string, requestId?: string, accepted?: boolean, quotaBlocked?: boolean, skippedPlatforms?: unknown, message?: string, publishedPlatforms?: unknown, platforms?: unknown, maxPlatforms?: number }} EnqueueResultLike
  * @typedef {{ cls: string, text: string, status?: string }} PlatformStatusBadgeLike
  * @typedef {{ code?: string, message: string, stack?: string }} ReadableErrorLike
  * @typedef {{ health?: (options?: Record<string, unknown>) => Promise<unknown>, getActiveClientDescriptor?: () => unknown, getStatus?: () => unknown, enqueueSyncArticle?: (payload: Record<string, unknown>) => Promise<unknown>, sendArticle?: (payload: Record<string, unknown>) => Promise<unknown> }} BridgeLike
@@ -300,25 +308,192 @@ function isUnsupportedBridgeError(error) {
 
 /**
  * @param {number} [selectedCount]
- * @param {{ proLicensed?: boolean }} [options]
+ * @param {{ proLicensed?: boolean, freeLimit?: number }} [options]
  * @returns {string}
  */
-function getQuotaHintText(selectedCount = 0, { proLicensed = false } = {}) {
+function getQuotaHintText(selectedCount = 0, { proLicensed = false, freeLimit = FREE_DAILY_PLATFORM_QUOTA } = {}) {
+  const limit = Number.isFinite(Number(freeLimit))
+    ? Math.max(0, Math.floor(Number(freeLimit)))
+    : FREE_DAILY_PLATFORM_QUOTA;
   if (proLicensed) {
     return selectedCount > 0
       ? `已选 ${selectedCount} 个平台。Pro 已激活，无每日平台数量限制。`
       : 'Pro 已激活，无每日平台数量限制。';
   }
-  if (selectedCount > FREE_DAILY_PLATFORM_QUOTA) {
-    return `已选 ${selectedCount} 个平台；免费版每天 ${FREE_DAILY_PLATFORM_QUOTA} 个平台额度，超出部分会自动跳过。`;
+  if (selectedCount > limit) {
+    return `已选 ${selectedCount} 个平台；免费版每天 ${limit} 个平台额度，超出部分会自动跳过。`;
   }
-  if (selectedCount === FREE_DAILY_PLATFORM_QUOTA) {
-    return `已选 ${selectedCount} 个平台，刚好达到免费版每天 ${FREE_DAILY_PLATFORM_QUOTA} 个平台额度。`;
+  if (selectedCount === limit) {
+    return `已选 ${selectedCount} 个平台，刚好达到免费版每天 ${limit} 个平台额度。`;
   }
   if (selectedCount > 0) {
-    return `已选 ${selectedCount} 个平台；免费版每天 ${FREE_DAILY_PLATFORM_QUOTA} 个平台额度。`;
+    return `已选 ${selectedCount} 个平台；免费版每天 ${limit} 个平台额度。`;
   }
-  return `免费版每天 ${FREE_DAILY_PLATFORM_QUOTA} 个平台额度。`;
+  return `免费版每天 ${limit} 个平台额度。`;
+}
+
+/**
+ * @param {unknown} value
+ * @returns {number | undefined}
+ */
+function toFiniteNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
+}
+
+/**
+ * @param {Record<string, unknown>} target
+ * @param {unknown} source
+ * @returns {Record<string, unknown>}
+ */
+function mergePolicyCapabilityDetails(target, source) {
+  const sourceRecord = toRecord(source);
+  /** @type {Record<string, unknown>} */
+  const next = {
+    ...target,
+    ...normalizeWechatSyncCapabilities(sourceRecord),
+  };
+  const quota = normalizePolicyQuota(sourceRecord.quota);
+  if (quota) next.quota = quota;
+
+  const policyVersion = toFiniteNumber(sourceRecord.policyVersion);
+  if (policyVersion !== undefined) next.policyVersion = policyVersion;
+
+  for (const key of [
+    'minExtensionVersion',
+    'minObsidianPluginVersion',
+    'proUpgradeUrl',
+    'extensionUpgradeUrl',
+    'obsidianPluginUpgradeUrl',
+  ]) {
+    const text = toText(sourceRecord[key]);
+    if (text) next[key] = text;
+  }
+
+  if (toText(sourceRecord.version)) next.extensionVersion = toText(sourceRecord.version);
+  for (const key of ['forceUpgradeExtension', 'forceUpgradeObsidianPlugin']) {
+    if (Object.prototype.hasOwnProperty.call(sourceRecord, key)) {
+      next[key] = sourceRecord[key] === true;
+    }
+  }
+  return next;
+}
+
+/**
+ * @param {Record<string, unknown>} cachedCapabilities
+ * @param {unknown} health
+ * @returns {Record<string, unknown>}
+ */
+function mergeHealthPolicyCapabilities(cachedCapabilities, health) {
+  const healthRecord = toRecord(health);
+  return mergePolicyCapabilityDetails(
+    mergePolicyCapabilityDetails(cachedCapabilities, healthRecord.capabilities),
+    healthRecord
+  );
+}
+
+/**
+ * @param {unknown} value
+ * @param {number} fallback
+ * @returns {number}
+ */
+function getDailyPlatformQuotaLimitFromCapabilities(value, fallback = FREE_DAILY_PLATFORM_QUOTA) {
+  const quota = normalizePolicyQuota(toRecord(value).quota);
+  if (!quota || quota.mode !== 'daily_platform_count') return fallback;
+  return Math.max(0, Math.floor(Number(quota.freeLimit)));
+}
+
+/**
+ * @param {unknown} bridgeSettings
+ * @param {Record<string, unknown>} capabilities
+ * @returns {number}
+ */
+function resolveInitialFreeQuotaLimit(bridgeSettings, capabilities) {
+  const settingsRecord = toRecord(bridgeSettings);
+  const cachedPolicy = toRecord(toRecord(settingsRecord.policyCache).payload);
+  const fallback = getDailyPlatformQuotaLimitFromCapabilities(capabilities, FREE_DAILY_PLATFORM_QUOTA);
+  return getDailyPlatformQuotaLimit(cachedPolicy, fallback);
+}
+
+/**
+ * @param {string[]} requestedPlatformIds
+ * @param {{ payload?: unknown, source?: string }} effectivePolicy
+ * @param {Record<string, unknown>} capabilities
+ * @returns {{ platformIds: string[], skippedPlatformIds: string[], quotaLimit: number, truncated: boolean }}
+ */
+function resolvePluginSideQuotaTruncation(requestedPlatformIds, effectivePolicy, capabilities) {
+  if (capabilities.proLicensed === true) {
+    return {
+      platformIds: requestedPlatformIds,
+      skippedPlatformIds: [],
+      quotaLimit: FREE_DAILY_PLATFORM_QUOTA,
+      truncated: false,
+    };
+  }
+  if (!Object.prototype.hasOwnProperty.call(capabilities, 'proLicensed')) {
+    return {
+      platformIds: requestedPlatformIds,
+      skippedPlatformIds: [],
+      quotaLimit: FREE_DAILY_PLATFORM_QUOTA,
+      truncated: false,
+    };
+  }
+
+  const policyQuota = effectivePolicy.source !== 'fallback'
+    ? normalizePolicyQuota(toRecord(effectivePolicy.payload).quota)
+    : null;
+  const quota = policyQuota
+    || normalizePolicyQuota(toRecord(capabilities).quota)
+    || normalizePolicyQuota(toRecord(effectivePolicy.payload).quota);
+  if (!quota || quota.mode !== 'daily_platform_count') {
+    return {
+      platformIds: requestedPlatformIds,
+      skippedPlatformIds: [],
+      quotaLimit: FREE_DAILY_PLATFORM_QUOTA,
+      truncated: false,
+    };
+  }
+
+  const quotaLimit = Math.max(0, Math.floor(Number(quota.freeLimit)));
+  if (requestedPlatformIds.length <= quotaLimit) {
+    return {
+      platformIds: requestedPlatformIds,
+      skippedPlatformIds: [],
+      quotaLimit,
+      truncated: false,
+    };
+  }
+  return {
+    platformIds: requestedPlatformIds.slice(0, quotaLimit),
+    skippedPlatformIds: requestedPlatformIds.slice(quotaLimit),
+    quotaLimit,
+    truncated: true,
+  };
+}
+
+/**
+ * @param {EnqueueResultLike} result
+ * @param {{ platformIds: string[], skippedPlatformIds: string[], quotaLimit: number, truncated: boolean }} truncation
+ * @returns {EnqueueResultLike}
+ */
+function mergePluginSkippedPlatformsIntoResult(result, truncation) {
+  if (!truncation.skippedPlatformIds.length) return result;
+  const skippedPlatformIds = parseWechatsyncPlatformIds([
+    ...truncation.skippedPlatformIds,
+    ...parseWechatsyncPlatformIds(toUnknownList(result.skippedPlatforms)),
+  ]);
+  const publishedPlatforms = toUnknownList(result.publishedPlatforms).length
+    ? result.publishedPlatforms
+    : truncation.platformIds;
+  return {
+    ...result,
+    quotaBlocked: true,
+    maxPlatforms: Number.isFinite(Number(result.maxPlatforms))
+      ? Number(result.maxPlatforms)
+      : truncation.quotaLimit,
+    publishedPlatforms,
+    skippedPlatforms: skippedPlatformIds,
+  };
 }
 
 /**
@@ -559,16 +734,11 @@ function saveModalSelectedPlatformIds(modal, selectedPlatforms) {
  */
 async function detectQuotaPolicySupport(bridge, cachedConnection = {}) {
   const cachedCapabilities = normalizeWechatSyncCapabilities(toRecord(cachedConnection.capabilities));
-  if (cachedCapabilities.quotaPolicy === true) return cachedCapabilities;
   if (!bridge || typeof bridge.health !== 'function') return cachedCapabilities;
 
   try {
     const health = await bridge.health({ timeoutMs: 5000 });
-    const healthRecord = toRecord(health);
-    return {
-      ...cachedCapabilities,
-      ...normalizeWechatSyncCapabilities(toRecord(healthRecord.capabilities)),
-    };
+    return mergeHealthPolicyCapabilities(cachedCapabilities, health);
   } catch (error) {
     if (isUnsupportedBridgeError(error)) return cachedCapabilities;
     const readableError = toReadableError(error);
@@ -593,20 +763,20 @@ function resolvePublishModalCapabilities(view, cachedConnection = {}) {
     : null;
   const activeClientRecord = toRecord(activeClient);
   if (activeClientRecord.capabilities) {
-    return {
-      ...cachedCapabilities,
-      ...normalizeWechatSyncCapabilities(toRecord(activeClientRecord.capabilities)),
-    };
+    return mergePolicyCapabilityDetails(
+      mergePolicyCapabilityDetails(cachedCapabilities, activeClientRecord.capabilities),
+      activeClientRecord
+    );
   }
 
   const status = typeof bridge.getStatus === 'function' ? toRecord(bridge.getStatus()) : {};
   const connectedClients = toRecordList(status.connectedClients);
   const liveClient = connectedClients.find((client) => client.status === 'connected' && client.capabilities);
   const liveClientRecord = toRecord(liveClient);
-  return {
-    ...cachedCapabilities,
-    ...normalizeWechatSyncCapabilities(toRecord(liveClientRecord.capabilities)),
-  };
+  return mergePolicyCapabilityDetails(
+    mergePolicyCapabilityDetails(cachedCapabilities, liveClientRecord.capabilities),
+    liveClientRecord
+  );
 }
 
 /**
@@ -671,6 +841,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
   });
   const publishModalCapabilities = resolvePublishModalCapabilities(view, cachedConnection);
   const isProLicensed = publishModalCapabilities.proLicensed === true;
+  const initialFreeQuotaLimit = resolveInitialFreeQuotaLimit(bridgeSettings, publishModalCapabilities);
   const quotaHint = asModalElement(modal.contentEl.createDiv({
     cls: `wechat-multiplatform-quota-hint ${isProLicensed ? 'is-pro' : 'is-free'}`,
   }));
@@ -687,7 +858,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
   }
   const quotaText = quotaHint.createEl('span', {
     cls: 'wechat-multiplatform-quota-copy',
-    text: getQuotaHintText(0, { proLicensed: isProLicensed }),
+    text: getQuotaHintText(0, { proLicensed: isProLicensed, freeLimit: initialFreeQuotaLimit }),
   });
   if (!isProLicensed) {
     const quotaUpgradeBtn = asModalElement(quotaHint.createEl('button', {
@@ -700,7 +871,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
   if (!bridgeSettings.enabled) {
     const disabledHint = asModalElement(modal.contentEl.createDiv({ cls: 'wechat-sync-empty-state' }));
     disabledHint.createEl('h3', { text: '尚未启用浏览器插件发布' });
-    disabledHint.createEl('p', { text: '请先安装浏览器插件，再到设置中启用浏览器插件发布、测试连接并选择平台。免费版每天 1 个平台额度。' });
+    disabledHint.createEl('p', { text: `请先安装浏览器插件，再到设置中启用浏览器插件发布、测试连接并选择平台。免费版每天 ${initialFreeQuotaLimit} 个平台额度。` });
     const settingsBtn = asModalElement(disabledHint.createEl('button', { text: '去设置', cls: 'mod-cta' }));
     settingsBtn.onclick = () => {
       modal.close();
@@ -745,7 +916,10 @@ async function showMultiPlatformPublishModal(view, options = {}) {
   cancelBtn.onclick = () => modal.close();
 
   const updateQuotaHintText = () => {
-    quotaText.textContent = getQuotaHintText(selectedPlatforms.size, { proLicensed: isProLicensed });
+    quotaText.textContent = getQuotaHintText(selectedPlatforms.size, {
+      proLicensed: isProLicensed,
+      freeLimit: initialFreeQuotaLimit,
+    });
   };
 
   const updateSyncButtonState = () => {
@@ -867,6 +1041,61 @@ async function showMultiPlatformPublishModal(view, options = {}) {
     const sendStartedAt = Date.now();
     const requestedPlatformIds = Array.from(selectedPlatforms);
     try {
+      const bridge = view.plugin.getWechatSyncBridgeService();
+      const [detectedCapabilities, effectivePolicy] = await Promise.all([
+        detectQuotaPolicySupport(bridge, cachedConnection),
+        getEffectiveObsidianPublisherPolicy(view.plugin, {
+          requestUrl: obsidian.requestUrl,
+          clientVersion: getObsidianPluginVersion(view.plugin),
+        }),
+      ]);
+      const pluginPolicyGate = checkObsidianPluginPolicyGate(
+        effectivePolicy.payload,
+        getObsidianPluginVersion(view.plugin)
+      );
+      if (!pluginPolicyGate.allowed) {
+        notice.hide();
+        new Notice(`❌ ${pluginPolicyGate.message || '当前 Obsidian 插件版本过低，请升级后继续发布。'}`, 10000);
+        return;
+      }
+      const extensionPolicyGate = checkExtensionPolicyGate(effectivePolicy.payload, {
+        currentVersion: toText(detectedCapabilities.extensionVersion),
+        remotePolicySupported: detectedCapabilities.remotePolicy === true,
+      });
+      if (!extensionPolicyGate.allowed) {
+        notice.hide();
+        new Notice(`❌ ${extensionPolicyGate.message || '当前浏览器扩展版本过低，请升级后继续发布。'}`, 10000);
+        return;
+      }
+      if (pluginPolicyGate.warning) {
+        console.info('[Wechatsync] Obsidian plugin upgrade recommended by policy', {
+          currentVersion: getObsidianPluginVersion(view.plugin),
+          minObsidianPluginVersion: pluginPolicyGate.minObsidianPluginVersion,
+          policyVersion: toRecord(effectivePolicy.payload).policyVersion,
+        });
+      }
+      if (extensionPolicyGate.warning) {
+        console.info('[Wechatsync] browser extension upgrade recommended by policy', {
+          currentVersion: toText(detectedCapabilities.extensionVersion),
+          minExtensionVersion: extensionPolicyGate.minExtensionVersion,
+          policyVersion: toRecord(effectivePolicy.payload).policyVersion,
+        });
+      }
+      const platformTruncation = resolvePluginSideQuotaTruncation(
+        requestedPlatformIds,
+        effectivePolicy,
+        detectedCapabilities
+      );
+      if (platformTruncation.truncated) {
+        console.info('[Wechatsync] request pre-truncated by Obsidian plugin policy', {
+          requestedPlatformCount: requestedPlatformIds.length,
+          enqueuedPlatformCount: platformTruncation.platformIds.length,
+          skippedPlatformCount: platformTruncation.skippedPlatformIds.length,
+          quotaLimit: platformTruncation.quotaLimit,
+          policyVersion: toRecord(effectivePolicy.payload).policyVersion,
+          policySource: effectivePolicy.source,
+        });
+      }
       const resolvedImages = toResolvedImages(await resolveArticleImages(rawMarkdown, activeFile, {
         app: view.app,
         cover: rawCover,
@@ -924,8 +1153,11 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         : '';
 
       console.info('[Wechatsync] enqueueSyncArticle started', {
-        platformCount: requestedPlatformIds.length,
+        platformCount: platformTruncation.platformIds.length,
+        requestedPlatformCount: requestedPlatformIds.length,
         platforms: requestedPlatformIds,
+        enqueuedPlatforms: platformTruncation.platformIds,
+        skippedByPluginPolicy: platformTruncation.skippedPlatformIds,
         title,
         hasMarkdown: !!markdown,
         contentLength: content.length,
@@ -935,37 +1167,48 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         assetCount: assets.length,
         assetBytes: assets.reduce((sum, asset) => sum + (asset.size || 0), 0),
       });
-      const bridge = view.plugin.getWechatSyncBridgeService();
-      const detectedCapabilities = await detectQuotaPolicySupport(bridge, cachedConnection);
       /** @type {EnqueueResultLike | null} */
       let result = null;
       let usedFallbackSend = false;
-      try {
-        result = toEnqueueResult(await bridge.enqueueSyncArticle({
-          platforms: requestedPlatformIds,
-          title,
-          markdown,
-          content,
-          cover,
-          coverThumbnail,
-          assets,
-          source: 'obsidian',
-          quotaPolicy: QUOTA_POLICY,
-        }));
-      } catch (enqueueError) {
-        if (!isUnsupportedBridgeError(enqueueError)) throw enqueueError;
-        usedFallbackSend = true;
-        console.warn('[Wechatsync] enqueueSyncArticle unsupported, falling back to one-way syncArticle', enqueueError);
-        result = toEnqueueResult(await bridge.sendArticle({
-          platforms: requestedPlatformIds,
-          title,
-          markdown,
-          content,
-          cover,
-          coverThumbnail,
-          assets,
-          quotaPolicy: QUOTA_POLICY,
-        }));
+      if (platformTruncation.platformIds.length === 0) {
+        result = {
+          accepted: false,
+          reason: 'daily_limit',
+          quotaBlocked: true,
+          maxPlatforms: platformTruncation.quotaLimit,
+          publishedPlatforms: [],
+          skippedPlatforms: requestedPlatformIds,
+          message: `免费版今日 ${platformTruncation.quotaLimit} 个平台额度已用完，明天 0:00 重置，或升级 Pro。`,
+        };
+      } else {
+        try {
+          result = toEnqueueResult(await bridge.enqueueSyncArticle({
+            platforms: platformTruncation.platformIds,
+            title,
+            markdown,
+            content,
+            cover,
+            coverThumbnail,
+            assets,
+            source: 'obsidian',
+            quotaPolicy: QUOTA_POLICY,
+          }));
+        } catch (enqueueError) {
+          if (!isUnsupportedBridgeError(enqueueError)) throw enqueueError;
+          usedFallbackSend = true;
+          console.warn('[Wechatsync] enqueueSyncArticle unsupported, falling back to one-way syncArticle', enqueueError);
+          result = toEnqueueResult(await bridge.sendArticle({
+            platforms: platformTruncation.platformIds,
+            title,
+            markdown,
+            content,
+            cover,
+            coverThumbnail,
+            assets,
+            quotaPolicy: QUOTA_POLICY,
+          }));
+        }
+        result = mergePluginSkippedPlatformsIntoResult(result, platformTruncation);
       }
       console.info('[Wechatsync] enqueueSyncArticle accepted', {
         elapsedMs: Date.now() - sendStartedAt,
@@ -976,8 +1219,10 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         quotaBlocked: result?.quotaBlocked,
         skippedPlatforms: result?.skippedPlatforms,
         usedFallbackSend,
-        platformCount: requestedPlatformIds.length,
+        platformCount: platformTruncation.platformIds.length,
+        requestedPlatformCount: requestedPlatformIds.length,
         supportsQuotaPolicy: detectedCapabilities.quotaPolicy === true,
+        remotePolicy: detectedCapabilities.remotePolicy === true,
       });
       const currentMultiPlatformSettings = normalizeMultiPlatformSyncSettings(view.plugin.settings.multiPlatformSync);
       const connectionRecord = toRecord(currentMultiPlatformSettings.connection);

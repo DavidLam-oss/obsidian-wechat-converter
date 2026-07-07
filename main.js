@@ -4404,13 +4404,13 @@ var require_apple_theme = __commonJS({
 // converter.js
 var require_converter = __commonJS({
   "converter.js"(exports, module2) {
-    function isRecord26(value) {
+    function isRecord27(value) {
       return !!value && typeof value === "object" && !Array.isArray(value);
     }
-    function toRecord23(value) {
-      return isRecord26(value) ? value : {};
+    function toRecord24(value) {
+      return isRecord27(value) ? value : {};
     }
-    function toText3(value) {
+    function toText4(value) {
       return typeof value === "string" ? value : "";
     }
     function safeDecodeUri(value) {
@@ -4527,7 +4527,7 @@ var require_converter = __commonJS({
       typeof window !== "undefined" ? window : {}
     );
     function getRuntimeDependency(name) {
-      const runtimeWindow = typeof window !== "undefined" ? toRecord23(window) : {};
+      const runtimeWindow = typeof window !== "undefined" ? toRecord24(window) : {};
       if (typeof runtimeWindow[name] !== "undefined") {
         return runtimeWindow[name];
       }
@@ -4591,8 +4591,8 @@ var require_converter = __commonJS({
           this.showImageCaption = Boolean(config.showImageCaption);
         }
         if (config.avatarUrl !== void 0) {
-          this.avatarUrl = toText3(config.avatarUrl);
-          this.avatarSrc = toText3(config.avatarUrl);
+          this.avatarUrl = toText4(config.avatarUrl);
+          this.avatarSrc = toText4(config.avatarUrl);
         }
       }
       /**
@@ -4684,7 +4684,7 @@ var require_converter = __commonJS({
             if (token.type === "list_item_close")
               break;
             if (token.type === "inline") {
-              const content = toText3(token.content);
+              const content = toText4(token.content);
               if (content.startsWith("\u2611") || content.startsWith("\u25A1") || content.startsWith("\u2610")) {
                 return {
                   isTask: true,
@@ -4704,7 +4704,7 @@ var require_converter = __commonJS({
             const themeColor = this.theme.getThemeColorValue() || "#576b95";
             if (inlineToken.children && inlineToken.children.length > 0) {
               const firstChild = inlineToken.children[0];
-              const firstContent = toText3(firstChild.content);
+              const firstContent = toText4(firstChild.content);
               if (firstChild.type === "text" && (firstContent.startsWith("\u2611") || firstContent.startsWith("\u25A1") || firstContent.startsWith("\u2610"))) {
                 const content = firstContent;
                 const restText = content.slice(1);
@@ -4745,7 +4745,7 @@ var require_converter = __commonJS({
                 inlineToken.children = newChildren;
               }
             } else {
-              const content = toText3(inlineToken.content);
+              const content = toText4(inlineToken.content);
               const restText = content.slice(1);
               if (taskInfo.checked) {
                 inlineToken.content = `<span style="display: inline-block; font-size: 1.15em; font-weight: bold; margin-right: 6px; vertical-align: -0.05em; color: #8f959e; line-height: 1;">\u2611</span><span style="text-decoration: line-through; color: #8f959e;">${restText.trimStart()}</span>`;
@@ -4757,11 +4757,11 @@ var require_converter = __commonJS({
           }
           return `<li style="${this.getInlineStyle("li")}">`;
         };
-        rules.code_inline = (tokens, idx) => `<code style="${this.getInlineStyle("code")}">${this.escapeHtml(toText3(getToken(tokens, idx).content))}</code>`;
+        rules.code_inline = (tokens, idx) => `<code style="${this.getInlineStyle("code")}">${this.escapeHtml(toText4(getToken(tokens, idx).content))}</code>`;
         rules.fence = (tokens, idx) => {
           const token = getToken(tokens, idx);
-          const content = toText3(token.content);
-          const lang = toText3(token.info) || "text";
+          const content = toText4(token.content);
+          const lang = toText4(token.info) || "text";
           return this.createCodeBlock(content, lang);
         };
         rules.link_open = (tokens, idx) => {
@@ -4770,7 +4770,7 @@ var require_converter = __commonJS({
           const safeHref = this.validateLink(href);
           const nextToken = getToken(tokens, idx + 1);
           const closeToken = getToken(tokens, idx + 2);
-          const visibleText = nextToken && nextToken.type === "text" ? toText3(nextToken.content).trim() : "";
+          const visibleText = nextToken && nextToken.type === "text" ? toText4(nextToken.content).trim() : "";
           const isUrlTextLink = (closeToken == null ? void 0 : closeToken.type) === "link_close" && /^https?:\/\//i.test(visibleText || href);
           const urlTextStyle = isUrlTextLink ? "; display:block; max-width:100%; margin:4px 0; line-height:1.55; word-break:break-all; overflow-wrap:anywhere;" : "";
           return `<a href="${safeHref}" style="${this.getInlineStyle("a")}${urlTextStyle}">`;
@@ -4781,7 +4781,7 @@ var require_converter = __commonJS({
         rules.image = (tokens, idx) => {
           var _a5, _b;
           let src = ((_b = (_a5 = getToken(tokens, idx)).attrGet) == null ? void 0 : _b.call(_a5, "src")) || "";
-          const alt = toText3(getToken(tokens, idx).content);
+          const alt = toText4(getToken(tokens, idx).content);
           src = this.resolveImagePath(src);
           let caption = "";
           if (alt) {
@@ -4883,7 +4883,7 @@ var require_converter = __commonJS({
           if (token.type === "blockquote_close")
             break;
           if (token.type === "inline" && token.content) {
-            const firstLine = toText3(token.content).split("\n")[0];
+            const firstLine = toText4(token.content).split("\n")[0];
             const match = firstLine.match(/^\[!\s*([^\]\r\n]+?)\s*\](?:\s+(.*))?/);
             if (match) {
               const rawType = match[1].trim();
@@ -4894,7 +4894,7 @@ var require_converter = __commonJS({
               const mappedConfig = CALLOUT_ICONS[type];
               const config = mappedConfig || { icon: CALLOUT_ICONS.note.icon, label: type };
               const defaultTitle = type.charAt(0).toUpperCase() + type.slice(1);
-              const lines = toText3(token.content).split("\n");
+              const lines = toText4(token.content).split("\n");
               lines.shift();
               token.content = lines.join("\n");
               if (token.children) {
@@ -4905,7 +4905,7 @@ var require_converter = __commonJS({
                   token.children = [];
                 }
               }
-              if (toText3(token.content).trim() === "") {
+              if (toText4(token.content).trim() === "") {
                 if (i > 0 && getToken(tokens, i - 1).type === "paragraph_open")
                   getToken(tokens, i - 1).hidden = true;
                 token.hidden = true;
@@ -5590,7 +5590,7 @@ __export(apple_style_view_shared_exports, {
   isChineseObsidianLocale: () => isChineseObsidianLocale,
   isMobileClient: () => isMobileClient3,
   isMobileClientBase: () => isMobileClient2,
-  isRecord: () => isRecord10,
+  isRecord: () => isRecord11,
   isWechatSyncUnsupportedMethodError: () => isUnsupportedBridgeMethodError,
   loadCommonJsDependency: () => loadCommonJsDependency,
   mapAppUrlImagesToAssetUrls: () => mapAppUrlImagesToAssetUrls,
@@ -5652,7 +5652,7 @@ __export(apple_style_view_shared_exports, {
   toOptionalNumber: () => toOptionalNumber2,
   toOptionalText: () => toOptionalText2,
   toReadableError: () => toReadableError4,
-  toRecord: () => toRecord7,
+  toRecord: () => toRecord8,
   toSyncFriendlyMessage: () => toSyncFriendlyMessage,
   updateFeishuHistoryPath: () => updateFeishuHistoryPath
 });
@@ -48759,6 +48759,7 @@ function createDefaultMultiPlatformSyncSettings() {
     connectedClients: [],
     selectedPlatforms: [],
     recentTasks: [],
+    policyCache: null,
     connection: {
       status: "untested",
       checkedAt: 0,
@@ -48835,6 +48836,7 @@ function normalizeWechatSyncCapabilities(value = {}) {
     "openSyncTask",
     "getAuthSnapshot",
     "quotaPolicy",
+    "remotePolicy",
     // Set by Obsidian Publisher >= 0.2.6 when LicenseManager reports an
     // active Pro tier; the publish modal hides upgrade affordances when true.
     "proLicensed"
@@ -48895,6 +48897,21 @@ function normalizeMultiPlatformConnection(value = {}) {
     capabilities: normalizeWechatSyncCapabilities(source.capabilities)
   };
 }
+function normalizeWechatSyncPolicyCache(value = null) {
+  if (!isRecord6(value))
+    return null;
+  const source = asRecord4(value);
+  const payload = asRecord4(source.payload);
+  const cachedAt = Number(source.cachedAt);
+  if (!isRecord6(source.payload) || typeof source.signature !== "string" || !Number.isFinite(cachedAt)) {
+    return null;
+  }
+  return {
+    payload: { ...payload },
+    signature: source.signature,
+    cachedAt
+  };
+}
 function normalizeMultiPlatformSyncSettings(value = {}) {
   const defaults = createDefaultMultiPlatformSyncSettings();
   const source = asRecord4(value);
@@ -48916,7 +48933,8 @@ function normalizeMultiPlatformSyncSettings(value = {}) {
     selectedPlatforms,
     connection: normalizeMultiPlatformConnection(source.connection),
     recentTasks: normalizeWechatSyncRecentTasks(source.recentTasks),
-    connectedClients: normalizeConnectedClients(source.connectedClients)
+    connectedClients: normalizeConnectedClients(source.connectedClients),
+    policyCache: normalizeWechatSyncPolicyCache(source.policyCache)
   };
 }
 function getAvailableWechatsyncPlatforms(settings = {}) {
@@ -49648,26 +49666,414 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   }));
 }
 
-// views/publish-modal/multi-platform.js
-var QUOTA_POLICY = "truncate";
-var FREE_DAILY_PLATFORM_QUOTA = 1;
-var MODAL_SELECTED_PLATFORM_IDS = "__wechatMultiPlatformSelectedPlatformIds";
-var MATERIAL_COVER_ASSET_TTL_MS = 5 * 60 * 1e3;
-var MAX_MATERIAL_COVER_ASSET_CACHE_ENTRIES = 3;
+// services/obsidian-publisher-policy.js
+var PRODUCT_ID = "obsidian-publisher";
+var POLICY_CLIENT = "obsidian-plugin";
+var FALLBACK_LICENSE_PUBLIC_KEY = "Xm_sBLP69WoJ2LpddMzRYCzVk6G1BlBsGMyHFNq0fUw";
+var LICENSE_WORKER_URLS = [
+  "https://license.xiaoweibox.top",
+  "https://license-cn.xiaoweibox.top"
+];
+var POLICY_REQUEST_TIMEOUT_MS = 1e4;
+var POLICY_GRACE_SECONDS = 24 * 60 * 60;
+var FALLBACK_FREE_DAILY_PLATFORM_QUOTA = 1;
+var DEFAULT_PRO_UPGRADE_URL = "https://xiaoweibox.top/obsidian-publisher/pro";
+var DEFAULT_EXTENSION_UPGRADE_URL = "https://xiaoweibox.top/obsidian-publisher/download";
+var DEFAULT_OBSIDIAN_PLUGIN_UPGRADE_URL = "obsidian://show-plugin?id=wechat-converter";
 function isRecord8(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
 function toRecord4(value) {
   return isRecord8(value) ? value : {};
 }
-function toRecordList2(value) {
-  return Array.isArray(value) ? value.filter(isRecord8).map((item) => ({ ...item })) : [];
-}
 function toText2(value) {
   return typeof value === "string" ? value : "";
 }
+function canonicalizePolicyPayload(value) {
+  if (value === null)
+    return "null";
+  if (typeof value === "boolean")
+    return value ? "true" : "false";
+  if (typeof value === "number") {
+    if (!Number.isFinite(value))
+      throw new Error("canonicalize: non-finite number not allowed");
+    return JSON.stringify(value);
+  }
+  if (typeof value === "string")
+    return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => canonicalizePolicyPayload(item != null ? item : null)).join(",")}]`;
+  }
+  if (isRecord8(value)) {
+    const parts = Object.keys(value).filter((key) => value[key] !== void 0 && typeof value[key] !== "function").sort().map((key) => `${JSON.stringify(key)}:${canonicalizePolicyPayload(value[key])}`);
+    return `{${parts.join(",")}}`;
+  }
+  throw new Error(`canonicalize: unsupported type ${typeof value}`);
+}
+function resolveNodeLoader() {
+  if (typeof require === "function")
+    return require;
+  const globalRequire = toRecord4(globalThis).require;
+  if (typeof globalRequire === "function")
+    return globalRequire;
+  const windowRequire = typeof window !== "undefined" ? toRecord4(window).require : null;
+  return typeof windowRequire === "function" ? windowRequire : null;
+}
+function resolveCryptoRuntime() {
+  const loader = resolveNodeLoader();
+  if (!loader)
+    return null;
+  try {
+    const crypto = loader(["cr", "ypto"].join(""));
+    const BufferCtor = toRecord4(globalThis).Buffer || loader("buffer").Buffer;
+    if (!(crypto == null ? void 0 : crypto.createPublicKey) || !(crypto == null ? void 0 : crypto.verify) || !BufferCtor)
+      return null;
+    return { crypto, BufferCtor };
+  } catch (e) {
+    return null;
+  }
+}
+function decodeBase64Url(value, BufferCtor) {
+  const normalized = String(value || "").replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
+  return BufferCtor.from(padded, "base64");
+}
+function verifyPolicyPayload(payload, signatureB64Url, publicKeyB64Url = FALLBACK_LICENSE_PUBLIC_KEY) {
+  if (!publicKeyB64Url || !signatureB64Url)
+    return false;
+  const runtime = resolveCryptoRuntime();
+  if (!runtime)
+    return false;
+  const { crypto, BufferCtor } = runtime;
+  try {
+    const publicKeyBytes = decodeBase64Url(publicKeyB64Url, BufferCtor);
+    const signature = decodeBase64Url(signatureB64Url, BufferCtor);
+    if (publicKeyBytes.length !== 32 || signature.length !== 64)
+      return false;
+    const spkiPrefix = BufferCtor.from("302a300506032b6570032100", "hex");
+    const publicKey = crypto.createPublicKey({
+      key: BufferCtor.concat([spkiPrefix, publicKeyBytes]),
+      format: "der",
+      type: "spki"
+    });
+    const message = BufferCtor.from(canonicalizePolicyPayload(payload), "utf8");
+    return crypto.verify(null, message, publicKey, signature) === true;
+  } catch (e) {
+    return false;
+  }
+}
+function normalizePolicyQuota(value) {
+  const quota = toRecord4(value);
+  const mode = toText2(quota.mode);
+  if (mode !== "daily_platform_count" && mode !== "daily_job_count" && mode !== "none") {
+    return null;
+  }
+  if (mode === "none")
+    return { mode: "none", freeLimit: 0 };
+  const freeLimit = Number(quota.freeLimit);
+  if (!Number.isFinite(freeLimit))
+    return null;
+  return { mode, freeLimit: Math.max(0, Math.floor(freeLimit)) };
+}
+function isPolicyPayload(value) {
+  const payload = toRecord4(value);
+  const quota = normalizePolicyQuota(payload.quota);
+  return payload.productId === PRODUCT_ID && typeof payload.policyVersion === "number" && typeof payload.issuedAt === "string" && typeof payload.expiresAt === "string" && !!quota && typeof payload.forceUpgradeExtension === "boolean" && typeof payload.forceUpgradeObsidianPlugin === "boolean" && typeof payload.proUpgradeUrl === "string";
+}
+function isSignedPolicyResponse(value) {
+  const record = toRecord4(value);
+  return typeof record.signature === "string" && isPolicyPayload(record.payload);
+}
+function normalizePolicyCache(value) {
+  const cache = toRecord4(value);
+  if (typeof cache.signature !== "string" || !Number.isFinite(Number(cache.cachedAt)))
+    return null;
+  if (!isPolicyPayload(cache.payload))
+    return null;
+  return {
+    payload: { ...toRecord4(cache.payload) },
+    signature: cache.signature,
+    cachedAt: Number(cache.cachedAt)
+  };
+}
+function nowSeconds() {
+  return Math.floor(Date.now() / 1e3);
+}
+function isPolicyExpired(payload) {
+  const expiresAt = Date.parse(toText2(toRecord4(payload).expiresAt));
+  return !Number.isFinite(expiresAt) || expiresAt <= Date.now();
+}
+function isPolicyWithinGrace(payload) {
+  const expiresAt = Date.parse(toText2(toRecord4(payload).expiresAt));
+  return Number.isFinite(expiresAt) && expiresAt + POLICY_GRACE_SECONDS * 1e3 > Date.now();
+}
+function hasCachedForceGate(payload) {
+  const record = toRecord4(payload);
+  return record.forceUpgradeExtension === true || record.forceUpgradeObsidianPlugin === true;
+}
+function readPolicyCache(plugin, publicKey = FALLBACK_LICENSE_PUBLIC_KEY) {
+  const settings = normalizeMultiPlatformSyncSettings(toRecord4(plugin == null ? void 0 : plugin.settings).multiPlatformSync);
+  const cache = normalizePolicyCache(settings.policyCache);
+  if (!cache)
+    return null;
+  if (!verifyPolicyPayload(cache.payload, cache.signature, publicKey))
+    return null;
+  if (cache.payload.productId !== PRODUCT_ID)
+    return null;
+  return cache;
+}
+async function writePolicyCache(plugin, payload, signature) {
+  const pluginRecord = toRecord4(plugin);
+  const settings = toRecord4(pluginRecord.settings);
+  const cache = {
+    payload: { ...toRecord4(payload) },
+    signature,
+    cachedAt: nowSeconds()
+  };
+  settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
+    ...toRecord4(settings.multiPlatformSync),
+    policyCache: cache
+  });
+  pluginRecord.settings = settings;
+  if (typeof pluginRecord.saveSettings === "function") {
+    try {
+      await pluginRecord.saveSettings();
+    } catch (e) {
+    }
+  }
+  return cache;
+}
+function buildFallbackPolicy() {
+  const now = new Date();
+  return {
+    productId: PRODUCT_ID,
+    policyVersion: 0,
+    issuedAt: now.toISOString(),
+    expiresAt: new Date(now.getTime() + 60 * 60 * 1e3).toISOString(),
+    quota: {
+      mode: "daily_platform_count",
+      freeLimit: FALLBACK_FREE_DAILY_PLATFORM_QUOTA
+    },
+    minExtensionVersion: void 0,
+    minObsidianPluginVersion: void 0,
+    forceUpgradeExtension: false,
+    forceUpgradeObsidianPlugin: false,
+    proUpgradeUrl: DEFAULT_PRO_UPGRADE_URL,
+    extensionUpgradeUrl: DEFAULT_EXTENSION_UPGRADE_URL,
+    obsidianPluginUpgradeUrl: DEFAULT_OBSIDIAN_PLUGIN_UPGRADE_URL
+  };
+}
+function createFetchImpl(options = {}) {
+  if (typeof options.fetchImpl === "function")
+    return options.fetchImpl;
+  if (typeof options.requestUrl === "function") {
+    return createObsidianFetchAdapter(options.requestUrl);
+  }
+  return null;
+}
+async function fetchAndVerifyPolicy(options = {}) {
+  const publicKey = options.publicKey || FALLBACK_LICENSE_PUBLIC_KEY;
+  if (!publicKey)
+    return { kind: "public_key_unconfigured" };
+  const fetchImpl = createFetchImpl(options);
+  if (!fetchImpl)
+    return { kind: "request_unavailable" };
+  const endpoints = options.workerUrl ? [options.workerUrl] : LICENSE_WORKER_URLS;
+  const body = {
+    productId: PRODUCT_ID,
+    client: POLICY_CLIENT,
+    clientVersion: options.clientVersion || "0.0.0",
+    installId: options.installId || ""
+  };
+  let lastNetworkOutcome = null;
+  let lastNonNetworkOutcome = null;
+  for (const baseUrl of endpoints) {
+    const url = String(baseUrl || "").replace(/\/+$/, "") + "/policy";
+    const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), options.timeoutMs || POLICY_REQUEST_TIMEOUT_MS) : null;
+    try {
+      const response = await fetchImpl(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: controller == null ? void 0 : controller.signal
+      });
+      let parsed;
+      try {
+        parsed = await response.json();
+      } catch (e) {
+        lastNonNetworkOutcome = {
+          kind: "malformed_response",
+          message: `non-JSON response (status ${response.status})`
+        };
+        continue;
+      }
+      if (!isSignedPolicyResponse(parsed)) {
+        lastNonNetworkOutcome = {
+          kind: "malformed_response",
+          message: `unexpected shape (status ${response.status})`
+        };
+        continue;
+      }
+      if (!verifyPolicyPayload(parsed.payload, parsed.signature, publicKey)) {
+        return { kind: "invalid_signature" };
+      }
+      if (parsed.payload.productId !== PRODUCT_ID) {
+        return { kind: "product_mismatch" };
+      }
+      if (isPolicyExpired(parsed.payload)) {
+        lastNonNetworkOutcome = { kind: "expired" };
+        continue;
+      }
+      return { kind: "success", response: parsed };
+    } catch (error) {
+      lastNetworkOutcome = {
+        kind: "network_error",
+        message: error instanceof Error ? error.message : String(error)
+      };
+    } finally {
+      if (timer)
+        clearTimeout(timer);
+    }
+  }
+  return lastNonNetworkOutcome || lastNetworkOutcome || { kind: "network_error", message: "unknown policy error" };
+}
+function getObsidianPluginVersion(plugin) {
+  return toText2(toRecord4(toRecord4(plugin).manifest).version) || "0.0.0";
+}
+async function getEffectiveObsidianPublisherPolicy(plugin, options = {}) {
+  const publicKey = options.publicKey || FALLBACK_LICENSE_PUBLIC_KEY;
+  const cache = readPolicyCache(plugin, publicKey);
+  if (cache && !isPolicyExpired(cache.payload)) {
+    return {
+      payload: cache.payload,
+      signature: cache.signature,
+      source: "cache",
+      fetchedAt: cache.cachedAt
+    };
+  }
+  const fetched = await fetchAndVerifyPolicy({
+    ...options,
+    publicKey,
+    clientVersion: options.clientVersion || getObsidianPluginVersion(plugin),
+    installId: options.installId || toText2(toRecord4(toRecord4(plugin).settings).clientId)
+  });
+  if (fetched.kind === "success") {
+    const cached = await writePolicyCache(plugin, fetched.response.payload, fetched.response.signature);
+    return {
+      payload: fetched.response.payload,
+      signature: fetched.response.signature,
+      source: "network",
+      fetchedAt: cached.cachedAt
+    };
+  }
+  if (cache && (isPolicyWithinGrace(cache.payload) || hasCachedForceGate(cache.payload))) {
+    return {
+      payload: cache.payload,
+      signature: cache.signature,
+      source: "cache_grace",
+      fetchedAt: cache.cachedAt,
+      fetchOutcome: fetched
+    };
+  }
+  return {
+    payload: buildFallbackPolicy(),
+    source: "fallback",
+    fetchOutcome: fetched
+  };
+}
+function getDailyPlatformQuotaLimit(policy, fallback = FALLBACK_FREE_DAILY_PLATFORM_QUOTA) {
+  const quota = normalizePolicyQuota(toRecord4(policy).quota);
+  if (!quota || quota.mode !== "daily_platform_count")
+    return fallback;
+  return Number.isFinite(Number(quota.freeLimit)) ? Math.max(0, Math.floor(Number(quota.freeLimit))) : fallback;
+}
+function parseSemverLike(raw) {
+  const trimmed = toText2(raw).trim();
+  if (!trimmed)
+    return null;
+  const match = trimmed.match(/^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:[-+].*)?$/i);
+  if (!match)
+    return null;
+  const parts = [match[1], match[2] || "0", match[3] || "0"].map((part) => Number(part));
+  return parts.every((part) => Number.isSafeInteger(part) && part >= 0) ? parts : null;
+}
+function compareSemverLike(current, target) {
+  const a = parseSemverLike(current);
+  const b = parseSemverLike(target);
+  if (!a || !b)
+    return null;
+  for (let index = 0; index < 3; index += 1) {
+    if (a[index] > b[index])
+      return 1;
+    if (a[index] < b[index])
+      return -1;
+  }
+  return 0;
+}
+function isVersionLessThan(current, minimum) {
+  if (!minimum)
+    return false;
+  const compared = compareSemverLike(current, minimum);
+  return compared === null ? null : compared < 0;
+}
+function checkObsidianPluginPolicyGate(policy, currentVersion) {
+  const record = toRecord4(policy);
+  const minVersion = toText2(record.minObsidianPluginVersion);
+  const forceUpgrade = record.forceUpgradeObsidianPlugin === true;
+  const lessThan = minVersion ? isVersionLessThan(currentVersion, minVersion) : false;
+  const shouldWarn = !!minVersion && (lessThan === true || lessThan === null);
+  const shouldBlock = forceUpgrade && shouldWarn;
+  const message = "\u5F53\u524D Obsidian \u63D2\u4EF6\u7248\u672C\u8FC7\u4F4E\uFF0C\u8BF7\u5347\u7EA7\u540E\u7EE7\u7EED\u53D1\u5E03\u3002";
+  return {
+    allowed: !shouldBlock,
+    warning: shouldWarn && !shouldBlock,
+    reason: shouldBlock ? "OBSIDIAN_PLUGIN_VERSION_UNSUPPORTED" : void 0,
+    message: shouldBlock ? message : void 0,
+    minObsidianPluginVersion: minVersion || void 0,
+    upgradeUrl: toText2(record.obsidianPluginUpgradeUrl) || DEFAULT_OBSIDIAN_PLUGIN_UPGRADE_URL
+  };
+}
+function checkExtensionPolicyGate(policy, options = {}) {
+  const record = toRecord4(policy);
+  const minVersion = toText2(record.minExtensionVersion);
+  const forceUpgrade = record.forceUpgradeExtension === true;
+  const currentVersion = toText2(options.currentVersion);
+  const lessThan = minVersion ? isVersionLessThan(currentVersion, minVersion) : false;
+  const versionWarn = !!minVersion && (lessThan === true || lessThan === null);
+  const remotePolicyUnsupported = forceUpgrade && options.remotePolicySupported !== true;
+  const shouldBlock = forceUpgrade && (remotePolicyUnsupported || versionWarn);
+  const message = remotePolicyUnsupported ? "\u5F53\u524D\u6D4F\u89C8\u5668\u6269\u5C55\u7248\u672C\u4E0D\u652F\u6301\u8FDC\u7AEF\u7B56\u7565\uFF0C\u8BF7\u5347\u7EA7\u540E\u7EE7\u7EED\u53D1\u5E03\u3002" : "\u5F53\u524D\u6D4F\u89C8\u5668\u6269\u5C55\u7248\u672C\u8FC7\u4F4E\uFF0C\u8BF7\u5347\u7EA7\u540E\u7EE7\u7EED\u53D1\u5E03\u3002";
+  return {
+    allowed: !shouldBlock,
+    warning: versionWarn && !shouldBlock,
+    reason: shouldBlock ? remotePolicyUnsupported ? "EXTENSION_REMOTE_POLICY_UNSUPPORTED" : "EXTENSION_VERSION_UNSUPPORTED" : void 0,
+    message: shouldBlock ? message : void 0,
+    minExtensionVersion: minVersion || void 0,
+    upgradeUrl: toText2(record.extensionUpgradeUrl) || DEFAULT_EXTENSION_UPGRADE_URL
+  };
+}
+
+// views/publish-modal/multi-platform.js
+var QUOTA_POLICY = "truncate";
+var FREE_DAILY_PLATFORM_QUOTA = 1;
+var MODAL_SELECTED_PLATFORM_IDS = "__wechatMultiPlatformSelectedPlatformIds";
+var MATERIAL_COVER_ASSET_TTL_MS = 5 * 60 * 1e3;
+var MAX_MATERIAL_COVER_ASSET_CACHE_ENTRIES = 3;
+function isRecord9(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+function toRecord5(value) {
+  return isRecord9(value) ? value : {};
+}
+function toRecordList2(value) {
+  return Array.isArray(value) ? value.filter(isRecord9).map((item) => ({ ...item })) : [];
+}
+function toText3(value) {
+  return typeof value === "string" ? value : "";
+}
 function callBooleanMethod(target, methodName, args = []) {
-  const method = toRecord4(target)[methodName];
+  const method = toRecord5(target)[methodName];
   if (typeof method !== "function")
     return null;
   const methodFn = (
@@ -49684,47 +50090,47 @@ function toReadableError2(error) {
     );
     return {
       message: error.message,
-      code: toText2(errorRecord.code),
-      stack: toText2(error.stack)
+      code: toText3(errorRecord.code),
+      stack: toText3(error.stack)
     };
   }
-  const record = toRecord4(error);
+  const record = toRecord5(error);
   return {
-    message: toText2(record.message) || String(error || ""),
-    code: toText2(record.code),
-    stack: toText2(record.stack)
+    message: toText3(record.message) || String(error || ""),
+    code: toText3(record.code),
+    stack: toText3(record.stack)
   };
 }
 function getPlatformId2(platform) {
-  const record = toRecord4(platform);
-  return toText2(record.id || record.platform);
+  const record = toRecord5(platform);
+  return toText3(record.id || record.platform);
 }
 function toEnqueueResult(value) {
   return (
     /** @type {EnqueueResultLike} */
-    { ...toRecord4(value) }
+    { ...toRecord5(value) }
   );
 }
 function toBridgeAssets(value) {
   if (!Array.isArray(value))
     return [];
-  return value.filter(isRecord8).map((asset) => (
+  return value.filter(isRecord9).map((asset) => (
     /** @type {BridgeAssetLike} */
     { ...asset }
   ));
 }
 function toResolvedImages(value) {
-  const record = toRecord4(value);
+  const record = toRecord5(value);
   return {
-    markdown: toText2(record.markdown),
+    markdown: toText3(record.markdown),
     assets: toBridgeAssets(record.assets),
-    cover: toText2(record.cover),
-    firstImageSrc: toText2(record.firstImageSrc),
+    cover: toText3(record.cover),
+    firstImageSrc: toText3(record.firstImageSrc),
     warnings: Array.isArray(record.warnings) ? record.warnings : []
   };
 }
 function toBridgeAsset(value) {
-  const record = toRecord4(value);
+  const record = toRecord5(value);
   if (!record.filename || !record.mimeType || typeof record.size !== "number" || typeof record.base64 !== "string") {
     return null;
   }
@@ -49732,26 +50138,26 @@ function toBridgeAsset(value) {
     /** @type {BridgeAssetLike} */
     {
       ...record,
-      filename: toText2(record.filename),
-      mimeType: toText2(record.mimeType),
+      filename: toText3(record.filename),
+      mimeType: toText3(record.mimeType),
       size: record.size,
       base64: record.base64,
-      source: isRecord8(record.source) ? { ...record.source } : void 0
+      source: isRecord9(record.source) ? { ...record.source } : void 0
     }
   );
 }
 function toPlatformStatusBadge2(value) {
-  const record = toRecord4(value);
+  const record = toRecord5(value);
   return {
-    cls: toText2(record.cls),
-    text: toText2(record.text),
-    status: toText2(record.status)
+    cls: toText3(record.cls),
+    text: toText3(record.text),
+    status: toText3(record.status)
   };
 }
 function toNormalizedPlatform(value) {
-  const record = toRecord4(value);
-  const id = toText2(record.id);
-  const name = toText2(record.name) || id;
+  const record = toRecord5(value);
+  const id = toText3(record.id);
+  const name = toText3(record.name) || id;
   if (!id)
     return null;
   return (
@@ -49765,12 +50171,12 @@ function toNormalizedPlatform(value) {
 }
 function toTaskResults(value) {
   return toRecordList2(value).map((item) => {
-    const record = toRecord4(item);
+    const record = toRecord5(item);
     return {
-      platform: toText2(record.id || record.platform),
-      platformName: toText2(record.name),
+      platform: toText3(record.id || record.platform),
+      platformName: toText3(record.name),
       success: record.success === true || record.status === "success",
-      error: toText2(record.error || record.message)
+      error: toText3(record.error || record.message)
     };
   }).filter((item) => item.platform);
 }
@@ -49785,7 +50191,7 @@ function toUnknownList(value) {
   return Array.isArray(value) ? value : [];
 }
 async function getResponseArrayBuffer(response) {
-  const responseRecord = toRecord4(response);
+  const responseRecord = toRecord5(response);
   const arrayBuffer = responseRecord.arrayBuffer;
   if (typeof arrayBuffer !== "function")
     return (
@@ -49807,25 +50213,140 @@ function asModalElement(element) {
 function isUnsupportedBridgeError2(error) {
   return isUnsupportedBridgeMethodError(toReadableError2(error));
 }
-function getQuotaHintText(selectedCount = 0, { proLicensed = false } = {}) {
+function getQuotaHintText(selectedCount = 0, { proLicensed = false, freeLimit = FREE_DAILY_PLATFORM_QUOTA } = {}) {
+  const limit = Number.isFinite(Number(freeLimit)) ? Math.max(0, Math.floor(Number(freeLimit))) : FREE_DAILY_PLATFORM_QUOTA;
   if (proLicensed) {
     return selectedCount > 0 ? `\u5DF2\u9009 ${selectedCount} \u4E2A\u5E73\u53F0\u3002Pro \u5DF2\u6FC0\u6D3B\uFF0C\u65E0\u6BCF\u65E5\u5E73\u53F0\u6570\u91CF\u9650\u5236\u3002` : "Pro \u5DF2\u6FC0\u6D3B\uFF0C\u65E0\u6BCF\u65E5\u5E73\u53F0\u6570\u91CF\u9650\u5236\u3002";
   }
-  if (selectedCount > FREE_DAILY_PLATFORM_QUOTA) {
-    return `\u5DF2\u9009 ${selectedCount} \u4E2A\u5E73\u53F0\uFF1B\u514D\u8D39\u7248\u6BCF\u5929 ${FREE_DAILY_PLATFORM_QUOTA} \u4E2A\u5E73\u53F0\u989D\u5EA6\uFF0C\u8D85\u51FA\u90E8\u5206\u4F1A\u81EA\u52A8\u8DF3\u8FC7\u3002`;
+  if (selectedCount > limit) {
+    return `\u5DF2\u9009 ${selectedCount} \u4E2A\u5E73\u53F0\uFF1B\u514D\u8D39\u7248\u6BCF\u5929 ${limit} \u4E2A\u5E73\u53F0\u989D\u5EA6\uFF0C\u8D85\u51FA\u90E8\u5206\u4F1A\u81EA\u52A8\u8DF3\u8FC7\u3002`;
   }
-  if (selectedCount === FREE_DAILY_PLATFORM_QUOTA) {
-    return `\u5DF2\u9009 ${selectedCount} \u4E2A\u5E73\u53F0\uFF0C\u521A\u597D\u8FBE\u5230\u514D\u8D39\u7248\u6BCF\u5929 ${FREE_DAILY_PLATFORM_QUOTA} \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002`;
+  if (selectedCount === limit) {
+    return `\u5DF2\u9009 ${selectedCount} \u4E2A\u5E73\u53F0\uFF0C\u521A\u597D\u8FBE\u5230\u514D\u8D39\u7248\u6BCF\u5929 ${limit} \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002`;
   }
   if (selectedCount > 0) {
-    return `\u5DF2\u9009 ${selectedCount} \u4E2A\u5E73\u53F0\uFF1B\u514D\u8D39\u7248\u6BCF\u5929 ${FREE_DAILY_PLATFORM_QUOTA} \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002`;
+    return `\u5DF2\u9009 ${selectedCount} \u4E2A\u5E73\u53F0\uFF1B\u514D\u8D39\u7248\u6BCF\u5929 ${limit} \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002`;
   }
-  return `\u514D\u8D39\u7248\u6BCF\u5929 ${FREE_DAILY_PLATFORM_QUOTA} \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002`;
+  return `\u514D\u8D39\u7248\u6BCF\u5929 ${limit} \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002`;
+}
+function toFiniteNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : void 0;
+}
+function mergePolicyCapabilityDetails(target, source) {
+  const sourceRecord = toRecord5(source);
+  const next = {
+    ...target,
+    ...normalizeWechatSyncCapabilities(sourceRecord)
+  };
+  const quota = normalizePolicyQuota(sourceRecord.quota);
+  if (quota)
+    next.quota = quota;
+  const policyVersion = toFiniteNumber(sourceRecord.policyVersion);
+  if (policyVersion !== void 0)
+    next.policyVersion = policyVersion;
+  for (const key of [
+    "minExtensionVersion",
+    "minObsidianPluginVersion",
+    "proUpgradeUrl",
+    "extensionUpgradeUrl",
+    "obsidianPluginUpgradeUrl"
+  ]) {
+    const text = toText3(sourceRecord[key]);
+    if (text)
+      next[key] = text;
+  }
+  if (toText3(sourceRecord.version))
+    next.extensionVersion = toText3(sourceRecord.version);
+  for (const key of ["forceUpgradeExtension", "forceUpgradeObsidianPlugin"]) {
+    if (Object.prototype.hasOwnProperty.call(sourceRecord, key)) {
+      next[key] = sourceRecord[key] === true;
+    }
+  }
+  return next;
+}
+function mergeHealthPolicyCapabilities(cachedCapabilities, health) {
+  const healthRecord = toRecord5(health);
+  return mergePolicyCapabilityDetails(
+    mergePolicyCapabilityDetails(cachedCapabilities, healthRecord.capabilities),
+    healthRecord
+  );
+}
+function getDailyPlatformQuotaLimitFromCapabilities(value, fallback = FREE_DAILY_PLATFORM_QUOTA) {
+  const quota = normalizePolicyQuota(toRecord5(value).quota);
+  if (!quota || quota.mode !== "daily_platform_count")
+    return fallback;
+  return Math.max(0, Math.floor(Number(quota.freeLimit)));
+}
+function resolveInitialFreeQuotaLimit(bridgeSettings, capabilities) {
+  const settingsRecord = toRecord5(bridgeSettings);
+  const cachedPolicy = toRecord5(toRecord5(settingsRecord.policyCache).payload);
+  const fallback = getDailyPlatformQuotaLimitFromCapabilities(capabilities, FREE_DAILY_PLATFORM_QUOTA);
+  return getDailyPlatformQuotaLimit(cachedPolicy, fallback);
+}
+function resolvePluginSideQuotaTruncation(requestedPlatformIds, effectivePolicy, capabilities) {
+  if (capabilities.proLicensed === true) {
+    return {
+      platformIds: requestedPlatformIds,
+      skippedPlatformIds: [],
+      quotaLimit: FREE_DAILY_PLATFORM_QUOTA,
+      truncated: false
+    };
+  }
+  if (!Object.prototype.hasOwnProperty.call(capabilities, "proLicensed")) {
+    return {
+      platformIds: requestedPlatformIds,
+      skippedPlatformIds: [],
+      quotaLimit: FREE_DAILY_PLATFORM_QUOTA,
+      truncated: false
+    };
+  }
+  const policyQuota = effectivePolicy.source !== "fallback" ? normalizePolicyQuota(toRecord5(effectivePolicy.payload).quota) : null;
+  const quota = policyQuota || normalizePolicyQuota(toRecord5(capabilities).quota) || normalizePolicyQuota(toRecord5(effectivePolicy.payload).quota);
+  if (!quota || quota.mode !== "daily_platform_count") {
+    return {
+      platformIds: requestedPlatformIds,
+      skippedPlatformIds: [],
+      quotaLimit: FREE_DAILY_PLATFORM_QUOTA,
+      truncated: false
+    };
+  }
+  const quotaLimit = Math.max(0, Math.floor(Number(quota.freeLimit)));
+  if (requestedPlatformIds.length <= quotaLimit) {
+    return {
+      platformIds: requestedPlatformIds,
+      skippedPlatformIds: [],
+      quotaLimit,
+      truncated: false
+    };
+  }
+  return {
+    platformIds: requestedPlatformIds.slice(0, quotaLimit),
+    skippedPlatformIds: requestedPlatformIds.slice(quotaLimit),
+    quotaLimit,
+    truncated: true
+  };
+}
+function mergePluginSkippedPlatformsIntoResult(result, truncation) {
+  if (!truncation.skippedPlatformIds.length)
+    return result;
+  const skippedPlatformIds = parseWechatsyncPlatformIds([
+    ...truncation.skippedPlatformIds,
+    ...parseWechatsyncPlatformIds(toUnknownList(result.skippedPlatforms))
+  ]);
+  const publishedPlatforms = toUnknownList(result.publishedPlatforms).length ? result.publishedPlatforms : truncation.platformIds;
+  return {
+    ...result,
+    quotaBlocked: true,
+    maxPlatforms: Number.isFinite(Number(result.maxPlatforms)) ? Number(result.maxPlatforms) : truncation.quotaLimit,
+    publishedPlatforms,
+    skippedPlatforms: skippedPlatformIds
+  };
 }
 function isMobileClient(app, platformApi = null) {
   if (typeof (platformApi == null ? void 0 : platformApi.isMobile) === "boolean")
     return platformApi.isMobile;
-  return toRecord4(app).isMobile === true;
+  return toRecord5(app).isMobile === true;
 }
 function openPublisherProPage(view) {
   const openedProPage = callBooleanMethod(view, "openPublisherProPage");
@@ -49885,12 +50406,12 @@ function bufferFromArrayBuffer(arrayBuffer) {
 }
 function getMaterialCoverAssetCacheKey(view, url) {
   return [
-    toText2(toRecord4(view).sessionThumbMediaId),
+    toText3(toRecord5(view).sessionThumbMediaId),
     String(url || "").trim()
   ].join("::");
 }
 function pruneMaterialCoverAssetCache(view, now = Date.now()) {
-  const viewRecord = toRecord4(view);
+  const viewRecord = toRecord5(view);
   if (!(viewRecord.wechatMaterialCoverAssetCache instanceof Map))
     viewRecord.wechatMaterialCoverAssetCache = /* @__PURE__ */ new Map();
   const cache = (
@@ -49927,7 +50448,7 @@ function cloneMaterialCoverAsset(cachedAsset, id) {
   };
 }
 async function downloadMaterialCoverAsBridgeAsset(view, coverUrl, assets = [], options = {}) {
-  const viewRecord = toRecord4(view);
+  const viewRecord = toRecord5(view);
   const url = String(coverUrl || "").trim();
   if (!/^https?:\/\//i.test(url)) {
     throw new Error("\u5FAE\u4FE1\u7D20\u6750\u5E93\u5C01\u9762\u7F3A\u5C11\u53EF\u4E0B\u8F7D URL\uFF0C\u65E0\u6CD5\u7528\u4E8E\u591A\u5E73\u53F0\u53D1\u5E03\u3002\u8BF7\u6539\u7528\u672C\u5730\u5C01\u9762\u6216 frontmatter cover\u3002");
@@ -49960,7 +50481,7 @@ async function downloadMaterialCoverAsBridgeAsset(view, coverUrl, assets = [], o
   } catch (error) {
     throw new Error(`\u5FAE\u4FE1\u7D20\u6750\u5E93\u5C01\u9762\u4E0B\u8F7D\u5931\u8D25\uFF1A${toReadableError2(error).message}`);
   }
-  const responseRecord = toRecord4(response);
+  const responseRecord = toRecord5(response);
   const arrayBuffer = await getResponseArrayBuffer(response);
   const buffer = bufferFromArrayBuffer(arrayBuffer);
   if (!buffer.length) {
@@ -49969,7 +50490,7 @@ async function downloadMaterialCoverAsBridgeAsset(view, coverUrl, assets = [], o
   if (buffer.length > DEFAULT_MAX_IMAGE_SIZE_BYTES) {
     throw new Error(`\u5FAE\u4FE1\u7D20\u6750\u5E93\u5C01\u9762\u8D85\u8FC7 ${Math.round(DEFAULT_MAX_IMAGE_SIZE_BYTES / 1024 / 1024)} MB\uFF0C\u65E0\u6CD5\u7528\u4E8E\u591A\u5E73\u53F0\u53D1\u5E03\u3002`);
   }
-  const headers = toRecord4(responseRecord.headers);
+  const headers = toRecord5(responseRecord.headers);
   const mimeType = String(headers["content-type"] || headers["Content-Type"] || "image/jpeg").split(";")[0].trim() || "image/jpeg";
   if (!/^image\/(png|jpe?g|gif|webp)$/i.test(mimeType)) {
     throw new Error(`\u5FAE\u4FE1\u7D20\u6750\u5E93\u5C01\u9762\u683C\u5F0F\u4E0D\u652F\u6301\uFF1A${mimeType}`);
@@ -49985,7 +50506,7 @@ async function downloadMaterialCoverAsBridgeAsset(view, coverUrl, assets = [], o
     source: {
       kind: "wechat-material-cover",
       originalSrc: url,
-      thumbMediaId: toText2(viewRecord.sessionThumbMediaId)
+      thumbMediaId: toText3(viewRecord.sessionThumbMediaId)
     }
   };
   assets.push(asset);
@@ -50017,18 +50538,12 @@ function saveModalSelectedPlatformIds(modal, selectedPlatforms) {
 }
 async function detectQuotaPolicySupport(bridge, cachedConnection = {}) {
   var _a5;
-  const cachedCapabilities = normalizeWechatSyncCapabilities(toRecord4(cachedConnection.capabilities));
-  if (cachedCapabilities.quotaPolicy === true)
-    return cachedCapabilities;
+  const cachedCapabilities = normalizeWechatSyncCapabilities(toRecord5(cachedConnection.capabilities));
   if (!bridge || typeof bridge.health !== "function")
     return cachedCapabilities;
   try {
     const health = await bridge.health({ timeoutMs: 5e3 });
-    const healthRecord = toRecord4(health);
-    return {
-      ...cachedCapabilities,
-      ...normalizeWechatSyncCapabilities(toRecord4(healthRecord.capabilities))
-    };
+    return mergeHealthPolicyCapabilities(cachedCapabilities, health);
   } catch (error) {
     if (isUnsupportedBridgeError2(error))
       return cachedCapabilities;
@@ -50041,27 +50556,27 @@ async function detectQuotaPolicySupport(bridge, cachedConnection = {}) {
   }
 }
 function resolvePublishModalCapabilities(view, cachedConnection = {}) {
-  const cachedCapabilities = normalizeWechatSyncCapabilities(toRecord4(cachedConnection.capabilities));
+  const cachedCapabilities = normalizeWechatSyncCapabilities(toRecord5(cachedConnection.capabilities));
   const bridge = (
     /** @type {BridgeLike} */
     view.plugin.getWechatSyncBridgeService()
   );
   const activeClient = typeof bridge.getActiveClientDescriptor === "function" ? bridge.getActiveClientDescriptor() : null;
-  const activeClientRecord = toRecord4(activeClient);
+  const activeClientRecord = toRecord5(activeClient);
   if (activeClientRecord.capabilities) {
-    return {
-      ...cachedCapabilities,
-      ...normalizeWechatSyncCapabilities(toRecord4(activeClientRecord.capabilities))
-    };
+    return mergePolicyCapabilityDetails(
+      mergePolicyCapabilityDetails(cachedCapabilities, activeClientRecord.capabilities),
+      activeClientRecord
+    );
   }
-  const status = typeof bridge.getStatus === "function" ? toRecord4(bridge.getStatus()) : {};
+  const status = typeof bridge.getStatus === "function" ? toRecord5(bridge.getStatus()) : {};
   const connectedClients = toRecordList2(status.connectedClients);
   const liveClient = connectedClients.find((client) => client.status === "connected" && client.capabilities);
-  const liveClientRecord = toRecord4(liveClient);
-  return {
-    ...cachedCapabilities,
-    ...normalizeWechatSyncCapabilities(toRecord4(liveClientRecord.capabilities))
-  };
+  const liveClientRecord = toRecord5(liveClient);
+  return mergePolicyCapabilityDetails(
+    mergePolicyCapabilityDetails(cachedCapabilities, liveClientRecord.capabilities),
+    liveClientRecord
+  );
 }
 function getObsidianApi2(view, options = {}) {
   return (
@@ -50081,9 +50596,9 @@ async function showMultiPlatformPublishModal(view, options = {}) {
   modal.contentEl = asModalElement(modal.contentEl);
   const shouldOpenModal = !options.modal;
   const mobileSync = isMobileClient(view.app, Platform15);
-  const bridgeSettings = normalizeMultiPlatformSyncSettings(toRecord4(view.plugin.settings.multiPlatformSync));
+  const bridgeSettings = normalizeMultiPlatformSyncSettings(toRecord5(view.plugin.settings.multiPlatformSync));
   const cachedConnection = bridgeSettings.connection || normalizeMultiPlatformConnection();
-  const cachedConnectionRecord = toRecord4(cachedConnection);
+  const cachedConnectionRecord = toRecord5(cachedConnection);
   view.preparePublishModalShell(modal, { mode: "multi", mobileSync });
   const { wechatTab, feishuTab } = view.createPublishModeTabs(modal, "multi");
   wechatTab.onclick = () => {
@@ -50105,6 +50620,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
   });
   const publishModalCapabilities = resolvePublishModalCapabilities(view, cachedConnection);
   const isProLicensed = publishModalCapabilities.proLicensed === true;
+  const initialFreeQuotaLimit = resolveInitialFreeQuotaLimit(bridgeSettings, publishModalCapabilities);
   const quotaHint = asModalElement(modal.contentEl.createDiv({
     cls: `wechat-multiplatform-quota-hint ${isProLicensed ? "is-pro" : "is-free"}`
   }));
@@ -50121,7 +50637,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
   }
   const quotaText = quotaHint.createEl("span", {
     cls: "wechat-multiplatform-quota-copy",
-    text: getQuotaHintText(0, { proLicensed: isProLicensed })
+    text: getQuotaHintText(0, { proLicensed: isProLicensed, freeLimit: initialFreeQuotaLimit })
   });
   if (!isProLicensed) {
     const quotaUpgradeBtn = asModalElement(quotaHint.createEl("button", {
@@ -50133,7 +50649,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
   if (!bridgeSettings.enabled) {
     const disabledHint = asModalElement(modal.contentEl.createDiv({ cls: "wechat-sync-empty-state" }));
     disabledHint.createEl("h3", { text: "\u5C1A\u672A\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03" });
-    disabledHint.createEl("p", { text: "\u8BF7\u5148\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u518D\u5230\u8BBE\u7F6E\u4E2D\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03\u3001\u6D4B\u8BD5\u8FDE\u63A5\u5E76\u9009\u62E9\u5E73\u53F0\u3002\u514D\u8D39\u7248\u6BCF\u5929 1 \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002" });
+    disabledHint.createEl("p", { text: `\u8BF7\u5148\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u518D\u5230\u8BBE\u7F6E\u4E2D\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03\u3001\u6D4B\u8BD5\u8FDE\u63A5\u5E76\u9009\u62E9\u5E73\u53F0\u3002\u514D\u8D39\u7248\u6BCF\u5929 ${initialFreeQuotaLimit} \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002` });
     const settingsBtn = asModalElement(disabledHint.createEl("button", { text: "\u53BB\u8BBE\u7F6E", cls: "mod-cta" }));
     settingsBtn.onclick = () => {
       modal.close();
@@ -50173,7 +50689,10 @@ async function showMultiPlatformPublishModal(view, options = {}) {
   (_a5 = syncBtn.addClass) == null ? void 0 : _a5.call(syncBtn, "apple-btn-disabled");
   cancelBtn.onclick = () => modal.close();
   const updateQuotaHintText = () => {
-    quotaText.textContent = getQuotaHintText(selectedPlatforms.size, { proLicensed: isProLicensed });
+    quotaText.textContent = getQuotaHintText(selectedPlatforms.size, {
+      proLicensed: isProLicensed,
+      freeLimit: initialFreeQuotaLimit
+    });
   };
   const updateSyncButtonState = () => {
     var _a6, _b;
@@ -50289,6 +50808,61 @@ async function showMultiPlatformPublishModal(view, options = {}) {
     const sendStartedAt = Date.now();
     const requestedPlatformIds = Array.from(selectedPlatforms);
     try {
+      const bridge = view.plugin.getWechatSyncBridgeService();
+      const [detectedCapabilities, effectivePolicy] = await Promise.all([
+        detectQuotaPolicySupport(bridge, cachedConnection),
+        getEffectiveObsidianPublisherPolicy(view.plugin, {
+          requestUrl: obsidian.requestUrl,
+          clientVersion: getObsidianPluginVersion(view.plugin)
+        })
+      ]);
+      const pluginPolicyGate = checkObsidianPluginPolicyGate(
+        effectivePolicy.payload,
+        getObsidianPluginVersion(view.plugin)
+      );
+      if (!pluginPolicyGate.allowed) {
+        notice.hide();
+        new Notice15(`\u274C ${pluginPolicyGate.message || "\u5F53\u524D Obsidian \u63D2\u4EF6\u7248\u672C\u8FC7\u4F4E\uFF0C\u8BF7\u5347\u7EA7\u540E\u7EE7\u7EED\u53D1\u5E03\u3002"}`, 1e4);
+        return;
+      }
+      const extensionPolicyGate = checkExtensionPolicyGate(effectivePolicy.payload, {
+        currentVersion: toText3(detectedCapabilities.extensionVersion),
+        remotePolicySupported: detectedCapabilities.remotePolicy === true
+      });
+      if (!extensionPolicyGate.allowed) {
+        notice.hide();
+        new Notice15(`\u274C ${extensionPolicyGate.message || "\u5F53\u524D\u6D4F\u89C8\u5668\u6269\u5C55\u7248\u672C\u8FC7\u4F4E\uFF0C\u8BF7\u5347\u7EA7\u540E\u7EE7\u7EED\u53D1\u5E03\u3002"}`, 1e4);
+        return;
+      }
+      if (pluginPolicyGate.warning) {
+        console.info("[Wechatsync] Obsidian plugin upgrade recommended by policy", {
+          currentVersion: getObsidianPluginVersion(view.plugin),
+          minObsidianPluginVersion: pluginPolicyGate.minObsidianPluginVersion,
+          policyVersion: toRecord5(effectivePolicy.payload).policyVersion
+        });
+      }
+      if (extensionPolicyGate.warning) {
+        console.info("[Wechatsync] browser extension upgrade recommended by policy", {
+          currentVersion: toText3(detectedCapabilities.extensionVersion),
+          minExtensionVersion: extensionPolicyGate.minExtensionVersion,
+          policyVersion: toRecord5(effectivePolicy.payload).policyVersion
+        });
+      }
+      const platformTruncation = resolvePluginSideQuotaTruncation(
+        requestedPlatformIds,
+        effectivePolicy,
+        detectedCapabilities
+      );
+      if (platformTruncation.truncated) {
+        console.info("[Wechatsync] request pre-truncated by Obsidian plugin policy", {
+          requestedPlatformCount: requestedPlatformIds.length,
+          enqueuedPlatformCount: platformTruncation.platformIds.length,
+          skippedPlatformCount: platformTruncation.skippedPlatformIds.length,
+          quotaLimit: platformTruncation.quotaLimit,
+          policyVersion: toRecord5(effectivePolicy.payload).policyVersion,
+          policySource: effectivePolicy.source
+        });
+      }
       const resolvedImages = toResolvedImages(await resolveArticleImages(rawMarkdown, activeFile, {
         app: view.app,
         cover: rawCover
@@ -50319,8 +50893,11 @@ async function showMultiPlatformPublishModal(view, options = {}) {
       const coverAsset = toBridgeAsset(findAssetForCover(cover, assets));
       const coverThumbnail = coverAsset ? await view.generateCoverThumbnailFromAsset(coverAsset) : "";
       console.info("[Wechatsync] enqueueSyncArticle started", {
-        platformCount: requestedPlatformIds.length,
+        platformCount: platformTruncation.platformIds.length,
+        requestedPlatformCount: requestedPlatformIds.length,
         platforms: requestedPlatformIds,
+        enqueuedPlatforms: platformTruncation.platformIds,
+        skippedByPluginPolicy: platformTruncation.skippedPlatformIds,
         title,
         hasMarkdown: !!markdown,
         contentLength: content.length,
@@ -50330,37 +50907,48 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         assetCount: assets.length,
         assetBytes: assets.reduce((sum, asset) => sum + (asset.size || 0), 0)
       });
-      const bridge = view.plugin.getWechatSyncBridgeService();
-      const detectedCapabilities = await detectQuotaPolicySupport(bridge, cachedConnection);
       let result = null;
       let usedFallbackSend = false;
-      try {
-        result = toEnqueueResult(await bridge.enqueueSyncArticle({
-          platforms: requestedPlatformIds,
-          title,
-          markdown,
-          content,
-          cover,
-          coverThumbnail,
-          assets,
-          source: "obsidian",
-          quotaPolicy: QUOTA_POLICY
-        }));
-      } catch (enqueueError) {
-        if (!isUnsupportedBridgeError2(enqueueError))
-          throw enqueueError;
-        usedFallbackSend = true;
-        console.warn("[Wechatsync] enqueueSyncArticle unsupported, falling back to one-way syncArticle", enqueueError);
-        result = toEnqueueResult(await bridge.sendArticle({
-          platforms: requestedPlatformIds,
-          title,
-          markdown,
-          content,
-          cover,
-          coverThumbnail,
-          assets,
-          quotaPolicy: QUOTA_POLICY
-        }));
+      if (platformTruncation.platformIds.length === 0) {
+        result = {
+          accepted: false,
+          reason: "daily_limit",
+          quotaBlocked: true,
+          maxPlatforms: platformTruncation.quotaLimit,
+          publishedPlatforms: [],
+          skippedPlatforms: requestedPlatformIds,
+          message: `\u514D\u8D39\u7248\u4ECA\u65E5 ${platformTruncation.quotaLimit} \u4E2A\u5E73\u53F0\u989D\u5EA6\u5DF2\u7528\u5B8C\uFF0C\u660E\u5929 0:00 \u91CD\u7F6E\uFF0C\u6216\u5347\u7EA7 Pro\u3002`
+        };
+      } else {
+        try {
+          result = toEnqueueResult(await bridge.enqueueSyncArticle({
+            platforms: platformTruncation.platformIds,
+            title,
+            markdown,
+            content,
+            cover,
+            coverThumbnail,
+            assets,
+            source: "obsidian",
+            quotaPolicy: QUOTA_POLICY
+          }));
+        } catch (enqueueError) {
+          if (!isUnsupportedBridgeError2(enqueueError))
+            throw enqueueError;
+          usedFallbackSend = true;
+          console.warn("[Wechatsync] enqueueSyncArticle unsupported, falling back to one-way syncArticle", enqueueError);
+          result = toEnqueueResult(await bridge.sendArticle({
+            platforms: platformTruncation.platformIds,
+            title,
+            markdown,
+            content,
+            cover,
+            coverThumbnail,
+            assets,
+            quotaPolicy: QUOTA_POLICY
+          }));
+        }
+        result = mergePluginSkippedPlatformsIntoResult(result, platformTruncation);
       }
       console.info("[Wechatsync] enqueueSyncArticle accepted", {
         elapsedMs: Date.now() - sendStartedAt,
@@ -50371,11 +50959,13 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         quotaBlocked: result == null ? void 0 : result.quotaBlocked,
         skippedPlatforms: result == null ? void 0 : result.skippedPlatforms,
         usedFallbackSend,
-        platformCount: requestedPlatformIds.length,
-        supportsQuotaPolicy: detectedCapabilities.quotaPolicy === true
+        platformCount: platformTruncation.platformIds.length,
+        requestedPlatformCount: requestedPlatformIds.length,
+        supportsQuotaPolicy: detectedCapabilities.quotaPolicy === true,
+        remotePolicy: detectedCapabilities.remotePolicy === true
       });
       const currentMultiPlatformSettings = normalizeMultiPlatformSyncSettings(view.plugin.settings.multiPlatformSync);
-      const connectionRecord = toRecord4(currentMultiPlatformSettings.connection);
+      const connectionRecord = toRecord5(currentMultiPlatformSettings.connection);
       if ((result == null ? void 0 : result.accepted) === false) {
         notice.hide();
         modal.close();
@@ -50386,7 +50976,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
             status: "connected",
             checkedAt: Date.now(),
             capabilities: {
-              ...toRecord4(connectionRecord.capabilities),
+              ...toRecord5(connectionRecord.capabilities),
               ...detectedCapabilities
             },
             message: (result == null ? void 0 : result.message) || "\u6D4F\u89C8\u5668\u63D2\u4EF6\u5DF2\u62D2\u7EDD\u672C\u6B21\u53D1\u5E03\u3002"
@@ -50403,7 +50993,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         notice.setMessage("\u5DF2\u6295\u9012\uFF0C\u6B63\u5728\u8BFB\u53D6\u63D2\u4EF6\u4EFB\u52A1\u72B6\u6001...");
       const taskSnapshot = (result == null ? void 0 : result.syncId) ? await view.getWechatsyncTaskSnapshot(bridge, result.syncId) : null;
       const immediateResults = toUnknownList(normalizeWechatSyncResponseResults(result));
-      const taskSnapshotRecord = toRecord4(taskSnapshot);
+      const taskSnapshotRecord = toRecord5(taskSnapshot);
       const taskResults = toTaskResults(taskSnapshotRecord.platforms);
       const cachedPlatformsAfterSync = updateCachedPlatformsAfterSync(
         toRecordList2(connectionRecord.platforms),
@@ -50429,7 +51019,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
           checkedAt: Date.now(),
           platforms: cachedPlatformsAfterSync,
           capabilities: {
-            ...toRecord4(connectionRecord.capabilities),
+            ...toRecord5(connectionRecord.capabilities),
             ...detectedCapabilities
           },
           message: ""
@@ -50460,7 +51050,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         view.plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
           ...currentMultiPlatformSettings,
           connection: {
-            ...toRecord4(currentMultiPlatformSettings.connection),
+            ...toRecord5(currentMultiPlatformSettings.connection),
             status: "failed",
             checkedAt: Date.now(),
             message: displayMessage
@@ -51208,7 +51798,7 @@ var FeishuApiClient = class {
 
 // services/feishu-settings.js
 var FEISHU_FREE_MONTHLY_API_LIMIT = 1e4;
-function toRecord5(value) {
+function toRecord6(value) {
   return value && typeof value === "object" ? (
     /** @type {Record<string, unknown>} */
     value
@@ -51284,7 +51874,7 @@ function createDefaultFeishuApiUsageStats() {
   };
 }
 function normalizeFeishuApiUsageStats(value, now = new Date()) {
-  const source = toRecord5(value);
+  const source = toRecord6(value);
   const currentMonth = getFeishuApiUsageMonthKey(now);
   const month = toStringWithFallback(source.month, currentMonth);
   const count = Math.max(0, Math.floor(Number(source.count) || 0));
@@ -51309,13 +51899,13 @@ function normalizeMermaidRenderProvider(value) {
   return value === "kroki" ? "kroki" : "kroki";
 }
 function normalizeMermaidPreferences(value) {
-  const source = toRecord5(value);
+  const source = toRecord6(value);
   const result = {};
   for (const [path, rawPreference] of Object.entries(source)) {
     const normalizedPath = toTrimmedString(path);
     if (!normalizedPath)
       continue;
-    const preference = toRecord5(rawPreference);
+    const preference = toRecord6(rawPreference);
     result[normalizedPath] = {
       mode: normalizeMermaidRenderMode(preference.mode),
       provider: normalizeMermaidRenderProvider(preference.provider),
@@ -51325,11 +51915,11 @@ function normalizeMermaidPreferences(value) {
   return result;
 }
 function normalizeFeishuSyncSettings(value) {
-  const source = toRecord5(value);
+  const source = toRecord6(value);
   const rawUploadHistory = source.uploadHistory;
   const rawMermaidPreferences = source.mermaidPreferences || source.feishuMermaidPreferences;
   const uploadHistory = Array.isArray(rawUploadHistory) ? rawUploadHistory.map((item) => {
-    const historyItem = toRecord5(item);
+    const historyItem = toRecord6(item);
     if (!Object.keys(historyItem).length)
       return null;
     return {
@@ -51355,7 +51945,7 @@ function normalizeFeishuSyncSettings(value) {
   };
 }
 function incrementFeishuApiUsage(settings, delta = 1, now = new Date()) {
-  const source = toRecord5(settings);
+  const source = toRecord6(settings);
   const current = normalizeFeishuApiUsageStats(source.apiUsage, now);
   const amount = Math.max(0, Math.floor(Number(delta) || 0));
   const next = {
@@ -51367,7 +51957,7 @@ function incrementFeishuApiUsage(settings, delta = 1, now = new Date()) {
   return next;
 }
 function resetFeishuApiUsage(settings, now = new Date()) {
-  const source = toRecord5(settings);
+  const source = toRecord6(settings);
   const next = {
     month: getFeishuApiUsageMonthKey(now),
     count: 0,
@@ -51377,7 +51967,7 @@ function resetFeishuApiUsage(settings, now = new Date()) {
   return next;
 }
 function addFeishuUploadHistory(settings, item) {
-  const targetSettings = toRecord5(settings);
+  const targetSettings = toRecord6(settings);
   if (!Object.keys(targetSettings).length)
     return;
   const rawUploadHistory = targetSettings.uploadHistory;
@@ -51388,7 +51978,7 @@ function addFeishuUploadHistory(settings, item) {
     /** @type {FeishuUploadHistoryItemLike[]} */
     targetSettings.uploadHistory
   );
-  const sourceItem = toRecord5(item);
+  const sourceItem = toRecord6(item);
   const normalizedItem = {
     title: toStringWithFallback(sourceItem.title, "\u65E0\u6807\u9898\u6587\u7AE0"),
     url: toStringWithFallback(sourceItem.url),
@@ -51406,7 +51996,7 @@ function addFeishuUploadHistory(settings, item) {
   }
 }
 function rebindFeishuHistoryByPath(settings, sourcePath, value) {
-  const source = toRecord5(value);
+  const source = toRecord6(value);
   const targetPath = toTrimmedString(sourcePath);
   if (!targetPath)
     return null;
@@ -51424,7 +52014,7 @@ function rebindFeishuHistoryByPath(settings, sourcePath, value) {
   return historyItem;
 }
 function findFeishuHistoryByPath(settings, path) {
-  const source = toRecord5(settings);
+  const source = toRecord6(settings);
   if (!Array.isArray(source.uploadHistory))
     return null;
   const targetPath = String(path || "").trim();
@@ -51436,7 +52026,7 @@ function findFeishuHistoryByPath(settings, path) {
   );
 }
 function removeFeishuHistoryByPath(settings, path) {
-  const source = toRecord5(settings);
+  const source = toRecord6(settings);
   if (!Array.isArray(source.uploadHistory))
     return false;
   const targetPath = String(path || "").trim();
@@ -51453,7 +52043,7 @@ function removeFeishuHistoryByPath(settings, path) {
   return true;
 }
 function updateFeishuHistoryPath(settings, oldPath, newPath) {
-  const source = toRecord5(settings);
+  const source = toRecord6(settings);
   if (!Array.isArray(source.uploadHistory))
     return false;
   const targetOld = String(oldPath || "").trim();
@@ -51470,7 +52060,7 @@ function updateFeishuHistoryPath(settings, oldPath, newPath) {
   return changed;
 }
 function getFeishuMermaidPreferenceByPath(settings, path) {
-  const source = toRecord5(settings);
+  const source = toRecord6(settings);
   const targetPath = toTrimmedString(path);
   if (!targetPath)
     return null;
@@ -51478,13 +52068,13 @@ function getFeishuMermaidPreferenceByPath(settings, path) {
   return preferences[targetPath] || null;
 }
 function setFeishuMermaidPreferenceByPath(settings, path, value) {
-  const source = toRecord5(settings);
+  const source = toRecord6(settings);
   if (!Object.keys(source).length)
     return null;
   const targetPath = toTrimmedString(path);
   if (!targetPath)
     return null;
-  const preference = toRecord5(value);
+  const preference = toRecord6(value);
   const normalized = {
     mode: normalizeMermaidRenderMode(preference.mode),
     provider: normalizeMermaidRenderProvider(preference.provider),
@@ -51496,7 +52086,7 @@ function setFeishuMermaidPreferenceByPath(settings, path, value) {
   return normalized;
 }
 function removeFeishuMermaidPreferenceByPath(settings, path) {
-  const source = toRecord5(settings);
+  const source = toRecord6(settings);
   if (!Object.keys(source).length)
     return false;
   const targetPath = toTrimmedString(path);
@@ -53535,11 +54125,11 @@ function toReadableError3(error) {
   }
   return { message: String(error || "") };
 }
-function isRecord9(value) {
+function isRecord10(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
-function toRecord6(value) {
-  return isRecord9(value) ? value : {};
+function toRecord7(value) {
+  return isRecord10(value) ? value : {};
 }
 function toOptionalText(value) {
   return typeof value === "string" ? value : "";
@@ -53548,23 +54138,23 @@ function toOptionalNumber(value) {
   return typeof value === "number" && Number.isFinite(value) ? value : void 0;
 }
 function parseJsonRecord(value) {
-  if (isRecord9(value))
+  if (isRecord10(value))
     return value;
   if (typeof value !== "string" || !value.trim())
     return {};
   try {
-    return toRecord6(JSON.parse(value));
+    return toRecord7(JSON.parse(value));
   } catch (e) {
     return {};
   }
 }
 function normalizeRequestUrlResponse(response) {
   var _a5;
-  const record = toRecord6(response);
+  const record = toRecord7(response);
   const status = (_a5 = toOptionalNumber(record.status)) != null ? _a5 : 200;
   const headers = (
     /** @type {Record<string, string>} */
-    toRecord6(record.headers)
+    toRecord7(record.headers)
   );
   return {
     status,
@@ -53578,10 +54168,10 @@ function normalizeRequestUrlResponse(response) {
   };
 }
 function getResponseJsonRecord(response) {
-  return toRecord6(response.json);
+  return toRecord7(response.json);
 }
 function getProxyErrorMessage(response) {
-  const body = isRecord9(response.json) ? response.json : parseJsonRecord(response.text);
+  const body = isRecord10(response.json) ? response.json : parseJsonRecord(response.text);
   const bodyError = body.error;
   if (typeof bodyError === "string" && bodyError)
     return bodyError;
@@ -54152,11 +54742,11 @@ function toReadableError4(error) {
 }
 
 // services/record-utils.js
-function isRecord10(value) {
+function isRecord11(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
-function toRecord7(value) {
-  return isRecord10(value) ? value : {};
+function toRecord8(value) {
+  return isRecord11(value) ? value : {};
 }
 function toOptionalText2(value) {
   return typeof value === "string" ? value : "";
@@ -54165,12 +54755,12 @@ function toOptionalNumber2(value) {
   return typeof value === "number" && Number.isFinite(value) ? value : void 0;
 }
 function parseJsonRecord2(value) {
-  if (isRecord10(value))
+  if (isRecord11(value))
     return value;
   if (typeof value !== "string" || !value.trim())
     return {};
   try {
-    return toRecord7(JSON.parse(value));
+    return toRecord8(JSON.parse(value));
   } catch (e) {
     return {};
   }
@@ -54178,37 +54768,37 @@ function parseJsonRecord2(value) {
 
 // services/ai-layout-records.js
 function toAiLayoutState(value) {
-  return isRecord10(value) ? (
+  return isRecord11(value) ? (
     /** @type {AiLayoutStateLike} */
     value
   ) : null;
 }
 function toAiLayoutJson(value) {
-  return isRecord10(value) ? (
+  return isRecord11(value) ? (
     /** @type {AiLayoutJsonLike} */
     value
   ) : null;
 }
 function toAiLayoutBlock(value) {
-  return isRecord10(value) ? (
+  return isRecord11(value) ? (
     /** @type {AiLayoutBlockLike} */
     value
   ) : {};
 }
 function toAiLayoutGenerationMeta(value) {
-  return isRecord10(value) ? (
+  return isRecord11(value) ? (
     /** @type {AiLayoutGenerationMetaLike} */
     value
   ) : null;
 }
 function toAiLayoutSelection(value) {
-  return isRecord10(value) ? (
+  return isRecord11(value) ? (
     /** @type {AiLayoutSelectionLike} */
     value
   ) : {};
 }
 function toAiLayoutFamilyStates(value) {
-  if (!isRecord10(value))
+  if (!isRecord11(value))
     return {};
   return (
     /** @type {Record<string, AiLayoutStateLike>} */
@@ -54219,11 +54809,11 @@ function toAiLayoutFamilyStates(value) {
 // services/request-utils.js
 function normalizeRequestUrlResponse2(response) {
   var _a5;
-  const record = toRecord7(response);
+  const record = toRecord8(response);
   const status = (_a5 = toOptionalNumber2(record.status)) != null ? _a5 : 200;
   const headers = (
     /** @type {Record<string, string>} */
-    toRecord7(record.headers)
+    toRecord8(record.headers)
   );
   return {
     status,
@@ -54237,10 +54827,10 @@ function normalizeRequestUrlResponse2(response) {
   };
 }
 function getResponseJsonRecord2(response) {
-  return toRecord7(response.json);
+  return toRecord8(response.json);
 }
 function getProxyErrorMessage2(response) {
-  const body = isRecord10(response.json) ? response.json : parseJsonRecord2(response.text);
+  const body = isRecord11(response.json) ? response.json : parseJsonRecord2(response.text);
   const bodyError = body.error;
   if (typeof bodyError === "string" && bodyError)
     return bodyError;
@@ -54460,11 +55050,11 @@ ${quoteLinesForImageSwipeCallout(content)}`;
 }
 
 // services/plugin-settings.js
-function isRecord11(value) {
+function isRecord12(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
-function toRecord8(value) {
-  return isRecord11(value) ? value : {};
+function toRecord9(value) {
+  return isRecord12(value) ? value : {};
 }
 function generateFallbackId() {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -54503,7 +55093,7 @@ function createDefaultSettings() {
   };
 }
 function normalizeLoadedSettings(loadedData, options = {}) {
-  const data = toRecord8(loadedData);
+  const data = toRecord9(loadedData);
   const settings = Object.assign(createDefaultSettings(), data);
   const generateId15 = typeof options.generateId === "function" ? options.generateId : generateFallbackId;
   let didMigrate = false;
@@ -54521,7 +55111,7 @@ function normalizeLoadedSettings(loadedData, options = {}) {
   const rawAiSettings = data.ai;
   settings.ai = normalizeAiSettings(rawAiSettings || settings.ai || {});
   if (rawAiSettings !== void 0) {
-    const normalizedRawAi = normalizeAiSettings(toRecord8(rawAiSettings));
+    const normalizedRawAi = normalizeAiSettings(toRecord9(rawAiSettings));
     if (JSON.stringify(normalizedRawAi) !== JSON.stringify(rawAiSettings)) {
       didMigrate = true;
     }
@@ -54545,7 +55135,7 @@ function normalizeLoadedSettings(loadedData, options = {}) {
     console.log("\u2705 \u5DF2\u5C06\u65E7\u8D26\u53F7\u914D\u7F6E\u8FC1\u79FB\u5230\u65B0\u683C\u5F0F");
   }
   settings.wechatAccounts = settings.wechatAccounts.map((account) => {
-    if (!isRecord11(account)) {
+    if (!isRecord12(account)) {
       didMigrate = true;
       return { id: "", name: "", appId: "", appSecret: "" };
     }
@@ -54721,8 +55311,8 @@ var {
   setDestructiveButtonCompat: setDestructiveButtonCompat2,
   refreshSettingTabCompat: refreshSettingTabCompat2,
   toReadableError: toReadableError5,
-  isRecord: isRecord12,
-  toRecord: toRecord9,
+  isRecord: isRecord13,
+  toRecord: toRecord10,
   toAiLayoutState: toAiLayoutState2,
   toAiLayoutJson: toAiLayoutJson2,
   toAiLayoutBlock: toAiLayoutBlock2,
@@ -55097,9 +55687,9 @@ var coreMethods = {
           candidateRenderer: async (markdown, context = {}) => {
             const renderContext = (
               /** @type {RenderCandidateContextLike} */
-              toRecord9(context)
+              toRecord10(context)
             );
-            const contextSettings = isRecord12(renderContext.settings) ? (
+            const contextSettings = isRecord13(renderContext.settings) ? (
               /** @type {PluginSettingsLike} */
               renderContext.settings
             ) : this.plugin.settings;
@@ -55600,8 +56190,8 @@ var {
   setDestructiveButtonCompat: setDestructiveButtonCompat3,
   refreshSettingTabCompat: refreshSettingTabCompat3,
   toReadableError: toReadableError6,
-  isRecord: isRecord13,
-  toRecord: toRecord10,
+  isRecord: isRecord14,
+  toRecord: toRecord11,
   toAiLayoutState: toAiLayoutState3,
   toAiLayoutJson: toAiLayoutJson3,
   toAiLayoutBlock: toAiLayoutBlock3,
@@ -56068,7 +56658,7 @@ var stylePanelMethods = {
     return { excerpt, cover, cover_dir, coverSrc, title };
   },
   getFrontmatterString(frontmatter, keys) {
-    const frontmatterRecord = toRecord10(frontmatter);
+    const frontmatterRecord = toRecord11(frontmatter);
     if (!frontmatterRecord)
       return "";
     if (!Array.isArray(keys) || keys.length === 0)
@@ -56092,7 +56682,7 @@ var stylePanelMethods = {
   },
   getFrontmatterKeyMap(frontmatter, keys) {
     const result = {};
-    const frontmatterRecord = toRecord10(frontmatter);
+    const frontmatterRecord = toRecord11(frontmatter);
     if (!frontmatterRecord)
       return result;
     if (!Array.isArray(keys) || keys.length === 0)
@@ -56144,7 +56734,7 @@ var stylePanelMethods = {
     return this.isPathInsideDirectoryByTail(normalized, cleanedDir);
   },
   clearInvalidPublishMetaInFrontmatter(frontmatter, cleanedDir) {
-    const frontmatterRecord = toRecord10(frontmatter);
+    const frontmatterRecord = toRecord11(frontmatter);
     if (!frontmatterRecord)
       return false;
     let changed = false;
@@ -56201,7 +56791,7 @@ var stylePanelMethods = {
       const processFrontMatter = (_b = (_a5 = this.app) == null ? void 0 : _a5.fileManager) == null ? void 0 : _b["processFrontMatter"];
       if (typeof processFrontMatter === "function") {
         await processFrontMatter.call(this.app.fileManager, activeFile, (frontmatter) => {
-          this.clearInvalidPublishMetaInFrontmatter(toRecord10(frontmatter), cleanedDir);
+          this.clearInvalidPublishMetaInFrontmatter(toRecord11(frontmatter), cleanedDir);
         });
       } else {
         await this.clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir);
@@ -56514,8 +57104,8 @@ var {
   setDestructiveButtonCompat: setDestructiveButtonCompat4,
   refreshSettingTabCompat: refreshSettingTabCompat4,
   toReadableError: toReadableError7,
-  isRecord: isRecord14,
-  toRecord: toRecord11,
+  isRecord: isRecord15,
+  toRecord: toRecord12,
   toAiLayoutState: toAiLayoutState4,
   toAiLayoutJson: toAiLayoutJson4,
   toAiLayoutBlock: toAiLayoutBlock4,
@@ -56902,7 +57492,7 @@ var aiLayoutPanelMethods = {
     if (!this.aiLayoutOverlay)
       return;
     const pack = this.getAiRenderColorPalette(colorPaletteId || "tech-green");
-    const tokens = toRecord11(pack.tokens);
+    const tokens = toRecord12(pack.tokens);
     this.aiLayoutOverlay.style.setProperty("--ai-layout-accent", tokens.accent || "#0a84ff");
     this.aiLayoutOverlay.style.setProperty("--ai-layout-accent-deep", tokens.accentDeep || tokens.accent || "#0a84ff");
     this.aiLayoutOverlay.style.setProperty("--ai-layout-accent-soft", tokens.accentSoft || "rgba(0, 122, 255, 0.08)");
@@ -57578,8 +58168,8 @@ var {
   setDestructiveButtonCompat: setDestructiveButtonCompat5,
   refreshSettingTabCompat: refreshSettingTabCompat5,
   toReadableError: toReadableError8,
-  isRecord: isRecord15,
-  toRecord: toRecord12,
+  isRecord: isRecord16,
+  toRecord: toRecord13,
   toAiLayoutState: toAiLayoutState5,
   toAiLayoutJson: toAiLayoutJson5,
   toAiLayoutBlock: toAiLayoutBlock5,
@@ -58323,7 +58913,7 @@ var aiLayoutDebugMethods = {
     } catch (error) {
       console.error("AI \u7F16\u6392\u751F\u6210\u5931\u8D25:", error);
       const readableError = toReadableError8(error);
-      const errorRecord = toRecord12(error);
+      const errorRecord = toRecord13(error);
       const errorGenerationMeta = toAiLayoutGenerationMeta5(errorRecord.generationMeta);
       const previousState = this.getCurrentArticleLayoutState();
       const isSchemaError = errorRecord.code === "ai-layout-schema-invalid";
@@ -58516,8 +59106,8 @@ var {
   setDestructiveButtonCompat: setDestructiveButtonCompat6,
   refreshSettingTabCompat: refreshSettingTabCompat6,
   toReadableError: toReadableError9,
-  isRecord: isRecord16,
-  toRecord: toRecord13,
+  isRecord: isRecord17,
+  toRecord: toRecord14,
   toAiLayoutState: toAiLayoutState6,
   toAiLayoutJson: toAiLayoutJson6,
   toAiLayoutBlock: toAiLayoutBlock6,
@@ -59251,8 +59841,8 @@ var {
   setDestructiveButtonCompat: setDestructiveButtonCompat7,
   refreshSettingTabCompat: refreshSettingTabCompat7,
   toReadableError: toReadableError10,
-  isRecord: isRecord17,
-  toRecord: toRecord14,
+  isRecord: isRecord18,
+  toRecord: toRecord15,
   toAiLayoutState: toAiLayoutState7,
   toAiLayoutJson: toAiLayoutJson7,
   toAiLayoutBlock: toAiLayoutBlock7,
@@ -59514,8 +60104,8 @@ var {
   setDestructiveButtonCompat: setDestructiveButtonCompat8,
   refreshSettingTabCompat: refreshSettingTabCompat8,
   toReadableError: toReadableError11,
-  isRecord: isRecord18,
-  toRecord: toRecord15,
+  isRecord: isRecord19,
+  toRecord: toRecord16,
   toAiLayoutState: toAiLayoutState8,
   toAiLayoutJson: toAiLayoutJson8,
   toAiLayoutBlock: toAiLayoutBlock8,
@@ -59768,8 +60358,8 @@ var {
   setDestructiveButtonCompat: setDestructiveButtonCompat9,
   refreshSettingTabCompat: refreshSettingTabCompat9,
   toReadableError: toReadableError12,
-  isRecord: isRecord19,
-  toRecord: toRecord16,
+  isRecord: isRecord20,
+  toRecord: toRecord17,
   toAiLayoutState: toAiLayoutState9,
   toAiLayoutJson: toAiLayoutJson9,
   toAiLayoutBlock: toAiLayoutBlock9,
@@ -59974,8 +60564,8 @@ var {
   setDestructiveButtonCompat: setDestructiveButtonCompat10,
   refreshSettingTabCompat: refreshSettingTabCompat10,
   toReadableError: toReadableError13,
-  isRecord: isRecord20,
-  toRecord: toRecord17,
+  isRecord: isRecord21,
+  toRecord: toRecord18,
   toAiLayoutState: toAiLayoutState10,
   toAiLayoutJson: toAiLayoutJson10,
   toAiLayoutBlock: toAiLayoutBlock10,
@@ -60114,7 +60704,7 @@ var wechatSyncModalMethods = {
           defaultAccountId: this.plugin.settings.defaultAccountId
         })
       );
-      return isRecord20(resolvedAccount) ? (
+      return isRecord21(resolvedAccount) ? (
         /** @type {WechatAccountLike} */
         resolvedAccount
       ) : null;
@@ -60502,8 +61092,8 @@ var {
   setDestructiveButtonCompat: setDestructiveButtonCompat11,
   refreshSettingTabCompat: refreshSettingTabCompat11,
   toReadableError: toReadableError14,
-  isRecord: isRecord21,
-  toRecord: toRecord18,
+  isRecord: isRecord22,
+  toRecord: toRecord19,
   toAiLayoutState: toAiLayoutState11,
   toAiLayoutJson: toAiLayoutJson11,
   toAiLayoutBlock: toAiLayoutBlock11,
@@ -60582,7 +61172,7 @@ var wechatMultiPlatformActionMethods = {
       const capabilities = settings.connection.capabilities || {};
       if (capabilities.openSyncTask !== false) {
         try {
-          const result = typeof bridge.openSyncTask === "function" ? toRecord18(await bridge.openSyncTask(taskId, { timeoutMs: 8e3 })) : {};
+          const result = typeof bridge.openSyncTask === "function" ? toRecord19(await bridge.openSyncTask(taskId, { timeoutMs: 8e3 })) : {};
           if ((result == null ? void 0 : result.opened) !== false) {
             new Notice11("\u5DF2\u6253\u5F00\u6D4F\u89C8\u5668\u63D2\u4EF6\u4EFB\u52A1\u7A97\u53E3");
             return true;
@@ -60591,7 +61181,7 @@ var wechatMultiPlatformActionMethods = {
           if (!isWechatSyncUnsupportedMethodError10(error))
             throw error;
           const readableError = toReadableError14(error);
-          const errorRecord = toRecord18(error);
+          const errorRecord = toRecord19(error);
           console.warn("[Wechatsync] openSyncTask failed, falling back to task link", {
             code: errorRecord.code,
             message: readableError.message
@@ -60600,7 +61190,7 @@ var wechatMultiPlatformActionMethods = {
       }
       if (capabilities.getSyncTaskLink !== false) {
         try {
-          const linkResult = typeof bridge.getSyncTaskLink === "function" ? toRecord18(await bridge.getSyncTaskLink(taskId, { timeoutMs: 5e3 })) : {};
+          const linkResult = typeof bridge.getSyncTaskLink === "function" ? toRecord19(await bridge.getSyncTaskLink(taskId, { timeoutMs: 5e3 })) : {};
           const url = String((linkResult == null ? void 0 : linkResult.url) || "").trim();
           if ((linkResult == null ? void 0 : linkResult.canOpen) !== false && url) {
             return this.openExternalUrl(url, { allowExtensionUrls: true });
@@ -60613,7 +61203,7 @@ var wechatMultiPlatformActionMethods = {
           if (!isWechatSyncUnsupportedMethodError10(error))
             throw error;
           const readableError = toReadableError14(error);
-          const errorRecord = toRecord18(error);
+          const errorRecord = toRecord19(error);
           console.warn("[Wechatsync] getSyncTaskLink failed", {
             code: errorRecord.code,
             message: readableError.message
@@ -60624,7 +61214,7 @@ var wechatMultiPlatformActionMethods = {
       return false;
     } catch (error) {
       const readableError = toReadableError14(error);
-      const errorRecord = toRecord18(error);
+      const errorRecord = toRecord19(error);
       console.error("[Wechatsync] open task failed", {
         syncId: taskId,
         code: errorRecord.code,
@@ -60642,7 +61232,7 @@ var wechatMultiPlatformActionMethods = {
     if (!hasWechatSyncCapability11(settings, "getSyncTask"))
       return null;
     try {
-      const task = typeof bridge.getSyncTask === "function" ? toRecord18(await bridge.getSyncTask(taskId, { timeoutMs: 5e3 })) : {};
+      const task = typeof bridge.getSyncTask === "function" ? toRecord19(await bridge.getSyncTask(taskId, { timeoutMs: 5e3 })) : {};
       if ((task == null ? void 0 : task.found) === false)
         return task;
       return Object.keys(task).length ? (
@@ -60653,7 +61243,7 @@ var wechatMultiPlatformActionMethods = {
       if (isWechatSyncUnsupportedMethodError10(error))
         return null;
       const readableError = toReadableError14(error);
-      const errorRecord = toRecord18(error);
+      const errorRecord = toRecord19(error);
       console.warn("[Wechatsync] getSyncTask failed after enqueue", {
         syncId: taskId,
         code: errorRecord.code,
@@ -60677,6 +61267,7 @@ var wechatMultiPlatformActionMethods = {
     const skippedPlatformIds = parseWechatsyncPlatformIds11(Array.isArray(quotaRecord.skippedPlatforms) ? quotaRecord.skippedPlatforms : []);
     const quotaPublishedPlatforms = Array.isArray(quotaRecord.publishedPlatforms) ? quotaRecord.publishedPlatforms : [];
     const quotaPlatforms = Array.isArray(quotaRecord.platforms) ? quotaRecord.platforms : [];
+    const quotaLimit = Number.isFinite(Number(quotaRecord.maxPlatforms)) ? Math.max(0, Math.floor(Number(quotaRecord.maxPlatforms))) : 1;
     const publishedPlatformIds = parseWechatsyncPlatformIds11(
       quotaPublishedPlatforms.length ? quotaPublishedPlatforms : quotaPlatforms.length ? quotaPlatforms : requestedPlatforms
     );
@@ -60746,7 +61337,7 @@ var wechatMultiPlatformActionMethods = {
     }
     const rawTaskPlatforms = taskPlatformSource;
     const taskPlatforms = sortPlatformItems(rawTaskPlatforms.filter((item) => {
-      const itemRecord = toRecord18(item);
+      const itemRecord = toRecord19(item);
       const platformId = parseWechatsyncPlatformIds11([itemRecord.id || itemRecord.platform || item])[0] || "";
       if (!platformId)
         return false;
@@ -60757,7 +61348,7 @@ var wechatMultiPlatformActionMethods = {
       }
       return true;
     }), (item) => {
-      const itemRecord = toRecord18(item);
+      const itemRecord = toRecord19(item);
       return parseWechatsyncPlatformIds11([itemRecord.id || itemRecord.platform || item])[0] || "";
     });
     if (taskId) {
@@ -60776,7 +61367,7 @@ var wechatMultiPlatformActionMethods = {
       }
     }
     for (const item of taskPlatforms) {
-      const itemRecord = toRecord18(item);
+      const itemRecord = toRecord19(item);
       const platformId = String(itemRecord.id || itemRecord.platform || item || "").trim();
       if (!platformId)
         continue;
@@ -60797,7 +61388,7 @@ var wechatMultiPlatformActionMethods = {
       const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
       body.createEl("div", { text: platformName, cls: "wechat-multiplatform-result-name" });
       body.createEl("div", {
-        text: "\u514D\u8D39\u7248\u6BCF\u5929 1 \u4E2A\u5E73\u53F0\u989D\u5EA6\uFF0C\u5F53\u524D\u5E73\u53F0\u672A\u5165\u961F\u3002",
+        text: `\u514D\u8D39\u7248\u6BCF\u5929 ${quotaLimit} \u4E2A\u5E73\u53F0\u989D\u5EA6\uFF0C\u5F53\u524D\u5E73\u53F0\u672A\u5165\u961F\u3002`,
         cls: "wechat-multiplatform-result-detail"
       });
     }
@@ -61112,8 +61703,8 @@ var {
   setDestructiveButtonCompat: setDestructiveButtonCompat12,
   refreshSettingTabCompat: refreshSettingTabCompat12,
   toReadableError: toReadableError15,
-  isRecord: isRecord22,
-  toRecord: toRecord19,
+  isRecord: isRecord23,
+  toRecord: toRecord20,
   toAiLayoutState: toAiLayoutState12,
   toAiLayoutJson: toAiLayoutJson12,
   toAiLayoutBlock: toAiLayoutBlock12,
@@ -61185,7 +61776,7 @@ var wechatSyncActionMethods = {
         defaultAccountId: this.plugin.settings.defaultAccountId
       })
     );
-    const account = isRecord22(accountRecord) ? (
+    const account = isRecord23(accountRecord) ? (
       /** @type {WechatAccountLike} */
       accountRecord
     ) : null;
@@ -61211,7 +61802,7 @@ var wechatSyncActionMethods = {
           processMathFormulas: (html, api, progressCallback) => this.processMathFormulas(String(html || ""), api, progressCallback),
           prepareHtmlForDraft: (html) => this.prepareHtmlForWechatDraft(String(html || "")),
           cleanHtmlForDraft: (html) => this.cleanHtmlForDraft(String(html || "")),
-          cleanupConfiguredDirectory: (file) => this.cleanupConfiguredDirectory(isRecord22(file) ? (
+          cleanupConfiguredDirectory: (file) => this.cleanupConfiguredDirectory(isRecord23(file) ? (
             /** @type {TFileLike} */
             file
           ) : null),
@@ -61405,8 +61996,8 @@ var {
   setDestructiveButtonCompat: setDestructiveButtonCompat13,
   refreshSettingTabCompat: refreshSettingTabCompat13,
   toReadableError: toReadableError16,
-  isRecord: isRecord23,
-  toRecord: toRecord20,
+  isRecord: isRecord24,
+  toRecord: toRecord21,
   toAiLayoutState: toAiLayoutState13,
   toAiLayoutJson: toAiLayoutJson13,
   toAiLayoutBlock: toAiLayoutBlock13,
@@ -62756,20 +63347,20 @@ AppleStyleSettingTab.prototype[LEGACY_SETTING_RENDER_KEY2] = function legacySett
 };
 
 // services/ai-layout-cache.js
-function isRecord24(value) {
+function isRecord25(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
-function toRecord21(value) {
-  return isRecord24(value) ? value : {};
+function toRecord22(value) {
+  return isRecord25(value) ? value : {};
 }
 function toAiLayoutState14(value) {
-  return isRecord24(value) ? value : null;
+  return isRecord25(value) ? value : null;
 }
 function toAiLayoutSelection14(value) {
-  return isRecord24(value) ? value : {};
+  return isRecord25(value) ? value : {};
 }
 function toAiLayoutFamilyStates14(value) {
-  if (!isRecord24(value))
+  if (!isRecord25(value))
     return {};
   return value;
 }
@@ -62777,8 +63368,8 @@ function getArticleLayoutStateFromSettings(pluginSettings, sourcePath = "", sele
   const normalizedPath = normalizeVaultPath(sourcePath || "");
   if (!normalizedPath)
     return null;
-  const aiSettings = normalizeAiSettings(toRecord21(pluginSettings.ai));
-  const articleLayoutsByPath = toRecord21(aiSettings.articleLayoutsByPath);
+  const aiSettings = normalizeAiSettings(toRecord22(pluginSettings.ai));
+  const articleLayoutsByPath = toRecord22(aiSettings.articleLayoutsByPath);
   const entry = articleLayoutsByPath[normalizedPath] || null;
   const normalizedEntry = normalizeArticleLayoutCacheEntry(entry);
   if (!normalizedEntry)
@@ -62801,7 +63392,7 @@ function saveArticleLayoutStateToSettings(pluginSettings, sourcePath = "", nextS
     pluginSettings.ai = createDefaultAiSettings();
   }
   const aiSettings = pluginSettings.ai;
-  if (!isRecord24(aiSettings.articleLayoutsByPath)) {
+  if (!isRecord25(aiSettings.articleLayoutsByPath)) {
     aiSettings.articleLayoutsByPath = {};
   }
   const articleLayoutsByPath = aiSettings.articleLayoutsByPath;
@@ -62974,8 +63565,8 @@ var {
   setDestructiveButtonCompat: setDestructiveButtonCompat14,
   refreshSettingTabCompat: refreshSettingTabCompat14,
   toReadableError: toReadableError17,
-  isRecord: isRecord25,
-  toRecord: toRecord22,
+  isRecord: isRecord26,
+  toRecord: toRecord23,
   toAiLayoutState: toAiLayoutState15,
   toAiLayoutJson: toAiLayoutJson14,
   toAiLayoutBlock: toAiLayoutBlock14,
@@ -63229,7 +63820,7 @@ var AppleStylePlugin = class extends Plugin14 {
         var _a6, _b2;
         const currentSettings = getPluginSettings14(this);
         currentSettings["multiPlatformSync"] = normalizeMultiPlatformSyncSettings14({
-          ...toRecord22(currentSettings["multiPlatformSync"]),
+          ...toRecord23(currentSettings["multiPlatformSync"]),
           connectedClients: Array.isArray(clients) ? clients : []
         });
         await this.saveSettings();
@@ -63254,7 +63845,7 @@ var AppleStylePlugin = class extends Plugin14 {
         status
       });
     }).catch((error) => {
-      const errorRecord = toRecord22(error);
+      const errorRecord = toRecord23(error);
       const readableError = toReadableError17(error);
       console.warn("[Wechatsync] bridge warm start failed", {
         reason,

@@ -66,6 +66,7 @@ export function createDefaultMultiPlatformSyncSettings() {
     connectedClients: [],
     selectedPlatforms: [],
     recentTasks: [],
+    policyCache: null,
     connection: {
       status: 'untested',
       checkedAt: 0,
@@ -153,6 +154,7 @@ export function normalizeWechatSyncCapabilities(value = {}) {
     'openSyncTask',
     'getAuthSnapshot',
     'quotaPolicy',
+    'remotePolicy',
     // Set by Obsidian Publisher >= 0.2.6 when LicenseManager reports an
     // active Pro tier; the publish modal hides upgrade affordances when true.
     'proLicensed',
@@ -217,6 +219,21 @@ export function normalizeMultiPlatformConnection(value = {}) {
   };
 }
 
+function normalizeWechatSyncPolicyCache(value = null) {
+  if (!isRecord(value)) return null;
+  const source = asRecord(value);
+  const payload = asRecord(source.payload);
+  const cachedAt = Number(source.cachedAt);
+  if (!isRecord(source.payload) || typeof source.signature !== 'string' || !Number.isFinite(cachedAt)) {
+    return null;
+  }
+  return {
+    payload: { ...payload },
+    signature: source.signature,
+    cachedAt,
+  };
+}
+
 export function normalizeMultiPlatformSyncSettings(value = {}) {
   const defaults = createDefaultMultiPlatformSyncSettings();
   const source = asRecord(value);
@@ -241,6 +258,7 @@ export function normalizeMultiPlatformSyncSettings(value = {}) {
     connection: normalizeMultiPlatformConnection(source.connection),
     recentTasks: normalizeWechatSyncRecentTasks(source.recentTasks),
     connectedClients: normalizeConnectedClients(source.connectedClients),
+    policyCache: normalizeWechatSyncPolicyCache(source.policyCache),
   };
 }
 

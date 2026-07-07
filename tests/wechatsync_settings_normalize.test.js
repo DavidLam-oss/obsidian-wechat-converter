@@ -241,6 +241,38 @@ describe('§16 Phase 1 normalizeConnectedClient / normalizeConnectedClients', ()
     expect(normalizeWechatSyncCapabilities({})).not.toHaveProperty('proLicensed');
   });
 
+  it('preserves remote policy capability and policy cache shape without coercing quota into capabilities', () => {
+    const normalized = normalizeMultiPlatformSyncSettings({
+      connection: {
+        capabilities: {
+          remotePolicy: true,
+          quotaPolicy: true,
+          quota: { mode: 'daily_platform_count', freeLimit: 2 },
+        },
+      },
+      policyCache: {
+        signature: 'sig',
+        cachedAt: 123,
+        payload: {
+          productId: 'obsidian-publisher',
+          quota: { mode: 'daily_platform_count', freeLimit: 2 },
+        },
+      },
+    });
+
+    expect(normalized.connection.capabilities.remotePolicy).toBe(true);
+    expect(normalized.connection.capabilities.quotaPolicy).toBe(true);
+    expect(normalized.connection.capabilities).not.toHaveProperty('quota');
+    expect(normalized.policyCache).toEqual(expect.objectContaining({
+      signature: 'sig',
+      cachedAt: 123,
+      payload: expect.objectContaining({
+        productId: 'obsidian-publisher',
+        quota: { mode: 'daily_platform_count', freeLimit: 2 },
+      }),
+    }));
+  });
+
   it('normalizeMultiPlatformSyncSettings is idempotent with connectedClients', () => {
     const once = normalizeMultiPlatformSyncSettings({ connectedClients: [VALID_CLIENT] });
     const twice = normalizeMultiPlatformSyncSettings(once);

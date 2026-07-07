@@ -386,6 +386,99 @@ describe('AppleStyleView - showMultiPlatformSyncModal platform rows', () => {
     }));
   });
 
+  it('pre-truncates a Free remote-policy request before enqueueing selected platforms', async () => {
+    const cachedPlatforms = [
+      { id: 'zhihu', name: '知乎', authKnown: true, authenticated: true },
+      { id: 'juejin', name: '掘金', authKnown: true, authenticated: true },
+      { id: 'csdn', name: 'CSDN', authKnown: true, authenticated: true },
+    ];
+    const bridge = {
+      health: vi.fn().mockResolvedValue({
+        ok: true,
+        version: '0.3.0',
+        proLicensed: false,
+        policyVersion: 1,
+        quota: { mode: 'daily_platform_count', freeLimit: 1 },
+        capabilities: {
+          quotaPolicy: true,
+          remotePolicy: true,
+          proLicensed: false,
+          policyVersion: 1,
+          quota: { mode: 'daily_platform_count', freeLimit: 1 },
+        },
+      }),
+      enqueueSyncArticle: vi.fn().mockResolvedValue({
+        accepted: true,
+        syncId: 'sync-remote-policy',
+        publishedPlatforms: ['zhihu'],
+      }),
+    };
+    const view = makeView({
+      selectedPlatforms: ['zhihu', 'juejin', 'csdn'],
+      cachedPlatforms,
+      bridge,
+    });
+    view.showWechatsyncEnqueueAcceptedModal = vi.fn();
+
+    await view.showMultiPlatformSyncModal();
+    const modal = modalCapture.getLastModal();
+    const syncBtn = modal.contentEl.querySelector('.wechat-modal-buttons .mod-cta');
+
+    await syncBtn.onclick();
+
+    expect(bridge.enqueueSyncArticle).toHaveBeenCalledWith(expect.objectContaining({
+      platforms: ['zhihu'],
+      source: 'obsidian',
+      quotaPolicy: 'truncate',
+    }));
+    expect(view.showWechatsyncEnqueueAcceptedModal).toHaveBeenCalledWith(expect.objectContaining({
+      platforms: ['zhihu', 'csdn', 'juejin'],
+      quotaResult: expect.objectContaining({
+        quotaBlocked: true,
+        maxPlatforms: 1,
+        publishedPlatforms: ['zhihu'],
+        skippedPlatforms: ['csdn', 'juejin'],
+      }),
+    }));
+  });
+
+  it('does not pre-truncate when remote policy confirms an active Pro license', async () => {
+    const cachedPlatforms = [
+      { id: 'zhihu', name: '知乎', authKnown: true, authenticated: true },
+      { id: 'juejin', name: '掘金', authKnown: true, authenticated: true },
+    ];
+    const bridge = {
+      health: vi.fn().mockResolvedValue({
+        ok: true,
+        version: '0.3.0',
+        proLicensed: true,
+        quota: { mode: 'daily_platform_count', freeLimit: 1 },
+        capabilities: {
+          quotaPolicy: true,
+          remotePolicy: true,
+          proLicensed: true,
+          quota: { mode: 'daily_platform_count', freeLimit: 1 },
+        },
+      }),
+      enqueueSyncArticle: vi.fn().mockResolvedValue({
+        accepted: true,
+        syncId: 'sync-pro-policy',
+      }),
+    };
+    const view = makeView({ selectedPlatforms: ['zhihu', 'juejin'], cachedPlatforms, bridge });
+    view.showWechatsyncEnqueueAcceptedModal = vi.fn();
+
+    await view.showMultiPlatformSyncModal();
+    const modal = modalCapture.getLastModal();
+    await modal.contentEl.querySelector('.wechat-modal-buttons .mod-cta').onclick();
+
+    expect(bridge.enqueueSyncArticle).toHaveBeenCalledWith(expect.objectContaining({
+      platforms: ['zhihu', 'juejin'],
+      quotaPolicy: 'truncate',
+    }));
+    expect(view.showWechatsyncEnqueueAcceptedModal.mock.calls[0][0].quotaResult.quotaBlocked).not.toBe(true);
+  });
+
   it('sends local markdown images as bridge assets and rewrites local HTML src values', async () => {
     const imageFile = {
       path: 'notes/assets/local.png',
@@ -602,7 +695,10 @@ describe('AppleStyleView - showMultiPlatformSyncModal platform rows', () => {
     modal = modalCapture.getLastModal();
     await modal.contentEl.querySelector('.wechat-modal-buttons .mod-cta').onclick();
 
-    expect(obsidian.requestUrl).toHaveBeenCalledTimes(1);
+    const materialRequests = obsidian.requestUrl.mock.calls
+      .map((call) => call[0])
+      .filter((request) => String(request?.url || '').includes('mmbiz.qpic.cn'));
+    expect(materialRequests).toHaveLength(1);
     expect(bridge.enqueueSyncArticle).toHaveBeenCalledTimes(2);
     expect(view.wechatMaterialCoverAssetCache.size).toBe(1);
     expect(bridge.enqueueSyncArticle.mock.calls[1][0]).toEqual(expect.objectContaining({
@@ -633,7 +729,10 @@ describe('AppleStyleView - showMultiPlatformSyncModal platform rows', () => {
     const modal = modalCapture.getLastModal();
     await modal.contentEl.querySelector('.wechat-modal-buttons .mod-cta').onclick();
 
-    expect(obsidian.requestUrl).not.toHaveBeenCalled();
+    const materialRequests = obsidian.requestUrl.mock.calls
+      .map((call) => call[0])
+      .filter((request) => String(request?.url || '').includes('mmbiz.qpic.cn'));
+    expect(materialRequests).toHaveLength(0);
     expect(bridge.enqueueSyncArticle).not.toHaveBeenCalled();
     expect(view.showMultiPlatformSyncResultModal).toHaveBeenCalledWith(expect.objectContaining({
       fatalError: expect.any(Error),
@@ -659,7 +758,10 @@ describe('AppleStyleView - showMultiPlatformSyncModal platform rows', () => {
     const modal = modalCapture.getLastModal();
     await modal.contentEl.querySelector('.wechat-modal-buttons .mod-cta').onclick();
 
-    expect(obsidian.requestUrl).toHaveBeenCalledTimes(1);
+    const materialRequests = obsidian.requestUrl.mock.calls
+      .map((call) => call[0])
+      .filter((request) => String(request?.url || '').includes('mmbiz.qpic.cn'));
+    expect(materialRequests).toHaveLength(1);
     expect(bridge.enqueueSyncArticle).not.toHaveBeenCalled();
     expect(view.showMultiPlatformSyncResultModal.mock.calls[0][0].fatalError.message).toContain('格式不支持');
   });
