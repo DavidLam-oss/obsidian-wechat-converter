@@ -1,18 +1,18 @@
 {
   "version": 2,
-  "updatedAt": "2026-07-07 23:34:27",
+  "updatedAt": "2026-07-07 23:40:06",
   "incidents": [],
   "patterns": [],
   "skills": [],
   "candidates": [
     {
-      "candidateId": "candidate-eval-20260707233250",
+      "candidateId": "candidate-eval-20260707233939",
       "status": "pending-review",
-      "path": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/knowledge/candidates/candidate-eval-20260707233250/candidate.json",
+      "path": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/knowledge/candidates/candidate-eval-20260707233939/candidate.json",
       "sourceKind": "quality-report",
-      "sourceRef": "candidate-eval-20260707233250",
-      "title": "质量报告 eval-20260707233422",
-      "draftSkillPath": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/knowledge/drafts/openprd-experience-quality-candidate-eval-20260707233250/SKILL.md"
+      "sourceRef": "candidate-eval-20260707233939",
+      "title": "质量报告 eval-20260707234002",
+      "draftSkillPath": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/knowledge/drafts/openprd-experience-quality-candidate-eval-20260707233939/SKILL.md"
     },
     {
       "candidateId": "candidate-turn-1783435195935-e6ac10a15a936c35",
@@ -20,8 +20,17 @@
       "path": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/knowledge/candidates/candidate-turn-1783435195935-e6ac10a15a936c35/candidate.json",
       "sourceKind": "diagnostic-report",
       "sourceRef": "candidate-turn-1783435195935-e6ac10a15a936c35",
-      "title": "先 commit and push，然后继续下一个大文件吧",
+      "title": "围绕 highlight.min.js 等 10 个文件的实现经验",
       "draftSkillPath": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/knowledge/drafts/openprd-experience-diagnostic-candidate-turn-1783435195935-e6ac10a15a936c35/SKILL.md"
+    },
+    {
+      "candidateId": "candidate-eval-20260707233250",
+      "status": "pending-review",
+      "path": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/knowledge/candidates/candidate-eval-20260707233250/candidate.json",
+      "sourceKind": "diagnostic-report",
+      "sourceRef": "candidate-eval-20260707233250",
+      "title": "先 commit and push，然后继续下一个大文件吧",
+      "draftSkillPath": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/knowledge/drafts/openprd-experience-diagnostic-candidate-eval-20260707233250/SKILL.md"
     },
     {
       "candidateId": "candidate-eval-20260707232537",
@@ -71,15 +80,27 @@
   ],
   "drafts": [
     {
-      "skillName": "openprd-experience-quality-candidate-eval-20260707233250",
-      "path": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/knowledge/drafts/openprd-experience-quality-candidate-eval-20260707233250/SKILL.md",
-      "candidateId": "candidate-eval-20260707233250",
+      "skillName": "openprd-experience-quality-candidate-eval-20260707233939",
+      "path": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/knowledge/drafts/openprd-experience-quality-candidate-eval-20260707233939/SKILL.md",
+      "candidateId": "candidate-eval-20260707233939",
       "status": "pending-review"
     },
     {
       "skillName": "openprd-experience-diagnostic-candidate-turn-1783435195935-e6ac10a15a936c35",
       "path": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/knowledge/drafts/openprd-experience-diagnostic-candidate-turn-1783435195935-e6ac10a15a936c35/SKILL.md",
       "candidateId": "candidate-turn-1783435195935-e6ac10a15a936c35",
+      "status": "pending-review"
+    },
+    {
+      "skillName": "openprd-experience-diagnostic-candidate-eval-20260707233250",
+      "path": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/knowledge/drafts/openprd-experience-diagnostic-candidate-eval-20260707233250/SKILL.md",
+      "candidateId": "candidate-eval-20260707233250",
+      "status": "pending-review"
+    },
+    {
+      "skillName": "openprd-experience-quality-candidate-eval-20260707233250",
+      "path": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/knowledge/drafts/openprd-experience-quality-candidate-eval-20260707233250/SKILL.md",
+      "candidateId": "candidate-eval-20260707233250",
       "status": "pending-review"
     },
     {
