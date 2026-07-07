@@ -1,3 +1,30 @@
+/*
+## 核心功能
+
+实现 Obsidian 插件视图层的 apple style view 能力。
+
+## 输入
+
+接收 Obsidian ItemView/PluginSettingTab 生命周期、插件实例、用户事件和服务层结果。
+
+## 输出
+
+输出 `AppleStyleView`，用于组装主视图、状态栏或共享视图方法。
+
+## 定位
+
+位于 views/，是 UI 编排层；复杂业务规则应委托 converter.js 或 services/。
+
+## 依赖
+
+关键依赖：`./apple-style-view-shared.js`、`./converter/core.js`、`./converter/style-panel.js`、`./converter/ai-layout-panel.js`、`./converter/ai-layout-debug.js`、`./converter/clipboard.js`、`./publish-modal/wechat.js`、`./publish-modal/material-picker.js`。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 views 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 import { ItemView } from './apple-style-view-shared.js';
 import { coreMethods } from './converter/core.js';
 import { stylePanelMethods } from './converter/style-panel.js';

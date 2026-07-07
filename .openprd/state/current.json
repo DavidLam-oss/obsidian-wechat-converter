@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "status": "initialized",
+  "activeEngagement": "active",
+  "prdVersion": 0,
+  "productType": "consumer",
+  "templatePack": "consumer",
+  "captureMeta": {},
+  "projectRoot": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter",
+  "workspaceRoot": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd",
+  "createdAt": "2026-07-07 22:01:05"
+}

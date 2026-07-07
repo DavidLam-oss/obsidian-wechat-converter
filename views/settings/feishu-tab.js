@@ -1,3 +1,30 @@
+/*
+## 核心功能
+
+实现插件设置页中的 feishu tab 配置界面能力。
+
+## 输入
+
+接收插件设置、SettingTab 生命周期、用户表单输入和账号/平台配置状态。
+
+## 输出
+
+输出 `renderFeishuSettingsTab`，用于渲染设置项、保存配置或打开辅助 modal。
+
+## 定位
+
+位于 views/settings/，负责设置 UI 层；设置归一化交给 services/plugin-settings.js。
+
+## 依赖
+
+关键依赖：`../../services/dom-utils.js`、`../../services/feishu-api.js`、`../../services/feishu-settings.js`。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 views/settings 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: JS file handles dynamic API responses without strict typescript type annotations */
 // views/settings/feishu-tab.js
 //

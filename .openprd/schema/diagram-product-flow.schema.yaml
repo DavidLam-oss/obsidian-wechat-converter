@@ -1,0 +1,52 @@
+name: diagram-product-flow
+version: 1
+description: Minimal contract for OpenPrd product flow diagrams
+
+requiredFields:
+  - type
+  - title
+  - steps
+  - transitions
+  - summaryCards
+  - metadata.reviewStatus
+
+requiredArrays:
+  actors: 1
+  steps: 3
+  transitions: 2
+  summaryCards: 1
+  reviewInstructions: 1
+
+itemRequiredFields:
+  steps:
+    - id
+    - name
+    - type
+  transitions:
+    - from|from_step_id
+    - to|to_step_id
+    - label
+  summaryCards:
+    - title
+    - items
+
+allowedValues:
+  type:
+    - product-flow
+  metadata.reviewStatus:
+    - pending-confirmation
+    - confirmed
+    - needs-revision
+
+itemAllowedValues:
+  steps:
+    type:
+      - user_action
+      - system_process
+      - decision
+      - success
+      - error_path
+  transitions:
+    type:
+      - standard
+      - error_path

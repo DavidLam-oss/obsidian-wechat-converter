@@ -1,0 +1,53 @@
+{
+  "type": "architecture",
+  "locale": "zh-CN",
+  "title": "示例架构评审",
+  "subtitle": "说明预期系统形态，便于用户确认",
+  "components": [
+    {
+      "id": "frontend",
+      "name": "前端体验",
+      "type": "frontend",
+      "subtitle": "面向用户的层",
+      "details": [
+        "主要入口界面"
+      ]
+    },
+    {
+      "id": "backend",
+      "name": "核心产品逻辑",
+      "type": "backend",
+      "subtitle": "核心编排",
+      "details": [
+        "业务规则"
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "source": "frontend",
+      "target": "backend",
+      "label": "主要交互",
+      "type": "standard"
+    }
+  ],
+  "summaryCards": [
+    {
+      "title": "范围",
+      "color": "frontend",
+      "items": [
+        "范围内包含什么",
+        "范围外排除什么"
+      ]
+    }
+  ],
+  "reviewInstructions": [
+    "确认缺失系统、边界和依赖。"
+  ],
+  "metadata": {
+    "versionId": "v0001",
+    "owner": "PM",
+    "targetSystem": "OpenPrd",
+    "reviewStatus": "pending-confirmation"
+  }
+}

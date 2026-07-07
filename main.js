@@ -35739,7 +35739,7 @@ function htmlToText(html = "") {
   return container ? container.textContent || "" : "";
 }
 
-// services/obsidian-triplet-serializer.js
+// services/obsidian-triplet-serializer-utils.js
 function appendInlineStyle(el, styleText) {
   if (!el || !styleText)
     return;
@@ -35759,104 +35759,17 @@ function setInlineStyleIfMissing(el, styleText) {
     return;
   el.setAttribute("style", styleText);
 }
-var LEGACY_CALLOUT_ICON_BY_TYPE = {
-  note: "\u2139\uFE0F",
-  info: "\u2139\uFE0F",
-  todo: "\u2611\uFE0F",
-  abstract: "\u{1F4C4}",
-  summary: "\u{1F4C4}",
-  tldr: "\u{1F4C4}",
-  tip: "\u{1F4A1}",
-  hint: "\u{1F4A1}",
-  important: "\u{1F4A1}",
-  success: "\u2705",
-  check: "\u2705",
-  done: "\u2705",
-  question: "\u2753",
-  help: "\u2753",
-  faq: "\u2753",
-  warning: "\u26A0\uFE0F",
-  caution: "\u26A0\uFE0F",
-  attention: "\u26A0\uFE0F",
-  failure: "\u274C",
-  fail: "\u274C",
-  missing: "\u274C",
-  danger: "\u{1F6A8}",
-  error: "\u274C",
-  bug: "\u{1F41B}",
-  quote: "\u{1F4AC}",
-  cite: "\u{1F4DD}",
-  example: "\u{1F4CB}"
-};
-function toTitleCase(value) {
-  const text = String(value || "").trim();
-  if (!text)
+function getTagStyle(converter, tagName) {
+  if (!converter || typeof converter.getInlineStyle !== "function")
     return "";
-  return text.charAt(0).toUpperCase() + text.slice(1);
-}
-function resolveLegacyCalloutIcon(type) {
-  const key = String(type || "").trim().toLowerCase();
-  if (!key)
-    return "\u2139\uFE0F";
-  return LEGACY_CALLOUT_ICON_BY_TYPE[key] || "\u2139\uFE0F";
-}
-function convertObsidianCalloutsToLegacy(container, converter) {
-  if (!container || !converter)
-    return;
-  if (typeof converter.renderCalloutOpen !== "function")
-    return;
-  const callouts = Array.from(
-    container.querySelectorAll("div.callout,aside.callout,blockquote.callout,section.callout")
-  );
-  if (callouts.length === 0)
-    return;
-  const getCalloutDepth = (node) => {
-    let depth = 0;
-    let cursor = (node == null ? void 0 : node.parentElement) || null;
-    while (cursor) {
-      if (cursor.matches && cursor.matches("div.callout,aside.callout,blockquote.callout,section.callout")) {
-        depth += 1;
-      }
-      cursor = cursor.parentElement;
-    }
-    return depth;
-  };
-  callouts.sort((a, b) => {
-    const da = getCalloutDepth(a);
-    const db = getCalloutDepth(b);
-    return db - da;
-  });
-  for (const callout of callouts) {
-    if (!callout || !callout.parentNode)
-      continue;
-    const typeRaw = callout.getAttribute("data-callout") || callout.getAttribute("data-callout-type") || "";
-    const type = String(typeRaw || "").trim().toLowerCase();
-    const titleEl = callout.querySelector(":scope > .callout-title .callout-title-inner") || callout.querySelector(":scope > .callout-title-inner") || callout.querySelector(":scope > .callout-title");
-    const titleText = String((titleEl == null ? void 0 : titleEl.textContent) || "").trim();
-    const title = titleText || toTitleCase(type) || "Callout";
-    const contentEl = callout.querySelector(":scope > .callout-content") || callout.querySelector(":scope > .callout-body");
-    const contentHtml = contentEl ? contentEl.innerHTML : callout.innerHTML;
-    const calloutInfo = {
-      type: type || title.toLowerCase(),
-      title,
-      icon: resolveLegacyCalloutIcon(type || title),
-      label: type || title
-    };
-    let openHtml = "";
-    try {
-      openHtml = converter.renderCalloutOpen(calloutInfo);
-    } catch (e) {
-      continue;
-    }
-    if (!openHtml)
-      continue;
-    const host = createHtmlContainer("div", `${openHtml}${contentHtml}</section></section>`);
-    const replacementNodes = Array.from(host.childNodes);
-    if (replacementNodes.length === 0)
-      continue;
-    callout.replaceWith(...replacementNodes);
+  try {
+    return converter.getInlineStyle(tagName) || "";
+  } catch (e) {
+    return "";
   }
 }
+
+// services/obsidian-triplet-serializer-images.js
 function getObsidianCalloutParts(callout) {
   const typeRaw = callout.getAttribute("data-callout") || callout.getAttribute("data-callout-type") || "";
   const type = String(typeRaw || "").trim().toLowerCase();
@@ -35894,219 +35807,6 @@ function convertObsidianImageSwipeCallouts(container) {
     }
     imgs.forEach((img) => block.appendChild(img));
     callout.replaceWith(block);
-  }
-}
-function sanitizeClassList(el, tagName, finalStage = false) {
-  const className = el.getAttribute("class");
-  if (!className)
-    return;
-  const classes = className.split(/\s+/).filter(Boolean);
-  let keep = [];
-  if (tagName === "section") {
-    keep = classes.filter((cls) => cls === "code-snippet__fix");
-  } else if (tagName === "img") {
-    keep = classes.filter((cls) => cls === "math-formula-image" || cls === "mermaid-diagram-image");
-  } else if (tagName === "svg") {
-    keep = classes.filter((cls) => cls === "owc-mermaid-diagram");
-  } else if (!finalStage && (tagName === "pre" || tagName === "code")) {
-    keep = classes.filter((cls) => cls.startsWith("language-"));
-  }
-  if (keep.length > 0) {
-    el.setAttribute("class", keep.join(" "));
-  } else {
-    el.removeAttribute("class");
-  }
-}
-function pruneObsidianOnlyAttributes(container, { finalStage = false } = {}) {
-  if (!container)
-    return;
-  const SVG_ALLOWED_ATTRS = /* @__PURE__ */ new Set([
-    "style",
-    "class",
-    "xmlns",
-    "viewbox",
-    "width",
-    "height",
-    "x",
-    "y",
-    "dx",
-    "dy",
-    "cx",
-    "cy",
-    "rx",
-    "ry",
-    "r",
-    "x1",
-    "y1",
-    "x2",
-    "y2",
-    "d",
-    "points",
-    "transform",
-    "fill",
-    "stroke",
-    "stroke-width",
-    "stroke-linecap",
-    "stroke-linejoin",
-    "stroke-dasharray",
-    "stroke-dashoffset",
-    "opacity",
-    "fill-opacity",
-    "stroke-opacity",
-    "font-size",
-    "font-family",
-    "font-weight",
-    "text-anchor",
-    "alignment-baseline",
-    "dominant-baseline",
-    "preserveaspectratio",
-    "marker-start",
-    "marker-mid",
-    "marker-end",
-    "markerwidth",
-    "markerheight",
-    "refx",
-    "refy",
-    "orient",
-    "pathlength",
-    "role",
-    "focusable",
-    "aria-hidden",
-    "xmlns:xlink",
-    "xlink:href"
-  ]);
-  const SVG_TAGS = /* @__PURE__ */ new Set([
-    "svg",
-    "g",
-    "path",
-    "rect",
-    "circle",
-    "ellipse",
-    "line",
-    "polyline",
-    "polygon",
-    "text",
-    "tspan",
-    "defs",
-    "marker",
-    "foreignobject",
-    "clippath",
-    "pattern",
-    "mask",
-    "symbol",
-    "use"
-  ]);
-  const getAllowedAttrs = (tagName) => {
-    if (tagName === "a")
-      return /* @__PURE__ */ new Set(["href", "style"]);
-    if (tagName === "img")
-      return /* @__PURE__ */ new Set(["src", "alt", "style", "width", "height", "class", "referrerpolicy"]);
-    if (tagName === "section" && !finalStage) {
-      return /* @__PURE__ */ new Set(["style", "class", "data-owc-image-swipe", "data-owc-image-swipe-type", "data-owc-image-swipe-warning", "data-owc-image-swipe-hint"]);
-    }
-    if (tagName === "section")
-      return /* @__PURE__ */ new Set(["style", "class"]);
-    if (!finalStage && (tagName === "pre" || tagName === "code"))
-      return /* @__PURE__ */ new Set(["style", "class"]);
-    if (SVG_TAGS.has(tagName))
-      return SVG_ALLOWED_ATTRS;
-    return /* @__PURE__ */ new Set(["style"]);
-  };
-  Array.from(container.querySelectorAll("*")).forEach((el) => {
-    const tagName = el.tagName.toLowerCase();
-    const allowed = getAllowedAttrs(tagName);
-    const attrs = Array.from(el.attributes);
-    for (const attr of attrs) {
-      const name = attr.name.toLowerCase();
-      if (name.startsWith("data-") && !allowed.has(name) || name === "id" || name === "dir") {
-        el.removeAttribute(attr.name);
-        continue;
-      }
-      if (!allowed.has(name)) {
-        el.removeAttribute(attr.name);
-      }
-    }
-    sanitizeClassList(el, tagName, finalStage);
-    const style = el.getAttribute("style");
-    if (style !== null && style.trim() === "") {
-      el.removeAttribute("style");
-    }
-  });
-}
-function normalizeLegacyTagAliases(container) {
-  if (!container)
-    return;
-  const activeDocument = getActiveDocument();
-  if (!activeDocument)
-    return;
-  const strikeTags = Array.from(container.querySelectorAll("s"));
-  for (const sEl of strikeTags) {
-    const del = activeDocument.createElement("del");
-    if (sEl.hasAttributes()) {
-      Array.from(sEl.attributes).forEach((attr) => {
-        del.setAttribute(attr.name, attr.value);
-      });
-    }
-    while (sEl.firstChild) {
-      del.appendChild(sEl.firstChild);
-    }
-    sEl.replaceWith(del);
-  }
-}
-function normalizeLegacyDeleteNesting(container) {
-  if (!container)
-    return;
-  const activeDocument = getActiveDocument();
-  if (!activeDocument)
-    return;
-  const dels = Array.from(container.querySelectorAll("del"));
-  for (const first of dels) {
-    if (!first || !first.parentElement)
-      continue;
-    if (first.parentElement.tagName.toLowerCase() === "del")
-      continue;
-    if (first.querySelector("del"))
-      continue;
-    let spacer = first.nextSibling;
-    let second = null;
-    if (spacer && spacer.nodeType === Node.TEXT_NODE && /^\s*$/.test(spacer.textContent || "")) {
-      second = spacer.nextSibling;
-    } else if (spacer instanceof Element && spacer.tagName.toLowerCase() === "del") {
-      second = spacer;
-      spacer = null;
-    } else {
-      continue;
-    }
-    if (!(second instanceof Element) || second.tagName.toLowerCase() !== "del")
-      continue;
-    const label = (first.textContent || "").trim();
-    if (!/[：:]$/.test(label))
-      continue;
-    if (!/\S/.test(second.textContent || ""))
-      continue;
-    if (!/\s$/.test(first.textContent || "")) {
-      first.appendChild(activeDocument.createTextNode(" "));
-    }
-    first.appendChild(second);
-    if (spacer && spacer.parentNode)
-      spacer.remove();
-  }
-}
-function normalizeLegacyDeleteNestingInHtml(html) {
-  if (typeof html !== "string" || html.length === 0)
-    return html;
-  return html.replace(
-    /<del([^>]*)>([^<]*[：:])<\/del>(?:\s|&nbsp;|<br\s*\/?>)*<del([^>]*)>/g,
-    (_match, attrs1, label, attrs2) => `<del${attrs1}>${label} <del${attrs2}>`
-  );
-}
-function getTagStyle(converter, tagName) {
-  if (!converter || typeof converter.getInlineStyle !== "function")
-    return "";
-  try {
-    return converter.getInlineStyle(tagName) || "";
-  } catch (e) {
-    return "";
   }
 }
 function safeDecodeCaption(text) {
@@ -36221,51 +35921,6 @@ function buildLegacyParityImageAlt(imgEl, rawAlt = "") {
   }
   return alt;
 }
-function sanitizeAnchorAndImageLinks(container, converter) {
-  if (!container)
-    return;
-  const hasExplicitProtocol = (value) => /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(String(value || ""));
-  const hasNonAscii = (value) => {
-    for (const ch of String(value || "")) {
-      if (String(ch || "").charCodeAt(0) > 127)
-        return true;
-    }
-    return false;
-  };
-  const canonicalizeRelativeHrefForLegacyParity = (href) => {
-    const value = String(href || "").trim();
-    if (!value)
-      return value;
-    if (value.startsWith("#") || value.startsWith("//"))
-      return value;
-    if (hasExplicitProtocol(value)) {
-      if (/^https?:/i.test(value) && hasNonAscii(value)) {
-        try {
-          const parsed = new URL(value);
-          const isBareHost = /^https?:\/\/[^/?#]+$/i.test(value);
-          if (isBareHost && parsed.pathname === "/" && !parsed.search && !parsed.hash) {
-            return `${parsed.protocol}//${parsed.host}`;
-          }
-          return parsed.href;
-        } catch (e) {
-          return value;
-        }
-      }
-      return value;
-    }
-    let decoded = value;
-    try {
-      decoded = decodeURI(value);
-    } catch (e) {
-    }
-    return encodeURI(decoded);
-  };
-  container.querySelectorAll("a[href]").forEach((a) => {
-    const href = a.getAttribute("href") || "";
-    const safeHref = converter && typeof converter.validateLink === "function" ? converter.validateLink(href, false) : href;
-    a.setAttribute("href", canonicalizeRelativeHrefForLegacyParity(safeHref));
-  });
-}
 function extractImageEmbedSrc(embedEl) {
   if (!embedEl)
     return "";
@@ -36356,25 +36011,6 @@ function normalizeObsidianImageSrcForLegacyParity(src) {
     }
   }
   return value;
-}
-function convertPreBlocks(container, converter) {
-  if (!container || !converter || typeof converter.createCodeBlock !== "function")
-    return;
-  const preBlocks = Array.from(container.querySelectorAll("pre"));
-  for (const pre of preBlocks) {
-    if (pre.closest(".code-snippet__fix"))
-      continue;
-    const codeEl = pre.querySelector("code");
-    const className = `${pre.className || ""} ${(codeEl == null ? void 0 : codeEl.className) || ""}`;
-    const langMatch = className.match(/language-([\w-]+)/);
-    const lang = langMatch ? langMatch[1] : "text";
-    const content = codeEl ? codeEl.textContent || "" : pre.textContent || "";
-    const wrapper = createHtmlContainer("div", converter.createCodeBlock(content, lang));
-    const replacement = wrapper.firstElementChild;
-    if (replacement) {
-      pre.replaceWith(replacement);
-    }
-  }
 }
 var IMAGE_SWIPE_DEFAULT_WARNING = "\u6B64\u7C7B\u56FE\u7247\u53EF\u80FD\u5F15\u53D1\u4E0D\u9002\uFF0C\u5411\u5DE6\u6ED1\u52A8\u67E5\u770B";
 var IMAGE_SWIPE_DEFAULT_HINT = "\u5DE6\u53F3\u6ED1\u52A8\u67E5\u770B\u56FE\u7247";
@@ -36597,6 +36233,374 @@ function convertStandaloneImages(container, converter) {
       figure.appendChild(figcaption);
     }
     img.replaceWith(figure);
+  }
+}
+
+// services/obsidian-triplet-serializer.js
+var LEGACY_CALLOUT_ICON_BY_TYPE = {
+  note: "\u2139\uFE0F",
+  info: "\u2139\uFE0F",
+  todo: "\u2611\uFE0F",
+  abstract: "\u{1F4C4}",
+  summary: "\u{1F4C4}",
+  tldr: "\u{1F4C4}",
+  tip: "\u{1F4A1}",
+  hint: "\u{1F4A1}",
+  important: "\u{1F4A1}",
+  success: "\u2705",
+  check: "\u2705",
+  done: "\u2705",
+  question: "\u2753",
+  help: "\u2753",
+  faq: "\u2753",
+  warning: "\u26A0\uFE0F",
+  caution: "\u26A0\uFE0F",
+  attention: "\u26A0\uFE0F",
+  failure: "\u274C",
+  fail: "\u274C",
+  missing: "\u274C",
+  danger: "\u{1F6A8}",
+  error: "\u274C",
+  bug: "\u{1F41B}",
+  quote: "\u{1F4AC}",
+  cite: "\u{1F4DD}",
+  example: "\u{1F4CB}"
+};
+function toTitleCase(value) {
+  const text = String(value || "").trim();
+  if (!text)
+    return "";
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+function resolveLegacyCalloutIcon(type) {
+  const key = String(type || "").trim().toLowerCase();
+  if (!key)
+    return "\u2139\uFE0F";
+  return LEGACY_CALLOUT_ICON_BY_TYPE[key] || "\u2139\uFE0F";
+}
+function convertObsidianCalloutsToLegacy(container, converter) {
+  if (!container || !converter)
+    return;
+  if (typeof converter.renderCalloutOpen !== "function")
+    return;
+  const callouts = Array.from(
+    container.querySelectorAll("div.callout,aside.callout,blockquote.callout,section.callout")
+  );
+  if (callouts.length === 0)
+    return;
+  const getCalloutDepth = (node) => {
+    let depth = 0;
+    let cursor = (node == null ? void 0 : node.parentElement) || null;
+    while (cursor) {
+      if (cursor.matches && cursor.matches("div.callout,aside.callout,blockquote.callout,section.callout")) {
+        depth += 1;
+      }
+      cursor = cursor.parentElement;
+    }
+    return depth;
+  };
+  callouts.sort((a, b) => {
+    const da = getCalloutDepth(a);
+    const db = getCalloutDepth(b);
+    return db - da;
+  });
+  for (const callout of callouts) {
+    if (!callout || !callout.parentNode)
+      continue;
+    const typeRaw = callout.getAttribute("data-callout") || callout.getAttribute("data-callout-type") || "";
+    const type = String(typeRaw || "").trim().toLowerCase();
+    const titleEl = callout.querySelector(":scope > .callout-title .callout-title-inner") || callout.querySelector(":scope > .callout-title-inner") || callout.querySelector(":scope > .callout-title");
+    const titleText = String((titleEl == null ? void 0 : titleEl.textContent) || "").trim();
+    const title = titleText || toTitleCase(type) || "Callout";
+    const contentEl = callout.querySelector(":scope > .callout-content") || callout.querySelector(":scope > .callout-body");
+    const contentHtml = contentEl ? contentEl.innerHTML : callout.innerHTML;
+    const calloutInfo = {
+      type: type || title.toLowerCase(),
+      title,
+      icon: resolveLegacyCalloutIcon(type || title),
+      label: type || title
+    };
+    let openHtml = "";
+    try {
+      openHtml = converter.renderCalloutOpen(calloutInfo);
+    } catch (e) {
+      continue;
+    }
+    if (!openHtml)
+      continue;
+    const host = createHtmlContainer("div", `${openHtml}${contentHtml}</section></section>`);
+    const replacementNodes = Array.from(host.childNodes);
+    if (replacementNodes.length === 0)
+      continue;
+    callout.replaceWith(...replacementNodes);
+  }
+}
+function sanitizeClassList(el, tagName, finalStage = false) {
+  const className = el.getAttribute("class");
+  if (!className)
+    return;
+  const classes = className.split(/\s+/).filter(Boolean);
+  let keep = [];
+  if (tagName === "section") {
+    keep = classes.filter((cls) => cls === "code-snippet__fix");
+  } else if (tagName === "img") {
+    keep = classes.filter((cls) => cls === "math-formula-image" || cls === "mermaid-diagram-image");
+  } else if (tagName === "svg") {
+    keep = classes.filter((cls) => cls === "owc-mermaid-diagram");
+  } else if (!finalStage && (tagName === "pre" || tagName === "code")) {
+    keep = classes.filter((cls) => cls.startsWith("language-"));
+  }
+  if (keep.length > 0) {
+    el.setAttribute("class", keep.join(" "));
+  } else {
+    el.removeAttribute("class");
+  }
+}
+function pruneObsidianOnlyAttributes(container, { finalStage = false } = {}) {
+  if (!container)
+    return;
+  const SVG_ALLOWED_ATTRS = /* @__PURE__ */ new Set([
+    "style",
+    "class",
+    "xmlns",
+    "viewbox",
+    "width",
+    "height",
+    "x",
+    "y",
+    "dx",
+    "dy",
+    "cx",
+    "cy",
+    "rx",
+    "ry",
+    "r",
+    "x1",
+    "y1",
+    "x2",
+    "y2",
+    "d",
+    "points",
+    "transform",
+    "fill",
+    "stroke",
+    "stroke-width",
+    "stroke-linecap",
+    "stroke-linejoin",
+    "stroke-dasharray",
+    "stroke-dashoffset",
+    "opacity",
+    "fill-opacity",
+    "stroke-opacity",
+    "font-size",
+    "font-family",
+    "font-weight",
+    "text-anchor",
+    "alignment-baseline",
+    "dominant-baseline",
+    "preserveaspectratio",
+    "marker-start",
+    "marker-mid",
+    "marker-end",
+    "markerwidth",
+    "markerheight",
+    "refx",
+    "refy",
+    "orient",
+    "pathlength",
+    "role",
+    "focusable",
+    "aria-hidden",
+    "xmlns:xlink",
+    "xlink:href"
+  ]);
+  const SVG_TAGS = /* @__PURE__ */ new Set([
+    "svg",
+    "g",
+    "path",
+    "rect",
+    "circle",
+    "ellipse",
+    "line",
+    "polyline",
+    "polygon",
+    "text",
+    "tspan",
+    "defs",
+    "marker",
+    "foreignobject",
+    "clippath",
+    "pattern",
+    "mask",
+    "symbol",
+    "use"
+  ]);
+  const getAllowedAttrs = (tagName) => {
+    if (tagName === "a")
+      return /* @__PURE__ */ new Set(["href", "style"]);
+    if (tagName === "img")
+      return /* @__PURE__ */ new Set(["src", "alt", "style", "width", "height", "class", "referrerpolicy"]);
+    if (tagName === "section" && !finalStage) {
+      return /* @__PURE__ */ new Set(["style", "class", "data-owc-image-swipe", "data-owc-image-swipe-type", "data-owc-image-swipe-warning", "data-owc-image-swipe-hint"]);
+    }
+    if (tagName === "section")
+      return /* @__PURE__ */ new Set(["style", "class"]);
+    if (!finalStage && (tagName === "pre" || tagName === "code"))
+      return /* @__PURE__ */ new Set(["style", "class"]);
+    if (SVG_TAGS.has(tagName))
+      return SVG_ALLOWED_ATTRS;
+    return /* @__PURE__ */ new Set(["style"]);
+  };
+  Array.from(container.querySelectorAll("*")).forEach((el) => {
+    const tagName = el.tagName.toLowerCase();
+    const allowed = getAllowedAttrs(tagName);
+    const attrs = Array.from(el.attributes);
+    for (const attr of attrs) {
+      const name = attr.name.toLowerCase();
+      if (name.startsWith("data-") && !allowed.has(name) || name === "id" || name === "dir") {
+        el.removeAttribute(attr.name);
+        continue;
+      }
+      if (!allowed.has(name)) {
+        el.removeAttribute(attr.name);
+      }
+    }
+    sanitizeClassList(el, tagName, finalStage);
+    const style = el.getAttribute("style");
+    if (style !== null && style.trim() === "") {
+      el.removeAttribute("style");
+    }
+  });
+}
+function normalizeLegacyTagAliases(container) {
+  if (!container)
+    return;
+  const activeDocument = getActiveDocument();
+  if (!activeDocument)
+    return;
+  const strikeTags = Array.from(container.querySelectorAll("s"));
+  for (const sEl of strikeTags) {
+    const del = activeDocument.createElement("del");
+    if (sEl.hasAttributes()) {
+      Array.from(sEl.attributes).forEach((attr) => {
+        del.setAttribute(attr.name, attr.value);
+      });
+    }
+    while (sEl.firstChild) {
+      del.appendChild(sEl.firstChild);
+    }
+    sEl.replaceWith(del);
+  }
+}
+function normalizeLegacyDeleteNesting(container) {
+  if (!container)
+    return;
+  const activeDocument = getActiveDocument();
+  if (!activeDocument)
+    return;
+  const dels = Array.from(container.querySelectorAll("del"));
+  for (const first of dels) {
+    if (!first || !first.parentElement)
+      continue;
+    if (first.parentElement.tagName.toLowerCase() === "del")
+      continue;
+    if (first.querySelector("del"))
+      continue;
+    let spacer = first.nextSibling;
+    let second = null;
+    if (spacer && spacer.nodeType === Node.TEXT_NODE && /^\s*$/.test(spacer.textContent || "")) {
+      second = spacer.nextSibling;
+    } else if (spacer instanceof Element && spacer.tagName.toLowerCase() === "del") {
+      second = spacer;
+      spacer = null;
+    } else {
+      continue;
+    }
+    if (!(second instanceof Element) || second.tagName.toLowerCase() !== "del")
+      continue;
+    const label = (first.textContent || "").trim();
+    if (!/[：:]$/.test(label))
+      continue;
+    if (!/\S/.test(second.textContent || ""))
+      continue;
+    if (!/\s$/.test(first.textContent || "")) {
+      first.appendChild(activeDocument.createTextNode(" "));
+    }
+    first.appendChild(second);
+    if (spacer && spacer.parentNode)
+      spacer.remove();
+  }
+}
+function normalizeLegacyDeleteNestingInHtml(html) {
+  if (typeof html !== "string" || html.length === 0)
+    return html;
+  return html.replace(
+    /<del([^>]*)>([^<]*[：:])<\/del>(?:\s|&nbsp;|<br\s*\/?>)*<del([^>]*)>/g,
+    (_match, attrs1, label, attrs2) => `<del${attrs1}>${label} <del${attrs2}>`
+  );
+}
+function sanitizeAnchorAndImageLinks(container, converter) {
+  if (!container)
+    return;
+  const hasExplicitProtocol = (value) => /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(String(value || ""));
+  const hasNonAscii = (value) => {
+    for (const ch of String(value || "")) {
+      if (String(ch || "").charCodeAt(0) > 127)
+        return true;
+    }
+    return false;
+  };
+  const canonicalizeRelativeHrefForLegacyParity = (href) => {
+    const value = String(href || "").trim();
+    if (!value)
+      return value;
+    if (value.startsWith("#") || value.startsWith("//"))
+      return value;
+    if (hasExplicitProtocol(value)) {
+      if (/^https?:/i.test(value) && hasNonAscii(value)) {
+        try {
+          const parsed = new URL(value);
+          const isBareHost = /^https?:\/\/[^/?#]+$/i.test(value);
+          if (isBareHost && parsed.pathname === "/" && !parsed.search && !parsed.hash) {
+            return `${parsed.protocol}//${parsed.host}`;
+          }
+          return parsed.href;
+        } catch (e) {
+          return value;
+        }
+      }
+      return value;
+    }
+    let decoded = value;
+    try {
+      decoded = decodeURI(value);
+    } catch (e) {
+    }
+    return encodeURI(decoded);
+  };
+  container.querySelectorAll("a[href]").forEach((a) => {
+    const href = a.getAttribute("href") || "";
+    const safeHref = converter && typeof converter.validateLink === "function" ? converter.validateLink(href, false) : href;
+    a.setAttribute("href", canonicalizeRelativeHrefForLegacyParity(safeHref));
+  });
+}
+function convertPreBlocks(container, converter) {
+  if (!container || !converter || typeof converter.createCodeBlock !== "function")
+    return;
+  const preBlocks = Array.from(container.querySelectorAll("pre"));
+  for (const pre of preBlocks) {
+    if (pre.closest(".code-snippet__fix"))
+      continue;
+    const codeEl = pre.querySelector("code");
+    const className = `${pre.className || ""} ${(codeEl == null ? void 0 : codeEl.className) || ""}`;
+    const langMatch = className.match(/language-([\w-]+)/);
+    const lang = langMatch ? langMatch[1] : "text";
+    const content = codeEl ? codeEl.textContent || "" : pre.textContent || "";
+    const wrapper = createHtmlContainer("div", converter.createCodeBlock(content, lang));
+    const replacement = wrapper.firstElementChild;
+    if (replacement) {
+      pre.replaceWith(replacement);
+    }
   }
 }
 function trimTrailingWhitespaceInBlockText(container) {

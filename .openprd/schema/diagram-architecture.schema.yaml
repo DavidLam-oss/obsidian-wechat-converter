@@ -1,0 +1,49 @@
+name: diagram-architecture
+version: 1
+description: Minimal contract for OpenPrd architecture diagrams
+
+requiredFields:
+  - type
+  - title
+  - components
+  - flows
+  - summaryCards
+  - metadata.versionId
+  - metadata.reviewStatus
+
+requiredArrays:
+  components: 2
+  flows: 1
+  summaryCards: 1
+  reviewInstructions: 1
+
+itemRequiredFields:
+  components:
+    - id
+    - name
+    - type
+  flows:
+    - source
+    - target
+    - label
+  summaryCards:
+    - title
+    - items
+
+allowedValues:
+  type:
+    - architecture
+  metadata.reviewStatus:
+    - pending-confirmation
+    - confirmed
+    - needs-revision
+
+itemAllowedValues:
+  components:
+    type:
+      - frontend
+      - backend
+      - database
+      - cloud
+      - security
+      - external

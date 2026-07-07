@@ -1,3 +1,30 @@
+/*
+## 核心功能
+
+实现发布弹窗中的 multi platform 交互能力。
+
+## 输入
+
+接收视图状态、账号设置、文章元数据、同步结果和用户在弹窗中的操作。
+
+## 输出
+
+输出 `showMultiPlatformPublishModal`，用于微信、飞书或多平台发布流程的 UI 编排。
+
+## 定位
+
+位于 views/publish-modal/，负责发布弹窗 UI 层；API 调用委托 services/。
+
+## 依赖
+
+关键依赖：`../../services/wechatsync-results.js`、`../../services/wechatsync-bridge.js`、`../../services/wechatsync-settings.js`、`../connection-status-bar.js`、`../../services/markdown-utils.js`、`../../services/article-image-assets.js`、`../../services/obsidian-publisher-policy.js`、`../../services/dom-utils.js`。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 views/publish-modal 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 // views/publish-modal/multi-platform.js
 //
 // Renders the「其他平台发布」publish modal. Extracted from input.js

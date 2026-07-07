@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "layouts": [
+    {
+      "id": "immersive-hero-stack",
+      "useFor": ["product-launch", "immersive-showcase"],
+      "summary": "Full-width hero followed by layered proof and supporting sections."
+    },
+    {
+      "id": "editorial-rail",
+      "useFor": ["editorial-contrast", "content-experience"],
+      "summary": "Alternating wide media and text rails with strong vertical rhythm."
+    },
+    {
+      "id": "product-spec-runway",
+      "useFor": ["product-launch"],
+      "summary": "Hero, highlights, specs, proof, and CTA in a linear product narrative."
+    },
+    {
+      "id": "ops-density-grid",
+      "useFor": ["operational-density"],
+      "summary": "Dense work surface with fixed controls, structured panels, and scan-first tables."
+    },
+    {
+      "id": "catalog-browser",
+      "useFor": ["catalog-clarity"],
+      "summary": "Filter rail plus flexible list or grid browsing surface."
+    },
+    {
+      "id": "story-map",
+      "useFor": ["immersive-showcase", "editorial-contrast"],
+      "summary": "Narrative sequence with strong landmarks, maps, or guided discovery blocks."
+    },
+    {
+      "id": "pricing-and-proof",
+      "useFor": ["product-launch", "operational-density"],
+      "summary": "Decision-focused layout with plan comparison, objections, and proof."
+    },
+    {
+      "id": "settings-split",
+      "useFor": ["operational-density"],
+      "summary": "Stable navigation rail with form-heavy content split by configuration sections."
+    }
+  ]
+}

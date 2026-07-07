@@ -1,3 +1,30 @@
+/*
+## 核心功能
+
+配置插件主 bundle 的 esbuild 构建流程，生成 Obsidian 可加载的 main.js。
+
+## 输入
+
+接收命令行 production 参数、入口源码、外部依赖声明和构建环境。
+
+## 输出
+
+输出 main.js bundle 或开发 watch 构建结果。
+
+## 定位
+
+位于根目录，属于构建工具入口，不承载产品运行时逻辑。
+
+## 依赖
+
+关键依赖：`esbuild`、`process`、`node:module`。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 根目录 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 import esbuild from "esbuild";
 import process from "process";
 import { builtinModules } from "node:module";

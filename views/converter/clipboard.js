@@ -1,3 +1,30 @@
+/*
+## 核心功能
+
+实现转换器主面板的 clipboard 交互能力。
+
+## 输入
+
+接收 AppleStyleView 实例状态、活动笔记、渲染结果、用户点击和面板控件事件。
+
+## 输出
+
+输出 `clipboardMethods`，驱动预览刷新、样式选择、剪贴板或 AI layout 面板行为。
+
+## 定位
+
+位于 views/converter/，只处理转换器视图交互；底层转换和同步逻辑调用 services/。
+
+## 依赖
+
+关键依赖：`../apple-style-view-shared.js`。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 views/converter 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 /* eslint-disable no-unused-vars -- Transitional method group keeps original free identifiers available after extraction. */
 import * as shared from '../apple-style-view-shared.js';
 

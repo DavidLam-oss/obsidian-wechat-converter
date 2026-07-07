@@ -1,0 +1,361 @@
+<!-- starter-defaults: lens=product-launch theme=deep-launch layout=product-spec-runway -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>产品发布页模板</title>
+    <style>
+      :root {
+        --bg: #0d1116;
+        --panel: rgba(16, 22, 30, 0.88);
+        --panel-soft: rgba(24, 30, 38, 0.74);
+        --line: rgba(255, 255, 255, 0.1);
+        --text: #f4f7fb;
+        --muted: rgba(244, 247, 251, 0.72);
+        --accent: #7ce0c3;
+        --accent-soft: rgba(124, 224, 195, 0.14);
+        --radius: 24px;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Avenir Next", "Noto Sans SC", "PingFang SC", sans-serif;
+        background:
+          radial-gradient(circle at top center, rgba(124, 224, 195, 0.16), transparent 28%),
+          linear-gradient(180deg, #091018 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      .page {
+        width: min(1180px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 28px 0 56px;
+      }
+
+      .hero,
+      .section,
+      .cta {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--panel);
+      }
+
+      .hero {
+        padding: 32px;
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 22px;
+      }
+
+      .eyebrow,
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 13px;
+      }
+
+      h1, h2, h3, p { margin: 0; }
+
+      h1 {
+        margin-top: 18px;
+        font-family: "DIN Condensed", "Avenir Next Condensed", "Noto Sans SC", "PingFang SC", sans-serif;
+        font-size: clamp(40px, 6vw, 70px);
+        line-height: 0.96;
+        letter-spacing: 0;
+      }
+
+      .lede {
+        margin-top: 18px;
+        max-width: 50ch;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .actions,
+      .metrics,
+      .feature-grid,
+      .proof-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .actions {
+        margin-top: 24px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .button,
+      .ghost {
+        min-height: 48px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        padding: 0 18px;
+      }
+
+      .button {
+        background: var(--text);
+        color: #081019;
+      }
+
+      .ghost {
+        color: var(--text);
+      }
+
+      .showcase {
+        padding: 22px;
+        border-radius: 22px;
+        min-height: 100%;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01)),
+          linear-gradient(135deg, rgba(124, 224, 195, 0.14), transparent 55%);
+        display: grid;
+        gap: 14px;
+      }
+
+      .showcase-box,
+      .metric,
+      .feature,
+      .proof {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--panel-soft);
+      }
+
+      .showcase-box {
+        min-height: 280px;
+        color: var(--muted);
+      }
+
+      .showcase-copy,
+      .proof-copy {
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .showcase-media,
+      .proof-media {
+        overflow: hidden;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .showcase-media {
+        min-height: 280px;
+      }
+
+      .proof-media {
+        aspect-ratio: 16 / 9;
+        margin-bottom: 14px;
+      }
+
+      .media-frame,
+      .media-fallback {
+        min-height: inherit;
+        height: 100%;
+      }
+
+      .media-frame {
+        display: grid;
+      }
+
+      .media-frame img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+
+      .media-frame figcaption,
+      .media-fallback span {
+        padding: 12px 14px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .media-frame figcaption {
+        border-top: 1px solid var(--line);
+        background: rgba(9, 16, 24, 0.72);
+      }
+
+      .media-fallback {
+        display: grid;
+        place-items: center;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
+          linear-gradient(135deg, rgba(124, 224, 195, 0.14), transparent 55%);
+      }
+
+      .metrics {
+        margin-top: 18px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .metric,
+      .feature,
+      .proof {
+        padding: 18px;
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 28px;
+        margin-bottom: 6px;
+      }
+
+      .section {
+        margin-top: 20px;
+        padding: 24px;
+      }
+
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      .section-head p,
+      .feature p,
+      .proof p {
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .feature-grid,
+      .proof-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .cta {
+        margin-top: 20px;
+        padding: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
+      }
+
+      @media (max-width: 920px) {
+        .hero,
+        .metrics,
+        .feature-grid,
+        .proof-grid,
+        .cta {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <div>
+          <span class="eyebrow">发布型首页模板</span>
+          <h1>[产品名 / 发布主题]</h1>
+          <p class="lede">[用一句直接的话讲清楚这次发布带来的变化、面向的人群，以及为什么现在值得点进去。]</p>
+          <div class="actions">
+            <a class="button" href="#">[主动作]</a>
+            <a class="ghost" href="#">[次动作]</a>
+          </div>
+          <div class="metrics">
+            <article class="metric">
+              <span class="chip">事实</span>
+              <strong>[版本 / 日期]</strong>
+              <p>[把核实过的事实放这里]</p>
+            </article>
+            <article class="metric">
+              <span class="chip">价值</span>
+              <strong>[核心收益]</strong>
+              <p>[一句可感知的提升]</p>
+            </article>
+            <article class="metric">
+              <span class="chip">范围</span>
+              <strong>[适用对象]</strong>
+              <p>[谁最该看这一页]</p>
+            </article>
+          </div>
+        </div>
+        <aside class="showcase">
+          <div>
+            <span class="chip">主视觉 / 产品图 / 关键界面</span>
+            <p class="showcase-copy" style="margin-top: 12px;">[用真实产品图、关键界面，或至少清楚的产品结构示意，不要只放情绪渐变]</p>
+          </div>
+          <div class="showcase-box showcase-media">[主视觉媒体]</div>
+        </aside>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <span class="chip">What changed</span>
+            <h2 style="margin-top: 10px;">[这次发布的 3 个重点]</h2>
+          </div>
+          <p>[适合把功能、能力、权益或体验升级拆成三个可扫描模块。]</p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature">
+            <h3>[重点一]</h3>
+            <p>[一句说明它带来的变化]</p>
+          </article>
+          <article class="feature">
+            <h3>[重点二]</h3>
+            <p>[一句说明它带来的变化]</p>
+          </article>
+          <article class="feature">
+            <h3>[重点三]</h3>
+            <p>[一句说明它带来的变化]</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <span class="chip">Proof</span>
+            <h2 style="margin-top: 10px;">[用证据讲，不只用形容词讲]</h2>
+          </div>
+          <p>[这里放规格、案例、截图、兼容范围、交付方式或上线信息。]</p>
+        </div>
+        <div class="proof-grid">
+          <article class="proof">
+            <div class="proof-media">[证据媒体一]</div>
+            <h3>[证据块一]</h3>
+            <p>[数据 / 截图 / 规格 / 范围]</p>
+          </article>
+          <article class="proof">
+            <div class="proof-media">[证据媒体二]</div>
+            <h3>[证据块二]</h3>
+            <p>[数据 / 截图 / 规格 / 范围]</p>
+          </article>
+          <article class="proof">
+            <div class="proof-media">[证据媒体三]</div>
+            <h3>[证据块三]</h3>
+            <p>[数据 / 截图 / 规格 / 范围]</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="cta">
+        <div>
+          <span class="chip">Next</span>
+          <h2 style="margin-top: 10px;">[收尾 CTA 标题]</h2>
+          <p style="margin-top: 8px; color: var(--muted);">[把发布信息、受众和动作收成一句清楚的人话。]</p>
+        </div>
+        <a class="button" href="#">[最终动作]</a>
+      </section>
+    </main>
+  </body>
+</html>

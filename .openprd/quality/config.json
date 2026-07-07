@@ -1,0 +1,243 @@
+{
+  "version": 1,
+  "schema": "openprd.quality.v1",
+  "updatedAt": "2026-07-07 22:01:04",
+  "enforcement": "blocking",
+  "observability": {
+    "centralizedLoggingRequired": true,
+    "requiredSignals": [
+      "logs",
+      "traces",
+      "metrics",
+      "errors"
+    ],
+    "requiredCorrelationFields": [
+      "trace_id",
+      "span_id",
+      "request_id",
+      "task_id",
+      "user_session_id",
+      "error_id"
+    ],
+    "requiredSurfaces": [
+      "frontend",
+      "backend",
+      "agent"
+    ],
+    "redactionRequired": true,
+    "retentionDays": 30,
+    "samplingPolicy": "errors and high-risk flows are never sampled out; routine success logs may be sampled",
+    "queryExamplesRequired": true
+  },
+  "evalHarness": {
+    "smokeRequired": true,
+    "featureCoverageRequired": true,
+    "normalPerformanceRequired": true,
+    "extremePerformanceRequired": true,
+    "currentEvidenceRequired": true,
+    "evidenceSources": [
+      ".openprd/harness/test-reports",
+      ".openprd/harness/visual-reviews",
+      ".openprd/quality/evidence",
+      "test-results",
+      "tests/reports",
+      "coverage"
+    ],
+    "scenarioProfiles": {
+      "core": [
+        "smoke",
+        "feature-coverage"
+      ],
+      "frontend": [
+        "smoke",
+        "visual-review"
+      ],
+      "desktop": [
+        "smoke",
+        "visual-review"
+      ],
+      "backend": [
+        "smoke",
+        "traceability"
+      ],
+      "businessCost": [
+        "business-guardrails"
+      ],
+      "security": [
+        "redaction"
+      ],
+      "performance": [
+        "normal-performance"
+      ],
+      "extreme": [
+        "extreme-performance"
+      ],
+      "release": [
+        "traceability",
+        "redaction",
+        "business-guardrails",
+        "smoke",
+        "feature-coverage",
+        "normal-performance",
+        "extreme-performance",
+        "knowledge"
+      ]
+    },
+    "reportFormat": "html",
+    "baselinePolicy": "agent-initialized average baseline; user may override; agent ratchet may only tighten thresholds",
+    "projectBaseline": {
+      "normal": {
+        "cpuPercentP95Max": 70,
+        "memoryMBP95Max": 512,
+        "pageLoadMsP95Max": 2500,
+        "apiLatencyMsP95Max": 500,
+        "errorRatePercentMax": 0.1
+      },
+      "extreme": {
+        "cpuPercentP95Max": 85,
+        "memoryMBP95Max": 1024,
+        "pageLoadMsP95Max": 5000,
+        "apiLatencyMsP95Max": 1200,
+        "errorRatePercentMax": 1
+      }
+    }
+  },
+  "businessGuardrails": {
+    "enabled": true,
+    "riskIndicators": [
+      "free user",
+      "free tier",
+      "trial",
+      "quota",
+      "usage limit",
+      "rate limit",
+      "credit",
+      "token",
+      "metered",
+      "cost",
+      "spend",
+      "third-party cost",
+      "third-party api",
+      "ai generation",
+      "model call",
+      "openai",
+      "anthropic",
+      "免费用户",
+      "免费额度",
+      "试用",
+      "额度",
+      "用量",
+      "限流",
+      "积分",
+      "点数",
+      "令牌",
+      "成本",
+      "消耗",
+      "第三方成本",
+      "第三方调用",
+      "第三方 API",
+      "大模型",
+      "模型调用",
+      "AI 生成",
+      "图像生成",
+      "内容生成",
+      "薅",
+      "滥用"
+    ],
+    "requiredEvidence": {
+      "usageLimits": [
+        "quota",
+        "usage limit",
+        "rate limit",
+        "daily limit",
+        "monthly limit",
+        "allowance",
+        "free tier",
+        "额度",
+        "用量限制",
+        "限流",
+        "每日上限",
+        "月度上限",
+        "免费额度"
+      ],
+      "abusePrevention": [
+        "abuse",
+        "bypass",
+        "fraud",
+        "replay",
+        "concurrent",
+        "unauthorized",
+        "negative test",
+        "越权",
+        "滥用",
+        "绕过",
+        "并发",
+        "重复请求",
+        "负向测试"
+      ],
+      "monitoringSignals": [
+        "usage metric",
+        "cost metric",
+        "billing metric",
+        "tokens_used",
+        "cost_usd",
+        "spend",
+        "dashboard",
+        "monitor",
+        "监控",
+        "指标",
+        "用量",
+        "成本",
+        "看板"
+      ],
+      "alertThresholds": [
+        "alert",
+        "alarm",
+        "threshold",
+        "budget",
+        "anomaly",
+        "报警",
+        "告警",
+        "阈值",
+        "预算",
+        "异常增长"
+      ],
+      "stopLossActions": [
+        "kill switch",
+        "feature flag",
+        "circuit breaker",
+        "disable",
+        "degrade",
+        "pause",
+        "shutdown",
+        "止损",
+        "关闭",
+        "降级",
+        "暂停",
+        "熔断"
+      ]
+    }
+  },
+  "knowledge": {
+    "enabled": true,
+    "skillGenerationRequiredFor": [
+      "repeated-issue",
+      "high-impact-fix",
+      "hidden-debug-knowledge",
+      "agent-misjudgment"
+    ],
+    "skillDir": ".openprd/knowledge/skills",
+    "candidateDir": ".openprd/knowledge/candidates",
+    "draftDir": ".openprd/knowledge/drafts",
+    "abstractionRequired": true
+  },
+  "growth": {
+    "enabled": true,
+    "ledgerPath": ".openprd/growth/ledger.json",
+    "completionCheckpointRequired": true
+  },
+  "reports": {
+    "retentionMaxReports": 60,
+    "retentionEnabled": true
+  }
+}

@@ -1,3 +1,30 @@
+/*
+## 核心功能
+
+处理图片、SVG 或 Mermaid 资源的 image swipe callout 能力。
+
+## 输入
+
+接收本地资源路径、DOM 节点、图片字节、渲染选项和上传上下文。
+
+## 输出
+
+输出 `IMAGE_SWIPE_COMMAND_COPY`、`getObsidianLocale`、`isChineseObsidianLocale`、`getImageSwipeCommandCopy`、`quoteLinesForImageSwipeCallout`、`createImageSwipeCalloutMarkdown`，用于资源解析、栅格化、缓存或同步前替换。
+
+## 定位
+
+位于 services/，属于资源处理层；调用方只消费归一化结果。
+
+## 依赖
+
+关键依赖：无直接模块导入；依赖当前运行环境或同文件内工具函数。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 services 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 /** @type {Record<string, ImageSwipeCopyLike>} */
 const IMAGE_SWIPE_COMMAND_COPY = {
   'image-swipe': {

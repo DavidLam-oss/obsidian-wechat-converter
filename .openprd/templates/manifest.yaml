@@ -1,0 +1,27 @@
+version: 1
+
+registry:
+  base:
+    path: base/prd.md
+    extends: []
+
+  consumer:
+    path: consumer/prd.md
+    extends:
+      - base
+
+  b2b:
+    path: b2b/prd.md
+    extends:
+      - base
+
+  agent:
+    path: agent/prd.md
+    extends:
+      - base
+
+overrideLayers:
+  - industry
+  - company
+  - project
+  - session

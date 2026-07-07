@@ -1,3 +1,30 @@
+/*
+## 核心功能
+
+定义 Obsidian 插件入口，注册视图、命令、设置页和顶层发布动作。
+
+## 输入
+
+接收 Obsidian Plugin 生命周期、用户设置、活动笔记、命令事件和视图交互。
+
+## 输出
+
+导出 AppleStylePlugin，并在运行时创建转换器视图、设置页、状态栏和发布入口。
+
+## 定位
+
+位于根目录，是插件生命周期层；复杂渲染、同步和 UI 子逻辑应下沉到 services/ 与 views/。
+
+## 依赖
+
+关键依赖：`./views/apple-style-view.js`、`./views/settings/apple-style-setting-tab.js`、`./services/ai-layout-cache.js`、`./services/plugin-settings.js`、`./views/apple-style-view-shared.js`。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 根目录 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 /* eslint-disable no-unused-vars -- Transitional shared runtime destructuring keeps the plugin shell compatible while methods move out of input.js. */
 import { AppleStyleView } from './views/apple-style-view.js';
 import { AppleStyleSettingTab } from './views/settings/apple-style-setting-tab.js';

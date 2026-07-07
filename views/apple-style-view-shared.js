@@ -1,3 +1,30 @@
+/*
+## 核心功能
+
+实现 Obsidian 插件视图层的 apple style view shared 能力。
+
+## 输入
+
+接收 Obsidian ItemView/PluginSettingTab 生命周期、插件实例、用户事件和服务层结果。
+
+## 输出
+
+输出 `createRenderPipelines`、`buildRenderRuntime`、`resolveMarkdownSource`、`normalizeVaultPath`、`isAbsolutePathLike`、`renderObsidianTripletMarkdown`、`canUseNativePreviewFastPath`、`renderNativeMarkdown`、`convertRenderedMermaidDiagramsToImages`、`renderMermaidCodeBlocks`，用于组装主视图、状态栏或共享视图方法。
+
+## 定位
+
+位于 views/，是 UI 编排层；复杂业务规则应委托 converter.js 或 services/。
+
+## 依赖
+
+关键依赖：`../services/render-pipeline.js`、`../services/dependency-loader.js`、`../services/markdown-source.js`、`../services/path-utils.js`、`../services/obsidian-triplet-renderer.js`、`../services/native-renderer.js`、`../services/rendered-mermaid.js`、`../services/ai-layout.js`。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 views 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
 /**
  * @typedef {{ cls?: string, text?: string, value?: string | number, type?: string, href?: string, title?: string, placeholder?: string, checked?: boolean, style?: string, attr?: Record<string, unknown> }} ElementCreateOptionsLike
  * @typedef {HTMLElement & {

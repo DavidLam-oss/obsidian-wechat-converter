@@ -1,0 +1,347 @@
+<!-- starter-defaults: lens=operational-density theme=tool-neutral layout=ops-density-grid -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>运营工作台模板</title>
+    <style>
+      :root {
+        --bg: #eef2f7;
+        --panel: #ffffff;
+        --panel-soft: #f8fafc;
+        --line: #d7e0ea;
+        --ink: #102131;
+        --muted: #566779;
+        --accent: #1967d2;
+        --accent-soft: rgba(25, 103, 210, 0.12);
+        --radius: 18px;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Aptos", "Avenir Next", "Noto Sans SC", "PingFang SC", sans-serif;
+        background: linear-gradient(180deg, #f6f8fb 0%, var(--bg) 100%);
+        color: var(--ink);
+      }
+
+      .page {
+        width: min(1280px, calc(100vw - 28px));
+        margin: 0 auto;
+        padding: 20px 0 32px;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        gap: 16px;
+      }
+
+      .sidebar,
+      .topbar,
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--panel);
+      }
+
+      .sidebar {
+        padding: 18px;
+        min-height: calc(100vh - 40px);
+      }
+
+      .brand {
+        font-size: 18px;
+        font-weight: 700;
+        font-family: "Aptos Display", "Avenir Next", "Noto Sans SC", "PingFang SC", sans-serif;
+      }
+
+      .nav,
+      .stats,
+      .grid,
+      .subgrid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .nav {
+        margin-top: 18px;
+      }
+
+      .nav-item,
+      .chip {
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+
+      .nav-item.active,
+      .chip {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      .main {
+        display: grid;
+        gap: 16px;
+      }
+
+      .topbar {
+        padding: 18px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+      }
+
+      h1, h2, h3, p { margin: 0; }
+
+      h1,
+      h2,
+      h3 {
+        font-family: "Aptos Display", "Avenir Next", "Noto Sans SC", "PingFang SC", sans-serif;
+      }
+
+      .topbar p,
+      .panel p {
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .panel {
+        padding: 18px;
+      }
+
+      .stat strong {
+        display: block;
+        margin-top: 10px;
+        font-size: 28px;
+      }
+
+      .grid {
+        grid-template-columns: 1.25fr 0.75fr;
+      }
+
+      .subgrid {
+        grid-template-columns: 0.9fr 1.1fr;
+      }
+
+      .list {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1.2fr 0.7fr 0.6fr;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: var(--panel-soft);
+      }
+
+      .row strong,
+      .action strong,
+      .delta-row strong,
+      .topic-card strong {
+        display: block;
+      }
+
+      .row span,
+      .delta-row span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .action-list {
+        margin-top: 14px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .action {
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+      }
+
+      .action p {
+        margin-top: 6px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .delta-list,
+      .topic-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .delta-row,
+      .topic-card {
+        padding: 14px;
+        border-radius: 14px;
+        background: var(--panel-soft);
+      }
+
+      .delta-row p,
+      .topic-card p {
+        margin-top: 6px;
+      }
+
+      @media (max-width: 980px) {
+        .shell,
+        .stats,
+        .grid,
+        .subgrid {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          min-height: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <div class="shell">
+        <aside class="sidebar">
+          <div class="brand">[工作台 / 系统名]</div>
+          <div class="nav">
+            <div class="nav-item active">[当前模块]</div>
+            <div class="nav-item">[模块二]</div>
+            <div class="nav-item">[模块三]</div>
+            <div class="nav-item">[模块四]</div>
+          </div>
+        </aside>
+
+        <section class="main">
+          <header class="topbar">
+            <div>
+              <span class="chip">运营工作台模板</span>
+              <h1 style="margin-top: 10px; font-size: 30px;">[本页标题]</h1>
+              <p style="margin-top: 8px;">[一句说明这页帮助用户每天更快做什么。]</p>
+            </div>
+            <div class="chip">[筛选 / 时间范围 / 当前状态]</div>
+          </header>
+
+          <section class="stats">
+            <article class="panel stat">
+              <span class="chip">[总览标签一]</span>
+              <strong>[指标一]</strong>
+              <p>[指标说明一]</p>
+            </article>
+            <article class="panel stat">
+              <span class="chip">[总览标签二]</span>
+              <strong>[指标二]</strong>
+              <p>[指标说明二]</p>
+            </article>
+            <article class="panel stat">
+              <span class="chip">[总览标签三]</span>
+              <strong>[指标三]</strong>
+              <p>[指标说明三]</p>
+            </article>
+            <article class="panel stat">
+              <span class="chip">[总览标签四]</span>
+              <strong>[指标四]</strong>
+              <p>[指标说明四]</p>
+            </article>
+          </section>
+
+          <section class="grid">
+            <article class="panel">
+              <h2>[主要列表 / 队列]</h2>
+              <p style="margin-top: 8px;">[把用户最常扫的对象放在左边。]</p>
+              <div class="list">
+                <div class="row">
+                  <strong>[对象一]</strong>
+                  <span>[状态一]</span>
+                  <span>[动作一标签]</span>
+                </div>
+                <div class="row">
+                  <strong>[对象二]</strong>
+                  <span>[状态二]</span>
+                  <span>[动作二标签]</span>
+                </div>
+                <div class="row">
+                  <strong>[对象三]</strong>
+                  <span>[状态三]</span>
+                  <span>[动作三标签]</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel">
+              <h2>[待处理动作]</h2>
+              <p style="margin-top: 8px;">[把判断和下一步放在同一视图里。]</p>
+              <div class="action-list">
+                <div class="action">
+                  <strong>[动作一]</strong>
+                  <p>[动作一说明]</p>
+                </div>
+                <div class="action">
+                  <strong>[动作二]</strong>
+                  <p>[动作二说明]</p>
+                </div>
+                <div class="action">
+                  <strong>[动作三]</strong>
+                  <p>[动作三说明]</p>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <section class="subgrid">
+            <article class="panel">
+              <h2>[最近订阅变化]</h2>
+              <p style="margin-top: 8px;">[用近 7 天的订阅变化帮用户判断哪类内容值得继续发。]</p>
+              <div class="delta-list">
+                <div class="delta-row">
+                  <strong>[变化项一]</strong>
+                  <span>[变化说明一]</span>
+                  <p>[变化备注一]</p>
+                </div>
+                <div class="delta-row">
+                  <strong>[变化项二]</strong>
+                  <span>[变化说明二]</span>
+                  <p>[变化备注二]</p>
+                </div>
+                <div class="delta-row">
+                  <strong>[变化项三]</strong>
+                  <span>[变化说明三]</span>
+                  <p>[变化备注三]</p>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel">
+              <h2>[选题状态]</h2>
+              <p style="margin-top: 8px;">[把待写、待发和待放弃的题目放到同一块，避免开新坑太轻松。]</p>
+              <div class="topic-list">
+                <div class="topic-card">
+                  <strong>[选题一]</strong>
+                  <p>[选题一说明]</p>
+                </div>
+                <div class="topic-card">
+                  <strong>[选题二]</strong>
+                  <p>[选题二说明]</p>
+                </div>
+                <div class="topic-card">
+                  <strong>[选题三]</strong>
+                  <p>[选题三说明]</p>
+                </div>
+              </div>
+            </article>
+          </section>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>
