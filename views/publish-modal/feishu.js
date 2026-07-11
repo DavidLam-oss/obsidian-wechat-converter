@@ -172,18 +172,18 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
     view.showSyncModal({ modal });
   };
 
+  const multiTabBtn = tabsWrapper.createEl('button', {
+    cls: 'wechat-publish-mode-tab',
+  });
+  multiTabBtn.createEl('span', { text: '多平台发布（小红书/知乎/头条/B 站等）' });
+  multiTabBtn.onclick = () => {
+    view.showMultiPlatformSyncModal({ modal });
+  };
+
   tabsWrapper.createEl('button', {
     text: '飞书云文档',
     cls: 'wechat-publish-mode-tab is-active',
   });
-
-  const multiTabBtn = tabsWrapper.createEl('button', {
-    cls: 'wechat-publish-mode-tab',
-  });
-  multiTabBtn.createEl('span', { text: '其他平台（小红书/知乎等）' });
-  multiTabBtn.onclick = () => {
-    view.showMultiPlatformSyncModal({ modal });
-  };
 
   const shell = containerEl.createDiv({ cls: 'wechat-feishu-publish-shell' });
 

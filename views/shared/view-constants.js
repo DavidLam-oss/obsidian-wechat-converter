@@ -33,7 +33,7 @@ const OBSIDIAN_PUBLISHER_PRO_URL = 'https://xiaoweibox.top/obsidian-publisher/pr
 const OBSIDIAN_PUBLISHER_GUIDE_URL = 'https://xiaoweibox.top/obsidian-publisher/guide/';
 const OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL = `${OBSIDIAN_PUBLISHER_GUIDE_URL}?from=obsidian-plugin#install-extension`;
 const OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL = `${OBSIDIAN_PUBLISHER_GUIDE_URL}?from=obsidian-plugin#bridge`;
-const MULTI_PLATFORM_TAB_LABEL = '其他平台（小红书/知乎/抖音等）';
+const MULTI_PLATFORM_TAB_LABEL = '多平台发布（小红书/知乎/头条/B 站等）';
 const MAX_ACCOUNTS = 5;
 const AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS = 700;
 const DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS = Object.freeze({

@@ -96,15 +96,15 @@ const settingsTabShellMethods = {
 
     const tabBar = containerEl.createDiv({ cls: 'apple-settings-tabs' });
     const wechatTab = tabBar.createDiv({ cls: 'apple-settings-tab active', text: '微信' });
-    const feishuTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '飞书' });
     const multiTab = tabBar.createDiv({ cls: 'apple-settings-tab apple-settings-tab-multi' });
     multiTab.createSpan({ text: MULTI_PLATFORM_TAB_LABEL, cls: 'apple-settings-tab-label' });
+    const feishuTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '飞书' });
 
     const wechatContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
-    const feishuContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
-    feishuContent.setCssStyles({ display: 'none' });
     const multiContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
     multiContent.setCssStyles({ display: 'none' });
+    const feishuContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
+    feishuContent.setCssStyles({ display: 'none' });
 
     wechatTab.onclick = () => {
       this._activeSettingsTab = 'wechat';

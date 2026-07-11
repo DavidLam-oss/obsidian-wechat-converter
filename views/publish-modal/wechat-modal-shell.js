@@ -225,15 +225,16 @@ createPublishModeTabs(modal, activeMode = 'wechat') {
     cls: `wechat-publish-mode-tab${activeMode === 'wechat' ? ' is-active' : ''}`,
   });
 
+  const multiPlatformTab = publishModeTabs.createEl('button', {
+    cls: `wechat-publish-mode-tab${activeMode === 'multi' ? ' is-active' : ''}`,
+  });
+  multiPlatformTab.createEl('span', { text: MULTI_PLATFORM_TAB_LABEL });
+
   const feishuTab = publishModeTabs.createEl('button', {
     text: '飞书云文档',
     cls: `wechat-publish-mode-tab${activeMode === 'feishu' ? ' is-active' : ''}`,
   });
 
-  const multiPlatformTab = publishModeTabs.createEl('button', {
-    cls: `wechat-publish-mode-tab${activeMode === 'multi' ? ' is-active' : ''}`,
-  });
-  multiPlatformTab.createEl('span', { text: MULTI_PLATFORM_TAB_LABEL });
   return { wechatTab, feishuTab, multiPlatformTab };
 }
 };

@@ -53907,17 +53907,17 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
   wechatTabBtn.onclick = () => {
     view.showSyncModal({ modal });
   };
+  const multiTabBtn = tabsWrapper.createEl("button", {
+    cls: "wechat-publish-mode-tab"
+  });
+  multiTabBtn.createEl("span", { text: "\u591A\u5E73\u53F0\u53D1\u5E03\uFF08\u5C0F\u7EA2\u4E66/\u77E5\u4E4E/\u5934\u6761/B \u7AD9\u7B49\uFF09" });
+  multiTabBtn.onclick = () => {
+    view.showMultiPlatformSyncModal({ modal });
+  };
   tabsWrapper.createEl("button", {
     text: "\u98DE\u4E66\u4E91\u6587\u6863",
     cls: "wechat-publish-mode-tab is-active"
   });
-  const multiTabBtn = tabsWrapper.createEl("button", {
-    cls: "wechat-publish-mode-tab"
-  });
-  multiTabBtn.createEl("span", { text: "\u5176\u4ED6\u5E73\u53F0\uFF08\u5C0F\u7EA2\u4E66/\u77E5\u4E4E\u7B49\uFF09" });
-  multiTabBtn.onclick = () => {
-    view.showMultiPlatformSyncModal({ modal });
-  };
   const shell = containerEl.createDiv({ cls: "wechat-feishu-publish-shell" });
   const contentWrapper = shell.createDiv({ cls: "wechat-feishu-publish-content" });
   bindTransientScrollbar(contentWrapper);
@@ -55124,7 +55124,7 @@ var OBSIDIAN_PUBLISHER_PRO_URL2 = "https://xiaoweibox.top/obsidian-publisher/pro
 var OBSIDIAN_PUBLISHER_GUIDE_URL = "https://xiaoweibox.top/obsidian-publisher/guide/";
 var OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL2 = `${OBSIDIAN_PUBLISHER_GUIDE_URL}?from=obsidian-plugin#install-extension`;
 var OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL2 = `${OBSIDIAN_PUBLISHER_GUIDE_URL}?from=obsidian-plugin#bridge`;
-var MULTI_PLATFORM_TAB_LABEL = "\u5176\u4ED6\u5E73\u53F0\uFF08\u5C0F\u7EA2\u4E66/\u77E5\u4E4E/\u6296\u97F3\u7B49\uFF09";
+var MULTI_PLATFORM_TAB_LABEL = "\u591A\u5E73\u53F0\u53D1\u5E03\uFF08\u5C0F\u7EA2\u4E66/\u77E5\u4E4E/\u5934\u6761/B \u7AD9\u7B49\uFF09";
 var MAX_ACCOUNTS = 5;
 var AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS = 700;
 var DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS = Object.freeze({
@@ -60589,14 +60589,14 @@ var wechatModalShellMethods = {
       text: "\u5FAE\u4FE1\u8349\u7A3F\u7BB1",
       cls: `wechat-publish-mode-tab${activeMode === "wechat" ? " is-active" : ""}`
     });
-    const feishuTab = publishModeTabs.createEl("button", {
-      text: "\u98DE\u4E66\u4E91\u6587\u6863",
-      cls: `wechat-publish-mode-tab${activeMode === "feishu" ? " is-active" : ""}`
-    });
     const multiPlatformTab = publishModeTabs.createEl("button", {
       cls: `wechat-publish-mode-tab${activeMode === "multi" ? " is-active" : ""}`
     });
     multiPlatformTab.createEl("span", { text: MULTI_PLATFORM_TAB_LABEL9 });
+    const feishuTab = publishModeTabs.createEl("button", {
+      text: "\u98DE\u4E66\u4E91\u6587\u6863",
+      cls: `wechat-publish-mode-tab${activeMode === "feishu" ? " is-active" : ""}`
+    });
     return { wechatTab, feishuTab, multiPlatformTab };
   }
 };
@@ -62556,14 +62556,14 @@ var settingsTabShellMethods = {
     this.renderGitHubStarBanner(containerEl);
     const tabBar = containerEl.createDiv({ cls: "apple-settings-tabs" });
     const wechatTab = tabBar.createDiv({ cls: "apple-settings-tab active", text: "\u5FAE\u4FE1" });
-    const feishuTab = tabBar.createDiv({ cls: "apple-settings-tab", text: "\u98DE\u4E66" });
     const multiTab = tabBar.createDiv({ cls: "apple-settings-tab apple-settings-tab-multi" });
     multiTab.createSpan({ text: MULTI_PLATFORM_TAB_LABEL, cls: "apple-settings-tab-label" });
+    const feishuTab = tabBar.createDiv({ cls: "apple-settings-tab", text: "\u98DE\u4E66" });
     const wechatContent = containerEl.createDiv({ cls: "apple-settings-tab-content" });
-    const feishuContent = containerEl.createDiv({ cls: "apple-settings-tab-content" });
-    feishuContent.setCssStyles({ display: "none" });
     const multiContent = containerEl.createDiv({ cls: "apple-settings-tab-content" });
     multiContent.setCssStyles({ display: "none" });
+    const feishuContent = containerEl.createDiv({ cls: "apple-settings-tab-content" });
+    feishuContent.setCssStyles({ display: "none" });
     wechatTab.onclick = () => {
       this._activeSettingsTab = "wechat";
       wechatTab.addClass("active");
