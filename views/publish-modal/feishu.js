@@ -250,6 +250,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
         docTitle = val.trim();
       })
     );
+  titleSetting.settingEl.addClass('wechat-feishu-title-setting');
 
   const mermaidSection = contentWrapper.createDiv({ cls: 'wechat-modal-section wechat-feishu-section wechat-feishu-mermaid-section is-hidden' });
 

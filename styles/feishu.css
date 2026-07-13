@@ -274,3 +274,29 @@
   padding-top: 0;
 }
 
+.wechat-feishu-title-setting {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.wechat-feishu-title-setting .setting-item-info {
+  width: 100%;
+  max-width: none;
+}
+
+.wechat-feishu-title-setting .setting-item-control {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.wechat-feishu-title-setting .setting-item-control input[type='text'] {
+  width: 100%;
+  max-width: none;
+}
+
+.wechat-feishu-title-setting .setting-item-control input[type='text']:focus {
+  border-color: var(--apple-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--apple-accent) 18%, transparent);
+}
+
