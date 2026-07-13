@@ -143,6 +143,9 @@ function toThemeOptions(settings = {}) {
     macCodeBlock: settings.macCodeBlock,
     codeLineNumber: settings.codeLineNumber,
     sidePadding: settings.sidePadding,
+    lineHeight: settings.lineHeight,
+    paragraphGap: settings.paragraphGap,
+    letterSpacing: settings.letterSpacing,
     coloredHeader: settings.coloredHeader,
   };
 }

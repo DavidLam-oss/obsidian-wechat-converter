@@ -3590,6 +3590,9 @@ var require_apple_theme = __commonJS({
         this.macCodeBlock = options.macCodeBlock !== false;
         this.codeLineNumber = Boolean(options.codeLineNumber);
         this.sidePadding = options.sidePadding !== void 0 ? Number(options.sidePadding) : 16;
+        this.lineHeight = options.lineHeight;
+        this.paragraphGap = options.paragraphGap;
+        this.letterSpacing = options.letterSpacing;
         this.coloredHeader = Boolean(options.coloredHeader);
       }
       /**
@@ -3685,6 +3688,7 @@ var require_apple_theme = __commonJS({
        * @returns {string} - CSS 样式字符串
        */
       getStyle(tagName) {
+        var _a5, _b, _c;
         const config = this.getThemeConfig();
         const sizes = this.getSizes();
         const font = this.getFontFamily();
@@ -3696,15 +3700,18 @@ var require_apple_theme = __commonJS({
         const mutedTextColor = config.mutedTextColor;
         const headingColor = this.getHeadingColorValue();
         const sectionSidePadding = this.getSectionSidePadding(config);
+        const effectiveLineHeight = (_a5 = this.lineHeight) != null ? _a5 : config.lineHeight;
+        const effectiveParagraphGap = (_b = this.paragraphGap) != null ? _b : config.paragraphGap;
+        const effectiveLetterSpacing = (_c = this.letterSpacing) != null ? _c : 0;
         switch (tagName) {
           case "section":
             if (config.sectionBgStyle !== "grid") {
               return this.joinStyleStrings(
-                `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; background: ${config.sectionBg || "#ffffff"}; ${this.getSectionBoxSizingStyle(config)}max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; text-align: justify`
+                `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; background: ${config.sectionBg || "#ffffff"}; ${this.getSectionBoxSizingStyle(config)}max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; text-align: justify`
               );
             }
             return this.joinStyleStrings(
-              `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; box-sizing: border-box; max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; text-align: justify`,
+              `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; box-sizing: border-box; max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; text-align: justify`,
               `background-color: ${config.sectionBg || "#ffffff"}`,
               `background-image: linear-gradient(${this.hexToRgba(color, config.gridLineAlpha || "09")} 1px, transparent 1px), linear-gradient(90deg, ${this.hexToRgba(color, config.gridLineAlpha || "09")} 1px, transparent 1px)`,
               config.sectionBgSize ? `background-size: ${config.sectionBgSize}` : ""
@@ -3723,7 +3730,7 @@ var require_apple_theme = __commonJS({
             return this.getH6Style(config.h6Decoration, color, sizes.h6, font, headingColor, mutedTextColor);
           case "p":
             return this.joinStyleStrings(
-              `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; margin: 0 0 ${config.paragraphGap}px 0; text-align: justify; text-align-last: left; letter-spacing: 0; word-break: normal; overflow-wrap: break-word; line-break: strict`,
+              `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 0 0 ${effectiveParagraphGap}px 0; text-align: justify; text-align-last: left;${effectiveLetterSpacing ? ` letter-spacing: ${effectiveLetterSpacing}px;` : " letter-spacing: 0;"} word-break: normal; overflow-wrap: break-word; line-break: strict`,
               config.paragraphTextIndent ? `text-indent: ${config.paragraphTextIndent}` : ""
             );
           case "blockquote":
@@ -3735,37 +3742,37 @@ var require_apple_theme = __commonJS({
             if (config.blockquoteStyle === "paper") {
               const paperBg = quoteCalloutStyleMode === "neutral" ? _AppleTheme.QUOTE_CALLOUT_NEUTRAL_BG : config.blockquoteBg || color + "1F";
               const paperBorder = quoteCalloutStyleMode === "neutral" ? _AppleTheme.QUOTE_NEUTRAL_BORDER : `${color}99`;
-              return `font-family: ${_AppleTheme.FONTS.serif}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: #5f574c; background: ${paperBg}; margin: 22px 0 22px 8px; padding: 16px 18px; border-left: 3px solid ${paperBorder}; border-radius: ${r.sm}px; text-align: justify;`;
+              return `font-family: ${_AppleTheme.FONTS.serif}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #5f574c; background: ${paperBg}; margin: 22px 0 22px 8px; padding: 16px 18px; border-left: 3px solid ${paperBorder}; border-radius: ${r.sm}px; text-align: justify;`;
             }
             if (config.blockquoteStyle === "soft") {
               const softBg = quoteCalloutStyleMode === "neutral" ? _AppleTheme.QUOTE_CALLOUT_NEUTRAL_BG : config.blockquoteBg || color + "14";
               const softTextColor = config.blockquoteTextColor || "#595959";
               const softBorderColor = quoteCalloutStyleMode === "neutral" ? _AppleTheme.QUOTE_NEUTRAL_BORDER : `${color}99`;
               const softBorderWidth = this.themeName === "wechat" ? 3 : config.blockquoteBorderWidth || 4;
-              return `font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${softTextColor}; background: ${softBg}; margin: ${s.md}px 0 ${s.md}px 8px; padding: ${s.md}px; border-left: ${softBorderWidth}px solid ${softBorderColor}; border-radius: ${r.sm}px;`;
+              return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${softTextColor}; background: ${softBg}; margin: ${s.md}px 0 ${s.md}px 8px; padding: ${s.md}px; border-left: ${softBorderWidth}px solid ${softBorderColor}; border-radius: ${r.sm}px;`;
             }
             if (quoteCalloutStyleMode === "neutral") {
               const neutralBorderWidth = this.themeName === "wechat" ? 3 : config.blockquoteBorderWidth || 4;
-              return `font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: #595959; background: ${_AppleTheme.QUOTE_CALLOUT_NEUTRAL_BG}; margin: ${s.md}px 0 ${s.md}px 8px; padding: ${s.md}px; border-left: ${neutralBorderWidth}px solid ${_AppleTheme.QUOTE_NEUTRAL_BORDER}; border-radius: ${r.sm}px;`;
+              return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #595959; background: ${_AppleTheme.QUOTE_CALLOUT_NEUTRAL_BG}; margin: ${s.md}px 0 ${s.md}px 8px; padding: ${s.md}px; border-left: ${neutralBorderWidth}px solid ${_AppleTheme.QUOTE_NEUTRAL_BORDER}; border-radius: ${r.sm}px;`;
             }
             if (this.themeName === "wechat") {
-              return `font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: #595959; background: ${config.blockquoteBg || color + "1F"}; margin: ${s.md}px 0 ${s.md}px 4px; padding: ${s.md}px; border-left: 3px solid ${color}99; border-radius: 3px;`;
+              return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #595959; background: ${config.blockquoteBg || color + "1F"}; margin: ${s.md}px 0 ${s.md}px 4px; padding: ${s.md}px; border-left: 3px solid ${color}99; border-radius: 3px;`;
             }
-            return `font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: #595959; background: ${config.blockquoteBg || color + "1F"}; margin: ${s.md}px 0; padding: ${s.md}px; border-left: ${config.blockquoteBorderWidth}px solid ${config.blockquoteBorderColor || color}; border-radius: 3px;`;
+            return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #595959; background: ${config.blockquoteBg || color + "1F"}; margin: ${s.md}px 0; padding: ${s.md}px; border-left: ${config.blockquoteBorderWidth}px solid ${config.blockquoteBorderColor || color}; border-radius: 3px;`;
           case "pre":
             return `background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: ${r.md}px; padding: ${s.md}px; margin: ${s.md}px 0; overflow-x: auto; font-family: ${_AppleTheme.FONTS.monospace}; font-size: ${sizes.code}px; line-height: 1.6; color: #24292e;`;
           case "code":
             return `background: ${color}1A; color: ${color}; padding: 2px 4px; border-radius: 3px; font-family: ${_AppleTheme.FONTS.monospace}; font-size: ${sizes.code}px;`;
           case "ul":
-            return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; margin: 12px 0; padding-left: 20px; list-style-type: disc;`;
+            return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 12px 0; padding-left: 20px; list-style-type: disc;`;
           case "ol":
-            return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; margin: 12px 0; padding-left: 20px; list-style-type: decimal;`;
+            return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 12px 0; padding-left: 20px; list-style-type: decimal;`;
           case "li":
-            return `font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; margin: 4px 0;`;
+            return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 4px 0;${effectiveLetterSpacing ? ` letter-spacing: ${effectiveLetterSpacing}px;` : ""}`;
           case "li-task":
-            return `font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; margin: 4px 0; list-style-type: none; margin-left: -20px;`;
+            return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 4px 0; list-style-type: none; margin-left: -20px;`;
           case "li p":
-            return `margin: 0; padding: 0; line-height: ${config.lineHeight};`;
+            return `margin: 0; padding: 0; line-height: ${effectiveLineHeight};`;
           case "figure":
             return `display: block; margin: 20px 0; text-align: center; border: 1px solid ${config.figureBorderColor || "#e1e4e8"}; border-radius: ${r.md}px; padding: ${config.figurePadding || 10}px;`;
           case "figcaption":
@@ -4091,6 +4098,12 @@ var require_apple_theme = __commonJS({
           this.codeLineNumber = Boolean(options.codeLineNumber);
         if (options.sidePadding !== void 0)
           this.sidePadding = Number(options.sidePadding);
+        if (options.lineHeight !== void 0)
+          this.lineHeight = options.lineHeight;
+        if (options.paragraphGap !== void 0)
+          this.paragraphGap = options.paragraphGap;
+        if (options.letterSpacing !== void 0)
+          this.letterSpacing = options.letterSpacing;
         if (options.coloredHeader !== void 0)
           this.coloredHeader = Boolean(options.coloredHeader);
       }
@@ -4220,7 +4233,7 @@ var require_apple_theme = __commonJS({
       serif: {
         name: "\u4F18\u96C5",
         lineHeight: 1.8,
-        paragraphGap: 20,
+        paragraphGap: 26,
         h1Decoration: "editorial-h1",
         // 杂志大标题 (金线)
         h2Decoration: "editorial-h1",
@@ -35446,6 +35459,9 @@ function toThemeOptions(settings = {}) {
     macCodeBlock: settings.macCodeBlock,
     codeLineNumber: settings.codeLineNumber,
     sidePadding: settings.sidePadding,
+    lineHeight: settings.lineHeight,
+    paragraphGap: settings.paragraphGap,
+    letterSpacing: settings.letterSpacing,
     coloredHeader: settings.coloredHeader
   };
 }
@@ -55196,6 +55212,16 @@ function isRecord12(value) {
 function toRecord9(value) {
   return isRecord12(value) ? value : {};
 }
+function normalizeSpacingValue(value, min, max) {
+  if (value === null || value === void 0)
+    return null;
+  const num = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(num))
+    return null;
+  if (num < min || num > max)
+    return null;
+  return num;
+}
 function generateFallbackId() {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
@@ -55221,6 +55247,10 @@ function createDefaultSettings() {
     draftCache: createEmptyDraftCache(),
     usePhoneFrame: true,
     sidePadding: 16,
+    // 间距微调（全局覆盖；null = 跟随当前主题默认）
+    lineHeight: null,
+    paragraphGap: null,
+    letterSpacing: null,
     coloredHeader: false,
     cleanupAfterSync: false,
     cleanupUseSystemTrash: true,
@@ -55310,6 +55340,9 @@ function normalizeLoadedSettings(loadedData, options = {}) {
     delete settings.cleanupTarget;
     didMigrate = true;
   }
+  settings.lineHeight = normalizeSpacingValue(settings.lineHeight, 1.4, 2.2);
+  settings.paragraphGap = normalizeSpacingValue(settings.paragraphGap, 8, 40);
+  settings.letterSpacing = normalizeSpacingValue(settings.letterSpacing, 0, 2);
   const deprecatedRenderKeys = [
     "useTripletPipeline",
     "tripletFallbackToPhase2",
@@ -56575,6 +56608,64 @@ var stylePanelMethods = {
         await this.convertCurrent(true);
       });
     });
+    const spacingGroup = settingsArea.createEl("details", { cls: "apple-settings-details" });
+    this.settingsSpacingGroup = spacingGroup;
+    const spacingSummary = spacingGroup.createEl("summary", { cls: "apple-settings-summary" });
+    const spacingArea = spacingGroup.createDiv({ cls: "apple-settings-area" });
+    this.updateSpacingSummary(spacingSummary);
+    const buildSpacingSlider = (label, min, max, step, getEffective, settingsKey, updateKey) => {
+      this.createSection(spacingArea, label, (section) => {
+        const container2 = section.createEl("div", {
+          cls: "apple-slider-container",
+          style: "width: 100%; display: flex; align-items: center; gap: 10px;"
+        });
+        const slider = (
+          /** @type {ObsidianInputLike} */
+          container2.createEl("input", {
+            type: "range",
+            cls: "apple-slider",
+            attr: { min: String(min), max: String(max), step: String(step) }
+          })
+        );
+        const initial = getEffective();
+        slider.value = String(initial);
+        slider.setCssStyles({ flex: "1" });
+        const valueLabel = container2.createEl("span", {
+          text: this.formatSpacingValue(initial),
+          style: "font-size: 12px; color: var(--apple-secondary); min-width: 32px; text-align: right;"
+        });
+        const applyValue = (raw) => {
+          const val = Number(raw);
+          valueLabel.setText(this.formatSpacingValue(val));
+          this.plugin.settings[settingsKey] = val;
+          this.theme.update({ [updateKey]: val });
+          this.updateSpacingSummary(spacingSummary);
+        };
+        slider.addEventListener("input", (e) => {
+          const val = Number(getEventTargetValue3(e, String(getEffective())));
+          applyValue(val);
+          if (this.saveTimeout)
+            window.clearTimeout(this.saveTimeout);
+          this.saveTimeout = window.setTimeout(async () => {
+            await this.plugin.saveSettings();
+          }, 500);
+          this.scheduleSidePaddingPreview(120);
+        });
+        slider.addEventListener("change", async (e) => {
+          const val = Number(getEventTargetValue3(e, String(getEffective())));
+          applyValue(val);
+          if (this.sidePaddingPreviewTimer) {
+            window.clearTimeout(this.sidePaddingPreviewTimer);
+            this.sidePaddingPreviewTimer = null;
+          }
+          await this.plugin.saveSettings();
+          await this.convertCurrent(true);
+        });
+      });
+    };
+    buildSpacingSlider("\u884C\u95F4\u8DDD", 1.4, 2.2, 0.05, () => this.getEffectiveLineHeight(), "lineHeight", "lineHeight");
+    buildSpacingSlider("\u6BB5\u95F4\u8DDD", 8, 40, 1, () => this.getEffectiveParagraphGap(), "paragraphGap", "paragraphGap");
+    buildSpacingSlider("\u5B57\u95F4\u8DDD", 0, 2, 0.5, () => this.getEffectiveLetterSpacing(), "letterSpacing", "letterSpacing");
     const advancedOptions = settingsArea.createEl("details", { cls: "apple-settings-details" });
     this.settingsAdvancedOptions = advancedOptions;
     advancedOptions.createEl("summary", {
@@ -57048,11 +57139,57 @@ var stylePanelMethods = {
     builder(content);
     return section;
   },
+  getEffectiveLineHeight() {
+    const configured = this.plugin.settings.lineHeight;
+    if (configured !== null && configured !== void 0)
+      return configured;
+    const cfg = this.getThemeConfigSafe();
+    return cfg ? cfg.lineHeight : 1.8;
+  },
+  getEffectiveParagraphGap() {
+    const configured = this.plugin.settings.paragraphGap;
+    if (configured !== null && configured !== void 0)
+      return configured;
+    const cfg = this.getThemeConfigSafe();
+    return cfg ? cfg.paragraphGap : 18;
+  },
+  getEffectiveLetterSpacing() {
+    const configured = this.plugin.settings.letterSpacing;
+    if (configured !== null && configured !== void 0)
+      return configured;
+    return 0;
+  },
+  getThemeConfigSafe() {
+    const theme = this.theme;
+    if (theme && typeof theme.getThemeConfig === "function") {
+      try {
+        return theme.getThemeConfig();
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  },
+  formatSpacingValue(val) {
+    const num = Number(val);
+    if (!Number.isFinite(num))
+      return "0";
+    return parseFloat(num.toFixed(2)).toString();
+  },
+  updateSpacingSummary(summary) {
+    if (!summary)
+      return;
+    const inherited = this.plugin.settings.lineHeight == null && this.plugin.settings.paragraphGap == null && this.plugin.settings.letterSpacing == null;
+    const body = `\u884C\u8DDD ${this.formatSpacingValue(this.getEffectiveLineHeight())} \xB7 \u6BB5\u8DDD ${this.formatSpacingValue(this.getEffectiveParagraphGap())} \xB7 \u5B57\u8DDD ${this.formatSpacingValue(this.getEffectiveLetterSpacing())}`;
+    summary.setText(inherited ? `\u6392\u7248\u95F4\u8DDD\uFF08\u8DDF\u968F\u4E3B\u9898\uFF09\xB7 ${body}` : `\u6392\u7248\u95F4\u8DDD \xB7 ${body}`);
+  },
   resetSettingsPanelViewState() {
     var _a5;
     const advancedOptions = this.settingsAdvancedOptions || ((_a5 = this.settingsOverlay) == null ? void 0 : _a5.querySelector(".apple-settings-details"));
     if (advancedOptions)
       advancedOptions.open = false;
+    if (this.settingsSpacingGroup)
+      this.settingsSpacingGroup.open = false;
     const scrollTargets = [
       this.settingsOverlay,
       this.settingsArea,

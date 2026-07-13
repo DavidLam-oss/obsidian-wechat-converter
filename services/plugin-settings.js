@@ -51,6 +51,22 @@ function toRecord(value) {
   return isRecord(value) ? value : {};
 }
 
+/**
+ * 间距微调值校验：合法值 = null/undefined（表示继承主题默认）或在 [min, max] 内的有限数字。
+ * 越界 / NaN / 非数 → 重置为 null（继承主题默认）。
+ * @param {unknown} value
+ * @param {number} min
+ * @param {number} max
+ * @returns {number | null}
+ */
+function normalizeSpacingValue(value, min, max) {
+  if (value === null || value === undefined) return null;
+  const num = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(num)) return null;
+  if (num < min || num > max) return null;
+  return num;
+}
+
 function generateFallbackId() {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
@@ -77,6 +93,10 @@ export function createDefaultSettings() {
     draftCache: createEmptyDraftCache(),
     usePhoneFrame: true,
     sidePadding: 16,
+    // 间距微调（全局覆盖；null = 跟随当前主题默认）
+    lineHeight: null,
+    paragraphGap: null,
+    letterSpacing: null,
     coloredHeader: false,
     cleanupAfterSync: false,
     cleanupUseSystemTrash: true,
@@ -186,6 +206,11 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
     delete settings.cleanupTarget;
     didMigrate = true;
   }
+
+  // 间距微调：越界 / 非数 → 回退继承（null）
+  settings.lineHeight = normalizeSpacingValue(settings.lineHeight, 1.4, 2.2);
+  settings.paragraphGap = normalizeSpacingValue(settings.paragraphGap, 8, 40);
+  settings.letterSpacing = normalizeSpacingValue(settings.letterSpacing, 0, 2);
 
   const deprecatedRenderKeys = [
     'useTripletPipeline',

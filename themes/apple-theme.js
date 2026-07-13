@@ -191,7 +191,7 @@ class AppleTheme {
     serif: {
       name: '优雅',
       lineHeight: 1.8,
-      paragraphGap: 20,
+      paragraphGap: 26,
       h1Decoration: 'editorial-h1',      // 杂志大标题 (金线)
       h2Decoration: 'editorial-h1',      // H2 此时也是金线 (Level 2 = Level 1)
       h3Decoration: 'editorial-h2',      // H3 使用原 H2 样式 (斜体，现在的 helper 已强制左对齐)
@@ -383,6 +383,14 @@ class AppleTheme {
     // 侧边距设置 (默认 16px)
     /** @type {number} */
     this.sidePadding = options.sidePadding !== undefined ? Number(options.sidePadding) : 16;
+    // 间距微调（全局覆盖；null/undefined = 继承当前主题默认）
+    // 注意：字距默认 0（与正文现状一致），合法值 0 必须用 ?? 解析，不能用 ||
+    /** @type {number | null | undefined} */
+    this.lineHeight = options.lineHeight;
+    /** @type {number | null | undefined} */
+    this.paragraphGap = options.paragraphGap;
+    /** @type {number | null | undefined} */
+    this.letterSpacing = options.letterSpacing;
     // 标题染色设置
     /** @type {boolean} */
     this.coloredHeader = Boolean(options.coloredHeader);
@@ -498,17 +506,23 @@ class AppleTheme {
     const headingColor = this.getHeadingColorValue();
     const sectionSidePadding = this.getSectionSidePadding(config);
 
+    // 间距微调有效值：全局覆盖优先，null/undefined 回退主题默认。
+    // 字距无主题级配置，默认 0；0 是合法值，必须用 ?? 保留 0（不能用 ||）。
+    const effectiveLineHeight = this.lineHeight ?? config.lineHeight;
+    const effectiveParagraphGap = this.paragraphGap ?? config.paragraphGap;
+    const effectiveLetterSpacing = this.letterSpacing ?? 0;
+
     switch (tagName) {
       case 'section':
         // 使用配置的 sidePadding
         if (config.sectionBgStyle !== 'grid') {
           return this.joinStyleStrings(
-            `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; background: ${config.sectionBg || '#ffffff'}; ${this.getSectionBoxSizingStyle(config)}max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; text-align: justify`
+            `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; background: ${config.sectionBg || '#ffffff'}; ${this.getSectionBoxSizingStyle(config)}max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; text-align: justify`
           );
         }
 
         return this.joinStyleStrings(
-          `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; box-sizing: border-box; max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; text-align: justify`,
+          `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; box-sizing: border-box; max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; text-align: justify`,
           `background-color: ${config.sectionBg || '#ffffff'}`,
           `background-image: linear-gradient(${this.hexToRgba(color, config.gridLineAlpha || '09')} 1px, transparent 1px), linear-gradient(90deg, ${this.hexToRgba(color, config.gridLineAlpha || '09')} 1px, transparent 1px)`,
           config.sectionBgSize ? `background-size: ${config.sectionBgSize}` : ''
@@ -535,7 +549,7 @@ class AppleTheme {
 
       case 'p':
         return this.joinStyleStrings(
-          `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; margin: 0 0 ${config.paragraphGap}px 0; text-align: justify; text-align-last: left; letter-spacing: 0; word-break: normal; overflow-wrap: break-word; line-break: strict`,
+          `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 0 0 ${effectiveParagraphGap}px 0; text-align: justify; text-align-last: left;${effectiveLetterSpacing ? ` letter-spacing: ${effectiveLetterSpacing}px;` : ' letter-spacing: 0;'} word-break: normal; overflow-wrap: break-word; line-break: strict`,
           config.paragraphTextIndent ? `text-indent: ${config.paragraphTextIndent}` : ''
         );
 
@@ -560,7 +574,7 @@ class AppleTheme {
           const paperBorder = quoteCalloutStyleMode === 'neutral'
             ? AppleTheme.QUOTE_NEUTRAL_BORDER
             : `${color}99`;
-          return `font-family: ${AppleTheme.FONTS.serif}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: #5f574c; background: ${paperBg}; margin: 22px 0 22px 8px; padding: 16px 18px; border-left: 3px solid ${paperBorder}; border-radius: ${r.sm}px; text-align: justify;`;
+          return `font-family: ${AppleTheme.FONTS.serif}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #5f574c; background: ${paperBg}; margin: 22px 0 22px 8px; padding: 16px 18px; border-left: 3px solid ${paperBorder}; border-radius: ${r.sm}px; text-align: justify;`;
         }
         if (config.blockquoteStyle === 'soft') {
           const softBg = quoteCalloutStyleMode === 'neutral'
@@ -573,28 +587,28 @@ class AppleTheme {
           const softBorderWidth = this.themeName === 'wechat'
             ? 3
             : (config.blockquoteBorderWidth || 4);
-          return `font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${softTextColor}; background: ${softBg}; margin: ${s.md}px 0 ${s.md}px 8px; padding: ${s.md}px; border-left: ${softBorderWidth}px solid ${softBorderColor}; border-radius: ${r.sm}px;`;
+          return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${softTextColor}; background: ${softBg}; margin: ${s.md}px 0 ${s.md}px 8px; padding: ${s.md}px; border-left: ${softBorderWidth}px solid ${softBorderColor}; border-radius: ${r.sm}px;`;
         }
 
         if (quoteCalloutStyleMode === 'neutral') {
           const neutralBorderWidth = this.themeName === 'wechat'
             ? 3
             : (config.blockquoteBorderWidth || 4);
-          return `font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: #595959; background: ${AppleTheme.QUOTE_CALLOUT_NEUTRAL_BG}; margin: ${s.md}px 0 ${s.md}px 8px; padding: ${s.md}px; border-left: ${neutralBorderWidth}px solid ${AppleTheme.QUOTE_NEUTRAL_BORDER}; border-radius: ${r.sm}px;`;
+          return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #595959; background: ${AppleTheme.QUOTE_CALLOUT_NEUTRAL_BG}; margin: ${s.md}px 0 ${s.md}px 8px; padding: ${s.md}px; border-left: ${neutralBorderWidth}px solid ${AppleTheme.QUOTE_NEUTRAL_BORDER}; border-radius: ${r.sm}px;`;
         }
 
         // 经典主题（wechat）：使用更细的边框和更浅的颜色，与 H3 区分
         // H3: 4px 主题色 100% 左边框，顶格
         // 引用块: 3px 主题色 60% 左边框，缩进 4px
         if (this.themeName === 'wechat') {
-          return `font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: #595959; background: ${config.blockquoteBg || color + '1F'}; margin: ${s.md}px 0 ${s.md}px 4px; padding: ${s.md}px; border-left: 3px solid ${color}99; border-radius: 3px;`;
+          return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #595959; background: ${config.blockquoteBg || color + '1F'}; margin: ${s.md}px 0 ${s.md}px 4px; padding: ${s.md}px; border-left: 3px solid ${color}99; border-radius: 3px;`;
         }
 
         // Standard Blockquote: Restoring Italic and adjusting padding/background to match the screenshot
         // Background: Light opacity of theme color (1F) for better visibility
         // Border: Solid theme color
         // Font: Normal (removed italic) for better legibility on mobile
-        return `font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: #595959; background: ${config.blockquoteBg || color + '1F'}; margin: ${s.md}px 0; padding: ${s.md}px; border-left: ${config.blockquoteBorderWidth}px solid ${config.blockquoteBorderColor || color}; border-radius: 3px;`;
+        return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #595959; background: ${config.blockquoteBg || color + '1F'}; margin: ${s.md}px 0; padding: ${s.md}px; border-left: ${config.blockquoteBorderWidth}px solid ${config.blockquoteBorderColor || color}; border-radius: 3px;`;
 
       case 'pre':
         return `background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: ${r.md}px; padding: ${s.md}px; margin: ${s.md}px 0; overflow-x: auto; font-family: ${AppleTheme.FONTS.monospace}; font-size: ${sizes.code}px; line-height: 1.6; color: #24292e;`;
@@ -603,15 +617,15 @@ class AppleTheme {
         return `background: ${color}1A; color: ${color}; padding: 2px 4px; border-radius: 3px; font-family: ${AppleTheme.FONTS.monospace}; font-size: ${sizes.code}px;`;
 
       case 'ul':
-        return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; margin: 12px 0; padding-left: 20px; list-style-type: disc;`;
+        return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 12px 0; padding-left: 20px; list-style-type: disc;`;
       case 'ol':
-        return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; margin: 12px 0; padding-left: 20px; list-style-type: decimal;`;
+        return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 12px 0; padding-left: 20px; list-style-type: decimal;`;
       case 'li':
-        return `font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; margin: 4px 0;`;
+        return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 4px 0;${effectiveLetterSpacing ? ` letter-spacing: ${effectiveLetterSpacing}px;` : ''}`;
       case 'li-task':
-        return `font-size: ${sizes.base}px; line-height: ${config.lineHeight}; color: ${textColor}; margin: 4px 0; list-style-type: none; margin-left: -20px;`;
+        return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 4px 0; list-style-type: none; margin-left: -20px;`;
       case 'li p':
-        return `margin: 0; padding: 0; line-height: ${config.lineHeight};`;
+        return `margin: 0; padding: 0; line-height: ${effectiveLineHeight};`;
 
 
 
@@ -964,6 +978,10 @@ class AppleTheme {
     if (options.macCodeBlock !== undefined) this.macCodeBlock = options.macCodeBlock !== false;
     if (options.codeLineNumber !== undefined) this.codeLineNumber = Boolean(options.codeLineNumber);
     if (options.sidePadding !== undefined) this.sidePadding = Number(options.sidePadding);
+    // 间距微调：允许 null 显式重置为继承主题默认
+    if (options.lineHeight !== undefined) this.lineHeight = options.lineHeight;
+    if (options.paragraphGap !== undefined) this.paragraphGap = options.paragraphGap;
+    if (options.letterSpacing !== undefined) this.letterSpacing = options.letterSpacing;
     if (options.coloredHeader !== undefined) this.coloredHeader = Boolean(options.coloredHeader);
   }
 

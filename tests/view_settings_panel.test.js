@@ -82,6 +82,128 @@ describe('AppleStyleView settings panel + toolbar', () => {
     expect(container.querySelector('.apple-icon-btn[aria-label="复制到公众号"]')).toBeNull();
   });
 
+  it('createSettingsPanel should render a collapsed 排版间距 group with 3 spacing sliders', () => {
+    const view = new AppleStyleView(null, {
+      settings: {
+        theme: 'serif',
+        themeColor: 'blue',
+        customColor: '#0366d6',
+        fontFamily: 'serif',
+        fontSize: 3,
+        coloredHeader: false,
+        macCodeBlock: true,
+        codeLineNumber: true,
+        sidePadding: 16,
+        lineHeight: null,
+        paragraphGap: null,
+        letterSpacing: null,
+        showImageCaption: true,
+        enableWatermark: false,
+      },
+      saveSettings: vi.fn(),
+    });
+    view.app = { isMobile: false };
+    view.theme = {
+      update: vi.fn(),
+      getThemeConfig: () => ({ lineHeight: 1.8, paragraphGap: 26 }),
+    };
+    view.converter = { updateConfig: vi.fn() };
+
+    global.AppleTheme = {
+      getThemeList: () => [{ value: 'serif', label: '优雅' }],
+      getColorList: () => [{ value: 'blue', color: '#0366d6' }],
+    };
+
+    const container = createObsidianLikeElement();
+    view.createSettingsPanel(container);
+
+    // 找到「排版间距」折叠组
+    const groups = Array.from(container.querySelectorAll('details.apple-settings-details'));
+    const spacingGroup = groups.find((g) => {
+      const summary = g.querySelector('summary');
+      return summary && summary.textContent.includes('排版间距');
+    });
+    expect(spacingGroup).toBeTruthy();
+
+    // 默认收起
+    expect(spacingGroup.open).toBeFalsy();
+
+    // 内含 3 个 range 滑块
+    const sliders = spacingGroup.querySelectorAll('input[type="range"]');
+    expect(sliders.length).toBe(3);
+
+    // 摘要显示有效值（全部继承时标记「跟随主题」）
+    const summary = spacingGroup.querySelector('summary');
+    expect(summary.textContent).toContain('行距 1.8');
+    expect(summary.textContent).toContain('段距 26');
+    expect(summary.textContent).toContain('字距 0');
+    expect(summary.textContent).toContain('跟随主题');
+
+    // 行间距滑块范围正确
+    const lineSlider = sliders[0];
+    expect(lineSlider.getAttribute('min')).toBe('1.4');
+    expect(lineSlider.getAttribute('max')).toBe('2.2');
+    expect(lineSlider.getAttribute('step')).toBe('0.05');
+  });
+
+  it('排版间距 slider should reflect a custom override in summary and persist to settings', () => {
+    const saveSettings = vi.fn();
+    const view = new AppleStyleView(null, {
+      settings: {
+        theme: 'serif',
+        themeColor: 'blue',
+        customColor: '#0366d6',
+        fontFamily: 'serif',
+        fontSize: 3,
+        coloredHeader: false,
+        macCodeBlock: true,
+        codeLineNumber: true,
+        sidePadding: 16,
+        lineHeight: null,
+        paragraphGap: null,
+        letterSpacing: null,
+        showImageCaption: true,
+        enableWatermark: false,
+      },
+      saveSettings,
+    });
+    view.app = { isMobile: false };
+    const themeUpdate = vi.fn();
+    view.theme = {
+      update: themeUpdate,
+      getThemeConfig: () => ({ lineHeight: 1.8, paragraphGap: 26 }),
+    };
+    view.converter = { updateConfig: vi.fn() };
+    view.convertCurrent = vi.fn();
+    view.scheduleSidePaddingPreview = vi.fn();
+    global.AppleTheme = {
+      getThemeList: () => [{ value: 'serif', label: '优雅' }],
+      getColorList: () => [{ value: 'blue', color: '#0366d6' }],
+    };
+
+    const container = createObsidianLikeElement();
+    view.createSettingsPanel(container);
+
+    const groups = Array.from(container.querySelectorAll('details.apple-settings-details'));
+    const spacingGroup = groups.find((g) => {
+      const summary = g.querySelector('summary');
+      return summary && summary.textContent.includes('排版间距');
+    });
+    const sliders = spacingGroup.querySelectorAll('input[type="range"]');
+
+    // 拖动段间距滑块到 30
+    const paraSlider = sliders[1];
+    paraSlider.value = '30';
+    paraSlider.dispatchEvent(new window.Event('change'));
+
+    expect(view.plugin.settings.paragraphGap).toBe(30);
+    expect(themeUpdate).toHaveBeenCalledWith({ paragraphGap: 30 });
+    expect(saveSettings).toHaveBeenCalled();
+    const summary = spacingGroup.querySelector('summary');
+    expect(summary.textContent).toContain('段距 30');
+    expect(summary.textContent).not.toContain('跟随主题');
+  });
+
   it('resetSettingsPanelViewState should collapse advanced options and scroll to top without changing settings', () => {
     const settings = { theme: 'wechat', fontSize: 4 };
     const view = new AppleStyleView(null, { settings });

@@ -410,6 +410,79 @@ createSettingsPanel(container) {
     });
   });
 
+  // === 排版间距（折叠：呼吸感微调，默认收起） ===
+  const spacingGroup = settingsArea.createEl('details', { cls: 'apple-settings-details' });
+  this.settingsSpacingGroup = spacingGroup;
+  const spacingSummary = spacingGroup.createEl('summary', { cls: 'apple-settings-summary' });
+  const spacingArea = spacingGroup.createDiv({ cls: 'apple-settings-area' });
+  this.updateSpacingSummary(spacingSummary);
+
+  /**
+   * 复用留白滑块交互：input 轻量预览 + 防抖保存；change 全量重渲染 + 保存。
+   * @param {string} label
+   * @param {number} min
+   * @param {number} max
+   * @param {number} step
+   * @param {() => number} getEffective
+   * @param {string} settingsKey
+   * @param {string} updateKey
+   */
+  const buildSpacingSlider = (label, min, max, step, getEffective, settingsKey, updateKey) => {
+    this.createSection(spacingArea, label, (section) => {
+      const container = section.createEl('div', {
+        cls: 'apple-slider-container',
+        style: 'width: 100%; display: flex; align-items: center; gap: 10px;'
+      });
+
+      const slider = /** @type {ObsidianInputLike} */ (container.createEl('input', {
+        type: 'range',
+        cls: 'apple-slider',
+        attr: { min: String(min), max: String(max), step: String(step) }
+      }));
+      const initial = getEffective();
+      slider.value = String(initial);
+      slider.setCssStyles({ flex: '1' });
+
+      const valueLabel = container.createEl('span', {
+        text: this.formatSpacingValue(initial),
+        style: 'font-size: 12px; color: var(--apple-secondary); min-width: 32px; text-align: right;'
+      });
+
+      const applyValue = (raw) => {
+        const val = Number(raw);
+        valueLabel.setText(this.formatSpacingValue(val));
+        this.plugin.settings[settingsKey] = val;
+        this.theme.update({ [updateKey]: val });
+        this.updateSpacingSummary(spacingSummary);
+      };
+
+      slider.addEventListener('input', (e) => {
+        const val = Number(getEventTargetValue(e, String(getEffective())));
+        applyValue(val);
+        if (this.saveTimeout) window.clearTimeout(this.saveTimeout);
+        this.saveTimeout = window.setTimeout(async () => {
+          await this.plugin.saveSettings();
+        }, 500);
+        this.scheduleSidePaddingPreview(120);
+      });
+
+      slider.addEventListener('change', async (e) => {
+        const val = Number(getEventTargetValue(e, String(getEffective())));
+        applyValue(val);
+        if (this.sidePaddingPreviewTimer) {
+          window.clearTimeout(this.sidePaddingPreviewTimer);
+          this.sidePaddingPreviewTimer = null;
+        }
+        await this.plugin.saveSettings();
+        await this.convertCurrent(true);
+      });
+    });
+  };
+
+  buildSpacingSlider('行间距', 1.4, 2.2, 0.05, () => this.getEffectiveLineHeight(), 'lineHeight', 'lineHeight');
+  buildSpacingSlider('段间距', 8, 40, 1, () => this.getEffectiveParagraphGap(), 'paragraphGap', 'paragraphGap');
+  buildSpacingSlider('字间距', 0, 2, 0.5, () => this.getEffectiveLetterSpacing(), 'letterSpacing', 'letterSpacing');
+
   const advancedOptions = settingsArea.createEl('details', { cls: 'apple-settings-details' });
   this.settingsAdvancedOptions = advancedOptions;
   advancedOptions.createEl('summary', {
@@ -935,9 +1008,64 @@ createSection(parent, label, builder) {
 }
 ,
 
+getEffectiveLineHeight() {
+  const configured = this.plugin.settings.lineHeight;
+  if (configured !== null && configured !== undefined) return configured;
+  const cfg = this.getThemeConfigSafe();
+  return cfg ? cfg.lineHeight : 1.8;
+}
+,
+
+getEffectiveParagraphGap() {
+  const configured = this.plugin.settings.paragraphGap;
+  if (configured !== null && configured !== undefined) return configured;
+  const cfg = this.getThemeConfigSafe();
+  return cfg ? cfg.paragraphGap : 18;
+}
+,
+
+getEffectiveLetterSpacing() {
+  const configured = this.plugin.settings.letterSpacing;
+  if (configured !== null && configured !== undefined) return configured;
+  return 0;
+}
+,
+
+getThemeConfigSafe() {
+  const theme = this.theme;
+  if (theme && typeof theme.getThemeConfig === 'function') {
+    try {
+      return theme.getThemeConfig();
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+,
+
+formatSpacingValue(val) {
+  const num = Number(val);
+  if (!Number.isFinite(num)) return '0';
+  // 最多 2 位小数，去掉末尾多余的 0
+  return parseFloat(num.toFixed(2)).toString();
+}
+,
+
+updateSpacingSummary(summary) {
+  if (!summary) return;
+  const inherited = this.plugin.settings.lineHeight == null
+    && this.plugin.settings.paragraphGap == null
+    && this.plugin.settings.letterSpacing == null;
+  const body = `行距 ${this.formatSpacingValue(this.getEffectiveLineHeight())} · 段距 ${this.formatSpacingValue(this.getEffectiveParagraphGap())} · 字距 ${this.formatSpacingValue(this.getEffectiveLetterSpacing())}`;
+  summary.setText(inherited ? `排版间距（跟随主题）· ${body}` : `排版间距 · ${body}`);
+}
+,
+
 resetSettingsPanelViewState() {
   const advancedOptions = this.settingsAdvancedOptions || this.settingsOverlay?.querySelector('.apple-settings-details');
   if (advancedOptions) advancedOptions.open = false;
+  if (this.settingsSpacingGroup) this.settingsSpacingGroup.open = false;
 
   const scrollTargets = [
     this.settingsOverlay,

@@ -382,4 +382,68 @@ describe('AppleTheme Color Logic', () => {
       expect(h3Style).toContain('background: #0366d60A;');
     });
   });
+
+  describe('Spacing overrides (line / paragraph / letter spacing)', () => {
+    it('should override line-height when set explicitly', () => {
+      const theme = new AppleTheme({ theme: 'serif', lineHeight: 1.5 });
+      const pStyle = theme.getStyle('p');
+      expect(pStyle).toContain('line-height: 1.5');
+      expect(pStyle).not.toContain('line-height: 1.8');
+    });
+
+    it('should fall back to theme default line-height when null/undefined', () => {
+      expect(new AppleTheme({ theme: 'serif', lineHeight: null }).getStyle('p')).toContain('line-height: 1.8');
+      expect(new AppleTheme({ theme: 'serif' }).getStyle('p')).toContain('line-height: 1.8');
+    });
+
+    it('should override paragraph gap when set explicitly', () => {
+      const pStyle = new AppleTheme({ theme: 'serif', paragraphGap: 30 }).getStyle('p');
+      expect(pStyle).toContain('margin: 0 0 30px 0');
+      expect(pStyle).not.toContain('margin: 0 0 26px 0');
+    });
+
+    it('should use updated serif default paragraph gap (26) when not overridden', () => {
+      const pStyle = new AppleTheme({ theme: 'serif' }).getStyle('p');
+      expect(pStyle).toContain('margin: 0 0 26px 0');
+    });
+
+    it('should apply explicit letter-spacing to p and li, and default to 0px', () => {
+      // Explicit nonzero override applies to both p and li.
+      expect(new AppleTheme({ theme: 'serif', letterSpacing: 1 }).getStyle('p')).toContain('letter-spacing: 1px');
+      expect(new AppleTheme({ theme: 'serif', letterSpacing: 1 }).getStyle('li')).toContain('letter-spacing: 1px');
+      // Default (0): p keeps the legacy byte-identical "letter-spacing: 0;" and li emits no letter-spacing at all.
+      expect(new AppleTheme({ theme: 'serif' }).getStyle('p')).toContain('letter-spacing: 0;');
+      expect(new AppleTheme({ theme: 'serif' }).getStyle('li')).not.toContain('letter-spacing');
+    });
+
+    it('should NOT apply body letter-spacing to headings (headings keep their own)', () => {
+      const theme = new AppleTheme({ theme: 'serif', letterSpacing: 2 });
+      const h2 = theme.getStyle('h2');
+      // editorial-h1 decoration uses its own 1px, not the body 2px
+      expect(h2).toContain('letter-spacing: 1px');
+      expect(h2).not.toContain('letter-spacing: 2px');
+    });
+
+    it('should update spacing values at runtime via update()', () => {
+      const theme = new AppleTheme({ theme: 'serif' });
+      theme.update({ lineHeight: 2.0, paragraphGap: 40, letterSpacing: 0.5 });
+      const pStyle = theme.getStyle('p');
+      expect(pStyle).toContain('line-height: 2');
+      expect(pStyle).toContain('margin: 0 0 40px 0');
+      expect(pStyle).toContain('letter-spacing: 0.5px');
+    });
+
+    it('should reset to inherited default when update() receives null', () => {
+      const theme = new AppleTheme({ theme: 'serif', lineHeight: 1.5 });
+      theme.update({ lineHeight: null });
+      expect(theme.getStyle('p')).toContain('line-height: 1.8');
+    });
+
+    it('should apply line-height globally across body elements (section, blockquote, ul, li)', () => {
+      const theme = new AppleTheme({ theme: 'serif', lineHeight: 1.6 });
+      expect(theme.getStyle('section')).toContain('line-height: 1.6');
+      expect(theme.getStyle('ul')).toContain('line-height: 1.6');
+      expect(theme.getStyle('li')).toContain('line-height: 1.6');
+    });
+  });
 });
