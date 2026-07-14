@@ -55906,9 +55906,12 @@ var coreMethods = {
   async onThemeChange(value, grid) {
     var _a5, _b;
     this.plugin.settings.theme = value;
+    this.plugin.settings.lineHeight = null;
+    this.plugin.settings.paragraphGap = null;
+    this.plugin.settings.letterSpacing = null;
     await this.plugin.saveSettings();
     this.updateButtonActive(grid, value);
-    (_a5 = this.theme) == null ? void 0 : _a5.update({ theme: value });
+    (_a5 = this.theme) == null ? void 0 : _a5.update({ theme: value, lineHeight: null, paragraphGap: null, letterSpacing: null });
     (_b = this.refreshSpacingSliders) == null ? void 0 : _b.call(this);
     await this.convertCurrent(true);
   },

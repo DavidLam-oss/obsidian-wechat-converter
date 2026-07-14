@@ -616,10 +616,14 @@ async loadDependencies() {
 
 async onThemeChange(value, grid) {
   this.plugin.settings.theme = value;
+  // 切换主题时重置间距微调为「跟随主题」(null)：
+  // 每个主题展示各自默认间距，不跨主题持久化手动微调，避免回不到默认值。
+  this.plugin.settings.lineHeight = null;
+  this.plugin.settings.paragraphGap = null;
+  this.plugin.settings.letterSpacing = null;
   await this.plugin.saveSettings();
   this.updateButtonActive(grid, value);
-  this.theme?.update({ theme: value });
-  // 切主题后刷新间距滑块显示值（跟随主题的滑块需同步新主题默认值）。
+  this.theme?.update({ theme: value, lineHeight: null, paragraphGap: null, letterSpacing: null });
   this.refreshSpacingSliders?.();
   await this.convertCurrent(true);
 }
