@@ -202,7 +202,8 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   border-top: 1px solid color-mix(in srgb, var(--background-modifier-border) 82%, transparent);
 }
 
-.wechat-modal-section:first-child {
+.wechat-modal-section:first-child,
+.wechat-publish-mode-tabs + .wechat-modal-section {
   border-top: none;
   padding-top: 0;
 }

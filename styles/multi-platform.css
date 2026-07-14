@@ -47,9 +47,7 @@
   padding: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--apple-border) 86%, transparent);
   background: transparent;
-  overflow-x: auto;
   white-space: nowrap;
-  -webkit-overflow-scrolling: touch;
 }
 
 .wechat-sync-modal button.wechat-publish-mode-tab {
