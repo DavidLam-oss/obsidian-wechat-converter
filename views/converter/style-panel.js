@@ -414,8 +414,14 @@ createSettingsPanel(container) {
   const spacingGroup = settingsArea.createEl('details', { cls: 'apple-settings-details' });
   this.settingsSpacingGroup = spacingGroup;
   const spacingSummary = spacingGroup.createEl('summary', { cls: 'apple-settings-summary' });
-  const spacingArea = spacingGroup.createDiv({ cls: 'apple-settings-area' });
-  this.updateSpacingSummary(spacingSummary);
+  spacingSummary.createEl('span', { text: '排版间距' });
+  this.settingsSpacingValues = spacingSummary.createEl('span', {
+    attr: {
+      style: 'margin-left: auto; margin-right: 8px; font-size: 11px; font-weight: 400; color: var(--apple-secondary);'
+    }
+  });
+  const spacingArea = spacingGroup.createDiv({ cls: 'apple-settings-area apple-settings-advanced-area' });
+  this.updateSpacingSummary();
 
   /**
    * 复用留白滑块交互：input 轻量预览 + 防抖保存；change 全量重渲染 + 保存。
@@ -453,7 +459,7 @@ createSettingsPanel(container) {
         valueLabel.setText(this.formatSpacingValue(val));
         this.plugin.settings[settingsKey] = val;
         this.theme.update({ [updateKey]: val });
-        this.updateSpacingSummary(spacingSummary);
+        this.updateSpacingSummary();
       };
 
       slider.addEventListener('input', (e) => {
@@ -1052,13 +1058,13 @@ formatSpacingValue(val) {
 }
 ,
 
-updateSpacingSummary(summary) {
-  if (!summary) return;
-  const inherited = this.plugin.settings.lineHeight == null
-    && this.plugin.settings.paragraphGap == null
-    && this.plugin.settings.letterSpacing == null;
-  const body = `行距 ${this.formatSpacingValue(this.getEffectiveLineHeight())} · 段距 ${this.formatSpacingValue(this.getEffectiveParagraphGap())} · 字距 ${this.formatSpacingValue(this.getEffectiveLetterSpacing())}`;
-  summary.setText(inherited ? `排版间距（跟随主题）· ${body}` : `排版间距 · ${body}`);
+updateSpacingSummary() {
+  const el = this.settingsSpacingValues;
+  if (!el) return;
+  const lh = this.formatSpacingValue(this.getEffectiveLineHeight());
+  const pg = this.formatSpacingValue(this.getEffectiveParagraphGap());
+  const ls = this.formatSpacingValue(this.getEffectiveLetterSpacing());
+  el.setText(`行距 ${lh} · 段距 ${pg} · 字距 ${ls}`);
 }
 ,
 

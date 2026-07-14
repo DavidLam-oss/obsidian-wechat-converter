@@ -132,12 +132,12 @@ describe('AppleStyleView settings panel + toolbar', () => {
     const sliders = spacingGroup.querySelectorAll('input[type="range"]');
     expect(sliders.length).toBe(3);
 
-    // 摘要显示有效值（全部继承时标记「跟随主题」）
+    // 摘要显示标题 + 有效值（标题「排版间距」+ 行距/段距/字距）
     const summary = spacingGroup.querySelector('summary');
+    expect(summary.textContent).toContain('排版间距');
     expect(summary.textContent).toContain('行距 1.8');
     expect(summary.textContent).toContain('段距 26');
     expect(summary.textContent).toContain('字距 0');
-    expect(summary.textContent).toContain('跟随主题');
 
     // 行间距滑块范围正确
     const lineSlider = sliders[0];

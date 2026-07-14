@@ -56611,8 +56611,14 @@ var stylePanelMethods = {
     const spacingGroup = settingsArea.createEl("details", { cls: "apple-settings-details" });
     this.settingsSpacingGroup = spacingGroup;
     const spacingSummary = spacingGroup.createEl("summary", { cls: "apple-settings-summary" });
-    const spacingArea = spacingGroup.createDiv({ cls: "apple-settings-area" });
-    this.updateSpacingSummary(spacingSummary);
+    spacingSummary.createEl("span", { text: "\u6392\u7248\u95F4\u8DDD" });
+    this.settingsSpacingValues = spacingSummary.createEl("span", {
+      attr: {
+        style: "margin-left: auto; margin-right: 8px; font-size: 11px; font-weight: 400; color: var(--apple-secondary);"
+      }
+    });
+    const spacingArea = spacingGroup.createDiv({ cls: "apple-settings-area apple-settings-advanced-area" });
+    this.updateSpacingSummary();
     const buildSpacingSlider = (label, min, max, step, getEffective, settingsKey, updateKey) => {
       this.createSection(spacingArea, label, (section) => {
         const container2 = section.createEl("div", {
@@ -56639,7 +56645,7 @@ var stylePanelMethods = {
           valueLabel.setText(this.formatSpacingValue(val));
           this.plugin.settings[settingsKey] = val;
           this.theme.update({ [updateKey]: val });
-          this.updateSpacingSummary(spacingSummary);
+          this.updateSpacingSummary();
         };
         slider.addEventListener("input", (e) => {
           const val = Number(getEventTargetValue3(e, String(getEffective())));
@@ -57176,12 +57182,14 @@ var stylePanelMethods = {
       return "0";
     return parseFloat(num.toFixed(2)).toString();
   },
-  updateSpacingSummary(summary) {
-    if (!summary)
+  updateSpacingSummary() {
+    const el = this.settingsSpacingValues;
+    if (!el)
       return;
-    const inherited = this.plugin.settings.lineHeight == null && this.plugin.settings.paragraphGap == null && this.plugin.settings.letterSpacing == null;
-    const body = `\u884C\u8DDD ${this.formatSpacingValue(this.getEffectiveLineHeight())} \xB7 \u6BB5\u8DDD ${this.formatSpacingValue(this.getEffectiveParagraphGap())} \xB7 \u5B57\u8DDD ${this.formatSpacingValue(this.getEffectiveLetterSpacing())}`;
-    summary.setText(inherited ? `\u6392\u7248\u95F4\u8DDD\uFF08\u8DDF\u968F\u4E3B\u9898\uFF09\xB7 ${body}` : `\u6392\u7248\u95F4\u8DDD \xB7 ${body}`);
+    const lh = this.formatSpacingValue(this.getEffectiveLineHeight());
+    const pg = this.formatSpacingValue(this.getEffectiveParagraphGap());
+    const ls = this.formatSpacingValue(this.getEffectiveLetterSpacing());
+    el.setText(`\u884C\u8DDD ${lh} \xB7 \u6BB5\u8DDD ${pg} \xB7 \u5B57\u8DDD ${ls}`);
   },
   resetSettingsPanelViewState() {
     var _a5;
@@ -63907,6 +63915,10 @@ var AppleStylePlugin = class extends Plugin14 {
     console.log("\u{1F4DD} \u6B63\u5728\u52A0\u8F7D Obsidian \u53D1\u5E03\u52A9\u624B...");
     this.obsidianApi = obsidianApi14;
     await this.loadSettings();
+    if (typeof window !== "undefined") {
+      delete window.AppleTheme;
+      delete window.AppleStyleConverter;
+    }
     this.registerView(
       APPLE_STYLE_VIEW14,
       (leaf) => new AppleStyleView(leaf, this)

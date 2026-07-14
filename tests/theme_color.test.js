@@ -445,5 +445,16 @@ describe('AppleTheme Color Logic', () => {
       expect(theme.getStyle('ul')).toContain('line-height: 1.6');
       expect(theme.getStyle('li')).toContain('line-height: 1.6');
     });
+
+    it('should reflect update() overrides in getStyle (runtime panel sequence)', () => {
+      // 模拟真实面板流程：以默认设置构造（lineHeight=null），拖动滑块后 update() 覆盖。
+      const theme = new AppleTheme({ theme: 'serif' });
+      expect(theme.getStyle('p')).toContain('line-height: 1.8');
+      theme.update({ lineHeight: 1.5, paragraphGap: 30, letterSpacing: 1 });
+      expect(theme.getStyle('p')).toContain('line-height: 1.5');
+      expect(theme.getStyle('p')).toContain('margin: 0 0 30px 0');
+      expect(theme.getStyle('p')).toContain('letter-spacing: 1px');
+      expect(theme.getStyle('li')).toContain('letter-spacing: 1px');
+    });
   });
 });

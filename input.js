@@ -208,6 +208,14 @@ class AppleStylePlugin extends Plugin {
 
     await this.loadSettings();
 
+    // 热重载兼容：清除上次加载缓存在 window 上的运行时类。
+    // 否则「重载插件」会复用旧 AppleTheme/AppleStyleConverter 类，
+    // 导致本次构建的主题改动（如间距微调）不生效——预览拖滑块无变化。
+    if (typeof window !== 'undefined') {
+      delete window.AppleTheme;
+      delete window.AppleStyleConverter;
+    }
+
     this.registerView(
       APPLE_STYLE_VIEW,
       (leaf) => new AppleStyleView(leaf, this)
