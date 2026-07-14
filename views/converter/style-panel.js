@@ -454,6 +454,9 @@ createSettingsPanel(container) {
         style: 'font-size: 12px; color: var(--apple-secondary); min-width: 32px; text-align: right;'
       });
 
+      // 记录引用，供 refreshSpacingSliders() 切主题后刷新显示。
+      this.spacingSliderRefs.push({ slider, valueLabel, getEffective });
+
       const applyValue = (raw) => {
         const val = Number(raw);
         valueLabel.setText(this.formatSpacingValue(val));
@@ -485,6 +488,8 @@ createSettingsPanel(container) {
     });
   };
 
+  // 存储滑块引用，供切主题时刷新显示值（跟随主题的滑块需同步新主题默认值）。
+  this.spacingSliderRefs = [];
   buildSpacingSlider('行间距', 1.4, 2.2, 0.05, () => this.getEffectiveLineHeight(), 'lineHeight', 'lineHeight');
   buildSpacingSlider('段间距', 8, 40, 1, () => this.getEffectiveParagraphGap(), 'paragraphGap', 'paragraphGap');
   buildSpacingSlider('字间距', 0, 2, 0.5, () => this.getEffectiveLetterSpacing(), 'letterSpacing', 'letterSpacing');
@@ -1065,6 +1070,19 @@ updateSpacingSummary() {
   const pg = this.formatSpacingValue(this.getEffectiveParagraphGap());
   const ls = this.formatSpacingValue(this.getEffectiveLetterSpacing());
   el.setText(`行距 ${lh} · 段距 ${pg} · 字距 ${ls}`);
+}
+,
+
+// 切换主题后刷新间距滑块显示：跟随主题(null)的滑块同步新主题默认值；
+// 用户手动设过(非 null)的保持不变（getEffective 直接返回用户值）。
+refreshSpacingSliders() {
+  if (!this.spacingSliderRefs) return;
+  this.spacingSliderRefs.forEach(({ slider, valueLabel, getEffective }) => {
+    const v = getEffective();
+    slider.value = String(v);
+    valueLabel.setText(this.formatSpacingValue(v));
+  });
+  this.updateSpacingSummary();
 }
 ,
 

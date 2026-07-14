@@ -619,6 +619,8 @@ async onThemeChange(value, grid) {
   await this.plugin.saveSettings();
   this.updateButtonActive(grid, value);
   this.theme?.update({ theme: value });
+  // 切主题后刷新间距滑块显示值（跟随主题的滑块需同步新主题默认值）。
+  this.refreshSpacingSliders?.();
   await this.convertCurrent(true);
 }
 ,

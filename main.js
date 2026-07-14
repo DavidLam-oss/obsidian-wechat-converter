@@ -55904,11 +55904,12 @@ var coreMethods = {
     }
   },
   async onThemeChange(value, grid) {
-    var _a5;
+    var _a5, _b;
     this.plugin.settings.theme = value;
     await this.plugin.saveSettings();
     this.updateButtonActive(grid, value);
     (_a5 = this.theme) == null ? void 0 : _a5.update({ theme: value });
+    (_b = this.refreshSpacingSliders) == null ? void 0 : _b.call(this);
     await this.convertCurrent(true);
   },
   async onFontFamilyChange(value) {
@@ -56640,6 +56641,7 @@ var stylePanelMethods = {
           text: this.formatSpacingValue(initial),
           style: "font-size: 12px; color: var(--apple-secondary); min-width: 32px; text-align: right;"
         });
+        this.spacingSliderRefs.push({ slider, valueLabel, getEffective });
         const applyValue = (raw) => {
           const val = Number(raw);
           valueLabel.setText(this.formatSpacingValue(val));
@@ -56669,6 +56671,7 @@ var stylePanelMethods = {
         });
       });
     };
+    this.spacingSliderRefs = [];
     buildSpacingSlider("\u884C\u95F4\u8DDD", 1.4, 2.2, 0.05, () => this.getEffectiveLineHeight(), "lineHeight", "lineHeight");
     buildSpacingSlider("\u6BB5\u95F4\u8DDD", 8, 40, 1, () => this.getEffectiveParagraphGap(), "paragraphGap", "paragraphGap");
     buildSpacingSlider("\u5B57\u95F4\u8DDD", 0, 2, 0.5, () => this.getEffectiveLetterSpacing(), "letterSpacing", "letterSpacing");
@@ -57190,6 +57193,18 @@ var stylePanelMethods = {
     const pg = this.formatSpacingValue(this.getEffectiveParagraphGap());
     const ls = this.formatSpacingValue(this.getEffectiveLetterSpacing());
     el.setText(`\u884C\u8DDD ${lh} \xB7 \u6BB5\u8DDD ${pg} \xB7 \u5B57\u8DDD ${ls}`);
+  },
+  // 切换主题后刷新间距滑块显示：跟随主题(null)的滑块同步新主题默认值；
+  // 用户手动设过(非 null)的保持不变（getEffective 直接返回用户值）。
+  refreshSpacingSliders() {
+    if (!this.spacingSliderRefs)
+      return;
+    this.spacingSliderRefs.forEach(({ slider, valueLabel, getEffective }) => {
+      const v = getEffective();
+      slider.value = String(v);
+      valueLabel.setText(this.formatSpacingValue(v));
+    });
+    this.updateSpacingSummary();
   },
   resetSettingsPanelViewState() {
     var _a5;
