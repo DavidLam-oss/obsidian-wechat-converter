@@ -108,6 +108,7 @@ export default [
       "input.js",
       "services/concurrency.js",
       "services/custom-css-inliner.js",
+      "services/pseudo-element-renderer.js",
       "services/markdown-utils.js",
       "services/ai-layout-records.js",
       "services/ai-layout-cache.js",

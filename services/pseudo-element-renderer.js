@@ -581,6 +581,7 @@ export function prerenderPseudoElementsIntoHtml(wrappedHtml, cssText) {
     if (pseudoRules.length === 0) return wrappedHtml;
 
     const host = document.createElement('div');
+    // eslint-disable-next-line @microsoft/sdl/no-inner-html -- wrappedHtml 来自 converter 管线、已先经 sanitizeHtml 清洗且为受信的文章渲染结果；此处仅用于把字符串解析成 DOM 以注入伪元素 span，并非注入未净化内容
     host.innerHTML = wrappedHtml;
     const container = host.firstElementChild;
     if (!container) return wrappedHtml;
