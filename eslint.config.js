@@ -293,6 +293,10 @@ export default [
       "lib/",
       "services/generated-embedded-deps.js",
       "dist/",
+      // Tool-generated working dirs (OpenPRD / Codex): not project source,
+      // skip linting so their generated code does not pollute CI output.
+      ".codex/",
+      ".openprd/",
     ],
   }
 ];
