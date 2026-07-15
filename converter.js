@@ -1012,7 +1012,7 @@ ${macHeader}
     html = this.removeBlockquoteParagraphMargins(html); // Fix: Remove margins from <p> inside <blockquote> for vertical centering
     html = this.fixMathJaxTags(html); // Fix: Replace <mjx-container> with WeChat-compatible tags
     html = this.sanitizeHtml(html); // Final security pass: Neutralize XSS and dangerous tags
-    return `<section style="${this.getInlineStyle('section')}">${html}</section>`;
+    return `<section class="owc-article-root" style="${this.getInlineStyle('section')}">${html}</section>`;
   }
 
   /**

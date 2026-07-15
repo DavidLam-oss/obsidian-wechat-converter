@@ -111,6 +111,7 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
 
     const copyPromise = view.copyHTML();
     await Promise.resolve();
+    await Promise.resolve();
 
     expect(copyBtn.classList.contains('is-copying')).toBe(true);
     expect(copyBtn.classList.contains('active')).toBe(false);

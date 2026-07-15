@@ -410,7 +410,12 @@ async enhanceHtmlForWechatPublishing(root) {
 ,
 
 async prepareHtmlForWechatDraft(html) {
-  const tempDiv = createHtmlContainer('div', html || '');
+  let processedHtml = html || '';
+
+  // 自定义 CSS 与 AI 编排解耦：AI 模式下跳过（见 applyCustomCss）
+  processedHtml = await this.applyCustomCss(processedHtml);
+
+  const tempDiv = createHtmlContainer('div', processedHtml);
   if (!tempDiv) return '';
   await this.enhanceHtmlForWechatPublishing(tempDiv);
   return tempDiv.innerHTML;
@@ -694,7 +699,11 @@ async copyHTML() {
   }
 
   try {
-    const exportHtml = this.getCurrentExportHtml() || this.currentHtml;
+    let exportHtml = this.getCurrentExportHtml() || this.currentHtml;
+
+    // 自定义 CSS 与 AI 编排解耦：AI 模式下跳过（见 applyCustomCss）
+    exportHtml = await this.applyCustomCss(exportHtml);
+
     // 创建临时的 DOM 容器来解析和处理图片
     const tempDiv = createHtmlContainer('div', exportHtml);
 

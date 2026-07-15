@@ -58,6 +58,7 @@
 		"ws": "^8.20.0"
 	},
 	"dependencies": {
+		"juice": "^10.0.1",
 		"markdown-it-mathjax3": "^4.3.2"
 	},
 	"overrides": {

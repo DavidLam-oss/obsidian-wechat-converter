@@ -27,6 +27,7 @@
 
 /* eslint-disable no-unused-vars -- Transitional method group keeps original free identifiers available after extraction. */
 import * as shared from '../apple-style-view-shared.js';
+import { inlineCustomCss, resolveCustomCssFromSettings } from '../../services/custom-css-inliner.js';
 
 const {
   createRenderPipelines,
@@ -713,10 +714,27 @@ async renderMarkdownForPreview(markdown, sourcePath) {
   if (!pipeline) {
     throw new Error('渲染管线未初始化');
   }
-  return pipeline.renderForPreview(markdown, {
+  const html = await pipeline.renderForPreview(markdown, {
     sourcePath,
     settings: this.plugin.settings,
   });
+
+  return this.applyCustomCss(html);
+}
+,
+
+/**
+ * 应用用户自定义 CSS（仅非 AI 编排模式）。
+ * 自定义 CSS 与 AI 编排是两套独立系统：AI 模式下不套用，避免互相干扰。
+ * @param {string} html
+ * @returns {Promise<string>}
+ */
+async applyCustomCss(html) {
+  if (!html) return html;
+  if (this.aiPreviewApplied) return html;
+  const customCss = await resolveCustomCssFromSettings(this.plugin);
+  if (!customCss) return html;
+  return inlineCustomCss(html, customCss);
 }
 ,
 

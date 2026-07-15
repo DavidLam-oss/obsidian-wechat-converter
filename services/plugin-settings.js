@@ -101,6 +101,10 @@ export function createDefaultSettings() {
     cleanupAfterSync: false,
     cleanupUseSystemTrash: true,
     cleanupDirTemplate: '',
+    // 自定义 CSS（Phase 1）
+    enableCustomCss: false,
+    customCss: '',
+    customCssNote: '',
     multiPlatformSync: createDefaultMultiPlatformSyncSettings(),
     feishuSync: createDefaultFeishuSyncSettings(),
     wechatAppId: '',

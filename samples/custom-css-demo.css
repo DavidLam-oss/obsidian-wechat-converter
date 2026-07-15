@@ -1,0 +1,163 @@
+/*
+## 核心功能
+
+自定义 CSS 演示样式，用于测试 obsidian-wechat-converter 的「自定义 CSS」功能。
+覆盖段落、标题、引用、代码、链接、列表等常见元素，效果在微信编辑器中清晰可见。
+
+## 输入
+
+复制本文件全部内容到插件设置 → WeChat → 自定义 CSS 内容；
+或保存为 vault 笔记（如 Meta/custom-css-demo.md），然后在「或从笔记读取 CSS」中填写路径。
+
+## 输出
+
+生成更醒目的文章样式：深色正文、彩色标题、卡片式引用块、圆角代码块等。
+
+## 定位
+
+samples/ 下的演示文件，供用户快速验证自定义 CSS 是否生效。
+
+## 依赖
+
+需要插件开启「启用自定义 CSS」；作用域会自动限定到 .owc-article-root，无需手写前缀。
+
+## 维护规则
+
+- 修改后同步更新 samples/README.md 中的文件说明。
+- 保持 CSS 微信友好：避免 flex/grid/position/float 等可能被清洗的属性。
+*/
+
+/* 全局正文：深色、舒适行距 */
+p,
+li {
+  color: #2c3e50 !important;
+  line-height: 1.85 !important;
+  font-size: 16px !important;
+  letter-spacing: 0.3px !important;
+}
+
+/* 标题：统一主色调 + 底部装饰线 */
+h1,
+h2,
+h3 {
+  color: #1a5276 !important;
+  font-weight: 700 !important;
+}
+
+h1 {
+  font-size: 26px !important;
+  border-bottom: 3px solid #3498db !important;
+  padding-bottom: 10px !important;
+}
+
+h2 {
+  font-size: 22px !important;
+  border-left: 6px solid #3498db !important;
+  padding-left: 12px !important;
+}
+
+h3 {
+  font-size: 19px !important;
+  color: #2874a6 !important;
+}
+
+/* 引用块：卡片式灰底 */
+blockquote {
+  background: #f4f6f7 !important;
+  border-left: 5px solid #3498db !important;
+  padding: 14px 18px !important;
+  margin: 18px 0 !important;
+  border-radius: 0 8px 8px 0 !important;
+  color: #566573 !important;
+}
+
+blockquote p {
+  color: #566573 !important;
+  margin: 0 !important;
+}
+
+/* 链接：高亮蓝 + 下划线 */
+a {
+  color: #e74c3c !important;
+  text-decoration: underline !important;
+  font-weight: 600 !important;
+}
+
+/* 代码：行内代码红字灰底 */
+code {
+  color: #c0392b !important;
+  background: #f8f9f9 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-family: 'SF Mono', Menlo, Consolas, monospace !important;
+  font-size: 0.92em !important;
+}
+
+/* 代码块：深色主题 */
+pre {
+  background: #2c3e50 !important;
+  border-radius: 10px !important;
+  padding: 16px !important;
+  overflow-x: auto !important;
+}
+
+pre code {
+  color: #ecf0f1 !important;
+  background: transparent !important;
+  font-size: 14px !important;
+  line-height: 1.7 !important;
+}
+
+/* 列表：更清晰的圆点/数字 */
+ul,
+ol {
+  padding-left: 26px !important;
+}
+
+li {
+  margin-bottom: 8px !important;
+}
+
+/* 图片：圆角阴影 */
+img {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+  max-width: 100% !important;
+}
+
+/* 表格：简洁边框 */
+table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 16px 0 !important;
+}
+
+th {
+  background: #3498db !important;
+  color: #ffffff !important;
+  padding: 10px 14px !important;
+  border: 1px solid #2980b9 !important;
+}
+
+td {
+  padding: 10px 14px !important;
+  border: 1px solid #d5dbdb !important;
+}
+
+/* 强调 */
+strong {
+  color: #1a5276 !important;
+  font-weight: 700 !important;
+}
+
+em {
+  color: #7d3c98 !important;
+  font-style: italic !important;
+}
+
+/* 分隔线 */
+hr {
+  border: none !important;
+  border-top: 2px dashed #bdc3c7 !important;
+  margin: 28px 0 !important;
+}

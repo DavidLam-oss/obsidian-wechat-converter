@@ -1,0 +1,203 @@
+/*
+## 核心功能
+
+受 Esther Typora Theme 启发的自定义 CSS 样例，用于测试 obsidian-wechat-converter 的「自定义 CSS」功能。
+还原其温暖、克制、有手写感的设计气质：衬线标题、蓝黄红三色节奏、舒展行距、卡片式引用与深色代码块。
+
+## 输入
+
+复制本文件全部内容到插件设置 → WeChat → 自定义 CSS 内容；
+或保存为 vault 笔记（如 Meta/esther-css.md），然后在「或从笔记读取 CSS」中填写路径。
+
+## 输出
+
+生成 Esther 风格的公众号文章：蓝主色标题、红强调链接、黄高亮引用、深色代码块、清晰的内容层级。
+
+## 定位
+
+samples/ 下的演示文件，供用户基于外部 Typora 主题快速验证自定义 CSS 移植效果。
+
+## 依赖
+
+需要插件开启「启用自定义 CSS」；作用域会自动限定到 .owc-article-root，无需手写前缀。
+
+## 维护规则
+
+- 修改后同步更新 samples/README.md 中的文件说明。
+- 保持 CSS 微信友好：避免 flex/grid/position/float 等可能被清洗的属性。
+*/
+
+/* 全局正文：深色、舒展行距 */
+p,
+li {
+  color: #333333 !important;
+  line-height: 1.9 !important;
+  font-size: 16px !important;
+  letter-spacing: 0.2px !important;
+}
+
+/* 标题：衬线字体 + 蓝色层级 */
+h1,
+h2,
+h3,
+h4 {
+  color: #2f75c8 !important;
+  font-family: 'Songti SC', 'SimSun', 'Noto Serif CJK SC', 'STSong', serif !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+}
+
+h1 {
+  font-size: 30px !important;
+  margin-top: 36px !important;
+  margin-bottom: 20px !important;
+  letter-spacing: 1px !important;
+}
+
+h2 {
+  font-size: 24px !important;
+  margin-top: 32px !important;
+  margin-bottom: 16px !important;
+  border-bottom: 1px solid #e8e8e8 !important;
+  padding-bottom: 10px !important;
+}
+
+h3 {
+  font-size: 20px !important;
+  margin-top: 26px !important;
+  margin-bottom: 12px !important;
+  color: #3a8ae8 !important;
+}
+
+h4 {
+  font-size: 17px !important;
+  margin-top: 22px !important;
+  margin-bottom: 10px !important;
+  color: #555555 !important;
+}
+
+/* 链接：点缀红 */
+a {
+  color: #e84a4a !important;
+  text-decoration: none !important;
+  border-bottom: 1px solid #e84a4a !important;
+  font-weight: 500 !important;
+}
+
+/* 强调：粗体偏蓝，斜体偏灰 */
+strong {
+  color: #2f75c8 !important;
+  font-weight: 700 !important;
+}
+
+em {
+  color: #666666 !important;
+  font-style: italic !important;
+}
+
+/* 高亮：强调黄 */
+mark {
+  background-color: #fff3b0 !important;
+  color: #333333 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+
+/* 删除线：灰红 */
+del,
+s {
+  color: #999999 !important;
+  text-decoration: line-through !important;
+  text-decoration-color: #e84a4a !important;
+}
+
+/* 行内代码：点缀红 */
+code {
+  color: #e84a4a !important;
+  background: #fafafa !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-family: 'SF Mono', Menlo, Consolas, monospace !important;
+  font-size: 0.9em !important;
+}
+
+/* 代码块：深色主题，像 Typora 的代码区域 */
+pre {
+  background: #2b2b2b !important;
+  border-radius: 8px !important;
+  padding: 18px !important;
+  margin: 20px 0 !important;
+  overflow-x: auto !important;
+}
+
+pre code {
+  color: #f8f8f2 !important;
+  background: transparent !important;
+  font-size: 14px !important;
+  line-height: 1.7 !important;
+}
+
+/* 引用块：黄色左条 + 浅黄底 */
+blockquote {
+  background: #fffbf0 !important;
+  border-left: 4px solid #f2c94c !important;
+  padding: 16px 20px !important;
+  margin: 20px 0 !important;
+  border-radius: 0 8px 8px 0 !important;
+  color: #555555 !important;
+}
+
+blockquote p {
+  color: #555555 !important;
+  margin: 0 !important;
+  line-height: 1.8 !important;
+}
+
+/* 列表：蓝色主项，红色次级强调 */
+ul,
+ol {
+  padding-left: 28px !important;
+}
+
+li {
+  margin-bottom: 10px !important;
+}
+
+li::marker {
+  color: #2f75c8 !important;
+}
+
+/* 表格：蓝色表头 + 淡边框 */
+table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 20px 0 !important;
+  font-size: 15px !important;
+}
+
+th {
+  background: #2f75c8 !important;
+  color: #ffffff !important;
+  padding: 12px 16px !important;
+  border: 1px solid #2f75c8 !important;
+  font-weight: 600 !important;
+}
+
+td {
+  padding: 12px 16px !important;
+  border: 1px solid #e0e0e0 !important;
+}
+
+/* 图片：圆角 + 轻微阴影 */
+img {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  max-width: 100% !important;
+}
+
+/* 分隔线：淡蓝 */
+hr {
+  border: none !important;
+  border-top: 1px solid #d0e0f0 !important;
+  margin: 32px 0 !important;
+}

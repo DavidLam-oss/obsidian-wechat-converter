@@ -1,0 +1,42 @@
+<!--
+## 核心功能
+
+提供 obsidian-wechat-converter 插件典型 HTML 输出的静态样本，用于测试 scripts/check-wechat-style-safety.mjs 校验脚本。
+
+## 输入
+
+无（静态 HTML 片段）。
+
+## 输出
+
+可直接被 check-wechat-style-safety.mjs 解析的示例 HTML。
+
+## 定位
+
+示例/测试数据，不进入插件主代码路径。
+
+## 依赖
+
+scripts/check-wechat-style-safety.mjs
+
+## 维护规则
+
+- 若调整此样本以覆盖新的 B 类 span 或样式模式，需同步更新校验脚本的期望值说明。
+- 保持 HTML 结构典型，能覆盖 A 类元素、B 类 span 和 <style>/class 清洗风险。
+-->
+<!-- 示例：模拟 obsidian-wechat-converter 的典型输出，用于跑校验脚本 -->
+<div class="note-content">
+  <h1 style="font-size:22px;color:#1a1a1a;font-weight:700;">标题示例</h1>
+  <p style="font-size:15px;line-height:1.8;color:#3f3f3f;">这是一段正文，包含<strong style="font-weight:700;color:#07c160;">加粗</strong>和<em style="font-style:italic;">斜体</em>。</p>
+  <pre><code style="display:block;background:#f6f8fa;padding:12px;border-radius:6px;font-family:monospace;">const a = 1;</code></pre>
+  <ul>
+    <li style="font-size:15px;line-height:1.8;"><span style="text-decoration:line-through;color:#8f959e;">已完成任务</span></li>
+    <li style="font-size:15px;line-height:1.8;"><span style="color:#07c160;">☐</span> 待办任务</li>
+  </ul>
+  <blockquote style="border-left:3px solid #07c160;padding-left:12px;color:#6b7280;">引用块示例</blockquote>
+  <figure>
+    <img src="https://example.com/a.png" style="max-width:100%;border-radius:8px;"/>
+    <figcaption><span style="font-size:12px;color:#8f959e;">图：头像署名</span></figcaption>
+  </figure>
+  <style>.danger{color:red}</style>
+</div>

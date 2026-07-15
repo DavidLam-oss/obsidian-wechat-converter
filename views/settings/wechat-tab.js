@@ -371,6 +371,97 @@ const wechatSettingsMethods = {
       attr: { style: 'color: var(--text-muted);' }
     });
 
+    this.renderCustomCssSection(containerEl);
+
+  },
+
+  /**
+   * 渲染「自定义 CSS」折叠设置区块（Phase 1）。
+   * @param {ObsidianElementLike} containerEl
+   */
+  renderCustomCssSection(containerEl) {
+    new Setting(containerEl)
+      .setName('自定义 CSS')
+      .setHeading();
+
+    const warningCard = containerEl.createDiv({
+      cls: 'owc-custom-css-warning',
+      attr: {
+        style: 'margin-bottom: 12px; padding: 10px 12px; border-left: 3px solid var(--text-warning); border-radius: 4px; background-color: var(--background-primary-alt); font-size: 13px; line-height: 1.6; color: var(--text-muted);'
+      }
+    });
+    warningCard.createEl('strong', { text: '⚠️ 高阶功能', attr: { style: 'color: var(--text-warning);' } });
+    warningCard.createSpan({
+      text: '：需要您自己编写 CSS。插件会自动把选择器样式内联到元素上，但微信仍可能清洗部分复杂样式；当文章已使用 AI 编排结果时，自定义 CSS 不生效（两者为独立的样式系统）。启用前建议先用「复制到公众号」小范围测试。'
+    });
+
+    // 使用指南外链
+    new Setting(containerEl)
+      .setName('使用指南')
+      .setDesc('自定义 CSS 的作用域原理、可用选择器清单、可直接复制的示例与禁忌坑位，看这篇在线指南。')
+      .addButton(btn => btn
+        .setButtonText('查看使用指南 →')
+        .setCta()
+        .onClick(() => {
+          if (typeof window !== 'undefined' && typeof window.open === 'function') {
+            window.open('https://xiaoweibox.top/obsidian-publisher/guide/custom-css', '_blank', 'noopener');
+          }
+        }));
+
+    // 启用开关
+    let customCssEnabled = !!this.plugin.settings.enableCustomCss;
+    new Setting(containerEl)
+      .setName('启用自定义 CSS')
+      .setDesc('开启后，下方输入的 CSS 将覆盖当前主题的部分样式。')
+      .addToggle(toggle => toggle
+        .setValue(customCssEnabled)
+        .onChange(async (value) => {
+          customCssEnabled = value;
+          this.plugin.settings.enableCustomCss = value;
+          await this.plugin.saveSettings();
+          refreshSettingTabCompat(this);
+        }));
+
+    if (!customCssEnabled) {
+      return;
+    }
+
+    // CSS textarea
+    const textareaSetting = new Setting(containerEl)
+      .setName('自定义 CSS 内容')
+      .setDesc('直接粘贴 CSS，例如 p { color: #333; }。无需写 .owc-article-root 前缀，插件会自动限定作用域。');
+
+    textareaSetting.settingEl.setCssStyles?.({ flexWrap: 'wrap' });
+    textareaSetting.addTextArea(text => {
+      text
+        .setPlaceholder('/* 在此输入你的自定义 CSS */\np { color: #333; }')
+        .setValue(this.plugin.settings.customCss || '')
+        .onChange(async (value) => {
+          this.plugin.settings.customCss = value;
+          await this.plugin.saveSettings();
+        });
+
+      if (text.inputEl) {
+        text.inputEl.setCssStyles?.({
+          width: '100%',
+          minHeight: '160px',
+          fontFamily: 'monospace',
+          fontSize: '13px',
+        });
+      }
+    });
+
+    // Vault 笔记名输入框
+    new Setting(containerEl)
+      .setName('或从笔记读取 CSS')
+      .setDesc('填写 vault 内笔记路径（如 Meta/custom.css.md），插件会优先读取该笔记内容作为 CSS。读取失败时回退到上方 textarea。')
+      .addText(text => text
+        .setPlaceholder('Meta/custom-css.md')
+        .setValue(this.plugin.settings.customCssNote || '')
+        .onChange(async (value) => {
+          this.plugin.settings.customCssNote = value.trim();
+          await this.plugin.saveSettings();
+        }));
   }
 };
 
