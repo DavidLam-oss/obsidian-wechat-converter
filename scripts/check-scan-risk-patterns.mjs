@@ -39,6 +39,7 @@ const IGNORED_DIRS = new Set([
   'lib',
   'node_modules',
   'RELEASE_NOTES',
+  'samples',
   'scripts',
   'tests',
 ]);

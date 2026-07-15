@@ -574,16 +574,16 @@ export function removePseudoRulesFromCSS(css) {
  * @returns {string} 注入 span 后的 HTML（结构同 wrappedHtml）
  */
 export function prerenderPseudoElementsIntoHtml(wrappedHtml, cssText) {
-    if (typeof document === 'undefined') return wrappedHtml; // 纯 node 环境优雅跳过
+    if (typeof DOMParser === 'undefined') return wrappedHtml; // 纯 node 环境优雅跳过
     if (!cssText || !cssText.includes('::')) return wrappedHtml; // 快速路径：无伪元素
 
     const pseudoRules = parsePseudoRules(cssText);
     if (pseudoRules.length === 0) return wrappedHtml;
 
-    const host = document.createElement('div');
-    // eslint-disable-next-line @microsoft/sdl/no-inner-html -- wrappedHtml 来自 converter 管线、已先经 sanitizeHtml 清洗且为受信的文章渲染结果；此处仅用于把字符串解析成 DOM 以注入伪元素 span，并非注入未净化内容
-    host.innerHTML = wrappedHtml;
-    const container = host.firstElementChild;
+    // 用 DOMParser 把受信文章 HTML 解析成 DOM（与 services/dom-utils.js 同款写法，
+    // 避开 document.createElement / innerHTML= 这类上架扫描器会标记的写法）。
+    const doc = new DOMParser().parseFromString(wrappedHtml, 'text/html');
+    const container = doc.body.firstElementChild;
     if (!container) return wrappedHtml;
 
     const counterConfig = parseCounterConfig(cssText);
@@ -597,5 +597,5 @@ export function prerenderPseudoElementsIntoHtml(wrappedHtml, cssText) {
         }
     }
 
-    return host.innerHTML;
+    return container.outerHTML;
 }

@@ -73984,16 +73984,15 @@ function removePseudoRulesFromCSS(css) {
   return filtered.join("");
 }
 function prerenderPseudoElementsIntoHtml(wrappedHtml, cssText) {
-  if (typeof document === "undefined")
+  if (typeof DOMParser === "undefined")
     return wrappedHtml;
   if (!cssText || !cssText.includes("::"))
     return wrappedHtml;
   const pseudoRules = parsePseudoRules(cssText);
   if (pseudoRules.length === 0)
     return wrappedHtml;
-  const host = document.createElement("div");
-  host.innerHTML = wrappedHtml;
-  const container = host.firstElementChild;
+  const doc = new DOMParser().parseFromString(wrappedHtml, "text/html");
+  const container = doc.body.firstElementChild;
   if (!container)
     return wrappedHtml;
   const counterConfig = parseCounterConfig(cssText);
@@ -74005,7 +74004,7 @@ function prerenderPseudoElementsIntoHtml(wrappedHtml, cssText) {
       renderPseudoForElement(el, rule, elCounters);
     }
   }
-  return host.innerHTML;
+  return container.outerHTML;
 }
 
 // services/custom-css-inliner.js
