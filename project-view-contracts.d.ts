@@ -55,7 +55,7 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     sessionDigest: string;
     /** @type {Map<string, WechatMaterialCacheEntryLike>} */
     wechatMaterialCache: Map<string, WechatMaterialCacheEntryLike>;
-    wechatMaterialCoverAssetCache: Map<any, any>;
+    wechatMaterialCoverAssetCache: Map<string, unknown>;
     /** @type {number | null} */
     scrollSyncFrame: number | null;
     /** @type {(() => void) | null} */
@@ -290,10 +290,10 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
      * @returns {{ excerpt: string, cover: string, cover_dir: string, coverSrc: string|null, title: string }}
      */
     /**
-     * @param {TFileLike | unknown | null | undefined} activeFile
+     * @param {unknown} activeFile
      * @returns {{ excerpt: string, cover: string, cover_dir: string, coverSrc: string|null, title: string }}
      */
-    getFrontmatterPublishMeta(activeFile: TFileLike | unknown | null | undefined): {
+    getFrontmatterPublishMeta(activeFile: unknown): {
         excerpt: string;
         cover: string;
         cover_dir: string;
@@ -326,8 +326,8 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
      * @returns {boolean}
      */
     clearInvalidPublishMetaInFrontmatter(frontmatter: Record<string, unknown> | null | undefined, cleanedDir: string): boolean;
-    clearInvalidPublishMetaByTextFallback(activeFile: any, cleanedDir: any): Promise<boolean>;
-    clearInvalidPublishMetaAfterCleanup(activeFile: any, cleanedDirPath: any): Promise<string>;
+    clearInvalidPublishMetaByTextFallback(activeFile: TFileLike | null | undefined, cleanedDir: string): Promise<boolean>;
+    clearInvalidPublishMetaAfterCleanup(activeFile: TFileLike | null | undefined, cleanedDirPath: string): Promise<string>;
     /**
      * 将 vault 相对路径解析为可预览/上传的资源 src（通常是 app://）
      */
@@ -381,7 +381,7 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
      * @param {ObsidianElementLike | null} button
      * @param {(() => unknown) | undefined} [onOpen]
      */
-    togglePanel(overlay: ObsidianElementLike | null, button: ObsidianElementLike | null, onOpen?: (() => unknown) | undefined): void;
+    togglePanel(overlay: ObsidianElementLike | null, button: ObsidianElementLike | null, onOpen?: () => unknown): void;
     /**
      * @param {Element | null} element
      * @param {number} deltaY
@@ -448,7 +448,7 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
      * @param {number} [index]
      * @returns {string}
      */
-    getAiLayoutBlockStateKey(block?: AiLayoutBlockLike | unknown, index?: number): string;
+    getAiLayoutBlockStateKey(block?: unknown, index?: number): string;
     /**
      * @param {AiLayoutStateLike | null} state
      * @returns {VisibleAiLayoutSnapshotLike}
@@ -522,7 +522,7 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
      * @param {AiLayoutBlockLike | unknown} block
      * @returns {string}
      */
-    getAiLayoutBlockLabel(block: AiLayoutBlockLike | unknown): string;
+    getAiLayoutBlockLabel(block: unknown): string;
     /**
      * @param {string} value
      * @returns {string}

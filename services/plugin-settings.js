@@ -169,7 +169,7 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
     settings.wechatAppId = '';
     settings.wechatAppSecret = '';
     didMigrate = true;
-    console.log('✅ 已将旧账号配置迁移到新格式');
+    console.debug('✅ 已将旧账号配置迁移到新格式');
   }
 
   settings.wechatAccounts = settings.wechatAccounts.map((account) => {
@@ -202,7 +202,7 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
   if (!currentTemplate && legacyRootDir && legacyTarget === 'folder') {
     settings.cleanupDirTemplate = `${legacyRootDir}/{{note}}_img`;
     didMigrate = true;
-    console.log('✅ 已将旧清理配置迁移为目录模板 cleanupDirTemplate');
+    console.debug('✅ 已将旧清理配置迁移为目录模板 cleanupDirTemplate');
   }
 
   if (Object.prototype.hasOwnProperty.call(settings, 'cleanupRootDir')) {

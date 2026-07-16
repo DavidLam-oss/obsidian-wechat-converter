@@ -528,10 +528,8 @@ async showMultiPlatformSyncModal(options = {}) {
 showFeishuSyncModal(options = {}) {
   const modal = options.modal || createObsidianModal(this.app);
   const mobileSync = isMobileClient(this.app);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- reason: dynamic modal parameter
   this.preparePublishModalShell(modal, { mode: 'feishu', mobileSync });
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- reason: dynamic modal parameter
   const { wechatTab, multiPlatformTab } = this.createPublishModeTabs(modal, 'feishu');
   if (wechatTab) {
     wechatTab.onclick = () => {
@@ -544,11 +542,9 @@ showFeishuSyncModal(options = {}) {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access -- reason: dynamic modal element
   renderFeishuPublishTab(this, modal, modal.contentEl, { obsidianApi });
 
   if (!options.modal) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- reason: dynamic modal API call
     modal.open();
   }
 }

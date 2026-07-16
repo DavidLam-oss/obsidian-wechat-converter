@@ -56,7 +56,7 @@ interface AppleStyleViewContract {
         isStale?: boolean;
         sourcePath?: string;
     }): string;
-    truncateAiPromptMarkdown(markdown: any, maxLength?: number): string;
+    truncateAiPromptMarkdown(markdown: unknown, maxLength?: number): string;
     /**
      * @param {{ state: AiLayoutStateLike | null, context: AiLayoutContextLike, providerLabel?: string, modelLabel?: string, isStale?: boolean }} options
      * @returns {string}
@@ -231,9 +231,9 @@ interface AppleStyleViewContract {
     onSyncToWechat(): Promise<void>;
     /**
      * @param {string} src
-     * @returns {unknown | null}
+     * @returns {unknown}
      */
-    resolveLocalImageFileForUpload(src: string): unknown | null;
+    resolveLocalImageFileForUpload(src: string): unknown;
     /**
      * @param {unknown} file
      * @returns {Promise<Blob>}

@@ -147,11 +147,8 @@ function renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, No
  * @param {object} [options={}] Injected options
  */
 function renderFeishuSettingsTab(tab, containerEl, options = {}) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- reason: dynamic obsidian api resolution
   const obsidian = options.obsidianApi || tab.plugin.obsidianApi || getActiveWindowValue('obsidian') || {};
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- reason: dynamic Setting component
   const Setting = obsidian.Setting;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- reason: dynamic Notice component
   const Notice = obsidian.Notice;
 
   const { plugin } = tab;

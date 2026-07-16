@@ -1,6 +1,3 @@
-/// <reference path="./project-view-contracts.d.ts" />
-/// <reference path="./project-view-method-contracts.d.ts" />
-/// <reference path="./project-method-groups.d.ts" />
 /*
 ## 核心功能
 

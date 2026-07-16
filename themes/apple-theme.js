@@ -82,6 +82,9 @@
  *   macCodeBlock?: boolean,
  *   codeLineNumber?: boolean,
  *   sidePadding?: number,
+ *   lineHeight?: number | null,
+ *   paragraphGap?: number | null,
+ *   letterSpacing?: number | null,
  *   coloredHeader?: boolean,
  * }} AppleThemeOptions
  */

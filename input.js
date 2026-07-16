@@ -65,7 +65,7 @@ import {
  */
 class AppleStylePlugin extends Plugin {
   async onload() {
-    console.log('📝 正在加载 Obsidian 发布助手...');
+    console.debug('📝 正在加载 Obsidian 发布助手...');
     /** @type {ObsidianApiLike} */
     this.obsidianApi = obsidianApi;
 
@@ -125,10 +125,9 @@ class AppleStylePlugin extends Plugin {
     if (typeof this.app.vault.on === 'function') {
       this.registerEvent(
         this.app.vault.on('rename', (file, oldPath) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access -- reason: dynamic plugin settings
-          if (this.settings.feishuSync) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access -- reason: dynamic file rename variables
-            const changed = updateFeishuHistoryPath(this.settings.feishuSync, oldPath, file.path);
+          const pluginSettings = /** @type {PluginSettingsLike} */ (getPluginSettings(this));
+          if (pluginSettings.feishuSync) {
+            const changed = updateFeishuHistoryPath(pluginSettings.feishuSync, oldPath, file.path);
             if (changed) {
               this.saveSettings().catch((err) => {
                 console.error('保存重命名设置失败:', err);
@@ -141,7 +140,7 @@ class AppleStylePlugin extends Plugin {
 
     this.startWechatSyncBridgeInBackground('plugin-load');
 
-    console.log('✅ Obsidian 发布助手加载完成');
+    console.debug('✅ Obsidian 发布助手加载完成');
   }
 
   /**
@@ -302,7 +301,7 @@ class AppleStylePlugin extends Plugin {
     const bridge = this.getWechatSyncBridgeService();
     bridge.start()
       .then((status) => {
-        console.info('[Wechatsync] bridge warm start', {
+        console.debug('[Wechatsync] bridge warm start', {
           reason,
           port: settings.port,
           status,
@@ -359,7 +358,7 @@ class AppleStylePlugin extends Plugin {
         console.warn('停止浏览器插件连接失败:', error);
       });
     }
-    console.log('📝 Obsidian 发布助手已卸载');
+    console.debug('📝 Obsidian 发布助手已卸载');
   }
 }
 

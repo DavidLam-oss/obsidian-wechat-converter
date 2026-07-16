@@ -616,9 +616,7 @@ async function syncNoteToFeishu({
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- reason: dynamic requestUrl extraction
   const obsidianApi = getActiveWindowValue('obsidian');
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- reason: dynamic requestUrl extraction
   const requestUrlImpl = requestUrl || (obsidianApi && typeof obsidianApi.requestUrl === 'function' ? obsidianApi.requestUrl : null);
 
   // 1. Resolve document title

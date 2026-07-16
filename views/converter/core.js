@@ -67,7 +67,7 @@ getIcon() {
 ,
 
 async onOpen() {
-  console.log('🍎 发布助手面板打开');
+  console.debug('🍎 发布助手面板打开');
   const container = /** @type {ObsidianElementLike} */ (this.containerEl.children[1]);
   container.empty();
   container.addClass('apple-converter-container');
@@ -465,7 +465,7 @@ async loadDependencies() {
     }));
     this.nativeRenderPipeline = pipelines.nativePipeline;
 
-    console.log('✅ 依赖加载完成');
+    console.debug('✅ 依赖加载完成');
   } catch (error) {
     console.error('❌ 依赖加载失败:', error);
     new Notice('依赖加载失败: ' + toReadableError(error).message);
@@ -896,7 +896,7 @@ async onClose() {
     this.mermaidImageCache.clear();
   }
 
-  console.log('🍎 发布助手面板已关闭');
+  console.debug('🍎 发布助手面板已关闭');
 }
 ,
 

@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Node",
     "allowJs": true,
-    "checkJs": false,
+    "checkJs": true,
     "strict": false,
     "noEmit": true,
     "skipLibCheck": true,
@@ -12,16 +12,18 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "input.js",
-    "services/**/*.js",
-    "views/**/*.js",
-    "tests/**/*.js",
-    "scripts/**/*.mjs",
-    "esbuild.config.mjs"
+    "**/*.js",
+    "**/*.mjs",
+    "project-*.d.ts",
   ],
   "exclude": [
     "node_modules",
     "coverage",
+    ".codex",
+    ".openprd",
+    ".workbuddy",
+    "dist",
+    "server",
     "main.js",
     "lib/**/*.js"
   ]

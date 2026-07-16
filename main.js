@@ -53398,7 +53398,7 @@ var import_highlight_min = __toESM(require_highlight_min());
     Ic.default = Ic;
     nO.exports = Ic;
   });
-  var aO = hO(iO()), v21 = typeof window != "undefined" ? window : typeof global != "undefined" ? global : typeof self != "undefined" ? self : {};
+  var aO = hO(iO()), v21 = typeof window < "u" ? window : typeof global < "u" ? global : typeof self < "u" ? self : {};
   v21.ObsidianWechatMath = (t, e) => {
     try {
       t.use(aO.default, { tex: { inlineMath: [["$", "$"], ["\\(", "\\)"]], displayMath: [["$$", "$$"], ["\\[", "\\]"]] }, svg: { fontCache: "none", scale: 1, displayAlign: "center", displayIndent: "0" }, options: { enableMenu: false, assistiveMml: false } });
@@ -69063,14 +69063,14 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         return;
       }
       if (pluginPolicyGate.warning) {
-        console.info("[Wechatsync] Obsidian plugin upgrade recommended by policy", {
+        console.debug("[Wechatsync] Obsidian plugin upgrade recommended by policy", {
           currentVersion: getObsidianPluginVersion(view.plugin),
           minObsidianPluginVersion: pluginPolicyGate.minObsidianPluginVersion,
           policyVersion: toRecord5(effectivePolicy.payload).policyVersion
         });
       }
       if (extensionPolicyGate.warning) {
-        console.info("[Wechatsync] browser extension upgrade recommended by policy", {
+        console.debug("[Wechatsync] browser extension upgrade recommended by policy", {
           currentVersion: toText3(detectedCapabilities.extensionVersion),
           minExtensionVersion: extensionPolicyGate.minExtensionVersion,
           policyVersion: toRecord5(effectivePolicy.payload).policyVersion
@@ -69082,7 +69082,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         detectedCapabilities
       );
       if (platformTruncation.truncated) {
-        console.info("[Wechatsync] request pre-truncated by Obsidian plugin policy", {
+        console.debug("[Wechatsync] request pre-truncated by Obsidian plugin policy", {
           requestedPlatformCount: requestedPlatformIds.length,
           enqueuedPlatformCount: platformTruncation.platformIds.length,
           skippedPlatformCount: platformTruncation.skippedPlatformIds.length,
@@ -69120,7 +69120,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
       }
       const coverAsset = toBridgeAsset(findAssetForCover(cover, assets));
       const coverThumbnail = coverAsset ? await view.generateCoverThumbnailFromAsset(coverAsset) : "";
-      console.info("[Wechatsync] enqueueSyncArticle started", {
+      console.debug("[Wechatsync] enqueueSyncArticle started", {
         platformCount: platformTruncation.platformIds.length,
         requestedPlatformCount: requestedPlatformIds.length,
         platforms: requestedPlatformIds,
@@ -69178,7 +69178,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         }
         result = mergePluginSkippedPlatformsIntoResult(result, platformTruncation);
       }
-      console.info("[Wechatsync] enqueueSyncArticle accepted", {
+      console.debug("[Wechatsync] enqueueSyncArticle accepted", {
         elapsedMs: Date.now() - sendStartedAt,
         resultKind: Array.isArray(result) ? "array" : typeof result,
         syncId: result == null ? void 0 : result.syncId,
@@ -73293,7 +73293,7 @@ function normalizeLoadedSettings(loadedData, options = {}) {
     settings.wechatAppId = "";
     settings.wechatAppSecret = "";
     didMigrate = true;
-    console.log("\u2705 \u5DF2\u5C06\u65E7\u8D26\u53F7\u914D\u7F6E\u8FC1\u79FB\u5230\u65B0\u683C\u5F0F");
+    console.debug("\u2705 \u5DF2\u5C06\u65E7\u8D26\u53F7\u914D\u7F6E\u8FC1\u79FB\u5230\u65B0\u683C\u5F0F");
   }
   settings.wechatAccounts = settings.wechatAccounts.map((account) => {
     if (!isRecord12(account)) {
@@ -73321,7 +73321,7 @@ function normalizeLoadedSettings(loadedData, options = {}) {
   if (!currentTemplate && legacyRootDir && legacyTarget === "folder") {
     settings.cleanupDirTemplate = `${legacyRootDir}/{{note}}_img`;
     didMigrate = true;
-    console.log("\u2705 \u5DF2\u5C06\u65E7\u6E05\u7406\u914D\u7F6E\u8FC1\u79FB\u4E3A\u76EE\u5F55\u6A21\u677F cleanupDirTemplate");
+    console.debug("\u2705 \u5DF2\u5C06\u65E7\u6E05\u7406\u914D\u7F6E\u8FC1\u79FB\u4E3A\u76EE\u5F55\u6A21\u677F cleanupDirTemplate");
   }
   if (Object.prototype.hasOwnProperty.call(settings, "cleanupRootDir")) {
     delete settings.cleanupRootDir;
@@ -73929,7 +73929,7 @@ var coreMethods = {
     return "wand";
   },
   async onOpen() {
-    console.log("\u{1F34E} \u53D1\u5E03\u52A9\u624B\u9762\u677F\u6253\u5F00");
+    console.debug("\u{1F34E} \u53D1\u5E03\u52A9\u624B\u9762\u677F\u6253\u5F00");
     const container = (
       /** @type {ObsidianElementLike} */
       this.containerEl.children[1]
@@ -74267,7 +74267,7 @@ var coreMethods = {
         })
       );
       this.nativeRenderPipeline = pipelines.nativePipeline;
-      console.log("\u2705 \u4F9D\u8D56\u52A0\u8F7D\u5B8C\u6210");
+      console.debug("\u2705 \u4F9D\u8D56\u52A0\u8F7D\u5B8C\u6210");
     } catch (error) {
       console.error("\u274C \u4F9D\u8D56\u52A0\u8F7D\u5931\u8D25:", error);
       new Notice("\u4F9D\u8D56\u52A0\u8F7D\u5931\u8D25: " + toReadableError4(error).message);
@@ -74646,7 +74646,7 @@ var coreMethods = {
     if (this.mermaidImageCache) {
       this.mermaidImageCache.clear();
     }
-    console.log("\u{1F34E} \u53D1\u5E03\u52A9\u624B\u9762\u677F\u5DF2\u5173\u95ED");
+    console.debug("\u{1F34E} \u53D1\u5E03\u52A9\u624B\u9762\u677F\u5DF2\u5173\u95ED");
   },
   simpleHash(str) {
     let hash = 5381;
@@ -80326,6 +80326,22 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
       view.refreshAiLayoutPanel();
     }
   }
+  display() {
+    const renderSettingsContent = (
+      /** @type {() => void} */
+      settingsTabShellMethods.renderSettingsContent
+    );
+    renderSettingsContent.call(this);
+  }
+  /** @returns {SettingDefinitionRenderLike[]} */
+  getSettingDefinitions() {
+    return [{
+      name: "Wechat Converter",
+      desc: "\u5FAE\u4FE1\u53D1\u5E03\u52A9\u624B\u8BBE\u7F6E",
+      searchable: false,
+      render: () => this.display()
+    }];
+  }
 };
 Object.assign(
   AppleStyleSettingTab.prototype,
@@ -80462,7 +80478,7 @@ function saveArticleLayoutStateToSettings(pluginSettings, sourcePath = "", nextS
 // input.js
 var AppleStylePlugin = class extends Plugin {
   async onload() {
-    console.log("\u{1F4DD} \u6B63\u5728\u52A0\u8F7D Obsidian \u53D1\u5E03\u52A9\u624B...");
+    console.debug("\u{1F4DD} \u6B63\u5728\u52A0\u8F7D Obsidian \u53D1\u5E03\u52A9\u624B...");
     this.obsidianApi = obsidianApi;
     await this.loadSettings();
     if (typeof window !== "undefined") {
@@ -80506,8 +80522,12 @@ var AppleStylePlugin = class extends Plugin {
     if (typeof this.app.vault.on === "function") {
       this.registerEvent(
         this.app.vault.on("rename", (file, oldPath) => {
-          if (this.settings.feishuSync) {
-            const changed = updateFeishuHistoryPath(this.settings.feishuSync, oldPath, file.path);
+          const pluginSettings = (
+            /** @type {PluginSettingsLike} */
+            getPluginSettings(this)
+          );
+          if (pluginSettings.feishuSync) {
+            const changed = updateFeishuHistoryPath(pluginSettings.feishuSync, oldPath, file.path);
             if (changed) {
               this.saveSettings().catch((err) => {
                 console.error("\u4FDD\u5B58\u91CD\u547D\u540D\u8BBE\u7F6E\u5931\u8D25:", err);
@@ -80518,7 +80538,7 @@ var AppleStylePlugin = class extends Plugin {
       );
     }
     this.startWechatSyncBridgeInBackground("plugin-load");
-    console.log("\u2705 Obsidian \u53D1\u5E03\u52A9\u624B\u52A0\u8F7D\u5B8C\u6210");
+    console.debug("\u2705 Obsidian \u53D1\u5E03\u52A9\u624B\u52A0\u8F7D\u5B8C\u6210");
   }
   /**
    * @param {string} [type]
@@ -80676,7 +80696,7 @@ var AppleStylePlugin = class extends Plugin {
       return;
     const bridge = this.getWechatSyncBridgeService();
     bridge.start().then((status) => {
-      console.info("[Wechatsync] bridge warm start", {
+      console.debug("[Wechatsync] bridge warm start", {
         reason,
         port: settings.port,
         status
@@ -80729,7 +80749,7 @@ var AppleStylePlugin = class extends Plugin {
         console.warn("\u505C\u6B62\u6D4F\u89C8\u5668\u63D2\u4EF6\u8FDE\u63A5\u5931\u8D25:", error);
       });
     }
-    console.log("\u{1F4DD} Obsidian \u53D1\u5E03\u52A9\u624B\u5DF2\u5378\u8F7D");
+    console.debug("\u{1F4DD} Obsidian \u53D1\u5E03\u52A9\u624B\u5DF2\u5378\u8F7D");
   }
 };
 AppleStylePlugin.default = AppleStylePlugin;

@@ -1,4 +1,3 @@
-/// <reference path="../project-types.js" />
 /*
 ## 核心功能
 

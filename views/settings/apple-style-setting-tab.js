@@ -73,6 +73,21 @@ class AppleStyleSettingTab extends PluginSettingTab {
       view.refreshAiLayoutPanel();
     }
   }
+
+  display() {
+    const renderSettingsContent = /** @type {() => void} */ (settingsTabShellMethods.renderSettingsContent);
+    renderSettingsContent.call(this);
+  }
+
+  /** @returns {SettingDefinitionRenderLike[]} */
+  getSettingDefinitions() {
+    return [{
+      name: 'Wechat Converter',
+      desc: '微信发布助手设置',
+      searchable: false,
+      render: () => this.display(),
+    }];
+  }
 }
 
 Object.assign(

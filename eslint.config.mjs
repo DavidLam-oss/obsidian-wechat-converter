@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`@eslint/js`、`globals`、`eslint-plugin-obsidianmd`、`@microsoft/eslint-plugin-sdl`、`@typescript-eslint/eslint-plugin`。
+关键依赖：`@eslint/js`、`globals`、`eslint-plugin-obsidianmd`、`@microsoft/eslint-plugin-sdl`、`@typescript-eslint/eslint-plugin`、`@typescript-eslint/parser`。
 
 ## 维护规则
 
@@ -30,6 +30,7 @@ import globals from "globals";
 import obsidianmd from "eslint-plugin-obsidianmd";
 import sdl from "@microsoft/eslint-plugin-sdl";
 import tsPlugin from "@typescript-eslint/eslint-plugin";
+import tsParser from "@typescript-eslint/parser";
 
 /**
  * @param {unknown} value
@@ -50,22 +51,26 @@ function normalizePluginModule(pluginModule) {
   return isRecord(pluginModule) ? pluginModule : {};
 }
 
+const typedParserOptions = {
+  project: "./tsconfig.json",
+  tsconfigRootDir: import.meta.dirname,
+};
+
 export default [
-  {
-    linterOptions: {
-      reportUnusedDisableDirectives: "off",
-    },
-  },
   js.configs.recommended,
-  // Default CommonJS settings for plugin source files
   {
-    files: ["**/*.js"],
     plugins: {
       obsidianmd: normalizePluginModule(/** @type {unknown} */ (obsidianmd)),
       "@microsoft/sdl": normalizePluginModule(/** @type {unknown} */ (sdl)),
       "@typescript-eslint": normalizePluginModule(/** @type {unknown} */ (tsPlugin)),
     },
+  },
+  // Default CommonJS settings for plugin source files
+  {
+    files: ["**/*.js"],
     languageOptions: {
+      parser: tsParser,
+      parserOptions: typedParserOptions,
       ecmaVersion: 2022,
       sourceType: "commonjs",
       globals: {
@@ -93,18 +98,29 @@ export default [
       "no-useless-escape": "off",
       "no-constant-condition": "off",
       "no-cond-assign": "off",
+      "no-redeclare": "off",
       "no-extra-semi": "off",
       "no-inner-declarations": "off",
       "no-control-regex": "off", // Allow regex to check control characters like \x00
+      "no-console": ["warn", { allow: ["warn", "error", "debug"] }],
       "obsidianmd/no-static-styles-assignment": "error",
+      "obsidianmd/no-unsupported-api": "error",
+      "obsidianmd/settings-tab/require-display": "warn",
+      "obsidianmd/settings-tab/prefer-setting-definitions": "warn",
       "@microsoft/sdl/no-inner-html": "error",
+      "@typescript-eslint/triple-slash-reference": ["warn", { path: "never" }],
+      "@typescript-eslint/no-unsafe-assignment": "warn",
+      "@typescript-eslint/no-unsafe-call": "warn",
+      "@typescript-eslint/no-unsafe-return": "warn",
+      "@typescript-eslint/no-unsafe-member-access": "warn",
+      "@typescript-eslint/no-unsafe-argument": "warn",
     },
   },
   // Targeted ESM leaf modules. Keep this list explicit so the plugin entry
   // and dynamic Obsidian integration files can stay CommonJS until migrated.
   {
     files: [
-      "eslint.config.js",
+      "eslint.config.mjs",
       "input.js",
       "services/concurrency.js",
       "services/custom-css-inliner.js",
@@ -260,13 +276,50 @@ export default [
       "no-extra-semi": "off",
       "no-inner-declarations": "off",
       "no-control-regex": "off",
+      "no-console": "off",
       "@microsoft/sdl/no-inner-html": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "obsidianmd/no-unsupported-api": "off",
+      "obsidianmd/settings-tab/require-display": "off",
+      "obsidianmd/settings-tab/prefer-setting-definitions": "off",
     }
   },
   {
-    files: ["__mocks__/**/*.js"],
+    files: ["__mocks__/**/*.js", "eslint.config.mjs"],
     rules: {
+      "no-console": "off",
       "@microsoft/sdl/no-inner-html": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "obsidianmd/no-unsupported-api": "off",
+      "obsidianmd/settings-tab/require-display": "off",
+      "obsidianmd/settings-tab/prefer-setting-definitions": "off",
+    },
+  },
+  {
+    files: ["**/*.d.ts"],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: typedParserOptions,
+    },
+    plugins: {
+      "@typescript-eslint": normalizePluginModule(/** @type {unknown} */ (tsPlugin)),
+    },
+    rules: {
+      "no-undef": "off",
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-redundant-type-constituents": "warn",
+      "@typescript-eslint/no-duplicate-type-constituents": "warn",
+      "@typescript-eslint/triple-slash-reference": ["warn", { path: "never" }],
     },
   },
   // CommonJS override for .cjs files
@@ -286,6 +339,12 @@ export default [
     }
   },
   {
+    linterOptions: {
+      reportUnusedDisableDirectives: "error",
+      reportUnusedInlineConfigs: "error",
+    },
+  },
+  {
     ignores: [
       "main.js",
       "node_modules/",
@@ -293,6 +352,7 @@ export default [
       "lib/",
       "services/generated-embedded-deps.js",
       "dist/",
+      "server/",
       // Tool-generated working dirs (OpenPRD / Codex): not project source,
       // skip linting so their generated code does not pollute CI output.
       ".codex/",

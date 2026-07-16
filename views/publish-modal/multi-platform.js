@@ -1095,14 +1095,14 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         return;
       }
       if (pluginPolicyGate.warning) {
-        console.info('[Wechatsync] Obsidian plugin upgrade recommended by policy', {
+        console.debug('[Wechatsync] Obsidian plugin upgrade recommended by policy', {
           currentVersion: getObsidianPluginVersion(view.plugin),
           minObsidianPluginVersion: pluginPolicyGate.minObsidianPluginVersion,
           policyVersion: toRecord(effectivePolicy.payload).policyVersion,
         });
       }
       if (extensionPolicyGate.warning) {
-        console.info('[Wechatsync] browser extension upgrade recommended by policy', {
+        console.debug('[Wechatsync] browser extension upgrade recommended by policy', {
           currentVersion: toText(detectedCapabilities.extensionVersion),
           minExtensionVersion: extensionPolicyGate.minExtensionVersion,
           policyVersion: toRecord(effectivePolicy.payload).policyVersion,
@@ -1114,7 +1114,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         detectedCapabilities
       );
       if (platformTruncation.truncated) {
-        console.info('[Wechatsync] request pre-truncated by Obsidian plugin policy', {
+        console.debug('[Wechatsync] request pre-truncated by Obsidian plugin policy', {
           requestedPlatformCount: requestedPlatformIds.length,
           enqueuedPlatformCount: platformTruncation.platformIds.length,
           skippedPlatformCount: platformTruncation.skippedPlatformIds.length,
@@ -1179,7 +1179,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         ? await view.generateCoverThumbnailFromAsset(coverAsset)
         : '';
 
-      console.info('[Wechatsync] enqueueSyncArticle started', {
+      console.debug('[Wechatsync] enqueueSyncArticle started', {
         platformCount: platformTruncation.platformIds.length,
         requestedPlatformCount: requestedPlatformIds.length,
         platforms: requestedPlatformIds,
@@ -1237,7 +1237,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         }
         result = mergePluginSkippedPlatformsIntoResult(result, platformTruncation);
       }
-      console.info('[Wechatsync] enqueueSyncArticle accepted', {
+      console.debug('[Wechatsync] enqueueSyncArticle accepted', {
         elapsedMs: Date.now() - sendStartedAt,
         resultKind: Array.isArray(result) ? 'array' : typeof result,
         syncId: result?.syncId,
