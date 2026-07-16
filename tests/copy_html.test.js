@@ -188,7 +188,8 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
     expect(css).toContain('display: block');
     expect(css).toContain('height: 8px');
     expect(css).toContain('scrollbar-gutter: stable');
-    expect(css).toContain('scrollbar-color: rgba(255, 255, 255, 0.58) rgba(255, 255, 255, 0.18)');
+    expect(css).toContain('background: rgba(255, 255, 255, 0.18)');
+    expect(css).toContain('background: rgba(255, 255, 255, 0.58)');
   });
 
   it('should render visible URL links as their own mobile-friendly line', async () => {

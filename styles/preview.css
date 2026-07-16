@@ -177,7 +177,6 @@
   overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
-  scrollbar-color: rgba(255, 255, 255, 0.58) rgba(255, 255, 255, 0.18);
 }
 
 .apple-converter-preview .code-snippet__fix .code-with-line-numbers > .code-scroll {
