@@ -43,10 +43,12 @@ import {
   normalizeAiSettings,
 } from './ai-layout.js';
 
+/** @param {unknown} value @returns {value is Record<string, unknown>} */
 function isRecord(value) {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
+/** @param {unknown} value @returns {Record<string, unknown>} */
 function toRecord(value) {
   return isRecord(value) ? value : {};
 }
@@ -71,6 +73,7 @@ function generateFallbackId() {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
+/** @returns {PluginSettingsLike} */
 export function createDefaultSettings() {
   return {
     theme: 'github',
@@ -116,7 +119,7 @@ export function createDefaultSettings() {
 /**
  * @param {unknown} loadedData
  * @param {{ generateId?: () => string }} [options]
- * @returns {{ settings: Record<string, unknown>, didMigrate: boolean }}
+ * @returns {{ settings: PluginSettingsLike, didMigrate: boolean }}
  */
 export function normalizeLoadedSettings(loadedData, options = {}) {
   const data = toRecord(loadedData);

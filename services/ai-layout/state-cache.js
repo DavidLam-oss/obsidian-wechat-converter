@@ -120,6 +120,7 @@ function getArticleLayoutFamilyCacheKey(state = {}, fallback = AI_LAYOUT_DEFAULT
   );
 }
 
+/** @param {AiLayoutStateLike | null} currentState @param {AiLayoutStateLike | null} nextState @returns {boolean} */
 function shouldReplaceArticleLayoutFamilyState(currentState = null, nextState = null) {
   if (!currentState) return true;
   if (!nextState) return false;

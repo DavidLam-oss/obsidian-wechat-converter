@@ -4417,11 +4417,11 @@ var require_apple_theme = __commonJS({
 // converter.js
 var require_converter = __commonJS({
   "converter.js"(exports, module2) {
-    function isRecord27(value) {
+    function isRecord14(value) {
       return !!value && typeof value === "object" && !Array.isArray(value);
     }
-    function toRecord24(value) {
-      return isRecord27(value) ? value : {};
+    function toRecord11(value) {
+      return isRecord14(value) ? value : {};
     }
     function toText4(value) {
       return typeof value === "string" ? value : "";
@@ -4434,16 +4434,16 @@ var require_converter = __commonJS({
         return text;
       }
     }
-    function normalizeVaultPath15(value) {
+    function normalizeVaultPath2(value) {
       return String(value || "").trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/{2,}/g, "/");
     }
     function getVaultDirname(filePath) {
-      const normalized = normalizeVaultPath15(filePath);
+      const normalized = normalizeVaultPath2(filePath);
       const index = normalized.lastIndexOf("/");
       return index > 0 ? normalized.slice(0, index) : "";
     }
     function joinVaultPath2(...parts) {
-      return normalizeVaultPath15(parts.filter(Boolean).join("/"));
+      return normalizeVaultPath2(parts.filter(Boolean).join("/"));
     }
     function getToken(tokens, idx) {
       return tokens[idx] || {};
@@ -4540,7 +4540,7 @@ var require_converter = __commonJS({
       typeof window !== "undefined" ? window : {}
     );
     function getRuntimeDependency(name) {
-      const runtimeWindow = typeof window !== "undefined" ? toRecord24(window) : {};
+      const runtimeWindow = typeof window !== "undefined" ? toRecord11(window) : {};
       if (typeof runtimeWindow[name] !== "undefined") {
         return runtimeWindow[name];
       }
@@ -4633,7 +4633,7 @@ var require_converter = __commonJS({
           }
           const vault = this.app.vault;
           const candidates = [];
-          const normalized = normalizeVaultPath15(linkPath);
+          const normalized = normalizeVaultPath2(linkPath);
           if (normalized)
             candidates.push(normalized);
           const noteDir = getVaultDirname(sourcePath);
@@ -23688,183 +23688,16 @@ __export(input_exports, {
   AppleStylePlugin: () => AppleStylePlugin,
   AppleStyleSettingTab: () => AppleStyleSettingTab,
   AppleStyleView: () => AppleStyleView,
-  WechatAPI: () => WechatAPI14,
-  createImageSwipeCalloutMarkdown: () => createImageSwipeCalloutMarkdown14,
+  WechatAPI: () => WechatAPI,
+  createImageSwipeCalloutMarkdown: () => createImageSwipeCalloutMarkdown,
   default: () => input_default,
-  describeWechatsyncConnectionState: () => describeWechatsyncConnectionState14,
-  formatWechatsyncCheckedAt: () => formatWechatsyncCheckedAt14,
-  getImageSwipeCommandCopy: () => getImageSwipeCommandCopy14,
-  renderWechatsyncConnectionStatusBar: () => renderWechatsyncConnectionStatusBar14,
-  stripMarkdownFrontmatter: () => stripMarkdownFrontmatter14
+  describeWechatsyncConnectionState: () => describeWechatsyncConnectionState,
+  formatWechatsyncCheckedAt: () => formatWechatsyncCheckedAt,
+  getImageSwipeCommandCopy: () => getImageSwipeCommandCopy,
+  renderWechatsyncConnectionStatusBar: () => renderWechatsyncConnectionStatusBar,
+  stripMarkdownFrontmatter: () => stripMarkdownFrontmatter
 });
 module.exports = __toCommonJS(input_exports);
-
-// views/apple-style-view-shared.js
-var apple_style_view_shared_exports = {};
-__export(apple_style_view_shared_exports, {
-  AI_LAYOUT_SCHEMA_VERSION: () => AI_LAYOUT_SCHEMA_VERSION,
-  AI_LAYOUT_SELECTION_AUTO: () => AI_LAYOUT_SELECTION_AUTO,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: () => AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS,
-  AI_PROVIDER_KINDS: () => AI_PROVIDER_KINDS,
-  APPLE_STYLE_VIEW: () => APPLE_STYLE_VIEW,
-  APPLE_STYLE_VIEW_TITLE: () => APPLE_STYLE_VIEW_TITLE,
-  DEFAULT_SETTINGS: () => DEFAULT_SETTINGS,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: () => DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS,
-  GITHUB_REPOSITORY_URL: () => GITHUB_REPOSITORY_URL,
-  IMAGE_SWIPE_COMMAND_COPY: () => IMAGE_SWIPE_COMMAND_COPY,
-  ItemView: () => ItemView,
-  LEGACY_SETTING_RENDER_KEY: () => LEGACY_SETTING_RENDER_KEY2,
-  MAX_ACCOUNTS: () => MAX_ACCOUNTS,
-  MULTI_PLATFORM_TAB_LABEL: () => MULTI_PLATFORM_TAB_LABEL,
-  MarkdownView: () => MarkdownView,
-  Notice: () => Notice,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: () => OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL2,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: () => OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL2,
-  OBSIDIAN_PUBLISHER_GUIDE_URL: () => OBSIDIAN_PUBLISHER_GUIDE_URL,
-  OBSIDIAN_PUBLISHER_PRO_URL: () => OBSIDIAN_PUBLISHER_PRO_URL2,
-  PLACEHOLDER_ICON_DATA_URL: () => PLACEHOLDER_ICON_DATA_URL,
-  Platform: () => Platform,
-  Plugin: () => Plugin,
-  PluginSettingTab: () => PluginSettingTab,
-  Setting: () => Setting,
-  WechatAPI: () => WechatAPI,
-  bufferFromBinary: () => bufferFromBinary2,
-  buildRenderRuntime: () => buildRenderRuntime,
-  canUseNativePreviewFastPath: () => canUseNativePreviewFastPath,
-  cleanHtmlForDraftService: () => cleanHtmlForDraft,
-  clearDraftAssociation: () => clearDraftAssociation,
-  convertRenderedMermaidDiagramsToImages: () => convertRenderedMermaidDiagramsToImages,
-  createDefaultAiSettings: () => createDefaultAiSettings,
-  createDefaultFeishuSyncSettings: () => createDefaultFeishuSyncSettings,
-  createDefaultMultiPlatformSyncSettings: () => createDefaultMultiPlatformSyncSettings,
-  createDefaultSettingsObject: () => createDefaultSettings,
-  createEmptyDraftCache: () => createEmptyDraftCache,
-  createFallbackSvgElement: () => createFallbackSvgElement,
-  createHtmlContainer: () => createHtmlContainer,
-  createImageSwipeCalloutMarkdown: () => createImageSwipeCalloutMarkdown,
-  createObsidianFetchAdapter: () => createObsidianFetchAdapter,
-  createObsidianModal: () => createObsidianModal,
-  createProxyError: () => createProxyError2,
-  createRenderPipelines: () => createRenderPipelines,
-  createWechatSyncBridgeService: () => createWechatSyncBridgeService,
-  createWechatSyncService: () => createWechatSyncService,
-  dataUrlToBlob: () => dataUrlToBlob,
-  deriveArticleLayoutStateForSelection: () => deriveArticleLayoutStateForSelection,
-  describeWechatsyncConnectionState: () => describeWechatsyncConnectionState,
-  extractImageRefsFromHtml: () => extractImageRefsFromHtml,
-  extractRenderedSectionFragments: () => extractRenderedSectionFragments,
-  formatWechatApiError: () => formatWechatApiError2,
-  formatWechatsyncCheckedAt: () => formatWechatsyncCheckedAt,
-  generateArticleLayout: () => generateArticleLayout,
-  generateId: () => generateId,
-  getActiveDocument: () => getActiveDocument,
-  getActiveDocumentCompat: () => getActiveDocumentCompat,
-  getActiveWindowValue: () => getActiveWindowValue,
-  getAiProviderIssues: () => getAiProviderIssues,
-  getAppleThemeApi: () => getAppleThemeApi,
-  getArticleLayoutSelectionState: () => getArticleLayoutSelectionState,
-  getAvailableWechatsyncPlatforms: () => getAvailableWechatsyncPlatforms,
-  getColorPaletteById: () => getColorPaletteById,
-  getColorPaletteList: () => getColorPaletteList,
-  getDraftAssociation: () => getDraftAssociation,
-  getEventTargetValue: () => getEventTargetValue,
-  getFileUrlLocalPath: () => getFileUrlLocalPath,
-  getImageSwipeCommandCopy: () => getImageSwipeCommandCopy,
-  getLayoutFamilyById: () => getLayoutFamilyById,
-  getLayoutFamilyList: () => getLayoutFamilyList,
-  getMultiPlatformResultSummary: () => getMultiPlatformResultSummary,
-  getObsidianLocale: () => getObsidianLocale,
-  getObsidianModalClass: () => getObsidianModalClass,
-  getObsidianRequest: () => getObsidianRequest,
-  getObsidianRequestUrl: () => getObsidianRequestUrl,
-  getObsidianSetIcon: () => getObsidianSetIcon,
-  getPluginSettings: () => getPluginSettings,
-  getProxyErrorMessage: () => getProxyErrorMessage2,
-  getResponseJsonRecord: () => getResponseJsonRecord2,
-  getValueElementFromEvent: () => getValueElementFromEvent,
-  getVaultAdapterBasePath: () => getVaultAdapterBasePath,
-  getVaultDirnameFromPath: () => getVaultDirnameFromPath,
-  getVaultRelativePathFromLocalPath: () => getVaultRelativePathFromLocalPath2,
-  getWechatAccountPublishOptions: () => getWechatAccountPublishOptions,
-  getWechatSyncResultError: () => getWechatSyncResultError,
-  getWechatSyncResultPlatformId: () => getWechatSyncResultPlatformId,
-  getWechatSyncResultUrl: () => getWechatSyncResultUrl,
-  hasWechatSyncCapability: () => hasWechatSyncCapability,
-  hasWechatUploadResult: () => hasWechatUploadResult2,
-  htmlToText: () => htmlToText,
-  inferLocalImageMimeType: () => inferLocalImageMimeType,
-  isAbsolutePathLike: () => isAbsolutePathLike,
-  isAiProviderRunnable: () => isAiProviderRunnable,
-  isChineseObsidianLocale: () => isChineseObsidianLocale,
-  isMobileClient: () => isMobileClient3,
-  isMobileClientBase: () => isMobileClient2,
-  isRecord: () => isRecord11,
-  isWechatSyncUnsupportedMethodError: () => isUnsupportedBridgeMethodError,
-  loadCommonJsDependency: () => loadCommonJsDependency,
-  mapAppUrlImagesToAssetUrls: () => mapAppUrlImagesToAssetUrls,
-  normalizeAbsoluteLocalPath: () => normalizeAbsoluteLocalPath2,
-  normalizeAiProvider: () => normalizeAiProvider,
-  normalizeAiSettings: () => normalizeAiSettings,
-  normalizeArticleLayoutCacheEntry: () => normalizeArticleLayoutCacheEntry,
-  normalizeArticleLayoutState: () => normalizeArticleLayoutState,
-  normalizeDraftCache: () => normalizeDraftCache,
-  normalizeFeishuSyncSettings: () => normalizeFeishuSyncSettings,
-  normalizeHexColor: () => normalizeHexColor,
-  normalizeLayoutSelection: () => normalizeLayoutSelection,
-  normalizeMultiPlatformSyncSettings: () => normalizeMultiPlatformSyncSettings,
-  normalizeRequestUrlResponse: () => normalizeRequestUrlResponse2,
-  normalizeVaultPath: () => normalizeVaultPath,
-  normalizeWechatAccountPublishOptions: () => normalizeWechatAccountPublishOptions,
-  normalizeWechatsyncPlatform: () => normalizeWechatsyncPlatform,
-  obsidianApi: () => obsidianApi,
-  pMap: () => pMap,
-  parseJsonRecord: () => parseJsonRecord2,
-  parseWechatsyncPlatformIds: () => parseWechatsyncPlatformIds,
-  processAllImagesService: () => processAllImages,
-  processMathFormulasService: () => processMathFormulas,
-  quoteLinesForImageSwipeCallout: () => quoteLinesForImageSwipeCallout,
-  rasterizeSvgToPngBlob: () => rasterizeSvgToPngBlob,
-  readBlobAsBase64Payload: () => readBlobAsBase64Payload2,
-  refreshSettingTabCompat: () => refreshSettingTabCompat,
-  removeElementClass: () => removeElementClass,
-  renderArticleLayoutHtml: () => renderArticleLayoutHtml,
-  renderFeishuPublishTab: () => renderFeishuPublishTab,
-  renderFeishuSettingsTab: () => renderFeishuSettingsTab,
-  renderMermaidCodeBlocks: () => renderMermaidCodeBlocks,
-  renderMultiPlatformSettingsTab: () => renderMultiPlatformSettingsTab,
-  renderNativeMarkdown: () => renderNativeMarkdown,
-  renderObsidianTripletMarkdown: () => renderObsidianTripletMarkdown,
-  renderWechatsyncConnectionStatusBar: () => renderWechatsyncConnectionStatusBar,
-  resolveAiProvider: () => resolveAiProvider,
-  resolveColorPaletteForRender: () => resolveColorPaletteForRender,
-  resolveMarkdownSource: () => resolveMarkdownSource,
-  resolveSyncAccount: () => resolveSyncAccount,
-  revealLeafCompat: () => revealLeafCompat,
-  safeDecodeUriText: () => safeDecodeUriText,
-  setDestructiveButtonCompat: () => setDestructiveButtonCompat,
-  setDraftAssociation: () => setDraftAssociation,
-  setElementHtml: () => setElementHtml,
-  setPluginSettings: () => setPluginSettings,
-  showMultiPlatformPublishModal: () => showMultiPlatformPublishModal,
-  sleep: () => sleep2,
-  sortWechatsyncPlatformItemsForDisplay: () => sortWechatsyncPlatformItemsForDisplay,
-  stripMarkdownFrontmatter: () => stripMarkdownFrontmatter,
-  summarizeAiProviderIssues: () => summarizeAiProviderIssues,
-  testAiProviderConnection: () => testAiProviderConnection,
-  toAiLayoutBlock: () => toAiLayoutBlock,
-  toAiLayoutFamilyStates: () => toAiLayoutFamilyStates,
-  toAiLayoutGenerationMeta: () => toAiLayoutGenerationMeta,
-  toAiLayoutJson: () => toAiLayoutJson,
-  toAiLayoutSelection: () => toAiLayoutSelection,
-  toAiLayoutState: () => toAiLayoutState,
-  toImageElements: () => toImageElements,
-  toOptionalNumber: () => toOptionalNumber2,
-  toOptionalText: () => toOptionalText2,
-  toReadableError: () => toReadableError4,
-  toRecord: () => toRecord8,
-  toSyncFriendlyMessage: () => toSyncFriendlyMessage,
-  updateFeishuHistoryPath: () => updateFeishuHistoryPath
-});
 
 // services/render-pipeline.js
 var NativeRenderPipeline = class {
@@ -53971,10 +53804,14 @@ function setInlineStyleIfMissing(el, styleText) {
   el.setAttribute("style", styleText);
 }
 function getTagStyle(converter, tagName) {
-  if (!converter || typeof converter.getInlineStyle !== "function")
+  const compatibleConverter = (
+    /** @type {{ getInlineStyle?: (tagName: string) => string } | null | undefined} */
+    converter
+  );
+  if (!compatibleConverter || typeof compatibleConverter.getInlineStyle !== "function")
     return "";
   try {
-    return converter.getInlineStyle(tagName) || "";
+    return compatibleConverter.getInlineStyle(tagName) || "";
   } catch (e) {
     return "";
   }
@@ -56524,11 +56361,11 @@ function preprocessImageSwipeCallouts(markdown) {
 
 // services/obsidian-triplet-renderer.js
 function getDefaultMarkdownRenderer() {
-  const obsidianApi15 = (
+  const obsidianApi2 = (
     /** @type {{ MarkdownRenderer?: MarkdownRendererLike } | undefined} */
     getActiveWindowValue("obsidian")
   );
-  return (obsidianApi15 == null ? void 0 : obsidianApi15.MarkdownRenderer) || null;
+  return (obsidianApi2 == null ? void 0 : obsidianApi2.MarkdownRenderer) || null;
 }
 function isFencedBlockDelimiter(line) {
   return /^\s{0,3}(?:`{3,}|~{3,})/.test(String(line || ""));
@@ -59757,12 +59594,15 @@ var AI_COLOR_PALETTES = (((_a4 = AI_LAYOUT_SHARED_RESOURCES.colorPalettes) == nu
   /** @type {Record<string, AiLayoutColorPalette>} */
   {}
 );
-var AI_WECHAT_SAFE_STYLE_PRIMITIVES = AI_LAYOUT_SHARED_RESOURCES.wechatSafeStylePrimitives || {
-  typography: {},
-  image: {},
-  profiles: {},
-  sectionLabels: {}
-};
+var AI_WECHAT_SAFE_STYLE_PRIMITIVES = (
+  /** @type {AiLayoutStylePrimitivesLike} */
+  AI_LAYOUT_SHARED_RESOURCES.wechatSafeStylePrimitives || {
+    typography: {},
+    image: {},
+    profiles: {},
+    sectionLabels: {}
+  }
+);
 var AI_PROVIDER_KIND_DEFAULTS = {
   [AI_PROVIDER_KINDS.OPENAI_COMPATIBLE]: {
     baseUrl: "https://api.openai.com/v1",
@@ -59916,7 +59756,10 @@ function normalizeResolvedLayoutFamily(value, fallback = AI_LAYOUT_DEFAULT_FAMIL
   if (AI_LAYOUT_IMPLEMENTED_FAMILIES.has(normalized))
     return normalized;
   if (AI_LAYOUT_RESERVED_FAMILY_FALLBACKS[normalized]) {
-    return AI_LAYOUT_RESERVED_FAMILY_FALLBACKS[normalized];
+    return (
+      /** @type {string} */
+      AI_LAYOUT_RESERVED_FAMILY_FALLBACKS[normalized]
+    );
   }
   return AI_LAYOUT_IMPLEMENTED_FAMILIES.has(fallback) ? fallback : AI_LAYOUT_DEFAULT_FAMILY;
 }
@@ -60560,15 +60403,15 @@ function buildSectionBlockFromSource(section, {
     section
   );
   const title = coerceString(sectionRecord.title || sectionRecord.heading || "");
-  const paragraphs = Array.isArray(section.paragraphs) ? section.paragraphs.map((item) => coerceString(item)).filter(Boolean) : [];
-  const bulletGroups = Array.isArray(section.bulletGroups) ? section.bulletGroups.map((group) => Array.isArray(group) ? group.map((item) => coerceString(item)).filter(Boolean).slice(0, 10) : []).filter((group) => group.length) : [];
-  const callouts = Array.isArray(section.callouts) ? section.callouts.map((callout) => ({
+  const paragraphs = Array.isArray(sectionRecord.paragraphs) ? sectionRecord.paragraphs.map((item) => coerceString(item)).filter(Boolean) : [];
+  const bulletGroups = Array.isArray(sectionRecord.bulletGroups) ? sectionRecord.bulletGroups.map((group) => Array.isArray(group) ? group.map((item) => coerceString(item)).filter(Boolean).slice(0, 10) : []).filter((group) => group.length) : [];
+  const callouts = Array.isArray(sectionRecord.callouts) ? sectionRecord.callouts.map((callout) => ({
     type: coerceString(callout == null ? void 0 : callout.type),
     title: coerceString(callout == null ? void 0 : callout.title),
     body: coerceString(callout == null ? void 0 : callout.body)
   })).filter((callout) => callout.title || callout.body || callout.type) : [];
   const normalizedImageIds = Array.isArray(imageIds) ? imageIds.map((item) => coerceString(item)).filter(Boolean).slice(0, 3) : [];
-  const subsections = Array.isArray(section.subsections) ? section.subsections.map((subsection) => ({
+  const subsections = Array.isArray(sectionRecord.subsections) ? sectionRecord.subsections.map((subsection) => ({
     title: coerceString((subsection == null ? void 0 : subsection.title) || (subsection == null ? void 0 : subsection.heading) || ""),
     level: Number.isInteger(subsection == null ? void 0 : subsection.level) ? subsection.level : 3,
     paragraphs: Array.isArray(subsection == null ? void 0 : subsection.paragraphs) ? subsection.paragraphs.map((item) => coerceString(item)).filter(Boolean) : [],
@@ -60664,21 +60507,28 @@ function findSourceSectionByTitle(sourceSections = [], title = "") {
 function normalizeLayoutBlock(block, imageIds, sourceSections, index) {
   if (!block || typeof block !== "object")
     return null;
-  const type = coerceString(block.type);
+  const blockRecord = (
+    /** @type {AiLayoutBlockLike} */
+    block
+  );
+  const type = coerceString(blockRecord.type);
   if (!type)
     return null;
   if (type === "hero") {
     return {
       type,
-      eyebrow: coerceString(block.eyebrow),
-      title: coerceString(block.title),
-      subtitle: coerceString(block.subtitle),
-      coverImageId: imageIds.has(coerceString(block.coverImageId)) ? coerceString(block.coverImageId) : "",
-      variant: ["cover-right", "cover-left"].includes(block.variant) ? block.variant : "cover-right"
+      eyebrow: coerceString(blockRecord.eyebrow),
+      title: coerceString(blockRecord.title),
+      subtitle: coerceString(blockRecord.subtitle),
+      coverImageId: imageIds.has(coerceString(blockRecord.coverImageId)) ? coerceString(blockRecord.coverImageId) : "",
+      variant: ["cover-right", "cover-left"].includes(
+        /** @type {string} */
+        blockRecord.variant
+      ) ? blockRecord.variant : "cover-right"
     };
   }
   if (type === "part-nav") {
-    const items = Array.isArray(block.items) ? block.items.map((item, itemIndex) => {
+    const items = Array.isArray(blockRecord.items) ? blockRecord.items.map((item, itemIndex) => {
       const itemRecord = toRecord(item);
       return {
         label: coerceString(itemRecord.label || `PART ${String(itemIndex + 1).padStart(2, "0")}`),
@@ -60688,68 +60538,68 @@ function normalizeLayoutBlock(block, imageIds, sourceSections, index) {
     return items.length ? { type, items } : null;
   }
   if (type === "lead-quote") {
-    const text = coerceString(block.text || block.quote);
+    const text = coerceString(blockRecord.text || blockRecord.quote);
     if (!text)
       return null;
     return {
       type,
       text,
-      note: coerceString(block.note)
+      note: coerceString(blockRecord.note)
     };
   }
   if (type === "case-block") {
-    const title = coerceString(block.title);
-    const summary = coerceString(block.summary);
+    const title = coerceString(blockRecord.title);
+    const summary = coerceString(blockRecord.summary);
     if (!title && !summary)
       return null;
     const matchedSection = findSourceSectionByTitle(sourceSections, title);
     if (matchedSection) {
       return buildSectionBlockFromSource(matchedSection, {
-        imageIds: toImageIdArray(block.imageIds, imageIds, MAX_CASE_BLOCK_IMAGE_IDS),
+        imageIds: toImageIdArray(blockRecord.imageIds, imageIds, MAX_CASE_BLOCK_IMAGE_IDS),
         fallbackIndex: toSectionIndex(matchedSection.index, index)
       });
     }
     return {
       type,
-      caseLabel: coerceString(block.caseLabel || `CASE ${String(index + 1).padStart(2, "0")}`),
+      caseLabel: coerceString(blockRecord.caseLabel || `CASE ${String(index + 1).padStart(2, "0")}`),
       title,
       summary,
-      bullets: toTextArray(block.bullets, MAX_CASE_BLOCK_BULLETS),
-      imageIds: toImageIdArray(block.imageIds, imageIds, MAX_CASE_BLOCK_IMAGE_IDS),
-      highlight: coerceString(block.highlight)
+      bullets: toTextArray(blockRecord.bullets, MAX_CASE_BLOCK_BULLETS),
+      imageIds: toImageIdArray(blockRecord.imageIds, imageIds, MAX_CASE_BLOCK_IMAGE_IDS),
+      highlight: coerceString(blockRecord.highlight)
     };
   }
   if (type === "section-block") {
-    const sectionIndex = toSectionIndex(block.sectionIndex, -1);
+    const sectionIndex = toSectionIndex(blockRecord.sectionIndex, -1);
     const sourceSection = sectionIndex >= 0 ? sourceSections.find((item) => toSectionIndex(item == null ? void 0 : item.index, -1) === sectionIndex) : null;
     if (!sourceSection)
       return null;
     return buildSectionBlockFromSource(sourceSection, {
-      imageIds: toImageIdArray(block.imageIds, imageIds, 3),
+      imageIds: toImageIdArray(blockRecord.imageIds, imageIds, 3),
       fallbackIndex: sectionIndex
     });
   }
   if (type === "phone-frame") {
-    const imageId = coerceString(block.imageId);
+    const imageId = coerceString(blockRecord.imageId);
     if (!imageIds.has(imageId))
       return null;
     return {
       type,
       imageId,
-      caption: coerceString(block.caption)
+      caption: coerceString(blockRecord.caption)
     };
   }
   if (type === "cta-card") {
-    const title = coerceString(block.title);
-    const body = coerceString(block.body);
+    const title = coerceString(blockRecord.title);
+    const body = coerceString(blockRecord.body);
     if (!title && !body)
       return null;
     return {
       type,
       title,
       body,
-      buttonText: coerceString(block.buttonText || "\u7EE7\u7EED\u9605\u8BFB"),
-      note: coerceString(block.note)
+      buttonText: coerceString(blockRecord.buttonText || "\u7EE7\u7EED\u9605\u8BFB"),
+      note: coerceString(blockRecord.note)
     };
   }
   return null;
@@ -61411,7 +61261,10 @@ function buildFallbackLayout(context = {}) {
       /** @type {MarkdownSignals | null} */
       source.signals || extractMarkdownSignals(source.markdown || "")
     ),
-    imageRefs: Array.isArray(source.imageRefs) ? source.imageRefs : []
+    imageRefs: Array.isArray(source.imageRefs) ? (
+      /** @type {AiImageRefLike[]} */
+      source.imageRefs
+    ) : []
   });
   const resolved = selectionResolution.resolved;
   const skill = getLayoutSkillById(resolved.layoutFamily);
@@ -62538,9 +62391,12 @@ function renderArticleLayoutHtml(layout, { imageRefs = [], mode = "preview", ren
     toRecord(layoutRecord.layoutJson || layoutRecord)
   );
   const layoutFamily = getLayoutFamilyById(((_a5 = layoutJson.resolved) == null ? void 0 : _a5.layoutFamily) || layoutJson.layoutFamily);
-  const colorPalette = resolveColorPaletteForRender(
-    ((_b = layoutJson.resolved) == null ? void 0 : _b.colorPalette) || layoutJson.stylePack,
-    colorPaletteOverride
+  const colorPalette = (
+    /** @type {AiLayoutColorPalette} */
+    resolveColorPaletteForRender(
+      ((_b = layoutJson.resolved) == null ? void 0 : _b.colorPalette) || layoutJson.stylePack,
+      colorPaletteOverride
+    )
   );
   const tokens = (
     /** @type {AiColorTokens} */
@@ -65237,7 +65093,7 @@ async function processAllImages({
   html,
   api,
   progressCallback,
-  pMap: pMap15,
+  pMap: pMap2,
   srcToBlob,
   imageUploadCache,
   cacheNamespace = "",
@@ -65261,7 +65117,7 @@ async function processAllImages({
   let completed = 0;
   const failedImages = [];
   const tasks = Array.from(uniqueUrls);
-  await pMap15(tasks, async (item) => {
+  await pMap2(tasks, async (item) => {
     const src = String(item || "");
     const cacheKey = `${cacheNamespace}::${src}`;
     const cached = getCachedEntry(imageUploadCache, cacheKey);
@@ -65327,7 +65183,7 @@ async function processMathFormulas({
   html,
   api,
   progressCallback,
-  pMap: pMap15,
+  pMap: pMap2,
   simpleHash,
   svgUploadCache,
   svgToPngBlob
@@ -65395,7 +65251,7 @@ async function processMathFormulas({
       return html;
     const total = mathNodes.length;
     let completed = 0;
-    await pMap15(mathNodes, async (item) => {
+    await pMap2(mathNodes, async (item) => {
       const svg = (
         /** @type {SVGElement} */
         item
@@ -67526,7 +67382,7 @@ function refreshSettingTab(tab) {
 }
 function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   var _a5, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p;
-  const { Setting: Setting15, Notice: Notice15 } = getObsidianApi(tab, options);
+  const { Setting: Setting2, Notice: Notice2 } = getObsidianApi(tab, options);
   const { plugin } = tab;
   const pluginSettings = toSettingsRecord(plugin.settings);
   const multiPlatformSettings = normalizeMultiPlatformSyncSettings(pluginSettings.multiPlatformSync);
@@ -67540,7 +67396,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       "\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u5E76\u9009\u62E9\u8981\u4FDD\u5B58\u8349\u7A3F\u7684\u5185\u5BB9\u5E73\u53F0\u3002"
     );
   }
-  new Setting15(containerEl).setName("\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03").setDesc("Obsidian \u8D1F\u8D23\u5199\u4F5C\u3001\u9884\u89C8\u548C\u5E73\u53F0\u9009\u62E9\uFF1B\u6D4F\u89C8\u5668\u63D2\u4EF6\u4F7F\u7528\u5F53\u524D\u7684\u6D4F\u89C8\u5668\u767B\u5F55\u6001\uFF0C\u628A\u6587\u7AE0\u4FDD\u5B58\u5230\u77E5\u4E4E\u3001\u6398\u91D1\u3001CSDN \u7B49\u5E73\u53F0\u8349\u7A3F\u7BB1\u3002\u5FAE\u4FE1\u4ECD\u53EF\u4F7F\u7528\u4E0A\u65B9\u516C\u4F17\u53F7 API\u3002").setHeading();
+  new Setting2(containerEl).setName("\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03").setDesc("Obsidian \u8D1F\u8D23\u5199\u4F5C\u3001\u9884\u89C8\u548C\u5E73\u53F0\u9009\u62E9\uFF1B\u6D4F\u89C8\u5668\u63D2\u4EF6\u4F7F\u7528\u5F53\u524D\u7684\u6D4F\u89C8\u5668\u767B\u5F55\u6001\uFF0C\u628A\u6587\u7AE0\u4FDD\u5B58\u5230\u77E5\u4E4E\u3001\u6398\u91D1\u3001CSDN \u7B49\u5E73\u53F0\u8349\u7A3F\u7BB1\u3002\u5FAE\u4FE1\u4ECD\u53EF\u4F7F\u7528\u4E0A\u65B9\u516C\u4F17\u53F7 API\u3002").setHeading();
   const guide = containerEl.createDiv({
     cls: `wechat-multiplatform-onboarding${isProLicensed ? " is-pro" : ""}`
   });
@@ -67564,7 +67420,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   bridgeGuideBtn.onclick = () => openExternalUrl(tab, OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL);
   const proGuideBtn = guideActions.createEl("button", { text: isProLicensed ? "\u67E5\u770B Pro \u6743\u76CA" : "\u4E86\u89E3 Pro" });
   proGuideBtn.onclick = () => openExternalUrl(tab, OBSIDIAN_PUBLISHER_PRO_URL);
-  new Setting15(containerEl).setName("\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03").setDesc("\u5F00\u542F\u540E\uFF0CObsidian \u4F1A\u628A\u6587\u7AE0\u53D1\u9001\u7ED9\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u7531\u63D2\u4EF6\u4F7F\u7528\u6D4F\u89C8\u5668\u767B\u5F55\u6001\u4FDD\u5B58\u5230\u5404\u5E73\u53F0\u8349\u7A3F\u7BB1\u3002\u5728\u4E0B\u65B9\u586B\u5165\u300C\u8FDE\u63A5\u4EE4\u724C\u300D\u5373\u53EF\u5B8C\u6210\u914D\u5BF9\u3002").addToggle((toggle) => toggle.setValue(multiPlatformSettings.enabled).onChange(async (value) => {
+  new Setting2(containerEl).setName("\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03").setDesc("\u5F00\u542F\u540E\uFF0CObsidian \u4F1A\u628A\u6587\u7AE0\u53D1\u9001\u7ED9\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u7531\u63D2\u4EF6\u4F7F\u7528\u6D4F\u89C8\u5668\u767B\u5F55\u6001\u4FDD\u5B58\u5230\u5404\u5E73\u53F0\u8349\u7A3F\u7BB1\u3002\u5728\u4E0B\u65B9\u586B\u5165\u300C\u8FDE\u63A5\u4EE4\u724C\u300D\u5373\u53EF\u5B8C\u6210\u914D\u5BF9\u3002").addToggle((toggle) => toggle.setValue(multiPlatformSettings.enabled).onChange(async (value) => {
     var _a6;
     plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
       ...toRecord3(plugin.settings.multiPlatformSync),
@@ -67583,7 +67439,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   if (!multiPlatformSettings.enabled) {
     return;
   }
-  new Setting15(containerEl).setName("\u672C\u5730\u670D\u52A1\u7AEF\u53E3").setDesc("\u9ED8\u8BA4 9527\u3002\u53EA\u6709\u5F53\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u7684\u672C\u5730\u670D\u52A1\u5730\u5740\u4F7F\u7528\u4E86\u5176\u4ED6\u7AEF\u53E3\u65F6\u624D\u9700\u8981\u4FEE\u6539\u3002").addText((text) => text.setPlaceholder(String(DEFAULT_WECHATSYNC_PORT)).setValue(String(multiPlatformSettings.port)).onChange(async (value) => {
+  new Setting2(containerEl).setName("\u672C\u5730\u670D\u52A1\u7AEF\u53E3").setDesc("\u9ED8\u8BA4 9527\u3002\u53EA\u6709\u5F53\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u7684\u672C\u5730\u670D\u52A1\u5730\u5740\u4F7F\u7528\u4E86\u5176\u4ED6\u7AEF\u53E3\u65F6\u624D\u9700\u8981\u4FEE\u6539\u3002").addText((text) => text.setPlaceholder(String(DEFAULT_WECHATSYNC_PORT)).setValue(String(multiPlatformSettings.port)).onChange(async (value) => {
     const nextPort = Number(value);
     plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
       ...toRecord3(plugin.settings.multiPlatformSync),
@@ -67593,7 +67449,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     await plugin.saveSettings();
     plugin.startWechatSyncBridgeInBackground("settings-port-change");
   }));
-  new Setting15(containerEl).setName("\u8FDE\u63A5\u4EE4\u724C").setDesc("\u586B\u5165\u6D4F\u89C8\u5668\u63D2\u4EF6\u672C\u5730\u670D\u52A1\u4E2D\u663E\u793A\u7684\u8FDE\u63A5\u4EE4\u724C\uFF0C\u7528\u4E8E\u786E\u8BA4 Obsidian \u4E0E\u63D2\u4EF6\u5C5E\u4E8E\u540C\u4E00\u7EC4\u8FDE\u63A5\u3002").addText((text) => text.setPlaceholder("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx").setValue(toText(multiPlatformSettings.token)).onChange(async (value) => {
+  new Setting2(containerEl).setName("\u8FDE\u63A5\u4EE4\u724C").setDesc("\u586B\u5165\u6D4F\u89C8\u5668\u63D2\u4EF6\u672C\u5730\u670D\u52A1\u4E2D\u663E\u793A\u7684\u8FDE\u63A5\u4EE4\u724C\uFF0C\u7528\u4E8E\u786E\u8BA4 Obsidian \u4E0E\u63D2\u4EF6\u5C5E\u4E8E\u540C\u4E00\u7EC4\u8FDE\u63A5\u3002").addText((text) => text.setPlaceholder("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx").setValue(toText(multiPlatformSettings.token)).onChange(async (value) => {
     plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
       ...toRecord3(plugin.settings.multiPlatformSync),
       token: value,
@@ -67785,7 +67641,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         chip.addClass("is-selected");
         setStatusVisible(true);
         if (authBadge.status === "login_required") {
-          new Notice15(`${platform.name} \u4E0A\u6B21\u72B6\u6001\u4E3A\u9700\u767B\u5F55\u3002\u8BF7\u5148\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u6253\u5F00\u5E73\u53F0\u767B\u5F55\u9875\uFF0C\u6216\u7EE7\u7EED\u5C1D\u8BD5\u7531\u63D2\u4EF6\u8FD4\u56DE\u5B9E\u9645\u7ED3\u679C\u3002`, 8e3);
+          new Notice2(`${platform.name} \u4E0A\u6B21\u72B6\u6001\u4E3A\u9700\u767B\u5F55\u3002\u8BF7\u5148\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u6253\u5F00\u5E73\u53F0\u767B\u5F55\u9875\uFF0C\u6216\u7EE7\u7EED\u5C1D\u8BD5\u7531\u63D2\u4EF6\u8FD4\u56DE\u5B9E\u9645\u7ED3\u679C\u3002`, 8e3);
         }
       } else {
         selectedPlatformSet.delete(platform.id);
@@ -67796,7 +67652,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       await saveSelectedPlatforms();
     };
   }
-  new Setting15(containerEl).setName("\u6D4B\u8BD5\u8FDE\u63A5").setDesc("\u53EA\u9A8C\u8BC1 Obsidian\u3001\u6D4F\u89C8\u5668\u63D2\u4EF6\u548C\u8FDE\u63A5\u4EE4\u724C\u662F\u5426\u8FDE\u901A\uFF0C\u5E76\u8BFB\u53D6\u5E73\u53F0\u6E05\u5355\uFF1B\u4E0D\u4F1A\u5B9E\u65F6\u68C0\u6D4B\u6240\u6709\u5E73\u53F0\u767B\u5F55\u72B6\u6001\u3002").addButton((button) => button.setButtonText("\u6D4B\u8BD5").onClick(async () => {
+  new Setting2(containerEl).setName("\u6D4B\u8BD5\u8FDE\u63A5").setDesc("\u53EA\u9A8C\u8BC1 Obsidian\u3001\u6D4F\u89C8\u5668\u63D2\u4EF6\u548C\u8FDE\u63A5\u4EE4\u724C\u662F\u5426\u8FDE\u901A\uFF0C\u5E76\u8BFB\u53D6\u5E73\u53F0\u6E05\u5355\uFF1B\u4E0D\u4F1A\u5B9E\u65F6\u68C0\u6D4B\u6240\u6709\u5E73\u53F0\u767B\u5F55\u72B6\u6001\u3002").addButton((button) => button.setButtonText("\u6D4B\u8BD5").onClick(async () => {
     var _a6, _b2, _c2, _d2, _e2;
     button.setButtonText("\u7B49\u5F85\u63D2\u4EF6...");
     (_a6 = button.setDisabled) == null ? void 0 : _a6.call(button, true);
@@ -67884,7 +67740,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       });
       await plugin.saveSettings();
       shouldRedisplay = true;
-      new Notice15(health ? "\u2705 \u5DF2\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u8FDE\u63A5\u4EE4\u724C\u6821\u9A8C\u901A\u8FC7" : "\u2705 \u5DF2\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6");
+      new Notice2(health ? "\u2705 \u5DF2\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u8FDE\u63A5\u4EE4\u724C\u6821\u9A8C\u901A\u8FC7" : "\u2705 \u5DF2\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6");
     } catch (error) {
       let bridgeStatusAfterFailure = null;
       let diagnostics = null;
@@ -67942,7 +67798,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         }
       });
       await plugin.saveSettings();
-      new Notice15(`\u274C ${detailedMessage}${hint ? ` ${hint}` : ""}`, 12e3);
+      new Notice2(`\u274C ${detailedMessage}${hint ? ` ${hint}` : ""}`, 12e3);
       shouldRedisplay = true;
     } finally {
       (_e2 = button.setDisabled) == null ? void 0 : _e2.call(button, false);
@@ -67951,7 +67807,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         refreshSettingTab(tab);
     }
   }));
-  new Setting15(containerEl).setName("\u8BFB\u53D6\u5DF2\u9009\u5E73\u53F0\u72B6\u6001").setDesc("\u8BFB\u53D6\u6D4F\u89C8\u5668\u63D2\u4EF6\u7F13\u5B58\u7684\u4E0A\u6B21\u72B6\u6001\uFF0C\u4E0D\u4F1A\u5B9E\u65F6\u68C0\u6D4B\u767B\u5F55\uFF1B\u53D1\u5E03\u65F6\u4ECD\u4EE5\u6D4F\u89C8\u5668\u63D2\u4EF6\u5B9E\u9645\u6267\u884C\u4E3A\u51C6\u3002").addButton((button) => button.setButtonText("\u8BFB\u53D6").onClick(async () => {
+  new Setting2(containerEl).setName("\u8BFB\u53D6\u5DF2\u9009\u5E73\u53F0\u72B6\u6001").setDesc("\u8BFB\u53D6\u6D4F\u89C8\u5668\u63D2\u4EF6\u7F13\u5B58\u7684\u4E0A\u6B21\u72B6\u6001\uFF0C\u4E0D\u4F1A\u5B9E\u65F6\u68C0\u6D4B\u767B\u5F55\uFF1B\u53D1\u5E03\u65F6\u4ECD\u4EE5\u6D4F\u89C8\u5668\u63D2\u4EF6\u5B9E\u9645\u6267\u884C\u4E3A\u51C6\u3002").addButton((button) => button.setButtonText("\u8BFB\u53D6").onClick(async () => {
     var _a6, _b2;
     const current = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
     const platformById = new Map(
@@ -67959,7 +67815,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     );
     const candidates = parseWechatsyncPlatformIds(current.selectedPlatforms || []).map((id) => platformById.get(id) || { id, name: id }).filter((platform) => platform.id);
     if (!candidates.length) {
-      new Notice15("\u8BF7\u5148\u52FE\u9009\u81F3\u5C11\u4E00\u4E2A\u53D1\u5E03\u5E73\u53F0");
+      new Notice2("\u8BF7\u5148\u52FE\u9009\u81F3\u5C11\u4E00\u4E2A\u53D1\u5E03\u5E73\u53F0");
       return;
     }
     button.setButtonText("\u8BFB\u53D6\u4E2D...");
@@ -68001,7 +67857,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       });
       await plugin.saveSettings();
       const authenticatedCount = cachedPlatforms.filter((platform) => platform.authenticated === true).length;
-      new Notice15(`\u2705 \u5DF2\u8BFB\u53D6 ${cachedPlatforms.length} \u4E2A\u5DF2\u9009\u5E73\u53F0\uFF0C${authenticatedCount} \u4E2A\u4E0A\u6B21\u53EF\u7528`);
+      new Notice2(`\u2705 \u5DF2\u8BFB\u53D6 ${cachedPlatforms.length} \u4E2A\u5DF2\u9009\u5E73\u53F0\uFF0C${authenticatedCount} \u4E2A\u4E0A\u6B21\u53EF\u7528`);
       refreshSettingTab(tab);
     } catch (error) {
       const readableError = toReadableError(error);
@@ -68010,7 +67866,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         code: readableError.code,
         message: readableError.message
       });
-      new Notice15(`\u274C \u8BFB\u53D6\u5931\u8D25\uFF1A${readableError.message}`, 1e4);
+      new Notice2(`\u274C \u8BFB\u53D6\u5931\u8D25\uFF1A${readableError.message}`, 1e4);
     } finally {
       (_b2 = button.setDisabled) == null ? void 0 : _b2.call(button, false);
       button.setButtonText("\u8BFB\u53D6");
@@ -68064,9 +67920,15 @@ function canonicalizePolicyPayload(value) {
 }
 function resolveNodeLoader() {
   if (typeof require === "function")
-    return require;
+    return (
+      /** @type {(moduleId: string) => unknown} */
+      require
+    );
   const windowRequire = getActiveWindowValue("require");
-  return typeof windowRequire === "function" ? windowRequire : null;
+  return typeof windowRequire === "function" ? (
+    /** @type {(moduleId: string) => unknown} */
+    windowRequire
+  ) : null;
 }
 function resolveCryptoRuntime() {
   var _a5;
@@ -68074,8 +67936,14 @@ function resolveCryptoRuntime() {
   if (!loader)
     return null;
   try {
-    const crypto = loader(["cr", "ypto"].join(""));
-    const BufferCtor = (_a5 = loader("buffer")) == null ? void 0 : _a5.Buffer;
+    const crypto = (
+      /** @type {PolicyCryptoLike} */
+      loader(["cr", "ypto"].join(""))
+    );
+    const BufferCtor = (
+      /** @type {{ Buffer?: PolicyBufferConstructorLike }} */
+      (_a5 = loader("buffer")) == null ? void 0 : _a5.Buffer
+    );
     if (!(crypto == null ? void 0 : crypto.createPublicKey) || !(crypto == null ? void 0 : crypto.verify) || !BufferCtor)
       return null;
     return { crypto, BufferCtor };
@@ -68162,7 +68030,10 @@ function hasCachedForceGate(payload) {
   return record.forceUpgradeExtension === true || record.forceUpgradeObsidianPlugin === true;
 }
 function readPolicyCache(plugin, publicKey = FALLBACK_LICENSE_PUBLIC_KEY) {
-  const settings = normalizeMultiPlatformSyncSettings(toRecord4(plugin == null ? void 0 : plugin.settings).multiPlatformSync);
+  const settings = normalizeMultiPlatformSyncSettings(toRecord4(
+    /** @type {PluginWithSettingsLike} */
+    plugin == null ? void 0 : plugin.settings
+  ).multiPlatformSync);
   const cache = normalizePolicyCache(settings.policyCache);
   if (!cache)
     return null;
@@ -68187,7 +68058,11 @@ async function writePolicyCache(plugin, payload, signature) {
   pluginRecord.settings = settings;
   if (typeof pluginRecord.saveSettings === "function") {
     try {
-      await pluginRecord.saveSettings();
+      const compatiblePlugin = (
+        /** @type {{ saveSettings: () => Promise<unknown> }} */
+        pluginRecord
+      );
+      await compatiblePlugin.saveSettings();
     } catch (e) {
     }
   }
@@ -68217,7 +68092,10 @@ function createFetchImpl(options = {}) {
   if (typeof options.fetchImpl === "function")
     return options.fetchImpl;
   if (typeof options.requestUrl === "function") {
-    return createObsidianFetchAdapter(options.requestUrl);
+    return (
+      /** @type {FetchLike} */
+      createObsidianFetchAdapter(options.requestUrl)
+    );
   }
   return null;
 }
@@ -68240,7 +68118,7 @@ async function fetchAndVerifyPolicy(options = {}) {
   for (const baseUrl of endpoints) {
     const url = String(baseUrl || "").replace(/\/+$/, "") + "/policy";
     const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-    const timer = controller ? setTimeout(() => controller.abort(), options.timeoutMs || POLICY_REQUEST_TIMEOUT_MS) : null;
+    const timer = controller ? window.setTimeout(() => controller.abort(), options.timeoutMs || POLICY_REQUEST_TIMEOUT_MS) : null;
     try {
       const response = await fetchImpl(url, {
         method: "POST",
@@ -68283,7 +68161,7 @@ async function fetchAndVerifyPolicy(options = {}) {
       };
     } finally {
       if (timer)
-        clearTimeout(timer);
+        window.clearTimeout(timer);
     }
   }
   return lastNonNetworkOutcome || lastNetworkOutcome || { kind: "network_error", message: "unknown policy error" };
@@ -68937,15 +68815,15 @@ function getObsidianApi2(view, options = {}) {
 async function showMultiPlatformPublishModal(view, options = {}) {
   var _a5;
   const obsidian = getObsidianApi2(view, options);
-  const { Notice: Notice15, Platform: Platform15 } = obsidian;
+  const { Notice: Notice2, Platform: Platform2 } = obsidian;
   if (!view.currentHtml) {
-    new Notice15(view.getMissingRenderNotice());
+    new Notice2(view.getMissingRenderNotice());
     return;
   }
   const modal = options.modal || new obsidian.Modal(view.app);
   modal.contentEl = asModalElement(modal.contentEl);
   const shouldOpenModal = !options.modal;
-  const mobileSync = isMobileClient(view.app, Platform15);
+  const mobileSync = isMobileClient(view.app, Platform2);
   const bridgeSettings = normalizeMultiPlatformSyncSettings(toRecord5(view.plugin.settings.multiPlatformSync));
   const cachedConnection = bridgeSettings.connection || normalizeMultiPlatformConnection();
   const cachedConnectionRecord = toRecord5(cachedConnection);
@@ -69004,7 +68882,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
     settingsBtn.onclick = () => {
       modal.close();
       if (!view.openPluginSettings()) {
-        new Notice15("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u5F00\u542F\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03");
+        new Notice2("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u5F00\u542F\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03");
       }
     };
     const guideBtn = asModalElement(disabledHint.createEl("button", { text: "\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\u6559\u7A0B" }));
@@ -69115,10 +68993,10 @@ async function showMultiPlatformPublishModal(view, options = {}) {
           (_b = row.classList) == null ? void 0 : _b.add("is-selected");
           setStatusVisible(true);
           if (authBadge.status === "login_required") {
-            new Notice15(`${platform.name} \u4E0A\u6B21\u72B6\u6001\u4E3A\u9700\u767B\u5F55\u3002\u8BF7\u5148\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u6253\u5F00\u5E73\u53F0\u767B\u5F55\u9875\uFF0C\u6216\u7EE7\u7EED\u5C1D\u8BD5\u7531\u63D2\u4EF6\u8FD4\u56DE\u5B9E\u9645\u7ED3\u679C\u3002`, 8e3);
+            new Notice2(`${platform.name} \u4E0A\u6B21\u72B6\u6001\u4E3A\u9700\u767B\u5F55\u3002\u8BF7\u5148\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u6253\u5F00\u5E73\u53F0\u767B\u5F55\u9875\uFF0C\u6216\u7EE7\u7EED\u5C1D\u8BD5\u7531\u63D2\u4EF6\u8FD4\u56DE\u5B9E\u9645\u7ED3\u679C\u3002`, 8e3);
           }
           if (authBadge.status === "unknown") {
-            new Notice15(`${platform.name} \u6B64\u524D\u672A\u68C0\u6D4B\uFF0C\u53D1\u5E03\u7ED3\u679C\u4EE5\u6D4F\u89C8\u5668\u63D2\u4EF6\u5B9E\u9645\u6267\u884C\u4E3A\u51C6\u3002`, 6e3);
+            new Notice2(`${platform.name} \u6B64\u524D\u672A\u68C0\u6D4B\uFF0C\u53D1\u5E03\u7ED3\u679C\u4EE5\u6D4F\u89C8\u5668\u63D2\u4EF6\u5B9E\u9645\u6267\u884C\u4E3A\u51C6\u3002`, 6e3);
           }
         } else {
           selectedPlatforms.delete(platform.id);
@@ -69136,11 +69014,11 @@ async function showMultiPlatformPublishModal(view, options = {}) {
   syncBtn.onclick = async () => {
     var _a6, _b;
     if (!isBridgeReady) {
-      new Notice15("\u8BF7\u5148\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u518D\u53D1\u9001\u591A\u5E73\u53F0\u53D1\u5E03\u4EFB\u52A1\u3002", 8e3);
+      new Notice2("\u8BF7\u5148\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u518D\u53D1\u9001\u591A\u5E73\u53F0\u53D1\u5E03\u4EFB\u52A1\u3002", 8e3);
       return;
     }
     if (selectedPlatforms.size === 0) {
-      new Notice15("\u8BF7\u5148\u9009\u62E9\u81F3\u5C11\u4E00\u4E2A\u5E73\u53F0");
+      new Notice2("\u8BF7\u5148\u9009\u62E9\u81F3\u5C11\u4E00\u4E2A\u5E73\u53F0");
       return;
     }
     const activeFile = view.getPublishContextFile();
@@ -69152,7 +69030,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
     const exportHtml = view.getCurrentExportHtml() || view.currentHtml || "";
     const selectedWechatMaterialCover = !!view.sessionThumbMediaId;
     const rawCover = getBridgeSafeSessionCover(view.sessionCoverBase64) || publishMeta.cover || "";
-    const notice = new Notice15("\u6B63\u5728\u51C6\u5907\u5E76\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6...", 0);
+    const notice = new Notice2("\u6B63\u5728\u51C6\u5907\u5E76\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6...", 0);
     syncBtn.disabled = true;
     (_a6 = syncBtn.addClass) == null ? void 0 : _a6.call(syncBtn, "apple-btn-disabled");
     const sendStartedAt = Date.now();
@@ -69172,7 +69050,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
       );
       if (!pluginPolicyGate.allowed) {
         notice.hide();
-        new Notice15(`\u274C ${pluginPolicyGate.message || "\u5F53\u524D Obsidian \u63D2\u4EF6\u7248\u672C\u8FC7\u4F4E\uFF0C\u8BF7\u5347\u7EA7\u540E\u7EE7\u7EED\u53D1\u5E03\u3002"}`, 1e4);
+        new Notice2(`\u274C ${pluginPolicyGate.message || "\u5F53\u524D Obsidian \u63D2\u4EF6\u7248\u672C\u8FC7\u4F4E\uFF0C\u8BF7\u5347\u7EA7\u540E\u7EE7\u7EED\u53D1\u5E03\u3002"}`, 1e4);
         return;
       }
       const extensionPolicyGate = checkExtensionPolicyGate(effectivePolicy.payload, {
@@ -69181,7 +69059,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
       });
       if (!extensionPolicyGate.allowed) {
         notice.hide();
-        new Notice15(`\u274C ${extensionPolicyGate.message || "\u5F53\u524D\u6D4F\u89C8\u5668\u6269\u5C55\u7248\u672C\u8FC7\u4F4E\uFF0C\u8BF7\u5347\u7EA7\u540E\u7EE7\u7EED\u53D1\u5E03\u3002"}`, 1e4);
+        new Notice2(`\u274C ${extensionPolicyGate.message || "\u5F53\u524D\u6D4F\u89C8\u5668\u6269\u5C55\u7248\u672C\u8FC7\u4F4E\uFF0C\u8BF7\u5347\u7EA7\u540E\u7EE7\u7EED\u53D1\u5E03\u3002"}`, 1e4);
         return;
       }
       if (pluginPolicyGate.warning) {
@@ -69409,7 +69287,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         await view.plugin.saveSettings();
       }
       modal.close();
-      new Notice15(`\u274C \u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6\u5931\u8D25\uFF1A${displayMessage}`, 1e4);
+      new Notice2(`\u274C \u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6\u5931\u8D25\uFF1A${displayMessage}`, 1e4);
       view.showMultiPlatformSyncResultModal({
         requestedPlatformIds,
         fatalError: error
@@ -69485,8 +69363,8 @@ var FeishuApiClient = class {
     this.accessToken = "";
     this.tokenExpiry = 0;
     this.baseUrl = "https://open.feishu.cn/open-apis";
-    const obsidianApi15 = getActiveWindowValue("obsidian");
-    this.requestUrl = requestUrl || (obsidianApi15 && typeof obsidianApi15.requestUrl === "function" ? obsidianApi15.requestUrl : null);
+    const obsidianApi2 = getActiveWindowValue("obsidian");
+    this.requestUrl = requestUrl || (obsidianApi2 && typeof obsidianApi2.requestUrl === "function" ? obsidianApi2.requestUrl : null);
     this.onApiCall = typeof options.onApiCall === "function" ? options.onApiCall : null;
   }
   /**
@@ -70459,7 +70337,7 @@ function formatFeishuUsagePercent(count, limit) {
     return "0%";
   return `${Math.min(100, Math.round(count / limit * 100))}%`;
 }
-function renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, Notice15) {
+function renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, Notice2) {
   const usage = settings.apiUsage;
   const used = Math.max(0, Number(usage.count) || 0);
   const limit = FEISHU_FREE_MONTHLY_API_LIMIT;
@@ -70501,8 +70379,8 @@ function renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, No
   resetBtn.onclick = async () => {
     resetFeishuApiUsage(settings);
     await plugin.saveSettings();
-    if (Notice15)
-      new Notice15("\u2705 \u98DE\u4E66 API \u8C03\u7528\u8BA1\u6570\u5DF2\u91CD\u7F6E");
+    if (Notice2)
+      new Notice2("\u2705 \u98DE\u4E66 API \u8C03\u7528\u8BA1\u6570\u5DF2\u91CD\u7F6E");
     renderFeishuSettingsTab(tab, containerEl, { obsidianApi: obsidian });
   };
   const progressTrack = card.createDiv({ cls: "wechat-feishu-usage-progress" });
@@ -70527,8 +70405,8 @@ function renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, No
 }
 function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   const obsidian = options.obsidianApi || tab.plugin.obsidianApi || getActiveWindowValue("obsidian") || {};
-  const Setting15 = obsidian.Setting;
-  const Notice15 = obsidian.Notice;
+  const Setting2 = obsidian.Setting;
+  const Notice2 = obsidian.Notice;
   const { plugin } = tab;
   const rawFeishuSettings = plugin.settings.feishuSync || {};
   const settings = normalizeFeishuSyncSettings(rawFeishuSettings);
@@ -70551,7 +70429,7 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
     text: "\u901A\u8FC7\u98DE\u4E66\u81EA\u5EFA\u5E94\u7528\u673A\u5668\u4EBA\u63A5\u53E3\uFF0C\u5C06\u5F53\u524D Obsidian \u7B14\u8BB0\u4E00\u952E\u53D1\u5E03\u5E76\u8F6C\u6362\u4E3A\u539F\u751F\u7684\u98DE\u4E66\u4E91\u6587\u6863\uFF08docx\uFF09\uFF0C\u652F\u6301\u4FDD\u7559\u6807\u9898\u3001\u8868\u683C\u3001\u4EE5\u53CA\u56FE\u7247\u4E0A\u4F20\uFF08\u5305\u542B\u672C\u5730\u548C\u56FE\u5E8A\u56FE\u7247\uFF09\u3002",
     cls: "setting-item-description"
   });
-  new Setting15(containerEl).setName("\u542F\u7528\u98DE\u4E66\u540C\u6B65\u529F\u80FD").setDesc("\u5F00\u542F\u540E\uFF0C\u53D1\u5E03\u5F39\u7A97\u4E2D\u4F1A\u51FA\u73B0\u300C\u98DE\u4E66\u300D\u9009\u9879\u5361\uFF0C\u652F\u6301\u5C06\u7B14\u8BB0\u53D1\u5E03\u81F3\u98DE\u4E66\u4E91\u76D8\u3002").addToggle(
+  new Setting2(containerEl).setName("\u542F\u7528\u98DE\u4E66\u540C\u6B65\u529F\u80FD").setDesc("\u5F00\u542F\u540E\uFF0C\u53D1\u5E03\u5F39\u7A97\u4E2D\u4F1A\u51FA\u73B0\u300C\u98DE\u4E66\u300D\u9009\u9879\u5361\uFF0C\u652F\u6301\u5C06\u7B14\u8BB0\u53D1\u5E03\u81F3\u98DE\u4E66\u4E91\u76D8\u3002").addToggle(
     (toggle) => toggle.setValue(settings.enabled).onChange(async (value) => {
       settings.enabled = value;
       await plugin.saveSettings();
@@ -70560,43 +70438,43 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   );
   if (!settings.enabled)
     return;
-  renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, Notice15);
-  new Setting15(containerEl).setName("\u98DE\u4E66\u81EA\u5EFA\u5E94\u7528 App ID").setDesc("\u5728\u98DE\u4E66\u5F00\u653E\u5E73\u53F0\uFF08open.feishu.cn\uFF09\u4E2D\uFF0C\u60A8\u521B\u5EFA\u7684\u4F01\u4E1A\u81EA\u5EFA\u5E94\u7528\u7684 App ID").addText(
+  renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, Notice2);
+  new Setting2(containerEl).setName("\u98DE\u4E66\u81EA\u5EFA\u5E94\u7528 App ID").setDesc("\u5728\u98DE\u4E66\u5F00\u653E\u5E73\u53F0\uFF08open.feishu.cn\uFF09\u4E2D\uFF0C\u60A8\u521B\u5EFA\u7684\u4F01\u4E1A\u81EA\u5EFA\u5E94\u7528\u7684 App ID").addText(
     (text) => text.setPlaceholder("cli_a248xxxxxxxxxxxx").setValue(settings.appId).onChange(async (value) => {
       settings.appId = value.trim();
       await plugin.saveSettings();
     })
   );
-  new Setting15(containerEl).setName("\u98DE\u4E66\u81EA\u5EFA\u5E94\u7528 App Secret").setDesc("\u81EA\u5EFA\u5E94\u7528\u7684 App Secret \u51ED\u8BC1").addText((text) => {
+  new Setting2(containerEl).setName("\u98DE\u4E66\u81EA\u5EFA\u5E94\u7528 App Secret").setDesc("\u81EA\u5EFA\u5E94\u7528\u7684 App Secret \u51ED\u8BC1").addText((text) => {
     text.inputEl.type = "password";
     text.setPlaceholder("xxxxxxxxxxxxxxxxxxxx").setValue(settings.appSecret).onChange(async (value) => {
       settings.appSecret = value.trim();
       await plugin.saveSettings();
     });
   });
-  new Setting15(containerEl).setName("\u540C\u6B65\u76EE\u6807\u6587\u4EF6\u5939 Token").setDesc("\u98DE\u4E66\u6587\u4EF6\u5939\u94FE\u63A5\u4E2D\u7684\u6700\u540E\u4E00\u4E32\u5B57\u7B26\u3002\u4F8B\u5982\uFF1Ahttps://feishu.cn/drive/folder/fldcnXXXXXXXXX \u7684 Token \u662F fldcnXXXXXXXXX").addText(
+  new Setting2(containerEl).setName("\u540C\u6B65\u76EE\u6807\u6587\u4EF6\u5939 Token").setDesc("\u98DE\u4E66\u6587\u4EF6\u5939\u94FE\u63A5\u4E2D\u7684\u6700\u540E\u4E00\u4E32\u5B57\u7B26\u3002\u4F8B\u5982\uFF1Ahttps://feishu.cn/drive/folder/fldcnXXXXXXXXX \u7684 Token \u662F fldcnXXXXXXXXX").addText(
     (text) => text.setPlaceholder("fldcnxxxxxxxxxxxxxxxxxx").setValue(settings.folderToken).onChange(async (value) => {
       settings.folderToken = value.trim();
       await plugin.saveSettings();
     })
   );
-  new Setting15(containerEl).setName("\u98DE\u4E66\u7528\u6237 ID (User ID)").setDesc("\u7528\u4E8E\u5728\u540C\u6B65\u6210\u529F\u540E\uFF0C\u628A\u6587\u6863\u7684\u6240\u6709\u6743\u7531\u673A\u5668\u4EBA\u81EA\u52A8\u8F6C\u79FB\u7ED9\u60A8\u672C\u4EBA\uFF08\u60A8\u7684\u98DE\u4E66\u4E91\u76D8\u4E2D\uFF09\u3002\u5EFA\u8BAE\u4F7F\u7528 user_id \u683C\u5F0F\uFF0C\u5982 abc1234\u3002").addText(
+  new Setting2(containerEl).setName("\u98DE\u4E66\u7528\u6237 ID (User ID)").setDesc("\u7528\u4E8E\u5728\u540C\u6B65\u6210\u529F\u540E\uFF0C\u628A\u6587\u6863\u7684\u6240\u6709\u6743\u7531\u673A\u5668\u4EBA\u81EA\u52A8\u8F6C\u79FB\u7ED9\u60A8\u672C\u4EBA\uFF08\u60A8\u7684\u98DE\u4E66\u4E91\u76D8\u4E2D\uFF09\u3002\u5EFA\u8BAE\u4F7F\u7528 user_id \u683C\u5F0F\uFF0C\u5982 abc1234\u3002").addText(
     (text) => text.setPlaceholder("abc1234").setValue(settings.userId).onChange(async (value) => {
       settings.userId = value.trim();
       await plugin.saveSettings();
     })
   );
-  new Setting15(containerEl).setName("\u6D4B\u8BD5\u8FDE\u63A5").setDesc("\u9A8C\u8BC1\u81EA\u5EFA\u5E94\u7528\u6388\u6743\u548C\u76EE\u6807\u6587\u4EF6\u5939\u8BFB\u53D6\u6743\u9650\u3002\u5B8C\u6574\u4E0A\u4F20/\u5BFC\u5165\u6743\u9650\u4F1A\u5728\u5B9E\u9645\u540C\u6B65\u65F6\u9A8C\u8BC1\u3002").addButton(
+  new Setting2(containerEl).setName("\u6D4B\u8BD5\u8FDE\u63A5").setDesc("\u9A8C\u8BC1\u81EA\u5EFA\u5E94\u7528\u6388\u6743\u548C\u76EE\u6807\u6587\u4EF6\u5939\u8BFB\u53D6\u6743\u9650\u3002\u5B8C\u6574\u4E0A\u4F20/\u5BFC\u5165\u6743\u9650\u4F1A\u5728\u5B9E\u9645\u540C\u6B65\u65F6\u9A8C\u8BC1\u3002").addButton(
     (btn) => btn.setButtonText("\u6D4B\u8BD5\u8FDE\u63A5").onClick(async () => {
       if (!settings.appId || !settings.appSecret) {
-        new Notice15("\u274C \u8BF7\u5148\u586B\u5199 App ID \u548C App Secret\uFF01");
+        new Notice2("\u274C \u8BF7\u5148\u586B\u5199 App ID \u548C App Secret\uFF01");
         return;
       }
       if (!settings.folderToken) {
-        new Notice15("\u274C \u8BF7\u5148\u586B\u5199\u540C\u6B65\u76EE\u6807\u6587\u4EF6\u5939 Token\uFF01");
+        new Notice2("\u274C \u8BF7\u5148\u586B\u5199\u540C\u6B65\u76EE\u6807\u6587\u4EF6\u5939 Token\uFF01");
         return;
       }
-      const notice = new Notice15("\u23F3 \u6B63\u5728\u8FDB\u884C\u98DE\u4E66\u8FDE\u63A5\u6D4B\u8BD5...", 0);
+      const notice = new Notice2("\u23F3 \u6B63\u5728\u8FDB\u884C\u98DE\u4E66\u8FDE\u63A5\u6D4B\u8BD5...", 0);
       try {
         let apiUsageChanged = false;
         const client = new FeishuApiClient(settings.appId, settings.appSecret, obsidian.requestUrl, {
@@ -70610,12 +70488,12 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
         notice.hide();
         if (apiUsageChanged)
           await plugin.saveSettings();
-        new Notice15("\u2705 \u98DE\u4E66\u8FDE\u63A5\u6210\u529F\uFF0C\u4E14\u76EE\u6807\u6587\u4EF6\u5939\u8BBF\u95EE\u6B63\u5E38\uFF01");
+        new Notice2("\u2705 \u98DE\u4E66\u8FDE\u63A5\u6210\u529F\uFF0C\u4E14\u76EE\u6807\u6587\u4EF6\u5939\u8BBF\u95EE\u6B63\u5E38\uFF01");
       } catch (err) {
         notice.hide();
         await plugin.saveSettings();
         console.error("[\u98DE\u4E66\u8FDE\u63A5\u6D4B\u8BD5\u5931\u8D25]:", err);
-        new Notice15(`\u274C \u98DE\u4E66\u8FDE\u63A5\u6D4B\u8BD5\u5931\u8D25: ${err.message || String(err)}`, 7e3);
+        new Notice2(`\u274C \u98DE\u4E66\u8FDE\u63A5\u6D4B\u8BD5\u5931\u8D25: ${err.message || String(err)}`, 7e3);
       }
     })
   );
@@ -71184,8 +71062,8 @@ function decodeBase64ImageBytes(base64) {
   return bytes;
 }
 function getRequestUrlImplementation() {
-  const obsidianApi15 = getActiveWindowValue("obsidian");
-  const requestUrl = obsidianApi15 && typeof obsidianApi15.requestUrl === "function" ? obsidianApi15.requestUrl : null;
+  const obsidianApi2 = getActiveWindowValue("obsidian");
+  const requestUrl = obsidianApi2 && typeof obsidianApi2.requestUrl === "function" ? obsidianApi2.requestUrl : null;
   if (typeof requestUrl !== "function")
     return null;
   return (options) => Promise.resolve(requestUrl(options));
@@ -71791,8 +71669,8 @@ async function syncNoteToFeishu({
       onProgress(stage, msg);
     }
   };
-  const obsidianApi15 = getActiveWindowValue("obsidian");
-  const requestUrlImpl = requestUrl || (obsidianApi15 && typeof obsidianApi15.requestUrl === "function" ? obsidianApi15.requestUrl : null);
+  const obsidianApi2 = getActiveWindowValue("obsidian");
+  const requestUrlImpl = requestUrl || (obsidianApi2 && typeof obsidianApi2.requestUrl === "function" ? obsidianApi2.requestUrl : null);
   let title = parseYamlTitle(markdown);
   if (!title)
     title = activeFile.basename;
@@ -72043,10 +71921,10 @@ async function syncNoteToFeishu({
 }
 
 // views/publish-modal/feishu.js
-function showFeishuNotice(Notice15, message, duration) {
-  if (typeof Notice15 !== "function")
+function showFeishuNotice(Notice2, message, duration) {
+  if (typeof Notice2 !== "function")
     return null;
-  return new Notice15(message, duration);
+  return new Notice2(message, duration);
 }
 function updateFeishuNotice(notice, message) {
   if (notice && typeof notice.setMessage === "function") {
@@ -72104,8 +71982,8 @@ function bindTransientScrollbar(scrollEl) {
 }
 function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
   const obsidian = options.obsidianApi || view.plugin.obsidianApi || getActiveWindowValue("obsidian") || {};
-  const Setting15 = obsidian.Setting;
-  const Notice15 = obsidian.Notice;
+  const Setting2 = obsidian.Setting;
+  const Notice2 = obsidian.Notice;
   const { plugin } = view;
   const settings = plugin.settings.feishuSync;
   containerEl.empty();
@@ -72167,7 +72045,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
   });
   const settingsSection = contentWrapper.createDiv({ cls: "wechat-modal-section wechat-feishu-section wechat-feishu-card-section" });
   let docTitle = activeFile.basename;
-  const titleSetting = new Setting15(settingsSection).setName("\u6587\u6863\u6807\u9898").setDesc("\u53D1\u5E03\u81F3\u98DE\u4E66\u65F6\u7684\u6587\u6863\u6807\u9898\u3002\u9ED8\u8BA4\u4F7F\u7528\u7B14\u8BB0\u6587\u4EF6\u540D\uFF0C\u652F\u6301\u81EA\u5B9A\u4E49\u3002").addText(
+  const titleSetting = new Setting2(settingsSection).setName("\u6587\u6863\u6807\u9898").setDesc("\u53D1\u5E03\u81F3\u98DE\u4E66\u65F6\u7684\u6587\u6863\u6807\u9898\u3002\u9ED8\u8BA4\u4F7F\u7528\u7B14\u8BB0\u6587\u4EF6\u540D\uFF0C\u652F\u6301\u81EA\u5B9A\u4E49\u3002").addText(
     (text) => text.setPlaceholder("\u8BF7\u8F93\u5165\u6587\u6863\u6807\u9898").setValue(docTitle).onChange((val) => {
       docTitle = val.trim();
     })
@@ -72262,7 +72140,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
     if (!parsed) {
       rebindHint.setText("\u8BF7\u8F93\u5165\u6709\u6548\u7684\u98DE\u4E66 docx \u94FE\u63A5\u6216 token\u3002");
       rebindHint.addClass("is-error");
-      showFeishuNotice(Notice15, "\u274C \u98DE\u4E66\u6587\u6863\u94FE\u63A5\u65E0\u6548");
+      showFeishuNotice(Notice2, "\u274C \u98DE\u4E66\u6587\u6863\u94FE\u63A5\u65E0\u6548");
       return;
     }
     const rebound = rebindFeishuHistoryByPath(settings, activeFile.path, {
@@ -72274,11 +72152,11 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
     if (!rebound) {
       rebindHint.setText("\u7ED1\u5B9A\u5931\u8D25\uFF0C\u8BF7\u786E\u8BA4\u5F53\u524D\u7B14\u8BB0\u8DEF\u5F84\u548C\u98DE\u4E66\u94FE\u63A5\u3002");
       rebindHint.addClass("is-error");
-      showFeishuNotice(Notice15, "\u274C \u7ED1\u5B9A\u5931\u8D25");
+      showFeishuNotice(Notice2, "\u274C \u7ED1\u5B9A\u5931\u8D25");
       return;
     }
     await plugin.saveSettings();
-    showFeishuNotice(Notice15, "\u2705 \u5DF2\u91CD\u65B0\u7ED1\u5B9A\u5F53\u524D\u7B14\u8BB0\u7684\u98DE\u4E66\u6587\u6863");
+    showFeishuNotice(Notice2, "\u2705 \u5DF2\u91CD\u65B0\u7ED1\u5B9A\u5F53\u524D\u7B14\u8BB0\u7684\u98DE\u4E66\u6587\u6863");
     renderFeishuPublishTab(view, modal, containerEl, options);
   };
   const resultCard = contentWrapper.createDiv({ cls: "wechat-feishu-result-card" });
@@ -72293,7 +72171,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
     cancelBtn.disabled = true;
     resultCard.addClass("is-hidden");
     const progressNotice = showFeishuNotice(
-      Notice15,
+      Notice2,
       isUpdate ? "\u{1F680} \u6B63\u5728\u66F4\u65B0\u98DE\u4E66\u6587\u6863..." : "\u{1F680} \u6B63\u5728\u540C\u6B65\u5230\u98DE\u4E66\u6587\u6863...",
       0
     );
@@ -72356,10 +72234,10 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
       copyBtn.onclick = async () => {
         try {
           await navigator.clipboard.writeText(result.url);
-          showFeishuNotice(Notice15, "\u2705 \u94FE\u63A5\u5DF2\u590D\u5236\u5230\u526A\u8D34\u677F");
+          showFeishuNotice(Notice2, "\u2705 \u94FE\u63A5\u5DF2\u590D\u5236\u5230\u526A\u8D34\u677F");
         } catch (copyError) {
           console.warn("[\u98DE\u4E66\u540C\u6B65] \u590D\u5236\u94FE\u63A5\u5931\u8D25:", copyError);
-          showFeishuNotice(Notice15, "\u274C \u590D\u5236\u94FE\u63A5\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u6253\u5F00\u540E\u590D\u5236");
+          showFeishuNotice(Notice2, "\u274C \u590D\u5236\u94FE\u63A5\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u6253\u5F00\u540E\u590D\u5236");
         }
       };
       resultCard.removeClass("is-hidden");
@@ -72367,7 +72245,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
       cancelBtn.setText("\u5173\u95ED");
       syncBtn.setCssStyles({ display: "none" });
       showFeishuNotice(
-        Notice15,
+        Notice2,
         warnings.length ? "\u2705 \u98DE\u4E66\u6587\u6863\u5DF2\u540C\u6B65\uFF0C\u90E8\u5206\u4E8B\u9879\u9700\u8981\u786E\u8BA4" : "\u2705 \u98DE\u4E66\u6587\u6863\u540C\u6B65\u6210\u529F\uFF01",
         warnings.length ? 7e3 : void 0
       );
@@ -72377,7 +72255,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
       titleSetting.settingEl.removeClass("is-disabled");
       syncBtn.disabled = false;
       cancelBtn.disabled = false;
-      showFeishuNotice(Notice15, `\u274C \u540C\u6B65\u5931\u8D25: ${err.message || String(err)}`, 8e3);
+      showFeishuNotice(Notice2, `\u274C \u540C\u6B65\u5931\u8D25: ${err.message || String(err)}`, 8e3);
     }
   };
 }
@@ -72402,7 +72280,7 @@ var loadCommonJsDependency = (specifier) => {
   throw new Error(`CommonJS loader unavailable for ${specifier}`);
 };
 var obsidianApi = (
-  /** @type {Record<string, unknown>} */
+  /** @type {typeof import('obsidian')} */
   loadCommonJsDependency("obsidian")
 );
 var Plugin = obsidianApi.Plugin;
@@ -72420,7 +72298,10 @@ function createObsidianModal(app) {
   if (typeof ModalClass !== "function") {
     throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301 Modal");
   }
-  return new ModalClass(app);
+  return new ModalClass(
+    /** @type {import('obsidian').App} */
+    app
+  );
 }
 function getObsidianSetIcon() {
   return obsidianApi.setIcon;
@@ -73102,20 +72983,6 @@ function toRecord8(value) {
 function toOptionalText2(value) {
   return typeof value === "string" ? value : "";
 }
-function toOptionalNumber2(value) {
-  return typeof value === "number" && Number.isFinite(value) ? value : void 0;
-}
-function parseJsonRecord2(value) {
-  if (isRecord11(value))
-    return value;
-  if (typeof value !== "string" || !value.trim())
-    return {};
-  try {
-    return toRecord8(JSON.parse(value));
-  } catch (e) {
-    return {};
-  }
-}
 
 // services/ai-layout-records.js
 function toAiLayoutState(value) {
@@ -73142,86 +73009,8 @@ function toAiLayoutGenerationMeta(value) {
     value
   ) : null;
 }
-function toAiLayoutSelection(value) {
-  return isRecord11(value) ? (
-    /** @type {AiLayoutSelectionLike} */
-    value
-  ) : {};
-}
-function toAiLayoutFamilyStates(value) {
-  if (!isRecord11(value))
-    return {};
-  return (
-    /** @type {Record<string, AiLayoutStateLike>} */
-    value
-  );
-}
-
-// services/request-utils.js
-function normalizeRequestUrlResponse2(response) {
-  var _a5;
-  const record = toRecord8(response);
-  const status = (_a5 = toOptionalNumber2(record.status)) != null ? _a5 : 200;
-  const headers = (
-    /** @type {Record<string, string>} */
-    toRecord8(record.headers)
-  );
-  return {
-    status,
-    json: record.json,
-    text: toOptionalText2(record.text),
-    arrayBuffer: typeof record.arrayBuffer === "function" ? (
-      /** @type {() => Promise<ArrayBuffer>} */
-      record.arrayBuffer.bind(response)
-    ) : void 0,
-    headers
-  };
-}
-function getResponseJsonRecord2(response) {
-  return toRecord8(response.json);
-}
-function getProxyErrorMessage2(response) {
-  const body = isRecord11(response.json) ? response.json : parseJsonRecord2(response.text);
-  const bodyError = body.error;
-  if (typeof bodyError === "string" && bodyError)
-    return bodyError;
-  return response.text || `Request failed, status ${response.status}`;
-}
-function createProxyError2(message, isAuthFailure) {
-  const error = (
-    /** @type {Error & { isProxyAuth?: boolean, isFatal?: boolean }} */
-    new Error(message)
-  );
-  if (isAuthFailure) {
-    error.isProxyAuth = true;
-    error.isFatal = true;
-  }
-  return error;
-}
-
-// services/wechat-api-utils.js
-function formatWechatApiError2(data) {
-  var _a5;
-  const errmsg = typeof data.errmsg === "string" ? data.errmsg : JSON.stringify(data);
-  const errcode = (_a5 = data.errcode) != null ? _a5 : "N/A";
-  return `${errmsg} (${errcode})`;
-}
-function hasWechatUploadResult2(data) {
-  return typeof data.media_id === "string" || typeof data.url === "string";
-}
 
 // services/image-source-utils.js
-function readBlobAsBase64Payload2(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-      resolve(result.split(",")[1] || "");
-    };
-    reader.onerror = () => reject(reader.error || new Error("Failed to read file data"));
-    reader.readAsDataURL(blob);
-  });
-}
 function dataUrlToBlob(dataUrl) {
   const source = String(dataUrl || "");
   const match = source.match(/^data:([^;,]*)(;base64)?,([\s\S]*)$/i);
@@ -73296,7 +73085,10 @@ function getVaultAdapterBasePath(app) {
   const adapter = (_a5 = app == null ? void 0 : app.vault) == null ? void 0 : _a5.adapter;
   if (!adapter || typeof adapter !== "object")
     return "";
-  const basePath = adapter["basePath"];
+  const basePath = (
+    /** @type {{ basePath?: unknown }} */
+    adapter.basePath
+  );
   return typeof basePath === "string" ? basePath : "";
 }
 function normalizeAbsoluteLocalPath2(value) {
@@ -73464,10 +73256,10 @@ function createDefaultSettings() {
 function normalizeLoadedSettings(loadedData, options = {}) {
   const data = toRecord9(loadedData);
   const settings = Object.assign(createDefaultSettings(), data);
-  const generateId15 = typeof options.generateId === "function" ? options.generateId : generateFallbackId;
+  const generateId2 = typeof options.generateId === "function" ? options.generateId : generateFallbackId;
   let didMigrate = false;
   if (!settings.clientId) {
-    settings.clientId = `wp_dev_${generateId15()}`;
+    settings.clientId = `wp_dev_${generateId2()}`;
     didMigrate = true;
   }
   settings.multiPlatformSync = normalizeMultiPlatformSyncSettings(settings.multiPlatformSync);
@@ -73491,7 +73283,7 @@ function normalizeLoadedSettings(loadedData, options = {}) {
   }
   if (settings.wechatAppId && settings.wechatAccounts.length === 0) {
     const migratedAccount = {
-      id: generateId15(),
+      id: generateId2(),
       name: "\u6211\u7684\u516C\u4F17\u53F7",
       appId: String(settings.wechatAppId || ""),
       appSecret: String(settings.wechatAppSecret || "")
@@ -74110,7 +73902,10 @@ async function resolveCustomCssFromSettings(plugin) {
   }
   const notePath = (_a5 = plugin.settings.customCssNote) == null ? void 0 : _a5.trim();
   if (notePath && plugin.app && plugin.app.vault) {
-    const file = plugin.app.vault.getAbstractFileByPath(notePath);
+    const file = (
+      /** @type {(TFileLike & { extension?: string }) | null} */
+      plugin.app.vault.getAbstractFileByPath(notePath)
+    );
     if (file && file.extension === "md") {
       try {
         return await plugin.app.vault.read(file);
@@ -74123,174 +73918,12 @@ async function resolveCustomCssFromSettings(plugin) {
 }
 
 // views/converter/core.js
-var {
-  createRenderPipelines: createRenderPipelines2,
-  buildRenderRuntime: buildRenderRuntime2,
-  resolveMarkdownSource: resolveMarkdownSource2,
-  normalizeVaultPath: normalizeVaultPath2,
-  isAbsolutePathLike: isAbsolutePathLike2,
-  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown2,
-  renderMermaidCodeBlocks: renderMermaidCodeBlocks2,
-  canUseNativePreviewFastPath: canUseNativePreviewFastPath2,
-  renderNativeMarkdown: renderNativeMarkdown2,
-  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages2,
-  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION2,
-  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO2,
-  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS2,
-  createDefaultAiSettings: createDefaultAiSettings2,
-  normalizeAiSettings: normalizeAiSettings2,
-  normalizeAiProvider: normalizeAiProvider2,
-  getAiProviderIssues: getAiProviderIssues2,
-  isAiProviderRunnable: isAiProviderRunnable2,
-  summarizeAiProviderIssues: summarizeAiProviderIssues2,
-  getLayoutFamilyList: getLayoutFamilyList2,
-  getLayoutFamilyById: getLayoutFamilyById2,
-  getColorPaletteList: getColorPaletteList2,
-  getColorPaletteById: getColorPaletteById2,
-  resolveColorPaletteForRender: resolveColorPaletteForRender2,
-  normalizeHexColor: normalizeHexColor2,
-  normalizeLayoutSelection: normalizeLayoutSelection2,
-  getArticleLayoutSelectionState: getArticleLayoutSelectionState2,
-  resolveAiProvider: resolveAiProvider2,
-  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection2,
-  normalizeArticleLayoutState: normalizeArticleLayoutState2,
-  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry2,
-  extractImageRefsFromHtml: extractImageRefsFromHtml2,
-  extractRenderedSectionFragments: extractRenderedSectionFragments2,
-  generateArticleLayout: generateArticleLayout2,
-  renderArticleLayoutHtml: renderArticleLayoutHtml2,
-  testAiProviderConnection: testAiProviderConnection2,
-  createWechatSyncService: createWechatSyncService2,
-  createWechatSyncBridgeService: createWechatSyncBridgeService2,
-  isWechatSyncUnsupportedMethodError,
-  getMultiPlatformResultSummary: getMultiPlatformResultSummary2,
-  getWechatSyncResultError: getWechatSyncResultError2,
-  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId2,
-  getWechatSyncResultUrl: getWechatSyncResultUrl2,
-  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform2,
-  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay2,
-  resolveSyncAccount: resolveSyncAccount2,
-  toSyncFriendlyMessage: toSyncFriendlyMessage2,
-  createEmptyDraftCache: createEmptyDraftCache2,
-  normalizeDraftCache: normalizeDraftCache2,
-  getDraftAssociation: getDraftAssociation2,
-  setDraftAssociation: setDraftAssociation2,
-  clearDraftAssociation: clearDraftAssociation2,
-  processAllImagesService,
-  processMathFormulasService,
-  cleanHtmlForDraftService,
-  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob2,
-  createObsidianFetchAdapter: createObsidianFetchAdapter2,
-  stripMarkdownFrontmatter: stripMarkdownFrontmatter2,
-  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls2,
-  createHtmlContainer: createHtmlContainer2,
-  getActiveDocument: getActiveDocument2,
-  getActiveWindowValue: getActiveWindowValue2,
-  htmlToText: htmlToText2,
-  setElementHtml: setElementHtml2,
-  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings2,
-  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds2,
-  hasWechatSyncCapability: hasWechatSyncCapability2,
-  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings2,
-  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms2,
-  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt2,
-  describeWechatsyncConnectionState: describeWechatsyncConnectionState2,
-  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar2,
-  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab2,
-  showMultiPlatformPublishModal: showMultiPlatformPublishModal2,
-  renderFeishuSettingsTab: renderFeishuSettingsTab2,
-  renderFeishuPublishTab: renderFeishuPublishTab2,
-  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings2,
-  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings2,
-  updateFeishuHistoryPath: updateFeishuHistoryPath2,
-  WechatAPI: WechatAPI2,
-  loadCommonJsDependency: loadCommonJsDependency2,
-  obsidianApi: obsidianApi2,
-  Plugin: Plugin2,
-  MarkdownView: MarkdownView2,
-  ItemView: ItemView2,
-  Notice: Notice2,
-  Platform: Platform2,
-  PluginSettingTab: PluginSettingTab2,
-  Setting: Setting2,
-  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY3,
-  getActiveDocumentCompat: getActiveDocumentCompat2,
-  createFallbackSvgElement: createFallbackSvgElement2,
-  revealLeafCompat: revealLeafCompat2,
-  getPluginSettings: getPluginSettings2,
-  setPluginSettings: setPluginSettings2,
-  setDestructiveButtonCompat: setDestructiveButtonCompat2,
-  refreshSettingTabCompat: refreshSettingTabCompat2,
-  toReadableError: toReadableError5,
-  isRecord: isRecord13,
-  toRecord: toRecord10,
-  toAiLayoutState: toAiLayoutState2,
-  toAiLayoutJson: toAiLayoutJson2,
-  toAiLayoutBlock: toAiLayoutBlock2,
-  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta2,
-  toAiLayoutSelection: toAiLayoutSelection2,
-  toAiLayoutFamilyStates: toAiLayoutFamilyStates2,
-  toOptionalText: toOptionalText3,
-  toImageElements: toImageElements2,
-  removeElementClass: removeElementClass2,
-  toOptionalNumber: toOptionalNumber3,
-  parseJsonRecord: parseJsonRecord3,
-  normalizeRequestUrlResponse: normalizeRequestUrlResponse3,
-  getResponseJsonRecord: getResponseJsonRecord3,
-  getProxyErrorMessage: getProxyErrorMessage3,
-  createProxyError: createProxyError3,
-  formatWechatApiError: formatWechatApiError3,
-  hasWechatUploadResult: hasWechatUploadResult3,
-  readBlobAsBase64Payload: readBlobAsBase64Payload3,
-  dataUrlToBlob: dataUrlToBlob2,
-  bufferFromBinary: bufferFromBinary3,
-  inferLocalImageMimeType: inferLocalImageMimeType2,
-  safeDecodeUriText: safeDecodeUriText2,
-  getFileUrlLocalPath: getFileUrlLocalPath2,
-  getVaultAdapterBasePath: getVaultAdapterBasePath2,
-  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath3,
-  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath3,
-  getVaultDirnameFromPath: getVaultDirnameFromPath2,
-  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW2,
-  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE2,
-  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL2,
-  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL2,
-  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL3,
-  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL2,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL3,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL3,
-  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL2,
-  getObsidianModalClass: getObsidianModalClass2,
-  createObsidianModal: createObsidianModal2,
-  getObsidianSetIcon: getObsidianSetIcon2,
-  getObsidianRequestUrl: getObsidianRequestUrl2,
-  getObsidianRequest: getObsidianRequest2,
-  getAppleThemeApi: getAppleThemeApi2,
-  getValueElementFromEvent: getValueElementFromEvent2,
-  getEventTargetValue: getEventTargetValue2,
-  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY2,
-  getObsidianLocale: getObsidianLocale2,
-  isChineseObsidianLocale: isChineseObsidianLocale2,
-  getImageSwipeCommandCopy: getImageSwipeCommandCopy2,
-  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout2,
-  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown2,
-  DEFAULT_SETTINGS: DEFAULT_SETTINGS2,
-  MAX_ACCOUNTS: MAX_ACCOUNTS2,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS2,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS2,
-  getWechatAccountPublishOptions: getWechatAccountPublishOptions2,
-  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions2,
-  isMobileClient: isMobileClient4,
-  generateId: generateId2,
-  sleep: sleep3,
-  pMap: pMap2
-} = apple_style_view_shared_exports;
 var coreMethods = {
   getViewType() {
-    return APPLE_STYLE_VIEW2;
+    return APPLE_STYLE_VIEW;
   },
   getDisplayText() {
-    return APPLE_STYLE_VIEW_TITLE2;
+    return APPLE_STYLE_VIEW_TITLE;
   },
   getIcon() {
     return "wand";
@@ -74303,12 +73936,12 @@ var coreMethods = {
     );
     container.empty();
     container.addClass("apple-converter-container");
-    if (isMobileClient4(this.app)) {
+    if (isMobileClient3(this.app)) {
       container.addClass("apple-converter-mobile");
     }
     await this.loadDependencies();
     this.createSettingsPanel(container);
-    const usePhoneFrame = this.plugin.settings.usePhoneFrame && !isMobileClient4(this.app);
+    const usePhoneFrame = this.plugin.settings.usePhoneFrame && !isMobileClient3(this.app);
     const previewWrapper = container.createEl("div", {
       cls: `apple-preview-wrapper ${usePhoneFrame ? "mode-phone" : "mode-classic"}`
     });
@@ -74331,11 +73964,11 @@ var coreMethods = {
     }
     this.setPlaceholder();
     this.registerActiveFileChange();
-    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView2);
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (activeView)
       this.registerScrollSync(activeView);
     window.setTimeout(async () => {
-      const activeView2 = this.app.workspace.getActiveViewOfType(MarkdownView2);
+      const activeView2 = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (activeView2 && this.converter) {
         await this.convertCurrent(true);
       }
@@ -74344,7 +73977,7 @@ var coreMethods = {
   registerActiveFileChange() {
     this.registerEvent(
       this.app.workspace.on("active-leaf-change", async () => {
-        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView2);
+        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (activeView && activeView.file) {
           this.lastActiveFile = activeView.file;
           const nextSourcePath = activeView.file.path || "";
@@ -74371,7 +74004,7 @@ var coreMethods = {
     const debouncedConvert = debounce(async () => {
       if (!this.containerEl.offsetParent)
         return;
-      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView2);
+      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (activeView && activeView.file && this.lastActiveFile && activeView.file.path === this.lastActiveFile.path) {
         await this.convertCurrent(true, {
           sourceOverride: {
@@ -74392,7 +74025,7 @@ var coreMethods = {
     }
     this.activeLeafRenderTimer = window.setTimeout(() => {
       this.activeLeafRenderTimer = null;
-      const activeView = activeViewOverride || this.app.workspace.getActiveViewOfType(MarkdownView2);
+      const activeView = activeViewOverride || this.app.workspace.getActiveViewOfType(MarkdownView);
       const sourceOverride = activeView && activeView.file ? {
         markdown: activeView.editor.getValue(),
         sourcePath: activeView.file.path || ""
@@ -74431,7 +74064,7 @@ var coreMethods = {
       return;
     this.aiLayoutSourceSwitchPath = sourcePath;
     this.aiLayoutStaleSuppressPath = sourcePath;
-    this.aiLayoutStaleSuppressUntil = Date.now() + AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS2;
+    this.aiLayoutStaleSuppressUntil = Date.now() + AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS;
     if (this.aiLayoutStaleSuppressTimer) {
       window.clearTimeout(this.aiLayoutStaleSuppressTimer);
     }
@@ -74444,7 +74077,7 @@ var coreMethods = {
       if (this.shouldSyncAiLayoutUi()) {
         this.refreshAiLayoutPanel();
       }
-    }, AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS2 + 40);
+    }, AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS + 40);
   },
   completeAiLayoutSourceSwitch(sourcePath = "") {
     if (sourcePath && this.aiLayoutSourceSwitchPath === sourcePath) {
@@ -74583,7 +74216,7 @@ var coreMethods = {
     try {
       const runtime = (
         /** @type {{ theme: ThemeRuntimeLike, converter: ConverterRuntimeLike }} */
-        await buildRenderRuntime2({
+        await buildRenderRuntime({
           settings: this.plugin.settings,
           app: this.app,
           adapter,
@@ -74594,38 +74227,38 @@ var coreMethods = {
       this.converter = runtime.converter;
       const pipelines = (
         /** @type {{ nativePipeline: RenderPipelineLike }} */
-        createRenderPipelines2({
+        createRenderPipelines({
           candidateRenderer: async (markdown, context = {}) => {
             const renderContext = (
               /** @type {RenderCandidateContextLike} */
-              toRecord10(context)
+              toRecord8(context)
             );
-            const contextSettings = isRecord13(renderContext.settings) ? (
+            const contextSettings = isRecord11(renderContext.settings) ? (
               /** @type {PluginSettingsLike} */
               renderContext.settings
             ) : this.plugin.settings;
-            if (canUseNativePreviewFastPath2(markdown)) {
+            if (canUseNativePreviewFastPath(markdown)) {
               const nativeHtml = (
                 /** @type {unknown} */
-                await renderNativeMarkdown2({
+                await renderNativeMarkdown({
                   converter: this.converter,
                   markdown: String(markdown || ""),
-                  sourcePath: toOptionalText3(renderContext.sourcePath)
+                  sourcePath: toOptionalText2(renderContext.sourcePath)
                 })
               );
               return String(nativeHtml || "");
             }
             return (
               /** @type {Promise<string>} */
-              renderObsidianTripletMarkdown2({
+              renderObsidianTripletMarkdown({
                 app: this.app,
                 converter: this.converter,
                 markdown: String(markdown || ""),
-                sourcePath: toOptionalText3(renderContext.sourcePath),
+                sourcePath: toOptionalText2(renderContext.sourcePath),
                 settings: contextSettings,
                 component: this,
-                markdownRenderer: obsidianApi2.MarkdownRenderer,
-                mermaidCodeRenderer: renderMermaidCodeBlocks2,
+                markdownRenderer: obsidianApi.MarkdownRenderer,
+                mermaidCodeRenderer: renderMermaidCodeBlocks,
                 rasterizeMermaid: false,
                 preserveSvgStyleTags: true
               })
@@ -74637,7 +74270,7 @@ var coreMethods = {
       console.log("\u2705 \u4F9D\u8D56\u52A0\u8F7D\u5B8C\u6210");
     } catch (error) {
       console.error("\u274C \u4F9D\u8D56\u52A0\u8F7D\u5931\u8D25:", error);
-      new Notice2("\u4F9D\u8D56\u52A0\u8F7D\u5931\u8D25: " + toReadableError5(error).message);
+      new Notice("\u4F9D\u8D56\u52A0\u8F7D\u5931\u8D25: " + toReadableError4(error).message);
     }
   },
   async onThemeChange(value, grid) {
@@ -74745,7 +74378,7 @@ var coreMethods = {
     return inlineCustomCss(html, customCss);
   },
   updateCurrentDoc() {
-    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView2);
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (activeView && this.docTitleText) {
       this.docTitleText.setText(activeView.file.basename);
       this.docTitleText.setCssStyles({ color: "var(--apple-primary)" });
@@ -74785,7 +74418,7 @@ var coreMethods = {
       /** @type {ObsidianElementLike & HTMLImageElement} */
       iconDiv.createEl("img", { attr: { alt: "Obsidian \u53D1\u5E03\u52A9\u624B" } })
     );
-    img.src = PLACEHOLDER_ICON_DATA_URL2;
+    img.src = PLACEHOLDER_ICON_DATA_URL;
     img.setCssStyles({
       width: "64px",
       height: "64px",
@@ -74845,10 +74478,10 @@ var coreMethods = {
       sourcePath: typeof sourceOverride.sourcePath === "string" ? sourceOverride.sourcePath : ""
     } : (
       /** @type {MarkdownSourceResultLike} */
-      await resolveMarkdownSource2({
+      await resolveMarkdownSource({
         app: this.app,
         lastActiveFile: this.lastActiveFile,
-        MarkdownViewType: MarkdownView2
+        MarkdownViewType: MarkdownView
       })
     );
     let markdown = "";
@@ -74861,7 +74494,7 @@ var coreMethods = {
       sourcePath = this.lastResolvedSourcePath || "";
     } else {
       if (!silent)
-        new Notice2("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A Markdown \u6587\u4EF6");
+        new Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A Markdown \u6587\u4EF6");
       if (showLoading && this.loadingGeneration === generation) {
         if (this.loadingVisibilityTimer) {
           window.clearTimeout(this.loadingVisibilityTimer);
@@ -74873,7 +74506,7 @@ var coreMethods = {
     }
     if (!markdown.trim()) {
       if (!silent)
-        new Notice2("\u5F53\u524D\u6587\u4EF6\u5185\u5BB9\u4E3A\u7A7A");
+        new Notice("\u5F53\u524D\u6587\u4EF6\u5185\u5BB9\u4E3A\u7A7A");
       this.completeAiLayoutSourceSwitch(sourcePath);
       if (showLoading && this.loadingGeneration === generation) {
         if (this.loadingVisibilityTimer) {
@@ -74886,7 +74519,7 @@ var coreMethods = {
     }
     try {
       if (!silent)
-        new Notice2("\u26A1 \u6B63\u5728\u8F6C\u6362...");
+        new Notice("\u26A1 \u6B63\u5728\u8F6C\u6362...");
       const html = await this.renderMarkdownForPreview(markdown, sourcePath);
       if (generation !== this.renderGeneration)
         return;
@@ -74900,7 +74533,7 @@ var coreMethods = {
       this.lastRenderFailureNoticeKey = "";
       this.sessionCoverBase64 = null;
       const scrollTop = this.previewContainer.scrollTop;
-      setElementHtml2(this.previewContainer, html);
+      setElementHtml(this.previewContainer, html);
       this.previewContainer.scrollTop = scrollTop;
       this.previewContainer.addClass("apple-has-content");
       this.syncPreviewPresentationMode();
@@ -74921,7 +74554,7 @@ var coreMethods = {
         this.refreshAiLayoutPanel();
       }
       if (!silent)
-        new Notice2("\u2705 \u8F6C\u6362\u6210\u529F\uFF01");
+        new Notice("\u2705 \u8F6C\u6362\u6210\u529F\uFF01");
     } catch (error) {
       console.error("\u8F6C\u6362\u5931\u8D25:", error);
       if (generation !== this.renderGeneration)
@@ -74931,7 +74564,7 @@ var coreMethods = {
       this.aiPreviewApplied = false;
       this.completeAiLayoutSourceSwitch(sourcePath);
       this.syncPreviewPresentationMode();
-      this.lastRenderError = toReadableError5(error).message || "\u672A\u77E5\u6E32\u67D3\u9519\u8BEF";
+      this.lastRenderError = toReadableError4(error).message || "\u672A\u77E5\u6E32\u67D3\u9519\u8BEF";
       this.showRenderFailurePlaceholder(this.lastRenderError);
       this.updateCurrentDoc();
       if (this.shouldSyncAiLayoutUi()) {
@@ -74939,7 +74572,7 @@ var coreMethods = {
       }
       const noticeKey = `${sourcePath || ""}:${this.lastRenderError}`;
       if (!silent || this.lastRenderFailureNoticeKey !== noticeKey) {
-        new Notice2("\u274C \u8F6C\u6362\u5931\u8D25: " + this.lastRenderError);
+        new Notice("\u274C \u8F6C\u6362\u5931\u8D25: " + this.lastRenderError);
         this.lastRenderFailureNoticeKey = noticeKey;
       }
     } finally {
@@ -75025,174 +74658,13 @@ var coreMethods = {
 };
 
 // views/converter/style-panel.js
-var {
-  createRenderPipelines: createRenderPipelines3,
-  buildRenderRuntime: buildRenderRuntime3,
-  resolveMarkdownSource: resolveMarkdownSource3,
-  normalizeVaultPath: normalizeVaultPath3,
-  isAbsolutePathLike: isAbsolutePathLike3,
-  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown3,
-  canUseNativePreviewFastPath: canUseNativePreviewFastPath3,
-  renderNativeMarkdown: renderNativeMarkdown3,
-  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages3,
-  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION3,
-  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO3,
-  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS3,
-  createDefaultAiSettings: createDefaultAiSettings3,
-  normalizeAiSettings: normalizeAiSettings3,
-  normalizeAiProvider: normalizeAiProvider3,
-  getAiProviderIssues: getAiProviderIssues3,
-  isAiProviderRunnable: isAiProviderRunnable3,
-  summarizeAiProviderIssues: summarizeAiProviderIssues3,
-  getLayoutFamilyList: getLayoutFamilyList3,
-  getLayoutFamilyById: getLayoutFamilyById3,
-  getColorPaletteList: getColorPaletteList3,
-  getColorPaletteById: getColorPaletteById3,
-  resolveColorPaletteForRender: resolveColorPaletteForRender3,
-  normalizeHexColor: normalizeHexColor3,
-  normalizeLayoutSelection: normalizeLayoutSelection3,
-  getArticleLayoutSelectionState: getArticleLayoutSelectionState3,
-  resolveAiProvider: resolveAiProvider3,
-  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection3,
-  normalizeArticleLayoutState: normalizeArticleLayoutState3,
-  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry3,
-  extractImageRefsFromHtml: extractImageRefsFromHtml3,
-  extractRenderedSectionFragments: extractRenderedSectionFragments3,
-  generateArticleLayout: generateArticleLayout3,
-  renderArticleLayoutHtml: renderArticleLayoutHtml3,
-  testAiProviderConnection: testAiProviderConnection3,
-  createWechatSyncService: createWechatSyncService3,
-  createWechatSyncBridgeService: createWechatSyncBridgeService3,
-  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError2,
-  getMultiPlatformResultSummary: getMultiPlatformResultSummary3,
-  getWechatSyncResultError: getWechatSyncResultError3,
-  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId3,
-  getWechatSyncResultUrl: getWechatSyncResultUrl3,
-  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform3,
-  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay3,
-  resolveSyncAccount: resolveSyncAccount3,
-  toSyncFriendlyMessage: toSyncFriendlyMessage3,
-  createEmptyDraftCache: createEmptyDraftCache3,
-  normalizeDraftCache: normalizeDraftCache3,
-  getDraftAssociation: getDraftAssociation3,
-  setDraftAssociation: setDraftAssociation3,
-  clearDraftAssociation: clearDraftAssociation3,
-  processAllImagesService: processAllImagesService2,
-  processMathFormulasService: processMathFormulasService2,
-  cleanHtmlForDraftService: cleanHtmlForDraftService2,
-  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob3,
-  createObsidianFetchAdapter: createObsidianFetchAdapter3,
-  stripMarkdownFrontmatter: stripMarkdownFrontmatter3,
-  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls3,
-  createHtmlContainer: createHtmlContainer3,
-  getActiveDocument: getActiveDocument3,
-  getActiveWindowValue: getActiveWindowValue3,
-  htmlToText: htmlToText3,
-  setElementHtml: setElementHtml3,
-  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings3,
-  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds3,
-  hasWechatSyncCapability: hasWechatSyncCapability3,
-  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings3,
-  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms3,
-  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt3,
-  describeWechatsyncConnectionState: describeWechatsyncConnectionState3,
-  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar3,
-  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab3,
-  showMultiPlatformPublishModal: showMultiPlatformPublishModal3,
-  renderFeishuSettingsTab: renderFeishuSettingsTab3,
-  renderFeishuPublishTab: renderFeishuPublishTab3,
-  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings3,
-  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings3,
-  updateFeishuHistoryPath: updateFeishuHistoryPath3,
-  WechatAPI: WechatAPI3,
-  loadCommonJsDependency: loadCommonJsDependency3,
-  obsidianApi: obsidianApi3,
-  Plugin: Plugin3,
-  MarkdownView: MarkdownView3,
-  ItemView: ItemView3,
-  Notice: Notice3,
-  Platform: Platform3,
-  PluginSettingTab: PluginSettingTab3,
-  Setting: Setting3,
-  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY4,
-  getActiveDocumentCompat: getActiveDocumentCompat3,
-  createFallbackSvgElement: createFallbackSvgElement3,
-  revealLeafCompat: revealLeafCompat3,
-  getPluginSettings: getPluginSettings3,
-  setPluginSettings: setPluginSettings3,
-  setDestructiveButtonCompat: setDestructiveButtonCompat3,
-  refreshSettingTabCompat: refreshSettingTabCompat3,
-  toReadableError: toReadableError6,
-  isRecord: isRecord14,
-  toRecord: toRecord11,
-  toAiLayoutState: toAiLayoutState3,
-  toAiLayoutJson: toAiLayoutJson3,
-  toAiLayoutBlock: toAiLayoutBlock3,
-  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta3,
-  toAiLayoutSelection: toAiLayoutSelection3,
-  toAiLayoutFamilyStates: toAiLayoutFamilyStates3,
-  toOptionalText: toOptionalText4,
-  toImageElements: toImageElements3,
-  removeElementClass: removeElementClass3,
-  toOptionalNumber: toOptionalNumber4,
-  parseJsonRecord: parseJsonRecord4,
-  normalizeRequestUrlResponse: normalizeRequestUrlResponse4,
-  getResponseJsonRecord: getResponseJsonRecord4,
-  getProxyErrorMessage: getProxyErrorMessage4,
-  createProxyError: createProxyError4,
-  formatWechatApiError: formatWechatApiError4,
-  hasWechatUploadResult: hasWechatUploadResult4,
-  readBlobAsBase64Payload: readBlobAsBase64Payload4,
-  dataUrlToBlob: dataUrlToBlob3,
-  bufferFromBinary: bufferFromBinary4,
-  inferLocalImageMimeType: inferLocalImageMimeType3,
-  safeDecodeUriText: safeDecodeUriText3,
-  getFileUrlLocalPath: getFileUrlLocalPath3,
-  getVaultAdapterBasePath: getVaultAdapterBasePath3,
-  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath4,
-  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath4,
-  getVaultDirnameFromPath: getVaultDirnameFromPath3,
-  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW3,
-  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE3,
-  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL3,
-  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL3,
-  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL4,
-  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL3,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL4,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL4,
-  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL3,
-  getObsidianModalClass: getObsidianModalClass3,
-  createObsidianModal: createObsidianModal3,
-  getObsidianSetIcon: getObsidianSetIcon3,
-  getObsidianRequestUrl: getObsidianRequestUrl3,
-  getObsidianRequest: getObsidianRequest3,
-  getAppleThemeApi: getAppleThemeApi3,
-  getValueElementFromEvent: getValueElementFromEvent3,
-  getEventTargetValue: getEventTargetValue3,
-  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY3,
-  getObsidianLocale: getObsidianLocale3,
-  isChineseObsidianLocale: isChineseObsidianLocale3,
-  getImageSwipeCommandCopy: getImageSwipeCommandCopy3,
-  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout3,
-  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown3,
-  DEFAULT_SETTINGS: DEFAULT_SETTINGS3,
-  MAX_ACCOUNTS: MAX_ACCOUNTS3,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS3,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS3,
-  getWechatAccountPublishOptions: getWechatAccountPublishOptions3,
-  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions3,
-  isMobileClient: isMobileClient5,
-  generateId: generateId3,
-  sleep: sleep4,
-  pMap: pMap3
-} = apple_style_view_shared_exports;
 var stylePanelMethods = {
   createSettingsPanel(container) {
     const toolbar = container.createEl("div", { cls: "apple-top-toolbar" });
     this.currentDocLabel = toolbar.createEl("div", { cls: "apple-toolbar-title" });
-    if (!isMobileClient5(this.app)) {
+    if (!isMobileClient3(this.app)) {
       const pluginLine = this.currentDocLabel.createDiv({ cls: "apple-toolbar-plugin-line" });
-      pluginLine.createEl("span", { text: APPLE_STYLE_VIEW_TITLE3, cls: "apple-toolbar-plugin-name" });
+      pluginLine.createEl("span", { text: APPLE_STYLE_VIEW_TITLE, cls: "apple-toolbar-plugin-name" });
       pluginLine.createEl("span", { text: "\u516C\u4F17\u53F7\u9884\u89C8", cls: "apple-toolbar-preview-badge" });
     }
     this.docTitleText = this.currentDocLabel.createDiv({ text: "\u672A\u9009\u62E9\u6587\u6863", cls: "apple-toolbar-doc-name" });
@@ -75203,7 +74675,7 @@ var stylePanelMethods = {
         attr: { "aria-label": title }
         // Tooltip
       });
-      const setIcon = getObsidianSetIcon3();
+      const setIcon = getObsidianSetIcon();
       if (typeof setIcon === "function") {
         setIcon(btn, icon);
       }
@@ -75217,7 +74689,7 @@ var stylePanelMethods = {
     settingsButton.setAttribute("title", "\u516C\u4F17\u53F7\u6392\u7248\u6837\u5F0F\u8BBE\u7F6E");
     this.settingsBtn = settingsButton;
     this.aiLayoutBtn = createIconBtn("sparkles", "AI \u7F16\u6392", () => this.onAiLayoutButtonClick());
-    if (!isMobileClient5(this.app)) {
+    if (!isMobileClient3(this.app)) {
       this.copyBtn = createIconBtn("copy", "\u590D\u5236\u5230\u516C\u4F17\u53F7", () => this.copyHTML());
     } else {
       this.copyBtn = null;
@@ -75228,7 +74700,7 @@ var stylePanelMethods = {
     this.settingsArea = settingsArea;
     this.createSection(settingsArea, "\u4E3B\u9898", (section) => {
       const grid = section.createEl("div", { cls: "apple-btn-grid" });
-      const themes = getAppleThemeApi3().getThemeList();
+      const themes = getAppleThemeApi().getThemeList();
       themes.forEach((t) => {
         const btn = grid.createEl("button", {
           cls: `apple-btn-theme ${this.plugin.settings.theme === t.value ? "active" : ""}`,
@@ -75256,7 +74728,7 @@ var stylePanelMethods = {
         if (this.plugin.settings.fontFamily === opt.value)
           option.selected = true;
       });
-      select.addEventListener("change", (e) => this.onFontFamilyChange(getEventTargetValue3(e, this.plugin.settings.fontFamily)));
+      select.addEventListener("change", (e) => this.onFontFamilyChange(getEventTargetValue(e, this.plugin.settings.fontFamily)));
     });
     this.createSection(settingsArea, "\u5B57\u53F7", (section) => {
       const grid = section.createEl("div", { cls: "apple-btn-row" });
@@ -75278,7 +74750,7 @@ var stylePanelMethods = {
     });
     this.createSection(settingsArea, "\u4E3B\u9898\u8272", (section) => {
       const grid = section.createEl("div", { cls: "apple-color-grid" });
-      const colors = getAppleThemeApi3().getColorList();
+      const colors = getAppleThemeApi().getColorList();
       colors.forEach((c) => {
         const btn = grid.createEl("button", {
           cls: `apple-btn-color ${this.plugin.settings.themeColor === c.value ? "active" : ""}`
@@ -75311,10 +74783,10 @@ var stylePanelMethods = {
         colorInput.click();
       });
       colorInput.addEventListener("input", (e) => {
-        customBtn.style.setProperty("--btn-color", getEventTargetValue3(e, this.plugin.settings.customColor));
+        customBtn.style.setProperty("--btn-color", getEventTargetValue(e, this.plugin.settings.customColor));
       });
       colorInput.addEventListener("change", async (e) => {
-        const newColor = getEventTargetValue3(e, this.plugin.settings.customColor);
+        const newColor = getEventTargetValue(e, this.plugin.settings.customColor);
         customBtn.style.setProperty("--btn-color", newColor);
         this.plugin.settings.customColor = newColor;
         this.theme.update({ customColor: newColor });
@@ -75322,7 +74794,7 @@ var stylePanelMethods = {
       });
     });
     this.createSection(settingsArea, "\u9875\u9762\u4E24\u4FA7\u7559\u767D", (section) => {
-      const mobile = isMobileClient5(this.app);
+      const mobile = isMobileClient3(this.app);
       const container2 = section.createEl("div", {
         cls: "apple-slider-container",
         style: "width: 100%; display: flex; align-items: center; gap: 10px;"
@@ -75342,7 +74814,7 @@ var stylePanelMethods = {
         style: "font-size: 12px; color: var(--apple-secondary); min-width: 32px; text-align: right;"
       });
       slider.addEventListener("input", (e) => {
-        const val = parseInt(getEventTargetValue3(e, String(this.plugin.settings.sidePadding)), 10);
+        const val = parseInt(getEventTargetValue(e, String(this.plugin.settings.sidePadding)), 10);
         valueLabel.setText(`${val}px`);
         this.plugin.settings.sidePadding = val;
         this.theme.update({ sidePadding: val });
@@ -75354,7 +74826,7 @@ var stylePanelMethods = {
         this.scheduleSidePaddingPreview(mobile ? 220 : 120);
       });
       slider.addEventListener("change", async (e) => {
-        const val = parseInt(getEventTargetValue3(e, String(this.plugin.settings.sidePadding)), 10);
+        const val = parseInt(getEventTargetValue(e, String(this.plugin.settings.sidePadding)), 10);
         valueLabel.setText(`${val}px`);
         this.plugin.settings.sidePadding = val;
         this.theme.update({ sidePadding: val });
@@ -75407,7 +74879,7 @@ var stylePanelMethods = {
           this.updateSpacingSummary();
         };
         slider.addEventListener("input", (e) => {
-          const val = Number(getEventTargetValue3(e, String(getEffective())));
+          const val = Number(getEventTargetValue(e, String(getEffective())));
           applyValue(val);
           if (this.saveTimeout)
             window.clearTimeout(this.saveTimeout);
@@ -75417,7 +74889,7 @@ var stylePanelMethods = {
           this.scheduleSidePaddingPreview(120);
         });
         slider.addEventListener("change", async (e) => {
-          const val = Number(getEventTargetValue3(e, String(getEffective())));
+          const val = Number(getEventTargetValue(e, String(getEffective())));
           applyValue(val);
           if (this.sidePaddingPreviewTimer) {
             window.clearTimeout(this.sidePaddingPreviewTimer);
@@ -75456,7 +74928,7 @@ var stylePanelMethods = {
         if (this.plugin.settings.quoteCalloutStyleMode === opt.value)
           option.selected = true;
       });
-      select.addEventListener("change", (e) => this.onQuoteCalloutStyleModeChange(getEventTargetValue3(e, this.plugin.settings.quoteCalloutStyleMode)));
+      select.addEventListener("change", (e) => this.onQuoteCalloutStyleModeChange(getEventTargetValue(e, this.plugin.settings.quoteCalloutStyleMode)));
       section.createEl("span", {
         text: "\u4E2D\u6027\u7070\u66F4\u9002\u5408\u957F\u6587\u9605\u8BFB\uFF1B\u7ECF\u5178\u4E3B\u9898\u8272\u517C\u5BB9\u73B0\u6709\u98CE\u683C\u3002",
         attr: {
@@ -75561,8 +75033,8 @@ var stylePanelMethods = {
     });
     captionSection.classList.add("apple-settings-inline-toggle");
     this.createSection(advancedArea, "\u6A2A\u6ED1\u56FE\u7247\u5757", (section) => {
-      const imageBlockCommand = getImageSwipeCommandCopy3(this.app, "image-swipe").name;
-      const sensitiveImageBlockCommand = getImageSwipeCommandCopy3(this.app, "image-sensitive").name;
+      const imageBlockCommand = getImageSwipeCommandCopy(this.app, "image-swipe").name;
+      const sensitiveImageBlockCommand = getImageSwipeCommandCopy(this.app, "image-sensitive").name;
       section.createEl("span", {
         text: `\u9009\u4E2D\u591A\u5F20\u56FE\u7247\uFF0C\u6253\u5F00\u547D\u4EE4\u9762\u677F\uFF0C\u8FD0\u884C\u300C${imageBlockCommand}\u300D\u6216\u300C${sensitiveImageBlockCommand}\u300D\u3002`,
         attr: {
@@ -75617,13 +75089,13 @@ var stylePanelMethods = {
     }
     this.selectedAccountId = defaultId;
     select.addEventListener("change", (event) => {
-      this.selectedAccountId = getEventTargetValue3(event, defaultId);
+      this.selectedAccountId = getEventTargetValue(event, defaultId);
     });
   },
   getFirstImageFromArticle() {
     if (!this.currentHtml)
       return null;
-    const tempDiv = createHtmlContainer3("div", this.currentHtml);
+    const tempDiv = createHtmlContainer("div", this.currentHtml);
     const imgs = Array.from(tempDiv.querySelectorAll("img"));
     for (const img of imgs) {
       if (img.alt === "logo")
@@ -75657,7 +75129,7 @@ var stylePanelMethods = {
     return { excerpt, cover, cover_dir, coverSrc, title };
   },
   getFrontmatterString(frontmatter, keys) {
-    const frontmatterRecord = toRecord11(frontmatter);
+    const frontmatterRecord = toRecord8(frontmatter);
     if (!frontmatterRecord)
       return "";
     if (!Array.isArray(keys) || keys.length === 0)
@@ -75681,7 +75153,7 @@ var stylePanelMethods = {
   },
   getFrontmatterKeyMap(frontmatter, keys) {
     const result = {};
-    const frontmatterRecord = toRecord11(frontmatter);
+    const frontmatterRecord = toRecord8(frontmatter);
     if (!frontmatterRecord)
       return result;
     if (!Array.isArray(keys) || keys.length === 0)
@@ -75699,6 +75171,7 @@ var stylePanelMethods = {
     }
     return result;
   },
+  /** @param {string} filePath @param {string} dirPath @returns {boolean} */
   isPathInsideDirectory(filePath, dirPath) {
     const file = this.normalizeVaultPath(filePath);
     const dir = this.normalizeVaultPath(dirPath);
@@ -75708,6 +75181,7 @@ var stylePanelMethods = {
       return true;
     return file.startsWith(`${dir}/`);
   },
+  /** @param {string} filePath @param {string} dirPath @returns {boolean} */
   isPathInsideDirectoryByTail(filePath, dirPath) {
     const file = this.normalizeVaultPath(filePath);
     const dir = this.normalizeVaultPath(dirPath);
@@ -75724,6 +75198,7 @@ var stylePanelMethods = {
     }
     return false;
   },
+  /** @param {string} pathValue @param {string} cleanedDir @returns {boolean} */
   shouldClearFrontmatterPathAfterCleanup(pathValue, cleanedDir) {
     const normalized = this.normalizeVaultPath(pathValue);
     if (!normalized)
@@ -75733,7 +75208,7 @@ var stylePanelMethods = {
     return this.isPathInsideDirectoryByTail(normalized, cleanedDir);
   },
   clearInvalidPublishMetaInFrontmatter(frontmatter, cleanedDir) {
-    const frontmatterRecord = toRecord11(frontmatter);
+    const frontmatterRecord = toRecord8(frontmatter);
     if (!frontmatterRecord)
       return false;
     let changed = false;
@@ -75753,6 +75228,7 @@ var stylePanelMethods = {
     }
     return changed;
   },
+  /** @param {TFileLike} activeFile @param {string} cleanedDir @returns {Promise<boolean>} */
   async clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir) {
     var _a5;
     const vault = (_a5 = this.app) == null ? void 0 : _a5.vault;
@@ -75779,6 +75255,7 @@ var stylePanelMethods = {
     await vault.modify(activeFile, `${match[1]}${body}${match[3]}${source.slice(match[0].length)}`);
     return true;
   },
+  /** @param {TFileLike | null | undefined} activeFile @param {string} cleanedDirPath @returns {Promise<string | null>} */
   async clearInvalidPublishMetaAfterCleanup(activeFile, cleanedDirPath) {
     var _a5, _b;
     if (!activeFile || !cleanedDirPath)
@@ -75790,16 +75267,17 @@ var stylePanelMethods = {
       const processFrontMatter = (_b = (_a5 = this.app) == null ? void 0 : _a5.fileManager) == null ? void 0 : _b["processFrontMatter"];
       if (typeof processFrontMatter === "function") {
         await processFrontMatter.call(this.app.fileManager, activeFile, (frontmatter) => {
-          this.clearInvalidPublishMetaInFrontmatter(toRecord11(frontmatter), cleanedDir);
+          this.clearInvalidPublishMetaInFrontmatter(toRecord8(frontmatter), cleanedDir);
         });
       } else {
         await this.clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir);
       }
     } catch (error) {
-      return `\u8D44\u6E90\u5DF2\u5220\u9664\uFF0C\u4F46\u6E05\u7406 frontmatter \u4E2D\u5931\u6548\u7684 cover/cover_dir \u5931\u8D25: ${toReadableError6(error).message}`;
+      return `\u8D44\u6E90\u5DF2\u5220\u9664\uFF0C\u4F46\u6E05\u7406 frontmatter \u4E2D\u5931\u6548\u7684 cover/cover_dir \u5931\u8D25: ${toReadableError4(error).message}`;
     }
     return null;
   },
+  /** @param {unknown} vaultPath @returns {string | null} */
   resolveVaultPathToResourceSrc(vaultPath) {
     if (typeof vaultPath !== "string")
       return null;
@@ -75817,19 +75295,23 @@ var stylePanelMethods = {
       return null;
     }
   },
+  /** @param {unknown} vaultPath @returns {string} */
   normalizeVaultPath(vaultPath) {
-    return normalizeVaultPath3(vaultPath);
+    return normalizeVaultPath(vaultPath);
   },
+  /** @returns {string} */
   getVaultConfigDir() {
     var _a5, _b;
     const configDir = (_b = (_a5 = this.app) == null ? void 0 : _a5.vault) == null ? void 0 : _b.configDir;
     return typeof configDir === "string" ? this.normalizeVaultPath(configDir) : "";
   },
+  /** @returns {string} */
   getCleanupDirTemplate() {
     var _a5, _b;
     const raw = typeof ((_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.cleanupDirTemplate) === "string" ? this.plugin.settings.cleanupDirTemplate : "";
     return this.normalizeVaultPath(raw);
   },
+  /** @param {TFileLike | null | undefined} activeFile @returns {{ path: string, warning?: string }} */
   resolveCleanupDirPath(activeFile) {
     const template = this.getCleanupDirTemplate();
     if (!template) {
@@ -75847,6 +75329,7 @@ var stylePanelMethods = {
     }
     return { path: normalized };
   },
+  /** @param {string} vaultPath @returns {boolean} */
   isSafeCleanupDirPath(vaultPath) {
     const normalized = this.normalizeVaultPath(vaultPath);
     if (!normalized)
@@ -75890,7 +75373,7 @@ var stylePanelMethods = {
         throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301\u5220\u9664\u63A5\u53E3");
       }
     } catch (error) {
-      return { attempted: true, success: false, warning: `\u5220\u9664\u5931\u8D25 (${normalized}): ${toReadableError6(error).message}` };
+      return { attempted: true, success: false, warning: `\u5220\u9664\u5931\u8D25 (${normalized}): ${toReadableError4(error).message}` };
     }
     const frontmatterWarning = await this.clearInvalidPublishMetaAfterCleanup(activeFile, normalized);
     if (frontmatterWarning) {
@@ -76057,175 +75540,14 @@ var stylePanelMethods = {
     overlay.__appleScrollGuardAttached = true;
   },
   closeTransientPanels() {
-    removeElementClass3(this.settingsOverlay, "visible");
-    removeElementClass3(this.aiLayoutOverlay, "visible");
-    removeElementClass3(this.settingsBtn, "active");
-    removeElementClass3(this.aiLayoutBtn, "active");
+    removeElementClass(this.settingsOverlay, "visible");
+    removeElementClass(this.aiLayoutOverlay, "visible");
+    removeElementClass(this.settingsBtn, "active");
+    removeElementClass(this.aiLayoutBtn, "active");
   }
 };
 
 // views/converter/ai-layout-panel.js
-var {
-  createRenderPipelines: createRenderPipelines4,
-  buildRenderRuntime: buildRenderRuntime4,
-  resolveMarkdownSource: resolveMarkdownSource4,
-  normalizeVaultPath: normalizeVaultPath4,
-  isAbsolutePathLike: isAbsolutePathLike4,
-  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown4,
-  canUseNativePreviewFastPath: canUseNativePreviewFastPath4,
-  renderNativeMarkdown: renderNativeMarkdown4,
-  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages4,
-  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION4,
-  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO4,
-  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS4,
-  createDefaultAiSettings: createDefaultAiSettings4,
-  normalizeAiSettings: normalizeAiSettings4,
-  normalizeAiProvider: normalizeAiProvider4,
-  getAiProviderIssues: getAiProviderIssues4,
-  isAiProviderRunnable: isAiProviderRunnable4,
-  summarizeAiProviderIssues: summarizeAiProviderIssues4,
-  getLayoutFamilyList: getLayoutFamilyList4,
-  getLayoutFamilyById: getLayoutFamilyById4,
-  getColorPaletteList: getColorPaletteList4,
-  getColorPaletteById: getColorPaletteById4,
-  resolveColorPaletteForRender: resolveColorPaletteForRender4,
-  normalizeHexColor: normalizeHexColor4,
-  normalizeLayoutSelection: normalizeLayoutSelection4,
-  getArticleLayoutSelectionState: getArticleLayoutSelectionState4,
-  resolveAiProvider: resolveAiProvider4,
-  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection4,
-  normalizeArticleLayoutState: normalizeArticleLayoutState4,
-  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry4,
-  extractImageRefsFromHtml: extractImageRefsFromHtml4,
-  extractRenderedSectionFragments: extractRenderedSectionFragments4,
-  generateArticleLayout: generateArticleLayout4,
-  renderArticleLayoutHtml: renderArticleLayoutHtml4,
-  testAiProviderConnection: testAiProviderConnection4,
-  createWechatSyncService: createWechatSyncService4,
-  createWechatSyncBridgeService: createWechatSyncBridgeService4,
-  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError3,
-  getMultiPlatformResultSummary: getMultiPlatformResultSummary4,
-  getWechatSyncResultError: getWechatSyncResultError4,
-  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId4,
-  getWechatSyncResultUrl: getWechatSyncResultUrl4,
-  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform4,
-  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay4,
-  resolveSyncAccount: resolveSyncAccount4,
-  toSyncFriendlyMessage: toSyncFriendlyMessage4,
-  createEmptyDraftCache: createEmptyDraftCache4,
-  normalizeDraftCache: normalizeDraftCache4,
-  getDraftAssociation: getDraftAssociation4,
-  setDraftAssociation: setDraftAssociation4,
-  clearDraftAssociation: clearDraftAssociation4,
-  processAllImagesService: processAllImagesService3,
-  processMathFormulasService: processMathFormulasService3,
-  cleanHtmlForDraftService: cleanHtmlForDraftService3,
-  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob4,
-  createObsidianFetchAdapter: createObsidianFetchAdapter4,
-  stripMarkdownFrontmatter: stripMarkdownFrontmatter4,
-  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls4,
-  createHtmlContainer: createHtmlContainer4,
-  getActiveDocument: getActiveDocument4,
-  getActiveWindowValue: getActiveWindowValue4,
-  htmlToText: htmlToText4,
-  setElementHtml: setElementHtml4,
-  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings4,
-  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds4,
-  hasWechatSyncCapability: hasWechatSyncCapability4,
-  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings4,
-  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms4,
-  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt4,
-  describeWechatsyncConnectionState: describeWechatsyncConnectionState4,
-  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar4,
-  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab4,
-  showMultiPlatformPublishModal: showMultiPlatformPublishModal4,
-  renderFeishuSettingsTab: renderFeishuSettingsTab4,
-  renderFeishuPublishTab: renderFeishuPublishTab4,
-  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings4,
-  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings4,
-  updateFeishuHistoryPath: updateFeishuHistoryPath4,
-  WechatAPI: WechatAPI4,
-  loadCommonJsDependency: loadCommonJsDependency4,
-  obsidianApi: obsidianApi4,
-  Plugin: Plugin4,
-  MarkdownView: MarkdownView4,
-  ItemView: ItemView4,
-  Notice: Notice4,
-  Platform: Platform4,
-  PluginSettingTab: PluginSettingTab4,
-  Setting: Setting4,
-  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY5,
-  getActiveDocumentCompat: getActiveDocumentCompat4,
-  createFallbackSvgElement: createFallbackSvgElement4,
-  revealLeafCompat: revealLeafCompat4,
-  getPluginSettings: getPluginSettings4,
-  setPluginSettings: setPluginSettings4,
-  setDestructiveButtonCompat: setDestructiveButtonCompat4,
-  refreshSettingTabCompat: refreshSettingTabCompat4,
-  toReadableError: toReadableError7,
-  isRecord: isRecord15,
-  toRecord: toRecord12,
-  toAiLayoutState: toAiLayoutState4,
-  toAiLayoutJson: toAiLayoutJson4,
-  toAiLayoutBlock: toAiLayoutBlock4,
-  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta4,
-  toAiLayoutSelection: toAiLayoutSelection4,
-  toAiLayoutFamilyStates: toAiLayoutFamilyStates4,
-  toOptionalText: toOptionalText5,
-  toImageElements: toImageElements4,
-  removeElementClass: removeElementClass4,
-  toOptionalNumber: toOptionalNumber5,
-  parseJsonRecord: parseJsonRecord5,
-  normalizeRequestUrlResponse: normalizeRequestUrlResponse5,
-  getResponseJsonRecord: getResponseJsonRecord5,
-  getProxyErrorMessage: getProxyErrorMessage5,
-  createProxyError: createProxyError5,
-  formatWechatApiError: formatWechatApiError5,
-  hasWechatUploadResult: hasWechatUploadResult5,
-  readBlobAsBase64Payload: readBlobAsBase64Payload5,
-  dataUrlToBlob: dataUrlToBlob4,
-  bufferFromBinary: bufferFromBinary5,
-  inferLocalImageMimeType: inferLocalImageMimeType4,
-  safeDecodeUriText: safeDecodeUriText4,
-  getFileUrlLocalPath: getFileUrlLocalPath4,
-  getVaultAdapterBasePath: getVaultAdapterBasePath4,
-  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath5,
-  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath5,
-  getVaultDirnameFromPath: getVaultDirnameFromPath4,
-  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW4,
-  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE4,
-  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL4,
-  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL4,
-  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL5,
-  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL4,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL5,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL5,
-  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL4,
-  getObsidianModalClass: getObsidianModalClass4,
-  createObsidianModal: createObsidianModal4,
-  getObsidianSetIcon: getObsidianSetIcon4,
-  getObsidianRequestUrl: getObsidianRequestUrl4,
-  getObsidianRequest: getObsidianRequest4,
-  getAppleThemeApi: getAppleThemeApi4,
-  getValueElementFromEvent: getValueElementFromEvent4,
-  getEventTargetValue: getEventTargetValue4,
-  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY4,
-  getObsidianLocale: getObsidianLocale4,
-  isChineseObsidianLocale: isChineseObsidianLocale4,
-  getImageSwipeCommandCopy: getImageSwipeCommandCopy4,
-  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout4,
-  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown4,
-  DEFAULT_SETTINGS: DEFAULT_SETTINGS4,
-  MAX_ACCOUNTS: MAX_ACCOUNTS4,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS4,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS4,
-  getWechatAccountPublishOptions: getWechatAccountPublishOptions4,
-  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions4,
-  isMobileClient: isMobileClient6,
-  generateId: generateId4,
-  sleep: sleep5,
-  pMap: pMap4
-} = apple_style_view_shared_exports;
 var aiLayoutPanelMethods = {
   getCurrentArticleAnyLayoutState() {
     var _a5, _b, _c, _d, _e, _f;
@@ -76233,14 +75555,14 @@ var aiLayoutPanelMethods = {
     if (!sourcePath)
       return null;
     if (typeof ((_a5 = this.plugin) == null ? void 0 : _a5.getArticleLayoutState) === "function") {
-      return toAiLayoutState4(this.plugin.getArticleLayoutState(sourcePath, {}) || null);
+      return toAiLayoutState(this.plugin.getArticleLayoutState(sourcePath, {}) || null);
     }
-    const normalizedPath = normalizeVaultPath4(sourcePath);
+    const normalizedPath = normalizeVaultPath(sourcePath);
     const entry = ((_e = (_d = (_c = (_b = this.plugin) == null ? void 0 : _b.settings) == null ? void 0 : _c.ai) == null ? void 0 : _d.articleLayoutsByPath) == null ? void 0 : _e[normalizedPath]) || null;
-    const normalizedEntry = normalizeArticleLayoutCacheEntry4(entry);
+    const normalizedEntry = normalizeArticleLayoutCacheEntry(entry);
     if (!normalizedEntry)
       return null;
-    return toAiLayoutState4(((_f = normalizedEntry.familyStates) == null ? void 0 : _f[normalizedEntry.lastLayoutFamily]) || null);
+    return toAiLayoutState(((_f = normalizedEntry.familyStates) == null ? void 0 : _f[normalizedEntry.lastLayoutFamily]) || null);
   },
   hasCurrentArticleAiLayoutCache() {
     var _a5;
@@ -76251,9 +75573,9 @@ var aiLayoutPanelMethods = {
     var _a5;
     if (!this.aiLayoutBtn)
       return;
-    const aiSettings = ((_a5 = this.plugin.settings) == null ? void 0 : _a5.ai) || createDefaultAiSettings4();
+    const aiSettings = ((_a5 = this.plugin.settings) == null ? void 0 : _a5.ai) || createDefaultAiSettings();
     const enabled = aiSettings.enabled === true;
-    const hasProvider = !!resolveAiProvider4(aiSettings);
+    const hasProvider = !!resolveAiProvider(aiSettings);
     const hasCachedLayout = this.hasCurrentArticleAiLayoutCache();
     const shouldShow = enabled && (hasProvider || hasCachedLayout);
     this.aiLayoutBtn.classList.toggle("is-disabled", !shouldShow);
@@ -76273,7 +75595,7 @@ var aiLayoutPanelMethods = {
     if (((_b = (_a5 = this.plugin.settings) == null ? void 0 : _a5.ai) == null ? void 0 : _b.enabled) !== true) {
       this.closeTransientPanels();
       this.updateAiToolbarState();
-      new Notice4("AI \u7F16\u6392\u5F53\u524D\u5DF2\u5173\u95ED\uFF0C\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u542F\u7528");
+      new Notice("AI \u7F16\u6392\u5F53\u524D\u5DF2\u5173\u95ED\uFF0C\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u542F\u7528");
       return;
     }
     this.togglePanel(this.aiLayoutOverlay, this.aiLayoutBtn, () => {
@@ -76309,7 +75631,7 @@ var aiLayoutPanelMethods = {
     layoutControl.createEl("label", { cls: "apple-setting-label", text: "\u5E03\u5C40" });
     this.aiLayoutFamilySelect = /** @type {ObsidianInputLike} */
     layoutControl.createEl("select", { cls: "apple-select" });
-    getLayoutFamilyList4({ includeAuto: true, includeReserved: false }).forEach((family) => {
+    getLayoutFamilyList({ includeAuto: true, includeReserved: false }).forEach((family) => {
       var _a6;
       const option = (
         /** @type {ObsidianInputLike} */
@@ -76318,7 +75640,7 @@ var aiLayoutPanelMethods = {
           text: this.getAiLayoutFamilyLabel(family.value)
         })
       );
-      if ((((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4) === family.value) {
+      if ((((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO) === family.value) {
         option.selected = true;
       }
     });
@@ -76326,7 +75648,7 @@ var aiLayoutPanelMethods = {
     paletteControl.createEl("label", { cls: "apple-setting-label", text: "\u989C\u8272" });
     this.aiColorPaletteSelect = /** @type {ObsidianInputLike} */
     paletteControl.createEl("select", { cls: "apple-select apple-ai-layout-color-select" });
-    getColorPaletteList4({ includeAuto: true }).forEach((palette) => {
+    getColorPaletteList({ includeAuto: true }).forEach((palette) => {
       var _a6;
       const option = (
         /** @type {ObsidianInputLike} */
@@ -76335,12 +75657,12 @@ var aiLayoutPanelMethods = {
           text: palette.label
         })
       );
-      if ((((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4) === palette.value) {
+      if ((((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO) === palette.value) {
         option.selected = true;
       }
     });
-    this.pendingAiLayoutFamily = this.pendingAiLayoutFamily || ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4;
-    this.pendingAiColorPalette = this.pendingAiColorPalette || ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4;
+    this.pendingAiLayoutFamily = this.pendingAiLayoutFamily || ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO;
+    this.pendingAiColorPalette = this.pendingAiColorPalette || ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO;
     this.pendingAiStylePack = this.pendingAiColorPalette;
     this.aiLayoutFamilySelect.value = this.pendingAiLayoutFamily;
     this.aiColorPaletteSelect.value = this.pendingAiColorPalette;
@@ -76349,9 +75671,9 @@ var aiLayoutPanelMethods = {
     const autoPaletteRow = this.aiColorPaletteControls.createDiv({ cls: "apple-ai-color-mode-row" });
     this.aiColorPaletteGrid = this.aiColorPaletteControls.createDiv({ cls: "apple-ai-color-grid" });
     const customPaletteRow = this.aiColorPaletteControls.createDiv({ cls: "apple-ai-color-custom-row" });
-    getColorPaletteList4({ includeAuto: true }).forEach((palette) => {
+    getColorPaletteList({ includeAuto: true }).forEach((palette) => {
       var _a6;
-      const isAuto = palette.value === AI_LAYOUT_SELECTION_AUTO4;
+      const isAuto = palette.value === AI_LAYOUT_SELECTION_AUTO;
       const isCustom = palette.value === "custom";
       const target = isAuto ? autoPaletteRow : isCustom ? customPaletteRow : this.aiColorPaletteGrid;
       const button = target.createEl("button", {
@@ -76361,7 +75683,7 @@ var aiLayoutPanelMethods = {
       });
       button.dataset.value = palette.value;
       if (!isAuto && !isCustom) {
-        const pack = getColorPaletteById4(palette.value);
+        const pack = getColorPaletteById(palette.value);
         button.style.setProperty("--btn-color", ((_a6 = pack == null ? void 0 : pack.tokens) == null ? void 0 : _a6.accent) || "#7c3aed");
       }
       button.addEventListener("click", async () => {
@@ -76378,11 +75700,11 @@ var aiLayoutPanelMethods = {
     });
     this.aiCustomColorInput.value = this.getAiCustomColor();
     this.aiCustomColorInput.addEventListener("input", (event) => {
-      const nextColor = normalizeHexColor4(getEventTargetValue4(event, this.getAiCustomColor()), this.getAiCustomColor());
+      const nextColor = normalizeHexColor(getEventTargetValue(event, this.getAiCustomColor()), this.getAiCustomColor());
       this.plugin.settings.ai.customColor = nextColor;
     });
     this.aiCustomColorInput.addEventListener("change", async (event) => {
-      const nextColor = normalizeHexColor4(getEventTargetValue4(event, this.getAiCustomColor()), this.getAiCustomColor());
+      const nextColor = normalizeHexColor(getEventTargetValue(event, this.getAiCustomColor()), this.getAiCustomColor());
       this.plugin.settings.ai.customColor = nextColor;
       await this.plugin.saveSettings();
       await this.onAiColorPaletteChange("custom", { skipSave: true });
@@ -76390,11 +75712,11 @@ var aiLayoutPanelMethods = {
     this.updateAiColorPaletteControls();
     this.aiLayoutFamilySelect.addEventListener("change", () => {
       var _a6;
-      this.onAiLayoutFamilyChange(this.aiLayoutFamilySelect.value || ((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4);
+      this.onAiLayoutFamilyChange(this.aiLayoutFamilySelect.value || ((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO);
     });
     this.aiColorPaletteSelect.addEventListener("change", () => {
       var _a6;
-      this.onAiColorPaletteChange(this.aiColorPaletteSelect.value || ((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4);
+      this.onAiColorPaletteChange(this.aiColorPaletteSelect.value || ((_a6 = this.plugin.settings.ai) == null ? void 0 : _a6.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO);
     });
     const actionRow = area.createDiv({ cls: "apple-ai-layout-actions" });
     this.aiGenerateBtn = actionRow.createEl("button", { cls: "apple-btn-primary", text: "\u751F\u6210\u5E76\u5E94\u7528" });
@@ -76458,7 +75780,7 @@ var aiLayoutPanelMethods = {
   },
   getAiCustomColor() {
     var _a5, _b;
-    return normalizeHexColor4((_b = (_a5 = this.plugin.settings) == null ? void 0 : _a5.ai) == null ? void 0 : _b.customColor, "#7c3aed");
+    return normalizeHexColor((_b = (_a5 = this.plugin.settings) == null ? void 0 : _a5.ai) == null ? void 0 : _b.customColor, "#7c3aed");
   },
   getAiColorPaletteOverride(colorPaletteId = "") {
     const targetPalette = colorPaletteId || this.getCurrentAiLayoutSelection().colorPalette;
@@ -76470,12 +75792,12 @@ var aiLayoutPanelMethods = {
     const targetPalette = colorPaletteId || this.getCurrentAiLayoutSelection().colorPalette || "tech-green";
     return (
       /** @type {Record<string, unknown>} */
-      resolveColorPaletteForRender4(targetPalette, this.getAiColorPaletteOverride(targetPalette))
+      resolveColorPaletteForRender(targetPalette, this.getAiColorPaletteOverride(targetPalette))
     );
   },
   updateAiColorPaletteControls() {
     var _a5, _b, _c, _d, _e;
-    const selectedValue = this.pendingAiColorPalette || ((_a5 = this.aiColorPaletteSelect) == null ? void 0 : _a5.value) || ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4;
+    const selectedValue = this.pendingAiColorPalette || ((_a5 = this.aiColorPaletteSelect) == null ? void 0 : _a5.value) || ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO;
     if (this.aiColorPaletteSelect && this.aiColorPaletteSelect.value !== selectedValue) {
       this.aiColorPaletteSelect.value = selectedValue;
     }
@@ -76489,11 +75811,11 @@ var aiLayoutPanelMethods = {
     });
   },
   getAiRenderLayoutJson(layoutJson = null, colorPaletteId = "") {
-    const layoutRecord = toAiLayoutJson4(layoutJson);
+    const layoutRecord = toAiLayoutJson(layoutJson);
     if (!layoutRecord)
       return layoutRecord;
     const selectedPalette = colorPaletteId || this.getCurrentAiLayoutSelection().colorPalette;
-    if (!selectedPalette || selectedPalette === AI_LAYOUT_SELECTION_AUTO4)
+    if (!selectedPalette || selectedPalette === AI_LAYOUT_SELECTION_AUTO)
       return layoutRecord;
     return {
       ...layoutRecord,
@@ -76510,7 +75832,7 @@ var aiLayoutPanelMethods = {
   },
   async onAiColorPaletteChange(value, { skipSave = false } = {}) {
     var _a5, _b, _c;
-    const nextValue = value || ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4;
+    const nextValue = value || ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO;
     const previousState = this.getCurrentArticleLayoutState();
     this.pendingAiColorPalette = nextValue;
     this.pendingAiStylePack = this.pendingAiColorPalette;
@@ -76522,7 +75844,7 @@ var aiLayoutPanelMethods = {
       await this.plugin.saveSettings();
     }
     await this.ensureAiLayoutSelectionState(previousState, {
-      layoutFamily: this.pendingAiLayoutFamily || ((_b = this.aiLayoutFamilySelect) == null ? void 0 : _b.value) || ((_c = previousState == null ? void 0 : previousState.selection) == null ? void 0 : _c.layoutFamily) || AI_LAYOUT_SELECTION_AUTO4,
+      layoutFamily: this.pendingAiLayoutFamily || ((_b = this.aiLayoutFamilySelect) == null ? void 0 : _b.value) || ((_c = previousState == null ? void 0 : previousState.selection) == null ? void 0 : _c.layoutFamily) || AI_LAYOUT_SELECTION_AUTO,
       colorPalette: this.pendingAiColorPalette
     });
     if (this.aiPreviewApplied) {
@@ -76533,7 +75855,7 @@ var aiLayoutPanelMethods = {
   },
   async onAiLayoutFamilyChange(value) {
     var _a5, _b, _c;
-    const nextValue = value || ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4;
+    const nextValue = value || ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO;
     this.pendingAiLayoutFamily = nextValue;
     if (this.aiLayoutFamilySelect && this.aiLayoutFamilySelect.value !== nextValue) {
       this.aiLayoutFamilySelect.value = nextValue;
@@ -76551,14 +75873,14 @@ var aiLayoutPanelMethods = {
     if (!this.aiLayoutOverlay)
       return;
     const pack = this.getAiRenderColorPalette(colorPaletteId || "tech-green");
-    const tokens = toRecord12(pack.tokens);
+    const tokens = toRecord8(pack.tokens);
     this.aiLayoutOverlay.style.setProperty("--ai-layout-accent", tokens.accent || "#0a84ff");
     this.aiLayoutOverlay.style.setProperty("--ai-layout-accent-deep", tokens.accentDeep || tokens.accent || "#0a84ff");
     this.aiLayoutOverlay.style.setProperty("--ai-layout-accent-soft", tokens.accentSoft || "rgba(0, 122, 255, 0.08)");
     this.aiLayoutOverlay.style.setProperty("--ai-layout-accent-border", tokens.accent || "#0a84ff");
   },
   getAiLayoutBlockStateKey(block = {}, index = 0) {
-    const blockRecord = toAiLayoutBlock4(block);
+    const blockRecord = toAiLayoutBlock(block);
     const type = String(blockRecord.type || "").trim();
     const sectionIndex = Number.isInteger(blockRecord.sectionIndex) ? String(blockRecord.sectionIndex) : "";
     const label = String(
@@ -76581,7 +75903,7 @@ var aiLayoutPanelMethods = {
     let hiddenCount = 0;
     state.layoutJson.blocks.forEach((block, index) => {
       var _a6, _b2;
-      const blockRecord = toAiLayoutBlock4(block);
+      const blockRecord = toAiLayoutBlock(block);
       const blockKey = this.getAiLayoutBlockStateKey(blockRecord, index);
       if (dismissedKeys.has(blockKey)) {
         hiddenCount += 1;
@@ -76649,7 +75971,7 @@ var aiLayoutPanelMethods = {
     const state = this.getCurrentArticleLayoutState();
     if (!context.sourcePath || !((_b = (_a5 = state == null ? void 0 : state.layoutJson) == null ? void 0 : _a5.blocks) == null ? void 0 : _b.length))
       return;
-    const block = toAiLayoutBlock4(state.layoutJson.blocks[originalIndex]);
+    const block = toAiLayoutBlock(state.layoutJson.blocks[originalIndex]);
     if (!block)
       return;
     this.queueAiLayoutRemovalAnchor(originalIndex, itemEl);
@@ -76729,13 +76051,13 @@ var aiLayoutPanelMethods = {
   },
   getCurrentAiLayoutSelection() {
     var _a5, _b, _c, _d, _e;
-    const aiSettings = ((_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.ai) || createDefaultAiSettings4();
-    return normalizeLayoutSelection4({
-      layoutFamily: this.pendingAiLayoutFamily || ((_c = this.aiLayoutFamilySelect) == null ? void 0 : _c.value) || aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO4,
-      colorPalette: this.pendingAiStylePack || this.pendingAiColorPalette || ((_d = this.aiColorPaletteSelect) == null ? void 0 : _d.value) || ((_e = this.aiStylePackSelect) == null ? void 0 : _e.value) || aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO4
+    const aiSettings = ((_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.ai) || createDefaultAiSettings();
+    return normalizeLayoutSelection({
+      layoutFamily: this.pendingAiLayoutFamily || ((_c = this.aiLayoutFamilySelect) == null ? void 0 : _c.value) || aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO,
+      colorPalette: this.pendingAiStylePack || this.pendingAiColorPalette || ((_d = this.aiColorPaletteSelect) == null ? void 0 : _d.value) || ((_e = this.aiStylePackSelect) == null ? void 0 : _e.value) || aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO
     }, {
-      layoutFamily: aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO4,
-      colorPalette: aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO4
+      layoutFamily: aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO,
+      colorPalette: aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO
     });
   },
   getCurrentArticleLayoutState() {
@@ -76745,7 +76067,7 @@ var aiLayoutPanelMethods = {
       return null;
     const selection = this.getCurrentAiLayoutSelection();
     if (typeof ((_a5 = this.plugin) == null ? void 0 : _a5.getArticleLayoutState) === "function") {
-      const state = toAiLayoutState4(this.plugin.getArticleLayoutState(sourcePath, selection));
+      const state = toAiLayoutState(this.plugin.getArticleLayoutState(sourcePath, selection));
       if (state) {
         return this.preferFreshAiLayoutState(sourcePath, selection, state, sourceHash);
       }
@@ -76757,33 +76079,33 @@ var aiLayoutPanelMethods = {
     if (!candidateState || !sourceHash || !candidateState.sourceHash || candidateState.sourceHash === sourceHash) {
       return candidateState;
     }
-    const normalizedSelection = normalizeLayoutSelection4(selection || {}, {
-      layoutFamily: ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4,
-      colorPalette: ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4
+    const normalizedSelection = normalizeLayoutSelection(selection || {}, {
+      layoutFamily: ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO,
+      colorPalette: ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO
     });
-    const canUseAnyColor = normalizedSelection.colorPalette === AI_LAYOUT_SELECTION_AUTO4;
+    const canUseAnyColor = normalizedSelection.colorPalette === AI_LAYOUT_SELECTION_AUTO;
     if (!canUseAnyColor)
       return candidateState;
-    const normalizedPath = normalizeVaultPath4(sourcePath || "");
-    const entry = normalizeArticleLayoutCacheEntry4((_f = (_e = (_d = (_c = this.plugin) == null ? void 0 : _c.settings) == null ? void 0 : _d.ai) == null ? void 0 : _e.articleLayoutsByPath) == null ? void 0 : _f[normalizedPath]);
+    const normalizedPath = normalizeVaultPath(sourcePath || "");
+    const entry = normalizeArticleLayoutCacheEntry((_f = (_e = (_d = (_c = this.plugin) == null ? void 0 : _c.settings) == null ? void 0 : _d.ai) == null ? void 0 : _e.articleLayoutsByPath) == null ? void 0 : _f[normalizedPath]);
     const statesByFamily = (entry == null ? void 0 : entry.familyStates) || {};
-    const requestedFamily = normalizedSelection.layoutFamily === AI_LAYOUT_SELECTION_AUTO4 ? "" : normalizedSelection.layoutFamily;
-    const exactState = requestedFamily ? toAiLayoutState4(statesByFamily[requestedFamily]) : null;
+    const requestedFamily = normalizedSelection.layoutFamily === AI_LAYOUT_SELECTION_AUTO ? "" : normalizedSelection.layoutFamily;
+    const exactState = requestedFamily ? toAiLayoutState(statesByFamily[requestedFamily]) : null;
     if ((exactState == null ? void 0 : exactState.sourceHash) === sourceHash && ((_h = (_g = exactState.layoutJson) == null ? void 0 : _g.blocks) == null ? void 0 : _h.length))
       return exactState;
-    const lastState = toAiLayoutState4(statesByFamily[entry == null ? void 0 : entry.lastLayoutFamily]);
+    const lastState = toAiLayoutState(statesByFamily[entry == null ? void 0 : entry.lastLayoutFamily]);
     if ((lastState == null ? void 0 : lastState.sourceHash) === sourceHash && ((_j = (_i = lastState.layoutJson) == null ? void 0 : _i.blocks) == null ? void 0 : _j.length))
       return lastState;
-    return Object.values(statesByFamily).map(toAiLayoutState4).find((state) => {
+    return Object.values(statesByFamily).map(toAiLayoutState).find((state) => {
       var _a6, _b2;
       return (state == null ? void 0 : state.sourceHash) === sourceHash && ((_b2 = (_a6 = state.layoutJson) == null ? void 0 : _a6.blocks) == null ? void 0 : _b2.length);
     }) || candidateState;
   },
   async recoverSourceFirstLayoutState(currentState = null, selection = null, context = null) {
     var _a5, _b, _c, _d, _e, _f;
-    const requestedSelection = normalizeLayoutSelection4(selection || this.getCurrentAiLayoutSelection(), {
-      layoutFamily: ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4,
-      colorPalette: ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4
+    const requestedSelection = normalizeLayoutSelection(selection || this.getCurrentAiLayoutSelection(), {
+      layoutFamily: ((_a5 = this.plugin.settings.ai) == null ? void 0 : _a5.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO,
+      colorPalette: ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO
     });
     if (requestedSelection.layoutFamily !== "source-first")
       return null;
@@ -76800,23 +76122,23 @@ var aiLayoutPanelMethods = {
       if (!this.baseRenderedHtml) {
         await this.convertCurrent(true, { showLoading: false });
       }
-      const aiSettings = this.plugin.settings.ai || createDefaultAiSettings4();
-      const provider = resolveAiProvider4(aiSettings);
-      const imageRefs = aiSettings.includeImagesInLayout === false ? [] : extractImageRefsFromHtml4(this.baseRenderedHtml || this.currentHtml || "");
-      const result = await generateArticleLayout4({
+      const aiSettings = this.plugin.settings.ai || createDefaultAiSettings();
+      const provider = resolveAiProvider(aiSettings);
+      const imageRefs = aiSettings.includeImagesInLayout === false ? [] : extractImageRefsFromHtml(this.baseRenderedHtml || this.currentHtml || "");
+      const result = await generateArticleLayout({
         provider,
         title: sourceContext.title,
         markdown: sourceContext.markdown,
         selection: requestedSelection,
         imageRefs,
         timeoutMs: aiSettings.requestTimeoutMs,
-        fetchImpl: createObsidianFetchAdapter4({ requestUrl: getObsidianRequestUrl4(), request: getObsidianRequest4() })
+        fetchImpl: createObsidianFetchAdapter({ requestUrl: getObsidianRequestUrl(), request: getObsidianRequest() })
       });
-      const layoutJson = toAiLayoutJson4(result.layoutJson);
+      const layoutJson = toAiLayoutJson(result.layoutJson);
       if (!Array.isArray(layoutJson == null ? void 0 : layoutJson.blocks) || !layoutJson.blocks.length)
         return null;
       await this.plugin.saveArticleLayoutState(sourceContext.sourcePath, {
-        version: AI_LAYOUT_SCHEMA_VERSION4,
+        version: AI_LAYOUT_SCHEMA_VERSION,
         updatedAt: Date.now(),
         sourceHash: sourceContext.sourceHash,
         providerId: (provider == null ? void 0 : provider.id) || "",
@@ -76833,7 +76155,7 @@ var aiLayoutPanelMethods = {
         lastAttemptAt: Date.now(),
         lastAttemptSchemaValidation: null,
         dismissedBlockKeys: [],
-        generationMeta: toAiLayoutGenerationMeta4(result.generationMeta),
+        generationMeta: toAiLayoutGenerationMeta(result.generationMeta),
         layoutJson
       }, layoutJson.selection);
       this.pendingAiLayoutFamily = ((_e = layoutJson.selection) == null ? void 0 : _e.layoutFamily) || requestedSelection.layoutFamily;
@@ -76855,17 +76177,17 @@ var aiLayoutPanelMethods = {
     const context = this.getCurrentLayoutContext();
     if (!context.sourcePath || typeof ((_a5 = this.plugin) == null ? void 0 : _a5.getArticleLayoutState) !== "function")
       return null;
-    const requestedSelection = normalizeLayoutSelection4(selection || this.getCurrentAiLayoutSelection(), {
-      layoutFamily: ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4,
-      colorPalette: ((_c = this.plugin.settings.ai) == null ? void 0 : _c.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4
+    const requestedSelection = normalizeLayoutSelection(selection || this.getCurrentAiLayoutSelection(), {
+      layoutFamily: ((_b = this.plugin.settings.ai) == null ? void 0 : _b.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO,
+      colorPalette: ((_c = this.plugin.settings.ai) == null ? void 0 : _c.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO
     });
-    const existingState = toAiLayoutState4(this.plugin.getArticleLayoutState(context.sourcePath, requestedSelection));
+    const existingState = toAiLayoutState(this.plugin.getArticleLayoutState(context.sourcePath, requestedSelection));
     if ((_e = (_d = existingState == null ? void 0 : existingState.layoutJson) == null ? void 0 : _d.blocks) == null ? void 0 : _e.length) {
       return existingState;
     }
-    const derivedState = deriveArticleLayoutStateForSelection4(baseState, requestedSelection, {
-      layoutFamily: ((_f = this.plugin.settings.ai) == null ? void 0 : _f.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO4,
-      colorPalette: ((_g = this.plugin.settings.ai) == null ? void 0 : _g.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO4
+    const derivedState = deriveArticleLayoutStateForSelection(baseState, requestedSelection, {
+      layoutFamily: ((_f = this.plugin.settings.ai) == null ? void 0 : _f.defaultLayoutFamily) || AI_LAYOUT_SELECTION_AUTO,
+      colorPalette: ((_g = this.plugin.settings.ai) == null ? void 0 : _g.defaultColorPalette) || AI_LAYOUT_SELECTION_AUTO
     });
     if (!derivedState)
       return null;
@@ -76873,7 +76195,7 @@ var aiLayoutPanelMethods = {
       ...derivedState,
       updatedAt: Date.now()
     }, requestedSelection);
-    return toAiLayoutState4(derivedState);
+    return toAiLayoutState(derivedState);
   },
   isAiLayoutPanelVisible() {
     var _a5;
@@ -76899,22 +76221,22 @@ var aiLayoutPanelMethods = {
     return ((_a5 = state.generationMeta) == null ? void 0 : _a5.providerModel) || state.model || (matchedProvider == null ? void 0 : matchedProvider.model) || "";
   },
   getAiLayoutBlockLabel(block) {
-    const blockRecord = toAiLayoutBlock4(block);
+    const blockRecord = toAiLayoutBlock(block);
     return blockRecord.title || blockRecord.caseLabel || blockRecord.text || blockRecord.caption || blockRecord.buttonText || blockRecord.type || "\u672A\u547D\u540D\u533A\u5757";
   },
   getAiLayoutFamilyLabel(value) {
-    if (value === AI_LAYOUT_SELECTION_AUTO4)
+    if (value === AI_LAYOUT_SELECTION_AUTO)
       return "\u81EA\u52A8\u63A8\u8350";
-    const family = getLayoutFamilyById4(value);
+    const family = getLayoutFamilyById(value);
     if (!family)
       return value || "\u81EA\u52A8\u63A8\u8350";
     return family.label || value || "\u81EA\u52A8\u63A8\u8350";
   },
   getAiColorPaletteLabel(value) {
     var _a5;
-    if (value === AI_LAYOUT_SELECTION_AUTO4)
+    if (value === AI_LAYOUT_SELECTION_AUTO)
       return "\u81EA\u52A8\u914D\u8272";
-    return ((_a5 = getColorPaletteById4(value)) == null ? void 0 : _a5.label) || value || "\u81EA\u52A8\u914D\u8272";
+    return ((_a5 = getColorPaletteById(value)) == null ? void 0 : _a5.label) || value || "\u81EA\u52A8\u914D\u8272";
   },
   getVisibleAiSchemaValidation(state) {
     var _a5, _b;
@@ -76946,24 +76268,26 @@ var aiLayoutPanelMethods = {
     const { sourcePath } = this.getCurrentLayoutContext();
     if (!sourcePath)
       return null;
-    const normalizedPath = normalizeVaultPath4(sourcePath);
+    const normalizedPath = normalizeVaultPath(sourcePath);
     return (
       /** @type {{ familyStates?: Record<string, AiLayoutStateLike>, lastLayoutFamily?: string } | null} */
-      normalizeArticleLayoutCacheEntry4((_d = (_c = (_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.ai) == null ? void 0 : _c.articleLayoutsByPath) == null ? void 0 : _d[normalizedPath])
+      normalizeArticleLayoutCacheEntry((_d = (_c = (_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.ai) == null ? void 0 : _c.articleLayoutsByPath) == null ? void 0 : _d[normalizedPath])
     );
   },
-  getCachedAiLayoutFamilyItems(context = this.getCurrentLayoutContext()) {
+  /** @this {AppleStyleViewContract} */
+  getCachedAiLayoutFamilyItems(context = void 0) {
+    context = context === void 0 ? this.getCurrentLayoutContext() : context;
     const entry = this.getCurrentArticleLayoutCacheEntry();
     if (!(entry == null ? void 0 : entry.familyStates))
       return [];
     return Object.entries(entry.familyStates).map(([layoutFamily, state]) => {
       var _a5, _b, _c;
-      const typedState = toAiLayoutState4(state);
+      const typedState = toAiLayoutState(state);
       if (!((_b = (_a5 = typedState == null ? void 0 : typedState.layoutJson) == null ? void 0 : _a5.blocks) == null ? void 0 : _b.length))
         return null;
       const isCurrentContent = !!(context.sourceHash && typedState.sourceHash && typedState.sourceHash === context.sourceHash);
       const isStaleContent = !!(!context.isStaleSuppressed && context.sourceHash && typedState.sourceHash && typedState.sourceHash !== context.sourceHash);
-      const fromAuto = ((_c = typedState.selection) == null ? void 0 : _c.layoutFamily) === AI_LAYOUT_SELECTION_AUTO4;
+      const fromAuto = ((_c = typedState.selection) == null ? void 0 : _c.layoutFamily) === AI_LAYOUT_SELECTION_AUTO;
       return {
         layoutFamily,
         state: typedState,
@@ -77038,7 +76362,7 @@ var aiLayoutPanelMethods = {
     const entry = this.getCurrentArticleLayoutCacheEntry();
     const state = ((_a5 = entry == null ? void 0 : entry.familyStates) == null ? void 0 : _a5[layoutFamily]) || null;
     if (!((_c = (_b = state == null ? void 0 : state.layoutJson) == null ? void 0 : _b.blocks) == null ? void 0 : _c.length)) {
-      new Notice4("\u8FD9\u4EFD\u7F13\u5B58\u5DF2\u7ECF\u4E0D\u53EF\u7528\uFF0C\u8BF7\u91CD\u65B0\u751F\u6210");
+      new Notice("\u8FD9\u4EFD\u7F13\u5B58\u5DF2\u7ECF\u4E0D\u53EF\u7528\uFF0C\u8BF7\u91CD\u65B0\u751F\u6210");
       this.refreshAiLayoutPanel();
       return;
     }
@@ -77129,167 +76453,6 @@ var aiLayoutPanelMethods = {
 };
 
 // views/converter/ai-layout-debug.js
-var {
-  createRenderPipelines: createRenderPipelines5,
-  buildRenderRuntime: buildRenderRuntime5,
-  resolveMarkdownSource: resolveMarkdownSource5,
-  normalizeVaultPath: normalizeVaultPath5,
-  isAbsolutePathLike: isAbsolutePathLike5,
-  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown5,
-  canUseNativePreviewFastPath: canUseNativePreviewFastPath5,
-  renderNativeMarkdown: renderNativeMarkdown5,
-  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages5,
-  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION5,
-  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO5,
-  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS5,
-  createDefaultAiSettings: createDefaultAiSettings5,
-  normalizeAiSettings: normalizeAiSettings5,
-  normalizeAiProvider: normalizeAiProvider5,
-  getAiProviderIssues: getAiProviderIssues5,
-  isAiProviderRunnable: isAiProviderRunnable5,
-  summarizeAiProviderIssues: summarizeAiProviderIssues5,
-  getLayoutFamilyList: getLayoutFamilyList5,
-  getLayoutFamilyById: getLayoutFamilyById5,
-  getColorPaletteList: getColorPaletteList5,
-  getColorPaletteById: getColorPaletteById5,
-  resolveColorPaletteForRender: resolveColorPaletteForRender5,
-  normalizeHexColor: normalizeHexColor5,
-  normalizeLayoutSelection: normalizeLayoutSelection5,
-  getArticleLayoutSelectionState: getArticleLayoutSelectionState5,
-  resolveAiProvider: resolveAiProvider5,
-  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection5,
-  normalizeArticleLayoutState: normalizeArticleLayoutState5,
-  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry5,
-  extractImageRefsFromHtml: extractImageRefsFromHtml5,
-  extractRenderedSectionFragments: extractRenderedSectionFragments5,
-  generateArticleLayout: generateArticleLayout5,
-  renderArticleLayoutHtml: renderArticleLayoutHtml5,
-  testAiProviderConnection: testAiProviderConnection5,
-  createWechatSyncService: createWechatSyncService5,
-  createWechatSyncBridgeService: createWechatSyncBridgeService5,
-  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError4,
-  getMultiPlatformResultSummary: getMultiPlatformResultSummary5,
-  getWechatSyncResultError: getWechatSyncResultError5,
-  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId5,
-  getWechatSyncResultUrl: getWechatSyncResultUrl5,
-  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform5,
-  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay5,
-  resolveSyncAccount: resolveSyncAccount5,
-  toSyncFriendlyMessage: toSyncFriendlyMessage5,
-  createEmptyDraftCache: createEmptyDraftCache5,
-  normalizeDraftCache: normalizeDraftCache5,
-  getDraftAssociation: getDraftAssociation5,
-  setDraftAssociation: setDraftAssociation5,
-  clearDraftAssociation: clearDraftAssociation5,
-  processAllImagesService: processAllImagesService4,
-  processMathFormulasService: processMathFormulasService4,
-  cleanHtmlForDraftService: cleanHtmlForDraftService4,
-  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob5,
-  createObsidianFetchAdapter: createObsidianFetchAdapter5,
-  stripMarkdownFrontmatter: stripMarkdownFrontmatter5,
-  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls5,
-  createHtmlContainer: createHtmlContainer5,
-  getActiveDocument: getActiveDocument5,
-  getActiveWindowValue: getActiveWindowValue5,
-  htmlToText: htmlToText5,
-  setElementHtml: setElementHtml5,
-  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings5,
-  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds5,
-  hasWechatSyncCapability: hasWechatSyncCapability5,
-  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings5,
-  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms5,
-  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt5,
-  describeWechatsyncConnectionState: describeWechatsyncConnectionState5,
-  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar5,
-  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab5,
-  showMultiPlatformPublishModal: showMultiPlatformPublishModal5,
-  renderFeishuSettingsTab: renderFeishuSettingsTab5,
-  renderFeishuPublishTab: renderFeishuPublishTab5,
-  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings5,
-  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings5,
-  updateFeishuHistoryPath: updateFeishuHistoryPath5,
-  WechatAPI: WechatAPI5,
-  loadCommonJsDependency: loadCommonJsDependency5,
-  obsidianApi: obsidianApi5,
-  Plugin: Plugin5,
-  MarkdownView: MarkdownView5,
-  ItemView: ItemView5,
-  Notice: Notice5,
-  Platform: Platform5,
-  PluginSettingTab: PluginSettingTab5,
-  Setting: Setting5,
-  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY6,
-  getActiveDocumentCompat: getActiveDocumentCompat5,
-  createFallbackSvgElement: createFallbackSvgElement5,
-  revealLeafCompat: revealLeafCompat5,
-  getPluginSettings: getPluginSettings5,
-  setPluginSettings: setPluginSettings5,
-  setDestructiveButtonCompat: setDestructiveButtonCompat5,
-  refreshSettingTabCompat: refreshSettingTabCompat5,
-  toReadableError: toReadableError8,
-  isRecord: isRecord16,
-  toRecord: toRecord13,
-  toAiLayoutState: toAiLayoutState5,
-  toAiLayoutJson: toAiLayoutJson5,
-  toAiLayoutBlock: toAiLayoutBlock5,
-  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta5,
-  toAiLayoutSelection: toAiLayoutSelection5,
-  toAiLayoutFamilyStates: toAiLayoutFamilyStates5,
-  toOptionalText: toOptionalText6,
-  toImageElements: toImageElements5,
-  removeElementClass: removeElementClass5,
-  toOptionalNumber: toOptionalNumber6,
-  parseJsonRecord: parseJsonRecord6,
-  normalizeRequestUrlResponse: normalizeRequestUrlResponse6,
-  getResponseJsonRecord: getResponseJsonRecord6,
-  getProxyErrorMessage: getProxyErrorMessage6,
-  createProxyError: createProxyError6,
-  formatWechatApiError: formatWechatApiError6,
-  hasWechatUploadResult: hasWechatUploadResult6,
-  readBlobAsBase64Payload: readBlobAsBase64Payload6,
-  dataUrlToBlob: dataUrlToBlob5,
-  bufferFromBinary: bufferFromBinary6,
-  inferLocalImageMimeType: inferLocalImageMimeType5,
-  safeDecodeUriText: safeDecodeUriText5,
-  getFileUrlLocalPath: getFileUrlLocalPath5,
-  getVaultAdapterBasePath: getVaultAdapterBasePath5,
-  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath6,
-  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath6,
-  getVaultDirnameFromPath: getVaultDirnameFromPath5,
-  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW5,
-  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE5,
-  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL5,
-  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL5,
-  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL6,
-  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL5,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL6,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL6,
-  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL5,
-  getObsidianModalClass: getObsidianModalClass5,
-  createObsidianModal: createObsidianModal5,
-  getObsidianSetIcon: getObsidianSetIcon5,
-  getObsidianRequestUrl: getObsidianRequestUrl5,
-  getObsidianRequest: getObsidianRequest5,
-  getAppleThemeApi: getAppleThemeApi5,
-  getValueElementFromEvent: getValueElementFromEvent5,
-  getEventTargetValue: getEventTargetValue5,
-  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY5,
-  getObsidianLocale: getObsidianLocale5,
-  isChineseObsidianLocale: isChineseObsidianLocale5,
-  getImageSwipeCommandCopy: getImageSwipeCommandCopy5,
-  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout5,
-  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown5,
-  DEFAULT_SETTINGS: DEFAULT_SETTINGS5,
-  MAX_ACCOUNTS: MAX_ACCOUNTS5,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS5,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS5,
-  getWechatAccountPublishOptions: getWechatAccountPublishOptions5,
-  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions5,
-  isMobileClient: isMobileClient7,
-  generateId: generateId5,
-  sleep: sleep6,
-  pMap: pMap5
-} = apple_style_view_shared_exports;
 var aiLayoutDebugMethods = {
   buildAiLayoutDebugJson(state) {
     if (!state)
@@ -77355,7 +76518,7 @@ var aiLayoutDebugMethods = {
     const visibleSchemaValidation = this.getVisibleAiSchemaValidation(state);
     const blockLines = Array.isArray(state.layoutJson.blocks) ? state.layoutJson.blocks.map((block, index) => {
       var _a6, _b2, _c2;
-      const blockRecord = toAiLayoutBlock5(block);
+      const blockRecord = toAiLayoutBlock(block);
       const origin = ((_c2 = (_b2 = (_a6 = state.generationMeta) == null ? void 0 : _a6.blockOrigins) == null ? void 0 : _b2[index]) == null ? void 0 : _c2.source) === "fallback" ? "\u8865\u5168" : "AI";
       return `${index + 1}. [${origin}] ${blockRecord.type || ""} - ${this.getAiLayoutBlockLabel(blockRecord)}`;
     }).join("\n") : "- \u65E0\u533A\u5757";
@@ -77434,7 +76597,7 @@ var aiLayoutDebugMethods = {
   },
   async copyAiLayoutDebugSnapshot() {
     const state = this.getCurrentArticleLayoutState();
-    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings5();
+    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings();
     const context = this.getCurrentLayoutContext();
     const providerLabel = this.getArticleLayoutProviderLabel(state, aiSettings);
     const modelLabel = this.getArticleLayoutModelLabel(state, aiSettings);
@@ -77448,21 +76611,21 @@ var aiLayoutDebugMethods = {
       sourcePath: context.sourcePath
     });
     if (!payload) {
-      new Notice5("\u8BF7\u5148\u5C55\u5F00\u5E03\u5C40 JSON \u6216\u9519\u8BEF\u8BE6\u60C5\uFF0C\u518D\u590D\u5236\u8C03\u8BD5\u5FEB\u7167");
+      new Notice("\u8BF7\u5148\u5C55\u5F00\u5E03\u5C40 JSON \u6216\u9519\u8BEF\u8BE6\u60C5\uFF0C\u518D\u590D\u5236\u8C03\u8BD5\u5FEB\u7167");
       return;
     }
     try {
       const copied = await this.copyPlainTextSnapshot(payload);
       if (!copied)
         throw new Error("clipboard unavailable");
-      new Notice5("\u2705 \u8C03\u8BD5\u5FEB\u7167\u5DF2\u590D\u5236");
+      new Notice("\u2705 \u8C03\u8BD5\u5FEB\u7167\u5DF2\u590D\u5236");
     } catch (e) {
-      new Notice5("\u274C \u8C03\u8BD5\u5FEB\u7167\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u526A\u8D34\u677F\u6743\u9650");
+      new Notice("\u274C \u8C03\u8BD5\u5FEB\u7167\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u526A\u8D34\u677F\u6743\u9650");
     }
   },
   async copyAiLayoutPromptContext() {
     const state = this.getCurrentArticleLayoutState();
-    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings5();
+    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings();
     const context = this.getCurrentLayoutContext();
     const providerLabel = this.getArticleLayoutProviderLabel(state, aiSettings);
     const modelLabel = this.getArticleLayoutModelLabel(state, aiSettings);
@@ -77475,16 +76638,16 @@ var aiLayoutDebugMethods = {
       isStale
     });
     if (!payload) {
-      new Notice5("\u5F53\u524D\u8FD8\u6CA1\u6709\u53EF\u7528\u7684 AI \u7F16\u6392\u7ED3\u679C\uFF0C\u6682\u65F6\u65E0\u6CD5\u751F\u6210 Prompt \u4E0A\u4E0B\u6587");
+      new Notice("\u5F53\u524D\u8FD8\u6CA1\u6709\u53EF\u7528\u7684 AI \u7F16\u6392\u7ED3\u679C\uFF0C\u6682\u65F6\u65E0\u6CD5\u751F\u6210 Prompt \u4E0A\u4E0B\u6587");
       return;
     }
     try {
       const copied = await this.copyPlainTextSnapshot(payload);
       if (!copied)
         throw new Error("clipboard unavailable");
-      new Notice5("\u2705 Prompt \u4E0A\u4E0B\u6587\u5DF2\u590D\u5236");
+      new Notice("\u2705 Prompt \u4E0A\u4E0B\u6587\u5DF2\u590D\u5236");
     } catch (e) {
-      new Notice5("\u274C Prompt \u4E0A\u4E0B\u6587\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u526A\u8D34\u677F\u6743\u9650");
+      new Notice("\u274C Prompt \u4E0A\u4E0B\u6587\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u526A\u8D34\u677F\u6743\u9650");
     }
   },
   refreshAiLayoutDebugPanel({ state, providerLabel, modelLabel, isStale }) {
@@ -77554,19 +76717,19 @@ var aiLayoutDebugMethods = {
     var _a5, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
     if (!this.aiLayoutStatusBadge || !this.aiLayoutSummary || !this.aiBlockList)
       return;
-    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings5();
-    const provider = resolveAiProvider5(aiSettings);
+    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings();
+    const provider = resolveAiProvider(aiSettings);
     const configuredProviders = Array.isArray(aiSettings.providers) ? aiSettings.providers.length : 0;
     const context = this.getCurrentLayoutContext();
     const storedState = this.getCurrentArticleLayoutState();
     const currentSelection = this.getCurrentAiLayoutSelection();
-    const activeGenerationSelection = this.aiLayoutLoading === true ? normalizeLayoutSelection5(this.aiLayoutActiveGenerationSelection || {}, {
-      layoutFamily: aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO5,
-      colorPalette: aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO5
+    const activeGenerationSelection = this.aiLayoutLoading === true ? normalizeLayoutSelection(this.aiLayoutActiveGenerationSelection || {}, {
+      layoutFamily: aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO,
+      colorPalette: aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO
     }) : null;
     const effectiveSelection = {
-      layoutFamily: (activeGenerationSelection == null ? void 0 : activeGenerationSelection.layoutFamily) || currentSelection.layoutFamily || ((_a5 = storedState == null ? void 0 : storedState.selection) == null ? void 0 : _a5.layoutFamily) || aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO5,
-      colorPalette: (activeGenerationSelection == null ? void 0 : activeGenerationSelection.colorPalette) || currentSelection.colorPalette || ((_b = storedState == null ? void 0 : storedState.selection) == null ? void 0 : _b.colorPalette) || aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO5
+      layoutFamily: (activeGenerationSelection == null ? void 0 : activeGenerationSelection.layoutFamily) || currentSelection.layoutFamily || ((_a5 = storedState == null ? void 0 : storedState.selection) == null ? void 0 : _a5.layoutFamily) || aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO,
+      colorPalette: (activeGenerationSelection == null ? void 0 : activeGenerationSelection.colorPalette) || currentSelection.colorPalette || ((_b = storedState == null ? void 0 : storedState.selection) == null ? void 0 : _b.colorPalette) || aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO
     };
     const state = storedState;
     if (effectiveSelection.layoutFamily === "source-first" && context.sourcePath && (!state || (state.status === "error" || state.status === "schema-error") && !((_d = (_c = state.layoutJson) == null ? void 0 : _c.blocks) == null ? void 0 : _d.length))) {
@@ -77642,7 +76805,7 @@ var aiLayoutDebugMethods = {
     this.aiLayoutStatusText.hidden = hideSuccessStatusText;
     this.aiLayoutStatusText.setText(hideSuccessStatusText ? "" : statusText);
     this.applyAiLayoutPanelStylePack(String(
-      ((_g = state == null ? void 0 : state.resolved) == null ? void 0 : _g.colorPalette) || (effectiveSelection.colorPalette !== AI_LAYOUT_SELECTION_AUTO5 ? effectiveSelection.colorPalette : "") || aiSettings.defaultStylePack || "tech-green"
+      ((_g = state == null ? void 0 : state.resolved) == null ? void 0 : _g.colorPalette) || (effectiveSelection.colorPalette !== AI_LAYOUT_SELECTION_AUTO ? effectiveSelection.colorPalette : "") || aiSettings.defaultStylePack || "tech-green"
     ));
     if (isResolvingSourceState && this.aiCachedLayoutList) {
       this.aiCachedLayoutList.empty();
@@ -77872,10 +77035,10 @@ var aiLayoutDebugMethods = {
     this.updateAiToolbarState();
   },
   async ensureCurrentArticleContext() {
-    const source = await resolveMarkdownSource5({
+    const source = await resolveMarkdownSource({
       app: this.app,
       lastActiveFile: this.lastActiveFile,
-      MarkdownViewType: MarkdownView5
+      MarkdownViewType: MarkdownView
     });
     if (!source.ok || !String(source.markdown || "").trim()) {
       return null;
@@ -77897,20 +77060,20 @@ var aiLayoutDebugMethods = {
   },
   async generateAiLayoutForCurrentArticle({ applyAfterGenerate = false } = {}) {
     var _a5, _b, _c, _d, _e, _f, _g;
-    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings5();
+    const aiSettings = this.plugin.settings.ai || createDefaultAiSettings();
     const context = await this.ensureCurrentArticleContext();
     if (!context) {
-      new Notice5("\u8BF7\u5148\u6253\u5F00\u4E00\u7BC7\u6709\u5185\u5BB9\u7684 Markdown \u6587\u7AE0");
+      new Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u7BC7\u6709\u5185\u5BB9\u7684 Markdown \u6587\u7AE0");
       return;
     }
     if (!this.baseRenderedHtml) {
       await this.convertCurrent(true, { showLoading: true, loadingText: "\u6B63\u5728\u51C6\u5907\u6587\u7AE0\u4E0A\u4E0B\u6587..." });
     }
-    const imageRefs = aiSettings.includeImagesInLayout === false ? [] : extractImageRefsFromHtml5(this.baseRenderedHtml || this.currentHtml || "");
+    const imageRefs = aiSettings.includeImagesInLayout === false ? [] : extractImageRefsFromHtml(this.baseRenderedHtml || this.currentHtml || "");
     const selection = this.getCurrentAiLayoutSelection();
-    const provider = resolveAiProvider5(aiSettings);
+    const provider = resolveAiProvider(aiSettings);
     if (selection.layoutFamily !== "source-first" && !provider) {
-      new Notice5("\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u5E76\u542F\u7528 AI Provider");
+      new Notice("\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u5E76\u542F\u7528 AI Provider");
       return;
     }
     const originalText = (_a5 = this.aiGenerateBtn) == null ? void 0 : _a5.textContent;
@@ -77922,21 +77085,21 @@ var aiLayoutDebugMethods = {
         this.aiGenerateBtn.disabled = true;
         this.aiGenerateBtn.setText("\u751F\u6210\u4E2D...");
       }
-      const result = await generateArticleLayout5({
+      const result = await generateArticleLayout({
         provider,
         title: context.title,
         markdown: context.markdown,
         selection,
         imageRefs,
         timeoutMs: aiSettings.requestTimeoutMs,
-        fetchImpl: createObsidianFetchAdapter5({ requestUrl: getObsidianRequestUrl5(), request: getObsidianRequest5() })
+        fetchImpl: createObsidianFetchAdapter({ requestUrl: getObsidianRequestUrl(), request: getObsidianRequest() })
       });
-      const layoutJson = toAiLayoutJson5(result.layoutJson);
+      const layoutJson = toAiLayoutJson(result.layoutJson);
       if (!Array.isArray(layoutJson == null ? void 0 : layoutJson.blocks) || !layoutJson.blocks.length) {
         throw new Error("AI \u8FD4\u56DE\u4E86\u7A7A\u7684\u7F16\u6392\u7ED3\u679C");
       }
       await this.plugin.saveArticleLayoutState(context.sourcePath, {
-        version: AI_LAYOUT_SCHEMA_VERSION5,
+        version: AI_LAYOUT_SCHEMA_VERSION,
         updatedAt: Date.now(),
         sourceHash: context.sourceHash,
         providerId: (provider == null ? void 0 : provider.id) || "",
@@ -77953,7 +77116,7 @@ var aiLayoutDebugMethods = {
         lastAttemptAt: Date.now(),
         lastAttemptSchemaValidation: null,
         dismissedBlockKeys: [],
-        generationMeta: toAiLayoutGenerationMeta5(result.generationMeta),
+        generationMeta: toAiLayoutGenerationMeta(result.generationMeta),
         layoutJson
       }, layoutJson.selection);
       this.pendingAiLayoutFamily = ((_b = layoutJson.selection) == null ? void 0 : _b.layoutFamily) || selection.layoutFamily;
@@ -77961,36 +77124,36 @@ var aiLayoutDebugMethods = {
       this.pendingAiStylePack = this.pendingAiColorPalette;
       if (applyAfterGenerate) {
         this.applyAiLayoutToPreview();
-        new Notice5(
-          ((_d = toAiLayoutGenerationMeta5(result.generationMeta)) == null ? void 0 : _d.executionMode) === "local-fallback" ? "\u2705 \u5DF2\u751F\u6210\u5E76\u5E94\u7528\u539F\u6587\u589E\u5F3A\u7ED3\u679C" : "\u2705 \u5DF2\u751F\u6210\u5E76\u5E94\u7528\u65B0\u7684\u7F16\u6392\u7ED3\u679C"
+        new Notice(
+          ((_d = toAiLayoutGenerationMeta(result.generationMeta)) == null ? void 0 : _d.executionMode) === "local-fallback" ? "\u2705 \u5DF2\u751F\u6210\u5E76\u5E94\u7528\u539F\u6587\u589E\u5F3A\u7ED3\u679C" : "\u2705 \u5DF2\u751F\u6210\u5E76\u5E94\u7528\u65B0\u7684\u7F16\u6392\u7ED3\u679C"
         );
       } else {
-        new Notice5(
-          ((_e = toAiLayoutGenerationMeta5(result.generationMeta)) == null ? void 0 : _e.executionMode) === "local-fallback" ? "\u2705 \u5DF2\u751F\u6210\u539F\u6587\u589E\u5F3A\u7ED3\u679C" : "\u2705 AI \u7F16\u6392\u5DF2\u751F\u6210"
+        new Notice(
+          ((_e = toAiLayoutGenerationMeta(result.generationMeta)) == null ? void 0 : _e.executionMode) === "local-fallback" ? "\u2705 \u5DF2\u751F\u6210\u539F\u6587\u589E\u5F3A\u7ED3\u679C" : "\u2705 AI \u7F16\u6392\u5DF2\u751F\u6210"
         );
       }
     } catch (error) {
       console.error("AI \u7F16\u6392\u751F\u6210\u5931\u8D25:", error);
-      const readableError = toReadableError8(error);
-      const errorRecord = toRecord13(error);
-      const errorGenerationMeta = toAiLayoutGenerationMeta5(errorRecord.generationMeta);
+      const readableError = toReadableError4(error);
+      const errorRecord = toRecord8(error);
+      const errorGenerationMeta = toAiLayoutGenerationMeta(errorRecord.generationMeta);
       const previousState = this.getCurrentArticleLayoutState();
       const isSchemaError = errorRecord.code === "ai-layout-schema-invalid";
       const hasReusablePreviousLayout = !!((previousState == null ? void 0 : previousState.status) === "ready" && ((_g = (_f = previousState == null ? void 0 : previousState.layoutJson) == null ? void 0 : _f.blocks) == null ? void 0 : _g.length));
       await this.plugin.saveArticleLayoutState(context.sourcePath, {
-        version: AI_LAYOUT_SCHEMA_VERSION5,
+        version: AI_LAYOUT_SCHEMA_VERSION,
         updatedAt: hasReusablePreviousLayout ? previousState.updatedAt : Date.now(),
         sourceHash: hasReusablePreviousLayout ? previousState.sourceHash : context.sourceHash,
         providerId: (provider == null ? void 0 : provider.id) || "",
         model: (provider == null ? void 0 : provider.model) || "",
         selection: hasReusablePreviousLayout ? previousState.selection : selection,
         resolved: hasReusablePreviousLayout ? previousState.resolved : {
-          layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO5 ? "source-first" : selection.layoutFamily,
-          colorPalette: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO5 ? "tech-green" : selection.colorPalette
+          layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO ? "source-first" : selection.layoutFamily,
+          colorPalette: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO ? "tech-green" : selection.colorPalette
         },
         recommendedLayoutFamily: hasReusablePreviousLayout ? previousState.recommendedLayoutFamily : "",
         recommendedColorPalette: hasReusablePreviousLayout ? previousState.recommendedColorPalette : "",
-        stylePack: hasReusablePreviousLayout ? previousState.stylePack : selection.colorPalette === AI_LAYOUT_SELECTION_AUTO5 ? "tech-green" : selection.colorPalette,
+        stylePack: hasReusablePreviousLayout ? previousState.stylePack : selection.colorPalette === AI_LAYOUT_SELECTION_AUTO ? "tech-green" : selection.colorPalette,
         status: hasReusablePreviousLayout ? previousState.status : isSchemaError ? "schema-error" : "error",
         lastError: readableError.message || "\u672A\u77E5\u9519\u8BEF",
         lastAttemptStatus: isSchemaError ? "schema-error" : "error",
@@ -78003,23 +77166,23 @@ var aiLayoutDebugMethods = {
         dismissedBlockKeys: hasReusablePreviousLayout ? previousState.dismissedBlockKeys || [] : [],
         generationMeta: hasReusablePreviousLayout ? previousState.generationMeta : errorGenerationMeta || (previousState == null ? void 0 : previousState.generationMeta) || null,
         layoutJson: hasReusablePreviousLayout ? previousState.layoutJson : (previousState == null ? void 0 : previousState.layoutJson) || {
-          version: AI_LAYOUT_SCHEMA_VERSION5,
+          version: AI_LAYOUT_SCHEMA_VERSION,
           articleType: "article",
           selection,
           resolved: {
-            layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO5 ? "source-first" : selection.layoutFamily,
-            colorPalette: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO5 ? "tech-green" : selection.colorPalette
+            layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO ? "source-first" : selection.layoutFamily,
+            colorPalette: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO ? "tech-green" : selection.colorPalette
           },
           recommendedLayoutFamily: "",
           recommendedColorPalette: "",
-          stylePack: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO5 ? "tech-green" : selection.colorPalette,
-          layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO5 ? "source-first" : selection.layoutFamily,
+          stylePack: selection.colorPalette === AI_LAYOUT_SELECTION_AUTO ? "tech-green" : selection.colorPalette,
+          layoutFamily: selection.layoutFamily === AI_LAYOUT_SELECTION_AUTO ? "source-first" : selection.layoutFamily,
           title: context.title,
           summary: "",
           blocks: []
         }
       }, selection);
-      new Notice5(
+      new Notice(
         hasReusablePreviousLayout ? "\u274C \u8FD9\u6B21\u751F\u6210\u6CA1\u6709\u6210\u529F\uFF0C\u5DF2\u4E3A\u4F60\u4FDD\u7559\u4E0A\u4E00\u7248\u7ED3\u679C" : isSchemaError ? `\u274C \u751F\u6210\u5931\u8D25\uFF1A${readableError.message}` : `\u274C \u751F\u6210\u5931\u8D25\uFF1A${readableError.message}`
       );
     } finally {
@@ -78038,17 +77201,17 @@ var aiLayoutDebugMethods = {
     const state = stateOverride || this.getCurrentArticleLayoutState();
     const visibleSnapshot = this.getVisibleAiLayoutSnapshot(state);
     if (!state || !((_b = (_a5 = visibleSnapshot.layoutJson) == null ? void 0 : _a5.blocks) == null ? void 0 : _b.length)) {
-      new Notice5("\u5F53\u524D\u6587\u7AE0\u8FD8\u6CA1\u6709\u53EF\u7528\u7684 AI \u7F16\u6392\u7ED3\u679C");
+      new Notice("\u5F53\u524D\u6587\u7AE0\u8FD8\u6CA1\u6709\u53EF\u7528\u7684 AI \u7F16\u6392\u7ED3\u679C");
       return;
     }
     if (!allowStale && context.sourceHash && state.sourceHash && context.sourceHash !== state.sourceHash) {
       this.refreshAiLayoutPanel();
       return;
     }
-    const imageRefs = extractImageRefsFromHtml5(this.baseRenderedHtml || this.currentHtml || "");
-    const renderedSectionFragments = extractRenderedSectionFragments5(this.baseRenderedHtml || this.currentHtml || "");
+    const imageRefs = extractImageRefsFromHtml(this.baseRenderedHtml || this.currentHtml || "");
+    const renderedSectionFragments = extractRenderedSectionFragments(this.baseRenderedHtml || this.currentHtml || "");
     const renderLayout = this.getAiRenderLayoutJson(visibleSnapshot.layoutJson);
-    const html = renderArticleLayoutHtml5(renderLayout, {
+    const html = renderArticleLayoutHtml(renderLayout, {
       imageRefs,
       renderedSectionFragments,
       colorPaletteOverride: this.getAiColorPaletteOverride(((_c = renderLayout == null ? void 0 : renderLayout.resolved) == null ? void 0 : _c.colorPalette) || (renderLayout == null ? void 0 : renderLayout.stylePack))
@@ -78057,7 +77220,7 @@ var aiLayoutDebugMethods = {
     this.currentHtml = html;
     this.aiPreviewApplied = true;
     if (this.previewContainer) {
-      setElementHtml5(this.previewContainer, html);
+      setElementHtml(this.previewContainer, html);
       this.previewContainer.scrollTop = scrollTop;
       this.previewContainer.addClass("apple-has-content");
     }
@@ -78067,167 +77230,6 @@ var aiLayoutDebugMethods = {
 };
 
 // views/converter/clipboard.js
-var {
-  createRenderPipelines: createRenderPipelines6,
-  buildRenderRuntime: buildRenderRuntime6,
-  resolveMarkdownSource: resolveMarkdownSource6,
-  normalizeVaultPath: normalizeVaultPath6,
-  isAbsolutePathLike: isAbsolutePathLike6,
-  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown6,
-  canUseNativePreviewFastPath: canUseNativePreviewFastPath6,
-  renderNativeMarkdown: renderNativeMarkdown6,
-  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages6,
-  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION6,
-  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO6,
-  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS6,
-  createDefaultAiSettings: createDefaultAiSettings6,
-  normalizeAiSettings: normalizeAiSettings6,
-  normalizeAiProvider: normalizeAiProvider6,
-  getAiProviderIssues: getAiProviderIssues6,
-  isAiProviderRunnable: isAiProviderRunnable6,
-  summarizeAiProviderIssues: summarizeAiProviderIssues6,
-  getLayoutFamilyList: getLayoutFamilyList6,
-  getLayoutFamilyById: getLayoutFamilyById6,
-  getColorPaletteList: getColorPaletteList6,
-  getColorPaletteById: getColorPaletteById6,
-  resolveColorPaletteForRender: resolveColorPaletteForRender6,
-  normalizeHexColor: normalizeHexColor6,
-  normalizeLayoutSelection: normalizeLayoutSelection6,
-  getArticleLayoutSelectionState: getArticleLayoutSelectionState6,
-  resolveAiProvider: resolveAiProvider6,
-  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection6,
-  normalizeArticleLayoutState: normalizeArticleLayoutState6,
-  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry6,
-  extractImageRefsFromHtml: extractImageRefsFromHtml6,
-  extractRenderedSectionFragments: extractRenderedSectionFragments6,
-  generateArticleLayout: generateArticleLayout6,
-  renderArticleLayoutHtml: renderArticleLayoutHtml6,
-  testAiProviderConnection: testAiProviderConnection6,
-  createWechatSyncService: createWechatSyncService6,
-  createWechatSyncBridgeService: createWechatSyncBridgeService6,
-  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError5,
-  getMultiPlatformResultSummary: getMultiPlatformResultSummary6,
-  getWechatSyncResultError: getWechatSyncResultError6,
-  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId6,
-  getWechatSyncResultUrl: getWechatSyncResultUrl6,
-  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform6,
-  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay6,
-  resolveSyncAccount: resolveSyncAccount6,
-  toSyncFriendlyMessage: toSyncFriendlyMessage6,
-  createEmptyDraftCache: createEmptyDraftCache6,
-  normalizeDraftCache: normalizeDraftCache6,
-  getDraftAssociation: getDraftAssociation6,
-  setDraftAssociation: setDraftAssociation6,
-  clearDraftAssociation: clearDraftAssociation6,
-  processAllImagesService: processAllImagesService5,
-  processMathFormulasService: processMathFormulasService5,
-  cleanHtmlForDraftService: cleanHtmlForDraftService5,
-  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob6,
-  createObsidianFetchAdapter: createObsidianFetchAdapter6,
-  stripMarkdownFrontmatter: stripMarkdownFrontmatter6,
-  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls6,
-  createHtmlContainer: createHtmlContainer6,
-  getActiveDocument: getActiveDocument6,
-  getActiveWindowValue: getActiveWindowValue6,
-  htmlToText: htmlToText6,
-  setElementHtml: setElementHtml6,
-  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings6,
-  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds6,
-  hasWechatSyncCapability: hasWechatSyncCapability6,
-  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings6,
-  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms6,
-  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt6,
-  describeWechatsyncConnectionState: describeWechatsyncConnectionState6,
-  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar6,
-  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab6,
-  showMultiPlatformPublishModal: showMultiPlatformPublishModal6,
-  renderFeishuSettingsTab: renderFeishuSettingsTab6,
-  renderFeishuPublishTab: renderFeishuPublishTab6,
-  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings6,
-  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings6,
-  updateFeishuHistoryPath: updateFeishuHistoryPath6,
-  WechatAPI: WechatAPI6,
-  loadCommonJsDependency: loadCommonJsDependency6,
-  obsidianApi: obsidianApi6,
-  Plugin: Plugin6,
-  MarkdownView: MarkdownView6,
-  ItemView: ItemView6,
-  Notice: Notice6,
-  Platform: Platform6,
-  PluginSettingTab: PluginSettingTab6,
-  Setting: Setting6,
-  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY7,
-  getActiveDocumentCompat: getActiveDocumentCompat6,
-  createFallbackSvgElement: createFallbackSvgElement6,
-  revealLeafCompat: revealLeafCompat6,
-  getPluginSettings: getPluginSettings6,
-  setPluginSettings: setPluginSettings6,
-  setDestructiveButtonCompat: setDestructiveButtonCompat6,
-  refreshSettingTabCompat: refreshSettingTabCompat6,
-  toReadableError: toReadableError9,
-  isRecord: isRecord17,
-  toRecord: toRecord14,
-  toAiLayoutState: toAiLayoutState6,
-  toAiLayoutJson: toAiLayoutJson6,
-  toAiLayoutBlock: toAiLayoutBlock6,
-  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta6,
-  toAiLayoutSelection: toAiLayoutSelection6,
-  toAiLayoutFamilyStates: toAiLayoutFamilyStates6,
-  toOptionalText: toOptionalText7,
-  toImageElements: toImageElements6,
-  removeElementClass: removeElementClass6,
-  toOptionalNumber: toOptionalNumber7,
-  parseJsonRecord: parseJsonRecord7,
-  normalizeRequestUrlResponse: normalizeRequestUrlResponse7,
-  getResponseJsonRecord: getResponseJsonRecord7,
-  getProxyErrorMessage: getProxyErrorMessage7,
-  createProxyError: createProxyError7,
-  formatWechatApiError: formatWechatApiError7,
-  hasWechatUploadResult: hasWechatUploadResult7,
-  readBlobAsBase64Payload: readBlobAsBase64Payload7,
-  dataUrlToBlob: dataUrlToBlob6,
-  bufferFromBinary: bufferFromBinary7,
-  inferLocalImageMimeType: inferLocalImageMimeType6,
-  safeDecodeUriText: safeDecodeUriText6,
-  getFileUrlLocalPath: getFileUrlLocalPath6,
-  getVaultAdapterBasePath: getVaultAdapterBasePath6,
-  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath7,
-  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath7,
-  getVaultDirnameFromPath: getVaultDirnameFromPath6,
-  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW6,
-  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE6,
-  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL6,
-  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL6,
-  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL7,
-  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL6,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL7,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL7,
-  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL6,
-  getObsidianModalClass: getObsidianModalClass6,
-  createObsidianModal: createObsidianModal6,
-  getObsidianSetIcon: getObsidianSetIcon6,
-  getObsidianRequestUrl: getObsidianRequestUrl6,
-  getObsidianRequest: getObsidianRequest6,
-  getAppleThemeApi: getAppleThemeApi6,
-  getValueElementFromEvent: getValueElementFromEvent6,
-  getEventTargetValue: getEventTargetValue6,
-  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY6,
-  getObsidianLocale: getObsidianLocale6,
-  isChineseObsidianLocale: isChineseObsidianLocale6,
-  getImageSwipeCommandCopy: getImageSwipeCommandCopy6,
-  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout6,
-  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown6,
-  DEFAULT_SETTINGS: DEFAULT_SETTINGS6,
-  MAX_ACCOUNTS: MAX_ACCOUNTS6,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS6,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS6,
-  getWechatAccountPublishOptions: getWechatAccountPublishOptions6,
-  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions6,
-  isMobileClient: isMobileClient8,
-  generateId: generateId6,
-  sleep: sleep7,
-  pMap: pMap6
-} = apple_style_view_shared_exports;
 var clipboardMethods = {
   resolveLocalImageFileForUpload(src) {
     var _a5, _b, _c, _d, _e, _f;
@@ -78236,8 +77238,8 @@ var clipboardMethods = {
       return null;
     const activeFile = this.getPublishContextFile();
     const sourcePath = (activeFile == null ? void 0 : activeFile.path) || this.lastResolvedSourcePath || "";
-    const decoded = safeDecodeUriText6(raw);
-    const fromFileUrl = /^file:\/\//i.test(decoded) ? getVaultRelativePathFromLocalPath7(this.app, getFileUrlLocalPath6(decoded)) : "";
+    const decoded = safeDecodeUriText(raw);
+    const fromFileUrl = /^file:\/\//i.test(decoded) ? getVaultRelativePathFromLocalPath2(this.app, getFileUrlLocalPath(decoded)) : "";
     if (/^file:\/\//i.test(decoded) && !fromFileUrl) {
       throw new Error("\u53EA\u652F\u6301\u8BFB\u53D6\u5F53\u524D vault \u5185\u7684 file:// \u56FE\u7247");
     }
@@ -78249,12 +77251,12 @@ var clipboardMethods = {
     } catch (e) {
     }
     const candidates = [];
-    const normalized = normalizeVaultPath6(lookupSrc);
+    const normalized = normalizeVaultPath(lookupSrc);
     if (normalized)
       candidates.push(normalized);
-    const noteDir = getVaultDirnameFromPath6(sourcePath);
-    if (normalized && noteDir && !isAbsolutePathLike6(normalized)) {
-      candidates.push(normalizeVaultPath6(`${noteDir}/${normalized}`));
+    const noteDir = getVaultDirnameFromPath(sourcePath);
+    if (normalized && noteDir && !isAbsolutePathLike(normalized)) {
+      candidates.push(normalizeVaultPath(`${noteDir}/${normalized}`));
     }
     for (const candidate of Array.from(new Set(candidates))) {
       try {
@@ -78268,14 +77270,20 @@ var clipboardMethods = {
   },
   async vaultFileToBlob(file) {
     var _a5, _b;
-    const readBinary = (_b = (_a5 = this.app) == null ? void 0 : _a5.vault) == null ? void 0 : _b.readBinary;
+    const readBinary = (
+      /** @type {((file: unknown) => Promise<unknown>) | undefined} */
+      (_b = (_a5 = this.app) == null ? void 0 : _a5.vault) == null ? void 0 : _b.readBinary
+    );
     if (typeof readBinary !== "function") {
       throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301\u8BFB\u53D6\u672C\u5730\u56FE\u7247");
     }
-    const binary = await readBinary.call(this.app.vault, file);
-    const buffer = bufferFromBinary7(binary);
+    const binary = (
+      /** @type {unknown} */
+      await readBinary.call(this.app.vault, file)
+    );
+    const buffer = bufferFromBinary2(binary);
     const fileName = typeof file === "object" && file && typeof file["name"] === "string" ? file["name"] : typeof file === "object" && file && typeof file["path"] === "string" ? file["path"] : "image";
-    return new Blob([buffer], { type: inferLocalImageMimeType6(fileName) });
+    return new Blob([buffer], { type: inferLocalImageMimeType(fileName) });
   },
   async srcToBlob(src) {
     const localFile = this.resolveLocalImageFileForUpload(src);
@@ -78283,14 +77291,14 @@ var clipboardMethods = {
       return this.vaultFileToBlob(localFile);
     }
     if (src.startsWith("data:")) {
-      return dataUrlToBlob6(src);
+      return dataUrlToBlob(src);
     }
     if (src.startsWith("app://") || src.startsWith("capacitor://")) {
       const resp = await window.fetch(src);
       return await resp.blob();
     }
     if (src.startsWith("http")) {
-      const requestUrl = getObsidianRequestUrl6();
+      const requestUrl = getObsidianRequestUrl();
       if (typeof requestUrl !== "function") {
         throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301 requestUrl");
       }
@@ -78309,11 +77317,11 @@ var clipboardMethods = {
     const accountId = (cacheContext == null ? void 0 : cacheContext.accountId) || "";
     return (
       /** @type {Promise<string>} */
-      processAllImagesService5({
+      processAllImages({
         html,
         api,
         progressCallback,
-        pMap: pMap6,
+        pMap,
         srcToBlob: (src) => this.srcToBlob(String(src || "")),
         imageUploadCache: this.imageUploadCache,
         cacheNamespace: accountId,
@@ -78324,31 +77332,31 @@ var clipboardMethods = {
   async processMathFormulas(html, api, progressCallback) {
     return (
       /** @type {Promise<string>} */
-      processMathFormulasService5({
+      processMathFormulas({
         html,
         api,
         progressCallback,
-        pMap: pMap6,
+        pMap,
         simpleHash: (value) => this.simpleHash(String(value || "")),
         svgUploadCache: this.svgUploadCache,
         svgToPngBlob: (svgElement, scale) => this.svgToPngBlob(
-          svgElement instanceof SVGElement ? svgElement : createFallbackSvgElement6(),
+          svgElement instanceof SVGElement ? svgElement : createFallbackSvgElement(),
           typeof scale === "number" ? scale : 3
         )
       })
     );
   },
   async svgToPngBlob(svgElement, scale = 3) {
-    return rasterizeSvgToPngBlob6(svgElement, { scale });
+    return rasterizeSvgToPngBlob(svgElement, { scale });
   },
   cleanHtmlForDraft(html) {
-    return cleanHtmlForDraftService5(html);
+    return cleanHtmlForDraft(html);
   },
   renderHTML(html) {
     if (!this.previewContainer)
       return;
     this.previewContainer.empty();
-    setElementHtml6(this.previewContainer, html);
+    setElementHtml(this.previewContainer, html);
   },
   async copyRichHTMLByClipboard(htmlContent) {
     if (!navigator.clipboard || typeof navigator.clipboard.write !== "function" || typeof ClipboardItem === "undefined") {
@@ -78367,7 +77375,7 @@ var clipboardMethods = {
     if (!this.copyBtn)
       return;
     this.copyBtn.replaceChildren();
-    const setIcon = getObsidianSetIcon6();
+    const setIcon = getObsidianSetIcon();
     if (typeof setIcon === "function") {
       setIcon(this.copyBtn, icon);
     }
@@ -78376,7 +77384,7 @@ var clipboardMethods = {
     if (!this.copyBtn)
       return;
     this.copyBtn.replaceChildren();
-    const activeDocument = getActiveDocumentCompat6();
+    const activeDocument = getActiveDocumentCompat();
     if (!activeDocument)
       return;
     const spinner = activeDocument.createElement("span");
@@ -78387,7 +77395,7 @@ var clipboardMethods = {
   async enhanceHtmlForWechatPublishing(root) {
     if (!root)
       return;
-    const activeDocument = getActiveDocumentCompat6();
+    const activeDocument = getActiveDocumentCompat();
     let mount = null;
     try {
       if ((activeDocument == null ? void 0 : activeDocument.body) && !root.isConnected) {
@@ -78404,7 +77412,7 @@ var clipboardMethods = {
         activeDocument.body.appendChild(mount);
         mount.appendChild(root);
       }
-      await convertRenderedMermaidDiagramsToImages6(root, {
+      await convertRenderedMermaidDiagramsToImages(root, {
         simpleHash: (value) => this.simpleHash(String(value || "")),
         mermaidImageCache: this.mermaidImageCache
       });
@@ -78418,14 +77426,14 @@ var clipboardMethods = {
   async prepareHtmlForWechatDraft(html) {
     let processedHtml = html || "";
     processedHtml = await this.applyCustomCss(processedHtml);
-    const tempDiv = createHtmlContainer6("div", processedHtml);
+    const tempDiv = createHtmlContainer("div", processedHtml);
     if (!tempDiv)
       return "";
     await this.enhanceHtmlForWechatPublishing(tempDiv);
     return tempDiv.innerHTML;
   },
   async prepareHtmlForWechatsyncArticle(html) {
-    const tempDiv = createHtmlContainer6("div", html || "");
+    const tempDiv = createHtmlContainer("div", html || "");
     if (!tempDiv)
       return "";
     await this.processImagesToDataURL(tempDiv);
@@ -78433,8 +77441,8 @@ var clipboardMethods = {
     return tempDiv.innerHTML;
   },
   async prepareHtmlForWechatsyncArticleViaBridge(html, assets = []) {
-    const mapped = mapAppUrlImagesToAssetUrls6(html || "", assets);
-    const tempDiv = createHtmlContainer6("div", mapped);
+    const mapped = mapAppUrlImagesToAssetUrls(html || "", assets);
+    const tempDiv = createHtmlContainer("div", mapped);
     if (!tempDiv)
       return "";
     this.transformCodeBlocksForWechatsync(tempDiv);
@@ -78468,7 +77476,7 @@ var clipboardMethods = {
       const scale = Math.min(1, MAX_DIM / Math.max(naturalW, naturalH));
       const targetW = Math.max(1, Math.round(naturalW * scale));
       const targetH = Math.max(1, Math.round(naturalH * scale));
-      const activeDocument = getActiveDocumentCompat6();
+      const activeDocument = getActiveDocumentCompat();
       if (!activeDocument)
         return "";
       const canvas = activeDocument.createElement("canvas");
@@ -78512,7 +77520,7 @@ var clipboardMethods = {
     })[0];
     if (codeLinesNode) {
       return (codeLinesNode.innerHTML || "").split(/<br\s*\/?>/i).map((lineHtml) => {
-        return htmlToText6(lineHtml || "").replace(/\u00a0/g, " ");
+        return htmlToText(lineHtml || "").replace(/\u00a0/g, " ");
       }).join("\n");
     }
     const codeEl = codePre.querySelector("code");
@@ -78527,7 +77535,7 @@ var clipboardMethods = {
     );
     codeBlocks.forEach((block) => {
       const codeText = this.extractCodeTextForWechatsync(block);
-      const activeDocument = getActiveDocumentCompat6();
+      const activeDocument = getActiveDocumentCompat();
       if (!activeDocument)
         return;
       const pre = activeDocument.createElement("pre");
@@ -78613,7 +77621,7 @@ var clipboardMethods = {
       const codeLineParts = codeLinesNode ? codeLinesHtml.split(/<br\s*\/?>/i) : [codeLinesHtml];
       const lineNumberLabels = lineNumberColumn ? Array.from(lineNumberColumn.children).map((node) => (node.textContent || "").trim()).filter(Boolean) : [];
       const shouldKeepFixedLineNumbers = lineNumberLabels.length > 0 && codeLineParts.length > 0;
-      const activeDocument = getActiveDocumentCompat6();
+      const activeDocument = getActiveDocumentCompat();
       if (!activeDocument)
         return;
       const pre = activeDocument.createElement("pre");
@@ -78623,7 +77631,7 @@ var clipboardMethods = {
         const toolbar = activeDocument.createElement("section");
         const toolbarStyle = "display:block !important;background:#161b22 !important;padding:6px 10px 6px 10px !important;border:none !important;border-bottom:1px solid #30363d !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;box-sizing:border-box !important;width:100% !important;";
         toolbar.setAttribute("style", toolbarStyle);
-        setElementHtml6(toolbar, [
+        setElementHtml(toolbar, [
           '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>',
           '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>',
           '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#28c840 !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>'
@@ -78639,11 +77647,11 @@ var clipboardMethods = {
         const codeInnerHtml = codeLineParts.map((lineHtml) => lineHtml || "&nbsp;").join("<br/>");
         const codeWithLineNumbersStyle = "display:block !important;width:100% !important;min-width:100% !important;max-width:100% !important;padding:0 !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:normal !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;";
         code.setAttribute("style", codeWithLineNumbersStyle);
-        setElementHtml6(code, `<section style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;max-width:100% !important;padding:0 !important;box-sizing:border-box !important;margin:0 !important;"><section class="line-numbers" style="text-align:right !important;padding:12px 0 !important;border-right:1px solid rgba(255,255,255,0.1) !important;user-select:none !important;background:transparent !important;flex:0 0 auto !important;min-width:3.5em !important;box-sizing:border-box !important;margin:0 !important;">${lineNumbersHtml}</section><section class="code-scroll" style="flex:1 1 auto !important;overflow-x:scroll !important;overflow-y:visible !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;padding:12px 12px 16px 16px !important;min-width:0 !important;box-sizing:border-box !important;margin:0 !important;"><section style="white-space:pre !important;min-width:max-content !important;line-height:1.75 !important;font-size:13px !important;margin:0 !important;">${codeInnerHtml}</section></section></section>`);
+        setElementHtml(code, `<section style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;max-width:100% !important;padding:0 !important;box-sizing:border-box !important;margin:0 !important;"><section class="line-numbers" style="text-align:right !important;padding:12px 0 !important;border-right:1px solid rgba(255,255,255,0.1) !important;user-select:none !important;background:transparent !important;flex:0 0 auto !important;min-width:3.5em !important;box-sizing:border-box !important;margin:0 !important;">${lineNumbersHtml}</section><section class="code-scroll" style="flex:1 1 auto !important;overflow-x:scroll !important;overflow-y:visible !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;padding:12px 12px 16px 16px !important;min-width:0 !important;box-sizing:border-box !important;margin:0 !important;"><section style="white-space:pre !important;min-width:max-content !important;line-height:1.75 !important;font-size:13px !important;margin:0 !important;">${codeInnerHtml}</section></section></section>`);
       } else {
         const codeScrollableStyle = "display:block !important;width:max-content !important;min-width:100% !important;max-width:none !important;padding:12px 12px 16px 12px !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:nowrap !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;";
         code.setAttribute("style", codeScrollableStyle);
-        setElementHtml6(code, codeLinesHtml);
+        setElementHtml(code, codeLinesHtml);
       }
       pre.appendChild(code);
       block.replaceWith(pre);
@@ -78664,7 +77672,7 @@ var clipboardMethods = {
     if (this.isCopying)
       return;
     if (!this.currentHtml) {
-      new Notice6(this.getMissingRenderNotice());
+      new Notice(this.getMissingRenderNotice());
       return;
     }
     this.isCopying = true;
@@ -78675,15 +77683,15 @@ var clipboardMethods = {
     try {
       let exportHtml = this.getCurrentExportHtml() || this.currentHtml;
       exportHtml = await this.applyCustomCss(exportHtml);
-      const tempDiv = createHtmlContainer6("div", exportHtml);
+      const tempDiv = createHtmlContainer("div", exportHtml);
       await this.processImagesToDataURL(tempDiv);
       await this.enhanceHtmlForWechatPublishing(tempDiv);
       const cleanedHtml = this.cleanHtmlForDraft(tempDiv.innerHTML);
       const htmlContent = cleanedHtml;
       window.__OWC_LAST_CLIPBOARD_HTML = htmlContent;
-      window.__OWC_LAST_CLIPBOARD_TEXT = htmlToText6(cleanedHtml);
+      window.__OWC_LAST_CLIPBOARD_TEXT = htmlToText(cleanedHtml);
       const expectedPlainText = this.normalizeClipboardText(window.__OWC_LAST_CLIPBOARD_TEXT);
-      const mobile = isMobileClient8(this.app);
+      const mobile = isMobileClient3(this.app);
       let copied = false;
       try {
         copied = await this.copyRichHTMLByClipboard(htmlContent);
@@ -78697,7 +77705,7 @@ var clipboardMethods = {
       if (!copied) {
         throw new Error("rich copy unavailable");
       }
-      new Notice6("\u2705 \u5DF2\u590D\u5236\u516C\u4F17\u53F7\u683C\u5F0F\uFF0C\u8BF7\u76F4\u63A5\u7C98\u8D34\u5230\u516C\u4F17\u53F7\u7F16\u8F91\u5668");
+      new Notice("\u2705 \u5DF2\u590D\u5236\u516C\u4F17\u53F7\u683C\u5F0F\uFF0C\u8BF7\u76F4\u63A5\u7C98\u8D34\u5230\u516C\u4F17\u53F7\u7F16\u8F91\u5668");
       if (this.copyBtn) {
         this.copyBtn.classList.remove("is-copying");
         this.setCopyButtonIcon("check");
@@ -78710,7 +77718,7 @@ var clipboardMethods = {
       return;
     } catch (error) {
       console.error("\u590D\u5236\u5931\u8D25:", error);
-      new Notice6("\u274C \u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u4F7F\u7528\u300C\u53D1\u5E03\u4E0E\u5206\u53D1\u300D\u53D1\u9001\u6587\u7AE0");
+      new Notice("\u274C \u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u4F7F\u7528\u300C\u53D1\u5E03\u4E0E\u5206\u53D1\u300D\u53D1\u9001\u6587\u7AE0");
       if (this.copyBtn) {
         this.copyBtn.classList.remove("is-copying");
         this.setCopyButtonIcon("copy");
@@ -78720,7 +77728,7 @@ var clipboardMethods = {
     }
   },
   async processImagesToDataURL(container) {
-    const images = toImageElements6(container.querySelectorAll("img"));
+    const images = toImageElements(container.querySelectorAll("img"));
     const localImages = images.filter((img) => img.src.startsWith("app://") || img.src.startsWith("capacitor://"));
     if (localImages.length === 0)
       return false;
@@ -78742,7 +77750,7 @@ var clipboardMethods = {
       const response = await window.fetch(img.src);
       const blob = await response.blob();
       if (blob.size > 10 * 1024 * 1024) {
-        new Notice6(`\u26A0\uFE0F \u53D1\u73B0\u5927\u56FE (${(blob.size / 1024 / 1024).toFixed(1)}MB)\uFF0C\u5904\u7406\u53EF\u80FD\u8F83\u6162`, 5e3);
+        new Notice(`\u26A0\uFE0F \u53D1\u73B0\u5927\u56FE (${(blob.size / 1024 / 1024).toFixed(1)}MB)\uFF0C\u5904\u7406\u53EF\u80FD\u8F83\u6162`, 5e3);
       }
       let dataUrl;
       if (blob.type === "image/gif") {
@@ -78769,7 +77777,7 @@ var clipboardMethods = {
       const url = URL.createObjectURL(blob);
       const image = new Image();
       image.onload = () => {
-        const activeDocument = getActiveDocumentCompat6();
+        const activeDocument = getActiveDocumentCompat();
         if (!activeDocument) {
           URL.revokeObjectURL(url);
           reject(new Error("Document unavailable"));
@@ -78800,167 +77808,6 @@ var clipboardMethods = {
 };
 
 // views/publish-modal/wechat-preview-export.js
-var {
-  createRenderPipelines: createRenderPipelines7,
-  buildRenderRuntime: buildRenderRuntime7,
-  resolveMarkdownSource: resolveMarkdownSource7,
-  normalizeVaultPath: normalizeVaultPath7,
-  isAbsolutePathLike: isAbsolutePathLike7,
-  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown7,
-  canUseNativePreviewFastPath: canUseNativePreviewFastPath7,
-  renderNativeMarkdown: renderNativeMarkdown7,
-  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages7,
-  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION7,
-  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO7,
-  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS7,
-  createDefaultAiSettings: createDefaultAiSettings7,
-  normalizeAiSettings: normalizeAiSettings7,
-  normalizeAiProvider: normalizeAiProvider7,
-  getAiProviderIssues: getAiProviderIssues7,
-  isAiProviderRunnable: isAiProviderRunnable7,
-  summarizeAiProviderIssues: summarizeAiProviderIssues7,
-  getLayoutFamilyList: getLayoutFamilyList7,
-  getLayoutFamilyById: getLayoutFamilyById7,
-  getColorPaletteList: getColorPaletteList7,
-  getColorPaletteById: getColorPaletteById7,
-  resolveColorPaletteForRender: resolveColorPaletteForRender7,
-  normalizeHexColor: normalizeHexColor7,
-  normalizeLayoutSelection: normalizeLayoutSelection7,
-  getArticleLayoutSelectionState: getArticleLayoutSelectionState7,
-  resolveAiProvider: resolveAiProvider7,
-  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection7,
-  normalizeArticleLayoutState: normalizeArticleLayoutState7,
-  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry7,
-  extractImageRefsFromHtml: extractImageRefsFromHtml7,
-  extractRenderedSectionFragments: extractRenderedSectionFragments7,
-  generateArticleLayout: generateArticleLayout7,
-  renderArticleLayoutHtml: renderArticleLayoutHtml7,
-  testAiProviderConnection: testAiProviderConnection7,
-  createWechatSyncService: createWechatSyncService7,
-  createWechatSyncBridgeService: createWechatSyncBridgeService7,
-  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError6,
-  getMultiPlatformResultSummary: getMultiPlatformResultSummary7,
-  getWechatSyncResultError: getWechatSyncResultError7,
-  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId7,
-  getWechatSyncResultUrl: getWechatSyncResultUrl7,
-  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform7,
-  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay7,
-  resolveSyncAccount: resolveSyncAccount7,
-  toSyncFriendlyMessage: toSyncFriendlyMessage7,
-  createEmptyDraftCache: createEmptyDraftCache7,
-  normalizeDraftCache: normalizeDraftCache7,
-  getDraftAssociation: getDraftAssociation7,
-  setDraftAssociation: setDraftAssociation7,
-  clearDraftAssociation: clearDraftAssociation7,
-  processAllImagesService: processAllImagesService6,
-  processMathFormulasService: processMathFormulasService6,
-  cleanHtmlForDraftService: cleanHtmlForDraftService6,
-  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob7,
-  createObsidianFetchAdapter: createObsidianFetchAdapter7,
-  stripMarkdownFrontmatter: stripMarkdownFrontmatter7,
-  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls7,
-  createHtmlContainer: createHtmlContainer7,
-  getActiveDocument: getActiveDocument7,
-  getActiveWindowValue: getActiveWindowValue7,
-  htmlToText: htmlToText7,
-  setElementHtml: setElementHtml7,
-  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings7,
-  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds7,
-  hasWechatSyncCapability: hasWechatSyncCapability7,
-  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings7,
-  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms7,
-  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt7,
-  describeWechatsyncConnectionState: describeWechatsyncConnectionState7,
-  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar7,
-  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab7,
-  showMultiPlatformPublishModal: showMultiPlatformPublishModal7,
-  renderFeishuSettingsTab: renderFeishuSettingsTab7,
-  renderFeishuPublishTab: renderFeishuPublishTab7,
-  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings7,
-  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings7,
-  updateFeishuHistoryPath: updateFeishuHistoryPath7,
-  WechatAPI: WechatAPI7,
-  loadCommonJsDependency: loadCommonJsDependency7,
-  obsidianApi: obsidianApi7,
-  Plugin: Plugin7,
-  MarkdownView: MarkdownView7,
-  ItemView: ItemView7,
-  Notice: Notice7,
-  Platform: Platform7,
-  PluginSettingTab: PluginSettingTab7,
-  Setting: Setting7,
-  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY8,
-  getActiveDocumentCompat: getActiveDocumentCompat7,
-  createFallbackSvgElement: createFallbackSvgElement7,
-  revealLeafCompat: revealLeafCompat7,
-  getPluginSettings: getPluginSettings7,
-  setPluginSettings: setPluginSettings7,
-  setDestructiveButtonCompat: setDestructiveButtonCompat7,
-  refreshSettingTabCompat: refreshSettingTabCompat7,
-  toReadableError: toReadableError10,
-  isRecord: isRecord18,
-  toRecord: toRecord15,
-  toAiLayoutState: toAiLayoutState7,
-  toAiLayoutJson: toAiLayoutJson7,
-  toAiLayoutBlock: toAiLayoutBlock7,
-  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta7,
-  toAiLayoutSelection: toAiLayoutSelection7,
-  toAiLayoutFamilyStates: toAiLayoutFamilyStates7,
-  toOptionalText: toOptionalText8,
-  toImageElements: toImageElements7,
-  removeElementClass: removeElementClass7,
-  toOptionalNumber: toOptionalNumber8,
-  parseJsonRecord: parseJsonRecord8,
-  normalizeRequestUrlResponse: normalizeRequestUrlResponse8,
-  getResponseJsonRecord: getResponseJsonRecord8,
-  getProxyErrorMessage: getProxyErrorMessage8,
-  createProxyError: createProxyError8,
-  formatWechatApiError: formatWechatApiError8,
-  hasWechatUploadResult: hasWechatUploadResult8,
-  readBlobAsBase64Payload: readBlobAsBase64Payload8,
-  dataUrlToBlob: dataUrlToBlob7,
-  bufferFromBinary: bufferFromBinary8,
-  inferLocalImageMimeType: inferLocalImageMimeType7,
-  safeDecodeUriText: safeDecodeUriText7,
-  getFileUrlLocalPath: getFileUrlLocalPath7,
-  getVaultAdapterBasePath: getVaultAdapterBasePath7,
-  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath8,
-  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath8,
-  getVaultDirnameFromPath: getVaultDirnameFromPath7,
-  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW7,
-  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE7,
-  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL7,
-  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL7,
-  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL8,
-  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL7,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL8,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL8,
-  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL7,
-  getObsidianModalClass: getObsidianModalClass7,
-  createObsidianModal: createObsidianModal7,
-  getObsidianSetIcon: getObsidianSetIcon7,
-  getObsidianRequestUrl: getObsidianRequestUrl7,
-  getObsidianRequest: getObsidianRequest7,
-  getAppleThemeApi: getAppleThemeApi7,
-  getValueElementFromEvent: getValueElementFromEvent7,
-  getEventTargetValue: getEventTargetValue7,
-  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY7,
-  getObsidianLocale: getObsidianLocale7,
-  isChineseObsidianLocale: isChineseObsidianLocale7,
-  getImageSwipeCommandCopy: getImageSwipeCommandCopy7,
-  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout7,
-  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown7,
-  DEFAULT_SETTINGS: DEFAULT_SETTINGS7,
-  MAX_ACCOUNTS: MAX_ACCOUNTS7,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS7,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS7,
-  getWechatAccountPublishOptions: getWechatAccountPublishOptions7,
-  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions7,
-  isMobileClient: isMobileClient9,
-  generateId: generateId7,
-  sleep: sleep8,
-  pMap: pMap7
-} = apple_style_view_shared_exports;
 var wechatPreviewExportMethods = {
   getCurrentExportHtml() {
     var _a5, _b, _c;
@@ -78977,10 +77824,10 @@ var wechatPreviewExportMethods = {
     if (context.sourceHash && state.sourceHash && context.sourceHash !== state.sourceHash) {
       return this.currentHtml;
     }
-    const imageRefs = extractImageRefsFromHtml7(this.baseRenderedHtml || this.currentHtml || "");
-    const renderedSectionFragments = extractRenderedSectionFragments7(this.baseRenderedHtml || this.currentHtml || "");
+    const imageRefs = extractImageRefsFromHtml(this.baseRenderedHtml || this.currentHtml || "");
+    const renderedSectionFragments = extractRenderedSectionFragments(this.baseRenderedHtml || this.currentHtml || "");
     const renderLayout = this.getAiRenderLayoutJson(visibleSnapshot.layoutJson);
-    return renderArticleLayoutHtml7(renderLayout, {
+    return renderArticleLayoutHtml(renderLayout, {
       imageRefs,
       mode: "draft",
       renderedSectionFragments,
@@ -78993,7 +77840,7 @@ var wechatPreviewExportMethods = {
     const scrollTop = this.previewContainer.scrollTop;
     this.currentHtml = this.baseRenderedHtml;
     this.aiPreviewApplied = false;
-    setElementHtml7(this.previewContainer, this.baseRenderedHtml);
+    setElementHtml(this.previewContainer, this.baseRenderedHtml);
     this.previewContainer.scrollTop = scrollTop;
     this.previewContainer.addClass("apple-has-content");
     this.syncPreviewPresentationMode();
@@ -79025,12 +77872,12 @@ var wechatPreviewExportMethods = {
     const isHttpUrl = /^https?:\/\//i.test(target);
     const isExtensionUrl = /^(chrome|edge|brave|moz)-extension:\/\//i.test(target);
     if (!isHttpUrl && !(allowExtensionUrls && isExtensionUrl)) {
-      new Notice7("\u8349\u7A3F\u94FE\u63A5\u4E0D\u53EF\u7528");
+      new Notice("\u8349\u7A3F\u94FE\u63A5\u4E0D\u53EF\u7528");
       return false;
     }
     if (typeof window !== "undefined") {
       try {
-        const activeDoc = getActiveDocumentCompat7();
+        const activeDoc = getActiveDocumentCompat();
         if (!activeDoc)
           return false;
         const a = activeDoc.createElement("a");
@@ -79045,198 +77892,37 @@ var wechatPreviewExportMethods = {
         }
       }
     }
-    new Notice7("\u65E0\u6CD5\u6253\u5F00\u8349\u7A3F\u94FE\u63A5\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u67E5\u770B\u540C\u6B65\u7ED3\u679C");
+    new Notice("\u65E0\u6CD5\u6253\u5F00\u8349\u7A3F\u94FE\u63A5\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u67E5\u770B\u540C\u6B65\u7ED3\u679C");
     return false;
   },
   openPublisherProPage() {
-    return this.openExternalUrl(OBSIDIAN_PUBLISHER_PRO_URL8);
+    return this.openExternalUrl(OBSIDIAN_PUBLISHER_PRO_URL2);
   },
   openPublisherGuidePage(section = "") {
     if (section === "bridge") {
-      return this.openExternalUrl(OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL8);
+      return this.openExternalUrl(OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL2);
     }
     if (section === "install-extension") {
-      return this.openExternalUrl(OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL8);
+      return this.openExternalUrl(OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL2);
     }
-    return this.openExternalUrl(OBSIDIAN_PUBLISHER_GUIDE_URL7);
+    return this.openExternalUrl(OBSIDIAN_PUBLISHER_GUIDE_URL);
   }
 };
 
 // views/publish-modal/wechat-account-state.js
-var {
-  createRenderPipelines: createRenderPipelines8,
-  buildRenderRuntime: buildRenderRuntime8,
-  resolveMarkdownSource: resolveMarkdownSource8,
-  normalizeVaultPath: normalizeVaultPath8,
-  isAbsolutePathLike: isAbsolutePathLike8,
-  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown8,
-  canUseNativePreviewFastPath: canUseNativePreviewFastPath8,
-  renderNativeMarkdown: renderNativeMarkdown8,
-  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages8,
-  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION8,
-  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO8,
-  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS8,
-  createDefaultAiSettings: createDefaultAiSettings8,
-  normalizeAiSettings: normalizeAiSettings8,
-  normalizeAiProvider: normalizeAiProvider8,
-  getAiProviderIssues: getAiProviderIssues8,
-  isAiProviderRunnable: isAiProviderRunnable8,
-  summarizeAiProviderIssues: summarizeAiProviderIssues8,
-  getLayoutFamilyList: getLayoutFamilyList8,
-  getLayoutFamilyById: getLayoutFamilyById8,
-  getColorPaletteList: getColorPaletteList8,
-  getColorPaletteById: getColorPaletteById8,
-  resolveColorPaletteForRender: resolveColorPaletteForRender8,
-  normalizeHexColor: normalizeHexColor8,
-  normalizeLayoutSelection: normalizeLayoutSelection8,
-  getArticleLayoutSelectionState: getArticleLayoutSelectionState8,
-  resolveAiProvider: resolveAiProvider8,
-  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection8,
-  normalizeArticleLayoutState: normalizeArticleLayoutState8,
-  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry8,
-  extractImageRefsFromHtml: extractImageRefsFromHtml8,
-  extractRenderedSectionFragments: extractRenderedSectionFragments8,
-  generateArticleLayout: generateArticleLayout8,
-  renderArticleLayoutHtml: renderArticleLayoutHtml8,
-  testAiProviderConnection: testAiProviderConnection8,
-  createWechatSyncService: createWechatSyncService8,
-  createWechatSyncBridgeService: createWechatSyncBridgeService8,
-  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError7,
-  getMultiPlatformResultSummary: getMultiPlatformResultSummary8,
-  getWechatSyncResultError: getWechatSyncResultError8,
-  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId8,
-  getWechatSyncResultUrl: getWechatSyncResultUrl8,
-  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform8,
-  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay8,
-  resolveSyncAccount: resolveSyncAccount8,
-  toSyncFriendlyMessage: toSyncFriendlyMessage8,
-  createEmptyDraftCache: createEmptyDraftCache8,
-  normalizeDraftCache: normalizeDraftCache8,
-  getDraftAssociation: getDraftAssociation8,
-  setDraftAssociation: setDraftAssociation8,
-  clearDraftAssociation: clearDraftAssociation8,
-  processAllImagesService: processAllImagesService7,
-  processMathFormulasService: processMathFormulasService7,
-  cleanHtmlForDraftService: cleanHtmlForDraftService7,
-  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob8,
-  createObsidianFetchAdapter: createObsidianFetchAdapter8,
-  stripMarkdownFrontmatter: stripMarkdownFrontmatter8,
-  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls8,
-  createHtmlContainer: createHtmlContainer8,
-  getActiveDocument: getActiveDocument8,
-  getActiveWindowValue: getActiveWindowValue8,
-  htmlToText: htmlToText8,
-  setElementHtml: setElementHtml8,
-  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings8,
-  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds8,
-  hasWechatSyncCapability: hasWechatSyncCapability8,
-  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings8,
-  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms8,
-  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt8,
-  describeWechatsyncConnectionState: describeWechatsyncConnectionState8,
-  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar8,
-  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab8,
-  showMultiPlatformPublishModal: showMultiPlatformPublishModal8,
-  renderFeishuSettingsTab: renderFeishuSettingsTab8,
-  renderFeishuPublishTab: renderFeishuPublishTab8,
-  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings8,
-  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings8,
-  updateFeishuHistoryPath: updateFeishuHistoryPath8,
-  WechatAPI: WechatAPI8,
-  loadCommonJsDependency: loadCommonJsDependency8,
-  obsidianApi: obsidianApi8,
-  Plugin: Plugin8,
-  MarkdownView: MarkdownView8,
-  ItemView: ItemView8,
-  Notice: Notice8,
-  Platform: Platform8,
-  PluginSettingTab: PluginSettingTab8,
-  Setting: Setting8,
-  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY9,
-  getActiveDocumentCompat: getActiveDocumentCompat8,
-  createFallbackSvgElement: createFallbackSvgElement8,
-  revealLeafCompat: revealLeafCompat8,
-  getPluginSettings: getPluginSettings8,
-  setPluginSettings: setPluginSettings8,
-  setDestructiveButtonCompat: setDestructiveButtonCompat8,
-  refreshSettingTabCompat: refreshSettingTabCompat8,
-  toReadableError: toReadableError11,
-  isRecord: isRecord19,
-  toRecord: toRecord16,
-  toAiLayoutState: toAiLayoutState8,
-  toAiLayoutJson: toAiLayoutJson8,
-  toAiLayoutBlock: toAiLayoutBlock8,
-  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta8,
-  toAiLayoutSelection: toAiLayoutSelection8,
-  toAiLayoutFamilyStates: toAiLayoutFamilyStates8,
-  toOptionalText: toOptionalText9,
-  toImageElements: toImageElements8,
-  removeElementClass: removeElementClass8,
-  toOptionalNumber: toOptionalNumber9,
-  parseJsonRecord: parseJsonRecord9,
-  normalizeRequestUrlResponse: normalizeRequestUrlResponse9,
-  getResponseJsonRecord: getResponseJsonRecord9,
-  getProxyErrorMessage: getProxyErrorMessage9,
-  createProxyError: createProxyError9,
-  formatWechatApiError: formatWechatApiError9,
-  hasWechatUploadResult: hasWechatUploadResult9,
-  readBlobAsBase64Payload: readBlobAsBase64Payload9,
-  dataUrlToBlob: dataUrlToBlob8,
-  bufferFromBinary: bufferFromBinary9,
-  inferLocalImageMimeType: inferLocalImageMimeType8,
-  safeDecodeUriText: safeDecodeUriText8,
-  getFileUrlLocalPath: getFileUrlLocalPath8,
-  getVaultAdapterBasePath: getVaultAdapterBasePath8,
-  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath9,
-  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath9,
-  getVaultDirnameFromPath: getVaultDirnameFromPath8,
-  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW8,
-  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE8,
-  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL8,
-  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL8,
-  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL9,
-  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL8,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL9,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL9,
-  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL8,
-  getObsidianModalClass: getObsidianModalClass8,
-  createObsidianModal: createObsidianModal8,
-  getObsidianSetIcon: getObsidianSetIcon8,
-  getObsidianRequestUrl: getObsidianRequestUrl8,
-  getObsidianRequest: getObsidianRequest8,
-  getAppleThemeApi: getAppleThemeApi8,
-  getValueElementFromEvent: getValueElementFromEvent8,
-  getEventTargetValue: getEventTargetValue8,
-  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY8,
-  getObsidianLocale: getObsidianLocale8,
-  isChineseObsidianLocale: isChineseObsidianLocale8,
-  getImageSwipeCommandCopy: getImageSwipeCommandCopy8,
-  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout8,
-  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown8,
-  DEFAULT_SETTINGS: DEFAULT_SETTINGS8,
-  MAX_ACCOUNTS: MAX_ACCOUNTS8,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS8,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS8,
-  getWechatAccountPublishOptions: getWechatAccountPublishOptions8,
-  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions8,
-  isMobileClient: isMobileClient10,
-  generateId: generateId8,
-  sleep: sleep9,
-  pMap: pMap8
-} = apple_style_view_shared_exports;
 var wechatAccountStateMethods = {
   showAccountSetupEmptyState() {
     var _a5;
-    if (typeof getObsidianModalClass8() !== "function") {
+    if (typeof getObsidianModalClass() !== "function") {
       if (!this.openPluginSettings()) {
-        new Notice8("\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u6DFB\u52A0\u516C\u4F17\u53F7\u8D26\u53F7\uFF08AppID / AppSecret\uFF09");
+        new Notice("\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u6DFB\u52A0\u516C\u4F17\u53F7\u8D26\u53F7\uFF08AppID / AppSecret\uFF09");
       }
       return;
     }
-    const modal = createObsidianModal8(this.app);
+    const modal = createObsidianModal(this.app);
     modal.titleEl.setText("\u672A\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
     modal.contentEl.addClass("wechat-sync-modal");
-    if (isMobileClient10(this.app)) {
+    if (isMobileClient3(this.app)) {
       modal.contentEl.addClass("wechat-sync-modal-mobile");
       (_a5 = modal.modalEl) == null ? void 0 : _a5.addClass("wechat-sync-shell-mobile");
     }
@@ -79251,21 +77937,21 @@ var wechatAccountStateMethods = {
     configBtn.onclick = () => {
       modal.close();
       if (!this.openPluginSettings()) {
-        new Notice8("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
+        new Notice("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
       }
     };
     modal.open();
   },
   showSyncFailureActions(message, options = {}) {
     var _a5, _b, _c;
-    if (typeof getObsidianModalClass8() !== "function") {
-      new Notice8(`\u274C \u540C\u6B65\u5931\u8D25: ${message}`);
+    if (typeof getObsidianModalClass() !== "function") {
+      new Notice(`\u274C \u540C\u6B65\u5931\u8D25: ${message}`);
       return;
     }
-    const modal = createObsidianModal8(this.app);
+    const modal = createObsidianModal(this.app);
     modal.titleEl.setText("\u540C\u6B65\u5931\u8D25");
     modal.contentEl.addClass("wechat-sync-modal");
-    if (isMobileClient10(this.app)) {
+    if (isMobileClient3(this.app)) {
       modal.contentEl.addClass("wechat-sync-modal-mobile");
       (_a5 = modal.modalEl) == null ? void 0 : _a5.addClass("wechat-sync-shell-mobile");
     }
@@ -79290,14 +77976,14 @@ var wechatAccountStateMethods = {
     settingsBtn.onclick = () => {
       modal.close();
       if (!this.openPluginSettings()) {
-        new Notice8("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
+        new Notice("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
       }
     };
     if (hasDraftAssociation) {
       const resetDraftBtn = btnRow.createEl("button", { text: "\u53D6\u6D88\u5173\u8054\u5E76\u65B0\u5EFA\u8349\u7A3F" });
       resetDraftBtn.onclick = async () => {
         modal.close();
-        clearDraftAssociation8(this.plugin.settings, options.draftAssociation.sourcePath);
+        clearDraftAssociation(this.plugin.settings, options.draftAssociation.sourcePath);
         this.sessionDraftMediaId = "";
         this.sessionDraftIndex = 0;
         await this.plugin.saveSettings();
@@ -79317,167 +78003,6 @@ var wechatAccountStateMethods = {
 };
 
 // views/publish-modal/wechat-modal-shell.js
-var {
-  createRenderPipelines: createRenderPipelines9,
-  buildRenderRuntime: buildRenderRuntime9,
-  resolveMarkdownSource: resolveMarkdownSource9,
-  normalizeVaultPath: normalizeVaultPath9,
-  isAbsolutePathLike: isAbsolutePathLike9,
-  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown9,
-  canUseNativePreviewFastPath: canUseNativePreviewFastPath9,
-  renderNativeMarkdown: renderNativeMarkdown9,
-  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages9,
-  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION9,
-  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO9,
-  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS9,
-  createDefaultAiSettings: createDefaultAiSettings9,
-  normalizeAiSettings: normalizeAiSettings9,
-  normalizeAiProvider: normalizeAiProvider9,
-  getAiProviderIssues: getAiProviderIssues9,
-  isAiProviderRunnable: isAiProviderRunnable9,
-  summarizeAiProviderIssues: summarizeAiProviderIssues9,
-  getLayoutFamilyList: getLayoutFamilyList9,
-  getLayoutFamilyById: getLayoutFamilyById9,
-  getColorPaletteList: getColorPaletteList9,
-  getColorPaletteById: getColorPaletteById9,
-  resolveColorPaletteForRender: resolveColorPaletteForRender9,
-  normalizeHexColor: normalizeHexColor9,
-  normalizeLayoutSelection: normalizeLayoutSelection9,
-  getArticleLayoutSelectionState: getArticleLayoutSelectionState9,
-  resolveAiProvider: resolveAiProvider9,
-  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection9,
-  normalizeArticleLayoutState: normalizeArticleLayoutState9,
-  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry9,
-  extractImageRefsFromHtml: extractImageRefsFromHtml9,
-  extractRenderedSectionFragments: extractRenderedSectionFragments9,
-  generateArticleLayout: generateArticleLayout9,
-  renderArticleLayoutHtml: renderArticleLayoutHtml9,
-  testAiProviderConnection: testAiProviderConnection9,
-  createWechatSyncService: createWechatSyncService9,
-  createWechatSyncBridgeService: createWechatSyncBridgeService9,
-  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError8,
-  getMultiPlatformResultSummary: getMultiPlatformResultSummary9,
-  getWechatSyncResultError: getWechatSyncResultError9,
-  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId9,
-  getWechatSyncResultUrl: getWechatSyncResultUrl9,
-  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform9,
-  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay9,
-  resolveSyncAccount: resolveSyncAccount9,
-  toSyncFriendlyMessage: toSyncFriendlyMessage9,
-  createEmptyDraftCache: createEmptyDraftCache9,
-  normalizeDraftCache: normalizeDraftCache9,
-  getDraftAssociation: getDraftAssociation9,
-  setDraftAssociation: setDraftAssociation9,
-  clearDraftAssociation: clearDraftAssociation9,
-  processAllImagesService: processAllImagesService8,
-  processMathFormulasService: processMathFormulasService8,
-  cleanHtmlForDraftService: cleanHtmlForDraftService8,
-  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob9,
-  createObsidianFetchAdapter: createObsidianFetchAdapter9,
-  stripMarkdownFrontmatter: stripMarkdownFrontmatter9,
-  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls9,
-  createHtmlContainer: createHtmlContainer9,
-  getActiveDocument: getActiveDocument9,
-  getActiveWindowValue: getActiveWindowValue9,
-  htmlToText: htmlToText9,
-  setElementHtml: setElementHtml9,
-  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings9,
-  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds9,
-  hasWechatSyncCapability: hasWechatSyncCapability9,
-  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings9,
-  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms9,
-  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt9,
-  describeWechatsyncConnectionState: describeWechatsyncConnectionState9,
-  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar9,
-  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab9,
-  showMultiPlatformPublishModal: showMultiPlatformPublishModal9,
-  renderFeishuSettingsTab: renderFeishuSettingsTab9,
-  renderFeishuPublishTab: renderFeishuPublishTab9,
-  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings9,
-  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings9,
-  updateFeishuHistoryPath: updateFeishuHistoryPath9,
-  WechatAPI: WechatAPI9,
-  loadCommonJsDependency: loadCommonJsDependency9,
-  obsidianApi: obsidianApi9,
-  Plugin: Plugin9,
-  MarkdownView: MarkdownView9,
-  ItemView: ItemView9,
-  Notice: Notice9,
-  Platform: Platform9,
-  PluginSettingTab: PluginSettingTab9,
-  Setting: Setting9,
-  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY10,
-  getActiveDocumentCompat: getActiveDocumentCompat9,
-  createFallbackSvgElement: createFallbackSvgElement9,
-  revealLeafCompat: revealLeafCompat9,
-  getPluginSettings: getPluginSettings9,
-  setPluginSettings: setPluginSettings9,
-  setDestructiveButtonCompat: setDestructiveButtonCompat9,
-  refreshSettingTabCompat: refreshSettingTabCompat9,
-  toReadableError: toReadableError12,
-  isRecord: isRecord20,
-  toRecord: toRecord17,
-  toAiLayoutState: toAiLayoutState9,
-  toAiLayoutJson: toAiLayoutJson9,
-  toAiLayoutBlock: toAiLayoutBlock9,
-  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta9,
-  toAiLayoutSelection: toAiLayoutSelection9,
-  toAiLayoutFamilyStates: toAiLayoutFamilyStates9,
-  toOptionalText: toOptionalText10,
-  toImageElements: toImageElements9,
-  removeElementClass: removeElementClass9,
-  toOptionalNumber: toOptionalNumber10,
-  parseJsonRecord: parseJsonRecord10,
-  normalizeRequestUrlResponse: normalizeRequestUrlResponse10,
-  getResponseJsonRecord: getResponseJsonRecord10,
-  getProxyErrorMessage: getProxyErrorMessage10,
-  createProxyError: createProxyError10,
-  formatWechatApiError: formatWechatApiError10,
-  hasWechatUploadResult: hasWechatUploadResult10,
-  readBlobAsBase64Payload: readBlobAsBase64Payload10,
-  dataUrlToBlob: dataUrlToBlob9,
-  bufferFromBinary: bufferFromBinary10,
-  inferLocalImageMimeType: inferLocalImageMimeType9,
-  safeDecodeUriText: safeDecodeUriText9,
-  getFileUrlLocalPath: getFileUrlLocalPath9,
-  getVaultAdapterBasePath: getVaultAdapterBasePath9,
-  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath10,
-  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath10,
-  getVaultDirnameFromPath: getVaultDirnameFromPath9,
-  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW9,
-  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE9,
-  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL9,
-  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL9,
-  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL10,
-  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL9,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL10,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL10,
-  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL9,
-  getObsidianModalClass: getObsidianModalClass9,
-  createObsidianModal: createObsidianModal9,
-  getObsidianSetIcon: getObsidianSetIcon9,
-  getObsidianRequestUrl: getObsidianRequestUrl9,
-  getObsidianRequest: getObsidianRequest9,
-  getAppleThemeApi: getAppleThemeApi9,
-  getValueElementFromEvent: getValueElementFromEvent9,
-  getEventTargetValue: getEventTargetValue9,
-  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY9,
-  getObsidianLocale: getObsidianLocale9,
-  isChineseObsidianLocale: isChineseObsidianLocale9,
-  getImageSwipeCommandCopy: getImageSwipeCommandCopy9,
-  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout9,
-  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown9,
-  DEFAULT_SETTINGS: DEFAULT_SETTINGS9,
-  MAX_ACCOUNTS: MAX_ACCOUNTS9,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS9,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS9,
-  getWechatAccountPublishOptions: getWechatAccountPublishOptions9,
-  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions9,
-  isMobileClient: isMobileClient11,
-  generateId: generateId9,
-  sleep: sleep10,
-  pMap: pMap9
-} = apple_style_view_shared_exports;
 var wechatModalShellMethods = {
   preparePublishModalShell(modal, { mode = "wechat", mobileSync = false } = {}) {
     var _a5, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q;
@@ -79513,7 +78038,7 @@ var wechatModalShellMethods = {
     const multiPlatformTab = publishModeTabs.createEl("button", {
       cls: `wechat-publish-mode-tab${activeMode === "multi" ? " is-active" : ""}`
     });
-    multiPlatformTab.createEl("span", { text: MULTI_PLATFORM_TAB_LABEL9 });
+    multiPlatformTab.createEl("span", { text: MULTI_PLATFORM_TAB_LABEL });
     const feishuTab = publishModeTabs.createEl("button", {
       text: "\u98DE\u4E66\u4E91\u6587\u6863",
       cls: `wechat-publish-mode-tab${activeMode === "feishu" ? " is-active" : ""}`
@@ -79523,172 +78048,11 @@ var wechatModalShellMethods = {
 };
 
 // views/publish-modal/wechat-sync-modal.js
-var {
-  createRenderPipelines: createRenderPipelines10,
-  buildRenderRuntime: buildRenderRuntime10,
-  resolveMarkdownSource: resolveMarkdownSource10,
-  normalizeVaultPath: normalizeVaultPath10,
-  isAbsolutePathLike: isAbsolutePathLike10,
-  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown10,
-  canUseNativePreviewFastPath: canUseNativePreviewFastPath10,
-  renderNativeMarkdown: renderNativeMarkdown10,
-  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages10,
-  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION10,
-  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO10,
-  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS10,
-  createDefaultAiSettings: createDefaultAiSettings10,
-  normalizeAiSettings: normalizeAiSettings10,
-  normalizeAiProvider: normalizeAiProvider10,
-  getAiProviderIssues: getAiProviderIssues10,
-  isAiProviderRunnable: isAiProviderRunnable10,
-  summarizeAiProviderIssues: summarizeAiProviderIssues10,
-  getLayoutFamilyList: getLayoutFamilyList10,
-  getLayoutFamilyById: getLayoutFamilyById10,
-  getColorPaletteList: getColorPaletteList10,
-  getColorPaletteById: getColorPaletteById10,
-  resolveColorPaletteForRender: resolveColorPaletteForRender10,
-  normalizeHexColor: normalizeHexColor10,
-  normalizeLayoutSelection: normalizeLayoutSelection10,
-  getArticleLayoutSelectionState: getArticleLayoutSelectionState10,
-  resolveAiProvider: resolveAiProvider10,
-  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection10,
-  normalizeArticleLayoutState: normalizeArticleLayoutState10,
-  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry10,
-  extractImageRefsFromHtml: extractImageRefsFromHtml10,
-  extractRenderedSectionFragments: extractRenderedSectionFragments10,
-  generateArticleLayout: generateArticleLayout10,
-  renderArticleLayoutHtml: renderArticleLayoutHtml10,
-  testAiProviderConnection: testAiProviderConnection10,
-  createWechatSyncService: createWechatSyncService10,
-  createWechatSyncBridgeService: createWechatSyncBridgeService10,
-  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError9,
-  getMultiPlatformResultSummary: getMultiPlatformResultSummary10,
-  getWechatSyncResultError: getWechatSyncResultError10,
-  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId10,
-  getWechatSyncResultUrl: getWechatSyncResultUrl10,
-  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform10,
-  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay10,
-  resolveSyncAccount: resolveSyncAccount10,
-  toSyncFriendlyMessage: toSyncFriendlyMessage10,
-  createEmptyDraftCache: createEmptyDraftCache10,
-  normalizeDraftCache: normalizeDraftCache10,
-  getDraftAssociation: getDraftAssociation10,
-  setDraftAssociation: setDraftAssociation10,
-  clearDraftAssociation: clearDraftAssociation10,
-  processAllImagesService: processAllImagesService9,
-  processMathFormulasService: processMathFormulasService9,
-  cleanHtmlForDraftService: cleanHtmlForDraftService9,
-  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob10,
-  createObsidianFetchAdapter: createObsidianFetchAdapter10,
-  stripMarkdownFrontmatter: stripMarkdownFrontmatter10,
-  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls10,
-  createHtmlContainer: createHtmlContainer10,
-  getActiveDocument: getActiveDocument10,
-  getActiveWindowValue: getActiveWindowValue10,
-  htmlToText: htmlToText10,
-  setElementHtml: setElementHtml10,
-  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings10,
-  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds10,
-  hasWechatSyncCapability: hasWechatSyncCapability10,
-  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings10,
-  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms10,
-  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt10,
-  describeWechatsyncConnectionState: describeWechatsyncConnectionState10,
-  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar10,
-  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab10,
-  showMultiPlatformPublishModal: showMultiPlatformPublishModal10,
-  renderFeishuSettingsTab: renderFeishuSettingsTab10,
-  renderFeishuPublishTab: renderFeishuPublishTab10,
-  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings10,
-  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings10,
-  updateFeishuHistoryPath: updateFeishuHistoryPath10,
-  WechatAPI: WechatAPI10,
-  loadCommonJsDependency: loadCommonJsDependency10,
-  obsidianApi: obsidianApi10,
-  Plugin: Plugin10,
-  MarkdownView: MarkdownView10,
-  ItemView: ItemView10,
-  Notice: Notice10,
-  Platform: Platform10,
-  PluginSettingTab: PluginSettingTab10,
-  Setting: Setting10,
-  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY11,
-  getActiveDocumentCompat: getActiveDocumentCompat10,
-  createFallbackSvgElement: createFallbackSvgElement10,
-  revealLeafCompat: revealLeafCompat10,
-  getPluginSettings: getPluginSettings10,
-  setPluginSettings: setPluginSettings10,
-  setDestructiveButtonCompat: setDestructiveButtonCompat10,
-  refreshSettingTabCompat: refreshSettingTabCompat10,
-  toReadableError: toReadableError13,
-  isRecord: isRecord21,
-  toRecord: toRecord18,
-  toAiLayoutState: toAiLayoutState10,
-  toAiLayoutJson: toAiLayoutJson10,
-  toAiLayoutBlock: toAiLayoutBlock10,
-  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta10,
-  toAiLayoutSelection: toAiLayoutSelection10,
-  toAiLayoutFamilyStates: toAiLayoutFamilyStates10,
-  toOptionalText: toOptionalText11,
-  toImageElements: toImageElements10,
-  removeElementClass: removeElementClass10,
-  toOptionalNumber: toOptionalNumber11,
-  parseJsonRecord: parseJsonRecord11,
-  normalizeRequestUrlResponse: normalizeRequestUrlResponse11,
-  getResponseJsonRecord: getResponseJsonRecord11,
-  getProxyErrorMessage: getProxyErrorMessage11,
-  createProxyError: createProxyError11,
-  formatWechatApiError: formatWechatApiError11,
-  hasWechatUploadResult: hasWechatUploadResult11,
-  readBlobAsBase64Payload: readBlobAsBase64Payload11,
-  dataUrlToBlob: dataUrlToBlob10,
-  bufferFromBinary: bufferFromBinary11,
-  inferLocalImageMimeType: inferLocalImageMimeType10,
-  safeDecodeUriText: safeDecodeUriText10,
-  getFileUrlLocalPath: getFileUrlLocalPath10,
-  getVaultAdapterBasePath: getVaultAdapterBasePath10,
-  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath11,
-  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath11,
-  getVaultDirnameFromPath: getVaultDirnameFromPath10,
-  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW10,
-  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE10,
-  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL10,
-  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL10,
-  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL11,
-  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL10,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL11,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL11,
-  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL10,
-  getObsidianModalClass: getObsidianModalClass10,
-  createObsidianModal: createObsidianModal10,
-  getObsidianSetIcon: getObsidianSetIcon10,
-  getObsidianRequestUrl: getObsidianRequestUrl10,
-  getObsidianRequest: getObsidianRequest10,
-  getAppleThemeApi: getAppleThemeApi10,
-  getValueElementFromEvent: getValueElementFromEvent10,
-  getEventTargetValue: getEventTargetValue10,
-  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY10,
-  getObsidianLocale: getObsidianLocale10,
-  isChineseObsidianLocale: isChineseObsidianLocale10,
-  getImageSwipeCommandCopy: getImageSwipeCommandCopy10,
-  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout10,
-  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown10,
-  DEFAULT_SETTINGS: DEFAULT_SETTINGS10,
-  MAX_ACCOUNTS: MAX_ACCOUNTS10,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS10,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS10,
-  getWechatAccountPublishOptions: getWechatAccountPublishOptions10,
-  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions10,
-  isMobileClient: isMobileClient12,
-  generateId: generateId10,
-  sleep: sleep11,
-  pMap: pMap10
-} = apple_style_view_shared_exports;
 var wechatSyncModalMethods = {
   showSyncModal(options = {}) {
     var _a5, _b, _c;
     if (!this.currentHtml) {
-      new Notice10(this.getMissingRenderNotice());
+      new Notice(this.getMissingRenderNotice());
       return;
     }
     const accounts = this.plugin.settings.wechatAccounts || [];
@@ -79703,8 +78067,8 @@ var wechatSyncModalMethods = {
           return;
         }
       }
-      const modal2 = options.modal || createObsidianModal10(this.app);
-      const mobileSync2 = isMobileClient12(this.app);
+      const modal2 = options.modal || createObsidianModal(this.app);
+      const mobileSync2 = isMobileClient3(this.app);
       this.preparePublishModalShell(modal2, { mode: "wechat", mobileSync: mobileSync2 });
       const { feishuTab: feishuTab2, multiPlatformTab: multiPlatformTab2 } = this.createPublishModeTabs(modal2, "wechat");
       if (feishuTab2) {
@@ -79724,9 +78088,9 @@ var wechatSyncModalMethods = {
       }
       return;
     }
-    const modal = options.modal || createObsidianModal10(this.app);
+    const modal = options.modal || createObsidianModal(this.app);
     const shouldOpenModal = !options.modal;
-    const mobileSync = isMobileClient12(this.app);
+    const mobileSync = isMobileClient3(this.app);
     this.preparePublishModalShell(modal, { mode: "wechat", mobileSync });
     const { feishuTab, multiPlatformTab } = this.createPublishModeTabs(modal, "wechat");
     if (feishuTab) {
@@ -79755,13 +78119,13 @@ var wechatSyncModalMethods = {
     const getSelectedAccount = () => {
       const resolvedAccount = (
         /** @type {unknown} */
-        resolveSyncAccount10({
+        resolveSyncAccount({
           accounts: this.plugin.settings.wechatAccounts || [],
           selectedAccountId,
           defaultAccountId: this.plugin.settings.defaultAccountId
         })
       );
-      return isRecord21(resolvedAccount) ? (
+      return isRecord11(resolvedAccount) ? (
         /** @type {WechatAccountLike} */
         resolvedAccount
       ) : null;
@@ -79770,7 +78134,7 @@ var wechatSyncModalMethods = {
       var _a6;
       return currentPath ? (
         /** @type {DraftAssociationLike | null} */
-        getDraftAssociation10(this.plugin.settings, currentPath, ((_a6 = getSelectedAccount()) == null ? void 0 : _a6.id) || selectedAccountId)
+        getDraftAssociation(this.plugin.settings, currentPath, ((_a6 = getSelectedAccount()) == null ? void 0 : _a6.id) || selectedAccountId)
       ) : null;
     };
     let draftAssociation = getSelectedDraftAssociation();
@@ -79801,7 +78165,7 @@ var wechatSyncModalMethods = {
           option.selected = true;
       }
       accountSelect.addEventListener("change", (e) => {
-        selectedAccountId = getEventTargetValue10(e, selectedAccountId);
+        selectedAccountId = getEventTargetValue(e, selectedAccountId);
         draftAssociation = getSelectedDraftAssociation();
         forceNewDraft = false;
         if (typeof updatePreview === "function")
@@ -79898,7 +78262,7 @@ var wechatSyncModalMethods = {
     });
     const digestSection = advancedBody.createDiv({ cls: "wechat-modal-section" });
     digestSection.createEl("label", { text: "\u6587\u7AE0\u6458\u8981\uFF08\u53EF\u9009\uFF09", cls: "wechat-modal-label" });
-    const autoDigest = htmlToText10(this.currentHtml || "").replace(/\s+/g, " ").trim().substring(0, 45);
+    const autoDigest = htmlToText(this.currentHtml || "").replace(/\s+/g, " ").trim().substring(0, 45);
     const initialDigest = (cachedState == null ? void 0 : cachedState.digest) !== void 0 ? cachedState.digest : frontmatterMeta.excerpt || autoDigest;
     const digestInput = (
       /** @type {ObsidianInputLike & { rows: number, maxLength: number }} */
@@ -79953,7 +78317,7 @@ var wechatSyncModalMethods = {
         }
         forceNewDraft = true;
         if (currentPath) {
-          clearDraftAssociation10(this.plugin.settings, currentPath);
+          clearDraftAssociation(this.plugin.settings, currentPath);
           await this.plugin.saveSettings();
         }
         draftAssociation = null;
@@ -79969,7 +78333,7 @@ var wechatSyncModalMethods = {
     updateDraftStatusUI();
     syncBtn.onclick = async () => {
       if (!coverBase64 && !thumbMediaId) {
-        new Notice10("\u274C \u8BF7\u5148\u8BBE\u7F6E\u5C01\u9762\u56FE");
+        new Notice("\u274C \u8BF7\u5148\u8BBE\u7F6E\u5C01\u9762\u56FE");
         return;
       }
       modal.close();
@@ -79983,7 +78347,7 @@ var wechatSyncModalMethods = {
       await this.onSyncToWechat();
     };
     uploadBtn.onclick = () => {
-      const activeDocument = getActiveDocumentCompat10();
+      const activeDocument = getActiveDocumentCompat();
       if (!activeDocument)
         return;
       const input = (
@@ -80024,10 +78388,10 @@ var wechatSyncModalMethods = {
     selectMaterialBtn.onclick = async () => {
       const account = getSelectedAccount();
       if (!account) {
-        new Notice10("\u8BF7\u5148\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
+        new Notice("\u8BF7\u5148\u914D\u7F6E\u516C\u4F17\u53F7\u8D26\u53F7");
         return;
       }
-      const api = new WechatAPI10(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
+      const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
       await this.showMaterialPickerModal(api, (material) => {
         thumbMediaId = material.mediaId;
         coverBase64 = material.url || "";
@@ -80051,175 +78415,14 @@ var wechatSyncModalMethods = {
 };
 
 // views/publish-modal/wechat-multiplatform-actions.js
-var {
-  createRenderPipelines: createRenderPipelines11,
-  buildRenderRuntime: buildRenderRuntime11,
-  resolveMarkdownSource: resolveMarkdownSource11,
-  normalizeVaultPath: normalizeVaultPath11,
-  isAbsolutePathLike: isAbsolutePathLike11,
-  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown11,
-  canUseNativePreviewFastPath: canUseNativePreviewFastPath11,
-  renderNativeMarkdown: renderNativeMarkdown11,
-  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages11,
-  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION11,
-  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO11,
-  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS11,
-  createDefaultAiSettings: createDefaultAiSettings11,
-  normalizeAiSettings: normalizeAiSettings11,
-  normalizeAiProvider: normalizeAiProvider11,
-  getAiProviderIssues: getAiProviderIssues11,
-  isAiProviderRunnable: isAiProviderRunnable11,
-  summarizeAiProviderIssues: summarizeAiProviderIssues11,
-  getLayoutFamilyList: getLayoutFamilyList11,
-  getLayoutFamilyById: getLayoutFamilyById11,
-  getColorPaletteList: getColorPaletteList11,
-  getColorPaletteById: getColorPaletteById11,
-  resolveColorPaletteForRender: resolveColorPaletteForRender11,
-  normalizeHexColor: normalizeHexColor11,
-  normalizeLayoutSelection: normalizeLayoutSelection11,
-  getArticleLayoutSelectionState: getArticleLayoutSelectionState11,
-  resolveAiProvider: resolveAiProvider11,
-  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection11,
-  normalizeArticleLayoutState: normalizeArticleLayoutState11,
-  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry11,
-  extractImageRefsFromHtml: extractImageRefsFromHtml11,
-  extractRenderedSectionFragments: extractRenderedSectionFragments11,
-  generateArticleLayout: generateArticleLayout11,
-  renderArticleLayoutHtml: renderArticleLayoutHtml11,
-  testAiProviderConnection: testAiProviderConnection11,
-  createWechatSyncService: createWechatSyncService11,
-  createWechatSyncBridgeService: createWechatSyncBridgeService11,
-  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError10,
-  getMultiPlatformResultSummary: getMultiPlatformResultSummary11,
-  getWechatSyncResultError: getWechatSyncResultError11,
-  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId11,
-  getWechatSyncResultUrl: getWechatSyncResultUrl11,
-  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform11,
-  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay11,
-  resolveSyncAccount: resolveSyncAccount11,
-  toSyncFriendlyMessage: toSyncFriendlyMessage11,
-  createEmptyDraftCache: createEmptyDraftCache11,
-  normalizeDraftCache: normalizeDraftCache11,
-  getDraftAssociation: getDraftAssociation11,
-  setDraftAssociation: setDraftAssociation11,
-  clearDraftAssociation: clearDraftAssociation11,
-  processAllImagesService: processAllImagesService10,
-  processMathFormulasService: processMathFormulasService10,
-  cleanHtmlForDraftService: cleanHtmlForDraftService10,
-  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob11,
-  createObsidianFetchAdapter: createObsidianFetchAdapter11,
-  stripMarkdownFrontmatter: stripMarkdownFrontmatter11,
-  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls11,
-  createHtmlContainer: createHtmlContainer11,
-  getActiveDocument: getActiveDocument11,
-  getActiveWindowValue: getActiveWindowValue11,
-  htmlToText: htmlToText11,
-  setElementHtml: setElementHtml11,
-  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings11,
-  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds11,
-  hasWechatSyncCapability: hasWechatSyncCapability11,
-  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings11,
-  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms11,
-  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt11,
-  describeWechatsyncConnectionState: describeWechatsyncConnectionState11,
-  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar11,
-  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab11,
-  showMultiPlatformPublishModal: showMultiPlatformPublishModal11,
-  renderFeishuSettingsTab: renderFeishuSettingsTab11,
-  renderFeishuPublishTab: renderFeishuPublishTab11,
-  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings11,
-  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings11,
-  updateFeishuHistoryPath: updateFeishuHistoryPath11,
-  WechatAPI: WechatAPI11,
-  loadCommonJsDependency: loadCommonJsDependency11,
-  obsidianApi: obsidianApi11,
-  Plugin: Plugin11,
-  MarkdownView: MarkdownView11,
-  ItemView: ItemView11,
-  Notice: Notice11,
-  Platform: Platform11,
-  PluginSettingTab: PluginSettingTab11,
-  Setting: Setting11,
-  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY12,
-  getActiveDocumentCompat: getActiveDocumentCompat11,
-  createFallbackSvgElement: createFallbackSvgElement11,
-  revealLeafCompat: revealLeafCompat11,
-  getPluginSettings: getPluginSettings11,
-  setPluginSettings: setPluginSettings11,
-  setDestructiveButtonCompat: setDestructiveButtonCompat11,
-  refreshSettingTabCompat: refreshSettingTabCompat11,
-  toReadableError: toReadableError14,
-  isRecord: isRecord22,
-  toRecord: toRecord19,
-  toAiLayoutState: toAiLayoutState11,
-  toAiLayoutJson: toAiLayoutJson11,
-  toAiLayoutBlock: toAiLayoutBlock11,
-  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta11,
-  toAiLayoutSelection: toAiLayoutSelection11,
-  toAiLayoutFamilyStates: toAiLayoutFamilyStates11,
-  toOptionalText: toOptionalText12,
-  toImageElements: toImageElements11,
-  removeElementClass: removeElementClass11,
-  toOptionalNumber: toOptionalNumber12,
-  parseJsonRecord: parseJsonRecord12,
-  normalizeRequestUrlResponse: normalizeRequestUrlResponse12,
-  getResponseJsonRecord: getResponseJsonRecord12,
-  getProxyErrorMessage: getProxyErrorMessage12,
-  createProxyError: createProxyError12,
-  formatWechatApiError: formatWechatApiError12,
-  hasWechatUploadResult: hasWechatUploadResult12,
-  readBlobAsBase64Payload: readBlobAsBase64Payload12,
-  dataUrlToBlob: dataUrlToBlob11,
-  bufferFromBinary: bufferFromBinary12,
-  inferLocalImageMimeType: inferLocalImageMimeType11,
-  safeDecodeUriText: safeDecodeUriText11,
-  getFileUrlLocalPath: getFileUrlLocalPath11,
-  getVaultAdapterBasePath: getVaultAdapterBasePath11,
-  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath12,
-  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath12,
-  getVaultDirnameFromPath: getVaultDirnameFromPath11,
-  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW11,
-  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE11,
-  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL11,
-  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL11,
-  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL12,
-  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL11,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL12,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL12,
-  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL11,
-  getObsidianModalClass: getObsidianModalClass11,
-  createObsidianModal: createObsidianModal11,
-  getObsidianSetIcon: getObsidianSetIcon11,
-  getObsidianRequestUrl: getObsidianRequestUrl11,
-  getObsidianRequest: getObsidianRequest11,
-  getAppleThemeApi: getAppleThemeApi11,
-  getValueElementFromEvent: getValueElementFromEvent11,
-  getEventTargetValue: getEventTargetValue11,
-  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY11,
-  getObsidianLocale: getObsidianLocale11,
-  isChineseObsidianLocale: isChineseObsidianLocale11,
-  getImageSwipeCommandCopy: getImageSwipeCommandCopy11,
-  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout11,
-  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown11,
-  DEFAULT_SETTINGS: DEFAULT_SETTINGS11,
-  MAX_ACCOUNTS: MAX_ACCOUNTS11,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS11,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS11,
-  getWechatAccountPublishOptions: getWechatAccountPublishOptions11,
-  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions11,
-  isMobileClient: isMobileClient13,
-  generateId: generateId11,
-  sleep: sleep12,
-  pMap: pMap11
-} = apple_style_view_shared_exports;
 var wechatMultiPlatformActionMethods = {
   async openWechatsyncTask(syncId) {
     const taskId = String(syncId || "").trim();
     if (!taskId) {
-      new Notice11("\u5F53\u524D\u4EFB\u52A1\u6CA1\u6709 syncId\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u5386\u53F2\u8BB0\u5F55\u4E2D\u67E5\u770B\u6700\u8FD1\u4EFB\u52A1");
+      new Notice("\u5F53\u524D\u4EFB\u52A1\u6CA1\u6709 syncId\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u5386\u53F2\u8BB0\u5F55\u4E2D\u67E5\u770B\u6700\u8FD1\u4EFB\u52A1");
       return false;
     }
-    const settings = normalizeMultiPlatformSyncSettings11(this.plugin.settings.multiPlatformSync);
+    const settings = normalizeMultiPlatformSyncSettings(this.plugin.settings.multiPlatformSync);
     const bridge = this.plugin.getWechatSyncBridgeService();
     try {
       await bridge.start();
@@ -80229,16 +78432,16 @@ var wechatMultiPlatformActionMethods = {
       const capabilities = settings.connection.capabilities || {};
       if (capabilities.openSyncTask !== false) {
         try {
-          const result = typeof bridge.openSyncTask === "function" ? toRecord19(await bridge.openSyncTask(taskId, { timeoutMs: 8e3 })) : {};
+          const result = typeof bridge.openSyncTask === "function" ? toRecord8(await bridge.openSyncTask(taskId, { timeoutMs: 8e3 })) : {};
           if ((result == null ? void 0 : result.opened) !== false) {
-            new Notice11("\u5DF2\u6253\u5F00\u6D4F\u89C8\u5668\u63D2\u4EF6\u4EFB\u52A1\u7A97\u53E3");
+            new Notice("\u5DF2\u6253\u5F00\u6D4F\u89C8\u5668\u63D2\u4EF6\u4EFB\u52A1\u7A97\u53E3");
             return true;
           }
         } catch (error) {
-          if (!isWechatSyncUnsupportedMethodError10(error))
+          if (!isUnsupportedBridgeMethodError(error))
             throw error;
-          const readableError = toReadableError14(error);
-          const errorRecord = toRecord19(error);
+          const readableError = toReadableError4(error);
+          const errorRecord = toRecord8(error);
           console.warn("[Wechatsync] openSyncTask failed, falling back to task link", {
             code: errorRecord.code,
             message: readableError.message
@@ -80247,37 +78450,37 @@ var wechatMultiPlatformActionMethods = {
       }
       if (capabilities.getSyncTaskLink !== false) {
         try {
-          const linkResult = typeof bridge.getSyncTaskLink === "function" ? toRecord19(await bridge.getSyncTaskLink(taskId, { timeoutMs: 5e3 })) : {};
+          const linkResult = typeof bridge.getSyncTaskLink === "function" ? toRecord8(await bridge.getSyncTaskLink(taskId, { timeoutMs: 5e3 })) : {};
           const url = String((linkResult == null ? void 0 : linkResult.url) || "").trim();
           if ((linkResult == null ? void 0 : linkResult.canOpen) !== false && url) {
             return this.openExternalUrl(url, { allowExtensionUrls: true });
           }
           if (typeof (linkResult == null ? void 0 : linkResult.message) === "string" && linkResult.message) {
-            new Notice11(linkResult.message, 8e3);
+            new Notice(linkResult.message, 8e3);
             return false;
           }
         } catch (error) {
-          if (!isWechatSyncUnsupportedMethodError10(error))
+          if (!isUnsupportedBridgeMethodError(error))
             throw error;
-          const readableError = toReadableError14(error);
-          const errorRecord = toRecord19(error);
+          const readableError = toReadableError4(error);
+          const errorRecord = toRecord8(error);
           console.warn("[Wechatsync] getSyncTaskLink failed", {
             code: errorRecord.code,
             message: readableError.message
           });
         }
       }
-      new Notice11(`\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u5386\u53F2\u8BB0\u5F55\u4E2D\u67E5\u770B\u4EFB\u52A1\uFF1A${taskId}`, 1e4);
+      new Notice(`\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u5386\u53F2\u8BB0\u5F55\u4E2D\u67E5\u770B\u4EFB\u52A1\uFF1A${taskId}`, 1e4);
       return false;
     } catch (error) {
-      const readableError = toReadableError14(error);
-      const errorRecord = toRecord19(error);
+      const readableError = toReadableError4(error);
+      const errorRecord = toRecord8(error);
       console.error("[Wechatsync] open task failed", {
         syncId: taskId,
         code: errorRecord.code,
         message: readableError.message
       });
-      new Notice11(`\u65E0\u6CD5\u6253\u5F00\u6D4F\u89C8\u5668\u63D2\u4EF6\u4EFB\u52A1\uFF1A${readableError.message}`, 1e4);
+      new Notice(`\u65E0\u6CD5\u6253\u5F00\u6D4F\u89C8\u5668\u63D2\u4EF6\u4EFB\u52A1\uFF1A${readableError.message}`, 1e4);
       return false;
     }
   },
@@ -80285,11 +78488,11 @@ var wechatMultiPlatformActionMethods = {
     const taskId = String(syncId || "").trim();
     if (!taskId)
       return null;
-    const settings = normalizeMultiPlatformSyncSettings11(this.plugin.settings.multiPlatformSync);
-    if (!hasWechatSyncCapability11(settings, "getSyncTask"))
+    const settings = normalizeMultiPlatformSyncSettings(this.plugin.settings.multiPlatformSync);
+    if (!hasWechatSyncCapability(settings, "getSyncTask"))
       return null;
     try {
-      const task = typeof bridge.getSyncTask === "function" ? toRecord19(await bridge.getSyncTask(taskId, { timeoutMs: 5e3 })) : {};
+      const task = typeof bridge.getSyncTask === "function" ? toRecord8(await bridge.getSyncTask(taskId, { timeoutMs: 5e3 })) : {};
       if ((task == null ? void 0 : task.found) === false)
         return task;
       return Object.keys(task).length ? (
@@ -80297,10 +78500,10 @@ var wechatMultiPlatformActionMethods = {
         task
       ) : null;
     } catch (error) {
-      if (isWechatSyncUnsupportedMethodError10(error))
+      if (isUnsupportedBridgeMethodError(error))
         return null;
-      const readableError = toReadableError14(error);
-      const errorRecord = toRecord19(error);
+      const readableError = toReadableError4(error);
+      const errorRecord = toRecord8(error);
       console.warn("[Wechatsync] getSyncTask failed after enqueue", {
         syncId: taskId,
         code: errorRecord.code,
@@ -80321,23 +78524,23 @@ var wechatMultiPlatformActionMethods = {
     const taskId = String(syncId || "").trim();
     const quotaRecord = quotaResult || {};
     const requestedPlatforms = Array.isArray(platforms) ? platforms : [];
-    const skippedPlatformIds = parseWechatsyncPlatformIds11(Array.isArray(quotaRecord.skippedPlatforms) ? quotaRecord.skippedPlatforms : []);
+    const skippedPlatformIds = parseWechatsyncPlatformIds(Array.isArray(quotaRecord.skippedPlatforms) ? quotaRecord.skippedPlatforms : []);
     const quotaPublishedPlatforms = Array.isArray(quotaRecord.publishedPlatforms) ? quotaRecord.publishedPlatforms : [];
     const quotaPlatforms = Array.isArray(quotaRecord.platforms) ? quotaRecord.platforms : [];
     const quotaLimit = Number.isFinite(Number(quotaRecord.maxPlatforms)) ? Math.max(0, Math.floor(Number(quotaRecord.maxPlatforms))) : 1;
-    const publishedPlatformIds = parseWechatsyncPlatformIds11(
+    const publishedPlatformIds = parseWechatsyncPlatformIds(
       quotaPublishedPlatforms.length ? quotaPublishedPlatforms : quotaPlatforms.length ? quotaPlatforms : requestedPlatforms
     );
     const skippedPlatformSet = new Set(skippedPlatformIds);
     const publishedPlatformSet = new Set(publishedPlatformIds);
-    if (typeof getObsidianModalClass11() !== "function") {
+    if (typeof getObsidianModalClass() !== "function") {
       const syncIdText = taskId ? `\uFF08\u4EFB\u52A1 ${taskId}\uFF09` : "";
       const fallbackText = usedFallbackSend ? "\u5F53\u524D\u63D2\u4EF6\u672A\u63D0\u4F9B\u4EFB\u52A1 ID\uFF0C" : "";
       const quotaText = skippedPlatformIds.length ? `\u5DF2\u8DF3\u8FC7 ${skippedPlatformIds.length} \u4E2A\u8D85\u51FA\u4ECA\u65E5\u989D\u5EA6\u7684\u5E73\u53F0\u3002` : "";
-      new Notice11(`\u2705 \u5DF2\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6${syncIdText}\u3002${fallbackText}${quotaText}\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u7684\u5386\u53F2\u6216\u76EE\u6807\u5E73\u53F0\u8349\u7A3F\u7BB1\u67E5\u770B\u7ED3\u679C\u3002`, 1e4);
+      new Notice(`\u2705 \u5DF2\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6${syncIdText}\u3002${fallbackText}${quotaText}\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u7684\u5386\u53F2\u6216\u76EE\u6807\u5E73\u53F0\u8349\u7A3F\u7BB1\u67E5\u770B\u7ED3\u679C\u3002`, 1e4);
       return;
     }
-    const modal = createObsidianModal11(this.app);
+    const modal = createObsidianModal(this.app);
     modal.titleEl.setText("\u5DF2\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6");
     (_b = (_a5 = modal.titleEl).addClass) == null ? void 0 : _b.call(_a5, "wechat-multiplatform-title");
     modal.contentEl.addClass("wechat-sync-modal");
@@ -80348,19 +78551,19 @@ var wechatMultiPlatformActionMethods = {
     const summary = modal.contentEl.createDiv({
       cls: `wechat-multiplatform-result-summary ${skippedPlatformIds.length ? "is-warning" : "is-success"}`
     });
-    const multiPlatformSettings = normalizeMultiPlatformSyncSettings11(this.plugin.settings.multiPlatformSync);
-    const platformCatalog = getAvailableWechatsyncPlatforms11(multiPlatformSettings);
+    const multiPlatformSettings = normalizeMultiPlatformSyncSettings(this.plugin.settings.multiPlatformSync);
+    const platformCatalog = getAvailableWechatsyncPlatforms(multiPlatformSettings);
     const platformById = new Map(platformCatalog.map((platform) => [platform.id, platform]));
     const sortPlatformItems = (items = [], getId = (item) => String(item || "")) => {
       var _a6;
       return (
         /** @type {unknown[]} */
-        sortWechatsyncPlatformItemsForDisplay11(Array.isArray(items) ? items : [], {
+        sortWechatsyncPlatformItemsForDisplay(Array.isArray(items) ? items : [], {
           bridgeConnected: ((_a6 = multiPlatformSettings.connection) == null ? void 0 : _a6.status) === "connected",
           getPlatformId: getId,
           getPlatform: (item) => {
             const id = getId(item);
-            return platformById.get(id) || normalizeWechatsyncPlatform11(
+            return platformById.get(id) || normalizeWechatsyncPlatform(
               item && typeof item === "object" ? { ...item, id } : { id }
             ) || { id };
           }
@@ -80368,7 +78571,7 @@ var wechatMultiPlatformActionMethods = {
       );
     };
     const formatPlatformNames = (ids = []) => {
-      const names = sortPlatformItems(parseWechatsyncPlatformIds11(Array.isArray(ids) ? ids : [])).map((id) => {
+      const names = sortPlatformItems(parseWechatsyncPlatformIds(Array.isArray(ids) ? ids : [])).map((id) => {
         var _a6;
         return ((_a6 = platformById.get(String(id))) == null ? void 0 : _a6.name) || String(id);
       }).filter(Boolean);
@@ -80394,8 +78597,8 @@ var wechatMultiPlatformActionMethods = {
     }
     const rawTaskPlatforms = taskPlatformSource;
     const taskPlatforms = sortPlatformItems(rawTaskPlatforms.filter((item) => {
-      const itemRecord = toRecord19(item);
-      const platformId = parseWechatsyncPlatformIds11([itemRecord.id || itemRecord.platform || item])[0] || "";
+      const itemRecord = toRecord8(item);
+      const platformId = parseWechatsyncPlatformIds([itemRecord.id || itemRecord.platform || item])[0] || "";
       if (!platformId)
         return false;
       if (skippedPlatformSet.has(platformId))
@@ -80405,8 +78608,8 @@ var wechatMultiPlatformActionMethods = {
       }
       return true;
     }), (item) => {
-      const itemRecord = toRecord19(item);
-      return parseWechatsyncPlatformIds11([itemRecord.id || itemRecord.platform || item])[0] || "";
+      const itemRecord = toRecord8(item);
+      return parseWechatsyncPlatformIds([itemRecord.id || itemRecord.platform || item])[0] || "";
     });
     if (taskId) {
       const taskRow = list.createDiv({ cls: "wechat-multiplatform-result-row" });
@@ -80424,7 +78627,7 @@ var wechatMultiPlatformActionMethods = {
       }
     }
     for (const item of taskPlatforms) {
-      const itemRecord = toRecord19(item);
+      const itemRecord = toRecord8(item);
       const platformId = String(itemRecord.id || itemRecord.platform || item || "").trim();
       if (!platformId)
         continue;
@@ -80466,19 +78669,19 @@ var wechatMultiPlatformActionMethods = {
   },
   showMultiPlatformQuotaBlockedModal({ quotaResult = {}, requestedPlatformIds = [] } = {}) {
     var _a5, _b, _c, _d;
-    const multiPlatformSettings = normalizeMultiPlatformSyncSettings11(this.plugin.settings.multiPlatformSync);
-    const platformCatalog = getAvailableWechatsyncPlatforms11(multiPlatformSettings);
+    const multiPlatformSettings = normalizeMultiPlatformSyncSettings(this.plugin.settings.multiPlatformSync);
+    const platformCatalog = getAvailableWechatsyncPlatforms(multiPlatformSettings);
     const platformById = new Map(platformCatalog.map((platform) => [platform.id, platform]));
     const sortPlatformIds = (ids = []) => {
       var _a6;
-      return sortWechatsyncPlatformItemsForDisplay11(parseWechatsyncPlatformIds11(ids), {
+      return sortWechatsyncPlatformItemsForDisplay(parseWechatsyncPlatformIds(ids), {
         bridgeConnected: ((_a6 = multiPlatformSettings.connection) == null ? void 0 : _a6.status) === "connected",
         getPlatformId: (id) => id,
         getPlatform: (id) => platformById.get(id) || { id }
       });
     };
     const skippedPlatforms = Array.isArray(quotaResult.skippedPlatforms) && quotaResult.skippedPlatforms.length ? quotaResult.skippedPlatforms : requestedPlatformIds;
-    const skippedPlatformIds = parseWechatsyncPlatformIds11(skippedPlatforms);
+    const skippedPlatformIds = parseWechatsyncPlatformIds(skippedPlatforms);
     const formatPlatformNames = (ids = []) => {
       const names = sortPlatformIds(ids).map((id) => {
         var _a6;
@@ -80490,11 +78693,11 @@ var wechatMultiPlatformActionMethods = {
     const rawMessage = typeof (quotaResult == null ? void 0 : quotaResult.message) === "string" ? quotaResult.message.trim() : "";
     const legacyQuotaMessage = /单次最多|每次最多|每天最多发布\s*1\s*次|每天最多\s*1\s*次/.test(rawMessage);
     const summaryText = rawMessage && !legacyQuotaMessage ? rawMessage : "\u514D\u8D39\u7248\u4ECA\u65E5\u5E73\u53F0\u989D\u5EA6\u4E0D\u8DB3\uFF0C\u660E\u5929 0:00 \u91CD\u7F6E\uFF0C\u6216\u5347\u7EA7 Pro\u3002";
-    if (typeof getObsidianModalClass11() !== "function") {
-      new Notice11(summaryText, 1e4);
+    if (typeof getObsidianModalClass() !== "function") {
+      new Notice(summaryText, 1e4);
       return;
     }
-    const modal = createObsidianModal11(this.app);
+    const modal = createObsidianModal(this.app);
     modal.titleEl.setText("\u53D1\u5E03\u53D7\u9650");
     (_b = (_a5 = modal.titleEl).addClass) == null ? void 0 : _b.call(_a5, "wechat-multiplatform-title");
     modal.contentEl.addClass("wechat-sync-modal");
@@ -80521,22 +78724,22 @@ var wechatMultiPlatformActionMethods = {
   },
   showMultiPlatformSyncResultModal({ results = [], requestedPlatformIds = [], fatalError = null } = {}) {
     var _a5, _b, _c, _d, _e, _f;
-    if (typeof getObsidianModalClass11() !== "function") {
+    if (typeof getObsidianModalClass() !== "function") {
       const message = fatalError ? `\u6D4F\u89C8\u5668\u63D2\u4EF6\u540C\u6B65\u5931\u8D25\uFF1A${fatalError.message || String(fatalError)}` : "\u540C\u6B65\u5B8C\u6210\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u67E5\u770B\u7ED3\u679C";
-      new Notice11(message, 1e4);
+      new Notice(message, 1e4);
       return;
     }
-    const modal = createObsidianModal11(this.app);
-    const mobileSync = isMobileClient13(this.app);
-    const bridgeSettings = normalizeMultiPlatformSyncSettings11(this.plugin.settings.multiPlatformSync);
-    const platformCatalog = getAvailableWechatsyncPlatforms11(bridgeSettings);
+    const modal = createObsidianModal(this.app);
+    const mobileSync = isMobileClient3(this.app);
+    const bridgeSettings = normalizeMultiPlatformSyncSettings(this.plugin.settings.multiPlatformSync);
+    const platformCatalog = getAvailableWechatsyncPlatforms(bridgeSettings);
     const platformById = new Map(platformCatalog.map((platform) => [platform.id, platform]));
     const {
       normalizedResults,
       successCount,
       failedResults,
       isAllSuccess
-    } = getMultiPlatformResultSummary11(results, requestedPlatformIds, fatalError);
+    } = getMultiPlatformResultSummary(results, requestedPlatformIds, fatalError);
     modal.titleEl.setText("\u540C\u6B65\u7ED3\u679C");
     (_b = (_a5 = modal.titleEl).addClass) == null ? void 0 : _b.call(_a5, "wechat-multiplatform-title");
     modal.contentEl.addClass("wechat-sync-modal");
@@ -80550,7 +78753,7 @@ var wechatMultiPlatformActionMethods = {
     }
     const getPlatformName = (result = {}) => {
       var _a6;
-      const id = getWechatSyncResultPlatformId11(result);
+      const id = getWechatSyncResultPlatformId(result);
       return result.platformName || result.name || ((_a6 = platformById.get(id)) == null ? void 0 : _a6.name) || id || "\u672A\u77E5\u5E73\u53F0";
     };
     const summary = modal.contentEl.createDiv({
@@ -80581,17 +78784,17 @@ var wechatMultiPlatformActionMethods = {
         cls: "wechat-multiplatform-result-detail"
       });
     } else {
-      const sortedResults = sortWechatsyncPlatformItemsForDisplay11(normalizedResults, {
+      const sortedResults = sortWechatsyncPlatformItemsForDisplay(normalizedResults, {
         bridgeConnected: ((_f = bridgeSettings.connection) == null ? void 0 : _f.status) === "connected",
-        getPlatformId: (result) => getWechatSyncResultPlatformId11(result),
+        getPlatformId: (result) => getWechatSyncResultPlatformId(result),
         getPlatform: (result) => {
-          const id = getWechatSyncResultPlatformId11(result);
-          return platformById.get(id) || normalizeWechatsyncPlatform11({ ...result, id }) || { id };
+          const id = getWechatSyncResultPlatformId(result);
+          return platformById.get(id) || normalizeWechatsyncPlatform({ ...result, id }) || { id };
         }
       });
       for (const result of sortedResults) {
-        const draftUrl = getWechatSyncResultUrl11(result);
-        const errorMessage = getWechatSyncResultError11(result);
+        const draftUrl = getWechatSyncResultUrl(result);
+        const errorMessage = getWechatSyncResultError(result);
         const isSuccess = (result == null ? void 0 : result.success) === true;
         const row = list.createDiv({
           cls: `wechat-multiplatform-result-row ${isSuccess ? "is-success" : "is-error"}`
@@ -80636,12 +78839,12 @@ var wechatMultiPlatformActionMethods = {
   async showMultiPlatformSyncModal(options = {}) {
     return (
       /** @type {Promise<unknown>} */
-      showMultiPlatformPublishModal11(this, { ...options, obsidianApi: obsidianApi11 })
+      showMultiPlatformPublishModal(this, { ...options, obsidianApi })
     );
   },
   showFeishuSyncModal(options = {}) {
-    const modal = options.modal || createObsidianModal11(this.app);
-    const mobileSync = isMobileClient13(this.app);
+    const modal = options.modal || createObsidianModal(this.app);
+    const mobileSync = isMobileClient3(this.app);
     this.preparePublishModalShell(modal, { mode: "feishu", mobileSync });
     const { wechatTab, multiPlatformTab } = this.createPublishModeTabs(modal, "feishu");
     if (wechatTab) {
@@ -80654,7 +78857,7 @@ var wechatMultiPlatformActionMethods = {
         this.showMultiPlatformSyncModal({ modal });
       };
     }
-    renderFeishuPublishTab11(this, modal, modal.contentEl, { obsidianApi: obsidianApi11 });
+    renderFeishuPublishTab(this, modal, modal.contentEl, { obsidianApi });
     if (!options.modal) {
       modal.open();
     }
@@ -80662,178 +78865,17 @@ var wechatMultiPlatformActionMethods = {
 };
 
 // views/publish-modal/wechat-sync-action.js
-var {
-  createRenderPipelines: createRenderPipelines12,
-  buildRenderRuntime: buildRenderRuntime12,
-  resolveMarkdownSource: resolveMarkdownSource12,
-  normalizeVaultPath: normalizeVaultPath12,
-  isAbsolutePathLike: isAbsolutePathLike12,
-  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown12,
-  canUseNativePreviewFastPath: canUseNativePreviewFastPath12,
-  renderNativeMarkdown: renderNativeMarkdown12,
-  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages12,
-  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION12,
-  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO12,
-  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS12,
-  createDefaultAiSettings: createDefaultAiSettings12,
-  normalizeAiSettings: normalizeAiSettings12,
-  normalizeAiProvider: normalizeAiProvider12,
-  getAiProviderIssues: getAiProviderIssues12,
-  isAiProviderRunnable: isAiProviderRunnable12,
-  summarizeAiProviderIssues: summarizeAiProviderIssues12,
-  getLayoutFamilyList: getLayoutFamilyList12,
-  getLayoutFamilyById: getLayoutFamilyById12,
-  getColorPaletteList: getColorPaletteList12,
-  getColorPaletteById: getColorPaletteById12,
-  resolveColorPaletteForRender: resolveColorPaletteForRender12,
-  normalizeHexColor: normalizeHexColor12,
-  normalizeLayoutSelection: normalizeLayoutSelection12,
-  getArticleLayoutSelectionState: getArticleLayoutSelectionState12,
-  resolveAiProvider: resolveAiProvider12,
-  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection12,
-  normalizeArticleLayoutState: normalizeArticleLayoutState12,
-  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry12,
-  extractImageRefsFromHtml: extractImageRefsFromHtml12,
-  extractRenderedSectionFragments: extractRenderedSectionFragments12,
-  generateArticleLayout: generateArticleLayout12,
-  renderArticleLayoutHtml: renderArticleLayoutHtml12,
-  testAiProviderConnection: testAiProviderConnection12,
-  createWechatSyncService: createWechatSyncService12,
-  createWechatSyncBridgeService: createWechatSyncBridgeService12,
-  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError11,
-  getMultiPlatformResultSummary: getMultiPlatformResultSummary12,
-  getWechatSyncResultError: getWechatSyncResultError12,
-  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId12,
-  getWechatSyncResultUrl: getWechatSyncResultUrl12,
-  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform12,
-  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay12,
-  resolveSyncAccount: resolveSyncAccount12,
-  toSyncFriendlyMessage: toSyncFriendlyMessage12,
-  createEmptyDraftCache: createEmptyDraftCache12,
-  normalizeDraftCache: normalizeDraftCache12,
-  getDraftAssociation: getDraftAssociation12,
-  setDraftAssociation: setDraftAssociation12,
-  clearDraftAssociation: clearDraftAssociation12,
-  processAllImagesService: processAllImagesService11,
-  processMathFormulasService: processMathFormulasService11,
-  cleanHtmlForDraftService: cleanHtmlForDraftService11,
-  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob12,
-  createObsidianFetchAdapter: createObsidianFetchAdapter12,
-  stripMarkdownFrontmatter: stripMarkdownFrontmatter12,
-  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls12,
-  createHtmlContainer: createHtmlContainer12,
-  getActiveDocument: getActiveDocument12,
-  getActiveWindowValue: getActiveWindowValue12,
-  htmlToText: htmlToText12,
-  setElementHtml: setElementHtml12,
-  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings12,
-  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds12,
-  hasWechatSyncCapability: hasWechatSyncCapability12,
-  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings12,
-  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms12,
-  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt12,
-  describeWechatsyncConnectionState: describeWechatsyncConnectionState12,
-  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar12,
-  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab12,
-  showMultiPlatformPublishModal: showMultiPlatformPublishModal12,
-  renderFeishuSettingsTab: renderFeishuSettingsTab12,
-  renderFeishuPublishTab: renderFeishuPublishTab12,
-  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings12,
-  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings12,
-  updateFeishuHistoryPath: updateFeishuHistoryPath12,
-  WechatAPI: WechatAPI12,
-  loadCommonJsDependency: loadCommonJsDependency12,
-  obsidianApi: obsidianApi12,
-  Plugin: Plugin12,
-  MarkdownView: MarkdownView12,
-  ItemView: ItemView12,
-  Notice: Notice12,
-  Platform: Platform12,
-  PluginSettingTab: PluginSettingTab12,
-  Setting: Setting12,
-  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY13,
-  getActiveDocumentCompat: getActiveDocumentCompat12,
-  createFallbackSvgElement: createFallbackSvgElement12,
-  revealLeafCompat: revealLeafCompat12,
-  getPluginSettings: getPluginSettings12,
-  setPluginSettings: setPluginSettings12,
-  setDestructiveButtonCompat: setDestructiveButtonCompat12,
-  refreshSettingTabCompat: refreshSettingTabCompat12,
-  toReadableError: toReadableError15,
-  isRecord: isRecord23,
-  toRecord: toRecord20,
-  toAiLayoutState: toAiLayoutState12,
-  toAiLayoutJson: toAiLayoutJson12,
-  toAiLayoutBlock: toAiLayoutBlock12,
-  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta12,
-  toAiLayoutSelection: toAiLayoutSelection12,
-  toAiLayoutFamilyStates: toAiLayoutFamilyStates12,
-  toOptionalText: toOptionalText13,
-  toImageElements: toImageElements12,
-  removeElementClass: removeElementClass12,
-  toOptionalNumber: toOptionalNumber13,
-  parseJsonRecord: parseJsonRecord13,
-  normalizeRequestUrlResponse: normalizeRequestUrlResponse13,
-  getResponseJsonRecord: getResponseJsonRecord13,
-  getProxyErrorMessage: getProxyErrorMessage13,
-  createProxyError: createProxyError13,
-  formatWechatApiError: formatWechatApiError13,
-  hasWechatUploadResult: hasWechatUploadResult13,
-  readBlobAsBase64Payload: readBlobAsBase64Payload13,
-  dataUrlToBlob: dataUrlToBlob12,
-  bufferFromBinary: bufferFromBinary13,
-  inferLocalImageMimeType: inferLocalImageMimeType12,
-  safeDecodeUriText: safeDecodeUriText12,
-  getFileUrlLocalPath: getFileUrlLocalPath12,
-  getVaultAdapterBasePath: getVaultAdapterBasePath12,
-  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath13,
-  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath13,
-  getVaultDirnameFromPath: getVaultDirnameFromPath12,
-  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW12,
-  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE12,
-  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL12,
-  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL12,
-  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL13,
-  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL12,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL13,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL13,
-  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL12,
-  getObsidianModalClass: getObsidianModalClass12,
-  createObsidianModal: createObsidianModal12,
-  getObsidianSetIcon: getObsidianSetIcon12,
-  getObsidianRequestUrl: getObsidianRequestUrl12,
-  getObsidianRequest: getObsidianRequest12,
-  getAppleThemeApi: getAppleThemeApi12,
-  getValueElementFromEvent: getValueElementFromEvent12,
-  getEventTargetValue: getEventTargetValue12,
-  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY12,
-  getObsidianLocale: getObsidianLocale12,
-  isChineseObsidianLocale: isChineseObsidianLocale12,
-  getImageSwipeCommandCopy: getImageSwipeCommandCopy12,
-  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout12,
-  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown12,
-  DEFAULT_SETTINGS: DEFAULT_SETTINGS12,
-  MAX_ACCOUNTS: MAX_ACCOUNTS12,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS12,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS12,
-  getWechatAccountPublishOptions: getWechatAccountPublishOptions12,
-  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions12,
-  isMobileClient: isMobileClient14,
-  generateId: generateId12,
-  sleep: sleep13,
-  pMap: pMap12
-} = apple_style_view_shared_exports;
 var wechatSyncActionMethods = {
   async onSyncToWechat() {
     const accountRecord = (
       /** @type {unknown} */
-      resolveSyncAccount12({
+      resolveSyncAccount({
         accounts: this.plugin.settings.wechatAccounts || [],
         selectedAccountId: this.selectedAccountId,
         defaultAccountId: this.plugin.settings.defaultAccountId
       })
     );
-    const account = isRecord23(accountRecord) ? (
+    const account = isRecord11(accountRecord) ? (
       /** @type {WechatAccountLike} */
       accountRecord
     ) : null;
@@ -80842,24 +78884,24 @@ var wechatSyncActionMethods = {
       return;
     }
     if (!this.currentHtml) {
-      new Notice12(this.getMissingRenderNotice());
+      new Notice(this.getMissingRenderNotice());
       return;
     }
-    const notice = new Notice12(`\u{1F680} \u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65...`, 0);
+    const notice = new Notice(`\u{1F680} \u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65...`, 0);
     const activeFile = this.getPublishContextFile();
     const publishMeta = this.getFrontmatterPublishMeta(activeFile);
     try {
       const syncService = (
         /** @type {WechatSyncServiceLike} */
-        createWechatSyncService12({
-          createApi: (appId, appSecret, proxyUrl) => new WechatAPI12(appId, appSecret, proxyUrl, this.plugin.settings.clientId),
+        createWechatSyncService({
+          createApi: (appId, appSecret, proxyUrl) => new WechatAPI(appId, appSecret, proxyUrl, this.plugin.settings.clientId),
           srcToBlob: (src) => this.srcToBlob(String(src || "")),
           coverUploadCache: this.coverUploadCache,
           processAllImages: (html, api, progressCallback, options) => this.processAllImages(String(html || ""), api, progressCallback, options),
           processMathFormulas: (html, api, progressCallback) => this.processMathFormulas(String(html || ""), api, progressCallback),
           prepareHtmlForDraft: (html) => this.prepareHtmlForWechatDraft(String(html || "")),
           cleanHtmlForDraft: (html) => this.cleanHtmlForDraft(String(html || "")),
-          cleanupConfiguredDirectory: (file) => this.cleanupConfiguredDirectory(isRecord23(file) ? (
+          cleanupConfiguredDirectory: (file) => this.cleanupConfiguredDirectory(isRecord11(file) ? (
             /** @type {TFileLike} */
             file
           ) : null),
@@ -80897,7 +78939,7 @@ var wechatSyncActionMethods = {
       });
       const { cleanupResult, imageUploadFailures, placeholderImageSources, draftWarnings, mediaId, isUpdate, draftIndex } = result;
       if (activeFile && mediaId) {
-        setDraftAssociation12(this.plugin.settings, {
+        setDraftAssociation(this.plugin.settings, {
           sourcePath: activeFile.path,
           mediaId,
           accountId: account.id || "",
@@ -80908,7 +78950,7 @@ var wechatSyncActionMethods = {
         await this.plugin.saveSettings();
       }
       notice.hide();
-      new Notice12(isUpdate ? "\u2705 \u66F4\u65B0\u6210\u529F\uFF01\u5FAE\u4FE1\u8349\u7A3F\u5DF2\u66F4\u65B0" : "\u2705 \u540C\u6B65\u6210\u529F\uFF01\u8BF7\u524D\u5F80\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0\u8349\u7A3F\u7BB1\u67E5\u770B");
+      new Notice(isUpdate ? "\u2705 \u66F4\u65B0\u6210\u529F\uFF01\u5FAE\u4FE1\u8349\u7A3F\u5DF2\u66F4\u65B0" : "\u2705 \u540C\u6B65\u6210\u529F\uFF01\u8BF7\u524D\u5F80\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0\u8349\u7A3F\u7BB1\u67E5\u770B");
       const failedImageSources = Array.from(/* @__PURE__ */ new Set([
         ...Array.isArray(imageUploadFailures) ? imageUploadFailures.map((item) => item == null ? void 0 : item.src).filter(Boolean) : [],
         ...Array.isArray(placeholderImageSources) ? placeholderImageSources.filter(Boolean) : []
@@ -80916,22 +78958,22 @@ var wechatSyncActionMethods = {
       if (failedImageSources.length > 0) {
         const preview = failedImageSources.slice(0, 3).join("\u3001");
         const suffix = failedImageSources.length > 3 ? ` \u7B49 ${failedImageSources.length} \u5F20` : "";
-        new Notice12(`\u26A0\uFE0F \u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6709 ${failedImageSources.length} \u5F20\u6B63\u6587\u56FE\u7247\u672A\u540C\u6B65\uFF1A${preview}${suffix}\u3002\u8BF7\u5728\u5FAE\u4FE1\u540E\u53F0\u624B\u52A8\u8865\u4F20\u3002`, 1e4);
+        new Notice(`\u26A0\uFE0F \u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6709 ${failedImageSources.length} \u5F20\u6B63\u6587\u56FE\u7247\u672A\u540C\u6B65\uFF1A${preview}${suffix}\u3002\u8BF7\u5728\u5FAE\u4FE1\u540E\u53F0\u624B\u52A8\u8865\u4F20\u3002`, 1e4);
       }
       if (Array.isArray(draftWarnings) && draftWarnings.length > 0) {
         const preview = draftWarnings.slice(0, 3).map((item) => `${(item == null ? void 0 : item.message) || "\u6B63\u6587\u5B58\u5728\u53EF\u7591\u5185\u5BB9"}${(item == null ? void 0 : item.value) ? `\uFF1A${item.value}` : ""}`).join("\uFF1B");
         const suffix = draftWarnings.length > 3 ? `\uFF1B\u53E6\u6709 ${draftWarnings.length - 3} \u9879` : "";
-        new Notice12(`\u26A0\uFE0F \u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6B63\u6587\u68C0\u67E5\u53D1\u73B0 ${draftWarnings.length} \u9879\u63D0\u9192\uFF1A${preview}${suffix}`, 1e4);
+        new Notice(`\u26A0\uFE0F \u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6B63\u6587\u68C0\u67E5\u53D1\u73B0 ${draftWarnings.length} \u9879\u63D0\u9192\uFF1A${preview}${suffix}`, 1e4);
       }
       if (cleanupResult == null ? void 0 : cleanupResult.warning) {
-        new Notice12(`\u26A0\uFE0F \u8D44\u6E90\u6E05\u7406\u5931\u8D25\uFF1A${cleanupResult.warning}`, 7e3);
+        new Notice(`\u26A0\uFE0F \u8D44\u6E90\u6E05\u7406\u5931\u8D25\uFF1A${cleanupResult.warning}`, 7e3);
       }
     } catch (error) {
       notice.hide();
       console.error("Wechat Sync Error:", error);
-      const readableError = toReadableError15(error);
+      const readableError = toReadableError4(error);
       const isProxyAuth = readableError.isProxyAuth || /token|服务已于|安全警报/i.test(readableError.message);
-      const friendlyMsg = toSyncFriendlyMessage12(readableError.message);
+      const friendlyMsg = toSyncFriendlyMessage(readableError.message);
       this.showSyncFailureActions(friendlyMsg, {
         isProxyAuth,
         draftAssociation: this.sessionDraftMediaId && activeFile ? {
@@ -80955,167 +78997,6 @@ var wechatPublishMethods = {
 };
 
 // views/publish-modal/material-picker.js
-var {
-  createRenderPipelines: createRenderPipelines13,
-  buildRenderRuntime: buildRenderRuntime13,
-  resolveMarkdownSource: resolveMarkdownSource13,
-  normalizeVaultPath: normalizeVaultPath13,
-  isAbsolutePathLike: isAbsolutePathLike13,
-  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown13,
-  canUseNativePreviewFastPath: canUseNativePreviewFastPath13,
-  renderNativeMarkdown: renderNativeMarkdown13,
-  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages13,
-  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION13,
-  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO13,
-  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS13,
-  createDefaultAiSettings: createDefaultAiSettings13,
-  normalizeAiSettings: normalizeAiSettings13,
-  normalizeAiProvider: normalizeAiProvider13,
-  getAiProviderIssues: getAiProviderIssues13,
-  isAiProviderRunnable: isAiProviderRunnable13,
-  summarizeAiProviderIssues: summarizeAiProviderIssues13,
-  getLayoutFamilyList: getLayoutFamilyList13,
-  getLayoutFamilyById: getLayoutFamilyById13,
-  getColorPaletteList: getColorPaletteList13,
-  getColorPaletteById: getColorPaletteById13,
-  resolveColorPaletteForRender: resolveColorPaletteForRender13,
-  normalizeHexColor: normalizeHexColor13,
-  normalizeLayoutSelection: normalizeLayoutSelection13,
-  getArticleLayoutSelectionState: getArticleLayoutSelectionState13,
-  resolveAiProvider: resolveAiProvider13,
-  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection13,
-  normalizeArticleLayoutState: normalizeArticleLayoutState13,
-  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry13,
-  extractImageRefsFromHtml: extractImageRefsFromHtml13,
-  extractRenderedSectionFragments: extractRenderedSectionFragments13,
-  generateArticleLayout: generateArticleLayout13,
-  renderArticleLayoutHtml: renderArticleLayoutHtml13,
-  testAiProviderConnection: testAiProviderConnection13,
-  createWechatSyncService: createWechatSyncService13,
-  createWechatSyncBridgeService: createWechatSyncBridgeService13,
-  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError12,
-  getMultiPlatformResultSummary: getMultiPlatformResultSummary13,
-  getWechatSyncResultError: getWechatSyncResultError13,
-  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId13,
-  getWechatSyncResultUrl: getWechatSyncResultUrl13,
-  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform13,
-  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay13,
-  resolveSyncAccount: resolveSyncAccount13,
-  toSyncFriendlyMessage: toSyncFriendlyMessage13,
-  createEmptyDraftCache: createEmptyDraftCache13,
-  normalizeDraftCache: normalizeDraftCache13,
-  getDraftAssociation: getDraftAssociation13,
-  setDraftAssociation: setDraftAssociation13,
-  clearDraftAssociation: clearDraftAssociation13,
-  processAllImagesService: processAllImagesService12,
-  processMathFormulasService: processMathFormulasService12,
-  cleanHtmlForDraftService: cleanHtmlForDraftService12,
-  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob13,
-  createObsidianFetchAdapter: createObsidianFetchAdapter13,
-  stripMarkdownFrontmatter: stripMarkdownFrontmatter13,
-  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls13,
-  createHtmlContainer: createHtmlContainer13,
-  getActiveDocument: getActiveDocument13,
-  getActiveWindowValue: getActiveWindowValue13,
-  htmlToText: htmlToText13,
-  setElementHtml: setElementHtml13,
-  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings13,
-  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds13,
-  hasWechatSyncCapability: hasWechatSyncCapability13,
-  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings13,
-  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms13,
-  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt13,
-  describeWechatsyncConnectionState: describeWechatsyncConnectionState13,
-  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar13,
-  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab13,
-  showMultiPlatformPublishModal: showMultiPlatformPublishModal13,
-  renderFeishuSettingsTab: renderFeishuSettingsTab13,
-  renderFeishuPublishTab: renderFeishuPublishTab13,
-  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings13,
-  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings13,
-  updateFeishuHistoryPath: updateFeishuHistoryPath13,
-  WechatAPI: WechatAPI13,
-  loadCommonJsDependency: loadCommonJsDependency13,
-  obsidianApi: obsidianApi13,
-  Plugin: Plugin13,
-  MarkdownView: MarkdownView13,
-  ItemView: ItemView13,
-  Notice: Notice13,
-  Platform: Platform13,
-  PluginSettingTab: PluginSettingTab13,
-  Setting: Setting13,
-  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY14,
-  getActiveDocumentCompat: getActiveDocumentCompat13,
-  createFallbackSvgElement: createFallbackSvgElement13,
-  revealLeafCompat: revealLeafCompat13,
-  getPluginSettings: getPluginSettings13,
-  setPluginSettings: setPluginSettings13,
-  setDestructiveButtonCompat: setDestructiveButtonCompat13,
-  refreshSettingTabCompat: refreshSettingTabCompat13,
-  toReadableError: toReadableError16,
-  isRecord: isRecord24,
-  toRecord: toRecord21,
-  toAiLayoutState: toAiLayoutState13,
-  toAiLayoutJson: toAiLayoutJson13,
-  toAiLayoutBlock: toAiLayoutBlock13,
-  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta13,
-  toAiLayoutSelection: toAiLayoutSelection13,
-  toAiLayoutFamilyStates: toAiLayoutFamilyStates13,
-  toOptionalText: toOptionalText14,
-  toImageElements: toImageElements13,
-  removeElementClass: removeElementClass13,
-  toOptionalNumber: toOptionalNumber14,
-  parseJsonRecord: parseJsonRecord14,
-  normalizeRequestUrlResponse: normalizeRequestUrlResponse14,
-  getResponseJsonRecord: getResponseJsonRecord14,
-  getProxyErrorMessage: getProxyErrorMessage14,
-  createProxyError: createProxyError14,
-  formatWechatApiError: formatWechatApiError14,
-  hasWechatUploadResult: hasWechatUploadResult14,
-  readBlobAsBase64Payload: readBlobAsBase64Payload14,
-  dataUrlToBlob: dataUrlToBlob13,
-  bufferFromBinary: bufferFromBinary14,
-  inferLocalImageMimeType: inferLocalImageMimeType13,
-  safeDecodeUriText: safeDecodeUriText13,
-  getFileUrlLocalPath: getFileUrlLocalPath13,
-  getVaultAdapterBasePath: getVaultAdapterBasePath13,
-  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath14,
-  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath14,
-  getVaultDirnameFromPath: getVaultDirnameFromPath13,
-  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW13,
-  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE13,
-  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL13,
-  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL13,
-  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL14,
-  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL13,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL14,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL14,
-  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL13,
-  getObsidianModalClass: getObsidianModalClass13,
-  createObsidianModal: createObsidianModal13,
-  getObsidianSetIcon: getObsidianSetIcon13,
-  getObsidianRequestUrl: getObsidianRequestUrl13,
-  getObsidianRequest: getObsidianRequest13,
-  getAppleThemeApi: getAppleThemeApi13,
-  getValueElementFromEvent: getValueElementFromEvent13,
-  getEventTargetValue: getEventTargetValue13,
-  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY13,
-  getObsidianLocale: getObsidianLocale13,
-  isChineseObsidianLocale: isChineseObsidianLocale13,
-  getImageSwipeCommandCopy: getImageSwipeCommandCopy13,
-  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout13,
-  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown13,
-  DEFAULT_SETTINGS: DEFAULT_SETTINGS13,
-  MAX_ACCOUNTS: MAX_ACCOUNTS13,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS13,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS13,
-  getWechatAccountPublishOptions: getWechatAccountPublishOptions13,
-  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions13,
-  isMobileClient: isMobileClient15,
-  generateId: generateId13,
-  sleep: sleep14,
-  pMap: pMap13
-} = apple_style_view_shared_exports;
 var materialPickerMethods = {
   getWechatMaterialCacheKey(api, type, offset, count) {
     return [
@@ -81157,11 +79038,11 @@ var materialPickerMethods = {
   },
   async showMaterialPickerModal(api, onSelect) {
     var _a5, _b, _c;
-    const modal = createObsidianModal13(this.app);
+    const modal = createObsidianModal(this.app);
     modal.titleEl.setText("\u4ECE\u7D20\u6750\u5E93\u9009\u62E9\u5C01\u9762");
     (_a5 = modal.modalEl) == null ? void 0 : _a5.addClass("wechat-material-picker-modal");
     modal.contentEl.addClass("wechat-material-picker");
-    if (isMobileClient15(this.app)) {
+    if (isMobileClient3(this.app)) {
       (_b = modal.modalEl) == null ? void 0 : _b.addClass("wechat-material-picker-modal-mobile");
       modal.contentEl.addClass("wechat-material-picker-mobile");
     }
@@ -81276,7 +79157,7 @@ var materialPickerMethods = {
         grid.empty();
         grid.removeClass("is-loading");
         countLabel.setText("\u52A0\u8F7D\u5931\u8D25");
-        grid.createDiv({ cls: "wechat-material-empty", text: `\u52A0\u8F7D\u5931\u8D25\uFF1A${toReadableError16(error).message}` });
+        grid.createDiv({ cls: "wechat-material-empty", text: `\u52A0\u8F7D\u5931\u8D25\uFF1A${toReadableError4(error).message}` });
       } finally {
         isLoading = false;
       }
@@ -82459,20 +80340,20 @@ AppleStyleSettingTab.prototype[LEGACY_SETTING_RENDER_KEY2] = function legacySett
 };
 
 // services/ai-layout-cache.js
-function isRecord25(value) {
+function isRecord13(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
-function toRecord22(value) {
-  return isRecord25(value) ? value : {};
+function toRecord10(value) {
+  return isRecord13(value) ? value : {};
 }
-function toAiLayoutState14(value) {
-  return isRecord25(value) ? value : null;
+function toAiLayoutState2(value) {
+  return isRecord13(value) ? value : null;
 }
-function toAiLayoutSelection14(value) {
-  return isRecord25(value) ? value : {};
+function toAiLayoutSelection2(value) {
+  return isRecord13(value) ? value : {};
 }
-function toAiLayoutFamilyStates14(value) {
-  if (!isRecord25(value))
+function toAiLayoutFamilyStates2(value) {
+  if (!isRecord13(value))
     return {};
   return value;
 }
@@ -82480,17 +80361,17 @@ function getArticleLayoutStateFromSettings(pluginSettings, sourcePath = "", sele
   const normalizedPath = normalizeVaultPath(sourcePath || "");
   if (!normalizedPath)
     return null;
-  const aiSettings = normalizeAiSettings(toRecord22(pluginSettings.ai));
-  const articleLayoutsByPath = toRecord22(aiSettings.articleLayoutsByPath);
+  const aiSettings = normalizeAiSettings(toRecord10(pluginSettings.ai));
+  const articleLayoutsByPath = toRecord10(aiSettings.articleLayoutsByPath);
   const entry = articleLayoutsByPath[normalizedPath] || null;
   const normalizedEntry = normalizeArticleLayoutCacheEntry(entry);
   if (!normalizedEntry)
     return null;
   if (!selection || Object.keys(selection).length === 0) {
-    const familyStates = toAiLayoutFamilyStates14(normalizedEntry.familyStates);
+    const familyStates = toAiLayoutFamilyStates2(normalizedEntry.familyStates);
     return familyStates[normalizedEntry.lastLayoutFamily] || null;
   }
-  return toAiLayoutState14(getArticleLayoutSelectionState(normalizedEntry, toAiLayoutSelection14(selection), {
+  return toAiLayoutState2(getArticleLayoutSelectionState(normalizedEntry, toAiLayoutSelection2(selection), {
     layoutFamily: aiSettings.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO,
     colorPalette: aiSettings.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO
   }));
@@ -82504,7 +80385,7 @@ function saveArticleLayoutStateToSettings(pluginSettings, sourcePath = "", nextS
     pluginSettings.ai = createDefaultAiSettings();
   }
   const aiSettings = pluginSettings.ai;
-  if (!isRecord25(aiSettings.articleLayoutsByPath)) {
+  if (!isRecord13(aiSettings.articleLayoutsByPath)) {
     aiSettings.articleLayoutsByPath = {};
   }
   const articleLayoutsByPath = aiSettings.articleLayoutsByPath;
@@ -82513,12 +80394,12 @@ function saveArticleLayoutStateToSettings(pluginSettings, sourcePath = "", nextS
     lastAutoResolvedFamily: "",
     familyStates: {}
   };
-  const existingFamilyStates = toAiLayoutFamilyStates14(existingEntry.familyStates);
+  const existingFamilyStates = toAiLayoutFamilyStates2(existingEntry.familyStates);
   existingEntry.familyStates = existingFamilyStates;
-  const nextLayoutState = toAiLayoutState14(nextState);
+  const nextLayoutState = toAiLayoutState2(nextState);
   const hasExplicitSelection = typeof selection === "string" || selection && typeof selection === "object" && Object.keys(selection).length > 0;
   const requestedSelection = normalizeLayoutSelection(
-    (nextLayoutState == null ? void 0 : nextLayoutState.selection) || (hasExplicitSelection ? toAiLayoutSelection14(selection) : null) || {
+    (nextLayoutState == null ? void 0 : nextLayoutState.selection) || (hasExplicitSelection ? toAiLayoutSelection2(selection) : null) || {
       layoutFamily: (nextLayoutState == null ? void 0 : nextLayoutState.layoutFamily) || ((_a5 = nextLayoutState == null ? void 0 : nextLayoutState.resolved) == null ? void 0 : _a5.layoutFamily),
       colorPalette: (nextLayoutState == null ? void 0 : nextLayoutState.stylePack) || ((_b = nextLayoutState == null ? void 0 : nextLayoutState.resolved) == null ? void 0 : _b.colorPalette) || ((_c = nextLayoutState == null ? void 0 : nextLayoutState.layoutJson) == null ? void 0 : _c.stylePack)
     },
@@ -82529,7 +80410,7 @@ function saveArticleLayoutStateToSettings(pluginSettings, sourcePath = "", nextS
   );
   const getCacheFamily = (state = null) => {
     var _a6, _b2;
-    const stateRecord = toAiLayoutState14(state);
+    const stateRecord = toAiLayoutState2(state);
     const normalizedState = normalizeArticleLayoutState(stateRecord || {});
     const rawFamily = ((_a6 = normalizedState == null ? void 0 : normalizedState.resolved) == null ? void 0 : _a6.layoutFamily) || (normalizedState == null ? void 0 : normalizedState.layoutFamily) || ((_b2 = stateRecord == null ? void 0 : stateRecord.resolved) == null ? void 0 : _b2.layoutFamily) || (stateRecord == null ? void 0 : stateRecord.layoutFamily) || (requestedSelection.layoutFamily !== AI_LAYOUT_SELECTION_AUTO ? requestedSelection.layoutFamily : "");
     const normalizedFamily = normalizeLayoutSelection({ layoutFamily: rawFamily }).layoutFamily;
@@ -82579,200 +80460,39 @@ function saveArticleLayoutStateToSettings(pluginSettings, sourcePath = "", nextS
 }
 
 // input.js
-var {
-  createRenderPipelines: createRenderPipelines14,
-  buildRenderRuntime: buildRenderRuntime14,
-  resolveMarkdownSource: resolveMarkdownSource14,
-  normalizeVaultPath: normalizeVaultPath14,
-  isAbsolutePathLike: isAbsolutePathLike14,
-  renderObsidianTripletMarkdown: renderObsidianTripletMarkdown14,
-  canUseNativePreviewFastPath: canUseNativePreviewFastPath14,
-  renderNativeMarkdown: renderNativeMarkdown14,
-  convertRenderedMermaidDiagramsToImages: convertRenderedMermaidDiagramsToImages14,
-  AI_LAYOUT_SCHEMA_VERSION: AI_LAYOUT_SCHEMA_VERSION14,
-  AI_LAYOUT_SELECTION_AUTO: AI_LAYOUT_SELECTION_AUTO14,
-  AI_PROVIDER_KINDS: AI_PROVIDER_KINDS14,
-  createDefaultAiSettings: createDefaultAiSettings14,
-  normalizeAiSettings: normalizeAiSettings14,
-  normalizeAiProvider: normalizeAiProvider14,
-  getAiProviderIssues: getAiProviderIssues14,
-  isAiProviderRunnable: isAiProviderRunnable14,
-  summarizeAiProviderIssues: summarizeAiProviderIssues14,
-  getLayoutFamilyList: getLayoutFamilyList14,
-  getLayoutFamilyById: getLayoutFamilyById14,
-  getColorPaletteList: getColorPaletteList14,
-  getColorPaletteById: getColorPaletteById14,
-  resolveColorPaletteForRender: resolveColorPaletteForRender14,
-  normalizeHexColor: normalizeHexColor14,
-  normalizeLayoutSelection: normalizeLayoutSelection14,
-  getArticleLayoutSelectionState: getArticleLayoutSelectionState14,
-  resolveAiProvider: resolveAiProvider14,
-  deriveArticleLayoutStateForSelection: deriveArticleLayoutStateForSelection14,
-  normalizeArticleLayoutState: normalizeArticleLayoutState14,
-  normalizeArticleLayoutCacheEntry: normalizeArticleLayoutCacheEntry14,
-  extractImageRefsFromHtml: extractImageRefsFromHtml14,
-  extractRenderedSectionFragments: extractRenderedSectionFragments14,
-  generateArticleLayout: generateArticleLayout14,
-  renderArticleLayoutHtml: renderArticleLayoutHtml14,
-  testAiProviderConnection: testAiProviderConnection14,
-  createWechatSyncService: createWechatSyncService14,
-  createWechatSyncBridgeService: createWechatSyncBridgeService14,
-  isWechatSyncUnsupportedMethodError: isWechatSyncUnsupportedMethodError13,
-  getMultiPlatformResultSummary: getMultiPlatformResultSummary14,
-  getWechatSyncResultError: getWechatSyncResultError14,
-  getWechatSyncResultPlatformId: getWechatSyncResultPlatformId14,
-  getWechatSyncResultUrl: getWechatSyncResultUrl14,
-  normalizeWechatsyncPlatform: normalizeWechatsyncPlatform14,
-  sortWechatsyncPlatformItemsForDisplay: sortWechatsyncPlatformItemsForDisplay14,
-  resolveSyncAccount: resolveSyncAccount14,
-  toSyncFriendlyMessage: toSyncFriendlyMessage14,
-  createEmptyDraftCache: createEmptyDraftCache14,
-  normalizeDraftCache: normalizeDraftCache14,
-  getDraftAssociation: getDraftAssociation14,
-  setDraftAssociation: setDraftAssociation14,
-  clearDraftAssociation: clearDraftAssociation14,
-  processAllImagesService: processAllImagesService13,
-  processMathFormulasService: processMathFormulasService13,
-  cleanHtmlForDraftService: cleanHtmlForDraftService13,
-  rasterizeSvgToPngBlob: rasterizeSvgToPngBlob14,
-  createObsidianFetchAdapter: createObsidianFetchAdapter14,
-  stripMarkdownFrontmatter: stripMarkdownFrontmatter14,
-  mapAppUrlImagesToAssetUrls: mapAppUrlImagesToAssetUrls14,
-  createHtmlContainer: createHtmlContainer14,
-  getActiveDocument: getActiveDocument14,
-  getActiveWindowValue: getActiveWindowValue14,
-  htmlToText: htmlToText14,
-  setElementHtml: setElementHtml14,
-  createDefaultMultiPlatformSyncSettings: createDefaultMultiPlatformSyncSettings14,
-  parseWechatsyncPlatformIds: parseWechatsyncPlatformIds14,
-  hasWechatSyncCapability: hasWechatSyncCapability14,
-  normalizeMultiPlatformSyncSettings: normalizeMultiPlatformSyncSettings14,
-  getAvailableWechatsyncPlatforms: getAvailableWechatsyncPlatforms14,
-  formatWechatsyncCheckedAt: formatWechatsyncCheckedAt14,
-  describeWechatsyncConnectionState: describeWechatsyncConnectionState14,
-  renderWechatsyncConnectionStatusBar: renderWechatsyncConnectionStatusBar14,
-  renderMultiPlatformSettingsTab: renderMultiPlatformSettingsTab14,
-  showMultiPlatformPublishModal: showMultiPlatformPublishModal14,
-  renderFeishuSettingsTab: renderFeishuSettingsTab14,
-  renderFeishuPublishTab: renderFeishuPublishTab14,
-  createDefaultFeishuSyncSettings: createDefaultFeishuSyncSettings14,
-  normalizeFeishuSyncSettings: normalizeFeishuSyncSettings14,
-  updateFeishuHistoryPath: updateFeishuHistoryPath14,
-  WechatAPI: WechatAPI14,
-  loadCommonJsDependency: loadCommonJsDependency14,
-  obsidianApi: obsidianApi14,
-  Plugin: Plugin14,
-  MarkdownView: MarkdownView14,
-  ItemView: ItemView14,
-  Notice: Notice14,
-  Platform: Platform14,
-  PluginSettingTab: PluginSettingTab14,
-  Setting: Setting14,
-  LEGACY_SETTING_RENDER_KEY: LEGACY_SETTING_RENDER_KEY15,
-  getActiveDocumentCompat: getActiveDocumentCompat14,
-  createFallbackSvgElement: createFallbackSvgElement14,
-  revealLeafCompat: revealLeafCompat14,
-  getPluginSettings: getPluginSettings14,
-  setPluginSettings: setPluginSettings14,
-  setDestructiveButtonCompat: setDestructiveButtonCompat14,
-  refreshSettingTabCompat: refreshSettingTabCompat14,
-  toReadableError: toReadableError17,
-  isRecord: isRecord26,
-  toRecord: toRecord23,
-  toAiLayoutState: toAiLayoutState15,
-  toAiLayoutJson: toAiLayoutJson14,
-  toAiLayoutBlock: toAiLayoutBlock14,
-  toAiLayoutGenerationMeta: toAiLayoutGenerationMeta14,
-  toAiLayoutSelection: toAiLayoutSelection15,
-  toAiLayoutFamilyStates: toAiLayoutFamilyStates15,
-  toOptionalText: toOptionalText15,
-  toImageElements: toImageElements14,
-  removeElementClass: removeElementClass14,
-  toOptionalNumber: toOptionalNumber15,
-  parseJsonRecord: parseJsonRecord15,
-  normalizeRequestUrlResponse: normalizeRequestUrlResponse15,
-  getResponseJsonRecord: getResponseJsonRecord15,
-  getProxyErrorMessage: getProxyErrorMessage15,
-  createProxyError: createProxyError15,
-  formatWechatApiError: formatWechatApiError15,
-  hasWechatUploadResult: hasWechatUploadResult15,
-  readBlobAsBase64Payload: readBlobAsBase64Payload15,
-  dataUrlToBlob: dataUrlToBlob14,
-  bufferFromBinary: bufferFromBinary15,
-  inferLocalImageMimeType: inferLocalImageMimeType14,
-  safeDecodeUriText: safeDecodeUriText14,
-  getFileUrlLocalPath: getFileUrlLocalPath14,
-  getVaultAdapterBasePath: getVaultAdapterBasePath14,
-  normalizeAbsoluteLocalPath: normalizeAbsoluteLocalPath15,
-  getVaultRelativePathFromLocalPath: getVaultRelativePathFromLocalPath15,
-  getVaultDirnameFromPath: getVaultDirnameFromPath14,
-  APPLE_STYLE_VIEW: APPLE_STYLE_VIEW14,
-  APPLE_STYLE_VIEW_TITLE: APPLE_STYLE_VIEW_TITLE14,
-  PLACEHOLDER_ICON_DATA_URL: PLACEHOLDER_ICON_DATA_URL14,
-  GITHUB_REPOSITORY_URL: GITHUB_REPOSITORY_URL14,
-  OBSIDIAN_PUBLISHER_PRO_URL: OBSIDIAN_PUBLISHER_PRO_URL15,
-  OBSIDIAN_PUBLISHER_GUIDE_URL: OBSIDIAN_PUBLISHER_GUIDE_URL14,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL: OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL15,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL: OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL15,
-  MULTI_PLATFORM_TAB_LABEL: MULTI_PLATFORM_TAB_LABEL14,
-  getObsidianModalClass: getObsidianModalClass14,
-  createObsidianModal: createObsidianModal14,
-  getObsidianSetIcon: getObsidianSetIcon14,
-  getObsidianRequestUrl: getObsidianRequestUrl14,
-  getObsidianRequest: getObsidianRequest14,
-  getAppleThemeApi: getAppleThemeApi14,
-  getValueElementFromEvent: getValueElementFromEvent14,
-  getEventTargetValue: getEventTargetValue14,
-  IMAGE_SWIPE_COMMAND_COPY: IMAGE_SWIPE_COMMAND_COPY14,
-  getObsidianLocale: getObsidianLocale14,
-  isChineseObsidianLocale: isChineseObsidianLocale14,
-  getImageSwipeCommandCopy: getImageSwipeCommandCopy14,
-  quoteLinesForImageSwipeCallout: quoteLinesForImageSwipeCallout14,
-  createImageSwipeCalloutMarkdown: createImageSwipeCalloutMarkdown14,
-  DEFAULT_SETTINGS: DEFAULT_SETTINGS14,
-  MAX_ACCOUNTS: MAX_ACCOUNTS14,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS: AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS14,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS: DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS14,
-  getWechatAccountPublishOptions: getWechatAccountPublishOptions14,
-  normalizeWechatAccountPublishOptions: normalizeWechatAccountPublishOptions14,
-  isMobileClient: isMobileClient16,
-  generateId: generateId14,
-  sleep: sleep15,
-  pMap: pMap14
-} = apple_style_view_shared_exports;
-var AppleStylePlugin = class extends Plugin14 {
+var AppleStylePlugin = class extends Plugin {
   async onload() {
     console.log("\u{1F4DD} \u6B63\u5728\u52A0\u8F7D Obsidian \u53D1\u5E03\u52A9\u624B...");
-    this.obsidianApi = obsidianApi14;
+    this.obsidianApi = obsidianApi;
     await this.loadSettings();
     if (typeof window !== "undefined") {
       delete window.AppleTheme;
       delete window.AppleStyleConverter;
     }
     this.registerView(
-      APPLE_STYLE_VIEW14,
+      APPLE_STYLE_VIEW,
       (leaf) => new AppleStyleView(leaf, this)
     );
-    this.addRibbonIcon("wand", APPLE_STYLE_VIEW_TITLE14, async () => {
+    this.addRibbonIcon("wand", APPLE_STYLE_VIEW_TITLE, async () => {
       await this.openConverter();
     });
     this.addCommand({
       id: "open-apple-converter",
-      name: `\u6253\u5F00${APPLE_STYLE_VIEW_TITLE14}`,
+      name: `\u6253\u5F00${APPLE_STYLE_VIEW_TITLE}`,
       callback: async () => {
         await this.openConverter();
       }
     });
     this.addCommand({
       id: "insert-image-swipe-block",
-      name: getImageSwipeCommandCopy14(this.app, "image-swipe").name,
+      name: getImageSwipeCommandCopy(this.app, "image-swipe").name,
       callback: () => {
         this.insertImageSwipeCalloutFromActiveEditor("image-swipe");
       }
     });
     this.addCommand({
       id: "insert-image-sensitive-block",
-      name: getImageSwipeCommandCopy14(this.app, "image-sensitive").name,
+      name: getImageSwipeCommandCopy(this.app, "image-sensitive").name,
       callback: () => {
         this.insertImageSwipeCalloutFromActiveEditor("image-sensitive");
       }
@@ -82787,7 +80507,7 @@ var AppleStylePlugin = class extends Plugin14 {
       this.registerEvent(
         this.app.vault.on("rename", (file, oldPath) => {
           if (this.settings.feishuSync) {
-            const changed = updateFeishuHistoryPath14(this.settings.feishuSync, oldPath, file.path);
+            const changed = updateFeishuHistoryPath(this.settings.feishuSync, oldPath, file.path);
             if (changed) {
               this.saveSettings().catch((err) => {
                 console.error("\u4FDD\u5B58\u91CD\u547D\u540D\u8BBE\u7F6E\u5931\u8D25:", err);
@@ -82805,7 +80525,7 @@ var AppleStylePlugin = class extends Plugin14 {
    */
   insertImageSwipeCalloutFromActiveEditor(type = "image-swipe") {
     var _a5, _b, _c;
-    const activeView = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.workspace) == null ? void 0 : _b.getActiveViewOfType) == null ? void 0 : _c.call(_b, MarkdownView14);
+    const activeView = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.workspace) == null ? void 0 : _b.getActiveViewOfType) == null ? void 0 : _c.call(_b, MarkdownView);
     this.insertImageSwipeCallout(activeView == null ? void 0 : activeView.editor, type);
   }
   /**
@@ -82814,13 +80534,13 @@ var AppleStylePlugin = class extends Plugin14 {
    */
   insertImageSwipeCallout(editor, type = "image-swipe") {
     if (!editor || typeof editor.replaceSelection !== "function") {
-      new Notice14("\u8BF7\u5148\u6253\u5F00\u4E00\u7BC7 Markdown \u6587\u6863");
+      new Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u7BC7 Markdown \u6587\u6863");
       return;
     }
     const selectedText = typeof editor.getSelection === "function" ? editor.getSelection() : "";
-    const markdown = createImageSwipeCalloutMarkdown14(type, selectedText, this.app);
+    const markdown = createImageSwipeCalloutMarkdown(type, selectedText, this.app);
     editor.replaceSelection(markdown);
-    new Notice14(getImageSwipeCommandCopy14(this.app, type).notice);
+    new Notice(getImageSwipeCommandCopy(this.app, type).notice);
   }
   /**
    * @param {ViewStateLike | Record<string, unknown>} [baseState]
@@ -82832,20 +80552,20 @@ var AppleStylePlugin = class extends Plugin14 {
     const shouldActivate = options && typeof options === "object" && options.active === true;
     return {
       ...safeState,
-      type: APPLE_STYLE_VIEW14,
+      type: APPLE_STYLE_VIEW,
       state: safeState.state && typeof safeState.state === "object" ? safeState.state : {},
       icon: "wand",
-      title: APPLE_STYLE_VIEW_TITLE14,
+      title: APPLE_STYLE_VIEW_TITLE,
       active: shouldActivate
     };
   }
   async migrateLegacyConverterLeafTitles() {
-    const leaves = this.app.workspace.getLeavesOfType(APPLE_STYLE_VIEW14);
+    const leaves = this.app.workspace.getLeavesOfType(APPLE_STYLE_VIEW);
     if (!Array.isArray(leaves) || leaves.length === 0)
       return;
     for (const leaf of leaves) {
       const currentViewState = typeof leaf.getViewState === "function" ? leaf.getViewState() : null;
-      if (!currentViewState || currentViewState.title === APPLE_STYLE_VIEW_TITLE14)
+      if (!currentViewState || currentViewState.title === APPLE_STYLE_VIEW_TITLE)
         continue;
       await leaf.setViewState(
         this.toConverterViewState(currentViewState, { active: currentViewState.active === true })
@@ -82854,23 +80574,23 @@ var AppleStylePlugin = class extends Plugin14 {
   }
   async openConverter() {
     var _a5, _b, _c, _d;
-    let leaf = this.app.workspace.getLeavesOfType(APPLE_STYLE_VIEW14)[0];
+    let leaf = this.app.workspace.getLeavesOfType(APPLE_STYLE_VIEW)[0];
     if (!leaf) {
-      const targetLeaf = isMobileClient16(this.app) ? ((_b = (_a5 = this.app.workspace).getLeaf) == null ? void 0 : _b.call(_a5, "tab")) || ((_d = (_c = this.app.workspace).getLeaf) == null ? void 0 : _d.call(_c, false)) : this.app.workspace.getRightLeaf(false);
+      const targetLeaf = isMobileClient3(this.app) ? ((_b = (_a5 = this.app.workspace).getLeaf) == null ? void 0 : _b.call(_a5, "tab")) || ((_d = (_c = this.app.workspace).getLeaf) == null ? void 0 : _d.call(_c, false)) : this.app.workspace.getRightLeaf(false);
       if (!targetLeaf)
         return;
       await targetLeaf.setViewState(this.toConverterViewState({}, { active: true }));
       leaf = targetLeaf;
     } else {
       const currentViewState = typeof leaf.getViewState === "function" ? leaf.getViewState() : null;
-      if (!currentViewState || currentViewState.title !== APPLE_STYLE_VIEW_TITLE14) {
+      if (!currentViewState || currentViewState.title !== APPLE_STYLE_VIEW_TITLE) {
         await leaf.setViewState(this.toConverterViewState(currentViewState || {}, { active: true }));
       }
     }
-    await revealLeafCompat14(this.app.workspace, leaf);
+    await revealLeafCompat(this.app.workspace, leaf);
   }
   getConverterView() {
-    const leaves = this.app.workspace.getLeavesOfType(APPLE_STYLE_VIEW14);
+    const leaves = this.app.workspace.getLeavesOfType(APPLE_STYLE_VIEW);
     if (leaves.length > 0) {
       return leaves[0].view;
     }
@@ -82895,7 +80615,7 @@ var AppleStylePlugin = class extends Plugin14 {
     }
     if (typeof window !== "undefined") {
       try {
-        const activeDoc = getActiveDocumentCompat14();
+        const activeDoc = getActiveDocumentCompat();
         if (!activeDoc)
           return false;
         const a = activeDoc.createElement("a");
@@ -82914,8 +80634,8 @@ var AppleStylePlugin = class extends Plugin14 {
   }
   getWechatSyncBridgeService() {
     var _a5, _b;
-    const pluginSettings = getPluginSettings14(this);
-    const settings = normalizeMultiPlatformSyncSettings14(pluginSettings["multiPlatformSync"]);
+    const pluginSettings = getPluginSettings(this);
+    const settings = normalizeMultiPlatformSyncSettings(pluginSettings["multiPlatformSync"]);
     const cacheKey = `${settings.port}:${settings.token}:${settings.allowRemote ? 1 : 0}`;
     if (this._wechatSyncBridgeService && this._wechatSyncBridgeCacheKey === cacheKey) {
       return this._wechatSyncBridgeService;
@@ -82926,31 +80646,32 @@ var AppleStylePlugin = class extends Plugin14 {
       });
     }
     this._wechatSyncBridgeCacheKey = cacheKey;
-    this._wechatSyncBridgeService = createWechatSyncBridgeService14({
+    this._wechatSyncBridgeService = createWechatSyncBridgeService({
       port: settings.port,
       token: settings.token,
       allowRemote: settings.allowRemote,
       serverVersion: ((_b = this.manifest) == null ? void 0 : _b.version) || "",
       initialConnectedClients: settings.connectedClients || [],
       onClientRegistryChange: async (clients) => {
-        var _a6, _b2;
-        const currentSettings = getPluginSettings14(this);
-        currentSettings["multiPlatformSync"] = normalizeMultiPlatformSyncSettings14({
-          ...toRecord23(currentSettings["multiPlatformSync"]),
+        var _a6;
+        const currentSettings = getPluginSettings(this);
+        currentSettings["multiPlatformSync"] = normalizeMultiPlatformSyncSettings({
+          ...toRecord8(currentSettings["multiPlatformSync"]),
           connectedClients: Array.isArray(clients) ? clients : []
         });
         await this.saveSettings();
-        refreshSettingTabCompat14(
+        refreshSettingTabCompat(
           /** @type {SettingTabCompatLike | null | undefined} */
-          (_b2 = (_a6 = this.app) == null ? void 0 : _a6.setting) == null ? void 0 : _b2.activeTab
+          /** @type {AppLike} */
+          (_a6 = this.app.setting) == null ? void 0 : _a6.activeTab
         );
       }
     });
     return this._wechatSyncBridgeService;
   }
   startWechatSyncBridgeInBackground(reason = "manual") {
-    const pluginSettings = getPluginSettings14(this);
-    const settings = normalizeMultiPlatformSyncSettings14(pluginSettings["multiPlatformSync"]);
+    const pluginSettings = getPluginSettings(this);
+    const settings = normalizeMultiPlatformSyncSettings(pluginSettings["multiPlatformSync"]);
     if (!settings.enabled)
       return;
     const bridge = this.getWechatSyncBridgeService();
@@ -82961,8 +80682,8 @@ var AppleStylePlugin = class extends Plugin14 {
         status
       });
     }).catch((error) => {
-      const errorRecord = toRecord23(error);
-      const readableError = toReadableError17(error);
+      const errorRecord = toRecord8(error);
+      const readableError = toReadableError4(error);
       console.warn("[Wechatsync] bridge warm start failed", {
         reason,
         port: settings.port,
@@ -82972,31 +80693,31 @@ var AppleStylePlugin = class extends Plugin14 {
     });
   }
   async loadSettings() {
-    const { settings, didMigrate } = normalizeLoadedSettings(await this.loadData(), { generateId: generateId14 });
-    setPluginSettings14(this, settings);
+    const { settings, didMigrate } = normalizeLoadedSettings(await this.loadData(), { generateId });
+    setPluginSettings(this, settings);
     if (didMigrate) {
       await this.saveSettings();
     }
   }
   getArticleLayoutState(sourcePath = "", selection = {}) {
-    return getArticleLayoutStateFromSettings(getPluginSettings14(this), sourcePath, selection);
+    return getArticleLayoutStateFromSettings(getPluginSettings(this), sourcePath, selection);
   }
   async saveArticleLayoutState(sourcePath = "", nextState = null, selection = {}) {
-    const saved = saveArticleLayoutStateToSettings(getPluginSettings14(this), sourcePath, nextState, selection);
+    const saved = saveArticleLayoutStateToSettings(getPluginSettings(this), sourcePath, nextState, selection);
     if (!saved)
       return false;
     return this.saveSettings();
   }
   async saveSettings() {
     try {
-      await this.saveData(getPluginSettings14(this));
+      await this.saveData(getPluginSettings(this));
       return true;
     } catch (error) {
       console.error("\u4FDD\u5B58\u63D2\u4EF6\u8BBE\u7F6E\u5931\u8D25:", error);
       const now = Date.now();
       if (!this._lastSaveSettingsErrorAt || now - this._lastSaveSettingsErrorAt > 3e3) {
         this._lastSaveSettingsErrorAt = now;
-        new Notice14("\u26A0\uFE0F \u8BBE\u7F6E\u4FDD\u5B58\u5931\u8D25\uFF0C\u672C\u6B21\u4FEE\u6539\u4EC5\u5728\u5F53\u524D\u4F1A\u8BDD\u751F\u6548");
+        new Notice("\u26A0\uFE0F \u8BBE\u7F6E\u4FDD\u5B58\u5931\u8D25\uFF0C\u672C\u6B21\u4FEE\u6539\u4EC5\u5728\u5F53\u524D\u4F1A\u8BDD\u751F\u6548");
       }
       return false;
     }
@@ -83014,14 +80735,14 @@ var AppleStylePlugin = class extends Plugin14 {
 AppleStylePlugin.default = AppleStylePlugin;
 AppleStylePlugin.AppleStylePlugin = AppleStylePlugin;
 AppleStylePlugin.AppleStyleView = AppleStyleView;
-AppleStylePlugin.WechatAPI = WechatAPI14;
+AppleStylePlugin.WechatAPI = WechatAPI;
 AppleStylePlugin.AppleStyleSettingTab = AppleStyleSettingTab;
-AppleStylePlugin.createImageSwipeCalloutMarkdown = createImageSwipeCalloutMarkdown14;
-AppleStylePlugin.getImageSwipeCommandCopy = getImageSwipeCommandCopy14;
-AppleStylePlugin.stripMarkdownFrontmatter = stripMarkdownFrontmatter14;
-AppleStylePlugin.describeWechatsyncConnectionState = describeWechatsyncConnectionState14;
-AppleStylePlugin.renderWechatsyncConnectionStatusBar = renderWechatsyncConnectionStatusBar14;
-AppleStylePlugin.formatWechatsyncCheckedAt = formatWechatsyncCheckedAt14;
+AppleStylePlugin.createImageSwipeCalloutMarkdown = createImageSwipeCalloutMarkdown;
+AppleStylePlugin.getImageSwipeCommandCopy = getImageSwipeCommandCopy;
+AppleStylePlugin.stripMarkdownFrontmatter = stripMarkdownFrontmatter;
+AppleStylePlugin.describeWechatsyncConnectionState = describeWechatsyncConnectionState;
+AppleStylePlugin.renderWechatsyncConnectionStatusBar = renderWechatsyncConnectionStatusBar;
+AppleStylePlugin.formatWechatsyncCheckedAt = formatWechatsyncCheckedAt;
 var input_default = AppleStylePlugin;
 /*! markdown-it 14.2.0 https://github.com/markdown-it/markdown-it @license MIT */
 /*! Bundled license information:

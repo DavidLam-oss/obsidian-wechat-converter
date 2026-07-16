@@ -56,7 +56,9 @@ function buildFallbackLayout(context = {}) {
     requestedSelection: source.selection || { colorPalette: source.stylePack },
     rawLayout: source.rawLayout,
     signals: /** @type {MarkdownSignals | null} */ (source.signals || extractMarkdownSignals(source.markdown || '')),
-    imageRefs: Array.isArray(source.imageRefs) ? source.imageRefs : [],
+    imageRefs: Array.isArray(source.imageRefs)
+      ? /** @type {AiImageRefLike[]} */ (source.imageRefs)
+      : [],
   });
   const resolved = selectionResolution.resolved;
   const skill = getLayoutSkillById(resolved.layoutFamily);
@@ -215,10 +217,12 @@ function buildFallbackLayout(context = {}) {
   };
 }
 
+/** @param {AiLayoutBlockLike[]} aiBlocks @param {AiLayoutBlockLike[]} fallbackBlocks @returns {AiLayoutBlockLike[]} */
 function mergeBlocksWithFallback(aiBlocks = [], fallbackBlocks = []) {
   return mergeBlocksWithFallbackDetailed(aiBlocks, fallbackBlocks).map((entry) => entry.block);
 }
 
+/** @param {AiLayoutBlockLike[]} aiBlocks @param {AiLayoutBlockLike[]} fallbackBlocks @returns {Array<{ block: AiLayoutBlockLike, source: 'ai' | 'fallback' }>} */
 function mergeBlocksWithFallbackDetailed(aiBlocks = [], fallbackBlocks = []) {
   const introOrder = ['hero', 'part-nav', 'lead-quote'];
   /** @type {Map<string, AiLayoutBlockLike>} */
@@ -382,6 +386,10 @@ function normalizeArticleLayout(rawLayout = {}, context = {}) {
   };
 }
 
+/**
+ * @param {{ provider?: AiProviderLike | null, layoutFamily: string, colorPalette: string, recommendedLayoutFamily: string, recommendedColorPalette: string, signals?: MarkdownSignals, imageRefs?: AiImageRefLike[], normalizedAiBlocks?: AiLayoutBlockLike[], mergedEntries?: Array<{ source?: 'ai' | 'fallback', block?: AiLayoutBlockLike }>, schemaValidation?: AiSchemaValidationLike | null }} options
+ * @returns {AiLayoutGenerationMetaLike}
+ */
 function createLayoutGenerationMeta({
   provider,
   layoutFamily,

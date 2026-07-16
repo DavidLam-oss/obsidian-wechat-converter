@@ -36,6 +36,7 @@ import {
   toReadableError,
 } from '../apple-style-view-shared.js';
 
+/** @type {WechatSettingsMethodsContract & ThisType<AppleStyleSettingTabContract>} */
 const wechatSettingsMethods = {
   /**
    * @param {ObsidianElementLike} containerEl

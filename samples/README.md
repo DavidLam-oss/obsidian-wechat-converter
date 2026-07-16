@@ -26,5 +26,5 @@
 ## 文件索引
 
 - `wechat-sample.html`：微信文章 HTML 样本，可用于手动粘贴/样式安全扫描测试。
-- `custom-css-demo.css`：自定义 CSS 演示样式，供插件「自定义 CSS」功能快速验证。
-- `esther-typora-like.css`：受 Esther Typora Theme 启发的自定义 CSS 样例，用于测试把外部 Typora 主题风格迁移到本插件。
+- `custom-css-demo.css.example`：自定义 CSS 演示样式，供插件「自定义 CSS」功能快速验证。
+- `esther-typora-like.css.example`：受 Esther Typora Theme 启发的自定义 CSS 样例，用于测试把外部 Typora 主题风格迁移到本插件。

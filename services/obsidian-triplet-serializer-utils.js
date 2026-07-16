@@ -57,9 +57,10 @@ function setInlineStyleIfMissing(el, styleText) {
  * @returns {string}
  */
 function getTagStyle(converter, tagName) {
-  if (!converter || typeof converter.getInlineStyle !== 'function') return '';
+  const compatibleConverter = /** @type {{ getInlineStyle?: (tagName: string) => string } | null | undefined} */ (converter);
+  if (!compatibleConverter || typeof compatibleConverter.getInlineStyle !== 'function') return '';
   try {
-    return converter.getInlineStyle(tagName) || '';
+    return compatibleConverter.getInlineStyle(tagName) || '';
   } catch {
     return '';
   }

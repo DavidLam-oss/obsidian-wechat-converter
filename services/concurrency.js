@@ -25,6 +25,7 @@
 - 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
 */
 
+/** @param {number} ms @returns {Promise<void>} */
 export const sleep = (ms) => new Promise(resolve => window.setTimeout(resolve, ms));
 
 /**

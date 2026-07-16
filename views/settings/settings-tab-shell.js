@@ -34,6 +34,7 @@ import {
   renderMultiPlatformSettingsTab,
 } from '../apple-style-view-shared.js';
 
+/** @type {SettingsTabShellMethodsContract & ThisType<AppleStyleSettingTabContract>} */
 const settingsTabShellMethods = {
   /** @returns {SettingDefinitionRenderLike[]} */
   getSettingDefinitions() {

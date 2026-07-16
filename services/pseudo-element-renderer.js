@@ -280,6 +280,7 @@ function toRoman(num) {
     return result;
 }
 
+/** @param {number} num @returns {string} */
 function numToAlpha(num) {
     if (num <= 0) return '';
     let result = '';
@@ -471,9 +472,11 @@ function safeQuerySelectorAll(container, selector) {
  * @returns {Map<Element, Map<string, number>>}
  */
 function computeCounters(container, config) {
+    /** @type {Map<Element, Map<string, number>>} */
     const result = new Map();
     const doc = container.ownerDocument;
     const walker = doc.createTreeWalker(container, NodeFilter.SHOW_ELEMENT);
+    /** @type {Map<string, number>} */
     const counters = new Map();
 
     let node = walker.nextNode();
@@ -490,7 +493,7 @@ function computeCounters(container, config) {
             const newVal = (counters.get(inc.name) ?? 0) + inc.value;
             counters.set(inc.name, newVal);
             if (!result.has(el)) result.set(el, new Map());
-            result.get(el).set(inc.name, newVal);
+            /** @type {Map<string, number>} */ (result.get(el)).set(inc.name, newVal);
         }
 
         node = walker.nextNode();

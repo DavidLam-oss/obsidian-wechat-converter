@@ -68,6 +68,7 @@ const AI_LAYOUT_DEFAULT_COLOR_PALETTE = 'tech-green';
 
 const AI_LAYOUT_IMPLEMENTED_FAMILIES = new Set(AI_LAYOUT_FAMILIES);
 
+/** @type {Record<string, string>} */
 const AI_LAYOUT_RESERVED_FAMILY_FALLBACKS = {};
 
 const AI_LAYOUT_SHARED_RESOURCES = getAiLayoutSharedResources();
@@ -99,12 +100,12 @@ const AI_COLOR_PALETTES = (AI_LAYOUT_SHARED_RESOURCES.colorPalettes?.colorPalett
   return acc;
 }, /** @type {Record<string, AiLayoutColorPalette>} */ ({}));
 
-const AI_WECHAT_SAFE_STYLE_PRIMITIVES = AI_LAYOUT_SHARED_RESOURCES.wechatSafeStylePrimitives || {
+const AI_WECHAT_SAFE_STYLE_PRIMITIVES = /** @type {AiLayoutStylePrimitivesLike} */ (AI_LAYOUT_SHARED_RESOURCES.wechatSafeStylePrimitives || {
   typography: {},
   image: {},
   profiles: {},
   sectionLabels: {},
-};
+});
 
 const AI_STYLE_PACKS = AI_COLOR_PALETTES;
 

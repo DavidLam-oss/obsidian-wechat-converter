@@ -84,6 +84,7 @@ Object.assign(
   wechatAccountModalMethods,
 );
 
+/** @this {AppleStyleSettingTabContract} */
 AppleStyleSettingTab.prototype[LEGACY_SETTING_RENDER_KEY] = function legacySettingsFallback() {
   this.renderSettingsContent();
 };

@@ -46,6 +46,7 @@ import { normalizeLayoutGenerationMeta } from './schema-validation.js';
 import { normalizeArticleLayoutCacheEntry, normalizeArticleLayoutState } from './state-cache.js';
 import { toRecord, toSelectionRecord } from './utils.js';
 
+/** @param {{ requestedSelection?: unknown, rawLayout?: unknown, signals?: MarkdownSignals | null, imageRefs?: AiImageRefLike[] }} options */
 function resolveLayoutSelection({
   requestedSelection = {},
   rawLayout = {},
@@ -82,6 +83,7 @@ function resolveLayoutSelection({
   };
 }
 
+/** @param {unknown} entry @param {unknown} selection @param {unknown} defaults @returns {AiLayoutStateLike | null} */
 function getArticleLayoutSelectionState(entry, selection = {}, defaults = {}) {
   const normalizedEntry = normalizeArticleLayoutCacheEntry(entry);
   if (!normalizedEntry) return null;
@@ -105,6 +107,7 @@ function getArticleLayoutSelectionState(entry, selection = {}, defaults = {}) {
   return familyStates[familyKeys[0]] || null;
 }
 
+/** @param {unknown} state @param {unknown} selection @param {unknown} defaults @returns {AiLayoutStateLike | null} */
 function deriveArticleLayoutStateForSelection(state, selection = {}, defaults = {}) {
   const normalizedState = normalizeArticleLayoutState(state);
   if (!normalizedState?.layoutJson?.blocks?.length) return null;
@@ -186,6 +189,7 @@ function deriveArticleLayoutStateForSelection(state, selection = {}, defaults = 
   });
 }
 
+/** @param {unknown} entry @param {unknown} selection @param {unknown} defaults @returns {string} */
 function getArticleLayoutSelectionStateKey(entry, selection = {}, defaults = {}) {
   const normalizedEntry = normalizeArticleLayoutCacheEntry(entry);
   if (!normalizedEntry) return '';

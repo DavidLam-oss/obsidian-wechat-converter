@@ -77,6 +77,7 @@ import {
   toSelectionRecord,
 } from './utils.js';
 
+/** @param {unknown} text @returns {string} */
 function extractJsonPayload(text) {
   const content = String(text || '').trim();
   if (!content) throw new Error('AI 未返回内容');
@@ -91,6 +92,7 @@ function extractJsonPayload(text) {
   return candidate.slice(firstBrace, lastBrace + 1);
 }
 
+/** @param {unknown} payload @returns {string} */
 function sanitizeJsonStringLiteralControls(payload = '') {
   const raw = String(payload || '');
   if (!raw) return raw;
@@ -140,6 +142,7 @@ function sanitizeJsonStringLiteralControls(payload = '') {
   return sanitized;
 }
 
+/** @param {unknown} rawBlock @returns {string} */
 function inferBlockType(rawBlock = {}) {
   if (!isRecord(rawBlock)) return '';
   const blockRecord = rawBlock;
@@ -217,6 +220,7 @@ function repairRawLayoutPayload(rawLayout = {}) {
   };
 }
 
+/** @param {unknown} html @returns {AiImageRefLike[]} */
 function extractImageRefsFromHtml(html) {
   const source = coerceString(html);
   if (!source) return [];
@@ -241,6 +245,7 @@ function extractImageRefsFromHtml(html) {
   return refs;
 }
 
+/** @param {{ title: string, markdown: string, selection?: AiLayoutSelectionLike, stylePack?: string, imageRefs?: AiImageRefLike[] }} options @returns {AiLayoutMessageLike[]} */
 function buildLayoutMessages({ title, markdown, selection, stylePack, imageRefs = [] }) {
   const safeImageRefs = toAiImageRefs(imageRefs);
   const resolvedSelection = resolveLayoutSelection({
@@ -363,6 +368,7 @@ function buildLayoutMessages({ title, markdown, selection, stylePack, imageRefs 
   ];
 }
 
+/** @param {unknown} data @returns {string} */
 function readChatCompletionContent(data) {
   const source = toRecord(data);
   const choices = Array.isArray(source.choices) ? source.choices : [];
@@ -383,6 +389,7 @@ function readChatCompletionContent(data) {
   throw new Error('AI 响应格式无法识别');
 }
 
+/** @param {unknown} data @returns {string} */
 function readGeminiContent(data) {
   const source = toRecord(data);
   const candidates = Array.isArray(source.candidates) ? source.candidates : [];
@@ -400,6 +407,7 @@ function readGeminiContent(data) {
   throw new Error('Gemini 响应缺少可解析文本');
 }
 
+/** @param {unknown} data @returns {string} */
 function readAnthropicContent(data) {
   const source = toRecord(data);
   if (source.stop_reason === 'max_tokens') {
@@ -417,6 +425,7 @@ function readAnthropicContent(data) {
   throw new Error('Anthropic 响应缺少可解析文本');
 }
 
+/** @param {AiLayoutMessageLike[]} messages @returns {string} */
 function toPlainPromptFromMessages(messages = []) {
   return (Array.isArray(messages) ? messages : [])
     .map((message) => {
@@ -434,15 +443,18 @@ function shouldUseLocalFallbackLayout(error, selection = {}) {
   return requestedLayoutFamily === 'source-first' && !!error;
 }
 
+/** @param {unknown} error @returns {boolean} */
 function isAbortError(error) {
   return toRecord(error).name === 'AbortError';
 }
 
+/** @param {string} jsonPayload @returns {Record<string, unknown>} */
 function parseAndRepairLayoutPayload(jsonPayload) {
   const parsedPayload = /** @type {unknown} */ (JSON.parse(jsonPayload));
   return /** @type {Record<string, unknown>} */ (repairRawLayoutPayload(parsedPayload));
 }
 
+/** @param {AiLayoutRequestOptionsLike} options @returns {Promise<Record<string, unknown>>} */
 async function requestOpenAICompatibleLayout({
   provider,
   title,
@@ -499,6 +511,7 @@ async function requestOpenAICompatibleLayout({
   }
 }
 
+/** @param {AiLayoutRequestOptionsLike} options @returns {Promise<Record<string, unknown>>} */
 async function requestGeminiLayout({
   provider,
   title,
@@ -571,6 +584,7 @@ async function requestGeminiLayout({
   }
 }
 
+/** @param {AiLayoutRequestOptionsLike} options @returns {Promise<Record<string, unknown>>} */
 async function requestAnthropicLayout({
   provider,
   title,
@@ -638,6 +652,7 @@ async function requestAnthropicLayout({
   }
 }
 
+/** @param {AiLayoutGenerationOptionsLike} options @returns {Promise<AiLayoutResultLike>} */
 async function generateArticleLayout({
   provider,
   title,
@@ -774,6 +789,7 @@ async function generateArticleLayout({
   }
 }
 
+/** @param {unknown} provider @param {FetchLike} [fetchImpl] @returns {Promise<boolean>} */
 async function testAiProviderConnection(provider, fetchImpl = getDefaultFetch()) {
   const result = await generateArticleLayout({
     provider,

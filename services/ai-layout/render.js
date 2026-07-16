@@ -37,6 +37,7 @@ import {
 } from './prompt-context.js';
 import { coerceString, isRecord, toAiImageRefs, toAiLayoutBlocks, toRecord } from './utils.js';
 
+/** @param {unknown} text @returns {string} */
 function normalizeWechatTaskMarkerText(text) {
   return String(text || '').replace(
     /(^|\n)(\s*)\[([ xX])\]\s+/g,
@@ -45,6 +46,7 @@ function normalizeWechatTaskMarkerText(text) {
   );
 }
 
+/** @param {unknown} text @returns {string} */
 function escapeHtml(text) {
   /** @type {Record<string, string>} */
   const replacements = {
@@ -57,6 +59,7 @@ function escapeHtml(text) {
   return normalizeWechatTaskMarkerText(text).replace(/[&<>"']/g, (char) => replacements[char] || char);
 }
 
+/** @param {unknown} text @returns {string} */
 function normalizeAiLayoutDisplayText(text) {
   return String(text || '')
     .replace(/!\[\[[^[\]\r\n]+]]/g, '')
@@ -65,20 +68,24 @@ function normalizeAiLayoutDisplayText(text) {
     .trim();
 }
 
+/** @param {unknown} text @returns {string} */
 function escapeAiLayoutText(text) {
   return escapeHtml(normalizeAiLayoutDisplayText(text));
 }
 
+/** @param {unknown} fontFamily @returns {string} */
 function normalizeInlineFontFamily(fontFamily = '') {
   return String(fontFamily || '').replace(/"/g, '\'');
 }
 
+/** @param {string} tagName @param {unknown} text @param {string} style @param {{ mode?: string }} options @returns {string} */
 function renderStyledText(tagName, text, style, { mode = 'preview' } = {}) {
   if (text === undefined || text === null || text === '') return '';
   const actualTagName = mode === 'draft' && /^h[1-6]$/i.test(tagName) ? 'p' : tagName;
   return `<${actualTagName} style="${style}">${escapeHtml(text)}</${actualTagName}>`;
 }
 
+/** @param {AiColorTokens} tokens @returns {string} */
 function renderEditorialDraftDivider(tokens) {
   return `<section style="margin:24px 0 0;padding:0;font-size:0;line-height:0;overflow:hidden;">
     <section style="width:100%;height:1px;background:${tokens.border};font-size:0;line-height:0;overflow:hidden;">
@@ -87,6 +94,7 @@ function renderEditorialDraftDivider(tokens) {
   </section>`;
 }
 
+/** @param {AiColorTokens} tokens @returns {string} */
 function renderEditorialPreviewDivider(tokens) {
   return `<div style="margin-top:24px;font-size:0;line-height:0;overflow:hidden;">
     <div style="width:100%;height:1px;background:${tokens.border};font-size:0;line-height:0;overflow:hidden;">
@@ -95,14 +103,15 @@ function renderEditorialPreviewDivider(tokens) {
   </div>`;
 }
 
+/** @param {unknown} layout @param {{ imageRefs?: unknown, mode?: string, renderedSectionFragments?: unknown, colorPaletteOverride?: Record<string, unknown> | null }} options @returns {string} */
 function renderArticleLayoutHtml(layout, { imageRefs = [], mode = 'preview', renderedSectionFragments = null, colorPaletteOverride = null } = {}) {
   const layoutRecord = toRecord(layout);
   const layoutJson = /** @type {AiLayoutJsonLike} */ (toRecord(layoutRecord.layoutJson || layoutRecord));
   const layoutFamily = getLayoutFamilyById(layoutJson.resolved?.layoutFamily || layoutJson.layoutFamily);
-  const colorPalette = resolveColorPaletteForRender(
+  const colorPalette = /** @type {AiLayoutColorPalette} */ (resolveColorPaletteForRender(
     layoutJson.resolved?.colorPalette || layoutJson.stylePack,
     colorPaletteOverride
-  );
+  ));
   const tokens = /** @type {AiColorTokens} */ (colorPalette.tokens || {});
   const renderProfile = getWechatSafeRenderProfile(layoutFamily.id);
   const typography = toRecord(AI_WECHAT_SAFE_STYLE_PRIMITIVES.typography);

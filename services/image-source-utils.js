@@ -135,7 +135,7 @@ function getFileUrlLocalPath(src) {
 function getVaultAdapterBasePath(app) {
   const adapter = app?.vault?.adapter;
   if (!adapter || typeof adapter !== 'object') return '';
-  const basePath = adapter['basePath'];
+  const basePath = /** @type {{ basePath?: unknown }} */ (adapter).basePath;
   return typeof basePath === 'string' ? basePath : '';
 }
 

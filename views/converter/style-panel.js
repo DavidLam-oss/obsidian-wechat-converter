@@ -25,171 +25,21 @@
 - 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
 */
 
-/* eslint-disable no-unused-vars -- Transitional method group keeps original free identifiers available after extraction. */
-import * as shared from '../apple-style-view-shared.js';
-
-const {
-  createRenderPipelines,
-  buildRenderRuntime,
-  resolveMarkdownSource,
+import {
   normalizeVaultPath,
-  isAbsolutePathLike,
-  renderObsidianTripletMarkdown,
-  canUseNativePreviewFastPath,
-  renderNativeMarkdown,
-  convertRenderedMermaidDiagramsToImages,
-  AI_LAYOUT_SCHEMA_VERSION,
-  AI_LAYOUT_SELECTION_AUTO,
-  AI_PROVIDER_KINDS,
-  createDefaultAiSettings,
-  normalizeAiSettings,
-  normalizeAiProvider,
-  getAiProviderIssues,
-  isAiProviderRunnable,
-  summarizeAiProviderIssues,
-  getLayoutFamilyList,
-  getLayoutFamilyById,
-  getColorPaletteList,
-  getColorPaletteById,
-  resolveColorPaletteForRender,
-  normalizeHexColor,
-  normalizeLayoutSelection,
-  getArticleLayoutSelectionState,
-  resolveAiProvider,
-  deriveArticleLayoutStateForSelection,
-  normalizeArticleLayoutState,
-  normalizeArticleLayoutCacheEntry,
-  extractImageRefsFromHtml,
-  extractRenderedSectionFragments,
-  generateArticleLayout,
-  renderArticleLayoutHtml,
-  testAiProviderConnection,
-  createWechatSyncService,
-  createWechatSyncBridgeService,
-  isWechatSyncUnsupportedMethodError,
-  getMultiPlatformResultSummary,
-  getWechatSyncResultError,
-  getWechatSyncResultPlatformId,
-  getWechatSyncResultUrl,
-  normalizeWechatsyncPlatform,
-  sortWechatsyncPlatformItemsForDisplay,
-  resolveSyncAccount,
-  toSyncFriendlyMessage,
-  createEmptyDraftCache,
-  normalizeDraftCache,
-  getDraftAssociation,
-  setDraftAssociation,
-  clearDraftAssociation,
-  processAllImagesService,
-  processMathFormulasService,
-  cleanHtmlForDraftService,
-  rasterizeSvgToPngBlob,
-  createObsidianFetchAdapter,
-  stripMarkdownFrontmatter,
-  mapAppUrlImagesToAssetUrls,
   createHtmlContainer,
-  getActiveDocument,
-  getActiveWindowValue,
-  htmlToText,
-  setElementHtml,
-  createDefaultMultiPlatformSyncSettings,
-  parseWechatsyncPlatformIds,
-  hasWechatSyncCapability,
-  normalizeMultiPlatformSyncSettings,
-  getAvailableWechatsyncPlatforms,
-  formatWechatsyncCheckedAt,
-  describeWechatsyncConnectionState,
-  renderWechatsyncConnectionStatusBar,
-  renderMultiPlatformSettingsTab,
-  showMultiPlatformPublishModal,
-  renderFeishuSettingsTab,
-  renderFeishuPublishTab,
-  createDefaultFeishuSyncSettings,
-  normalizeFeishuSyncSettings,
-  updateFeishuHistoryPath,
-  WechatAPI,
-  loadCommonJsDependency,
-  obsidianApi,
-  Plugin,
-  MarkdownView,
-  ItemView,
-  Notice,
-  Platform,
-  PluginSettingTab,
-  Setting,
-  LEGACY_SETTING_RENDER_KEY,
-  getActiveDocumentCompat,
-  createFallbackSvgElement,
-  revealLeafCompat,
-  getPluginSettings,
-  setPluginSettings,
-  setDestructiveButtonCompat,
-  refreshSettingTabCompat,
   toReadableError,
-  isRecord,
   toRecord,
-  toAiLayoutState,
-  toAiLayoutJson,
-  toAiLayoutBlock,
-  toAiLayoutGenerationMeta,
-  toAiLayoutSelection,
-  toAiLayoutFamilyStates,
-  toOptionalText,
-  toImageElements,
   removeElementClass,
-  toOptionalNumber,
-  parseJsonRecord,
-  normalizeRequestUrlResponse,
-  getResponseJsonRecord,
-  getProxyErrorMessage,
-  createProxyError,
-  formatWechatApiError,
-  hasWechatUploadResult,
-  readBlobAsBase64Payload,
-  dataUrlToBlob,
-  bufferFromBinary,
-  inferLocalImageMimeType,
-  safeDecodeUriText,
-  getFileUrlLocalPath,
-  getVaultAdapterBasePath,
-  normalizeAbsoluteLocalPath,
-  getVaultRelativePathFromLocalPath,
-  getVaultDirnameFromPath,
-  APPLE_STYLE_VIEW,
   APPLE_STYLE_VIEW_TITLE,
-  PLACEHOLDER_ICON_DATA_URL,
-  GITHUB_REPOSITORY_URL,
-  OBSIDIAN_PUBLISHER_PRO_URL,
-  OBSIDIAN_PUBLISHER_GUIDE_URL,
-  OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL,
-  OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL,
-  MULTI_PLATFORM_TAB_LABEL,
-  getObsidianModalClass,
-  createObsidianModal,
   getObsidianSetIcon,
-  getObsidianRequestUrl,
-  getObsidianRequest,
   getAppleThemeApi,
-  getValueElementFromEvent,
   getEventTargetValue,
-  IMAGE_SWIPE_COMMAND_COPY,
-  getObsidianLocale,
-  isChineseObsidianLocale,
   getImageSwipeCommandCopy,
-  quoteLinesForImageSwipeCallout,
-  createImageSwipeCalloutMarkdown,
-  DEFAULT_SETTINGS,
-  MAX_ACCOUNTS,
-  AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS,
-  DEFAULT_WECHAT_ACCOUNT_PUBLISH_OPTIONS,
-  getWechatAccountPublishOptions,
-  normalizeWechatAccountPublishOptions,
   isMobileClient,
-  generateId,
-  sleep,
-  pMap
-} = shared;
+} from '../apple-style-view-shared.js';
 
+/** @type {StylePanelMethodsContract & ThisType<AppleStyleViewContract>} */
 export const stylePanelMethods = {
 createSettingsPanel(container) {
 
@@ -779,6 +629,7 @@ getFrontmatterKeyMap(frontmatter, keys) {
 }
 ,
 
+/** @param {string} filePath @param {string} dirPath @returns {boolean} */
 isPathInsideDirectory(filePath, dirPath) {
   const file = this.normalizeVaultPath(filePath);
   const dir = this.normalizeVaultPath(dirPath);
@@ -788,6 +639,7 @@ isPathInsideDirectory(filePath, dirPath) {
 }
 ,
 
+/** @param {string} filePath @param {string} dirPath @returns {boolean} */
 isPathInsideDirectoryByTail(filePath, dirPath) {
   const file = this.normalizeVaultPath(filePath);
   const dir = this.normalizeVaultPath(dirPath);
@@ -809,6 +661,7 @@ isPathInsideDirectoryByTail(filePath, dirPath) {
 }
 ,
 
+/** @param {string} pathValue @param {string} cleanedDir @returns {boolean} */
 shouldClearFrontmatterPathAfterCleanup(pathValue, cleanedDir) {
   const normalized = this.normalizeVaultPath(pathValue);
   if (!normalized) return false;
@@ -843,6 +696,7 @@ clearInvalidPublishMetaInFrontmatter(frontmatter, cleanedDir) {
 }
 ,
 
+/** @param {TFileLike} activeFile @param {string} cleanedDir @returns {Promise<boolean>} */
 async clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir) {
   const vault = this.app?.vault;
   if (!vault || typeof vault.read !== 'function' || typeof vault.modify !== 'function') {
@@ -871,6 +725,7 @@ async clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir) {
 }
 ,
 
+/** @param {TFileLike | null | undefined} activeFile @param {string} cleanedDirPath @returns {Promise<string | null>} */
 async clearInvalidPublishMetaAfterCleanup(activeFile, cleanedDirPath) {
   if (!activeFile || !cleanedDirPath) return null;
 
@@ -894,6 +749,7 @@ async clearInvalidPublishMetaAfterCleanup(activeFile, cleanedDirPath) {
 }
 ,
 
+/** @param {unknown} vaultPath @returns {string | null} */
 resolveVaultPathToResourceSrc(vaultPath) {
   if (typeof vaultPath !== 'string') return null;
   const normalized = vaultPath.trim().replace(/\\/g, '/').replace(/^\/+/, '');
@@ -911,17 +767,20 @@ resolveVaultPathToResourceSrc(vaultPath) {
 }
 ,
 
+/** @param {unknown} vaultPath @returns {string} */
 normalizeVaultPath(vaultPath) {
   return normalizeVaultPath(vaultPath);
 }
 ,
 
+/** @returns {string} */
 getVaultConfigDir() {
   const configDir = this.app?.vault?.configDir;
   return typeof configDir === 'string' ? this.normalizeVaultPath(configDir) : '';
 }
 ,
 
+/** @returns {string} */
 getCleanupDirTemplate() {
   const raw = typeof this.plugin?.settings?.cleanupDirTemplate === 'string'
     ? this.plugin.settings.cleanupDirTemplate
@@ -930,6 +789,7 @@ getCleanupDirTemplate() {
 }
 ,
 
+/** @param {TFileLike | null | undefined} activeFile @returns {{ path: string, warning?: string }} */
 resolveCleanupDirPath(activeFile) {
   const template = this.getCleanupDirTemplate();
   if (!template) {
@@ -952,6 +812,7 @@ resolveCleanupDirPath(activeFile) {
 }
 ,
 
+/** @param {string} vaultPath @returns {boolean} */
 isSafeCleanupDirPath(vaultPath) {
   const normalized = this.normalizeVaultPath(vaultPath);
   if (!normalized) return false;

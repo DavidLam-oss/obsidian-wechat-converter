@@ -41,6 +41,7 @@ import {
 } from './catalog.js';
 import { applyElementCssStyles, coerceString, toRecord } from './utils.js';
 
+/** @param {string} markdown @param {number} maxChars @returns {string} */
 function truncateMarkdownForPrompt(markdown = '', maxChars = 12000) {
   const content = String(markdown || '').trim();
   if (!content || content.length <= maxChars) return content;
@@ -57,10 +58,12 @@ function truncateMarkdownForPrompt(markdown = '', maxChars = 12000) {
   ].join('\n');
 }
 
+/** @param {unknown} value @returns {string} */
 function normalizeTitleKey(value) {
   return coerceString(value).toLowerCase().replace(/\s+/g, '');
 }
 
+/** @param {unknown} value @param {number} fallback @returns {number} */
 function toSectionIndex(value, fallback = -1) {
   if (Number.isInteger(value) && value >= 0) return value;
   if (typeof value === 'string' && /^\d+$/.test(value.trim())) {
@@ -70,6 +73,7 @@ function toSectionIndex(value, fallback = -1) {
   return fallback;
 }
 
+/** @param {unknown} value @param {number} limit @returns {string[]} */
 function toTextArray(value, limit = 6) {
   if (!Array.isArray(value)) return [];
   return value
@@ -78,6 +82,7 @@ function toTextArray(value, limit = 6) {
     .slice(0, limit);
 }
 
+/** @param {unknown} value @param {Set<string>} imageIds @param {number} limit @returns {string[]} */
 function toImageIdArray(value, imageIds, limit = 4) {
   if (!Array.isArray(value)) return [];
   return value
@@ -86,6 +91,7 @@ function toImageIdArray(value, imageIds, limit = 4) {
     .slice(0, limit);
 }
 
+/** @param {unknown} section @param {{ imageIds?: unknown, fallbackIndex?: number }} options @returns {AiLayoutBlockLike | null} */
 function buildSectionBlockFromSource(section, {
   imageIds = [],
   fallbackIndex = 0,
@@ -93,16 +99,16 @@ function buildSectionBlockFromSource(section, {
   if (!section || typeof section !== 'object') return null;
   const sectionRecord = /** @type {AiLayoutSourceSectionLike} */ (section);
   const title = coerceString(sectionRecord.title || sectionRecord.heading || '');
-  const paragraphs = Array.isArray(section.paragraphs)
-    ? section.paragraphs.map((item) => coerceString(item)).filter(Boolean)
+  const paragraphs = Array.isArray(sectionRecord.paragraphs)
+    ? sectionRecord.paragraphs.map((item) => coerceString(item)).filter(Boolean)
     : [];
-  const bulletGroups = Array.isArray(section.bulletGroups)
-    ? section.bulletGroups
+  const bulletGroups = Array.isArray(sectionRecord.bulletGroups)
+    ? sectionRecord.bulletGroups
       .map((group) => Array.isArray(group) ? group.map((item) => coerceString(item)).filter(Boolean).slice(0, 10) : [])
       .filter((group) => group.length)
     : [];
-  const callouts = Array.isArray(section.callouts)
-    ? section.callouts
+  const callouts = Array.isArray(sectionRecord.callouts)
+    ? sectionRecord.callouts
       .map((callout) => ({
         type: coerceString(callout?.type),
         title: coerceString(callout?.title),
@@ -113,8 +119,8 @@ function buildSectionBlockFromSource(section, {
   const normalizedImageIds = Array.isArray(imageIds)
     ? imageIds.map((item) => coerceString(item)).filter(Boolean).slice(0, 3)
     : [];
-  const subsections = Array.isArray(section.subsections)
-    ? section.subsections.map((subsection) => ({
+  const subsections = Array.isArray(sectionRecord.subsections)
+    ? sectionRecord.subsections.map((subsection) => ({
       title: coerceString(subsection?.title || subsection?.heading || ''),
       level: Number.isInteger(subsection?.level) ? subsection.level : 3,
       paragraphs: Array.isArray(subsection?.paragraphs)
@@ -151,6 +157,7 @@ function buildSectionBlockFromSource(section, {
   };
 }
 
+/** @param {AiLayoutBlockLike[]} blocks @param {number} maxSectionBlocks @returns {AiLayoutBlockLike[]} */
 function mergeSectionBlocksByBudget(blocks = [], maxSectionBlocks = 0) {
   if (!Number.isInteger(maxSectionBlocks) || maxSectionBlocks <= 0) return blocks.slice();
   let sectionCount = 0;
@@ -228,31 +235,34 @@ function mergeSectionBlocksByBudget(blocks = [], maxSectionBlocks = 0) {
   return merged;
 }
 
+/** @param {AiLayoutSourceSectionLike[]} sourceSections @param {string} title @returns {AiLayoutSourceSectionLike | null} */
 function findSourceSectionByTitle(sourceSections = [], title = '') {
   const expectedKey = normalizeTitleKey(title);
   if (!expectedKey) return null;
   return sourceSections.find((section) => normalizeTitleKey(section?.title) === expectedKey) || null;
 }
 
+/** @param {unknown} block @param {Set<string>} imageIds @param {AiLayoutSourceSectionLike[]} sourceSections @param {number} index @returns {AiLayoutBlockLike | null} */
 function normalizeLayoutBlock(block, imageIds, sourceSections, index) {
   if (!block || typeof block !== 'object') return null;
-  const type = coerceString(block.type);
+  const blockRecord = /** @type {AiLayoutBlockLike} */ (block);
+  const type = coerceString(blockRecord.type);
   if (!type) return null;
 
   if (type === 'hero') {
     return {
       type,
-      eyebrow: coerceString(block.eyebrow),
-      title: coerceString(block.title),
-      subtitle: coerceString(block.subtitle),
-      coverImageId: imageIds.has(coerceString(block.coverImageId)) ? coerceString(block.coverImageId) : '',
-      variant: ['cover-right', 'cover-left'].includes(block.variant) ? block.variant : 'cover-right',
+      eyebrow: coerceString(blockRecord.eyebrow),
+      title: coerceString(blockRecord.title),
+      subtitle: coerceString(blockRecord.subtitle),
+      coverImageId: imageIds.has(coerceString(blockRecord.coverImageId)) ? coerceString(blockRecord.coverImageId) : '',
+      variant: ['cover-right', 'cover-left'].includes(/** @type {string} */ (blockRecord.variant)) ? blockRecord.variant : 'cover-right',
     };
   }
 
   if (type === 'part-nav') {
-    const items = Array.isArray(block.items)
-      ? block.items.map((item, itemIndex) => {
+    const items = Array.isArray(blockRecord.items)
+      ? blockRecord.items.map((item, itemIndex) => {
         const itemRecord = toRecord(item);
         return {
           label: coerceString(itemRecord.label || `PART ${String(itemIndex + 1).padStart(2, '0')}`),
@@ -264,79 +274,81 @@ function normalizeLayoutBlock(block, imageIds, sourceSections, index) {
   }
 
   if (type === 'lead-quote') {
-    const text = coerceString(block.text || block.quote);
+    const text = coerceString(blockRecord.text || blockRecord.quote);
     if (!text) return null;
     return {
       type,
       text,
-      note: coerceString(block.note),
+      note: coerceString(blockRecord.note),
     };
   }
 
   if (type === 'case-block') {
-    const title = coerceString(block.title);
-    const summary = coerceString(block.summary);
+    const title = coerceString(blockRecord.title);
+    const summary = coerceString(blockRecord.summary);
     if (!title && !summary) return null;
     const matchedSection = findSourceSectionByTitle(sourceSections, title);
     if (matchedSection) {
       return buildSectionBlockFromSource(matchedSection, {
-        imageIds: toImageIdArray(block.imageIds, imageIds, MAX_CASE_BLOCK_IMAGE_IDS),
+        imageIds: toImageIdArray(blockRecord.imageIds, imageIds, MAX_CASE_BLOCK_IMAGE_IDS),
         fallbackIndex: toSectionIndex(matchedSection.index, index),
       });
     }
     return {
       type,
-      caseLabel: coerceString(block.caseLabel || `CASE ${String(index + 1).padStart(2, '0')}`),
+      caseLabel: coerceString(blockRecord.caseLabel || `CASE ${String(index + 1).padStart(2, '0')}`),
       title,
       summary,
-      bullets: toTextArray(block.bullets, MAX_CASE_BLOCK_BULLETS),
-      imageIds: toImageIdArray(block.imageIds, imageIds, MAX_CASE_BLOCK_IMAGE_IDS),
-      highlight: coerceString(block.highlight),
+      bullets: toTextArray(blockRecord.bullets, MAX_CASE_BLOCK_BULLETS),
+      imageIds: toImageIdArray(blockRecord.imageIds, imageIds, MAX_CASE_BLOCK_IMAGE_IDS),
+      highlight: coerceString(blockRecord.highlight),
     };
   }
 
   if (type === 'section-block') {
-    const sectionIndex = toSectionIndex(block.sectionIndex, -1);
+    const sectionIndex = toSectionIndex(blockRecord.sectionIndex, -1);
     const sourceSection = sectionIndex >= 0 ? sourceSections.find((item) => toSectionIndex(item?.index, -1) === sectionIndex) : null;
     if (!sourceSection) return null;
     return buildSectionBlockFromSource(sourceSection, {
-      imageIds: toImageIdArray(block.imageIds, imageIds, 3),
+      imageIds: toImageIdArray(blockRecord.imageIds, imageIds, 3),
       fallbackIndex: sectionIndex,
     });
   }
 
   if (type === 'phone-frame') {
-    const imageId = coerceString(block.imageId);
+    const imageId = coerceString(blockRecord.imageId);
     if (!imageIds.has(imageId)) return null;
     return {
       type,
       imageId,
-      caption: coerceString(block.caption),
+      caption: coerceString(blockRecord.caption),
     };
   }
 
   if (type === 'cta-card') {
-    const title = coerceString(block.title);
-    const body = coerceString(block.body);
+    const title = coerceString(blockRecord.title);
+    const body = coerceString(blockRecord.body);
     if (!title && !body) return null;
     return {
       type,
       title,
       body,
-      buttonText: coerceString(block.buttonText || '继续阅读'),
-      note: coerceString(block.note),
+      buttonText: coerceString(blockRecord.buttonText || '继续阅读'),
+      note: coerceString(blockRecord.note),
     };
   }
 
   return null;
 }
 
+/** @param {unknown} value @param {number} maxLength @returns {string} */
 function summarizeText(value, maxLength = 80) {
   const text = coerceString(value).replace(/\s+/g, ' ');
   if (!text) return '';
   return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
 }
 
+/** @param {AiImageRefLike} image @returns {boolean} */
 function looksLikeScreenshotRef(image = {}) {
   const signature = [
     image.id,
@@ -348,6 +360,7 @@ function looksLikeScreenshotRef(image = {}) {
   return /(截图|界面|对话|聊天|微信|面板|后台|screenshot|screen|cleanshot|dialog|chat|ui)/i.test(signature);
 }
 
+/** @param {string} markdown @returns {string} */
 function stripFrontmatterBlock(markdown = '') {
   const content = String(markdown || '').replace(/^\uFEFF/, '');
   if (!content.startsWith('---')) return content;
@@ -355,6 +368,7 @@ function stripFrontmatterBlock(markdown = '') {
   return match ? content.slice(match[0].length) : content;
 }
 
+/** @param {unknown} value @returns {string} */
 function stripMarkdown(value) {
   return String(value || '')
     .replace(/```[\s\S]*?```/g, ' ')
@@ -367,6 +381,7 @@ function stripMarkdown(value) {
     .trim();
 }
 
+/** @param {string} line @returns {{ type: string, title: string } | null} */
 function parseMarkdownCalloutStart(line = '') {
   const quoteLine = String(line || '').trim();
   const match = quoteLine.match(/^>\s*\[!\s*([^\]\r\n]+?)\s*\](?:\s*(.*))?$/u);
@@ -377,6 +392,7 @@ function parseMarkdownCalloutStart(line = '') {
   };
 }
 
+/** @param {string} type @returns {string} */
 function formatCalloutLabel(type = '') {
   const normalized = coerceString(type).toLowerCase();
   /** @type {Record<string, string>} */
@@ -399,6 +415,7 @@ function formatCalloutLabel(type = '') {
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
 
+/** @param {Node[]} nodes @returns {string} */
 function serializeClonedNodes(nodes = []) {
   const activeDocument = getActiveDocument();
   if (!activeDocument) return '';
@@ -410,6 +427,7 @@ function serializeClonedNodes(nodes = []) {
   return container.innerHTML.trim();
 }
 
+/** @param {unknown} node @returns {boolean} */
 function hasMeaningfulNodeContent(node) {
   const currentNode = /** @type {Node | null} */ (node || null);
   if (!currentNode) return false;
@@ -427,6 +445,7 @@ function hasMeaningfulNodeContent(node) {
   return /\S/.test((element.textContent || '').replace(/\u00a0/g, ''));
 }
 
+/** @param {unknown} node @returns {boolean} */
 function isTrailingDecorativeNode(node) {
   const currentNode = /** @type {Node | null} */ (node || null);
   if (!currentNode) return true;
@@ -441,6 +460,7 @@ function isTrailingDecorativeNode(node) {
   return false;
 }
 
+/** @param {unknown} nodes @returns {Node[]} */
 function trimTrailingDecorativeNodes(nodes = []) {
   /** @type {Node[]} */
   const trimmed = [];
@@ -455,6 +475,7 @@ function trimTrailingDecorativeNodes(nodes = []) {
   return trimmed;
 }
 
+/** @param {string} html @param {AiColorTokens} tokens @returns {string} */
 function remapPreservedFragmentColors(html = '', tokens = {}) {
   const source = coerceString(html);
   if (!source) return source;
@@ -526,6 +547,7 @@ function remapPreservedFragmentColors(html = '', tokens = {}) {
   return container.innerHTML.trim();
 }
 
+/** @param {string} html @returns {{ sections: RenderedSectionFragmentLike[] }} */
 function extractRenderedSectionFragments(html = '') {
   if (!html) {
     return { sections: [] };
@@ -537,7 +559,7 @@ function extractRenderedSectionFragments(html = '') {
   const childNodes = Array.from(root?.childNodes || []).filter((node) => (
     node.nodeType !== 3 || /\S/.test(node.textContent || '')
   ));
-  /** @type {AiLayoutSourceSectionLike[]} */
+  /** @type {RenderedSectionFragmentLike[]} */
   const sections = [];
   /** @type {{ title: string, titleKey: string, leadNodes: Node[], subsections: Array<{ title: string, titleKey: string, nodes: Node[] }> } | null} */
   let currentSection = null;
@@ -604,6 +626,7 @@ function extractRenderedSectionFragments(html = '') {
   return { sections };
 }
 
+/** @param {string} markdown @returns {MarkdownStructure} */
 function extractMarkdownSections(markdown = '') {
   const lines = stripFrontmatterBlock(markdown).split(/\r?\n/);
   /** @type {MarkdownSection[]} */
@@ -789,6 +812,7 @@ function extractMarkdownSections(markdown = '') {
   };
 }
 
+/** @param {string} markdown @returns {MarkdownSignals} */
 function extractMarkdownSignals(markdown = '') {
   const structure = extractMarkdownSections(markdown);
   const headings = Array.isArray(structure.headings)
@@ -824,6 +848,7 @@ function extractMarkdownSignals(markdown = '') {
   };
 }
 
+/** @param {{ rawLayout?: unknown, signals?: MarkdownSignals | null, imageRefs?: AiImageRefLike[] }} options @returns {string} */
 function recommendLayoutFamily({ rawLayout = {}, signals = null, imageRefs = [] } = {}) {
   const rawLayoutRecord = toRecord(rawLayout);
   const resolvedRecord = toRecord(rawLayoutRecord.resolved);
@@ -846,6 +871,7 @@ function recommendLayoutFamily({ rawLayout = {}, signals = null, imageRefs = [] 
   return 'source-first';
 }
 
+/** @param {{ rawLayout?: unknown, signals?: MarkdownSignals | null }} options @returns {string} */
 function recommendColorPalette({ rawLayout = {}, signals = null } = {}) {
   const rawLayoutRecord = toRecord(rawLayout);
   const resolvedRecord = toRecord(rawLayoutRecord.resolved);

@@ -28,6 +28,7 @@
 import { getObsidianRequestUrl } from './obsidian-compat.js';
 import { sleep } from './concurrency.js';
 
+/** @param {unknown} error @returns {ReadableErrorLike} */
 function toReadableError(error) {
   if (error instanceof Error) return /** @type {ReadableErrorLike} */ (error);
   if (error && typeof error === 'object') {

@@ -96,6 +96,7 @@ function normalizeLayoutGenerationMeta(raw = {}, layoutJson = null) {
   };
 }
 
+/** @param {unknown} raw @returns {AiSchemaValidationLike} */
 function normalizeSchemaValidation(raw = {}) {
   const source = toRecord(raw);
   const issues = Array.isArray(source.issues)

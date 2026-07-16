@@ -43,6 +43,7 @@ function hexToRgb(hex) {
   };
 }
 
+/** @param {{ r: number, g: number, b: number }} rgb @returns {string} */
 function rgbToHex({ r, g, b }) {
   return `#${[r, g, b].map((channel) => {
     const clamped = Math.max(0, Math.min(255, Math.round(channel)));

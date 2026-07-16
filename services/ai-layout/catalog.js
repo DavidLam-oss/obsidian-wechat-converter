@@ -41,34 +41,39 @@ import {
 import { coerceString, toRecord, toSelectionRecord } from './utils.js';
 import { createColorPaletteFromAccent, normalizeHexColor } from './color.js';
 
+/** @param {unknown} value @param {string} fallback @returns {string} */
 function normalizeLayoutFamily(value, fallback = AI_LAYOUT_SELECTION_AUTO) {
   const normalized = coerceString(value);
   if (normalized === AI_LAYOUT_SELECTION_AUTO) return AI_LAYOUT_SELECTION_AUTO;
   return AI_LAYOUT_FAMILY_DEFS[normalized] ? normalized : fallback;
 }
 
+/** @param {unknown} value @param {string} fallback @returns {string} */
 function normalizeColorPalette(value, fallback = AI_LAYOUT_SELECTION_AUTO) {
   const normalized = coerceString(value);
   if (normalized === AI_LAYOUT_SELECTION_AUTO) return AI_LAYOUT_SELECTION_AUTO;
   return AI_COLOR_PALETTES[normalized] ? normalized : fallback;
 }
 
+/** @param {unknown} value @param {string} fallback @returns {string} */
 function normalizeResolvedLayoutFamily(value, fallback = AI_LAYOUT_DEFAULT_FAMILY) {
   const normalized = coerceString(value);
   if (!normalized) return fallback;
   if (AI_LAYOUT_IMPLEMENTED_FAMILIES.has(normalized)) return normalized;
   if (AI_LAYOUT_RESERVED_FAMILY_FALLBACKS[normalized]) {
-    return AI_LAYOUT_RESERVED_FAMILY_FALLBACKS[normalized];
+    return /** @type {string} */ (AI_LAYOUT_RESERVED_FAMILY_FALLBACKS[normalized]);
   }
   return AI_LAYOUT_IMPLEMENTED_FAMILIES.has(fallback) ? fallback : AI_LAYOUT_DEFAULT_FAMILY;
 }
 
+/** @param {unknown} value @param {string} fallback @returns {string} */
 function normalizeResolvedColorPalette(value, fallback = AI_LAYOUT_DEFAULT_COLOR_PALETTE) {
   const normalized = coerceString(value);
   if (AI_COLOR_PALETTES[normalized]) return normalized;
   return AI_COLOR_PALETTES[fallback] ? fallback : AI_LAYOUT_DEFAULT_COLOR_PALETTE;
 }
 
+/** @param {unknown} value @param {string} fallback @returns {string} */
 function normalizeAutoRecommendedColorPalette(value, fallback = AI_LAYOUT_DEFAULT_COLOR_PALETTE) {
   const normalized = normalizeResolvedColorPalette(value, fallback);
   if (normalized === 'custom') {
@@ -78,6 +83,7 @@ function normalizeAutoRecommendedColorPalette(value, fallback = AI_LAYOUT_DEFAUL
   return normalized;
 }
 
+/** @param {unknown} raw @param {unknown} fallback @returns {AiLayoutSelectionLike} */
 function normalizeLayoutSelection(raw = {}, fallback = {}) {
   const candidate = (typeof raw === 'string')
     ? (AI_COLOR_PALETTES[raw]
@@ -97,6 +103,7 @@ function normalizeLayoutSelection(raw = {}, fallback = {}) {
   };
 }
 
+/** @param {unknown} raw @param {unknown} fallback @returns {AiLayoutSelectionLike} */
 function normalizeResolvedSelection(raw = {}, fallback = {}) {
   const candidate = (typeof raw === 'string')
     ? (AI_COLOR_PALETTES[raw]

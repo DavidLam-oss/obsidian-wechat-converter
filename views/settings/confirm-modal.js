@@ -29,6 +29,7 @@ import {
   createObsidianModal,
 } from '../apple-style-view-shared.js';
 
+/** @type {ConfirmModalMethodsContract & ThisType<AppleStyleSettingTabContract>} */
 const confirmModalMethods = {
   /**
    * @param {{ title?: string, message?: string, confirmText?: string, cancelText?: string }} options

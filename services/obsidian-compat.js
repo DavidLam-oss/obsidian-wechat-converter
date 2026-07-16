@@ -44,8 +44,8 @@ export const loadCommonJsDependency = (specifier) => {
   throw new Error(`CommonJS loader unavailable for ${specifier}`);
 };
 
-/** @type {Record<string, unknown>} */
-export const obsidianApi = /** @type {Record<string, unknown>} */ (loadCommonJsDependency('obsidian'));
+/** @type {typeof import('obsidian')} */
+export const obsidianApi = /** @type {typeof import('obsidian')} */ (loadCommonJsDependency('obsidian'));
 
 export const Plugin = obsidianApi.Plugin;
 export const MarkdownView = obsidianApi.MarkdownView;
@@ -55,30 +55,34 @@ export const Platform = obsidianApi.Platform;
 export const PluginSettingTab = obsidianApi.PluginSettingTab;
 export const Setting = obsidianApi.Setting;
 
+/** @returns {typeof import('obsidian').Modal} */
 export function getObsidianModalClass() {
   return obsidianApi.Modal;
 }
 
 /**
  * @param {unknown} app
- * @returns {unknown}
+ * @returns {import('obsidian').Modal}
  */
 export function createObsidianModal(app) {
   const ModalClass = getObsidianModalClass();
   if (typeof ModalClass !== 'function') {
     throw new Error('当前 Obsidian 版本不支持 Modal');
   }
-  return new ModalClass(app);
+  return new ModalClass(/** @type {import('obsidian').App} */ (app));
 }
 
+/** @returns {typeof import('obsidian').setIcon} */
 export function getObsidianSetIcon() {
   return obsidianApi.setIcon;
 }
 
+/** @returns {typeof import('obsidian').requestUrl} */
 export function getObsidianRequestUrl() {
   return obsidianApi.requestUrl;
 }
 
+/** @returns {typeof import('obsidian').request} */
 export function getObsidianRequest() {
   return obsidianApi.request;
 }

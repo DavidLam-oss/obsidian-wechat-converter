@@ -29,6 +29,14 @@ import { createObsidianFetchAdapter } from './obsidian-fetch-adapter.js';
 import { getActiveWindowValue } from './dom-utils.js';
 import { normalizeMultiPlatformSyncSettings } from './wechatsync-settings.js';
 
+/** @typedef {{ length: number }} PolicyBufferLike */
+/** @typedef {{ from: (value: string, encoding: string) => PolicyBufferLike, concat: (values: PolicyBufferLike[]) => PolicyBufferLike }} PolicyBufferConstructorLike */
+/** @typedef {{ createPublicKey: (options: Record<string, unknown>) => unknown, verify: (algorithm: unknown, data: PolicyBufferLike, key: unknown, signature: PolicyBufferLike) => boolean }} PolicyCryptoLike */
+/** @typedef {{ payload: Record<string, unknown>, signature: string }} SignedPolicyResponseLike */
+/** @typedef {{ payload: Record<string, unknown>, signature: string, cachedAt: number }} PolicyCacheLike */
+/** @typedef {{ requestUrl?: (options: Record<string, unknown>) => Promise<unknown>, fetchImpl?: FetchLike, workerUrl?: string, publicKey?: string, clientVersion?: string, installId?: string, timeoutMs?: number }} PolicyRequestOptionsLike */
+/** @typedef {{ kind: string, response?: SignedPolicyResponseLike, message?: string }} PolicyFetchOutcomeLike */
+
 const PRODUCT_ID = 'obsidian-publisher';
 const POLICY_CLIENT = 'obsidian-plugin';
 const FALLBACK_LICENSE_PUBLIC_KEY = 'Xm_sBLP69WoJ2LpddMzRYCzVk6G1BlBsGMyHFNq0fUw';
@@ -92,18 +100,22 @@ export function canonicalizePolicyPayload(value) {
   throw new Error(`canonicalize: unsupported type ${typeof value}`);
 }
 
+/** @returns {((moduleId: string) => unknown) | null} */
 function resolveNodeLoader() {
-  if (typeof require === 'function') return require;
+  if (typeof require === 'function') return /** @type {(moduleId: string) => unknown} */ (require);
   const windowRequire = getActiveWindowValue('require');
-  return typeof windowRequire === 'function' ? windowRequire : null;
+  return typeof windowRequire === 'function'
+    ? /** @type {(moduleId: string) => unknown} */ (windowRequire)
+    : null;
 }
 
+/** @returns {{ crypto: PolicyCryptoLike, BufferCtor: PolicyBufferConstructorLike } | null} */
 function resolveCryptoRuntime() {
   const loader = resolveNodeLoader();
   if (!loader) return null;
   try {
-    const crypto = loader(['cr', 'ypto'].join(''));
-    const BufferCtor = loader('buffer')?.Buffer;
+    const crypto = /** @type {PolicyCryptoLike} */ (loader(['cr', 'ypto'].join('')));
+    const BufferCtor = /** @type {{ Buffer?: PolicyBufferConstructorLike }} */ (loader('buffer'))?.Buffer;
     if (!crypto?.createPublicKey || !crypto?.verify || !BufferCtor) return null;
     return { crypto, BufferCtor };
   } catch {
@@ -113,8 +125,8 @@ function resolveCryptoRuntime() {
 
 /**
  * @param {string} value
- * @param {unknown} BufferCtor
- * @returns {Buffer}
+ * @param {PolicyBufferConstructorLike} BufferCtor
+ * @returns {PolicyBufferLike}
  */
 function decodeBase64Url(value, BufferCtor) {
   const normalized = String(value || '').replace(/-/g, '+').replace(/_/g, '/');
@@ -187,11 +199,13 @@ export function isPolicyPayload(value) {
   );
 }
 
+/** @param {unknown} value @returns {value is SignedPolicyResponseLike} */
 function isSignedPolicyResponse(value) {
   const record = toRecord(value);
   return typeof record.signature === 'string' && isPolicyPayload(record.payload);
 }
 
+/** @param {unknown} value @returns {PolicyCacheLike | null} */
 function normalizePolicyCache(value) {
   const cache = toRecord(value);
   if (typeof cache.signature !== 'string' || !Number.isFinite(Number(cache.cachedAt))) return null;
@@ -222,8 +236,9 @@ function hasCachedForceGate(payload) {
   return record.forceUpgradeExtension === true || record.forceUpgradeObsidianPlugin === true;
 }
 
+/** @param {unknown} plugin @param {string} publicKey @returns {PolicyCacheLike | null} */
 function readPolicyCache(plugin, publicKey = FALLBACK_LICENSE_PUBLIC_KEY) {
-  const settings = normalizeMultiPlatformSyncSettings(toRecord(plugin?.settings).multiPlatformSync);
+  const settings = normalizeMultiPlatformSyncSettings(toRecord((/** @type {PluginWithSettingsLike} */ (plugin))?.settings).multiPlatformSync);
   const cache = normalizePolicyCache(settings.policyCache);
   if (!cache) return null;
   if (!verifyPolicyPayload(cache.payload, cache.signature, publicKey)) return null;
@@ -231,6 +246,7 @@ function readPolicyCache(plugin, publicKey = FALLBACK_LICENSE_PUBLIC_KEY) {
   return cache;
 }
 
+/** @param {unknown} plugin @param {unknown} payload @param {string} signature @returns {Promise<PolicyCacheLike>} */
 async function writePolicyCache(plugin, payload, signature) {
   const pluginRecord = toRecord(plugin);
   const settings = toRecord(pluginRecord.settings);
@@ -246,7 +262,8 @@ async function writePolicyCache(plugin, payload, signature) {
   pluginRecord.settings = settings;
   if (typeof pluginRecord.saveSettings === 'function') {
     try {
-      await pluginRecord.saveSettings();
+      const compatiblePlugin = /** @type {{ saveSettings: () => Promise<unknown> }} */ (pluginRecord);
+      await compatiblePlugin.saveSettings();
     } catch {
       // Cache persistence is best-effort; publishing can continue.
     }
@@ -275,14 +292,16 @@ function buildFallbackPolicy() {
   };
 }
 
+/** @param {PolicyRequestOptionsLike} options @returns {FetchLike | null} */
 function createFetchImpl(options = {}) {
   if (typeof options.fetchImpl === 'function') return options.fetchImpl;
   if (typeof options.requestUrl === 'function') {
-    return createObsidianFetchAdapter(options.requestUrl);
+    return /** @type {FetchLike} */ (createObsidianFetchAdapter(options.requestUrl));
   }
   return null;
 }
 
+/** @param {PolicyRequestOptionsLike} options @returns {Promise<PolicyFetchOutcomeLike>} */
 async function fetchAndVerifyPolicy(options = {}) {
   const publicKey = options.publicKey || FALLBACK_LICENSE_PUBLIC_KEY;
   if (!publicKey) return { kind: 'public_key_unconfigured' };
@@ -298,14 +317,16 @@ async function fetchAndVerifyPolicy(options = {}) {
     installId: options.installId || '',
   };
 
+  /** @type {PolicyFetchOutcomeLike | null} */
   let lastNetworkOutcome = null;
+  /** @type {PolicyFetchOutcomeLike | null} */
   let lastNonNetworkOutcome = null;
 
   for (const baseUrl of endpoints) {
     const url = String(baseUrl || '').replace(/\/+$/, '') + '/policy';
     const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const timer = controller
-      ? setTimeout(() => controller.abort(), options.timeoutMs || POLICY_REQUEST_TIMEOUT_MS)
+      ? window.setTimeout(() => controller.abort(), options.timeoutMs || POLICY_REQUEST_TIMEOUT_MS)
       : null;
     try {
       const response = await fetchImpl(url, {
@@ -314,6 +335,7 @@ async function fetchAndVerifyPolicy(options = {}) {
         body: JSON.stringify(body),
         signal: controller?.signal,
       });
+      /** @type {unknown} */
       let parsed;
       try {
         parsed = await response.json();
@@ -348,7 +370,7 @@ async function fetchAndVerifyPolicy(options = {}) {
         message: error instanceof Error ? error.message : String(error),
       };
     } finally {
-      if (timer) clearTimeout(timer);
+      if (timer) window.clearTimeout(timer);
     }
   }
 
@@ -365,7 +387,7 @@ export function getObsidianPluginVersion(plugin) {
 
 /**
  * @param {unknown} plugin
- * @param {{ requestUrl?: Function, fetchImpl?: Function, workerUrl?: string, publicKey?: string, clientVersion?: string, installId?: string, timeoutMs?: number }} [options]
+ * @param {PolicyRequestOptionsLike} [options]
  * @returns {Promise<{ payload: Record<string, unknown>, signature?: string, source: 'cache' | 'network' | 'cache_grace' | 'fallback', fetchedAt?: number, fetchOutcome?: Record<string, unknown> }>}
  */
 export async function getEffectiveObsidianPublisherPolicy(plugin, options = {}) {

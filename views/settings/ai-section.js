@@ -47,6 +47,7 @@ import {
   createObsidianModal,
 } from '../apple-style-view-shared.js';
 
+/** @type {AiSettingsMethodsContract & ThisType<AppleStyleSettingTabContract>} */
 const aiSettingsMethods = {
   /**
    * @param {ObsidianElementLike} containerEl

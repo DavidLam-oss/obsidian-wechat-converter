@@ -2,7 +2,7 @@
 
 ## 运行环境
 
-插件运行在 Obsidian 的 Electron / Node 风格 CommonJS 环境中，入口为 `main.js`。源码主要使用 JavaScript 和 `.mjs` 构建脚本，构建目标兼容 Obsidian 插件运行时。开发工具链依赖 Node.js、npm、esbuild、Vitest 和 ESLint。
+插件运行在 Obsidian 的 Electron / Node 风格 CommonJS 环境中，入口为 `main.js`。源码主要使用 JavaScript 和 `.mjs` 构建脚本，构建目标兼容 Obsidian 插件运行时。开发工具链依赖 Node.js、npm、esbuild、Vitest、ESLint 和 TypeScript 静态分析。
 
 ## 核心依赖
 
@@ -11,6 +11,7 @@
 - `markdown-it-mathjax3` 与单独构建的 `lib/mathjax-plugin.js` 支撑数学公式。
 - `highlight.js` 支撑代码高亮。
 - `jsdom`、`vitest` 和测试 helper 支撑单元测试。
+- `typescript`、`@typescript-eslint/parser` 和 `@typescript-eslint/eslint-plugin` 为 JavaScript/JSDoc 提供类型感知检查；`project-types.js` 与 `project-*.d.ts` 只在分析阶段生效。
 - 微信、飞书和浏览器扩展桥接依赖各自服务协议与本地配置，不作为 npm 运行时服务常驻。
 
 ## 工具链

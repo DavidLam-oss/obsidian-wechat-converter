@@ -42,6 +42,7 @@ import { normalizeAiProvider } from './providers.js';
 import { normalizeArticleLayoutCacheEntry } from './state-cache.js';
 import { clampNumber, isRecord, toRecord } from './utils.js';
 
+/** @returns {AiSettingsLike} */
 function createDefaultAiSettings() {
   return {
     enabled: true,
@@ -56,9 +57,11 @@ function createDefaultAiSettings() {
   };
 }
 
+/** @param {unknown} raw @returns {AiSettingsLike} */
 function normalizeAiSettings(raw = {}) {
   const source = toRecord(raw);
   const defaults = createDefaultAiSettings();
+  /** @type {AiProviderLike[]} */
   const providers = Array.isArray(source.providers) ? source.providers.map(normalizeAiProvider) : defaults.providers;
   /** @type {Record<string, AiLayoutCacheEntryLike>} */
   const articleLayoutsByPath = {};

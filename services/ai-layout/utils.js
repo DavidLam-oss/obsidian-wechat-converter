@@ -27,36 +27,43 @@
 
 // Split from services/ai-layout.js. Keep changes behavior-compatible with the legacy entry.
 
+/** @param {unknown} value @returns {value is Record<string, unknown>} */
 function isRecord(value) {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
+/** @param {unknown} value @returns {AiLayoutSelectionLike} */
 function toSelectionRecord(value) {
   return isRecord(value) ? /** @type {AiLayoutSelectionLike} */ (value) : {};
 }
 
+/** @param {unknown} value @returns {Record<string, unknown>} */
 function toRecord(value) {
   return isRecord(value) ? /** @type {Record<string, unknown>} */ (value) : {};
 }
 
+/** @param {unknown} value @returns {AiLayoutBlockLike[]} */
 function toAiLayoutBlocks(value) {
   return Array.isArray(value)
     ? value.map((item) => /** @type {AiLayoutBlockLike} */ (toRecord(item)))
     : [];
 }
 
+/** @param {unknown} value @returns {AiImageRefLike[]} */
 function toAiImageRefs(value) {
   return Array.isArray(value)
     ? value.map((image) => /** @type {AiImageRefLike} */ (toRecord(image)))
     : [];
 }
 
+/** @param {unknown} element @param {Record<string, string | number | null | undefined>} styles */
 function applyElementCssStyles(element, styles) {
   const target = /** @type {Element & { setCssStyles?: (styles: Record<string, string | number | null | undefined>) => void }} */ (element);
   if (!target || typeof target.setCssStyles !== 'function') return;
   target.setCssStyles(styles);
 }
 
+/** @returns {FetchLike | undefined} */
 function getDefaultFetch() {
   const activeWindow = typeof window !== 'undefined' ? window : null;
   if (activeWindow && typeof activeWindow.fetch === 'function') {
@@ -67,22 +74,26 @@ function getDefaultFetch() {
   return undefined;
 }
 
+/** @param {() => void} callback @param {number} delay @returns {number | null} */
 function setAiLayoutTimeout(callback, delay) {
   if (typeof window === 'undefined' || typeof window.setTimeout !== 'function') return null;
   return window.setTimeout(callback, delay);
 }
 
+/** @param {number | null | undefined} timer */
 function clearAiLayoutTimeout(timer) {
   if (!timer || typeof window === 'undefined' || typeof window.clearTimeout !== 'function') return;
   window.clearTimeout(timer);
 }
 
+/** @param {unknown} value @param {number} fallback @param {number} min @param {number} max @returns {number} */
 function clampNumber(value, fallback, min, max) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(max, Math.max(min, Math.round(parsed)));
 }
 
+/** @param {unknown} value @param {string} fallback @returns {string} */
 function coerceString(value, fallback = '') {
   return typeof value === 'string' ? value.trim() : fallback;
 }

@@ -30,6 +30,7 @@
 import { AI_PROVIDER_KIND_DEFAULTS, AI_PROVIDER_KINDS } from './constants.js';
 import { coerceString, toRecord } from './utils.js';
 
+/** @param {unknown} raw @returns {AiProviderLike} */
 function normalizeAiProvider(raw = {}) {
   const source = toRecord(raw);
   const id = typeof source.id === 'string' && source.id.trim()
@@ -52,6 +53,7 @@ function normalizeAiProvider(raw = {}) {
   };
 }
 
+/** @param {unknown} baseUrl @returns {boolean} */
 function isAllowedAiProviderBaseUrl(baseUrl) {
   try {
     const parsed = new URL(String(baseUrl || ''));
@@ -75,6 +77,7 @@ function isAllowedAiProviderBaseUrl(baseUrl) {
   }
 }
 
+/** @param {unknown} provider @returns {string[]} */
 function getAiProviderIssues(provider = {}) {
   const source = toRecord(provider);
   const issues = [];
@@ -95,11 +98,13 @@ function getAiProviderIssues(provider = {}) {
   return issues;
 }
 
+/** @param {unknown} provider @returns {boolean} */
 function isAiProviderRunnable(provider = {}) {
   const issues = getAiProviderIssues(provider);
   return !issues.some((issue) => issue !== 'disabled');
 }
 
+/** @param {unknown} provider @returns {string} */
 function summarizeAiProviderIssues(provider = {}) {
   const issues = getAiProviderIssues(provider);
   if (!issues.length) return '配置完整';
@@ -115,12 +120,14 @@ function summarizeAiProviderIssues(provider = {}) {
   return issues.map((issue) => labels[issue] || issue).join(' / ');
 }
 
+/** @param {{ providers?: unknown[] }} aiSettings @returns {AiProviderLike[]} */
 function listEnabledAiProviders(aiSettings = {}) {
   return Array.isArray(aiSettings.providers)
     ? aiSettings.providers.map(normalizeAiProvider).filter((provider) => provider.enabled !== false && isAiProviderRunnable(provider))
     : [];
 }
 
+/** @param {{ providers?: unknown[], defaultProviderId?: string }} aiSettings @param {string} providerId @returns {AiProviderLike | null} */
 function resolveAiProvider(aiSettings = {}, providerId = '') {
   const providers = listEnabledAiProviders(aiSettings);
   if (providerId) {

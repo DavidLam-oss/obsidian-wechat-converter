@@ -36,6 +36,7 @@ import {
   generateId,
 } from '../apple-style-view-shared.js';
 
+/** @type {WechatAccountModalMethodsContract & ThisType<AppleStyleSettingTabContract>} */
 const wechatAccountModalMethods = {
   /**
    * 显示添加/编辑账号的模态框

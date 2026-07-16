@@ -37,27 +37,33 @@ import {
   normalizeLayoutSelection,
 } from './ai-layout.js';
 
+/** @param {unknown} value @returns {value is Record<string, unknown>} */
 function isRecord(value) {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
+/** @param {unknown} value @returns {Record<string, unknown>} */
 function toRecord(value) {
   return isRecord(value) ? value : {};
 }
 
+/** @param {unknown} value @returns {AiLayoutStateLike | null} */
 function toAiLayoutState(value) {
   return isRecord(value) ? value : null;
 }
 
+/** @param {unknown} value @returns {AiLayoutSelectionLike} */
 function toAiLayoutSelection(value) {
   return isRecord(value) ? value : {};
 }
 
+/** @param {unknown} value @returns {Record<string, AiLayoutStateLike>} */
 function toAiLayoutFamilyStates(value) {
   if (!isRecord(value)) return {};
   return value;
 }
 
+/** @param {PluginSettingsLike} pluginSettings @param {string} sourcePath @param {unknown} selection @returns {AiLayoutStateLike | null} */
 export function getArticleLayoutStateFromSettings(pluginSettings, sourcePath = '', selection = {}) {
   const normalizedPath = normalizeVaultPath(sourcePath || '');
   if (!normalizedPath) return null;
@@ -76,6 +82,7 @@ export function getArticleLayoutStateFromSettings(pluginSettings, sourcePath = '
   }));
 }
 
+/** @param {PluginSettingsLike} pluginSettings @param {string} sourcePath @param {unknown} nextState @param {unknown} selection @returns {boolean} */
 export function saveArticleLayoutStateToSettings(pluginSettings, sourcePath = '', nextState = null, selection = {}) {
   const normalizedPath = normalizeVaultPath(sourcePath || '');
   if (!normalizedPath) return false;

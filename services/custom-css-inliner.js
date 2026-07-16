@@ -212,10 +212,7 @@ function unwrapRootContainer(html, rootClass) {
  * 从插件设置中读取自定义 CSS 文本。
  * 优先级：customCssNote（vault 笔记）> customCss（textarea）。
  *
- * @param {Object} plugin
- * @param {Object} plugin.settings
- * @param {Object} plugin.app
- * @param {Object} plugin.app.vault
+ * @param {{ settings?: { enableCustomCss?: boolean, customCssNote?: string, customCss?: string }, app?: { vault?: VaultLike } }} plugin
  * @returns {Promise<string>}
  */
 export async function resolveCustomCssFromSettings(plugin) {
@@ -225,7 +222,7 @@ export async function resolveCustomCssFromSettings(plugin) {
 
     const notePath = plugin.settings.customCssNote?.trim();
     if (notePath && plugin.app && plugin.app.vault) {
-        const file = plugin.app.vault.getAbstractFileByPath(notePath);
+        const file = /** @type {(TFileLike & { extension?: string }) | null} */ (plugin.app.vault.getAbstractFileByPath(notePath));
         if (file && file.extension === 'md') {
             try {
                 return await plugin.app.vault.read(file);
