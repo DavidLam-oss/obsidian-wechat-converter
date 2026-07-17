@@ -26,9 +26,9 @@
 */
 
 
-import fs from 'fs';
-import path from 'path';
 import { describe, it, expect, beforeAll } from 'vitest';
+
+const { getBundledThemeSource } = require('./helpers/theme-runtime-source.js');
 
 // Mock window
 global.window = {};
@@ -51,8 +51,7 @@ describe('AppleTheme Color Logic', () => {
     // Load the AppleTheme class directly from the file
     // Note: In a real module system we would import it, but since it's a non-exported browser script
     // we read and eval it.
-    const themePath = path.join(__dirname, '../themes/apple-theme.js');
-    const themeContent = fs.readFileSync(themePath, 'utf8');
+    const themeContent = getBundledThemeSource();
 
     // Evaluate the file content to load the class into window.AppleTheme
     // using Function constructor to execute in global scope
@@ -189,6 +188,8 @@ describe('AppleTheme Color Logic', () => {
       expect(theme.getStyle('p')).toContain('margin: 0 0 18px 0;');
       expect(theme.getStyle('h3')).toContain('border-bottom: 2px solid #28a745;');
       expect(theme.getStyle('th')).toContain('background: #f6f8fa;');
+      expect(theme.getStyle('mark')).toBe('background-color: #fff1a8; padding: 0 2px; border-radius: 2px;');
+      expect(theme.getStyle('strong')).toContain('color: #28a745;');
     });
 
     it('should keep the new templates driven by the selected theme color', () => {

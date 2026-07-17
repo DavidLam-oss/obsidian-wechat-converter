@@ -419,7 +419,8 @@ const wechatSettingsMethods = {
         .onChange(async (value) => {
           customCssEnabled = value;
           this.plugin.settings.enableCustomCss = value;
-          await this.plugin.saveSettings();
+          const saved = await this.plugin.saveSettings();
+          if (saved) this.plugin.scheduleCustomCssPreviewNotice?.();
           refreshSettingTabCompat(this);
         }));
 
@@ -439,7 +440,8 @@ const wechatSettingsMethods = {
         .setValue(this.plugin.settings.customCss || '')
         .onChange(async (value) => {
           this.plugin.settings.customCss = value;
-          await this.plugin.saveSettings();
+          const saved = await this.plugin.saveSettings();
+          if (saved) this.plugin.scheduleCustomCssPreviewNotice?.();
         });
 
       if (text.inputEl) {
@@ -461,7 +463,8 @@ const wechatSettingsMethods = {
         .setValue(this.plugin.settings.customCssNote || '')
         .onChange(async (value) => {
           this.plugin.settings.customCssNote = value.trim();
-          await this.plugin.saveSettings();
+          const saved = await this.plugin.saveSettings();
+          if (saved) this.plugin.scheduleCustomCssPreviewNotice?.();
         }));
   }
 };

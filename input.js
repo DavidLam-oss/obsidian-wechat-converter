@@ -60,6 +60,9 @@ import {
   generateId,
 } from './views/apple-style-view-shared.js';
 
+const CUSTOM_CSS_PREVIEW_NOTICE = '自定义 CSS 已更新，请关闭并重新打开发布助手面板以刷新预览。';
+const CUSTOM_CSS_PREVIEW_NOTICE_DELAY_MS = 300;
+
 /**
  * 📝 Obsidian 发布助手主插件
  */
@@ -68,6 +71,8 @@ class AppleStylePlugin extends Plugin {
     console.debug('📝 正在加载 Obsidian 发布助手...');
     /** @type {ObsidianApiLike} */
     this.obsidianApi = obsidianApi;
+    /** @type {number} */
+    this._customCssPreviewNoticeTimer = 0;
 
     await this.loadSettings();
 
@@ -134,6 +139,11 @@ class AppleStylePlugin extends Plugin {
               });
             }
           }
+        })
+      );
+      this.registerEvent(
+        this.app.vault.on('modify', (file) => {
+          this.handleCustomCssNoteModified(file);
         })
       );
     }
@@ -226,6 +236,37 @@ class AppleStylePlugin extends Plugin {
       return leaves[0].view;
     }
     return null;
+  }
+
+  /**
+   * Coalesces repeated custom CSS changes into one notice while a preview is open.
+   * This intentionally does not rebuild or mutate the existing preview.
+   * @returns {boolean} Whether a notice was scheduled
+   */
+  scheduleCustomCssPreviewNotice() {
+    if (!this.getConverterView() || typeof window === 'undefined') return false;
+
+    if (this._customCssPreviewNoticeTimer) {
+      window.clearTimeout(this._customCssPreviewNoticeTimer);
+    }
+    this._customCssPreviewNoticeTimer = window.setTimeout(() => {
+      this._customCssPreviewNoticeTimer = 0;
+      if (this.getConverterView()) {
+        new Notice(CUSTOM_CSS_PREVIEW_NOTICE);
+      }
+    }, CUSTOM_CSS_PREVIEW_NOTICE_DELAY_MS);
+    return true;
+  }
+
+  /**
+   * @param {{ path?: string } | null | undefined} file
+   * @returns {boolean} Whether the modified file matched the configured CSS note
+   */
+  handleCustomCssNoteModified(file) {
+    const configuredPath = String(getPluginSettings(this).customCssNote || '').trim();
+    if (!configuredPath || file?.path !== configuredPath) return false;
+    this.scheduleCustomCssPreviewNotice();
+    return true;
   }
 
   openExternalUrl(url) {
@@ -353,6 +394,10 @@ class AppleStylePlugin extends Plugin {
   }
 
   async onunload() {
+    if (this._customCssPreviewNoticeTimer && typeof window !== 'undefined') {
+      window.clearTimeout(this._customCssPreviewNoticeTimer);
+      this._customCssPreviewNoticeTimer = 0;
+    }
     if (this._wechatSyncBridgeService?.stop) {
       await this._wechatSyncBridgeService.stop().catch((error) => {
         console.warn('停止浏览器插件连接失败:', error);

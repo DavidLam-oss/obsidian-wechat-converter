@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：无直接模块导入；依赖当前运行环境或同文件内工具函数。
+关键依赖：`./apple-theme-config.js`、`./apple-theme-headings.js`。
 
 ## 维护规则
 
@@ -89,278 +89,40 @@
  * }} AppleThemeOptions
  */
 
+import {
+  THEME_COLORS,
+  THEME_COLORS_DEEP,
+  FONT_SIZES,
+  FONTS,
+  THEME_CONFIGS,
+  SPACING,
+  RADIUS,
+  QUOTE_CALLOUT_NEUTRAL_BG,
+  QUOTE_NEUTRAL_BORDER,
+} from './apple-theme-config.js';
+import {
+  buildH1Style,
+  buildH2Style,
+  buildH3Style,
+  buildH4Style,
+  buildH5Style,
+  buildH6Style,
+} from './apple-theme-headings.js';
+
 // Use assignment expression to avoid "Identifier has already been declared" errors if re-eval'd
 const APPLE_THEME_GLOBAL = /** @type {Record<string, unknown>} */ (typeof window !== 'undefined' ? window : {});
 
+/* eslint-disable @typescript-eslint/no-unsafe-return -- reason: extracted heading builders retain the legacy dynamic theme method contract */
 class AppleTheme {
-  /**
-   * 🎨 主题色板 - 8种预设颜色
-   */
-  /** @type {Record<AppleThemeColorName, string>} */
-  static THEME_COLORS = {
-    blue: '#0366d6',
-    green: '#28a745',
-    purple: '#6f42c1',
-    orange: '#fd7e14',
-    teal: '#20c997',
-    rose: '#e83e8c',
-    ruby: '#dc3545',
-    slate: '#6c757d',
-  };
-
-  /**
-   * 🎨 标题专用深色板 (Tone-on-Tone)
-   * 相比主题色加深 15-20%，用于标题以增加视觉稳重感，避免与正文高亮色冲突
-   */
-  /** @type {Record<AppleThemeColorName, string>} */
-  static THEME_COLORS_DEEP = {
-    blue: '#004795',    // Deep Blue
-    green: '#1e7e34',   // Deep Green
-    purple: '#4a2b82',  // Deep Purple
-    orange: '#c75e0b',  // Deep Orange
-    teal: '#158765',    // Deep Teal
-    rose: '#b81f66',    // Deep Rose
-    ruby: '#a81825',    // Deep Ruby
-    slate: '#495057',   // Deep Slate
-  };
-
-  /**
-   * 📐 字体大小系统 - 5档
-   */
-  /** @type {Record<AppleFontSizeName, AppleFontSizeConfig>} */
-  static FONT_SIZES = {
-    1: { base: 14, h1: 26, h2: 20, h3: 16, h4: 14, h5: 14, h6: 14, code: 12, caption: 12 },
-    2: { base: 15, h1: 28, h2: 21, h3: 17, h4: 15, h5: 15, h6: 15, code: 13, caption: 12 },
-    3: { base: 16, h1: 30, h2: 22, h3: 18, h4: 16, h5: 16, h6: 16, code: 14, caption: 13 }, // 推荐
-    4: { base: 17, h1: 32, h2: 24, h3: 19, h4: 17, h5: 17, h6: 17, code: 15, caption: 14 },
-    5: { base: 18, h1: 34, h2: 26, h3: 20, h4: 18, h5: 18, h6: 18, code: 16, caption: 14 },
-  };
-
-  /**
-   * 🔤 字体栈
-   */
-  /** @type {Record<AppleFontFamilyName, string>} */
-  static FONTS = {
-    'sans-serif': `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif`,
-    'serif': `'Times New Roman', Georgia, 'SimSun', serif`,
-    'monospace': `'SF Mono', Consolas, 'Liberation Mono', Menlo, Courier, monospace`,
-  };
-
-  /**
-   * 🎨 主题配置 - 每种主题的独特配色和规则
-   */
-  /** @type {Record<AppleThemeName, AppleThemeConfig>} */
-  static THEME_CONFIGS = {
-
-    github: {
-      name: '简约',
-      lineHeight: 1.82,
-      paragraphGap: 18,
-      h1Decoration: 'none',
-      h2Decoration: 'none',
-      h3Decoration: 'bottom-line-left',
-      h4Decoration: 'none',
-      headingWeight: 800,
-      headingLetterSpacing: 0,
-      textColor: '#3e3e3e',
-      headingColor: '#3e3e3e',
-
-      linkDecoration: 'underline',
-      blockquoteBorderWidth: 4,
-      tableHeaderBg: '#f6f8fa',
-      tableCellPadding: 10,
-      figurePadding: 8,
-      figureBorderColor: '#e8eaed',
-      // Removed blockquoteBorderColor to allow theme color (was #d0d7de)
-      // Removed blockquoteBg to allow theme color tint (was #ffffff)
-    },
-    wechat: {
-      name: '经典',
-      lineHeight: 1.8,
-      paragraphGap: 24,
-      h1Decoration: 'classic-title',
-      h2Decoration: 'classic-title',
-      h3Decoration: 'classic-subhead',
-      h4Decoration: 'classic-minor',
-      headingWeight: 700,
-      headingLetterSpacing: 0,
-      textColor: '#3e3e3e',
-      headingColor: '#3e3e3e',
-      linkDecoration: 'none',
-      blockquoteBorderWidth: 4,
-      blockquoteBg: '#f8fafc',
-      blockquoteStyle: 'soft',
-    },
-    serif: {
-      name: '优雅',
-      lineHeight: 1.8,
-      paragraphGap: 26,
-      h1Decoration: 'editorial-h1',      // 杂志大标题 (金线)
-      h2Decoration: 'editorial-h1',      // H2 此时也是金线 (Level 2 = Level 1)
-      h3Decoration: 'editorial-h2',      // H3 使用原 H2 样式 (斜体，现在的 helper 已强制左对齐)
-      h4Decoration: 'editorial-h3',      // H4 使用原 H3 (左对齐下划线)
-      headingWeight: 700,
-      headingLetterSpacing: 1,           // 优雅主题增加字间距
-      textColor: '#3e3e3e',
-      headingColor: '#3e3e3e',
-      linkDecoration: 'none',
-      blockquoteBorderWidth: 0,          // 居中样式不需要左边框
-      blockquoteStyle: 'center',         // 新增：居中引用
-    },
-    paper: {
-      name: '纸张长文',
-      lineHeight: 1.9,
-      paragraphGap: 22,
-      shiftHeadingDecorationsDown: true,
-      h1Decoration: 'paper-title',
-      h2Decoration: 'paper-chapter',
-      h3Decoration: 'paper-section',
-      h4Decoration: 'paper-kicker',
-      h5Decoration: 'simple',
-      h6Decoration: 'quiet',
-      headingWeight: 700,
-      headingLetterSpacing: 0,
-      textColor: '#3f3a33',
-      headingColor: '#3e3e3e',
-      sectionBg: '#fffdf8',
-      sectionSidePaddingOffset: 6,
-      mutedTextColor: '#786f63',
-      linkDecoration: 'none',
-      blockquoteBorderWidth: 0,
-      blockquoteBg: '#f7f1e7',
-      blockquoteStyle: 'paper',
-      tableHeaderBg: '#f7f1e7',
-      tableBorderColor: '#e6dccd',
-      figureBorderColor: '#eadfce',
-    },
-    grid: {
-      name: '网格文档',
-      lineHeight: 1.82,
-      paragraphGap: 20,
-      shiftHeadingDecorationsDown: true,
-      h1Decoration: 'grid-title',
-      h2Decoration: 'grid-chapter',
-      h3Decoration: 'grid-section',
-      h4Decoration: 'grid-kicker',
-      h5Decoration: 'light-bg',
-      h6Decoration: 'quiet',
-      headingWeight: 800,
-      headingLetterSpacing: 0,
-      textColor: '#344054',
-      headingColor: '#263238',
-      sectionBgStyle: 'grid',
-      sectionBg: '#ffffff',
-      sectionSidePaddingOffset: 6,
-      sectionBgSize: '18px 18px',
-      gridLineAlpha: '09',
-      mutedTextColor: '#667085',
-      linkDecoration: 'none',
-      blockquoteBorderWidth: 4,
-      blockquoteBg: '#f6f9fc',
-      blockquoteStyle: 'soft',
-      blockquoteTextColor: '#4b5565',
-      tableHeaderBg: '#f3f7fb',
-      tableBorderColor: '#dbe5ef',
-    },
-    typo: {
-      name: 'Typo',
-      lineHeight: 1.92,
-      paragraphGap: 22,
-      shiftHeadingDecorationsDown: true,
-      h1Decoration: 'typo-title',
-      h2Decoration: 'typo-title',
-      h3Decoration: 'typo-section',
-      h4Decoration: 'typo-subhead',
-      h5Decoration: 'dashed-bottom',
-      h6Decoration: 'quiet',
-      headingWeight: 700,
-      headingLetterSpacing: 0,
-      textColor: '#333333',
-      headingColor: '#222222',
-      mutedTextColor: '#6b6b6b',
-      linkDecoration: 'underline',
-      blockquoteBorderWidth: 2,
-      blockquoteBg: '#fafafa',
-      blockquoteStyle: 'soft',
-      paragraphTextIndent: '2em',
-      tableHeaderBg: '#f7f7f7',
-      figureBorderColor: '#ededed',
-    },
-    media: {
-      name: '清爽媒体',
-      lineHeight: 1.86,
-      paragraphGap: 18,
-      shiftHeadingDecorationsDown: true,
-      h1Decoration: 'media-title',
-      h2Decoration: 'media-chapter',
-      h3Decoration: 'media-section',
-      h4Decoration: 'left-border',
-      h5Decoration: 'light-bg',
-      h6Decoration: 'quiet',
-      headingWeight: 700,
-      headingLetterSpacing: 0,
-      textColor: '#3b4648',
-      headingColor: '#263238',
-      mutedTextColor: '#667476',
-      linkDecoration: 'none',
-      blockquoteBorderWidth: 3,
-      blockquoteBg: '#f3fbf8',
-      blockquoteStyle: 'soft',
-      tableHeaderBg: '#f3fbf8',
-      tableBorderColor: '#dbeee8',
-      figureBorderColor: '#dcefeb',
-    },
-    colorful: {
-      name: '彩色强调',
-      lineHeight: 1.82,
-      paragraphGap: 20,
-      shiftHeadingDecorationsDown: true,
-      h1Decoration: 'colorful-title',
-      h2Decoration: 'colorful-chapter',
-      h3Decoration: 'colorful-section',
-      h4Decoration: 'colorful-kicker',
-      h5Decoration: 'light-bg',
-      h6Decoration: 'quiet',
-      headingWeight: 800,
-      headingLetterSpacing: 0,
-      textColor: '#3e3e3e',
-      headingColor: '#3e3e3e',
-      mutedTextColor: '#6b7280',
-      linkDecoration: 'none',
-      blockquoteBorderWidth: 4,
-      blockquoteBg: '#fffaf5',
-      blockquoteStyle: 'soft',
-      tableHeaderBg: '#fff8ed',
-      figureBorderColor: '#f0e4d4',
-      strongBg: true,
-    },
-  };
-
-  /**
-   * 📐 间距系统 - 8px 基准
-   */
-  /** @type {Record<'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl', number>} */
-  static SPACING = {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-    xxl: 48,
-  };
-
-  /**
-   * 🎯 圆角系统
-   */
-  /** @type {Record<'sm' | 'md' | 'lg', number>} */
-  static RADIUS = {
-    sm: 4,
-    md: 8,
-    lg: 12,
-  };
-
-  static QUOTE_CALLOUT_NEUTRAL_BG = '#f9f9f9';
-  static QUOTE_NEUTRAL_BORDER = '#d9d9d9';
+  static THEME_COLORS = THEME_COLORS;
+  static THEME_COLORS_DEEP = THEME_COLORS_DEEP;
+  static FONT_SIZES = FONT_SIZES;
+  static FONTS = FONTS;
+  static THEME_CONFIGS = THEME_CONFIGS;
+  static SPACING = SPACING;
+  static RADIUS = RADIUS;
+  static QUOTE_CALLOUT_NEUTRAL_BG = QUOTE_CALLOUT_NEUTRAL_BG;
+  static QUOTE_NEUTRAL_BORDER = QUOTE_NEUTRAL_BORDER;
 
   /**
    * 当前配置
@@ -669,6 +431,8 @@ class AppleTheme {
         return `font-style: italic;`;
       case 'del':
         return `text-decoration: line-through; color: #999;`;
+      case 'mark':
+        return `background-color: #fff1a8; padding: 0 2px; border-radius: 2px;`;
 
       case 'avatar-header':
         return `margin: 0 0 ${s.sm}px 0 !important; display: flex !important; align-items: center !important; justify-content: flex-start !important; width: 100%; flex-direction: row !important; flex-wrap: nowrap !important; text-align: left !important;`;
@@ -694,35 +458,7 @@ class AppleTheme {
    * @returns {string}
    */
   getH1Style(type, color, fontSize, font, headingColor, config = AppleTheme.THEME_CONFIGS.github) {
-    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 30px auto 20px; color: ${headingColor}; text-align: center; line-height: 1.2;`;
-    switch (type) {
-      case 'editorial-h1': // Magazine Style: Forced Serif + Golden Line (More elegant: 1px height, 80px width, tightened spacing)
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 28px auto 16px; padding: 0 0 10px; color: ${headingColor}; text-align: center; line-height: 1.2; background-image: linear-gradient(to right, transparent, ${color}, transparent); background-size: 80px 1px; background-repeat: no-repeat; background-position: bottom center; letter-spacing: 1px;`;
-      case 'bottom-line':
-        // Pure CSS centered short line using linear-gradient (simulating image)
-        return `${base}
-          background-image: linear-gradient(to right, ${color}, ${color});
-          background-size: 80px 3px;
-          background-repeat: no-repeat;
-          background-position: bottom center;
-          padding-bottom: 15px;`;
-      case 'border-box':
-        return `${base} border: 1px solid ${color}; padding: 10px 20px; border-radius: 4px; display: inline-block; width: auto;`;
-      case 'classic-title':
-        return `${base} margin: 34px auto 22px; padding: 0; background-image: linear-gradient(to right, transparent, ${color}, transparent); background-size: 120px 2px; background-repeat: no-repeat; background-position: bottom center; padding-bottom: 14px;`;
-      case 'paper-title':
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 34px auto 24px; color: ${headingColor}; text-align: center; line-height: 1.35; letter-spacing: 1px; border-top: 2px solid ${color}; border-bottom: 1px solid ${color}66; padding: 16px 0 14px;`;
-      case 'grid-title':
-        return `${base} text-align: left; border: 1px solid ${color}55; border-radius: 4px; padding: 10px 12px; background: ${color}0F;`;
-      case 'typo-title':
-        return `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: 700; margin: 34px auto 22px; color: ${headingColor}; text-align: left; line-height: 1.28; border-bottom: 1px solid #d8d8d8; padding-bottom: 14px;`;
-      case 'media-title':
-        return `${base} text-align: left; color: ${headingColor}; background-image: linear-gradient(to right, ${color}, ${color}33); background-size: 100% 2px; background-repeat: no-repeat; background-position: bottom left; padding-bottom: 14px;`;
-      case 'colorful-title':
-        return `${base} color: #ffffff; background: ${color}; padding: 12px 18px; border-radius: 6px; box-shadow: 6px 6px 0 ${color}33;`;
-      default: // none or unknown
-        return this.joinStyleStrings(base, config.headingLetterSpacing ? `letter-spacing: ${config.headingLetterSpacing}px` : '');
-    }
+    return /** @type {string} */ (buildH1Style.call(this, AppleTheme, type, color, fontSize, font, headingColor, config));
   }
 
   /**
@@ -735,57 +471,7 @@ class AppleTheme {
    * @returns {string}
    */
   getH2Style(type, color, fontSize, font, headingColor, config = AppleTheme.THEME_CONFIGS.github) {
-    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 32px auto 16px; text-align: center; color: ${headingColor}; line-height: 1.25;`;
-    switch (type) {
-      case 'editorial-h1': // Golden Line (Shifted from H1 - More elegant: 1px height, 80px width, tightened spacing)
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 28px auto 14px; padding: 0 0 10px; color: ${headingColor}; text-align: center; line-height: 1.2; background-image: linear-gradient(to right, transparent, ${color}, transparent); background-size: 80px 1px; background-repeat: no-repeat; background-position: bottom center; letter-spacing: 1px;`;
-      case 'editorial-h2': // Magazine Subtitle
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: normal; margin: 32px auto 16px; text-align: center; color: ${headingColor}; line-height: 1.4; font-style: italic; letter-spacing: 1px;`;
-      case 'bottom-line':
-        // Pure CSS centered short line (thinner/shorter for H2)
-        return `${base}
-           background-image: linear-gradient(to right, ${color}, ${color});
-           background-size: 50px 2px;
-           background-repeat: no-repeat;
-           background-position: bottom center;
-           padding-bottom: 12px;`;
-      case 'filled-pill':
-        return `${base} background-color: ${color}; color: #fff; padding: 5px 20px; border-radius: 20px; display: inline-block; width: auto;`;
-      case 'bottom-line-center':
-        return `${base} display: inline-block; border-bottom: 1px solid ${color}; padding-bottom: 5px; width: auto;`;
-      case 'classic-title':
-        return `${base} margin: 34px auto 20px; padding: 0; background-image: linear-gradient(to right, transparent, ${color}, transparent); background-size: 120px 2px; background-repeat: no-repeat; background-position: bottom center; padding-bottom: 14px;`;
-      case 'paper-title':
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 34px auto 20px; color: ${headingColor}; text-align: center; line-height: 1.35; letter-spacing: 1px; border-top: 2px solid ${color}; border-bottom: 1px solid ${color}66; padding: 14px 0 12px;`;
-      case 'paper-chapter':
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 34px auto 20px; color: ${headingColor}; text-align: center; line-height: 1.35; letter-spacing: 1.5px; border-bottom: 2px solid ${color}; padding-bottom: 12px;`;
-      case 'grid-title':
-        return `${base} text-align: left; border: 1px solid ${color}55; border-radius: 4px; padding: 10px 12px; background: ${color}0F;`;
-      case 'grid-chapter':
-        return `${base} text-align: left; border-left: 3px solid ${color}; border-radius: 0 4px 4px 0; padding: 8px 12px; background: ${color}08;`;
-      case 'typo-title':
-        return `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: 700; margin: 34px 0 18px; color: ${headingColor}; text-align: left; line-height: 1.3; background-image: linear-gradient(#d8d8d8, #d8d8d8); background-size: 40% 1px; background-repeat: no-repeat; background-position: bottom left; padding-bottom: 12px;`;
-      case 'media-title':
-        return `${base} text-align: left; color: ${headingColor}; background-image: linear-gradient(to right, ${color}, ${color}33); background-size: 100% 2px; background-repeat: no-repeat; background-position: bottom left; padding-bottom: 12px;`;
-      case 'media-chapter':
-        return `${base} text-align: left; color: ${headingColor}; background-image: linear-gradient(to right, ${color}, transparent); background-size: 60% 2px; background-repeat: no-repeat; background-position: bottom left; padding-bottom: 12px;`;
-      case 'colorful-title':
-        return `${base} color: #ffffff; background: ${color}; padding: 10px 16px; border-radius: 6px; box-shadow: 5px 5px 0 ${color}33;`;
-      case 'colorful-chapter':
-        return `${base} text-align: left; border-left: 4px solid ${color}; background: ${color}12; padding: 10px 14px; border-radius: 0 4px 4px 0;`;
-      case 'paper-section':
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 34px 0 16px; color: ${headingColor}; text-align: left; line-height: 1.35; border-bottom: 1px solid ${color}55; padding-bottom: 8px;`;
-      case 'grid-section':
-        return `${base} text-align: left; border-bottom: 1px solid ${color}66; padding: 4px 0 8px;`;
-      case 'typo-section':
-        return `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: 700; margin: 34px 0 16px; color: ${headingColor}; text-align: left; line-height: 1.35;`;
-      case 'media-section':
-        return `${base} display: inline-block; width: auto; text-align: left; background: ${color}14; border: 1px solid ${color}33; padding: 6px 12px; border-radius: 2px;`;
-      case 'colorful-section':
-        return `${base} display: inline-block; width: auto; text-align: left; background: ${color}18; border-bottom: 3px solid ${color}; padding: 6px 10px 5px; border-radius: 4px 4px 0 0;`;
-      default:
-        return this.joinStyleStrings(base, config.headingLetterSpacing ? `letter-spacing: ${config.headingLetterSpacing}px` : '');
-    }
+    return /** @type {string} */ (buildH2Style.call(this, AppleTheme, type, color, fontSize, font, headingColor, config));
   }
 
   /**
@@ -798,36 +484,7 @@ class AppleTheme {
    * @returns {string}
    */
   getH3Style(type, color, fontSize, font, headingColor, config = AppleTheme.THEME_CONFIGS.github) {
-    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 20px 0 12px; text-align: left; color: ${headingColor}; line-height: 1.3;`;
-    switch (type) {
-      case 'editorial-h2': // Italic Serif (Left Aligned for H3)
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: normal; margin: 24px 0 12px; text-align: left; color: ${headingColor}; line-height: 1.4; font-style: italic; letter-spacing: 1px;`;
-      case 'editorial-h3': // Magazine Section: Forced Serif + Left Underline
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 24px 0 12px; text-align: left; color: ${headingColor}; line-height: 1.3;
-           border-bottom: 1px solid ${color}; padding-bottom: 4px; display: inline-block; width: auto; letter-spacing: 0.5px;`;
-      case 'left-border':
-        return `${base} border-left: 4px solid ${color}; padding-left: 10px;`;
-      case 'bottom-line-left':
-        return `${base} display: inline-block; border-bottom: 2px solid ${color}; padding-bottom: 2px; margin-right: auto;`;
-      case 'classic-subhead':
-        return `${base} border-left: 3px solid ${color}; background: ${color}0A; padding: 6px 10px; margin: 24px 0 12px;`;
-      case 'paper-section':
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 28px 0 14px; color: ${headingColor}; text-align: left; line-height: 1.35; border-top: 1px solid ${color}55; padding-top: 8px;`;
-      case 'grid-section':
-        return `${base} background-image: linear-gradient(${color}, ${color}); background-size: 3px 55%; background-position: left center; background-repeat: no-repeat; padding-left: 12px;`;
-      case 'typo-section':
-        return `${base} font-weight: 700; margin: 28px 0 14px; line-height: 1.35; border-left: 2px solid #d8d8d8; padding-left: 10px;`;
-      case 'media-section':
-        return `${base} display: inline-block; width: auto; background: ${color}14; border: 1px solid ${color}33; padding: 5px 10px; border-radius: 2px;`;
-      case 'colorful-section':
-        return `${base} display: inline-block; width: auto; background: ${color}18; border-bottom: 2px solid ${color}; padding: 5px 9px 4px; border-radius: 4px 4px 0 0;`;
-      case 'paper-kicker':
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 24px 0 12px; color: ${headingColor}; text-align: left; line-height: 1.35; padding-left: 10px; border-left: 3px double ${color};`;
-      case 'typo-subhead':
-        return `${base} font-weight: 700; color: ${headingColor};`;
-      default:
-        return this.joinStyleStrings(base, config.headingLetterSpacing ? `letter-spacing: ${config.headingLetterSpacing}px` : '');
-    }
+    return /** @type {string} */ (buildH3Style.call(this, AppleTheme, type, color, fontSize, font, headingColor, config));
   }
 
   /**
@@ -839,36 +496,7 @@ class AppleTheme {
    * @returns {string}
    */
   getH4Style(type, color, fontSize, font, headingColor) {
-    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 15px 0 10px; text-align: left; color: ${headingColor}; line-height: 1.35;`;
-    switch (type) {
-      case 'editorial-h3': // Inherit H3 style for H4
-        return `font-family: ${AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 15px 0 10px; text-align: left; color: ${headingColor}; line-height: 1.35;
-           border-bottom: 1px solid ${color}; padding-bottom: 3px; display: inline-block; width: auto; letter-spacing: 0.5px;`;
-      case 'simple': // Simple Bold (User Font)
-        // Use headingColor (Deep) instead of color (Bright)
-        return `${base}`;
-      case 'light-bg':
-        // Background uses bright color tint (low opacity), Text uses deep headingColor
-        return `${base} background-color: ${color}15; padding: 4px 8px; border-radius: 4px; display: inline-block;`;
-      case 'classic-minor':
-        return `${base} border-left: 2px solid ${color}55; padding-left: 8px;`;
-      case 'left-border':
-        return `${base} border-left: 3px solid ${color}; padding-left: 9px;`;
-      case 'bottom-line-left':
-        return `${base} display: inline-block; border-bottom: 2px solid ${color}; padding-bottom: 2px; margin-right: auto;`;
-      case 'paper-kicker':
-        return `font-family: ${AppleTheme.FONTS.serif}; display: inline-block; font-size: ${fontSize}px; font-weight: bold; margin: 22px 0 10px; color: ${headingColor}; text-align: left; line-height: 1.35; border-bottom: 1px double ${color}99; padding-bottom: 2px;`;
-      case 'grid-kicker':
-        return `${base} display: inline-block; border-bottom: 1px dashed ${color}44; padding-bottom: 2px;`;
-      case 'typo-subhead':
-        return `${base} font-weight: 700; letter-spacing: 1.5px;`;
-      case 'colorful-kicker':
-        return `${base} color: ${color}; background: ${color}12; padding: 4px 8px; border-radius: 4px; display: inline-block;`;
-      case 'italic-serif':
-        return `${base} font-style: italic; font-family: serif; border-bottom: 1px dashed #ccc; display: inline-block; padding-bottom: 2px;`;
-      default:
-        return base;
-    }
+    return /** @type {string} */ (buildH4Style.call(this, AppleTheme, type, color, fontSize, font, headingColor));
   }
 
   /**
@@ -880,19 +508,7 @@ class AppleTheme {
    * @returns {string}
    */
   getH5Style(type, color, fontSize, font, headingColor) {
-    if (!type) {
-      return `font-family: ${font}; font-size: ${fontSize}px; font-weight: bold; color: ${headingColor}; margin: 10px 0; text-align: left; line-height: 1.4;`;
-    }
-    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; color: ${headingColor}; margin: 12px 0 8px; text-align: left; line-height: 1.4;`;
-    switch (type) {
-      case 'light-bg':
-        return `${base} background-color: ${color}12; padding: 3px 7px; border-radius: 4px; display: inline-block;`;
-      case 'dashed-bottom':
-        return `${base} font-weight: 600; border-bottom: 1px dashed ${color}33; display: inline-block; padding-bottom: 1px;`;
-      case 'simple':
-      default:
-        return base;
-    }
+    return /** @type {string} */ (buildH5Style.call(this, AppleTheme, type, color, fontSize, font, headingColor));
   }
 
   /**
@@ -905,16 +521,7 @@ class AppleTheme {
    * @returns {string}
    */
   getH6Style(type, color, fontSize, font, headingColor, mutedColor = '#6b7280') {
-    if (!type) {
-      return `font-family: ${font}; font-size: ${fontSize}px; font-weight: bold; color: ${headingColor}; margin: 10px 0; text-align: left; line-height: 1.4;`;
-    }
-    const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; color: ${headingColor}; margin: 10px 0 6px; text-align: left; line-height: 1.4;`;
-    switch (type) {
-      case 'quiet':
-        return `${base} color: ${mutedColor}; font-weight: 600;`;
-      default:
-        return base;
-    }
+    return /** @type {string} */ (buildH6Style.call(this, AppleTheme, type, color, fontSize, font, headingColor, mutedColor));
   }
 
   /**
@@ -1010,6 +617,7 @@ class AppleTheme {
     }));
   }
 }
+/* eslint-enable @typescript-eslint/no-unsafe-return -- reason: resume typed linting after AppleTheme class boundary */
 
 // 导出到全局作用域
 APPLE_THEME_GLOBAL.AppleTheme = AppleTheme;
@@ -1017,6 +625,4 @@ if (typeof window !== 'undefined') {
   window.AppleTheme = APPLE_THEME_GLOBAL.AppleTheme;
 }
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = AppleTheme;
-}
+export default AppleTheme;

@@ -446,4 +446,35 @@ describe('Feishu Sync Coordinator basic import and preparation', () => {
     ))[0];
     expect(JSON.parse(importTaskRequest.body).file_name).toBe('test-note');
   });
+
+  it('should prefer an edited title, trim it, and enforce the Feishu title limit', async () => {
+    const requestedTitle = `  ${'自定义标题'.repeat(60)}  `;
+    const result = await syncNoteToFeishu({
+      app,
+      settings,
+      activeFile,
+      markdown: '---\ntitle: Frontmatter 标题\n---\n正文',
+      titleOverride: requestedTitle,
+    });
+
+    const expectedTitle = requestedTitle.trim().substring(0, 250);
+    const importTaskRequest = obsidianMock.requestUrl.mock.calls.find((call) => (
+      call[0].url.includes('import_tasks') && call[0].method === 'POST'
+    ))[0];
+    expect(result.title).toBe(expectedTitle);
+    expect(JSON.parse(importTaskRequest.body).file_name).toBe(expectedTitle);
+    expect(settings.uploadHistory[0].title).toBe(expectedTitle);
+  });
+
+  it('should restore frontmatter title resolution when an edited title is blank', async () => {
+    const result = await syncNoteToFeishu({
+      app,
+      settings,
+      activeFile,
+      markdown: '---\ntitle: Frontmatter 标题\n---\n正文',
+      titleOverride: '   ',
+    });
+
+    expect(result.title).toBe('Frontmatter 标题');
+  });
 });

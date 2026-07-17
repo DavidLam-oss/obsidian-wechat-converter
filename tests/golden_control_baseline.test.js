@@ -28,6 +28,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+const { getBundledThemeSource } = require('./helpers/theme-runtime-source.js');
 
 const readFixture = (name) => fs.readFileSync(path.resolve(__dirname, 'fixtures', name), 'utf8');
 
@@ -44,7 +45,7 @@ describe('Golden Control Baseline (Main + Micro Samples)', () => {
     global.hljs = require('../lib/highlight.min.js');
     require('../lib/mathjax-plugin.js');
 
-    const themeCode = fs.readFileSync(path.resolve(__dirname, '../themes/apple-theme.js'), 'utf8');
+    const themeCode = getBundledThemeSource();
     const converterCode = fs.readFileSync(path.resolve(__dirname, '../converter.js'), 'utf8');
     (0, eval)(themeCode);
     (0, eval)(converterCode);

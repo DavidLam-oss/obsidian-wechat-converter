@@ -27,6 +27,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { getBundledThemeSource } = require('./theme-runtime-source.js');
 
 function ensureDomGlobals() {
   if (typeof window === 'undefined') {
@@ -53,7 +54,7 @@ function bootstrapLegacyRuntime() {
   require('../../lib/mathjax-plugin.js');
 
   if (!window.AppleTheme) {
-    const themeCode = fs.readFileSync(path.resolve(__dirname, '../../themes/apple-theme.js'), 'utf8');
+    const themeCode = getBundledThemeSource();
     (0, eval)(themeCode);
   }
   if (!window.AppleStyleConverter) {

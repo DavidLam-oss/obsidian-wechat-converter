@@ -10,6 +10,9 @@ var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
@@ -3568,14 +3571,449 @@ https://github.com/highlightjs/highlight.js/issues/2277`), x = l, w = m), p === 
   }
 });
 
+// themes/apple-theme-config.js
+var THEME_COLORS, THEME_COLORS_DEEP, FONT_SIZES, FONTS, THEME_CONFIGS, SPACING, RADIUS, QUOTE_CALLOUT_NEUTRAL_BG, QUOTE_NEUTRAL_BORDER;
+var init_apple_theme_config = __esm({
+  "themes/apple-theme-config.js"() {
+    THEME_COLORS = {
+      blue: "#0366d6",
+      green: "#28a745",
+      purple: "#6f42c1",
+      orange: "#fd7e14",
+      teal: "#20c997",
+      rose: "#e83e8c",
+      ruby: "#dc3545",
+      slate: "#6c757d"
+    };
+    THEME_COLORS_DEEP = {
+      blue: "#004795",
+      // Deep Blue
+      green: "#1e7e34",
+      // Deep Green
+      purple: "#4a2b82",
+      // Deep Purple
+      orange: "#c75e0b",
+      // Deep Orange
+      teal: "#158765",
+      // Deep Teal
+      rose: "#b81f66",
+      // Deep Rose
+      ruby: "#a81825",
+      // Deep Ruby
+      slate: "#495057"
+      // Deep Slate
+    };
+    FONT_SIZES = {
+      1: { base: 14, h1: 26, h2: 20, h3: 16, h4: 14, h5: 14, h6: 14, code: 12, caption: 12 },
+      2: { base: 15, h1: 28, h2: 21, h3: 17, h4: 15, h5: 15, h6: 15, code: 13, caption: 12 },
+      3: { base: 16, h1: 30, h2: 22, h3: 18, h4: 16, h5: 16, h6: 16, code: 14, caption: 13 },
+      // 推荐
+      4: { base: 17, h1: 32, h2: 24, h3: 19, h4: 17, h5: 17, h6: 17, code: 15, caption: 14 },
+      5: { base: 18, h1: 34, h2: 26, h3: 20, h4: 18, h5: 18, h6: 18, code: 16, caption: 14 }
+    };
+    FONTS = {
+      "sans-serif": `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif`,
+      "serif": `'Times New Roman', Georgia, 'SimSun', serif`,
+      "monospace": `'SF Mono', Consolas, 'Liberation Mono', Menlo, Courier, monospace`
+    };
+    THEME_CONFIGS = {
+      github: {
+        name: "\u7B80\u7EA6",
+        lineHeight: 1.82,
+        paragraphGap: 18,
+        h1Decoration: "none",
+        h2Decoration: "none",
+        h3Decoration: "bottom-line-left",
+        h4Decoration: "none",
+        headingWeight: 800,
+        headingLetterSpacing: 0,
+        textColor: "#3e3e3e",
+        headingColor: "#3e3e3e",
+        linkDecoration: "underline",
+        blockquoteBorderWidth: 4,
+        tableHeaderBg: "#f6f8fa",
+        tableCellPadding: 10,
+        figurePadding: 8,
+        figureBorderColor: "#e8eaed"
+        // Removed blockquoteBorderColor to allow theme color (was #d0d7de)
+        // Removed blockquoteBg to allow theme color tint (was #ffffff)
+      },
+      wechat: {
+        name: "\u7ECF\u5178",
+        lineHeight: 1.8,
+        paragraphGap: 24,
+        h1Decoration: "classic-title",
+        h2Decoration: "classic-title",
+        h3Decoration: "classic-subhead",
+        h4Decoration: "classic-minor",
+        headingWeight: 700,
+        headingLetterSpacing: 0,
+        textColor: "#3e3e3e",
+        headingColor: "#3e3e3e",
+        linkDecoration: "none",
+        blockquoteBorderWidth: 4,
+        blockquoteBg: "#f8fafc",
+        blockquoteStyle: "soft"
+      },
+      serif: {
+        name: "\u4F18\u96C5",
+        lineHeight: 1.8,
+        paragraphGap: 26,
+        h1Decoration: "editorial-h1",
+        // 杂志大标题 (金线)
+        h2Decoration: "editorial-h1",
+        // H2 此时也是金线 (Level 2 = Level 1)
+        h3Decoration: "editorial-h2",
+        // H3 使用原 H2 样式 (斜体，现在的 helper 已强制左对齐)
+        h4Decoration: "editorial-h3",
+        // H4 使用原 H3 (左对齐下划线)
+        headingWeight: 700,
+        headingLetterSpacing: 1,
+        // 优雅主题增加字间距
+        textColor: "#3e3e3e",
+        headingColor: "#3e3e3e",
+        linkDecoration: "none",
+        blockquoteBorderWidth: 0,
+        // 居中样式不需要左边框
+        blockquoteStyle: "center"
+        // 新增：居中引用
+      },
+      paper: {
+        name: "\u7EB8\u5F20\u957F\u6587",
+        lineHeight: 1.9,
+        paragraphGap: 22,
+        shiftHeadingDecorationsDown: true,
+        h1Decoration: "paper-title",
+        h2Decoration: "paper-chapter",
+        h3Decoration: "paper-section",
+        h4Decoration: "paper-kicker",
+        h5Decoration: "simple",
+        h6Decoration: "quiet",
+        headingWeight: 700,
+        headingLetterSpacing: 0,
+        textColor: "#3f3a33",
+        headingColor: "#3e3e3e",
+        sectionBg: "#fffdf8",
+        sectionSidePaddingOffset: 6,
+        mutedTextColor: "#786f63",
+        linkDecoration: "none",
+        blockquoteBorderWidth: 0,
+        blockquoteBg: "#f7f1e7",
+        blockquoteStyle: "paper",
+        tableHeaderBg: "#f7f1e7",
+        tableBorderColor: "#e6dccd",
+        figureBorderColor: "#eadfce"
+      },
+      grid: {
+        name: "\u7F51\u683C\u6587\u6863",
+        lineHeight: 1.82,
+        paragraphGap: 20,
+        shiftHeadingDecorationsDown: true,
+        h1Decoration: "grid-title",
+        h2Decoration: "grid-chapter",
+        h3Decoration: "grid-section",
+        h4Decoration: "grid-kicker",
+        h5Decoration: "light-bg",
+        h6Decoration: "quiet",
+        headingWeight: 800,
+        headingLetterSpacing: 0,
+        textColor: "#344054",
+        headingColor: "#263238",
+        sectionBgStyle: "grid",
+        sectionBg: "#ffffff",
+        sectionSidePaddingOffset: 6,
+        sectionBgSize: "18px 18px",
+        gridLineAlpha: "09",
+        mutedTextColor: "#667085",
+        linkDecoration: "none",
+        blockquoteBorderWidth: 4,
+        blockquoteBg: "#f6f9fc",
+        blockquoteStyle: "soft",
+        blockquoteTextColor: "#4b5565",
+        tableHeaderBg: "#f3f7fb",
+        tableBorderColor: "#dbe5ef"
+      },
+      typo: {
+        name: "Typo",
+        lineHeight: 1.92,
+        paragraphGap: 22,
+        shiftHeadingDecorationsDown: true,
+        h1Decoration: "typo-title",
+        h2Decoration: "typo-title",
+        h3Decoration: "typo-section",
+        h4Decoration: "typo-subhead",
+        h5Decoration: "dashed-bottom",
+        h6Decoration: "quiet",
+        headingWeight: 700,
+        headingLetterSpacing: 0,
+        textColor: "#333333",
+        headingColor: "#222222",
+        mutedTextColor: "#6b6b6b",
+        linkDecoration: "underline",
+        blockquoteBorderWidth: 2,
+        blockquoteBg: "#fafafa",
+        blockquoteStyle: "soft",
+        paragraphTextIndent: "2em",
+        tableHeaderBg: "#f7f7f7",
+        figureBorderColor: "#ededed"
+      },
+      media: {
+        name: "\u6E05\u723D\u5A92\u4F53",
+        lineHeight: 1.86,
+        paragraphGap: 18,
+        shiftHeadingDecorationsDown: true,
+        h1Decoration: "media-title",
+        h2Decoration: "media-chapter",
+        h3Decoration: "media-section",
+        h4Decoration: "left-border",
+        h5Decoration: "light-bg",
+        h6Decoration: "quiet",
+        headingWeight: 700,
+        headingLetterSpacing: 0,
+        textColor: "#3b4648",
+        headingColor: "#263238",
+        mutedTextColor: "#667476",
+        linkDecoration: "none",
+        blockquoteBorderWidth: 3,
+        blockquoteBg: "#f3fbf8",
+        blockquoteStyle: "soft",
+        tableHeaderBg: "#f3fbf8",
+        tableBorderColor: "#dbeee8",
+        figureBorderColor: "#dcefeb"
+      },
+      colorful: {
+        name: "\u5F69\u8272\u5F3A\u8C03",
+        lineHeight: 1.82,
+        paragraphGap: 20,
+        shiftHeadingDecorationsDown: true,
+        h1Decoration: "colorful-title",
+        h2Decoration: "colorful-chapter",
+        h3Decoration: "colorful-section",
+        h4Decoration: "colorful-kicker",
+        h5Decoration: "light-bg",
+        h6Decoration: "quiet",
+        headingWeight: 800,
+        headingLetterSpacing: 0,
+        textColor: "#3e3e3e",
+        headingColor: "#3e3e3e",
+        mutedTextColor: "#6b7280",
+        linkDecoration: "none",
+        blockquoteBorderWidth: 4,
+        blockquoteBg: "#fffaf5",
+        blockquoteStyle: "soft",
+        tableHeaderBg: "#fff8ed",
+        figureBorderColor: "#f0e4d4",
+        strongBg: true
+      }
+    };
+    SPACING = {
+      xs: 4,
+      sm: 8,
+      md: 16,
+      lg: 24,
+      xl: 32,
+      xxl: 48
+    };
+    RADIUS = {
+      sm: 4,
+      md: 8,
+      lg: 12
+    };
+    QUOTE_CALLOUT_NEUTRAL_BG = "#f9f9f9";
+    QUOTE_NEUTRAL_BORDER = "#d9d9d9";
+  }
+});
+
+// themes/apple-theme-headings.js
+function buildH1Style(themeClass, type, color, fontSize, font, headingColor, config = themeClass.THEME_CONFIGS.github) {
+  const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 30px auto 20px; color: ${headingColor}; text-align: center; line-height: 1.2;`;
+  switch (type) {
+    case "editorial-h1":
+      return `font-family: ${themeClass.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 28px auto 16px; padding: 0 0 10px; color: ${headingColor}; text-align: center; line-height: 1.2; background-image: linear-gradient(to right, transparent, ${color}, transparent); background-size: 80px 1px; background-repeat: no-repeat; background-position: bottom center; letter-spacing: 1px;`;
+    case "bottom-line":
+      return `${base}
+        background-image: linear-gradient(to right, ${color}, ${color});
+        background-size: 80px 3px;
+        background-repeat: no-repeat;
+        background-position: bottom center;
+        padding-bottom: 15px;`;
+    case "border-box":
+      return `${base} border: 1px solid ${color}; padding: 10px 20px; border-radius: 4px; display: inline-block; width: auto;`;
+    case "classic-title":
+      return `${base} margin: 34px auto 22px; padding: 0; background-image: linear-gradient(to right, transparent, ${color}, transparent); background-size: 120px 2px; background-repeat: no-repeat; background-position: bottom center; padding-bottom: 14px;`;
+    case "paper-title":
+      return `font-family: ${themeClass.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 34px auto 24px; color: ${headingColor}; text-align: center; line-height: 1.35; letter-spacing: 1px; border-top: 2px solid ${color}; border-bottom: 1px solid ${color}66; padding: 16px 0 14px;`;
+    case "grid-title":
+      return `${base} text-align: left; border: 1px solid ${color}55; border-radius: 4px; padding: 10px 12px; background: ${color}0F;`;
+    case "typo-title":
+      return `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: 700; margin: 34px auto 22px; color: ${headingColor}; text-align: left; line-height: 1.28; border-bottom: 1px solid #d8d8d8; padding-bottom: 14px;`;
+    case "media-title":
+      return `${base} text-align: left; color: ${headingColor}; background-image: linear-gradient(to right, ${color}, ${color}33); background-size: 100% 2px; background-repeat: no-repeat; background-position: bottom left; padding-bottom: 14px;`;
+    case "colorful-title":
+      return `${base} color: #ffffff; background: ${color}; padding: 12px 18px; border-radius: 6px; box-shadow: 6px 6px 0 ${color}33;`;
+    default:
+      return this.joinStyleStrings(base, config.headingLetterSpacing ? `letter-spacing: ${config.headingLetterSpacing}px` : "");
+  }
+}
+function buildH2Style(themeClass, type, color, fontSize, font, headingColor, config = themeClass.THEME_CONFIGS.github) {
+  const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 32px auto 16px; text-align: center; color: ${headingColor}; line-height: 1.25;`;
+  switch (type) {
+    case "editorial-h1":
+      return `font-family: ${themeClass.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 28px auto 14px; padding: 0 0 10px; color: ${headingColor}; text-align: center; line-height: 1.2; background-image: linear-gradient(to right, transparent, ${color}, transparent); background-size: 80px 1px; background-repeat: no-repeat; background-position: bottom center; letter-spacing: 1px;`;
+    case "editorial-h2":
+      return `font-family: ${themeClass.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: normal; margin: 32px auto 16px; text-align: center; color: ${headingColor}; line-height: 1.4; font-style: italic; letter-spacing: 1px;`;
+    case "bottom-line":
+      return `${base}
+         background-image: linear-gradient(to right, ${color}, ${color});
+         background-size: 50px 2px;
+         background-repeat: no-repeat;
+         background-position: bottom center;
+         padding-bottom: 12px;`;
+    case "filled-pill":
+      return `${base} background-color: ${color}; color: #fff; padding: 5px 20px; border-radius: 20px; display: inline-block; width: auto;`;
+    case "bottom-line-center":
+      return `${base} display: inline-block; border-bottom: 1px solid ${color}; padding-bottom: 5px; width: auto;`;
+    case "classic-title":
+      return `${base} margin: 34px auto 20px; padding: 0; background-image: linear-gradient(to right, transparent, ${color}, transparent); background-size: 120px 2px; background-repeat: no-repeat; background-position: bottom center; padding-bottom: 14px;`;
+    case "paper-title":
+      return `font-family: ${themeClass.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 34px auto 20px; color: ${headingColor}; text-align: center; line-height: 1.35; letter-spacing: 1px; border-top: 2px solid ${color}; border-bottom: 1px solid ${color}66; padding: 14px 0 12px;`;
+    case "paper-chapter":
+      return `font-family: ${themeClass.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 34px auto 20px; color: ${headingColor}; text-align: center; line-height: 1.35; letter-spacing: 1.5px; border-bottom: 2px solid ${color}; padding-bottom: 12px;`;
+    case "grid-title":
+      return `${base} text-align: left; border: 1px solid ${color}55; border-radius: 4px; padding: 10px 12px; background: ${color}0F;`;
+    case "grid-chapter":
+      return `${base} text-align: left; border-left: 3px solid ${color}; border-radius: 0 4px 4px 0; padding: 8px 12px; background: ${color}08;`;
+    case "typo-title":
+      return `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: 700; margin: 34px 0 18px; color: ${headingColor}; text-align: left; line-height: 1.3; background-image: linear-gradient(#d8d8d8, #d8d8d8); background-size: 40% 1px; background-repeat: no-repeat; background-position: bottom left; padding-bottom: 12px;`;
+    case "media-title":
+      return `${base} text-align: left; color: ${headingColor}; background-image: linear-gradient(to right, ${color}, ${color}33); background-size: 100% 2px; background-repeat: no-repeat; background-position: bottom left; padding-bottom: 12px;`;
+    case "media-chapter":
+      return `${base} text-align: left; color: ${headingColor}; background-image: linear-gradient(to right, ${color}, transparent); background-size: 60% 2px; background-repeat: no-repeat; background-position: bottom left; padding-bottom: 12px;`;
+    case "colorful-title":
+      return `${base} color: #ffffff; background: ${color}; padding: 10px 16px; border-radius: 6px; box-shadow: 5px 5px 0 ${color}33;`;
+    case "colorful-chapter":
+      return `${base} text-align: left; border-left: 4px solid ${color}; background: ${color}12; padding: 10px 14px; border-radius: 0 4px 4px 0;`;
+    case "paper-section":
+      return `font-family: ${themeClass.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 34px 0 16px; color: ${headingColor}; text-align: left; line-height: 1.35; border-bottom: 1px solid ${color}55; padding-bottom: 8px;`;
+    case "grid-section":
+      return `${base} text-align: left; border-bottom: 1px solid ${color}66; padding: 4px 0 8px;`;
+    case "typo-section":
+      return `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: 700; margin: 34px 0 16px; color: ${headingColor}; text-align: left; line-height: 1.35;`;
+    case "media-section":
+      return `${base} display: inline-block; width: auto; text-align: left; background: ${color}14; border: 1px solid ${color}33; padding: 6px 12px; border-radius: 2px;`;
+    case "colorful-section":
+      return `${base} display: inline-block; width: auto; text-align: left; background: ${color}18; border-bottom: 3px solid ${color}; padding: 6px 10px 5px; border-radius: 4px 4px 0 0;`;
+    default:
+      return this.joinStyleStrings(base, config.headingLetterSpacing ? `letter-spacing: ${config.headingLetterSpacing}px` : "");
+  }
+}
+function buildH3Style(themeClass, type, color, fontSize, font, headingColor, config = themeClass.THEME_CONFIGS.github) {
+  const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 20px 0 12px; text-align: left; color: ${headingColor}; line-height: 1.3;`;
+  switch (type) {
+    case "editorial-h2":
+      return `font-family: ${themeClass.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: normal; margin: 24px 0 12px; text-align: left; color: ${headingColor}; line-height: 1.4; font-style: italic; letter-spacing: 1px;`;
+    case "editorial-h3":
+      return `font-family: ${themeClass.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 24px 0 12px; text-align: left; color: ${headingColor}; line-height: 1.3;
+         border-bottom: 1px solid ${color}; padding-bottom: 4px; display: inline-block; width: auto; letter-spacing: 0.5px;`;
+    case "left-border":
+      return `${base} border-left: 4px solid ${color}; padding-left: 10px;`;
+    case "bottom-line-left":
+      return `${base} display: inline-block; border-bottom: 2px solid ${color}; padding-bottom: 2px; margin-right: auto;`;
+    case "classic-subhead":
+      return `${base} border-left: 3px solid ${color}; background: ${color}0A; padding: 6px 10px; margin: 24px 0 12px;`;
+    case "paper-section":
+      return `font-family: ${themeClass.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 28px 0 14px; color: ${headingColor}; text-align: left; line-height: 1.35; border-top: 1px solid ${color}55; padding-top: 8px;`;
+    case "grid-section":
+      return `${base} background-image: linear-gradient(${color}, ${color}); background-size: 3px 55%; background-position: left center; background-repeat: no-repeat; padding-left: 12px;`;
+    case "typo-section":
+      return `${base} font-weight: 700; margin: 28px 0 14px; line-height: 1.35; border-left: 2px solid #d8d8d8; padding-left: 10px;`;
+    case "media-section":
+      return `${base} display: inline-block; width: auto; background: ${color}14; border: 1px solid ${color}33; padding: 5px 10px; border-radius: 2px;`;
+    case "colorful-section":
+      return `${base} display: inline-block; width: auto; background: ${color}18; border-bottom: 2px solid ${color}; padding: 5px 9px 4px; border-radius: 4px 4px 0 0;`;
+    case "paper-kicker":
+      return `font-family: ${themeClass.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 24px 0 12px; color: ${headingColor}; text-align: left; line-height: 1.35; padding-left: 10px; border-left: 3px double ${color};`;
+    case "typo-subhead":
+      return `${base} font-weight: 700; color: ${headingColor};`;
+    default:
+      return this.joinStyleStrings(base, config.headingLetterSpacing ? `letter-spacing: ${config.headingLetterSpacing}px` : "");
+  }
+}
+function buildH4Style(themeClass, type, color, fontSize, font, headingColor) {
+  const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 15px 0 10px; text-align: left; color: ${headingColor}; line-height: 1.35;`;
+  switch (type) {
+    case "editorial-h3":
+      return `font-family: ${themeClass.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 15px 0 10px; text-align: left; color: ${headingColor}; line-height: 1.35;
+         border-bottom: 1px solid ${color}; padding-bottom: 3px; display: inline-block; width: auto; letter-spacing: 0.5px;`;
+    case "simple":
+      return `${base}`;
+    case "light-bg":
+      return `${base} background-color: ${color}15; padding: 4px 8px; border-radius: 4px; display: inline-block;`;
+    case "classic-minor":
+      return `${base} border-left: 2px solid ${color}55; padding-left: 8px;`;
+    case "left-border":
+      return `${base} border-left: 3px solid ${color}; padding-left: 9px;`;
+    case "bottom-line-left":
+      return `${base} display: inline-block; border-bottom: 2px solid ${color}; padding-bottom: 2px; margin-right: auto;`;
+    case "paper-kicker":
+      return `font-family: ${themeClass.FONTS.serif}; display: inline-block; font-size: ${fontSize}px; font-weight: bold; margin: 22px 0 10px; color: ${headingColor}; text-align: left; line-height: 1.35; border-bottom: 1px double ${color}99; padding-bottom: 2px;`;
+    case "grid-kicker":
+      return `${base} display: inline-block; border-bottom: 1px dashed ${color}44; padding-bottom: 2px;`;
+    case "typo-subhead":
+      return `${base} font-weight: 700; letter-spacing: 1.5px;`;
+    case "colorful-kicker":
+      return `${base} color: ${color}; background: ${color}12; padding: 4px 8px; border-radius: 4px; display: inline-block;`;
+    case "italic-serif":
+      return `${base} font-style: italic; font-family: serif; border-bottom: 1px dashed #ccc; display: inline-block; padding-bottom: 2px;`;
+    default:
+      return base;
+  }
+}
+function buildH5Style(themeClass, type, color, fontSize, font, headingColor) {
+  if (!type) {
+    return `font-family: ${font}; font-size: ${fontSize}px; font-weight: bold; color: ${headingColor}; margin: 10px 0; text-align: left; line-height: 1.4;`;
+  }
+  const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; color: ${headingColor}; margin: 12px 0 8px; text-align: left; line-height: 1.4;`;
+  switch (type) {
+    case "light-bg":
+      return `${base} background-color: ${color}12; padding: 3px 7px; border-radius: 4px; display: inline-block;`;
+    case "dashed-bottom":
+      return `${base} font-weight: 600; border-bottom: 1px dashed ${color}33; display: inline-block; padding-bottom: 1px;`;
+    case "simple":
+    default:
+      return base;
+  }
+}
+function buildH6Style(themeClass, type, color, fontSize, font, headingColor, mutedColor = "#6b7280") {
+  if (!type) {
+    return `font-family: ${font}; font-size: ${fontSize}px; font-weight: bold; color: ${headingColor}; margin: 10px 0; text-align: left; line-height: 1.4;`;
+  }
+  const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; color: ${headingColor}; margin: 10px 0 6px; text-align: left; line-height: 1.4;`;
+  switch (type) {
+    case "quiet":
+      return `${base} color: ${mutedColor}; font-weight: 600;`;
+    default:
+      return base;
+  }
+}
+var init_apple_theme_headings = __esm({
+  "themes/apple-theme-headings.js"() {
+  }
+});
+
 // themes/apple-theme.js
-var require_apple_theme = __commonJS({
-  "themes/apple-theme.js"(exports, module2) {
-    var APPLE_THEME_GLOBAL = (
-      /** @type {Record<string, unknown>} */
-      typeof window !== "undefined" ? window : {}
-    );
-    var _AppleTheme = class {
+var apple_theme_exports = {};
+__export(apple_theme_exports, {
+  default: () => apple_theme_default
+});
+var APPLE_THEME_GLOBAL, _AppleTheme, AppleTheme, apple_theme_default;
+var init_apple_theme = __esm({
+  "themes/apple-theme.js"() {
+    init_apple_theme_config();
+    init_apple_theme_headings();
+    APPLE_THEME_GLOBAL = /** @type {Record<string, unknown>} */
+    typeof window !== "undefined" ? window : {};
+    _AppleTheme = class {
       /**
        * 当前配置
        * @param {AppleThemeOptions} [options]
@@ -3799,6 +4237,8 @@ var require_apple_theme = __commonJS({
             return `font-style: italic;`;
           case "del":
             return `text-decoration: line-through; color: #999;`;
+          case "mark":
+            return `background-color: #fff1a8; padding: 0 2px; border-radius: 2px;`;
           case "avatar-header":
             return `margin: 0 0 ${s.sm}px 0 !important; display: flex !important; align-items: center !important; justify-content: flex-start !important; width: 100%; flex-direction: row !important; flex-wrap: nowrap !important; text-align: left !important;`;
           case "avatar":
@@ -3820,34 +4260,10 @@ var require_apple_theme = __commonJS({
        * @returns {string}
        */
       getH1Style(type, color, fontSize, font, headingColor, config = _AppleTheme.THEME_CONFIGS.github) {
-        const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 30px auto 20px; color: ${headingColor}; text-align: center; line-height: 1.2;`;
-        switch (type) {
-          case "editorial-h1":
-            return `font-family: ${_AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 28px auto 16px; padding: 0 0 10px; color: ${headingColor}; text-align: center; line-height: 1.2; background-image: linear-gradient(to right, transparent, ${color}, transparent); background-size: 80px 1px; background-repeat: no-repeat; background-position: bottom center; letter-spacing: 1px;`;
-          case "bottom-line":
-            return `${base}
-          background-image: linear-gradient(to right, ${color}, ${color});
-          background-size: 80px 3px;
-          background-repeat: no-repeat;
-          background-position: bottom center;
-          padding-bottom: 15px;`;
-          case "border-box":
-            return `${base} border: 1px solid ${color}; padding: 10px 20px; border-radius: 4px; display: inline-block; width: auto;`;
-          case "classic-title":
-            return `${base} margin: 34px auto 22px; padding: 0; background-image: linear-gradient(to right, transparent, ${color}, transparent); background-size: 120px 2px; background-repeat: no-repeat; background-position: bottom center; padding-bottom: 14px;`;
-          case "paper-title":
-            return `font-family: ${_AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 34px auto 24px; color: ${headingColor}; text-align: center; line-height: 1.35; letter-spacing: 1px; border-top: 2px solid ${color}; border-bottom: 1px solid ${color}66; padding: 16px 0 14px;`;
-          case "grid-title":
-            return `${base} text-align: left; border: 1px solid ${color}55; border-radius: 4px; padding: 10px 12px; background: ${color}0F;`;
-          case "typo-title":
-            return `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: 700; margin: 34px auto 22px; color: ${headingColor}; text-align: left; line-height: 1.28; border-bottom: 1px solid #d8d8d8; padding-bottom: 14px;`;
-          case "media-title":
-            return `${base} text-align: left; color: ${headingColor}; background-image: linear-gradient(to right, ${color}, ${color}33); background-size: 100% 2px; background-repeat: no-repeat; background-position: bottom left; padding-bottom: 14px;`;
-          case "colorful-title":
-            return `${base} color: #ffffff; background: ${color}; padding: 12px 18px; border-radius: 6px; box-shadow: 6px 6px 0 ${color}33;`;
-          default:
-            return this.joinStyleStrings(base, config.headingLetterSpacing ? `letter-spacing: ${config.headingLetterSpacing}px` : "");
-        }
+        return (
+          /** @type {string} */
+          buildH1Style.call(this, _AppleTheme, type, color, fontSize, font, headingColor, config)
+        );
       }
       /**
        * @param {string | undefined} type
@@ -3859,56 +4275,10 @@ var require_apple_theme = __commonJS({
        * @returns {string}
        */
       getH2Style(type, color, fontSize, font, headingColor, config = _AppleTheme.THEME_CONFIGS.github) {
-        const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 32px auto 16px; text-align: center; color: ${headingColor}; line-height: 1.25;`;
-        switch (type) {
-          case "editorial-h1":
-            return `font-family: ${_AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 28px auto 14px; padding: 0 0 10px; color: ${headingColor}; text-align: center; line-height: 1.2; background-image: linear-gradient(to right, transparent, ${color}, transparent); background-size: 80px 1px; background-repeat: no-repeat; background-position: bottom center; letter-spacing: 1px;`;
-          case "editorial-h2":
-            return `font-family: ${_AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: normal; margin: 32px auto 16px; text-align: center; color: ${headingColor}; line-height: 1.4; font-style: italic; letter-spacing: 1px;`;
-          case "bottom-line":
-            return `${base}
-           background-image: linear-gradient(to right, ${color}, ${color});
-           background-size: 50px 2px;
-           background-repeat: no-repeat;
-           background-position: bottom center;
-           padding-bottom: 12px;`;
-          case "filled-pill":
-            return `${base} background-color: ${color}; color: #fff; padding: 5px 20px; border-radius: 20px; display: inline-block; width: auto;`;
-          case "bottom-line-center":
-            return `${base} display: inline-block; border-bottom: 1px solid ${color}; padding-bottom: 5px; width: auto;`;
-          case "classic-title":
-            return `${base} margin: 34px auto 20px; padding: 0; background-image: linear-gradient(to right, transparent, ${color}, transparent); background-size: 120px 2px; background-repeat: no-repeat; background-position: bottom center; padding-bottom: 14px;`;
-          case "paper-title":
-            return `font-family: ${_AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 34px auto 20px; color: ${headingColor}; text-align: center; line-height: 1.35; letter-spacing: 1px; border-top: 2px solid ${color}; border-bottom: 1px solid ${color}66; padding: 14px 0 12px;`;
-          case "paper-chapter":
-            return `font-family: ${_AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 34px auto 20px; color: ${headingColor}; text-align: center; line-height: 1.35; letter-spacing: 1.5px; border-bottom: 2px solid ${color}; padding-bottom: 12px;`;
-          case "grid-title":
-            return `${base} text-align: left; border: 1px solid ${color}55; border-radius: 4px; padding: 10px 12px; background: ${color}0F;`;
-          case "grid-chapter":
-            return `${base} text-align: left; border-left: 3px solid ${color}; border-radius: 0 4px 4px 0; padding: 8px 12px; background: ${color}08;`;
-          case "typo-title":
-            return `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: 700; margin: 34px 0 18px; color: ${headingColor}; text-align: left; line-height: 1.3; background-image: linear-gradient(#d8d8d8, #d8d8d8); background-size: 40% 1px; background-repeat: no-repeat; background-position: bottom left; padding-bottom: 12px;`;
-          case "media-title":
-            return `${base} text-align: left; color: ${headingColor}; background-image: linear-gradient(to right, ${color}, ${color}33); background-size: 100% 2px; background-repeat: no-repeat; background-position: bottom left; padding-bottom: 12px;`;
-          case "media-chapter":
-            return `${base} text-align: left; color: ${headingColor}; background-image: linear-gradient(to right, ${color}, transparent); background-size: 60% 2px; background-repeat: no-repeat; background-position: bottom left; padding-bottom: 12px;`;
-          case "colorful-title":
-            return `${base} color: #ffffff; background: ${color}; padding: 10px 16px; border-radius: 6px; box-shadow: 5px 5px 0 ${color}33;`;
-          case "colorful-chapter":
-            return `${base} text-align: left; border-left: 4px solid ${color}; background: ${color}12; padding: 10px 14px; border-radius: 0 4px 4px 0;`;
-          case "paper-section":
-            return `font-family: ${_AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 34px 0 16px; color: ${headingColor}; text-align: left; line-height: 1.35; border-bottom: 1px solid ${color}55; padding-bottom: 8px;`;
-          case "grid-section":
-            return `${base} text-align: left; border-bottom: 1px solid ${color}66; padding: 4px 0 8px;`;
-          case "typo-section":
-            return `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: 700; margin: 34px 0 16px; color: ${headingColor}; text-align: left; line-height: 1.35;`;
-          case "media-section":
-            return `${base} display: inline-block; width: auto; text-align: left; background: ${color}14; border: 1px solid ${color}33; padding: 6px 12px; border-radius: 2px;`;
-          case "colorful-section":
-            return `${base} display: inline-block; width: auto; text-align: left; background: ${color}18; border-bottom: 3px solid ${color}; padding: 6px 10px 5px; border-radius: 4px 4px 0 0;`;
-          default:
-            return this.joinStyleStrings(base, config.headingLetterSpacing ? `letter-spacing: ${config.headingLetterSpacing}px` : "");
-        }
+        return (
+          /** @type {string} */
+          buildH2Style.call(this, _AppleTheme, type, color, fontSize, font, headingColor, config)
+        );
       }
       /**
        * @param {string | undefined} type
@@ -3920,36 +4290,10 @@ var require_apple_theme = __commonJS({
        * @returns {string}
        */
       getH3Style(type, color, fontSize, font, headingColor, config = _AppleTheme.THEME_CONFIGS.github) {
-        const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 20px 0 12px; text-align: left; color: ${headingColor}; line-height: 1.3;`;
-        switch (type) {
-          case "editorial-h2":
-            return `font-family: ${_AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: normal; margin: 24px 0 12px; text-align: left; color: ${headingColor}; line-height: 1.4; font-style: italic; letter-spacing: 1px;`;
-          case "editorial-h3":
-            return `font-family: ${_AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 24px 0 12px; text-align: left; color: ${headingColor}; line-height: 1.3;
-           border-bottom: 1px solid ${color}; padding-bottom: 4px; display: inline-block; width: auto; letter-spacing: 0.5px;`;
-          case "left-border":
-            return `${base} border-left: 4px solid ${color}; padding-left: 10px;`;
-          case "bottom-line-left":
-            return `${base} display: inline-block; border-bottom: 2px solid ${color}; padding-bottom: 2px; margin-right: auto;`;
-          case "classic-subhead":
-            return `${base} border-left: 3px solid ${color}; background: ${color}0A; padding: 6px 10px; margin: 24px 0 12px;`;
-          case "paper-section":
-            return `font-family: ${_AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 28px 0 14px; color: ${headingColor}; text-align: left; line-height: 1.35; border-top: 1px solid ${color}55; padding-top: 8px;`;
-          case "grid-section":
-            return `${base} background-image: linear-gradient(${color}, ${color}); background-size: 3px 55%; background-position: left center; background-repeat: no-repeat; padding-left: 12px;`;
-          case "typo-section":
-            return `${base} font-weight: 700; margin: 28px 0 14px; line-height: 1.35; border-left: 2px solid #d8d8d8; padding-left: 10px;`;
-          case "media-section":
-            return `${base} display: inline-block; width: auto; background: ${color}14; border: 1px solid ${color}33; padding: 5px 10px; border-radius: 2px;`;
-          case "colorful-section":
-            return `${base} display: inline-block; width: auto; background: ${color}18; border-bottom: 2px solid ${color}; padding: 5px 9px 4px; border-radius: 4px 4px 0 0;`;
-          case "paper-kicker":
-            return `font-family: ${_AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 24px 0 12px; color: ${headingColor}; text-align: left; line-height: 1.35; padding-left: 10px; border-left: 3px double ${color};`;
-          case "typo-subhead":
-            return `${base} font-weight: 700; color: ${headingColor};`;
-          default:
-            return this.joinStyleStrings(base, config.headingLetterSpacing ? `letter-spacing: ${config.headingLetterSpacing}px` : "");
-        }
+        return (
+          /** @type {string} */
+          buildH3Style.call(this, _AppleTheme, type, color, fontSize, font, headingColor, config)
+        );
       }
       /**
        * @param {string | undefined} type
@@ -3960,34 +4304,10 @@ var require_apple_theme = __commonJS({
        * @returns {string}
        */
       getH4Style(type, color, fontSize, font, headingColor) {
-        const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 15px 0 10px; text-align: left; color: ${headingColor}; line-height: 1.35;`;
-        switch (type) {
-          case "editorial-h3":
-            return `font-family: ${_AppleTheme.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 15px 0 10px; text-align: left; color: ${headingColor}; line-height: 1.35;
-           border-bottom: 1px solid ${color}; padding-bottom: 3px; display: inline-block; width: auto; letter-spacing: 0.5px;`;
-          case "simple":
-            return `${base}`;
-          case "light-bg":
-            return `${base} background-color: ${color}15; padding: 4px 8px; border-radius: 4px; display: inline-block;`;
-          case "classic-minor":
-            return `${base} border-left: 2px solid ${color}55; padding-left: 8px;`;
-          case "left-border":
-            return `${base} border-left: 3px solid ${color}; padding-left: 9px;`;
-          case "bottom-line-left":
-            return `${base} display: inline-block; border-bottom: 2px solid ${color}; padding-bottom: 2px; margin-right: auto;`;
-          case "paper-kicker":
-            return `font-family: ${_AppleTheme.FONTS.serif}; display: inline-block; font-size: ${fontSize}px; font-weight: bold; margin: 22px 0 10px; color: ${headingColor}; text-align: left; line-height: 1.35; border-bottom: 1px double ${color}99; padding-bottom: 2px;`;
-          case "grid-kicker":
-            return `${base} display: inline-block; border-bottom: 1px dashed ${color}44; padding-bottom: 2px;`;
-          case "typo-subhead":
-            return `${base} font-weight: 700; letter-spacing: 1.5px;`;
-          case "colorful-kicker":
-            return `${base} color: ${color}; background: ${color}12; padding: 4px 8px; border-radius: 4px; display: inline-block;`;
-          case "italic-serif":
-            return `${base} font-style: italic; font-family: serif; border-bottom: 1px dashed #ccc; display: inline-block; padding-bottom: 2px;`;
-          default:
-            return base;
-        }
+        return (
+          /** @type {string} */
+          buildH4Style.call(this, _AppleTheme, type, color, fontSize, font, headingColor)
+        );
       }
       /**
        * @param {string | undefined} type
@@ -3998,19 +4318,10 @@ var require_apple_theme = __commonJS({
        * @returns {string}
        */
       getH5Style(type, color, fontSize, font, headingColor) {
-        if (!type) {
-          return `font-family: ${font}; font-size: ${fontSize}px; font-weight: bold; color: ${headingColor}; margin: 10px 0; text-align: left; line-height: 1.4;`;
-        }
-        const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; color: ${headingColor}; margin: 12px 0 8px; text-align: left; line-height: 1.4;`;
-        switch (type) {
-          case "light-bg":
-            return `${base} background-color: ${color}12; padding: 3px 7px; border-radius: 4px; display: inline-block;`;
-          case "dashed-bottom":
-            return `${base} font-weight: 600; border-bottom: 1px dashed ${color}33; display: inline-block; padding-bottom: 1px;`;
-          case "simple":
-          default:
-            return base;
-        }
+        return (
+          /** @type {string} */
+          buildH5Style.call(this, _AppleTheme, type, color, fontSize, font, headingColor)
+        );
       }
       /**
        * @param {string | undefined} type
@@ -4022,16 +4333,10 @@ var require_apple_theme = __commonJS({
        * @returns {string}
        */
       getH6Style(type, color, fontSize, font, headingColor, mutedColor = "#6b7280") {
-        if (!type) {
-          return `font-family: ${font}; font-size: ${fontSize}px; font-weight: bold; color: ${headingColor}; margin: 10px 0; text-align: left; line-height: 1.4;`;
-        }
-        const base = `font-family: ${font}; display: block; font-size: ${fontSize}px; font-weight: bold; color: ${headingColor}; margin: 10px 0 6px; text-align: left; line-height: 1.4;`;
-        switch (type) {
-          case "quiet":
-            return `${base} color: ${mutedColor}; font-weight: 600;`;
-          default:
-            return base;
-        }
+        return (
+          /** @type {string} */
+          buildH6Style.call(this, _AppleTheme, type, color, fontSize, font, headingColor, mutedColor)
+        );
       }
       /**
        * @param {string} hexColor
@@ -4128,289 +4433,21 @@ var require_apple_theme = __commonJS({
         }));
       }
     };
-    var AppleTheme = _AppleTheme;
-    /**
-     * 🎨 主题色板 - 8种预设颜色
-     */
-    /** @type {Record<AppleThemeColorName, string>} */
-    __publicField(AppleTheme, "THEME_COLORS", {
-      blue: "#0366d6",
-      green: "#28a745",
-      purple: "#6f42c1",
-      orange: "#fd7e14",
-      teal: "#20c997",
-      rose: "#e83e8c",
-      ruby: "#dc3545",
-      slate: "#6c757d"
-    });
-    /**
-     * 🎨 标题专用深色板 (Tone-on-Tone)
-     * 相比主题色加深 15-20%，用于标题以增加视觉稳重感，避免与正文高亮色冲突
-     */
-    /** @type {Record<AppleThemeColorName, string>} */
-    __publicField(AppleTheme, "THEME_COLORS_DEEP", {
-      blue: "#004795",
-      // Deep Blue
-      green: "#1e7e34",
-      // Deep Green
-      purple: "#4a2b82",
-      // Deep Purple
-      orange: "#c75e0b",
-      // Deep Orange
-      teal: "#158765",
-      // Deep Teal
-      rose: "#b81f66",
-      // Deep Rose
-      ruby: "#a81825",
-      // Deep Ruby
-      slate: "#495057"
-      // Deep Slate
-    });
-    /**
-     * 📐 字体大小系统 - 5档
-     */
-    /** @type {Record<AppleFontSizeName, AppleFontSizeConfig>} */
-    __publicField(AppleTheme, "FONT_SIZES", {
-      1: { base: 14, h1: 26, h2: 20, h3: 16, h4: 14, h5: 14, h6: 14, code: 12, caption: 12 },
-      2: { base: 15, h1: 28, h2: 21, h3: 17, h4: 15, h5: 15, h6: 15, code: 13, caption: 12 },
-      3: { base: 16, h1: 30, h2: 22, h3: 18, h4: 16, h5: 16, h6: 16, code: 14, caption: 13 },
-      // 推荐
-      4: { base: 17, h1: 32, h2: 24, h3: 19, h4: 17, h5: 17, h6: 17, code: 15, caption: 14 },
-      5: { base: 18, h1: 34, h2: 26, h3: 20, h4: 18, h5: 18, h6: 18, code: 16, caption: 14 }
-    });
-    /**
-     * 🔤 字体栈
-     */
-    /** @type {Record<AppleFontFamilyName, string>} */
-    __publicField(AppleTheme, "FONTS", {
-      "sans-serif": `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif`,
-      "serif": `'Times New Roman', Georgia, 'SimSun', serif`,
-      "monospace": `'SF Mono', Consolas, 'Liberation Mono', Menlo, Courier, monospace`
-    });
-    /**
-     * 🎨 主题配置 - 每种主题的独特配色和规则
-     */
-    /** @type {Record<AppleThemeName, AppleThemeConfig>} */
-    __publicField(AppleTheme, "THEME_CONFIGS", {
-      github: {
-        name: "\u7B80\u7EA6",
-        lineHeight: 1.82,
-        paragraphGap: 18,
-        h1Decoration: "none",
-        h2Decoration: "none",
-        h3Decoration: "bottom-line-left",
-        h4Decoration: "none",
-        headingWeight: 800,
-        headingLetterSpacing: 0,
-        textColor: "#3e3e3e",
-        headingColor: "#3e3e3e",
-        linkDecoration: "underline",
-        blockquoteBorderWidth: 4,
-        tableHeaderBg: "#f6f8fa",
-        tableCellPadding: 10,
-        figurePadding: 8,
-        figureBorderColor: "#e8eaed"
-        // Removed blockquoteBorderColor to allow theme color (was #d0d7de)
-        // Removed blockquoteBg to allow theme color tint (was #ffffff)
-      },
-      wechat: {
-        name: "\u7ECF\u5178",
-        lineHeight: 1.8,
-        paragraphGap: 24,
-        h1Decoration: "classic-title",
-        h2Decoration: "classic-title",
-        h3Decoration: "classic-subhead",
-        h4Decoration: "classic-minor",
-        headingWeight: 700,
-        headingLetterSpacing: 0,
-        textColor: "#3e3e3e",
-        headingColor: "#3e3e3e",
-        linkDecoration: "none",
-        blockquoteBorderWidth: 4,
-        blockquoteBg: "#f8fafc",
-        blockquoteStyle: "soft"
-      },
-      serif: {
-        name: "\u4F18\u96C5",
-        lineHeight: 1.8,
-        paragraphGap: 26,
-        h1Decoration: "editorial-h1",
-        // 杂志大标题 (金线)
-        h2Decoration: "editorial-h1",
-        // H2 此时也是金线 (Level 2 = Level 1)
-        h3Decoration: "editorial-h2",
-        // H3 使用原 H2 样式 (斜体，现在的 helper 已强制左对齐)
-        h4Decoration: "editorial-h3",
-        // H4 使用原 H3 (左对齐下划线)
-        headingWeight: 700,
-        headingLetterSpacing: 1,
-        // 优雅主题增加字间距
-        textColor: "#3e3e3e",
-        headingColor: "#3e3e3e",
-        linkDecoration: "none",
-        blockquoteBorderWidth: 0,
-        // 居中样式不需要左边框
-        blockquoteStyle: "center"
-        // 新增：居中引用
-      },
-      paper: {
-        name: "\u7EB8\u5F20\u957F\u6587",
-        lineHeight: 1.9,
-        paragraphGap: 22,
-        shiftHeadingDecorationsDown: true,
-        h1Decoration: "paper-title",
-        h2Decoration: "paper-chapter",
-        h3Decoration: "paper-section",
-        h4Decoration: "paper-kicker",
-        h5Decoration: "simple",
-        h6Decoration: "quiet",
-        headingWeight: 700,
-        headingLetterSpacing: 0,
-        textColor: "#3f3a33",
-        headingColor: "#3e3e3e",
-        sectionBg: "#fffdf8",
-        sectionSidePaddingOffset: 6,
-        mutedTextColor: "#786f63",
-        linkDecoration: "none",
-        blockquoteBorderWidth: 0,
-        blockquoteBg: "#f7f1e7",
-        blockquoteStyle: "paper",
-        tableHeaderBg: "#f7f1e7",
-        tableBorderColor: "#e6dccd",
-        figureBorderColor: "#eadfce"
-      },
-      grid: {
-        name: "\u7F51\u683C\u6587\u6863",
-        lineHeight: 1.82,
-        paragraphGap: 20,
-        shiftHeadingDecorationsDown: true,
-        h1Decoration: "grid-title",
-        h2Decoration: "grid-chapter",
-        h3Decoration: "grid-section",
-        h4Decoration: "grid-kicker",
-        h5Decoration: "light-bg",
-        h6Decoration: "quiet",
-        headingWeight: 800,
-        headingLetterSpacing: 0,
-        textColor: "#344054",
-        headingColor: "#263238",
-        sectionBgStyle: "grid",
-        sectionBg: "#ffffff",
-        sectionSidePaddingOffset: 6,
-        sectionBgSize: "18px 18px",
-        gridLineAlpha: "09",
-        mutedTextColor: "#667085",
-        linkDecoration: "none",
-        blockquoteBorderWidth: 4,
-        blockquoteBg: "#f6f9fc",
-        blockquoteStyle: "soft",
-        blockquoteTextColor: "#4b5565",
-        tableHeaderBg: "#f3f7fb",
-        tableBorderColor: "#dbe5ef"
-      },
-      typo: {
-        name: "Typo",
-        lineHeight: 1.92,
-        paragraphGap: 22,
-        shiftHeadingDecorationsDown: true,
-        h1Decoration: "typo-title",
-        h2Decoration: "typo-title",
-        h3Decoration: "typo-section",
-        h4Decoration: "typo-subhead",
-        h5Decoration: "dashed-bottom",
-        h6Decoration: "quiet",
-        headingWeight: 700,
-        headingLetterSpacing: 0,
-        textColor: "#333333",
-        headingColor: "#222222",
-        mutedTextColor: "#6b6b6b",
-        linkDecoration: "underline",
-        blockquoteBorderWidth: 2,
-        blockquoteBg: "#fafafa",
-        blockquoteStyle: "soft",
-        paragraphTextIndent: "2em",
-        tableHeaderBg: "#f7f7f7",
-        figureBorderColor: "#ededed"
-      },
-      media: {
-        name: "\u6E05\u723D\u5A92\u4F53",
-        lineHeight: 1.86,
-        paragraphGap: 18,
-        shiftHeadingDecorationsDown: true,
-        h1Decoration: "media-title",
-        h2Decoration: "media-chapter",
-        h3Decoration: "media-section",
-        h4Decoration: "left-border",
-        h5Decoration: "light-bg",
-        h6Decoration: "quiet",
-        headingWeight: 700,
-        headingLetterSpacing: 0,
-        textColor: "#3b4648",
-        headingColor: "#263238",
-        mutedTextColor: "#667476",
-        linkDecoration: "none",
-        blockquoteBorderWidth: 3,
-        blockquoteBg: "#f3fbf8",
-        blockquoteStyle: "soft",
-        tableHeaderBg: "#f3fbf8",
-        tableBorderColor: "#dbeee8",
-        figureBorderColor: "#dcefeb"
-      },
-      colorful: {
-        name: "\u5F69\u8272\u5F3A\u8C03",
-        lineHeight: 1.82,
-        paragraphGap: 20,
-        shiftHeadingDecorationsDown: true,
-        h1Decoration: "colorful-title",
-        h2Decoration: "colorful-chapter",
-        h3Decoration: "colorful-section",
-        h4Decoration: "colorful-kicker",
-        h5Decoration: "light-bg",
-        h6Decoration: "quiet",
-        headingWeight: 800,
-        headingLetterSpacing: 0,
-        textColor: "#3e3e3e",
-        headingColor: "#3e3e3e",
-        mutedTextColor: "#6b7280",
-        linkDecoration: "none",
-        blockquoteBorderWidth: 4,
-        blockquoteBg: "#fffaf5",
-        blockquoteStyle: "soft",
-        tableHeaderBg: "#fff8ed",
-        figureBorderColor: "#f0e4d4",
-        strongBg: true
-      }
-    });
-    /**
-     * 📐 间距系统 - 8px 基准
-     */
-    /** @type {Record<'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl', number>} */
-    __publicField(AppleTheme, "SPACING", {
-      xs: 4,
-      sm: 8,
-      md: 16,
-      lg: 24,
-      xl: 32,
-      xxl: 48
-    });
-    /**
-     * 🎯 圆角系统
-     */
-    /** @type {Record<'sm' | 'md' | 'lg', number>} */
-    __publicField(AppleTheme, "RADIUS", {
-      sm: 4,
-      md: 8,
-      lg: 12
-    });
-    __publicField(AppleTheme, "QUOTE_CALLOUT_NEUTRAL_BG", "#f9f9f9");
-    __publicField(AppleTheme, "QUOTE_NEUTRAL_BORDER", "#d9d9d9");
+    AppleTheme = _AppleTheme;
+    __publicField(AppleTheme, "THEME_COLORS", THEME_COLORS);
+    __publicField(AppleTheme, "THEME_COLORS_DEEP", THEME_COLORS_DEEP);
+    __publicField(AppleTheme, "FONT_SIZES", FONT_SIZES);
+    __publicField(AppleTheme, "FONTS", FONTS);
+    __publicField(AppleTheme, "THEME_CONFIGS", THEME_CONFIGS);
+    __publicField(AppleTheme, "SPACING", SPACING);
+    __publicField(AppleTheme, "RADIUS", RADIUS);
+    __publicField(AppleTheme, "QUOTE_CALLOUT_NEUTRAL_BG", QUOTE_CALLOUT_NEUTRAL_BG);
+    __publicField(AppleTheme, "QUOTE_NEUTRAL_BORDER", QUOTE_NEUTRAL_BORDER);
     APPLE_THEME_GLOBAL.AppleTheme = AppleTheme;
     if (typeof window !== "undefined") {
       window.AppleTheme = APPLE_THEME_GLOBAL.AppleTheme;
     }
-    if (typeof module2 !== "undefined" && module2.exports) {
-      module2.exports = AppleTheme;
-    }
+    apple_theme_default = AppleTheme;
   }
 });
 
@@ -53453,7 +53490,7 @@ async function loadRuntimeDependencies() {
     }
   }
   if (typeof getRuntimeValue(runtimeGlobal, "AppleTheme") === "undefined") {
-    const themeModule = await Promise.resolve().then(() => __toESM(require_apple_theme()));
+    const themeModule = await Promise.resolve().then(() => (init_apple_theme(), apple_theme_exports));
     const themeCtor = getRuntimeValue(runtimeGlobal, "AppleTheme") || getRuntimeValue(runtimeGlobal.window || null, "AppleTheme") || themeModule.default;
     if (typeof themeCtor !== "undefined") {
       assignRuntimeGlobal("AppleTheme", themeCtor);
@@ -54284,7 +54321,7 @@ function convertStandaloneImages(container, converter) {
   }
 }
 
-// services/obsidian-triplet-serializer.js
+// services/obsidian-triplet-serializer-dom.js
 var LEGACY_CALLOUT_ICON_BY_TYPE = {
   note: "\u2139\uFE0F",
   info: "\u2139\uFE0F",
@@ -54722,180 +54759,8 @@ function pruneEmptyHeadings(container) {
     }
   }
 }
-function applyThemeInlineStyles(container, converter) {
-  if (!container || !converter)
-    return;
-  const styledTags = [
-    "p",
-    "blockquote",
-    "pre",
-    "code",
-    "ul",
-    "ol",
-    "li",
-    "figure",
-    "figcaption",
-    "img",
-    "a",
-    "table",
-    "thead",
-    "th",
-    "td",
-    "hr",
-    "strong",
-    "em",
-    "del",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6"
-  ];
-  for (const tag of styledTags) {
-    const styleText = getTagStyle(converter, tag);
-    if (!styleText)
-      continue;
-    container.querySelectorAll(tag).forEach((el) => {
-      var _a5;
-      if ((_a5 = el.closest) == null ? void 0 : _a5.call(el, "svg")) {
-        return;
-      }
-      if (tag === "img" && el.getAttribute("data-owc-skip-style") === "1") {
-        return;
-      }
-      setInlineStyleIfMissing(el, styleText);
-    });
-  }
-  const liPStyle = getTagStyle(converter, "li p");
-  if (liPStyle) {
-    container.querySelectorAll("li > p").forEach((p) => {
-      var _a5;
-      if (!((_a5 = p.closest) == null ? void 0 : _a5.call(p, "svg"))) {
-        setInlineStyleIfMissing(p, liPStyle);
-      }
-    });
-  }
-}
-function formatTaskListItems(container, converter) {
-  if (!container || !converter)
-    return;
-  const activeDocument = getActiveDocument();
-  if (!activeDocument)
-    return;
-  const themeColor = converter.theme.getThemeColorValue() || "#576b95";
-  const liTaskStyle = getTagStyle(converter, "li-task") || "list-style-type: none; margin-left: -20px;";
-  container.querySelectorAll("li").forEach((li) => {
-    let target = li;
-    let firstChild = li.firstChild;
-    if (firstChild && firstChild.nodeType === 1 && firstChild.tagName === "P") {
-      target = firstChild;
-      firstChild = firstChild.firstChild;
-    }
-    if (firstChild && firstChild.nodeType === 3) {
-      const text = firstChild.textContent || "";
-      const trimmed = text.trimStart();
-      if (trimmed.startsWith("\u2611") || trimmed.startsWith("\u25A1") || trimmed.startsWith("\u2610")) {
-        const markerChar = trimmed[0];
-        const isChecked = markerChar === "\u2611";
-        li.setAttribute("style", liTaskStyle);
-        const markerIndex = text.indexOf(markerChar);
-        const preMarker = text.slice(0, markerIndex);
-        const postMarker = text.slice(markerIndex + 1).trimStart();
-        firstChild.textContent = preMarker;
-        const checkboxSpan = activeDocument.createElement("span");
-        checkboxSpan.setAttribute("style", `display: inline-block; font-size: 1.15em; font-weight: bold; margin-right: 6px; vertical-align: -0.05em; color: ${isChecked ? "#8f959e" : themeColor}; line-height: 1;`);
-        checkboxSpan.textContent = isChecked ? "\u2611" : "\u2610";
-        target.insertBefore(checkboxSpan, firstChild.nextSibling);
-        if (postMarker) {
-          const restTextNode = activeDocument.createTextNode(postMarker);
-          target.insertBefore(restTextNode, checkboxSpan.nextSibling);
-        }
-        if (isChecked) {
-          const contentSpan = activeDocument.createElement("span");
-          const checkedTaskContentStyle = "text-decoration: line-through; color: #8f959e;";
-          contentSpan.setAttribute("style", checkedTaskContentStyle);
-          let sibling = checkboxSpan.nextSibling;
-          while (sibling) {
-            const next = sibling.nextSibling;
-            if (sibling.nodeType === 1 && (sibling.tagName === "UL" || sibling.tagName === "OL")) {
-              break;
-            }
-            contentSpan.appendChild(sibling);
-            sibling = next;
-          }
-          if (sibling) {
-            target.insertBefore(contentSpan, sibling);
-          } else {
-            target.appendChild(contentSpan);
-          }
-        }
-      }
-    }
-  });
-}
-function getTableColumnCount(table) {
-  if (!table)
-    return 0;
-  const rows = Array.from(table.querySelectorAll("tr"));
-  for (const row of rows) {
-    const cells = Array.from(row.children).filter((child) => {
-      var _a5, _b;
-      const tagName = (_b = (_a5 = child.tagName) == null ? void 0 : _a5.toLowerCase) == null ? void 0 : _b.call(_a5);
-      return tagName === "th" || tagName === "td";
-    });
-    if (cells.length === 0)
-      continue;
-    return cells.reduce((total, cell) => {
-      const colspan = Number.parseInt(cell.getAttribute("colspan") || "1", 10);
-      return total + (Number.isFinite(colspan) && colspan > 0 ? colspan : 1);
-    }, 0);
-  }
-  return 0;
-}
-function getWechatTableWidth(table) {
-  const columns = getTableColumnCount(table);
-  if (!columns)
-    return 720;
-  const width = columns <= 2 ? columns * 180 + 80 : columns * 230 + 80;
-  return Math.max(360, Math.min(1200, width));
-}
-function replaceStyleDeclaration(style, property, value) {
-  const escaped = property.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const pattern = new RegExp(`(?:^|;)\\s*${escaped}\\s*:\\s*[^;]+;?`, "gi");
-  const cleaned = String(style || "").replace(pattern, ";").replace(/;{2,}/g, ";").replace(/^\s*;\s*/, "").trim();
-  const normalized = cleaned && !cleaned.endsWith(";") ? `${cleaned};` : cleaned;
-  return `${property}: ${value}; ${normalized}`.trim();
-}
-function isHorizontallyScrollableWrapper(el) {
-  if (!el || el.nodeType !== Node.ELEMENT_NODE)
-    return false;
-  const style = el.getAttribute("style") || "";
-  return /overflow-x\s*:\s*(?:auto|scroll)/i.test(style);
-}
-function wrapTablesForHorizontalScroll(container, converter) {
-  if (!container)
-    return;
-  const activeDocument = getActiveDocument();
-  if (!activeDocument)
-    return;
-  const wrapperStyle = getTagStyle(converter, "table-wrapper") || "display: block; box-sizing: border-box; width: 100%; max-width: 100%; overflow-x: scroll; overflow-y: hidden; -webkit-overflow-scrolling: touch; margin: 16px 0; padding-bottom: 10px;";
-  Array.from(container.querySelectorAll("table")).forEach((table) => {
-    const width = getWechatTableWidth(table);
-    let tableStyle = table.getAttribute("style") || getTagStyle(converter, "table") || "";
-    tableStyle = replaceStyleDeclaration(tableStyle, "width", `${width}px`);
-    tableStyle = replaceStyleDeclaration(tableStyle, "min-width", "100%");
-    tableStyle = replaceStyleDeclaration(tableStyle, "max-width", "none");
-    table.setAttribute("style", tableStyle);
-    const parent = table.parentElement;
-    if (isHorizontallyScrollableWrapper(parent))
-      return;
-    const wrapper = activeDocument.createElement("section");
-    wrapper.setAttribute("style", wrapperStyle);
-    table.replaceWith(wrapper);
-    wrapper.appendChild(table);
-  });
-}
+
+// services/obsidian-triplet-serializer-parity.js
 function stripDangerousTags(container, { preserveSvgStyleTags = false } = {}) {
   if (!container)
     return;
@@ -55190,6 +55055,183 @@ function injectPreRenderedMathFormulas(html, formulas) {
     }
   }
   return result;
+}
+
+// services/obsidian-triplet-serializer.js
+function applyThemeInlineStyles(container, converter) {
+  if (!container || !converter)
+    return;
+  const styledTags = [
+    "p",
+    "blockquote",
+    "pre",
+    "code",
+    "ul",
+    "ol",
+    "li",
+    "figure",
+    "figcaption",
+    "img",
+    "a",
+    "table",
+    "thead",
+    "th",
+    "td",
+    "hr",
+    "strong",
+    "em",
+    "del",
+    "mark",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6"
+  ];
+  for (const tag of styledTags) {
+    const styleText = getTagStyle(converter, tag);
+    if (!styleText)
+      continue;
+    container.querySelectorAll(tag).forEach((el) => {
+      var _a5;
+      if ((_a5 = el.closest) == null ? void 0 : _a5.call(el, "svg")) {
+        return;
+      }
+      if (tag === "img" && el.getAttribute("data-owc-skip-style") === "1") {
+        return;
+      }
+      setInlineStyleIfMissing(el, styleText);
+    });
+  }
+  const liPStyle = getTagStyle(converter, "li p");
+  if (liPStyle) {
+    container.querySelectorAll("li > p").forEach((p) => {
+      var _a5;
+      if (!((_a5 = p.closest) == null ? void 0 : _a5.call(p, "svg"))) {
+        setInlineStyleIfMissing(p, liPStyle);
+      }
+    });
+  }
+}
+function formatTaskListItems(container, converter) {
+  if (!container || !converter)
+    return;
+  const activeDocument = getActiveDocument();
+  if (!activeDocument)
+    return;
+  const themeColor = converter.theme.getThemeColorValue() || "#576b95";
+  const liTaskStyle = getTagStyle(converter, "li-task") || "list-style-type: none; margin-left: -20px;";
+  container.querySelectorAll("li").forEach((li) => {
+    let target = li;
+    let firstChild = li.firstChild;
+    if (firstChild && firstChild.nodeType === 1 && firstChild.tagName === "P") {
+      target = firstChild;
+      firstChild = firstChild.firstChild;
+    }
+    if (firstChild && firstChild.nodeType === 3) {
+      const text = firstChild.textContent || "";
+      const trimmed = text.trimStart();
+      if (trimmed.startsWith("\u2611") || trimmed.startsWith("\u25A1") || trimmed.startsWith("\u2610")) {
+        const markerChar = trimmed[0];
+        const isChecked = markerChar === "\u2611";
+        li.setAttribute("style", liTaskStyle);
+        const markerIndex = text.indexOf(markerChar);
+        const preMarker = text.slice(0, markerIndex);
+        const postMarker = text.slice(markerIndex + 1).trimStart();
+        firstChild.textContent = preMarker;
+        const checkboxSpan = activeDocument.createElement("span");
+        checkboxSpan.setAttribute("style", `display: inline-block; font-size: 1.15em; font-weight: bold; margin-right: 6px; vertical-align: -0.05em; color: ${isChecked ? "#8f959e" : themeColor}; line-height: 1;`);
+        checkboxSpan.textContent = isChecked ? "\u2611" : "\u2610";
+        target.insertBefore(checkboxSpan, firstChild.nextSibling);
+        if (postMarker) {
+          const restTextNode = activeDocument.createTextNode(postMarker);
+          target.insertBefore(restTextNode, checkboxSpan.nextSibling);
+        }
+        if (isChecked) {
+          const contentSpan = activeDocument.createElement("span");
+          const checkedTaskContentStyle = "text-decoration: line-through; color: #8f959e;";
+          contentSpan.setAttribute("style", checkedTaskContentStyle);
+          let sibling = checkboxSpan.nextSibling;
+          while (sibling) {
+            const next = sibling.nextSibling;
+            if (sibling.nodeType === 1 && (sibling.tagName === "UL" || sibling.tagName === "OL")) {
+              break;
+            }
+            contentSpan.appendChild(sibling);
+            sibling = next;
+          }
+          if (sibling) {
+            target.insertBefore(contentSpan, sibling);
+          } else {
+            target.appendChild(contentSpan);
+          }
+        }
+      }
+    }
+  });
+}
+function getTableColumnCount(table) {
+  if (!table)
+    return 0;
+  const rows = Array.from(table.querySelectorAll("tr"));
+  for (const row of rows) {
+    const cells = Array.from(row.children).filter((child) => {
+      var _a5, _b;
+      const tagName = (_b = (_a5 = child.tagName) == null ? void 0 : _a5.toLowerCase) == null ? void 0 : _b.call(_a5);
+      return tagName === "th" || tagName === "td";
+    });
+    if (cells.length === 0)
+      continue;
+    return cells.reduce((total, cell) => {
+      const colspan = Number.parseInt(cell.getAttribute("colspan") || "1", 10);
+      return total + (Number.isFinite(colspan) && colspan > 0 ? colspan : 1);
+    }, 0);
+  }
+  return 0;
+}
+function getWechatTableWidth(table) {
+  const columns = getTableColumnCount(table);
+  if (!columns)
+    return 720;
+  const width = columns <= 2 ? columns * 180 + 80 : columns * 230 + 80;
+  return Math.max(360, Math.min(1200, width));
+}
+function replaceStyleDeclaration(style, property, value) {
+  const escaped = property.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`(?:^|;)\\s*${escaped}\\s*:\\s*[^;]+;?`, "gi");
+  const cleaned = String(style || "").replace(pattern, ";").replace(/;{2,}/g, ";").replace(/^\s*;\s*/, "").trim();
+  const normalized = cleaned && !cleaned.endsWith(";") ? `${cleaned};` : cleaned;
+  return `${property}: ${value}; ${normalized}`.trim();
+}
+function isHorizontallyScrollableWrapper(el) {
+  if (!el || el.nodeType !== Node.ELEMENT_NODE)
+    return false;
+  const style = el.getAttribute("style") || "";
+  return /overflow-x\s*:\s*(?:auto|scroll)/i.test(style);
+}
+function wrapTablesForHorizontalScroll(container, converter) {
+  if (!container)
+    return;
+  const activeDocument = getActiveDocument();
+  if (!activeDocument)
+    return;
+  const wrapperStyle = getTagStyle(converter, "table-wrapper") || "display: block; box-sizing: border-box; width: 100%; max-width: 100%; overflow-x: scroll; overflow-y: hidden; -webkit-overflow-scrolling: touch; margin: 16px 0; padding-bottom: 10px;";
+  Array.from(container.querySelectorAll("table")).forEach((table) => {
+    const width = getWechatTableWidth(table);
+    let tableStyle = table.getAttribute("style") || getTagStyle(converter, "table") || "";
+    tableStyle = replaceStyleDeclaration(tableStyle, "width", `${width}px`);
+    tableStyle = replaceStyleDeclaration(tableStyle, "min-width", "100%");
+    tableStyle = replaceStyleDeclaration(tableStyle, "max-width", "none");
+    table.setAttribute("style", tableStyle);
+    const parent = table.parentElement;
+    if (isHorizontallyScrollableWrapper(parent))
+      return;
+    const wrapper = activeDocument.createElement("section");
+    wrapper.setAttribute("style", wrapperStyle);
+    table.replaceWith(wrapper);
+    wrapper.appendChild(table);
+  });
 }
 function serializeObsidianRenderedHtml({
   root,
@@ -71285,39 +71327,11 @@ function getImageFileNameFromSrc(src) {
   return value.split("/").pop() || value;
 }
 
-// services/feishu-sync.js
-var FEISHU_LOCAL_IMAGE_PLACEHOLDER_BASE = "https://obsidian-wechat-converter.invalid/feishu-local-image";
-function createFeishuLocalImagePlaceholder(asset) {
-  const rawName = String((asset == null ? void 0 : asset.filename) || "").trim();
-  const extensionMatch = rawName.match(/\.([a-z0-9]+)$/i);
-  const extension = extensionMatch ? extensionMatch[1].toLowerCase() : "png";
-  return `${FEISHU_LOCAL_IMAGE_PLACEHOLDER_BASE}/${(asset == null ? void 0 : asset.id) || "image"}.${extension}`;
-}
-function arrayBufferToBase64(buffer) {
-  let binary = "";
-  const bytes = new Uint8Array(buffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return window.btoa(binary);
-}
+// services/feishu-block-sync.js
 function getErrorText(error) {
   if (error instanceof Error)
     return error.message || String(error);
   return String(error || "");
-}
-function isRecoverableFeishuHistoryError(error) {
-  const text = getErrorText(error);
-  return text.includes("1770003") || /resource deleted/i.test(text) || /HTTP 404|404 page not found|not found/i.test(text);
-}
-function isFeishuBlockSchemaMismatchError(error) {
-  const text = getErrorText(error);
-  return text.includes("1770006") || /schema mismatch/i.test(text);
-}
-function isFeishuBlockWriteError(error) {
-  const text = getErrorText(error);
-  return isFeishuBlockSchemaMismatchError(error) || text.includes("9499") || /Invalid parameter/i.test(text) || /插入飞书文档块|插入文档块|插入内容块|插入嵌套内容块/.test(text);
 }
 function getFeishuRootBlockId(documentId) {
   return documentId;
@@ -71580,6 +71594,41 @@ async function deleteFeishuChildRange({ client, docToken, parentId, startIndex, 
     return;
   await client.batchDeleteBlocks(docToken, parentId, startIndex, endIndex);
 }
+
+// services/feishu-sync.js
+var FEISHU_LOCAL_IMAGE_PLACEHOLDER_BASE = "https://obsidian-wechat-converter.invalid/feishu-local-image";
+function createFeishuLocalImagePlaceholder(asset) {
+  const rawName = String((asset == null ? void 0 : asset.filename) || "").trim();
+  const extensionMatch = rawName.match(/\.([a-z0-9]+)$/i);
+  const extension = extensionMatch ? extensionMatch[1].toLowerCase() : "png";
+  return `${FEISHU_LOCAL_IMAGE_PLACEHOLDER_BASE}/${(asset == null ? void 0 : asset.id) || "image"}.${extension}`;
+}
+function arrayBufferToBase64(buffer) {
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary);
+}
+function getErrorText2(error) {
+  if (error instanceof Error)
+    return error.message || String(error);
+  return String(error || "");
+}
+function isRecoverableFeishuHistoryError(error) {
+  const text = getErrorText2(error);
+  return text.includes("1770003") || /resource deleted/i.test(text) || /HTTP 404|404 page not found|not found/i.test(text);
+}
+function isFeishuBlockSchemaMismatchError(error) {
+  const text = getErrorText2(error);
+  return text.includes("1770006") || /schema mismatch/i.test(text);
+}
+function isFeishuBlockWriteError(error) {
+  const text = getErrorText2(error);
+  return isFeishuBlockSchemaMismatchError(error) || text.includes("9499") || /Invalid parameter/i.test(text) || /插入飞书文档块|插入文档块|插入内容块|插入嵌套内容块/.test(text);
+}
 async function importTemporaryFeishuDocument({ client, title, markdown, folderToken, notify }) {
   notify("uploading_temp", "\u6B63\u5728\u751F\u6210\u7528\u4E8E\u8986\u76D6\u66F4\u65B0\u7684\u4E34\u65F6 Markdown \u6587\u4EF6...");
   const textEncoder = new TextEncoder();
@@ -71658,6 +71707,7 @@ async function syncNoteToFeishu({
   settings,
   activeFile,
   markdown,
+  titleOverride,
   onProgress,
   requestUrl,
   mermaidRenderMode = "source",
@@ -71671,10 +71721,11 @@ async function syncNoteToFeishu({
   };
   const obsidianApi2 = getActiveWindowValue("obsidian");
   const requestUrlImpl = requestUrl || (obsidianApi2 && typeof obsidianApi2.requestUrl === "function" ? obsidianApi2.requestUrl : null);
-  let title = parseYamlTitle(markdown);
+  const normalizedTitleOverride = typeof titleOverride === "string" ? titleOverride.trim() : "";
+  let title = normalizedTitleOverride || parseYamlTitle(markdown);
   if (!title)
     title = activeFile.basename;
-  title = title.substring(0, 250);
+  title = String(title).trim().substring(0, 250);
   const client = new FeishuApiClient(settings.appId, settings.appSecret, requestUrlImpl, {
     onApiCall: () => {
       incrementFeishuApiUsage(settings);
@@ -71734,6 +71785,7 @@ async function syncNoteToFeishu({
   let docUrl = "";
   let shouldTransferOwnership = false;
   let didUpdateExistingDocument = false;
+  let titleUpdateWarning;
   const importAsNewDocument = async () => {
     notify("uploading_temp", "\u6B63\u5728\u751F\u6210\u4E34\u65F6 Markdown \u4E0A\u4F20\u6587\u4EF6...");
     const textEncoder = new TextEncoder();
@@ -71818,6 +71870,7 @@ async function syncNoteToFeishu({
           historyItem.title = title;
         } catch (err) {
           console.warn("[\u98DE\u4E66\u540C\u6B65] \u91CD\u547D\u540D\u5931\u8D25:", err);
+          titleUpdateWarning = { code: "title_update_failed" };
         }
       }
       didUpdateExistingDocument = true;
@@ -71915,6 +71968,7 @@ async function syncNoteToFeishu({
     title,
     url: docUrl,
     docToken,
+    titleUpdateWarning,
     transferOwnerWarning,
     imageSummary
   };
@@ -71944,6 +71998,9 @@ function formatFeishuImageWarning(imageSummary) {
 }
 function getFeishuResultWarnings(result) {
   const warnings = [];
+  if (result == null ? void 0 : result.titleUpdateWarning) {
+    warnings.push("\u6B63\u6587\u5DF2\u66F4\u65B0\uFF0C\u6807\u9898\u672A\u80FD\u4FEE\u6539\u3002");
+  }
   if (result == null ? void 0 : result.transferOwnerWarning) {
     warnings.push("\u6587\u6863\u5DF2\u540C\u6B65\uFF0C\u4F46\u6240\u6709\u6743\u8F6C\u79FB\u672A\u5B8C\u6210\u3002\u4F60\u4ECD\u53EF\u4EE5\u7167\u5E38\u4F7F\u7528\u8BE5\u6587\u6863\uFF1B\u5982\u9700\u81EA\u52A8\u8F6C\u79FB\uFF0C\u8BF7\u68C0\u67E5\u98DE\u4E66 User ID \u548C\u5E94\u7528\u6743\u9650\u3002");
   }
@@ -71980,10 +72037,22 @@ function bindTransientScrollbar(scrollEl) {
   };
   scrollEl.addEventListener("scroll", showScrollbar, { passive: true });
 }
+function scrollFeishuResultIntoView(scrollEl, requestFrame) {
+  const scrollToResult = () => {
+    scrollEl.scrollTop = scrollEl.scrollHeight;
+  };
+  if (typeof requestFrame === "function") {
+    requestFrame(scrollToResult);
+  } else {
+    scrollToResult();
+  }
+}
 function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
   const obsidian = options.obsidianApi || view.plugin.obsidianApi || getActiveWindowValue("obsidian") || {};
   const Setting2 = obsidian.Setting;
   const Notice2 = obsidian.Notice;
+  const setIcon = obsidian.setIcon;
+  const requestFrame = options.requestAnimationFrame || (typeof window.requestAnimationFrame === "function" ? (callback) => window.requestAnimationFrame(callback) : void 0);
   const { plugin } = view;
   const settings = plugin.settings.feishuSync;
   containerEl.empty();
@@ -72045,9 +72114,11 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
   });
   const settingsSection = contentWrapper.createDiv({ cls: "wechat-modal-section wechat-feishu-section wechat-feishu-card-section" });
   let docTitle = activeFile.basename;
+  let docTitleEdited = false;
   const titleSetting = new Setting2(settingsSection).setName("\u6587\u6863\u6807\u9898").setDesc("\u53D1\u5E03\u81F3\u98DE\u4E66\u65F6\u7684\u6587\u6863\u6807\u9898\u3002\u9ED8\u8BA4\u4F7F\u7528\u7B14\u8BB0\u6587\u4EF6\u540D\uFF0C\u652F\u6301\u81EA\u5B9A\u4E49\u3002").addText(
     (text) => text.setPlaceholder("\u8BF7\u8F93\u5165\u6587\u6863\u6807\u9898").setValue(docTitle).onChange((val) => {
-      docTitle = val.trim();
+      docTitleEdited = true;
+      docTitle = val;
     })
   );
   titleSetting.settingEl.addClass("wechat-feishu-title-setting");
@@ -72144,7 +72215,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
       return;
     }
     const rebound = rebindFeishuHistoryByPath(settings, activeFile.path, {
-      title: docTitle || activeFile.basename,
+      title: docTitle.trim() || activeFile.basename,
       url: parsed.url,
       docToken: parsed.docToken,
       uploadTime: new Date().toISOString()
@@ -72194,6 +72265,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
         settings,
         activeFile,
         markdown,
+        ...docTitleEdited ? { titleOverride: docTitle } : {},
         onProgress: (stage, message) => {
           updateFeishuNotice(progressNotice, message);
         },
@@ -72207,7 +72279,15 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
       const warnings = getFeishuResultWarnings(result);
       resultCard.addClass(warnings.length ? "has-warning" : "is-success");
       resultCard.removeClass(warnings.length ? "is-success" : "has-warning");
-      resultCard.createEl("h4", {
+      const resultHeading = resultCard.createDiv({ cls: "wechat-feishu-result-heading" });
+      const resultIcon = resultHeading.createSpan({
+        cls: "wechat-feishu-result-icon",
+        attr: { "aria-hidden": "true" }
+      });
+      if (typeof setIcon === "function") {
+        setIcon(resultIcon, "circle-check");
+      }
+      resultHeading.createEl("h4", {
         text: warnings.length ? "\u540C\u6B65\u5B8C\u6210" : "\u540C\u6B65\u6210\u529F",
         cls: "wechat-feishu-result-title"
       });
@@ -72241,6 +72321,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
         }
       };
       resultCard.removeClass("is-hidden");
+      scrollFeishuResultIntoView(contentWrapper, requestFrame);
       cancelBtn.disabled = false;
       cancelBtn.setText("\u5173\u95ED");
       syncBtn.setCssStyles({ display: "none" });
@@ -79674,9 +79755,12 @@ var wechatSettingsMethods = {
     }));
     let customCssEnabled = !!this.plugin.settings.enableCustomCss;
     new Setting(containerEl).setName("\u542F\u7528\u81EA\u5B9A\u4E49 CSS").setDesc("\u5F00\u542F\u540E\uFF0C\u4E0B\u65B9\u8F93\u5165\u7684 CSS \u5C06\u8986\u76D6\u5F53\u524D\u4E3B\u9898\u7684\u90E8\u5206\u6837\u5F0F\u3002").addToggle((toggle) => toggle.setValue(customCssEnabled).onChange(async (value) => {
+      var _a6, _b2;
       customCssEnabled = value;
       this.plugin.settings.enableCustomCss = value;
-      await this.plugin.saveSettings();
+      const saved = await this.plugin.saveSettings();
+      if (saved)
+        (_b2 = (_a6 = this.plugin).scheduleCustomCssPreviewNotice) == null ? void 0 : _b2.call(_a6);
       refreshSettingTabCompat(this);
     }));
     if (!customCssEnabled) {
@@ -79687,8 +79771,11 @@ var wechatSettingsMethods = {
     textareaSetting.addTextArea((text) => {
       var _a6, _b2;
       text.setPlaceholder("/* \u5728\u6B64\u8F93\u5165\u4F60\u7684\u81EA\u5B9A\u4E49 CSS */\np { color: #333; }").setValue(this.plugin.settings.customCss || "").onChange(async (value) => {
+        var _a7, _b3;
         this.plugin.settings.customCss = value;
-        await this.plugin.saveSettings();
+        const saved = await this.plugin.saveSettings();
+        if (saved)
+          (_b3 = (_a7 = this.plugin).scheduleCustomCssPreviewNotice) == null ? void 0 : _b3.call(_a7);
       });
       if (text.inputEl) {
         (_b2 = (_a6 = text.inputEl).setCssStyles) == null ? void 0 : _b2.call(_a6, {
@@ -79700,8 +79787,11 @@ var wechatSettingsMethods = {
       }
     });
     new Setting(containerEl).setName("\u6216\u4ECE\u7B14\u8BB0\u8BFB\u53D6 CSS").setDesc("\u586B\u5199 vault \u5185\u7B14\u8BB0\u8DEF\u5F84\uFF08\u5982 Meta/custom.css.md\uFF09\uFF0C\u63D2\u4EF6\u4F1A\u4F18\u5148\u8BFB\u53D6\u8BE5\u7B14\u8BB0\u5185\u5BB9\u4F5C\u4E3A CSS\u3002\u8BFB\u53D6\u5931\u8D25\u65F6\u56DE\u9000\u5230\u4E0A\u65B9 textarea\u3002").addText((text) => text.setPlaceholder("Meta/custom-css.md").setValue(this.plugin.settings.customCssNote || "").onChange(async (value) => {
+      var _a6, _b2;
       this.plugin.settings.customCssNote = value.trim();
-      await this.plugin.saveSettings();
+      const saved = await this.plugin.saveSettings();
+      if (saved)
+        (_b2 = (_a6 = this.plugin).scheduleCustomCssPreviewNotice) == null ? void 0 : _b2.call(_a6);
     }));
   }
 };
@@ -80476,10 +80566,13 @@ function saveArticleLayoutStateToSettings(pluginSettings, sourcePath = "", nextS
 }
 
 // input.js
+var CUSTOM_CSS_PREVIEW_NOTICE = "\u81EA\u5B9A\u4E49 CSS \u5DF2\u66F4\u65B0\uFF0C\u8BF7\u5173\u95ED\u5E76\u91CD\u65B0\u6253\u5F00\u53D1\u5E03\u52A9\u624B\u9762\u677F\u4EE5\u5237\u65B0\u9884\u89C8\u3002";
+var CUSTOM_CSS_PREVIEW_NOTICE_DELAY_MS = 300;
 var AppleStylePlugin = class extends Plugin {
   async onload() {
     console.debug("\u{1F4DD} \u6B63\u5728\u52A0\u8F7D Obsidian \u53D1\u5E03\u52A9\u624B...");
     this.obsidianApi = obsidianApi;
+    this._customCssPreviewNoticeTimer = 0;
     await this.loadSettings();
     if (typeof window !== "undefined") {
       delete window.AppleTheme;
@@ -80534,6 +80627,11 @@ var AppleStylePlugin = class extends Plugin {
               });
             }
           }
+        })
+      );
+      this.registerEvent(
+        this.app.vault.on("modify", (file) => {
+          this.handleCustomCssNoteModified(file);
         })
       );
     }
@@ -80615,6 +80713,36 @@ var AppleStylePlugin = class extends Plugin {
       return leaves[0].view;
     }
     return null;
+  }
+  /**
+   * Coalesces repeated custom CSS changes into one notice while a preview is open.
+   * This intentionally does not rebuild or mutate the existing preview.
+   * @returns {boolean} Whether a notice was scheduled
+   */
+  scheduleCustomCssPreviewNotice() {
+    if (!this.getConverterView() || typeof window === "undefined")
+      return false;
+    if (this._customCssPreviewNoticeTimer) {
+      window.clearTimeout(this._customCssPreviewNoticeTimer);
+    }
+    this._customCssPreviewNoticeTimer = window.setTimeout(() => {
+      this._customCssPreviewNoticeTimer = 0;
+      if (this.getConverterView()) {
+        new Notice(CUSTOM_CSS_PREVIEW_NOTICE);
+      }
+    }, CUSTOM_CSS_PREVIEW_NOTICE_DELAY_MS);
+    return true;
+  }
+  /**
+   * @param {{ path?: string } | null | undefined} file
+   * @returns {boolean} Whether the modified file matched the configured CSS note
+   */
+  handleCustomCssNoteModified(file) {
+    const configuredPath = String(getPluginSettings(this).customCssNote || "").trim();
+    if (!configuredPath || (file == null ? void 0 : file.path) !== configuredPath)
+      return false;
+    this.scheduleCustomCssPreviewNotice();
+    return true;
   }
   openExternalUrl(url) {
     var _a5;
@@ -80744,6 +80872,10 @@ var AppleStylePlugin = class extends Plugin {
   }
   async onunload() {
     var _a5;
+    if (this._customCssPreviewNoticeTimer && typeof window !== "undefined") {
+      window.clearTimeout(this._customCssPreviewNoticeTimer);
+      this._customCssPreviewNoticeTimer = 0;
+    }
     if ((_a5 = this._wechatSyncBridgeService) == null ? void 0 : _a5.stop) {
       await this._wechatSyncBridgeService.stop().catch((error) => {
         console.warn("\u505C\u6B62\u6D4F\u89C8\u5668\u63D2\u4EF6\u8FDE\u63A5\u5931\u8D25:", error);

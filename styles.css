@@ -4523,22 +4523,44 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
 }
 
 .wechat-feishu-result-card.is-success {
-  border-color: color-mix(in srgb, var(--text-success) 35%, var(--background-modifier-border));
+  border-color: color-mix(in srgb, var(--text-success) 18%, var(--background-modifier-border));
 }
 
 .wechat-feishu-result-card.has-warning {
   border-color: color-mix(in srgb, var(--text-warning) 35%, var(--background-modifier-border));
 }
 
-.wechat-feishu-result-title {
-  margin: 0 0 6px;
+.wechat-feishu-result-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.wechat-feishu-result-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
   color: var(--text-success);
+}
+
+.wechat-feishu-result-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.wechat-feishu-result-title {
+  margin: 0;
+  color: var(--text-normal);
   font-size: 16px;
   font-weight: 700;
 }
 
 .wechat-feishu-result-card.has-warning .wechat-feishu-result-title {
-  color: var(--text-warning);
+  color: var(--text-normal);
 }
 
 .wechat-feishu-result-desc {
@@ -4718,7 +4740,6 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   border-color: var(--apple-accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--apple-accent) 18%, transparent);
 }
-
 /*
 ## 核心功能
 

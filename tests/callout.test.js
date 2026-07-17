@@ -40,12 +40,12 @@ global.markdownit = function(_options) {
 // Load theme and converter via eval (simulating the plugin's dynamic loading)
 const fs = require('fs');
 const path = require('path');
+const { getBundledThemeSource } = require('./helpers/theme-runtime-source.js');
 
-const themePath = path.resolve(__dirname, '../themes/apple-theme.js');
 const converterPath = path.resolve(__dirname, '../converter.js');
 
 // Execute theme first (defines window.AppleTheme)
-eval(fs.readFileSync(themePath, 'utf-8'));
+eval(getBundledThemeSource());
 
 // Execute converter (defines window.AppleStyleConverter and CALLOUT_ICONS)
 eval(fs.readFileSync(converterPath, 'utf-8'));

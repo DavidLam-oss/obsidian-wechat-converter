@@ -88,6 +88,9 @@ function formatFeishuImageWarning(imageSummary) {
  */
 function getFeishuResultWarnings(result) {
   const warnings = [];
+  if (result?.titleUpdateWarning) {
+    warnings.push('正文已更新，标题未能修改。');
+  }
   if (result?.transferOwnerWarning) {
     warnings.push('文档已同步，但所有权转移未完成。你仍可以照常使用该文档；如需自动转移，请检查飞书 User ID 和应用权限。');
   }
@@ -140,6 +143,21 @@ function bindTransientScrollbar(scrollEl) {
 }
 
 /**
+ * @param {HTMLElement} scrollEl
+ * @param {(callback: FrameRequestCallback) => number | void} [requestFrame]
+ */
+function scrollFeishuResultIntoView(scrollEl, requestFrame) {
+  const scrollToResult = () => {
+    scrollEl.scrollTop = scrollEl.scrollHeight;
+  };
+  if (typeof requestFrame === 'function') {
+    requestFrame(scrollToResult);
+  } else {
+    scrollToResult();
+  }
+}
+
+/**
  * Renders the Feishu publish tab content.
  * @param {any} view AppleStyleView instance
  * @param {any} modal Obsidian Modal instance
@@ -150,6 +168,12 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
   const obsidian = options.obsidianApi || view.plugin.obsidianApi || getActiveWindowValue('obsidian') || {};
   const Setting = obsidian.Setting;
   const Notice = obsidian.Notice;
+  const setIcon = obsidian.setIcon;
+  const requestFrame = options.requestAnimationFrame || (
+    typeof window.requestAnimationFrame === 'function'
+      ? (callback) => window.requestAnimationFrame(callback)
+      : undefined
+  );
 
   const { plugin } = view;
   const settings = plugin.settings.feishuSync;
@@ -237,6 +261,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
 
   // 5. Title setting
   let docTitle = activeFile.basename;
+  let docTitleEdited = false;
   const titleSetting = new Setting(settingsSection)
     .setName('文档标题')
     .setDesc('发布至飞书时的文档标题。默认使用笔记文件名，支持自定义。')
@@ -244,7 +269,8 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
       .setPlaceholder('请输入文档标题')
       .setValue(docTitle)
       .onChange((val) => {
-        docTitle = val.trim();
+        docTitleEdited = true;
+        docTitle = val;
       })
     );
   titleSetting.settingEl.addClass('wechat-feishu-title-setting');
@@ -351,7 +377,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
     }
 
     const rebound = rebindFeishuHistoryByPath(settings, activeFile.path, {
-      title: docTitle || activeFile.basename,
+      title: docTitle.trim() || activeFile.basename,
       url: parsed.url,
       docToken: parsed.docToken,
       uploadTime: new Date().toISOString(),
@@ -412,6 +438,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
         settings,
         activeFile,
         markdown,
+        ...(docTitleEdited ? { titleOverride: docTitle } : {}),
         onProgress: (stage, message) => {
           updateFeishuNotice(progressNotice, message);
         },
@@ -429,7 +456,15 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
       resultCard.addClass(warnings.length ? 'has-warning' : 'is-success');
       resultCard.removeClass(warnings.length ? 'is-success' : 'has-warning');
 
-      resultCard.createEl('h4', {
+      const resultHeading = resultCard.createDiv({ cls: 'wechat-feishu-result-heading' });
+      const resultIcon = resultHeading.createSpan({
+        cls: 'wechat-feishu-result-icon',
+        attr: { 'aria-hidden': 'true' },
+      });
+      if (typeof setIcon === 'function') {
+        setIcon(resultIcon, 'circle-check');
+      }
+      resultHeading.createEl('h4', {
         text: warnings.length ? '同步完成' : '同步成功',
         cls: 'wechat-feishu-result-title',
       });
@@ -470,6 +505,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
       };
 
       resultCard.removeClass('is-hidden');
+      scrollFeishuResultIntoView(contentWrapper, requestFrame);
       
       // Re-enable cancel button to let them close
       cancelBtn.disabled = false;

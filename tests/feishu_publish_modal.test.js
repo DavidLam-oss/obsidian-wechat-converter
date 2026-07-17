@@ -156,13 +156,17 @@ describe('Feishu publish modal UX', () => {
     const view = makeView();
     const modal = { close: vi.fn() };
     const containerEl = applyExtensions(document.createElement('div'));
+    const requestAnimationFrame = vi.fn((callback) => callback());
+    const setIcon = vi.fn((element, iconName) => element.setAttribute('data-icon', iconName));
 
     renderFeishuPublishTab(view, modal, containerEl, {
       obsidianApi: {
         Setting: TestSetting,
         Notice: TestNotice,
         requestUrl: vi.fn(),
+        setIcon,
       },
+      requestAnimationFrame,
     });
 
     const syncBtn = Array.from(containerEl.querySelectorAll('button'))
@@ -181,6 +185,8 @@ describe('Feishu publish modal UX', () => {
     expect(resultCard.textContent).not.toContain('field_validation failed');
     expect(resultCard.textContent).not.toContain('飞书链接:');
     expect(resultCard.querySelector('a')).toBeNull();
+    expect(resultCard.querySelector('.wechat-feishu-result-icon')?.getAttribute('data-icon')).toBe('circle-check');
+    expect(setIcon).toHaveBeenCalledTimes(1);
 
     const actionButtons = Array.from(resultCard.querySelectorAll('button')).map((button) => button.textContent);
     expect(actionButtons).toEqual(['在浏览器中打开', '复制链接']);
@@ -194,11 +200,142 @@ describe('Feishu publish modal UX', () => {
     expect(containerEl.classList.contains('wechat-feishu-modal-content')).toBe(true);
     expect(buttonRow.parentElement).toBe(shell);
     expect(content.contains(buttonRow)).toBe(false);
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(1);
     content.dispatchEvent(new Event('scroll'));
     expect(content.classList.contains('is-scrolling')).toBe(true);
     expect(containerEl.textContent).not.toContain('发布设置');
     expect(containerEl.textContent).not.toContain('同步目标文件夹');
     expect(containerEl.textContent).not.toContain('Token: folder-token');
+  });
+
+  it('scrolls successful and warning results to the bottom on the next frame', async () => {
+    const outcomes = [
+      {},
+      { titleUpdateWarning: { code: 'title_update_failed' } },
+    ];
+
+    for (const extraResult of outcomes) {
+      syncNoteToFeishu.mockResolvedValue({
+        title: '飞书测试',
+        url: 'https://feishu.cn/docx/doc-token',
+        docToken: 'doc-token',
+        imageSummary: { uploaded: 0, skipped: 0, failed: 0, details: [] },
+        ...extraResult,
+      });
+      const view = makeView();
+      const containerEl = applyExtensions(document.createElement('div'));
+      let nextFrame;
+      renderFeishuPublishTab(view, { close: vi.fn() }, containerEl, {
+        obsidianApi: { Setting: TestSetting, Notice: TestNotice, requestUrl: vi.fn() },
+        requestAnimationFrame: vi.fn((callback) => {
+          nextFrame = callback;
+        }),
+      });
+      const content = containerEl.querySelector('.wechat-feishu-publish-content');
+      Object.defineProperty(content, 'scrollHeight', { value: 840, configurable: true });
+
+      await Array.from(containerEl.querySelectorAll('button'))
+        .find((button) => button.textContent === '同步至飞书').onclick();
+      expect(content.scrollTop).toBe(0);
+      nextFrame();
+      expect(content.scrollTop).toBe(840);
+    }
+  });
+
+  it('does not force scrolling when Feishu sync fails', async () => {
+    syncNoteToFeishu.mockRejectedValue(new Error('network unavailable'));
+    const view = makeView();
+    const containerEl = applyExtensions(document.createElement('div'));
+    const requestAnimationFrame = vi.fn();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    renderFeishuPublishTab(view, { close: vi.fn() }, containerEl, {
+      obsidianApi: { Setting: TestSetting, Notice: TestNotice, requestUrl: vi.fn() },
+      requestAnimationFrame,
+    });
+    await Array.from(containerEl.querySelectorAll('button'))
+      .find((button) => button.textContent === '同步至飞书').onclick();
+
+    expect(requestAnimationFrame).not.toHaveBeenCalled();
+    expect(containerEl.querySelector('.wechat-feishu-result-card').classList.contains('is-hidden')).toBe(true);
+    errorSpy.mockRestore();
+  });
+
+  it('passes a title override only after the user edits the title field', async () => {
+    syncNoteToFeishu.mockResolvedValue({
+      title: '手动标题',
+      url: 'https://feishu.cn/docx/doc-token',
+      docToken: 'doc-token',
+      imageSummary: { uploaded: 0, skipped: 0, failed: 0, details: [] },
+    });
+
+    const untouchedView = makeView();
+    const untouchedContainer = applyExtensions(document.createElement('div'));
+    renderFeishuPublishTab(untouchedView, { close: vi.fn() }, untouchedContainer, {
+      obsidianApi: { Setting: TestSetting, Notice: TestNotice, requestUrl: vi.fn() },
+    });
+    await Array.from(untouchedContainer.querySelectorAll('button'))
+      .find((button) => button.textContent === '同步至飞书').onclick();
+    expect(syncNoteToFeishu.mock.calls[0][0]).not.toHaveProperty('titleOverride');
+
+    syncNoteToFeishu.mockClear();
+    const editedView = makeView();
+    const editedContainer = applyExtensions(document.createElement('div'));
+    renderFeishuPublishTab(editedView, { close: vi.fn() }, editedContainer, {
+      obsidianApi: { Setting: TestSetting, Notice: TestNotice, requestUrl: vi.fn() },
+    });
+    const titleInput = editedContainer.querySelector('.wechat-feishu-title-setting input');
+    titleInput.value = '  手动标题  ';
+    titleInput.oninput();
+    await Array.from(editedContainer.querySelectorAll('button'))
+      .find((button) => button.textContent === '同步至飞书').onclick();
+    expect(syncNoteToFeishu).toHaveBeenCalledWith(expect.objectContaining({
+      titleOverride: '  手动标题  ',
+    }));
+  });
+
+  it('passes an edited blank title so the service can restore automatic title resolution', async () => {
+    syncNoteToFeishu.mockResolvedValue({
+      title: 'Frontmatter 标题',
+      url: 'https://feishu.cn/docx/doc-token',
+      docToken: 'doc-token',
+      imageSummary: { uploaded: 0, skipped: 0, failed: 0, details: [] },
+    });
+
+    const view = makeView();
+    const containerEl = applyExtensions(document.createElement('div'));
+    renderFeishuPublishTab(view, { close: vi.fn() }, containerEl, {
+      obsidianApi: { Setting: TestSetting, Notice: TestNotice, requestUrl: vi.fn() },
+    });
+    const titleInput = containerEl.querySelector('.wechat-feishu-title-setting input');
+    titleInput.value = '   ';
+    titleInput.oninput();
+    await Array.from(containerEl.querySelectorAll('button'))
+      .find((button) => button.textContent === '同步至飞书').onclick();
+
+    expect(syncNoteToFeishu).toHaveBeenCalledWith(expect.objectContaining({ titleOverride: '   ' }));
+  });
+
+  it('shows a safe title warning without exposing the Feishu error', async () => {
+    syncNoteToFeishu.mockResolvedValue({
+      title: '手动标题',
+      url: 'https://feishu.cn/docx/doc-token',
+      docToken: 'doc-token',
+      titleUpdateWarning: { code: 'title_update_failed' },
+      imageSummary: { uploaded: 0, skipped: 0, failed: 0, details: [] },
+    });
+
+    const view = makeView();
+    const containerEl = applyExtensions(document.createElement('div'));
+    renderFeishuPublishTab(view, { close: vi.fn() }, containerEl, {
+      obsidianApi: { Setting: TestSetting, Notice: TestNotice, requestUrl: vi.fn() },
+    });
+    await Array.from(containerEl.querySelectorAll('button'))
+      .find((button) => button.textContent === '同步至飞书').onclick();
+
+    const resultCard = containerEl.querySelector('.wechat-feishu-result-card');
+    expect(resultCard.textContent).toContain('正文已更新，标题未能修改。');
+    expect(resultCard.textContent).not.toContain('title_update_failed');
   });
 
   it('rebinds the current note to a pasted Feishu docx URL', async () => {
