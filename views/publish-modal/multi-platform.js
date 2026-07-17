@@ -93,7 +93,7 @@ const MAX_MATERIAL_COVER_ASSET_CACHE_ENTRIES = 3;
  * @typedef {{ cachedAt: number, asset: BridgeAssetLike }} MaterialCoverCacheEntryLike
  * @typedef {{ requestUrl?: (options: Record<string, unknown>) => Promise<unknown>, obsidianApi?: Partial<ObsidianApiLike>, modal?: PublishModalLike }} PublishModalOptionsLike
  * @typedef {{ isMobile?: boolean }} PlatformLike
- * @typedef {{ Modal: new (app: unknown) => PublishModalLike, Notice: new (message: string, timeout?: number) => NoticeLike, Platform?: PlatformLike, requestUrl?: (options: Record<string, unknown>) => Promise<unknown> }} ObsidianApiLike
+ * @typedef {{ Modal: new (app: unknown) => PublishModalLike, Notice: new (message: string, timeout?: number) => NoticeLike, Platform?: PlatformLike, requestUrl?: (options: Record<string, unknown>) => Promise<unknown>, setIcon?: (element: HTMLElement, iconName: string) => void }} ObsidianApiLike
  * @typedef {{ hide: () => void, setMessage?: (message: string) => void }} NoticeLike
  * @typedef {{ contentEl: ModalContentElementLike, open: () => void, close: () => void, [MODAL_SELECTED_PLATFORM_IDS]?: string[] }} PublishModalLike
  * @typedef {HTMLElement & { createDiv: (options?: { cls?: string }) => ModalContentElementLike, createEl: (tagName: string, options?: { text?: string, cls?: string, attr?: Record<string, string> }) => ModalContentElementLike, empty?: () => void, addClass?: (className: string) => void, removeClass?: (className: string) => void }} ModalContentElementLike
@@ -830,7 +830,7 @@ function getObsidianApi(view, options = {}) {
  */
 async function showMultiPlatformPublishModal(view, options = {}) {
   const obsidian = getObsidianApi(view, options);
-  const { Notice, Platform } = obsidian;
+  const { Notice, Platform, setIcon } = obsidian;
   if (!view.currentHtml) {
     new Notice(view.getMissingRenderNotice());
     return;
@@ -857,6 +857,35 @@ async function showMultiPlatformPublishModal(view, options = {}) {
     };
   }
 
+  if (!bridgeSettings.enabled) {
+    const enablePanel = asModalElement(modal.contentEl.createDiv({ cls: 'wechat-multiplatform-enable-panel' }));
+    const enableMessage = asModalElement(enablePanel.createDiv({ cls: 'wechat-multiplatform-enable-message' }));
+    const enableIcon = asModalElement(enableMessage.createDiv({
+      cls: 'wechat-multiplatform-enable-icon',
+      attr: { 'aria-hidden': 'true' },
+    }));
+    if (typeof setIcon === 'function') {
+      setIcon(enableIcon, 'plug');
+    }
+    const enableCopy = asModalElement(enableMessage.createDiv({ cls: 'wechat-multiplatform-enable-copy' }));
+    enableCopy.createEl('h3', { text: '启用浏览器插件发布' });
+    enableCopy.createEl('p', {
+      text: '连接浏览器插件后，可将文章保存到小红书、知乎、头条等平台的草稿箱。',
+    });
+    const enableActions = asModalElement(enablePanel.createDiv({ cls: 'wechat-multiplatform-enable-actions' }));
+    const settingsBtn = asModalElement(enableActions.createEl('button', { text: '去设置', cls: 'mod-cta' }));
+    settingsBtn.onclick = () => {
+      modal.close();
+      if (!view.openPluginSettings()) {
+        new Notice('请在设置中打开 Obsidian 发布助手并开启浏览器插件发布');
+      }
+    };
+    const guideBtn = asModalElement(enableActions.createEl('button', { text: '查看安装教程' }));
+    guideBtn.onclick = () => openPublisherGuidePage(view, 'install-extension');
+    if (shouldOpenModal) modal.open();
+    return;
+  }
+
   const intro = asModalElement(modal.contentEl.createDiv({ cls: 'wechat-multiplatform-intro' }));
   const introText = asModalElement(intro.createDiv({ cls: 'wechat-multiplatform-intro-text' }));
   introText.createEl('p', {
@@ -866,6 +895,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
     text: '💡 提示：多平台发布能力依赖于浏览器插件，建议在电脑端使用。',
     cls: 'wechat-multiplatform-tip',
   });
+
   const publishModalCapabilities = resolvePublishModalCapabilities(view, cachedConnection);
   const isProLicensed = publishModalCapabilities.proLicensed === true;
   const initialFreeQuotaLimit = resolveInitialFreeQuotaLimit(bridgeSettings, publishModalCapabilities);
@@ -893,23 +923,6 @@ async function showMultiPlatformPublishModal(view, options = {}) {
       cls: 'wechat-multiplatform-quota-link',
     }));
     quotaUpgradeBtn.onclick = () => openPublisherProPage(view);
-  }
-
-  if (!bridgeSettings.enabled) {
-    const disabledHint = asModalElement(modal.contentEl.createDiv({ cls: 'wechat-sync-empty-state' }));
-    disabledHint.createEl('h3', { text: '尚未启用浏览器插件发布' });
-    disabledHint.createEl('p', { text: `请先安装浏览器插件，再到设置中启用浏览器插件发布、测试连接并选择平台。免费版每天 ${initialFreeQuotaLimit} 个平台额度。` });
-    const settingsBtn = asModalElement(disabledHint.createEl('button', { text: '去设置', cls: 'mod-cta' }));
-    settingsBtn.onclick = () => {
-      modal.close();
-      if (!view.openPluginSettings()) {
-        new Notice('请在设置中打开 Obsidian 发布助手并开启浏览器插件发布');
-      }
-    };
-    const guideBtn = asModalElement(disabledHint.createEl('button', { text: '安装浏览器插件教程' }));
-    guideBtn.onclick = () => openPublisherGuidePage(view, 'install-extension');
-    if (shouldOpenModal) modal.open();
-    return;
   }
 
   const availablePlatforms = toRecordList(getAvailableWechatsyncPlatforms(bridgeSettings));

@@ -353,6 +353,25 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     expect(panel?.textContent).toContain('不再受免费版每日平台数量限制');
   });
 
+  it('labels cached Pro identity as last-known when browser publishing is disabled', () => {
+    const tab = renderTab(makePlugin({ multiPlatformSync: {
+      enabled: false,
+      port: 9527,
+      token: 'token',
+      supportedPlatforms: [],
+      selectedPlatforms: [],
+      connectedClients: [],
+      connection: { status: 'connected', checkedAt: Date.now(), platforms: [], capabilities: { proLicensed: true }, message: '' },
+      recentTasks: [],
+    } }));
+
+    const panel = tab.containerEl.querySelector('.wechat-multiplatform-onboarding.is-pro');
+    expect(panel?.textContent).toContain('上次连接时识别为 Pro');
+    expect(panel?.textContent).toContain('浏览器插件发布当前已关闭');
+    expect(panel?.textContent).not.toContain('多平台发布已解锁');
+    expect(panel?.textContent).not.toContain('不再受免费版每日平台数量限制');
+  });
+
   it('does not expose hidden fallback-only platforms in the settings picker', () => {
     const tab = renderTab(makePlugin({ multiPlatformSync: {
       enabled: true,

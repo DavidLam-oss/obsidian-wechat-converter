@@ -63,7 +63,7 @@ function installModalCapture() {
   };
 }
 
-function makeView({ selectedPlatforms = ['zhihu'], cachedPlatforms = null, bridge = null, app = null } = {}) {
+function makeView({ selectedPlatforms = ['zhihu'], cachedPlatforms = null, bridge = null, app = null, enabled = true } = {}) {
   const platforms = cachedPlatforms || [
     { id: 'zhihu', name: '知乎', authKnown: true, authenticated: true, username: 'Lin' },
     { id: 'juejin', name: '掘金', authKnown: true, authenticated: false, error: '登录已失效' },
@@ -74,7 +74,7 @@ function makeView({ selectedPlatforms = ['zhihu'], cachedPlatforms = null, bridg
       defaultAccountId: 'acc-1',
       proxyUrl: '',
       multiPlatformSync: {
-        enabled: true,
+        enabled,
         port: 9527,
         token: 'test-token',
         supportedPlatforms: [],
@@ -242,8 +242,27 @@ describe('AppleStyleView - showMultiPlatformSyncModal platform rows', () => {
     const view = makeView({ selectedPlatforms: ['zhihu'] });
     await view.showMultiPlatformSyncModal();
     const modal = modalCapture.getLastModal();
-    const empty = modal.contentEl.querySelector('.wechat-sync-empty-state');
-    expect(empty).toBeNull();
+    expect(modal.contentEl.querySelector('.wechat-multiplatform-enable-panel')).toBeNull();
+  });
+
+  it('shows only the enable action when browser publishing is disabled, even with cached Pro identity', async () => {
+    const view = makeView({ enabled: false });
+    view.plugin.settings.multiPlatformSync.connection.capabilities = { proLicensed: true };
+    await view.showMultiPlatformSyncModal();
+    const modal = modalCapture.getLastModal();
+
+    const enablePanel = modal.contentEl.querySelector('.wechat-multiplatform-enable-panel');
+    expect(enablePanel?.textContent).toContain('启用浏览器插件发布');
+    expect(enablePanel?.textContent).toContain('小红书、知乎、头条等平台的草稿箱');
+    expect(enablePanel?.textContent).toContain('去设置');
+    expect(enablePanel?.textContent).toContain('查看安装教程');
+    expect(enablePanel?.querySelector('.wechat-multiplatform-enable-icon')?.getAttribute('aria-hidden')).toBe('true');
+    expect(enablePanel?.querySelectorAll('button')).toHaveLength(2);
+    expect(modal.contentEl.querySelector('.wechat-multiplatform-intro')).toBeNull();
+    expect(modal.contentEl.querySelector('.wechat-multiplatform-quota-hint')).toBeNull();
+    expect(modal.contentEl.textContent).not.toContain('免费版');
+    expect(modal.contentEl.textContent).not.toContain('升级 Pro');
+    expect(view.plugin.getWechatSyncBridgeService).not.toHaveBeenCalled();
   });
 
   it('row exposes a tooltip with full platform name + status when selected', async () => {

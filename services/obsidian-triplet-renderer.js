@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`./obsidian-triplet-serializer.js`、`./obsidian-triplet-renderer-images.js`、`./chinese-punctuation.js`、`./dom-utils.js`、`./native-renderer.js`。
+关键依赖：`./obsidian-triplet-serializer.js`、`./obsidian-triplet-renderer-images.js`、`./markdown-utils.js`、`./chinese-punctuation.js`、`./dom-utils.js`、`./native-renderer.js`。
 
 ## 维护规则
 
@@ -28,6 +28,7 @@
 import { serializeObsidianRenderedHtml } from './obsidian-triplet-serializer.js';
 import { normalizeRenderedDomPunctuation } from './chinese-punctuation.js';
 import { findAllElements, getActiveDocument, getActiveWindowValue } from './dom-utils.js';
+import { parseFencedBlockDelimiter, splitMarkdownCodeSegments } from './markdown-utils.js';
 import { normalizeAdjacentMarkdownBlockHeadings } from './native-renderer.js';
 import { getImageCaptionFromPath, materializeLocalMarkdownImages, preprocessImageSwipeCallouts } from './obsidian-triplet-renderer-images.js';
 
@@ -43,6 +44,7 @@ import { getImageCaptionFromPath, materializeLocalMarkdownImages, preprocessImag
  * @typedef {{
  *   render?: (markdown: string) => string,
  *   renderInline?: (markdown: string) => string,
+ *   parse?: (markdown: string, env?: Record<string, unknown>) => Array<{ type?: string, map?: [number, number] | null }>,
  * }} MarkdownItLike
  * @typedef {{
  *   md?: MarkdownItLike,
@@ -96,23 +98,6 @@ function getDefaultMarkdownRenderer() {
 /** @param {string} line */
 function isFencedBlockDelimiter(line) {
   return /^\s{0,3}(?:`{3,}|~{3,})/.test(String(line || ''));
-}
-
-/**
- * @param {string} line
- * @returns {FenceState | null}
- */
-function parseFencedBlockDelimiter(line) {
-  const value = String(line || '');
-  const match = value.match(/^\s{0,3}((`{3,})|(~{3,}))(.*)$/);
-  if (!match) return null;
-  const markerRun = match[1] || '';
-  const markerChar = markerRun.charAt(0);
-  if (markerChar !== '`' && markerChar !== '~') return null;
-  return {
-    marker: markerChar,
-    length: markerRun.length,
-  };
 }
 
 /** @param {string} line */
@@ -567,53 +552,52 @@ function preRenderMathFormulas(markdown, converter) {
   if (!converter || !converter.md) return { markdown, formulas };
   if (typeof converter.md.render !== 'function') return { markdown, formulas };
 
-  let output = markdown;
+  const output = splitMarkdownCodeSegments(markdown, converter).map((segment) => {
+    if (segment.isCode) return segment.text;
+    let processed = segment.text;
 
-  // First, handle block math ($$...$$) - must be processed before inline
-  // Match $$...$$ where content can span multiple lines
-  const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
-  output = output.replace(blockMathPattern, (match, formula, offset, fullText) => {
-    const placeholder = generateMathPlaceholder('BLOCK');
-    try {
-      let normalizedFormula = String(formula || '');
-      const safeOffset = Number(offset) || 0;
-      const source = String(fullText || '');
-      const lineStart = source.lastIndexOf('\n', Math.max(0, safeOffset - 1)) + 1;
-      const openingPrefix = source.slice(lineStart, safeOffset);
+    // First, handle block math ($$...$$) - must be processed before inline.
+    const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
+    processed = processed.replace(blockMathPattern, (match, formula, offset, fullText) => {
+      const placeholder = generateMathPlaceholder('BLOCK');
+      try {
+        let normalizedFormula = String(formula || '');
+        const safeOffset = Number(offset) || 0;
+        const source = String(fullText || '');
+        const lineStart = source.lastIndexOf('\n', Math.max(0, safeOffset - 1)) + 1;
+        const openingPrefix = source.slice(lineStart, safeOffset);
 
-      // In quoted blocks/callouts, captured formula lines include leading ">" markers.
-      // Strip them before MathJax rendering to avoid rendering stray ">" symbols.
-      if (isQuotePrefix(openingPrefix)) {
-        normalizedFormula = String(formula || '')
-          .split('\n')
-          .map((line) => stripQuotePrefix(line))
-          .join('\n');
+        // In quoted blocks/callouts, captured formula lines include leading ">" markers.
+        if (isQuotePrefix(openingPrefix)) {
+          normalizedFormula = String(formula || '')
+            .split('\n')
+            .map((line) => stripQuotePrefix(line))
+            .join('\n');
+        }
+
+        const rendered = converter.md.render(`$$${normalizedFormula}$$`);
+        const cleaned = rendered.replace(/^<p>|<\/p>$/g, '').trim();
+        formulas.push({ placeholder, rendered: cleaned, isBlock: true });
+        return placeholder;
+      } catch {
+        return match;
       }
+    });
 
-      // Render using full markdown-it (handles block math)
-      const rendered = converter.md.render(`$$${normalizedFormula}$$`);
-      // Extract just the rendered math (strip wrapper <p> if any)
-      const cleaned = rendered.replace(/^<p>|<\/p>$/g, '').trim();
-      formulas.push({ placeholder, rendered: cleaned, isBlock: true });
-      return placeholder;
-    } catch {
-      return match;
-    }
-  });
-
-  // Then, handle inline math ($...$) - single $ not $$.
-  const inlineMathPattern = /(^|[^$])\$(?!\$)([^$\n]+?)\$(?!\$)/g;
-  output = output.replace(inlineMathPattern, (match, prefix, formula) => {
-    const placeholder = generateMathPlaceholder('INLINE');
-    try {
-      // Render using renderInline for inline math
-      const rendered = converter.md.renderInline(`$${formula}$`);
-      formulas.push({ placeholder, rendered, isBlock: false });
-      return `${prefix}${placeholder}`;
-    } catch {
-      return match;
-    }
-  });
+    // Then, handle inline math ($...$) - single $ not $$.
+    const inlineMathPattern = /(^|[^$])\$(?!\$)([^$\n]+?)\$(?!\$)/g;
+    processed = processed.replace(inlineMathPattern, (match, prefix, formula) => {
+      const placeholder = generateMathPlaceholder('INLINE');
+      try {
+        const rendered = converter.md.renderInline(`$${formula}$`);
+        formulas.push({ placeholder, rendered, isBlock: false });
+        return `${prefix}${placeholder}`;
+      } catch {
+        return match;
+      }
+    });
+    return processed;
+  }).join('');
 
   return { markdown: output, formulas };
 }

@@ -325,6 +325,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   const multiPlatformSettings = normalizeMultiPlatformSyncSettings(pluginSettings.multiPlatformSync);
   plugin.settings.multiPlatformSync = multiPlatformSettings;
   const isProLicensed = hasWechatSyncProLicense(multiPlatformSettings);
+  const isPublishingEnabled = multiPlatformSettings.enabled;
 
   const renderSettingsTabIntro = tab.renderSettingsTabIntro;
   if (typeof renderSettingsTabIntro === 'function') {
@@ -345,11 +346,15 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   });
   guide.createEl('div', {
     cls: 'wechat-multiplatform-onboarding-title',
-    text: isProLicensed ? 'Pro 已激活：多平台发布已解锁' : '下一步：安装浏览器插件并完成配置',
+    text: isProLicensed
+      ? (isPublishingEnabled ? 'Pro 已激活：多平台发布已解锁' : '上次连接时识别为 Pro')
+      : '下一步：安装浏览器插件并完成配置',
   });
   guide.createEl('p', {
     text: isProLicensed
-      ? '当前浏览器插件授权已同步到 Obsidian，发布到其他平台时不再受免费版每日平台数量限制。'
+      ? (isPublishingEnabled
+        ? '当前浏览器插件授权已同步到 Obsidian，发布到其他平台时不再受免费版每日平台数量限制。'
+        : '浏览器插件发布当前已关闭。重新启用并连接后，Obsidian 会再次确认授权状态。')
       : '免费版每天 1 个平台额度。想先试用，先安装浏览器插件；已经购买或已经装好浏览器插件，可直接查看配置步骤。',
   });
   if (isProLicensed) {

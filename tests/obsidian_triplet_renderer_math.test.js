@@ -40,10 +40,63 @@ vi.mock('obsidian', () => ({
 
 const { createLegacyConverter } = require('./helpers/render-runtime');
 const {
+  preprocessMarkdownForTriplet,
   renderObsidianTripletMarkdown,
 } = require('../services/obsidian-triplet-renderer');
 
 describe('Obsidian Triplet Renderer math', () => {
+  it('should preserve inline and block math markers inside fenced code blocks', async () => {
+    const converter = await createLegacyConverter();
+    const input = [
+      '```js',
+      'const inline = "$text$";',
+      'const block = "$$value$$";',
+      '```',
+      '',
+      '~~~txt',
+      '$tilde$',
+      '~~~',
+    ].join('\n');
+
+    const result = preprocessMarkdownForTriplet(input, converter);
+
+    expect(result.mathFormulas).toHaveLength(0);
+    expect(result.markdown).toContain('const inline = "$text$";');
+    expect(result.markdown).toContain('const block = "$$value$$";');
+    expect(result.markdown).toContain('~~~txt\n$tilde$\n~~~');
+  });
+
+  it('should preserve math markers inside inline code spans', async () => {
+    const converter = await createLegacyConverter();
+    const input = '保留 `$text$` 和 ``code `with` $value$``，正文 $outside$ 仍渲染。';
+
+    const result = preprocessMarkdownForTriplet(input, converter);
+
+    expect(result.mathFormulas).toHaveLength(1);
+    expect(result.markdown).toContain('`$text$`');
+    expect(result.markdown).toContain('``code `with` $value$``');
+    expect(result.markdown).not.toContain('$outside$');
+  });
+
+  it('should preserve math markers inside indented code blocks', async () => {
+    const converter = await createLegacyConverter();
+    const input = [
+      '代码示例：',
+      '',
+      '    const value = "$text$";',
+      '    const total = "$$amount$$";',
+      '',
+      '正文 $outside$。',
+    ].join('\n');
+
+    const result = preprocessMarkdownForTriplet(input, converter);
+
+    expect(result.mathFormulas).toHaveLength(1);
+    expect(result.markdown).toContain('    const value = "$text$";');
+    expect(result.markdown).toContain('    const total = "$$amount$$";');
+    expect(result.markdown).not.toContain('$outside$');
+  });
+
   it('should render unresolved inline math formulas via markdown-it MathJax', async () => {
     const converter = await createLegacyConverter();
 

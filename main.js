@@ -55626,6 +55626,147 @@ function normalizeRenderedDomPunctuation(root, options = {}) {
   }
 }
 
+// services/markdown-utils.js
+function stripMarkdownFrontmatter(markdown = "") {
+  return String(markdown || "").replace(
+    /^(?:\uFEFF)?---[ \t]*\r?\n[\s\S]*?\r?\n(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/,
+    ""
+  );
+}
+function parseFencedBlockDelimiter(line) {
+  const value = String(line || "");
+  const match = value.match(/^\s{0,3}((`{3,})|(~{3,}))(.*)$/);
+  if (!match)
+    return null;
+  const markerRun = match[1] || "";
+  const markerChar = markerRun.charAt(0);
+  if (markerChar !== "`" && markerChar !== "~")
+    return null;
+  return {
+    marker: markerChar,
+    length: markerRun.length
+  };
+}
+function splitMarkdownCodeSegments(markdown, converter) {
+  var _a5, _b, _c;
+  const source = String(markdown || "");
+  const lineStarts = [0];
+  for (let i = 0; i < source.length; i += 1) {
+    if (source[i] === "\n")
+      lineStarts.push(i + 1);
+  }
+  let blockRanges = [];
+  const markdownIt = converter == null ? void 0 : converter.md;
+  const parse = markdownIt == null ? void 0 : markdownIt.parse;
+  if (typeof parse === "function") {
+    try {
+      const tokens = markdownIt.parse(source, {});
+      blockRanges = (Array.isArray(tokens) ? tokens : []).filter((token) => (token == null ? void 0 : token.type) === "fence" || (token == null ? void 0 : token.type) === "code_block").map((token) => {
+        var _a6, _b2;
+        const map = Array.isArray(token.map) ? token.map : null;
+        const startLine = Number(map == null ? void 0 : map[0]);
+        const endLine = Number(map == null ? void 0 : map[1]);
+        if (!Number.isInteger(startLine) || !Number.isInteger(endLine) || endLine <= startLine)
+          return null;
+        return {
+          start: (_a6 = lineStarts[startLine]) != null ? _a6 : source.length,
+          end: (_b2 = lineStarts[endLine]) != null ? _b2 : source.length
+        };
+      }).filter((range) => range && range.end > range.start);
+    } catch (e) {
+      blockRanges = [];
+    }
+  }
+  if (blockRanges.length === 0) {
+    const lines = source.split("\n");
+    let fenceState = null;
+    let fenceStartLine = -1;
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+      const delimiter = parseFencedBlockDelimiter(lines[lineIndex]);
+      if (!delimiter)
+        continue;
+      if (!fenceState) {
+        fenceState = delimiter;
+        fenceStartLine = lineIndex;
+        continue;
+      }
+      if (delimiter.marker === fenceState.marker && delimiter.length >= fenceState.length) {
+        blockRanges.push({
+          start: (_a5 = lineStarts[fenceStartLine]) != null ? _a5 : source.length,
+          end: (_b = lineStarts[lineIndex + 1]) != null ? _b : source.length
+        });
+        fenceState = null;
+        fenceStartLine = -1;
+      }
+    }
+    if (fenceState && fenceStartLine >= 0) {
+      blockRanges.push({ start: (_c = lineStarts[fenceStartLine]) != null ? _c : source.length, end: source.length });
+    }
+  }
+  blockRanges.sort((a, b) => a.start - b.start);
+  const splitInlineCode = (text) => {
+    const segments2 = [];
+    let cursor2 = 0;
+    let searchIndex = 0;
+    while (searchIndex < text.length) {
+      const openingIndex = text.indexOf("`", searchIndex);
+      if (openingIndex < 0)
+        break;
+      let backslashCount = 0;
+      for (let i = openingIndex - 1; i >= 0 && text[i] === "\\"; i -= 1)
+        backslashCount += 1;
+      if (backslashCount % 2 === 1) {
+        searchIndex = openingIndex + 1;
+        continue;
+      }
+      let openingEnd = openingIndex;
+      while (openingEnd < text.length && text[openingEnd] === "`")
+        openingEnd += 1;
+      const delimiterLength = openingEnd - openingIndex;
+      let closingStart = openingEnd;
+      let closingEnd = -1;
+      while (closingStart < text.length) {
+        closingStart = text.indexOf("`", closingStart);
+        if (closingStart < 0)
+          break;
+        let candidateEnd = closingStart;
+        while (candidateEnd < text.length && text[candidateEnd] === "`")
+          candidateEnd += 1;
+        if (candidateEnd - closingStart === delimiterLength) {
+          closingEnd = candidateEnd;
+          break;
+        }
+        closingStart = candidateEnd;
+      }
+      if (closingEnd < 0) {
+        searchIndex = openingEnd;
+        continue;
+      }
+      if (openingIndex > cursor2)
+        segments2.push({ text: text.slice(cursor2, openingIndex), isCode: false });
+      segments2.push({ text: text.slice(openingIndex, closingEnd), isCode: true });
+      cursor2 = closingEnd;
+      searchIndex = closingEnd;
+    }
+    if (cursor2 < text.length)
+      segments2.push({ text: text.slice(cursor2), isCode: false });
+    return segments2.length ? segments2 : [{ text, isCode: false }];
+  };
+  const segments = [];
+  let cursor = 0;
+  for (const range of blockRanges) {
+    if (range.start < cursor)
+      continue;
+    if (range.start > cursor)
+      segments.push(...splitInlineCode(source.slice(cursor, range.start)));
+    segments.push({ text: source.slice(range.start, range.end), isCode: true });
+    cursor = range.end;
+  }
+  if (cursor < source.length)
+    segments.push(...splitInlineCode(source.slice(cursor)));
+  return segments.length ? segments : [{ text: source, isCode: false }];
+}
+
 // services/native-renderer.js
 function isSafeRawImageSrc(src) {
   if (!src || typeof src !== "string")
@@ -55814,7 +55955,7 @@ async function renderNativeMarkdown({
 }
 
 // services/obsidian-triplet-renderer-images.js
-function parseFencedBlockDelimiter(line) {
+function parseFencedBlockDelimiter2(line) {
   const value = String(line || "");
   const match = value.match(/^\s{0,3}((`{3,})|(~{3,}))(.*)$/);
   if (!match)
@@ -56216,7 +56357,7 @@ function materializeLocalMarkdownImages(markdown) {
   let rawHtmlBlockTag = "";
   let inHtmlComment = false;
   for (const line of lines) {
-    const fenceDelimiter = parseFencedBlockDelimiter(line);
+    const fenceDelimiter = parseFencedBlockDelimiter2(line);
     if (!inMathFence && fenceDelimiter) {
       if (!fenceState) {
         fenceState = fenceDelimiter;
@@ -56351,7 +56492,7 @@ function preprocessImageSwipeCallouts(markdown) {
   let fenceState = null;
   let inMathFence = false;
   for (let i = 0; i < lines.length; ) {
-    const fenceDelimiter = parseFencedBlockDelimiter(lines[i]);
+    const fenceDelimiter = parseFencedBlockDelimiter2(lines[i]);
     if (fenceDelimiter) {
       if (!fenceState) {
         fenceState = fenceDelimiter;
@@ -56412,20 +56553,6 @@ function getDefaultMarkdownRenderer() {
 function isFencedBlockDelimiter(line) {
   return /^\s{0,3}(?:`{3,}|~{3,})/.test(String(line || ""));
 }
-function parseFencedBlockDelimiter2(line) {
-  const value = String(line || "");
-  const match = value.match(/^\s{0,3}((`{3,})|(~{3,}))(.*)$/);
-  if (!match)
-    return null;
-  const markerRun = match[1] || "";
-  const markerChar = markerRun.charAt(0);
-  if (markerChar !== "`" && markerChar !== "~")
-    return null;
-  return {
-    marker: markerChar,
-    length: markerRun.length
-  };
-}
 function isMathFenceDelimiter2(line) {
   return /^\s*\$\$\s*$/.test(String(line || ""));
 }
@@ -56483,7 +56610,7 @@ function injectHardBreaksForLegacyParity(markdown) {
   for (let i = 0; i < lines.length - 1; i += 1) {
     const line = lines[i];
     const nextLine = lines[i + 1];
-    const fenceDelimiter = parseFencedBlockDelimiter2(line);
+    const fenceDelimiter = parseFencedBlockDelimiter(line);
     if (fenceDelimiter) {
       if (!fenceState) {
         fenceState = fenceDelimiter;
@@ -56568,7 +56695,7 @@ function neutralizePlainWikilinks(markdown) {
   let inMathFence = false;
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
-    const fenceDelimiter = parseFencedBlockDelimiter2(line);
+    const fenceDelimiter = parseFencedBlockDelimiter(line);
     if (fenceDelimiter) {
       if (!fenceState) {
         fenceState = fenceDelimiter;
@@ -56596,7 +56723,7 @@ function normalizeWechatUnsafeTaskListMarkers(markdown) {
   let inMathFence = false;
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
-    const fenceDelimiter = parseFencedBlockDelimiter2(line);
+    const fenceDelimiter = parseFencedBlockDelimiter(line);
     if (fenceDelimiter) {
       if (!fenceState) {
         fenceState = fenceDelimiter;
@@ -56733,7 +56860,7 @@ function escapePseudoHtmlTags(markdown) {
   let inCodeBlock = false;
   let codeBlockFence = null;
   for (const line of lines) {
-    const parsed = parseFencedBlockDelimiter2(line);
+    const parsed = parseFencedBlockDelimiter(line);
     if (parsed) {
       if (!inCodeBlock) {
         inCodeBlock = true;
@@ -56835,38 +56962,43 @@ function preRenderMathFormulas(markdown, converter) {
     return { markdown, formulas };
   if (typeof converter.md.render !== "function")
     return { markdown, formulas };
-  let output = markdown;
-  const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
-  output = output.replace(blockMathPattern, (match, formula, offset, fullText) => {
-    const placeholder = generateMathPlaceholder("BLOCK");
-    try {
-      let normalizedFormula = String(formula || "");
-      const safeOffset = Number(offset) || 0;
-      const source = String(fullText || "");
-      const lineStart = source.lastIndexOf("\n", Math.max(0, safeOffset - 1)) + 1;
-      const openingPrefix = source.slice(lineStart, safeOffset);
-      if (isQuotePrefix(openingPrefix)) {
-        normalizedFormula = String(formula || "").split("\n").map((line) => stripQuotePrefix(line)).join("\n");
+  const output = splitMarkdownCodeSegments(markdown, converter).map((segment) => {
+    if (segment.isCode)
+      return segment.text;
+    let processed = segment.text;
+    const blockMathPattern = /\$\$([\s\S]+?)\$\$/g;
+    processed = processed.replace(blockMathPattern, (match, formula, offset, fullText) => {
+      const placeholder = generateMathPlaceholder("BLOCK");
+      try {
+        let normalizedFormula = String(formula || "");
+        const safeOffset = Number(offset) || 0;
+        const source = String(fullText || "");
+        const lineStart = source.lastIndexOf("\n", Math.max(0, safeOffset - 1)) + 1;
+        const openingPrefix = source.slice(lineStart, safeOffset);
+        if (isQuotePrefix(openingPrefix)) {
+          normalizedFormula = String(formula || "").split("\n").map((line) => stripQuotePrefix(line)).join("\n");
+        }
+        const rendered = converter.md.render(`$$${normalizedFormula}$$`);
+        const cleaned = rendered.replace(/^<p>|<\/p>$/g, "").trim();
+        formulas.push({ placeholder, rendered: cleaned, isBlock: true });
+        return placeholder;
+      } catch (e) {
+        return match;
       }
-      const rendered = converter.md.render(`$$${normalizedFormula}$$`);
-      const cleaned = rendered.replace(/^<p>|<\/p>$/g, "").trim();
-      formulas.push({ placeholder, rendered: cleaned, isBlock: true });
-      return placeholder;
-    } catch (e) {
-      return match;
-    }
-  });
-  const inlineMathPattern = /(^|[^$])\$(?!\$)([^$\n]+?)\$(?!\$)/g;
-  output = output.replace(inlineMathPattern, (match, prefix, formula) => {
-    const placeholder = generateMathPlaceholder("INLINE");
-    try {
-      const rendered = converter.md.renderInline(`$${formula}$`);
-      formulas.push({ placeholder, rendered, isBlock: false });
-      return `${prefix}${placeholder}`;
-    } catch (e) {
-      return match;
-    }
-  });
+    });
+    const inlineMathPattern = /(^|[^$])\$(?!\$)([^$\n]+?)\$(?!\$)/g;
+    processed = processed.replace(inlineMathPattern, (match, prefix, formula) => {
+      const placeholder = generateMathPlaceholder("INLINE");
+      try {
+        const rendered = converter.md.renderInline(`$${formula}$`);
+        formulas.push({ placeholder, rendered, isBlock: false });
+        return `${prefix}${placeholder}`;
+      } catch (e) {
+        return match;
+      }
+    });
+    return processed;
+  }).join("");
   return { markdown: output, formulas };
 }
 function preprocessMarkdownForTriplet(markdown, converter) {
@@ -56908,7 +57040,7 @@ function shouldObserveMermaidRenderWindow(markdown) {
   const lines = String(markdown || "").split("\n");
   let fenceState = null;
   for (const line of lines) {
-    const delimiter = parseFencedBlockDelimiter2(line);
+    const delimiter = parseFencedBlockDelimiter(line);
     if (!delimiter)
       continue;
     if (!fenceState) {
@@ -66181,14 +66313,6 @@ function createObsidianFetchAdapter(requestSource) {
   };
 }
 
-// services/markdown-utils.js
-function stripMarkdownFrontmatter(markdown = "") {
-  return String(markdown || "").replace(
-    /^(?:\uFEFF)?---[ \t]*\r?\n[\s\S]*?\r?\n(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/,
-    ""
-  );
-}
-
 // services/article-image-assets.js
 var DEFAULT_MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 var DEFAULT_MAX_TOTAL_IMAGE_SIZE_BYTES = 50 * 1024 * 1024;
@@ -67430,6 +67554,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   const multiPlatformSettings = normalizeMultiPlatformSyncSettings(pluginSettings.multiPlatformSync);
   plugin.settings.multiPlatformSync = multiPlatformSettings;
   const isProLicensed = hasWechatSyncProLicense(multiPlatformSettings);
+  const isPublishingEnabled = multiPlatformSettings.enabled;
   const renderSettingsTabIntro = tab.renderSettingsTabIntro;
   if (typeof renderSettingsTabIntro === "function") {
     renderSettingsTabIntro.call(
@@ -67444,10 +67569,10 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   });
   guide.createEl("div", {
     cls: "wechat-multiplatform-onboarding-title",
-    text: isProLicensed ? "Pro \u5DF2\u6FC0\u6D3B\uFF1A\u591A\u5E73\u53F0\u53D1\u5E03\u5DF2\u89E3\u9501" : "\u4E0B\u4E00\u6B65\uFF1A\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\u5E76\u5B8C\u6210\u914D\u7F6E"
+    text: isProLicensed ? isPublishingEnabled ? "Pro \u5DF2\u6FC0\u6D3B\uFF1A\u591A\u5E73\u53F0\u53D1\u5E03\u5DF2\u89E3\u9501" : "\u4E0A\u6B21\u8FDE\u63A5\u65F6\u8BC6\u522B\u4E3A Pro" : "\u4E0B\u4E00\u6B65\uFF1A\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\u5E76\u5B8C\u6210\u914D\u7F6E"
   });
   guide.createEl("p", {
-    text: isProLicensed ? "\u5F53\u524D\u6D4F\u89C8\u5668\u63D2\u4EF6\u6388\u6743\u5DF2\u540C\u6B65\u5230 Obsidian\uFF0C\u53D1\u5E03\u5230\u5176\u4ED6\u5E73\u53F0\u65F6\u4E0D\u518D\u53D7\u514D\u8D39\u7248\u6BCF\u65E5\u5E73\u53F0\u6570\u91CF\u9650\u5236\u3002" : "\u514D\u8D39\u7248\u6BCF\u5929 1 \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002\u60F3\u5148\u8BD5\u7528\uFF0C\u5148\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF1B\u5DF2\u7ECF\u8D2D\u4E70\u6216\u5DF2\u7ECF\u88C5\u597D\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u53EF\u76F4\u63A5\u67E5\u770B\u914D\u7F6E\u6B65\u9AA4\u3002"
+    text: isProLicensed ? isPublishingEnabled ? "\u5F53\u524D\u6D4F\u89C8\u5668\u63D2\u4EF6\u6388\u6743\u5DF2\u540C\u6B65\u5230 Obsidian\uFF0C\u53D1\u5E03\u5230\u5176\u4ED6\u5E73\u53F0\u65F6\u4E0D\u518D\u53D7\u514D\u8D39\u7248\u6BCF\u65E5\u5E73\u53F0\u6570\u91CF\u9650\u5236\u3002" : "\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03\u5F53\u524D\u5DF2\u5173\u95ED\u3002\u91CD\u65B0\u542F\u7528\u5E76\u8FDE\u63A5\u540E\uFF0CObsidian \u4F1A\u518D\u6B21\u786E\u8BA4\u6388\u6743\u72B6\u6001\u3002" : "\u514D\u8D39\u7248\u6BCF\u5929 1 \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002\u60F3\u5148\u8BD5\u7528\uFF0C\u5148\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF1B\u5DF2\u7ECF\u8D2D\u4E70\u6216\u5DF2\u7ECF\u88C5\u597D\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u53EF\u76F4\u63A5\u67E5\u770B\u914D\u7F6E\u6B65\u9AA4\u3002"
   });
   if (isProLicensed) {
     guide.createEl("span", {
@@ -68857,7 +68982,7 @@ function getObsidianApi2(view, options = {}) {
 async function showMultiPlatformPublishModal(view, options = {}) {
   var _a5;
   const obsidian = getObsidianApi2(view, options);
-  const { Notice: Notice2, Platform: Platform2 } = obsidian;
+  const { Notice: Notice2, Platform: Platform2, setIcon } = obsidian;
   if (!view.currentHtml) {
     new Notice2(view.getMissingRenderNotice());
     return;
@@ -68878,6 +69003,35 @@ async function showMultiPlatformPublishModal(view, options = {}) {
     feishuTab.onclick = () => {
       view.showFeishuSyncModal({ modal });
     };
+  }
+  if (!bridgeSettings.enabled) {
+    const enablePanel = asModalElement(modal.contentEl.createDiv({ cls: "wechat-multiplatform-enable-panel" }));
+    const enableMessage = asModalElement(enablePanel.createDiv({ cls: "wechat-multiplatform-enable-message" }));
+    const enableIcon = asModalElement(enableMessage.createDiv({
+      cls: "wechat-multiplatform-enable-icon",
+      attr: { "aria-hidden": "true" }
+    }));
+    if (typeof setIcon === "function") {
+      setIcon(enableIcon, "plug");
+    }
+    const enableCopy = asModalElement(enableMessage.createDiv({ cls: "wechat-multiplatform-enable-copy" }));
+    enableCopy.createEl("h3", { text: "\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03" });
+    enableCopy.createEl("p", {
+      text: "\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\u540E\uFF0C\u53EF\u5C06\u6587\u7AE0\u4FDD\u5B58\u5230\u5C0F\u7EA2\u4E66\u3001\u77E5\u4E4E\u3001\u5934\u6761\u7B49\u5E73\u53F0\u7684\u8349\u7A3F\u7BB1\u3002"
+    });
+    const enableActions = asModalElement(enablePanel.createDiv({ cls: "wechat-multiplatform-enable-actions" }));
+    const settingsBtn = asModalElement(enableActions.createEl("button", { text: "\u53BB\u8BBE\u7F6E", cls: "mod-cta" }));
+    settingsBtn.onclick = () => {
+      modal.close();
+      if (!view.openPluginSettings()) {
+        new Notice2("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u5F00\u542F\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03");
+      }
+    };
+    const guideBtn = asModalElement(enableActions.createEl("button", { text: "\u67E5\u770B\u5B89\u88C5\u6559\u7A0B" }));
+    guideBtn.onclick = () => openPublisherGuidePage(view, "install-extension");
+    if (shouldOpenModal)
+      modal.open();
+    return;
   }
   const intro = asModalElement(modal.contentEl.createDiv({ cls: "wechat-multiplatform-intro" }));
   const introText = asModalElement(intro.createDiv({ cls: "wechat-multiplatform-intro-text" }));
@@ -68915,23 +69069,6 @@ async function showMultiPlatformPublishModal(view, options = {}) {
       cls: "wechat-multiplatform-quota-link"
     }));
     quotaUpgradeBtn.onclick = () => openPublisherProPage(view);
-  }
-  if (!bridgeSettings.enabled) {
-    const disabledHint = asModalElement(modal.contentEl.createDiv({ cls: "wechat-sync-empty-state" }));
-    disabledHint.createEl("h3", { text: "\u5C1A\u672A\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03" });
-    disabledHint.createEl("p", { text: `\u8BF7\u5148\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u518D\u5230\u8BBE\u7F6E\u4E2D\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03\u3001\u6D4B\u8BD5\u8FDE\u63A5\u5E76\u9009\u62E9\u5E73\u53F0\u3002\u514D\u8D39\u7248\u6BCF\u5929 ${initialFreeQuotaLimit} \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002` });
-    const settingsBtn = asModalElement(disabledHint.createEl("button", { text: "\u53BB\u8BBE\u7F6E", cls: "mod-cta" }));
-    settingsBtn.onclick = () => {
-      modal.close();
-      if (!view.openPluginSettings()) {
-        new Notice2("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u5F00\u542F\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03");
-      }
-    };
-    const guideBtn = asModalElement(disabledHint.createEl("button", { text: "\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\u6559\u7A0B" }));
-    guideBtn.onclick = () => openPublisherGuidePage(view, "install-extension");
-    if (shouldOpenModal)
-      modal.open();
-    return;
   }
   const availablePlatforms = toRecordList2(getAvailableWechatsyncPlatforms(bridgeSettings));
   const defaultSelectedPlatforms = new Set(

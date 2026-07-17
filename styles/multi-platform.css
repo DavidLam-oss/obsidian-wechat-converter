@@ -124,6 +124,105 @@
   line-height: 1.55;
 }
 
+.wechat-multiplatform-enable-panel {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--apple-border) 76%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--apple-surface) 72%, var(--apple-background));
+}
+
+.wechat-multiplatform-enable-message {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.wechat-multiplatform-enable-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 10px;
+  color: var(--apple-accent);
+  background: color-mix(in srgb, var(--apple-accent) 10%, var(--apple-background));
+}
+
+.wechat-multiplatform-enable-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.wechat-multiplatform-enable-copy {
+  min-width: 0;
+}
+
+.wechat-multiplatform-enable-copy h3 {
+  margin: 0 0 4px;
+  color: var(--apple-primary);
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.wechat-multiplatform-enable-copy p {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--apple-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.wechat-multiplatform-enable-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.wechat-multiplatform-enable-actions button {
+  margin: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .wechat-multiplatform-enable-panel {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .wechat-multiplatform-enable-message {
+    align-items: flex-start;
+  }
+
+  .wechat-multiplatform-enable-actions {
+    padding-left: 54px;
+  }
+}
+
+@media (max-width: 480px) {
+  .wechat-multiplatform-enable-panel {
+    padding: 16px;
+  }
+
+  .wechat-multiplatform-enable-actions {
+    flex-direction: column;
+    align-items: stretch;
+    padding-left: 0;
+  }
+
+  .wechat-multiplatform-enable-actions button {
+    width: 100%;
+  }
+}
+
 .wechat-multiplatform-quota-hint {
   display: flex;
   align-items: center;
@@ -596,4 +695,3 @@
   border-color: var(--interactive-accent);
   color: var(--interactive-accent);
 }
-
