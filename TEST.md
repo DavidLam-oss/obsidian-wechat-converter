@@ -101,7 +101,22 @@ function calculate_area(radius) {
 }
 ```
 
-### 2. 长代码
+### 2. 公众号代码复制安全
+
+```bash
+git clone --branch master --depth 1 https://example.com/demo.git \
+  && cd demo \
+  && bash install.sh
+```
+
+复制到微信公众号编辑器后检查：
+
+1. `git clone` 必须显示在第 1 行，代码块顶部不能出现空白行。
+2. 行号应从真实代码首行开始，并与后续代码逐行对齐。
+3. 从公众号编辑器再次复制上述命令，确认空格字符均为普通空格 `U+0020`，不包含 `U+00A0`。
+4. 将复制出的命令粘贴到纯文本或字符检查工具中，确认续行、缩进和参数间空格无需手工替换。
+
+### 3. 长代码
 ```python
 # 文件名: data_processor.py
 import pandas as pd

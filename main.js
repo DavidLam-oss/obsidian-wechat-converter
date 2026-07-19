@@ -5524,17 +5524,17 @@ ${macHeader}
   }
 });
 
-// node_modules/cheerio/lib/types.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/types.js
 var require_types = __commonJS({
-  "node_modules/cheerio/lib/types.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/types.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
   }
 });
 
-// node_modules/cheerio/lib/options.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/options.js
 var require_options = __commonJS({
-  "node_modules/cheerio/lib/options.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/options.js"(exports) {
     "use strict";
     var __assign = exports && exports.__assign || function() {
       __assign = Object.assign || function(t) {
@@ -5566,9 +5566,9 @@ var require_options = __commonJS({
   }
 });
 
-// node_modules/domelementtype/lib/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domelementtype/lib/index.js
 var require_lib = __commonJS({
-  "node_modules/domelementtype/lib/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domelementtype/lib/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Doctype = exports.CDATA = exports.Tag = exports.Style = exports.Script = exports.Comment = exports.Directive = exports.Text = exports.Root = exports.isTag = exports.ElementType = void 0;
@@ -5600,9 +5600,9 @@ var require_lib = __commonJS({
   }
 });
 
-// node_modules/domhandler/lib/node.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domhandler/lib/node.js
 var require_node = __commonJS({
-  "node_modules/domhandler/lib/node.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domhandler/lib/node.js"(exports) {
     "use strict";
     var __extends = exports && exports.__extends || function() {
       var extendStatics = function(d, b) {
@@ -6037,9 +6037,9 @@ var require_node = __commonJS({
   }
 });
 
-// node_modules/domhandler/lib/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domhandler/lib/index.js
 var require_lib2 = __commonJS({
-  "node_modules/domhandler/lib/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domhandler/lib/index.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -6200,9 +6200,9 @@ var require_lib2 = __commonJS({
   }
 });
 
-// node_modules/entities/lib/generated/decode-data-html.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/generated/decode-data-html.js
 var require_decode_data_html = __commonJS({
-  "node_modules/entities/lib/generated/decode-data-html.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/generated/decode-data-html.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = new Uint16Array(
@@ -6214,9 +6214,9 @@ var require_decode_data_html = __commonJS({
   }
 });
 
-// node_modules/entities/lib/generated/decode-data-xml.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/generated/decode-data-xml.js
 var require_decode_data_xml = __commonJS({
-  "node_modules/entities/lib/generated/decode-data-xml.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/generated/decode-data-xml.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = new Uint16Array(
@@ -6228,9 +6228,9 @@ var require_decode_data_xml = __commonJS({
   }
 });
 
-// node_modules/entities/lib/decode_codepoint.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/decode_codepoint.js
 var require_decode_codepoint = __commonJS({
-  "node_modules/entities/lib/decode_codepoint.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/decode_codepoint.js"(exports) {
     "use strict";
     var _a5;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -6292,9 +6292,9 @@ var require_decode_codepoint = __commonJS({
   }
 });
 
-// node_modules/entities/lib/decode.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/decode.js
 var require_decode = __commonJS({
-  "node_modules/entities/lib/decode.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/decode.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -6655,9 +6655,9 @@ var require_decode = __commonJS({
   }
 });
 
-// node_modules/entities/lib/generated/encode-html.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/generated/encode-html.js
 var require_encode_html = __commonJS({
-  "node_modules/entities/lib/generated/encode-html.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/generated/encode-html.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function restoreDiff(arr) {
@@ -6670,9 +6670,9 @@ var require_encode_html = __commonJS({
   }
 });
 
-// node_modules/entities/lib/escape.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/escape.js
 var require_escape = __commonJS({
-  "node_modules/entities/lib/escape.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/escape.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.escapeText = exports.escapeAttribute = exports.escapeUTF8 = exports.escape = exports.encodeXML = exports.getCodePoint = exports.xmlReplacer = void 0;
@@ -6743,9 +6743,9 @@ var require_escape = __commonJS({
   }
 });
 
-// node_modules/entities/lib/encode.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/encode.js
 var require_encode = __commonJS({
-  "node_modules/entities/lib/encode.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/encode.js"(exports) {
     "use strict";
     var __importDefault = exports && exports.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -6798,9 +6798,9 @@ var require_encode = __commonJS({
   }
 });
 
-// node_modules/entities/lib/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/index.js
 var require_lib3 = __commonJS({
-  "node_modules/entities/lib/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.decodeXMLStrict = exports.decodeHTML5Strict = exports.decodeHTML4Strict = exports.decodeHTML5 = exports.decodeHTML4 = exports.decodeHTMLAttribute = exports.decodeHTMLStrict = exports.decodeHTML = exports.decodeXML = exports.DecodingMode = exports.EntityDecoder = exports.encodeHTML5 = exports.encodeHTML4 = exports.encodeNonAsciiHTML = exports.encodeHTML = exports.escapeText = exports.escapeAttribute = exports.escapeUTF8 = exports.escape = exports.encodeXML = exports.encode = exports.decodeStrict = exports.decode = exports.EncodingMode = exports.EntityLevel = void 0;
@@ -6928,9 +6928,9 @@ var require_lib3 = __commonJS({
   }
 });
 
-// node_modules/dom-serializer/lib/foreignNames.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/dom-serializer/lib/foreignNames.js
 var require_foreignNames = __commonJS({
-  "node_modules/dom-serializer/lib/foreignNames.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/dom-serializer/lib/foreignNames.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.attributeNames = exports.elementNames = void 0;
@@ -7041,9 +7041,9 @@ var require_foreignNames = __commonJS({
   }
 });
 
-// node_modules/dom-serializer/lib/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/dom-serializer/lib/index.js
 var require_lib4 = __commonJS({
-  "node_modules/dom-serializer/lib/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/dom-serializer/lib/index.js"(exports) {
     "use strict";
     var __assign = exports && exports.__assign || function() {
       __assign = Object.assign || function(t) {
@@ -7246,9 +7246,9 @@ var require_lib4 = __commonJS({
   }
 });
 
-// node_modules/domutils/lib/stringify.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/stringify.js
 var require_stringify = __commonJS({
-  "node_modules/domutils/lib/stringify.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/stringify.js"(exports) {
     "use strict";
     var __importDefault = exports && exports.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -7304,9 +7304,9 @@ var require_stringify = __commonJS({
   }
 });
 
-// node_modules/domutils/lib/traversal.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/traversal.js
 var require_traversal = __commonJS({
-  "node_modules/domutils/lib/traversal.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/traversal.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getChildren = getChildren;
@@ -7368,9 +7368,9 @@ var require_traversal = __commonJS({
   }
 });
 
-// node_modules/domutils/lib/manipulation.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/manipulation.js
 var require_manipulation = __commonJS({
-  "node_modules/domutils/lib/manipulation.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/manipulation.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.removeElement = removeElement;
@@ -7471,9 +7471,9 @@ var require_manipulation = __commonJS({
   }
 });
 
-// node_modules/domutils/lib/querying.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/querying.js
 var require_querying = __commonJS({
-  "node_modules/domutils/lib/querying.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/querying.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.filter = filter;
@@ -7568,9 +7568,9 @@ var require_querying = __commonJS({
   }
 });
 
-// node_modules/domutils/lib/legacy.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/legacy.js
 var require_legacy = __commonJS({
-  "node_modules/domutils/lib/legacy.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/legacy.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.testElement = testElement;
@@ -7686,9 +7686,9 @@ var require_legacy = __commonJS({
   }
 });
 
-// node_modules/domutils/lib/helpers.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/helpers.js
 var require_helpers = __commonJS({
-  "node_modules/domutils/lib/helpers.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/helpers.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DocumentPosition = void 0;
@@ -7778,9 +7778,9 @@ var require_helpers = __commonJS({
   }
 });
 
-// node_modules/domutils/lib/feeds.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/feeds.js
 var require_feeds = __commonJS({
-  "node_modules/domutils/lib/feeds.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/feeds.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getFeed = getFeed;
@@ -7918,9 +7918,9 @@ var require_feeds = __commonJS({
   }
 });
 
-// node_modules/domutils/lib/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/index.js
 var require_lib5 = __commonJS({
-  "node_modules/domutils/lib/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/index.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -7973,9 +7973,9 @@ var require_lib5 = __commonJS({
   }
 });
 
-// node_modules/cheerio/lib/static.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/static.js
 var require_static = __commonJS({
-  "node_modules/cheerio/lib/static.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/static.js"(exports) {
     "use strict";
     var __assign = exports && exports.__assign || function() {
       __assign = Object.assign || function(t) {
@@ -8118,9 +8118,9 @@ var require_static = __commonJS({
   }
 });
 
-// node_modules/cheerio/lib/utils.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/utils.js
 var require_utils = __commonJS({
-  "node_modules/cheerio/lib/utils.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/utils.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.isHtml = exports.cloneDom = exports.domEach = exports.cssCase = exports.camelCase = exports.isCheerio = exports.isTag = void 0;
@@ -8180,9 +8180,9 @@ var require_utils = __commonJS({
   }
 });
 
-// node_modules/cheerio/lib/api/attributes.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/attributes.js
 var require_attributes = __commonJS({
-  "node_modules/cheerio/lib/api/attributes.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/attributes.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.toggleClass = exports.removeClass = exports.addClass = exports.hasClass = exports.removeAttr = exports.val = exports.data = exports.prop = exports.attr = void 0;
@@ -8582,9 +8582,9 @@ var require_attributes = __commonJS({
   }
 });
 
-// node_modules/css-what/lib/commonjs/types.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/types.js
 var require_types2 = __commonJS({
-  "node_modules/css-what/lib/commonjs/types.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/types.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.AttributeAction = exports.IgnoreCaseMode = exports.SelectorType = void 0;
@@ -8622,9 +8622,9 @@ var require_types2 = __commonJS({
   }
 });
 
-// node_modules/css-what/lib/commonjs/parse.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/parse.js
 var require_parse = __commonJS({
-  "node_modules/css-what/lib/commonjs/parse.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/parse.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.parse = exports.isTraversal = void 0;
@@ -8975,9 +8975,9 @@ var require_parse = __commonJS({
   }
 });
 
-// node_modules/css-what/lib/commonjs/stringify.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/stringify.js
 var require_stringify2 = __commonJS({
-  "node_modules/css-what/lib/commonjs/stringify.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/stringify.js"(exports) {
     "use strict";
     var __spreadArray = exports && exports.__spreadArray || function(to, from, pack) {
       if (pack || arguments.length === 2)
@@ -9100,9 +9100,9 @@ var require_stringify2 = __commonJS({
   }
 });
 
-// node_modules/css-what/lib/commonjs/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/index.js
 var require_commonjs = __commonJS({
-  "node_modules/css-what/lib/commonjs/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/index.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -9141,9 +9141,9 @@ var require_commonjs = __commonJS({
   }
 });
 
-// node_modules/boolbase/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/boolbase/index.js
 var require_boolbase = __commonJS({
-  "node_modules/boolbase/index.js"(exports, module2) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/boolbase/index.js"(exports, module2) {
     module2.exports = {
       trueFunc: function trueFunc() {
         return true;
@@ -9155,9 +9155,9 @@ var require_boolbase = __commonJS({
   }
 });
 
-// node_modules/css-select/lib/sort.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/sort.js
 var require_sort = __commonJS({
-  "node_modules/css-select/lib/sort.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/sort.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.isTraversal = void 0;
@@ -9228,9 +9228,9 @@ var require_sort = __commonJS({
   }
 });
 
-// node_modules/css-select/lib/attributes.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/attributes.js
 var require_attributes2 = __commonJS({
-  "node_modules/css-select/lib/attributes.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/attributes.js"(exports) {
     "use strict";
     var __importDefault = exports && exports.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -9426,9 +9426,9 @@ var require_attributes2 = __commonJS({
   }
 });
 
-// node_modules/nth-check/lib/parse.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/nth-check/lib/parse.js
 var require_parse2 = __commonJS({
-  "node_modules/nth-check/lib/parse.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/nth-check/lib/parse.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.parse = void 0;
@@ -9491,9 +9491,9 @@ var require_parse2 = __commonJS({
   }
 });
 
-// node_modules/nth-check/lib/compile.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/nth-check/lib/compile.js
 var require_compile = __commonJS({
-  "node_modules/nth-check/lib/compile.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/nth-check/lib/compile.js"(exports) {
     "use strict";
     var __importDefault = exports && exports.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -9562,9 +9562,9 @@ var require_compile = __commonJS({
   }
 });
 
-// node_modules/nth-check/lib/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/nth-check/lib/index.js
 var require_lib6 = __commonJS({
-  "node_modules/nth-check/lib/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/nth-check/lib/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.sequence = exports.generate = exports.compile = exports.parse = void 0;
@@ -9590,9 +9590,9 @@ var require_lib6 = __commonJS({
   }
 });
 
-// node_modules/css-select/lib/pseudo-selectors/filters.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/filters.js
 var require_filters = __commonJS({
-  "node_modules/css-select/lib/pseudo-selectors/filters.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/filters.js"(exports) {
     "use strict";
     var __importDefault = exports && exports.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -9745,9 +9745,9 @@ var require_filters = __commonJS({
   }
 });
 
-// node_modules/css-select/lib/pseudo-selectors/pseudos.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/pseudos.js
 var require_pseudos = __commonJS({
-  "node_modules/css-select/lib/pseudo-selectors/pseudos.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/pseudos.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.verifyPseudoArgs = exports.pseudos = void 0;
@@ -9834,9 +9834,9 @@ var require_pseudos = __commonJS({
   }
 });
 
-// node_modules/css-select/lib/pseudo-selectors/aliases.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/aliases.js
 var require_aliases = __commonJS({
-  "node_modules/css-select/lib/pseudo-selectors/aliases.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/aliases.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.aliases = void 0;
@@ -9870,9 +9870,9 @@ var require_aliases = __commonJS({
   }
 });
 
-// node_modules/css-select/lib/pseudo-selectors/subselects.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/subselects.js
 var require_subselects = __commonJS({
-  "node_modules/css-select/lib/pseudo-selectors/subselects.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/subselects.js"(exports) {
     "use strict";
     var __spreadArray = exports && exports.__spreadArray || function(to, from, pack) {
       if (pack || arguments.length === 2)
@@ -9975,9 +9975,9 @@ var require_subselects = __commonJS({
   }
 });
 
-// node_modules/css-select/lib/pseudo-selectors/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/index.js
 var require_pseudo_selectors = __commonJS({
-  "node_modules/css-select/lib/pseudo-selectors/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.compilePseudoSelector = exports.aliases = exports.pseudos = exports.filters = void 0;
@@ -10035,9 +10035,9 @@ var require_pseudo_selectors = __commonJS({
   }
 });
 
-// node_modules/css-select/lib/general.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/general.js
 var require_general = __commonJS({
-  "node_modules/css-select/lib/general.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/general.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.compileGeneralSelector = void 0;
@@ -10180,9 +10180,9 @@ var require_general = __commonJS({
   }
 });
 
-// node_modules/css-select/lib/compile.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/compile.js
 var require_compile2 = __commonJS({
-  "node_modules/css-select/lib/compile.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/compile.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -10317,9 +10317,9 @@ var require_compile2 = __commonJS({
   }
 });
 
-// node_modules/css-select/lib/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/index.js
 var require_lib7 = __commonJS({
-  "node_modules/css-select/lib/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/index.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -10439,9 +10439,9 @@ var require_lib7 = __commonJS({
   }
 });
 
-// node_modules/cheerio-select/lib/positionals.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio-select/lib/positionals.js
 var require_positionals = __commonJS({
-  "node_modules/cheerio-select/lib/positionals.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio-select/lib/positionals.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getLimit = exports.isFilter = exports.filterNames = void 0;
@@ -10493,9 +10493,9 @@ var require_positionals = __commonJS({
   }
 });
 
-// node_modules/cheerio-select/lib/helpers.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio-select/lib/helpers.js
 var require_helpers2 = __commonJS({
-  "node_modules/cheerio-select/lib/helpers.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio-select/lib/helpers.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.groupSelectors = exports.getDocumentRoot = void 0;
@@ -10523,9 +10523,9 @@ var require_helpers2 = __commonJS({
   }
 });
 
-// node_modules/cheerio-select/lib/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio-select/lib/index.js
 var require_lib8 = __commonJS({
-  "node_modules/cheerio-select/lib/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio-select/lib/index.js"(exports) {
     "use strict";
     var __assign = exports && exports.__assign || function() {
       __assign = Object.assign || function(t) {
@@ -10813,9 +10813,9 @@ var require_lib8 = __commonJS({
   }
 });
 
-// node_modules/cheerio/lib/api/traversing.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/traversing.js
 var require_traversing = __commonJS({
-  "node_modules/cheerio/lib/api/traversing.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/traversing.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -11200,9 +11200,9 @@ var require_traversing = __commonJS({
   }
 });
 
-// node_modules/cheerio/lib/parse.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/parse.js
 var require_parse3 = __commonJS({
-  "node_modules/cheerio/lib/parse.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/parse.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.update = exports.getParse = void 0;
@@ -11252,9 +11252,9 @@ var require_parse3 = __commonJS({
   }
 });
 
-// node_modules/cheerio/lib/api/manipulation.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/manipulation.js
 var require_manipulation2 = __commonJS({
-  "node_modules/cheerio/lib/api/manipulation.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/manipulation.js"(exports) {
     "use strict";
     var __spreadArray = exports && exports.__spreadArray || function(to, from, pack) {
       if (pack || arguments.length === 2)
@@ -11619,9 +11619,9 @@ var require_manipulation2 = __commonJS({
   }
 });
 
-// node_modules/cheerio/lib/api/css.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/css.js
 var require_css = __commonJS({
-  "node_modules/cheerio/lib/api/css.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/css.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.css = void 0;
@@ -11704,9 +11704,9 @@ var require_css = __commonJS({
   }
 });
 
-// node_modules/cheerio/lib/api/forms.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/forms.js
 var require_forms = __commonJS({
-  "node_modules/cheerio/lib/api/forms.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/forms.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.serializeArray = exports.serialize = void 0;
@@ -11751,9 +11751,9 @@ var require_forms = __commonJS({
   }
 });
 
-// node_modules/cheerio/lib/cheerio.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/cheerio.js
 var require_cheerio = __commonJS({
-  "node_modules/cheerio/lib/cheerio.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/cheerio.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -11819,9 +11819,9 @@ var require_cheerio = __commonJS({
   }
 });
 
-// node_modules/cheerio/lib/load.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/load.js
 var require_load = __commonJS({
-  "node_modules/cheerio/lib/load.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/load.js"(exports) {
     "use strict";
     var __extends = exports && exports.__extends || function() {
       var extendStatics = function(d, b) {
@@ -11996,9 +11996,9 @@ var require_load = __commonJS({
   }
 });
 
-// node_modules/parse5/dist/cjs/common/unicode.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/unicode.js
 var require_unicode = __commonJS({
-  "node_modules/parse5/dist/cjs/common/unicode.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/unicode.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.SEQUENCES = exports.CODE_POINTS = exports.REPLACEMENT_CHARACTER = void 0;
@@ -12099,9 +12099,9 @@ var require_unicode = __commonJS({
   }
 });
 
-// node_modules/parse5/dist/cjs/common/error-codes.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/error-codes.js
 var require_error_codes = __commonJS({
-  "node_modules/parse5/dist/cjs/common/error-codes.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/error-codes.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ERR = void 0;
@@ -12171,9 +12171,9 @@ var require_error_codes = __commonJS({
   }
 });
 
-// node_modules/parse5/dist/cjs/tokenizer/preprocessor.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/tokenizer/preprocessor.js
 var require_preprocessor = __commonJS({
-  "node_modules/parse5/dist/cjs/tokenizer/preprocessor.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/tokenizer/preprocessor.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Preprocessor = void 0;
@@ -12350,9 +12350,9 @@ var require_preprocessor = __commonJS({
   }
 });
 
-// node_modules/parse5/dist/cjs/common/token.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/token.js
 var require_token = __commonJS({
-  "node_modules/parse5/dist/cjs/common/token.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/token.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.TokenType = void 0;
@@ -12380,9 +12380,9 @@ var require_token = __commonJS({
   }
 });
 
-// node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-html.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-html.js
 var require_decode_data_html2 = __commonJS({
-  "node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-html.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-html.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.htmlDecodeTree = void 0;
@@ -12393,9 +12393,9 @@ var require_decode_data_html2 = __commonJS({
   }
 });
 
-// node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-xml.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-xml.js
 var require_decode_data_xml2 = __commonJS({
-  "node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-xml.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-xml.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.xmlDecodeTree = void 0;
@@ -12406,9 +12406,9 @@ var require_decode_data_xml2 = __commonJS({
   }
 });
 
-// node_modules/parse5/node_modules/entities/dist/commonjs/decode-codepoint.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/decode-codepoint.js
 var require_decode_codepoint2 = __commonJS({
-  "node_modules/parse5/node_modules/entities/dist/commonjs/decode-codepoint.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/decode-codepoint.js"(exports) {
     "use strict";
     var _a5;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -12470,9 +12470,9 @@ var require_decode_codepoint2 = __commonJS({
   }
 });
 
-// node_modules/parse5/node_modules/entities/dist/commonjs/decode.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/decode.js
 var require_decode2 = __commonJS({
-  "node_modules/parse5/node_modules/entities/dist/commonjs/decode.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/decode.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.fromCodePoint = exports.replaceCodePoint = exports.decodeCodePoint = exports.xmlDecodeTree = exports.htmlDecodeTree = exports.EntityDecoder = exports.DecodingMode = exports.BinTrieFlags = void 0;
@@ -12879,9 +12879,9 @@ var require_decode2 = __commonJS({
   }
 });
 
-// node_modules/parse5/dist/cjs/common/html.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/html.js
 var require_html = __commonJS({
-  "node_modules/parse5/dist/cjs/common/html.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/html.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.NUMBERED_HEADERS = exports.SPECIAL_ELEMENTS = exports.TAG_ID = exports.TAG_NAMES = exports.DOCUMENT_MODE = exports.ATTRS = exports.NS = void 0;
@@ -13402,9 +13402,9 @@ var require_html = __commonJS({
   }
 });
 
-// node_modules/parse5/dist/cjs/tokenizer/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/tokenizer/index.js
 var require_tokenizer = __commonJS({
-  "node_modules/parse5/dist/cjs/tokenizer/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/tokenizer/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Tokenizer = exports.TokenizerMode = void 0;
@@ -16032,9 +16032,9 @@ var require_tokenizer = __commonJS({
   }
 });
 
-// node_modules/parse5/dist/cjs/parser/open-element-stack.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/parser/open-element-stack.js
 var require_open_element_stack = __commonJS({
-  "node_modules/parse5/dist/cjs/parser/open-element-stack.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/parser/open-element-stack.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.OpenElementStack = void 0;
@@ -16358,9 +16358,9 @@ var require_open_element_stack = __commonJS({
   }
 });
 
-// node_modules/parse5/dist/cjs/parser/formatting-element-list.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/parser/formatting-element-list.js
 var require_formatting_element_list = __commonJS({
-  "node_modules/parse5/dist/cjs/parser/formatting-element-list.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/parser/formatting-element-list.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.FormattingElementList = exports.EntryType = void 0;
@@ -16471,9 +16471,9 @@ var require_formatting_element_list = __commonJS({
   }
 });
 
-// node_modules/parse5/dist/cjs/tree-adapters/default.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/tree-adapters/default.js
 var require_default = __commonJS({
-  "node_modules/parse5/dist/cjs/tree-adapters/default.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/tree-adapters/default.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.defaultTreeAdapter = void 0;
@@ -16651,9 +16651,9 @@ var require_default = __commonJS({
   }
 });
 
-// node_modules/parse5/dist/cjs/common/doctype.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/doctype.js
 var require_doctype = __commonJS({
-  "node_modules/parse5/dist/cjs/common/doctype.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/doctype.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.isConforming = isConforming;
@@ -16769,9 +16769,9 @@ var require_doctype = __commonJS({
   }
 });
 
-// node_modules/parse5/dist/cjs/common/foreign-content.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/foreign-content.js
 var require_foreign_content = __commonJS({
-  "node_modules/parse5/dist/cjs/common/foreign-content.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/foreign-content.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.SVG_TAG_NAMES_ADJUSTMENT_MAP = void 0;
@@ -17003,9 +17003,9 @@ var require_foreign_content = __commonJS({
   }
 });
 
-// node_modules/parse5/dist/cjs/parser/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/parser/index.js
 var require_parser = __commonJS({
-  "node_modules/parse5/dist/cjs/parser/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/parser/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Parser = void 0;
@@ -20035,9 +20035,9 @@ var require_parser = __commonJS({
   }
 });
 
-// node_modules/parse5/node_modules/entities/dist/commonjs/escape.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/escape.js
 var require_escape2 = __commonJS({
-  "node_modules/parse5/node_modules/entities/dist/commonjs/escape.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/escape.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.escapeText = exports.escapeAttribute = exports.escapeUTF8 = exports.escape = exports.getCodePoint = exports.xmlReplacer = void 0;
@@ -20104,9 +20104,9 @@ var require_escape2 = __commonJS({
   }
 });
 
-// node_modules/parse5/dist/cjs/serializer/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/serializer/index.js
 var require_serializer = __commonJS({
-  "node_modules/parse5/dist/cjs/serializer/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/serializer/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.serialize = serialize;
@@ -20227,9 +20227,9 @@ var require_serializer = __commonJS({
   }
 });
 
-// node_modules/parse5/dist/cjs/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/index.js
 var require_cjs = __commonJS({
-  "node_modules/parse5/dist/cjs/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.TokenizerMode = exports.Tokenizer = exports.Token = exports.html = exports.foreignContent = exports.ErrorCodes = exports.serializeOuter = exports.serialize = exports.Parser = exports.defaultTreeAdapter = void 0;
@@ -20281,9 +20281,9 @@ var require_cjs = __commonJS({
   }
 });
 
-// node_modules/parse5-htmlparser2-tree-adapter/dist/cjs/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5-htmlparser2-tree-adapter/dist/cjs/index.js
 var require_cjs2 = __commonJS({
-  "node_modules/parse5-htmlparser2-tree-adapter/dist/cjs/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5-htmlparser2-tree-adapter/dist/cjs/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.adapter = void 0;
@@ -20496,9 +20496,9 @@ var require_cjs2 = __commonJS({
   }
 });
 
-// node_modules/cheerio/lib/parsers/parse5-adapter.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/parsers/parse5-adapter.js
 var require_parse5_adapter = __commonJS({
-  "node_modules/cheerio/lib/parsers/parse5-adapter.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/parsers/parse5-adapter.js"(exports) {
     "use strict";
     var __spreadArray = exports && exports.__spreadArray || function(to, from, pack) {
       if (pack || arguments.length === 2)
@@ -20546,9 +20546,9 @@ var require_parse5_adapter = __commonJS({
   }
 });
 
-// node_modules/htmlparser2/lib/Tokenizer.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/htmlparser2/lib/Tokenizer.js
 var require_Tokenizer = __commonJS({
-  "node_modules/htmlparser2/lib/Tokenizer.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/htmlparser2/lib/Tokenizer.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.QuoteType = void 0;
@@ -21319,9 +21319,9 @@ var require_Tokenizer = __commonJS({
   }
 });
 
-// node_modules/htmlparser2/lib/Parser.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/htmlparser2/lib/Parser.js
 var require_Parser = __commonJS({
-  "node_modules/htmlparser2/lib/Parser.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/htmlparser2/lib/Parser.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -21756,9 +21756,9 @@ var require_Parser = __commonJS({
   }
 });
 
-// node_modules/htmlparser2/lib/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/htmlparser2/lib/index.js
 var require_lib9 = __commonJS({
-  "node_modules/htmlparser2/lib/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/htmlparser2/lib/index.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -21847,9 +21847,9 @@ var require_lib9 = __commonJS({
   }
 });
 
-// node_modules/cheerio/lib/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/index.js
 var require_lib10 = __commonJS({
-  "node_modules/cheerio/lib/index.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/index.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -21924,9 +21924,9 @@ var require_lib10 = __commonJS({
   }
 });
 
-// node_modules/mensch/lib/debug.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/debug.js
 var require_debug = __commonJS({
-  "node_modules/mensch/lib/debug.js"(exports, module2) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/debug.js"(exports, module2) {
     exports = module2.exports = debug;
     function debug(label) {
       return _debug.bind(null, label);
@@ -21939,9 +21939,9 @@ var require_debug = __commonJS({
   }
 });
 
-// node_modules/mensch/lib/lexer.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/lexer.js
 var require_lexer = __commonJS({
-  "node_modules/mensch/lib/lexer.js"(exports, module2) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/lexer.js"(exports, module2) {
     var DEBUG = false;
     var TIMER = false;
     var debug = require_debug()("lex");
@@ -22406,9 +22406,9 @@ var require_lexer = __commonJS({
   }
 });
 
-// node_modules/mensch/lib/parser.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/parser.js
 var require_parser2 = __commonJS({
-  "node_modules/mensch/lib/parser.js"(exports, module2) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/parser.js"(exports, module2) {
     var DEBUG = false;
     var TIMER = false;
     var debug = require_debug()("parse");
@@ -22574,9 +22574,9 @@ var require_parser2 = __commonJS({
   }
 });
 
-// node_modules/mensch/lib/stringify.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/stringify.js
 var require_stringify3 = __commonJS({
-  "node_modules/mensch/lib/stringify.js"(exports, module2) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/stringify.js"(exports, module2) {
     var DEBUG = false;
     var TIMER = false;
     var debug = require_debug()("stringify");
@@ -22708,9 +22708,9 @@ var require_stringify3 = __commonJS({
   }
 });
 
-// node_modules/mensch/index.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/index.js
 var require_mensch = __commonJS({
-  "node_modules/mensch/index.js"(exports, module2) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/index.js"(exports, module2) {
     module2.exports = {
       lex: require_lexer(),
       parse: require_parser2(),
@@ -22719,9 +22719,9 @@ var require_mensch = __commonJS({
   }
 });
 
-// node_modules/slick/parser.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/slick/parser.js
 var require_parser3 = __commonJS({
-  "node_modules/slick/parser.js"(exports, module2) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/slick/parser.js"(exports, module2) {
     "use strict";
     var escapeRe = /([-.*+?^${}()|[\]\/\\])/g;
     var unescapeRe = /\\/g;
@@ -22886,9 +22886,9 @@ var require_parser3 = __commonJS({
   }
 });
 
-// node_modules/juice/lib/selector.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/selector.js
 var require_selector = __commonJS({
-  "node_modules/juice/lib/selector.js"(exports, module2) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/selector.js"(exports, module2) {
     "use strict";
     var parser = require_parser3();
     module2.exports = exports = Selector;
@@ -22957,9 +22957,9 @@ var require_selector = __commonJS({
   }
 });
 
-// node_modules/juice/lib/property.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/property.js
 var require_property = __commonJS({
-  "node_modules/juice/lib/property.js"(exports, module2) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/property.js"(exports, module2) {
     "use strict";
     module2.exports = exports = Property;
     var utils = require_utils2();
@@ -22994,9 +22994,9 @@ var require_property = __commonJS({
   }
 });
 
-// node_modules/juice/lib/utils.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/utils.js
 var require_utils2 = __commonJS({
-  "node_modules/juice/lib/utils.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/utils.js"(exports) {
     "use strict";
     var mensch = require_mensch();
     var Selector = require_selector();
@@ -23115,9 +23115,9 @@ var require_utils2 = __commonJS({
   }
 });
 
-// node_modules/juice/lib/cheerio.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/cheerio.js
 var require_cheerio2 = __commonJS({
-  "node_modules/juice/lib/cheerio.js"(exports, module2) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/cheerio.js"(exports, module2) {
     "use strict";
     var cheerio = require_lib10();
     var utils = require_utils2();
@@ -23171,9 +23171,9 @@ var require_cheerio2 = __commonJS({
   }
 });
 
-// node_modules/juice/lib/numbers.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/numbers.js
 var require_numbers = __commonJS({
-  "node_modules/juice/lib/numbers.js"(exports) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/numbers.js"(exports) {
     "use strict";
     exports.romanize = function(num) {
       if (isNaN(num))
@@ -23226,9 +23226,9 @@ var require_numbers = __commonJS({
   }
 });
 
-// node_modules/juice/lib/variables.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/variables.js
 var require_variables = __commonJS({
-  "node_modules/juice/lib/variables.js"(exports, module2) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/variables.js"(exports, module2) {
     "use strict";
     var uniqueString = (string) => {
       let str = "";
@@ -23277,9 +23277,9 @@ var require_variables = __commonJS({
   }
 });
 
-// node_modules/juice/lib/inline.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/inline.js
 var require_inline = __commonJS({
-  "node_modules/juice/lib/inline.js"(exports, module2) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/inline.js"(exports, module2) {
     "use strict";
     var utils = require_utils2();
     var numbers = require_numbers();
@@ -23699,9 +23699,9 @@ var require_inline = __commonJS({
   }
 });
 
-// node_modules/juice/client.js
+// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/client.js
 var require_client = __commonJS({
-  "node_modules/juice/client.js"(exports, module2) {
+  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/client.js"(exports, module2) {
     "use strict";
     var cheerio = require_cheerio2();
     var makeJuiceClient = require_inline();
@@ -77448,6 +77448,21 @@ var aiLayoutDebugMethods = {
 };
 
 // views/converter/clipboard.js
+function normalizeCopiedCodeSpaces(root) {
+  if (!root)
+    return;
+  const pending = [root];
+  while (pending.length > 0) {
+    const node = pending.pop();
+    if (!node)
+      continue;
+    if (node.nodeType === 3) {
+      node.nodeValue = String(node.nodeValue || "").replace(/\u00a0/g, " ");
+      continue;
+    }
+    pending.push(...Array.from(node.childNodes || []));
+  }
+}
 var clipboardMethods = {
   resolveLocalImageFileForUpload(src) {
     var _a5, _b, _c, _d, _e, _f;
@@ -77842,19 +77857,22 @@ var clipboardMethods = {
       const activeDocument = getActiveDocumentCompat();
       if (!activeDocument)
         return;
+      const wrapper = activeDocument.createElement("section");
+      wrapper.setAttribute("class", "code-snippet__export");
+      wrapper.setAttribute("style", `width:100% !important;max-width:100% !important;margin:12px 0 !important;background:${background} !important;border:${border} !important;border-radius:${borderRadius} !important;box-shadow:0 4px 12px rgba(0,0,0,0.3) !important;overflow:hidden !important;box-sizing:border-box !important;display:block !important;`);
       const pre = activeDocument.createElement("pre");
       pre.setAttribute("class", "hljs code__pre");
-      pre.setAttribute("style", `width:100% !important;max-width:100% !important;margin:12px 0 !important;background:${background} !important;border:${border} !important;border-radius:${borderRadius} !important;box-shadow:0 4px 12px rgba(0,0,0,0.3) !important;overflow-x:scroll !important;overflow-y:hidden !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;box-sizing:border-box !important;font-family:'SF Mono',Consolas,Monaco,monospace !important;font-size:13px !important;line-height:1.75 !important;color:#f0f6fc !important;white-space:normal !important;`);
+      pre.setAttribute("style", `width:100% !important;max-width:100% !important;margin:0 !important;background:${background} !important;border:none !important;border-radius:0 !important;box-shadow:none !important;overflow-x:scroll !important;overflow-y:hidden !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;box-sizing:border-box !important;font-family:'SF Mono',Consolas,Monaco,monospace !important;font-size:13px !important;line-height:1.75 !important;color:#f0f6fc !important;white-space:normal !important;`);
       if (hasMacHeader) {
         const toolbar = activeDocument.createElement("section");
         const toolbarStyle = "display:block !important;background:#161b22 !important;padding:6px 10px 6px 10px !important;border:none !important;border-bottom:1px solid #30363d !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;box-sizing:border-box !important;width:100% !important;";
         toolbar.setAttribute("style", toolbarStyle);
         setElementHtml(toolbar, [
-          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>',
-          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>',
-          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#28c840 !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>'
+          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;"></span>',
+          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;"></span>',
+          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#28c840 !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;"></span>'
         ].join(""));
-        pre.appendChild(toolbar);
+        wrapper.appendChild(toolbar);
       }
       const code = activeDocument.createElement("code");
       if (shouldKeepFixedLineNumbers) {
@@ -77862,17 +77880,19 @@ var clipboardMethods = {
           const lineNumber = lineNumberLabels[index] || String(index + 1);
           return `<section style="display:block !important;height:1.75em !important;line-height:1.75 !important;padding:0 10px 0 0 !important;margin:0 !important;color:#95989C !important;white-space:nowrap !important;box-sizing:border-box !important;">${lineNumber}</section>`;
         }).join("");
-        const codeInnerHtml = codeLineParts.map((lineHtml) => lineHtml || "&nbsp;").join("<br/>");
+        const codeInnerHtml = codeLineParts.map((lineHtml) => lineHtml || " ").join("<br/>");
         const codeWithLineNumbersStyle = "display:block !important;width:100% !important;min-width:100% !important;max-width:100% !important;padding:0 !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:normal !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;";
         code.setAttribute("style", codeWithLineNumbersStyle);
         setElementHtml(code, `<section style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;max-width:100% !important;padding:0 !important;box-sizing:border-box !important;margin:0 !important;"><section class="line-numbers" style="text-align:right !important;padding:12px 0 !important;border-right:1px solid rgba(255,255,255,0.1) !important;user-select:none !important;background:transparent !important;flex:0 0 auto !important;min-width:3.5em !important;box-sizing:border-box !important;margin:0 !important;">${lineNumbersHtml}</section><section class="code-scroll" style="flex:1 1 auto !important;overflow-x:scroll !important;overflow-y:visible !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;padding:12px 12px 16px 16px !important;min-width:0 !important;box-sizing:border-box !important;margin:0 !important;"><section style="white-space:pre !important;min-width:max-content !important;line-height:1.75 !important;font-size:13px !important;margin:0 !important;">${codeInnerHtml}</section></section></section>`);
       } else {
-        const codeScrollableStyle = "display:block !important;width:max-content !important;min-width:100% !important;max-width:none !important;padding:12px 12px 16px 12px !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:nowrap !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;";
+        const codeScrollableStyle = "display:block !important;width:max-content !important;min-width:100% !important;max-width:none !important;padding:12px 12px 16px 12px !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:pre !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;";
         code.setAttribute("style", codeScrollableStyle);
         setElementHtml(code, codeLinesHtml);
       }
+      normalizeCopiedCodeSpaces(code);
       pre.appendChild(code);
-      block.replaceWith(pre);
+      wrapper.appendChild(pre);
+      block.replaceWith(wrapper);
     });
   },
   async readClipboardTextSnapshot() {

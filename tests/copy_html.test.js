@@ -150,6 +150,18 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
     expect(html).toContain('background:#ff5f57');
     expect(html).not.toContain('<table');
     expect(html).not.toContain('<svg');
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    const exportBlock = container.querySelector('.code-snippet__export');
+    const pre = exportBlock?.querySelector('pre');
+    const toolbar = exportBlock?.querySelector('section');
+    expect(exportBlock).not.toBeNull();
+    expect(pre).not.toBeNull();
+    expect(toolbar).not.toBeNull();
+    expect(pre.contains(toolbar)).toBe(false);
+    expect(pre.querySelector('code')?.textContent).toBe('const x = 1;');
+    expect(pre.textContent?.charCodeAt(0)).toBe('c'.charCodeAt(0));
   });
 
   it('should render preview code blocks with fixed line numbers outside the scroll container', async () => {
@@ -305,13 +317,53 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
     const codeMatch = html.match(/<code\b[^>]*>([\s\S]*?)<\/code>/i);
     expect(codeMatch).not.toBeNull();
     expect(codeMatch[1].startsWith('<section')).toBe(true);
-    expect(codeMatch[1]).toContain('first&nbsp;=');
-    expect(codeMatch[1]).toContain('&nbsp;<br');
-    expect(codeMatch[1]).toContain('third&nbsp;=');
+    expect(codeMatch[1]).toContain('first =');
+    expect(codeMatch[1]).toContain(' <br');
+    expect(codeMatch[1]).toContain('third =');
+    expect(codeMatch[1]).not.toContain('&nbsp;');
+    expect(codeMatch[1]).not.toContain('\u00a0');
     expect(html).toContain('<section class="line-numbers"');
     expect(html).toContain('>1</section>');
     expect(html).toContain('>2</section>');
     expect(html).toContain('>3</section>');
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    const pre = container.querySelector('.code-snippet__export > pre');
+    const code = pre?.querySelector('code');
+    const toolbar = container.querySelector('.code-snippet__export > section');
+    const copiedCodeText = code?.textContent || '';
+    expect(pre).not.toBeNull();
+    expect(toolbar).not.toBeNull();
+    expect(pre.contains(toolbar)).toBe(false);
+    expect(copiedCodeText).not.toContain('\u00a0');
+    expect(copiedCodeText).toContain('const first = 1;');
+    expect(copiedCodeText).toContain('const third = 3;');
+  });
+
+  it('should export executable code with ordinary spaces', async () => {
+    const converter = await createLegacyConverter({
+      themeOptions: {
+        macCodeBlock: true,
+        codeLineNumber: false,
+      },
+    });
+    const command = 'git clone --branch master --depth 1';
+    view.currentHtml = await converter.convert(['```sh', command, '```'].join('\n'));
+    view.cleanHtmlForDraft = vi.fn((html) => html);
+
+    await view.copyHTML();
+
+    const item = writeMock.mock.calls[0][0][0];
+    const html = await blobToText(item.items['text/html']);
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    const code = container.querySelector('.code-snippet__export > pre > code');
+    const copiedText = code?.textContent || '';
+
+    expect(copiedText).toBe(command);
+    expect(copiedText).not.toContain('\u00a0');
+    expect(Array.from(copiedText).filter((char) => char === ' ')).toHaveLength(5);
   });
 
   it('should convert Mermaid diagrams to images before writing clipboard html', async () => {

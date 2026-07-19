@@ -54,6 +54,24 @@ import {
   pMap,
 } from '../apple-style-view-shared.js';
 
+/**
+ * Keep syntax-highlight markup while making copied code safe to execute.
+ * @param {Node | null | undefined} root
+ */
+function normalizeCopiedCodeSpaces(root) {
+  if (!root) return;
+  const pending = [root];
+  while (pending.length > 0) {
+    const node = pending.pop();
+    if (!node) continue;
+    if (node.nodeType === 3) {
+      node.nodeValue = String(node.nodeValue || '').replace(/\u00a0/g, ' ');
+      continue;
+    }
+    pending.push(...Array.from(node.childNodes || []));
+  }
+}
+
 /** @type {ClipboardMethodsContract & ThisType<AppleStyleViewContract>} */
 export const clipboardMethods = {
 resolveLocalImageFileForUpload(src) {
@@ -498,20 +516,24 @@ transformCodeBlocksForClipboard(root) {
 
     const activeDocument = getActiveDocumentCompat();
     if (!activeDocument) return;
+    const wrapper = activeDocument.createElement('section');
+    wrapper.setAttribute('class', 'code-snippet__export');
+    wrapper.setAttribute('style', `width:100% !important;max-width:100% !important;margin:12px 0 !important;background:${background} !important;border:${border} !important;border-radius:${borderRadius} !important;box-shadow:0 4px 12px rgba(0,0,0,0.3) !important;overflow:hidden !important;box-sizing:border-box !important;display:block !important;`);
+
     const pre = activeDocument.createElement('pre');
     pre.setAttribute('class', 'hljs code__pre');
-    pre.setAttribute('style', `width:100% !important;max-width:100% !important;margin:12px 0 !important;background:${background} !important;border:${border} !important;border-radius:${borderRadius} !important;box-shadow:0 4px 12px rgba(0,0,0,0.3) !important;overflow-x:scroll !important;overflow-y:hidden !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;box-sizing:border-box !important;font-family:'SF Mono',Consolas,Monaco,monospace !important;font-size:13px !important;line-height:1.75 !important;color:#f0f6fc !important;white-space:normal !important;`);
+    pre.setAttribute('style', `width:100% !important;max-width:100% !important;margin:0 !important;background:${background} !important;border:none !important;border-radius:0 !important;box-shadow:none !important;overflow-x:scroll !important;overflow-y:hidden !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;box-sizing:border-box !important;font-family:'SF Mono',Consolas,Monaco,monospace !important;font-size:13px !important;line-height:1.75 !important;color:#f0f6fc !important;white-space:normal !important;`);
 
     if (hasMacHeader) {
       const toolbar = activeDocument.createElement('section');
       const toolbarStyle = 'display:block !important;background:#161b22 !important;padding:6px 10px 6px 10px !important;border:none !important;border-bottom:1px solid #30363d !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;box-sizing:border-box !important;width:100% !important;';
       toolbar.setAttribute('style', toolbarStyle);
       setElementHtml(toolbar, [
-      '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>',
-      '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>',
-      '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#28c840 !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;">&nbsp;</span>',
+      '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;"></span>',
+      '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;"></span>',
+      '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#28c840 !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;"></span>',
     ].join(''));
-      pre.appendChild(toolbar);
+      wrapper.appendChild(toolbar);
     }
 
     const code = activeDocument.createElement('code');
@@ -520,18 +542,20 @@ transformCodeBlocksForClipboard(root) {
         const lineNumber = lineNumberLabels[index] || String(index + 1);
         return `<section style="display:block !important;height:1.75em !important;line-height:1.75 !important;padding:0 10px 0 0 !important;margin:0 !important;color:#95989C !important;white-space:nowrap !important;box-sizing:border-box !important;">${lineNumber}</section>`;
       }).join('');
-      const codeInnerHtml = codeLineParts.map((lineHtml) => lineHtml || '&nbsp;').join('<br/>');
+      const codeInnerHtml = codeLineParts.map((lineHtml) => lineHtml || ' ').join('<br/>');
       const codeWithLineNumbersStyle = 'display:block !important;width:100% !important;min-width:100% !important;max-width:100% !important;padding:0 !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:normal !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;';
       code.setAttribute('style', codeWithLineNumbersStyle);
       setElementHtml(code, `<section style="display:flex !important;align-items:flex-start !important;overflow-x:hidden !important;overflow-y:visible !important;width:100% !important;max-width:100% !important;padding:0 !important;box-sizing:border-box !important;margin:0 !important;"><section class="line-numbers" style="text-align:right !important;padding:12px 0 !important;border-right:1px solid rgba(255,255,255,0.1) !important;user-select:none !important;background:transparent !important;flex:0 0 auto !important;min-width:3.5em !important;box-sizing:border-box !important;margin:0 !important;">${lineNumbersHtml}</section><section class="code-scroll" style="flex:1 1 auto !important;overflow-x:scroll !important;overflow-y:visible !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;padding:12px 12px 16px 16px !important;min-width:0 !important;box-sizing:border-box !important;margin:0 !important;"><section style="white-space:pre !important;min-width:max-content !important;line-height:1.75 !important;font-size:13px !important;margin:0 !important;">${codeInnerHtml}</section></section></section>`);
     } else {
-      const codeScrollableStyle = 'display:block !important;width:max-content !important;min-width:100% !important;max-width:none !important;padding:12px 12px 16px 12px !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:nowrap !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;';
+      const codeScrollableStyle = 'display:block !important;width:max-content !important;min-width:100% !important;max-width:none !important;padding:12px 12px 16px 12px !important;box-sizing:border-box !important;background:transparent !important;color:#f0f6fc !important;font-family:inherit !important;font-size:13px !important;line-height:1.75 !important;white-space:pre !important;overflow:visible !important;text-indent:0 !important;margin:0 !important;';
       code.setAttribute('style', codeScrollableStyle);
       setElementHtml(code, codeLinesHtml);
     }
+    normalizeCopiedCodeSpaces(code);
     pre.appendChild(code);
+    wrapper.appendChild(pre);
 
-    block.replaceWith(pre);
+    block.replaceWith(wrapper);
   });
 }
 ,
