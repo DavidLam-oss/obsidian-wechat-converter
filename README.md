@@ -1,4 +1,4 @@
-简体中文 | [English README](./README.en.md)
+简体中文 | [English README](https://github.com/DavidLam-oss/obsidian-wechat-converter/blob/main/README.en.md)
 
 # 📝 微信公众号排版转换器 (Wechat Converter)
 

@@ -1,4 +1,4 @@
-[简体中文](./README.md) | English
+[简体中文](https://github.com/DavidLam-oss/obsidian-wechat-converter/blob/main/README.md) | English
 
 # Wechat Converter for Obsidian
 
