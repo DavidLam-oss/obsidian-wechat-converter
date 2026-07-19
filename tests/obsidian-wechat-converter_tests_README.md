@@ -20,6 +20,13 @@
 
 Vitest、jsdom、__mocks__/obsidian.js、tests/helpers/ 和项目源码。
 
+## 多平台发布测试分组
+
+- `multi_platform_modal.test.js`：平台列表、选择状态、连接状态和 Pro/Free UI 契约。
+- `multi_platform_modal_publish.test.js`：额度策略、Pro 预截断和 Bridge 发布结果。
+- `multi_platform_modal_assets.test.js`：本地图片、封面资源、远程素材封面和缓存。
+- `helpers/multi-platform-modal-fixtures.js`：多平台 Modal 的公共 Obsidian view 与 Modal 夹具。
+
 ## 维护规则
 
 - 每次新增、删除、移动文件或调整目录职责后，必须更新本 README。

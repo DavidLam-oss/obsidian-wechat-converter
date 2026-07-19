@@ -4454,13 +4454,13 @@ var init_apple_theme = __esm({
 // converter.js
 var require_converter = __commonJS({
   "converter.js"(exports, module2) {
-    function isRecord14(value) {
+    function isRecord17(value) {
       return !!value && typeof value === "object" && !Array.isArray(value);
     }
-    function toRecord11(value) {
-      return isRecord14(value) ? value : {};
+    function toRecord14(value) {
+      return isRecord17(value) ? value : {};
     }
-    function toText4(value) {
+    function toText7(value) {
       return typeof value === "string" ? value : "";
     }
     function safeDecodeUri(value) {
@@ -4577,7 +4577,7 @@ var require_converter = __commonJS({
       typeof window !== "undefined" ? window : {}
     );
     function getRuntimeDependency(name) {
-      const runtimeWindow = typeof window !== "undefined" ? toRecord11(window) : {};
+      const runtimeWindow = typeof window !== "undefined" ? toRecord14(window) : {};
       if (typeof runtimeWindow[name] !== "undefined") {
         return runtimeWindow[name];
       }
@@ -4641,8 +4641,8 @@ var require_converter = __commonJS({
           this.showImageCaption = Boolean(config.showImageCaption);
         }
         if (config.avatarUrl !== void 0) {
-          this.avatarUrl = toText4(config.avatarUrl);
-          this.avatarSrc = toText4(config.avatarUrl);
+          this.avatarUrl = toText7(config.avatarUrl);
+          this.avatarSrc = toText7(config.avatarUrl);
         }
       }
       /**
@@ -4734,7 +4734,7 @@ var require_converter = __commonJS({
             if (token.type === "list_item_close")
               break;
             if (token.type === "inline") {
-              const content = toText4(token.content);
+              const content = toText7(token.content);
               if (content.startsWith("\u2611") || content.startsWith("\u25A1") || content.startsWith("\u2610")) {
                 return {
                   isTask: true,
@@ -4754,7 +4754,7 @@ var require_converter = __commonJS({
             const themeColor = this.theme.getThemeColorValue() || "#576b95";
             if (inlineToken.children && inlineToken.children.length > 0) {
               const firstChild = inlineToken.children[0];
-              const firstContent = toText4(firstChild.content);
+              const firstContent = toText7(firstChild.content);
               if (firstChild.type === "text" && (firstContent.startsWith("\u2611") || firstContent.startsWith("\u25A1") || firstContent.startsWith("\u2610"))) {
                 const content = firstContent;
                 const restText = content.slice(1);
@@ -4795,7 +4795,7 @@ var require_converter = __commonJS({
                 inlineToken.children = newChildren;
               }
             } else {
-              const content = toText4(inlineToken.content);
+              const content = toText7(inlineToken.content);
               const restText = content.slice(1);
               if (taskInfo.checked) {
                 inlineToken.content = `<span style="display: inline-block; font-size: 1.15em; font-weight: bold; margin-right: 6px; vertical-align: -0.05em; color: #8f959e; line-height: 1;">\u2611</span><span style="text-decoration: line-through; color: #8f959e;">${restText.trimStart()}</span>`;
@@ -4807,11 +4807,11 @@ var require_converter = __commonJS({
           }
           return `<li style="${this.getInlineStyle("li")}">`;
         };
-        rules.code_inline = (tokens, idx) => `<code style="${this.getInlineStyle("code")}">${this.escapeHtml(toText4(getToken(tokens, idx).content))}</code>`;
+        rules.code_inline = (tokens, idx) => `<code style="${this.getInlineStyle("code")}">${this.escapeHtml(toText7(getToken(tokens, idx).content))}</code>`;
         rules.fence = (tokens, idx) => {
           const token = getToken(tokens, idx);
-          const content = toText4(token.content);
-          const lang = toText4(token.info) || "text";
+          const content = toText7(token.content);
+          const lang = toText7(token.info) || "text";
           return this.createCodeBlock(content, lang);
         };
         rules.link_open = (tokens, idx) => {
@@ -4820,7 +4820,7 @@ var require_converter = __commonJS({
           const safeHref = this.validateLink(href);
           const nextToken = getToken(tokens, idx + 1);
           const closeToken = getToken(tokens, idx + 2);
-          const visibleText = nextToken && nextToken.type === "text" ? toText4(nextToken.content).trim() : "";
+          const visibleText = nextToken && nextToken.type === "text" ? toText7(nextToken.content).trim() : "";
           const isUrlTextLink = (closeToken == null ? void 0 : closeToken.type) === "link_close" && /^https?:\/\//i.test(visibleText || href);
           const urlTextStyle = isUrlTextLink ? "; display:block; max-width:100%; margin:4px 0; line-height:1.55; word-break:break-all; overflow-wrap:anywhere;" : "";
           return `<a href="${safeHref}" style="${this.getInlineStyle("a")}${urlTextStyle}">`;
@@ -4831,7 +4831,7 @@ var require_converter = __commonJS({
         rules.image = (tokens, idx) => {
           var _a5, _b;
           let src = ((_b = (_a5 = getToken(tokens, idx)).attrGet) == null ? void 0 : _b.call(_a5, "src")) || "";
-          const alt = toText4(getToken(tokens, idx).content);
+          const alt = toText7(getToken(tokens, idx).content);
           src = this.resolveImagePath(src);
           let caption = "";
           if (alt) {
@@ -4933,7 +4933,7 @@ var require_converter = __commonJS({
           if (token.type === "blockquote_close")
             break;
           if (token.type === "inline" && token.content) {
-            const firstLine = toText4(token.content).split("\n")[0];
+            const firstLine = toText7(token.content).split("\n")[0];
             const match = firstLine.match(/^\[!\s*([^\]\r\n]+?)\s*\](?:\s+(.*))?/);
             if (match) {
               const rawType = match[1].trim();
@@ -4944,7 +4944,7 @@ var require_converter = __commonJS({
               const mappedConfig = CALLOUT_ICONS[type];
               const config = mappedConfig || { icon: CALLOUT_ICONS.note.icon, label: type };
               const defaultTitle = type.charAt(0).toUpperCase() + type.slice(1);
-              const lines = toText4(token.content).split("\n");
+              const lines = toText7(token.content).split("\n");
               lines.shift();
               token.content = lines.join("\n");
               if (token.children) {
@@ -4955,7 +4955,7 @@ var require_converter = __commonJS({
                   token.children = [];
                 }
               }
-              if (toText4(token.content).trim() === "") {
+              if (toText7(token.content).trim() === "") {
                 if (i > 0 && getToken(tokens, i - 1).type === "paragraph_open")
                   getToken(tokens, i - 1).hidden = true;
                 token.hidden = true;
@@ -5524,17 +5524,17 @@ ${macHeader}
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/types.js
+// node_modules/cheerio/lib/types.js
 var require_types = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/types.js"(exports) {
+  "node_modules/cheerio/lib/types.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/options.js
+// node_modules/cheerio/lib/options.js
 var require_options = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/options.js"(exports) {
+  "node_modules/cheerio/lib/options.js"(exports) {
     "use strict";
     var __assign = exports && exports.__assign || function() {
       __assign = Object.assign || function(t) {
@@ -5566,9 +5566,9 @@ var require_options = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domelementtype/lib/index.js
+// node_modules/domelementtype/lib/index.js
 var require_lib = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domelementtype/lib/index.js"(exports) {
+  "node_modules/domelementtype/lib/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Doctype = exports.CDATA = exports.Tag = exports.Style = exports.Script = exports.Comment = exports.Directive = exports.Text = exports.Root = exports.isTag = exports.ElementType = void 0;
@@ -5600,9 +5600,9 @@ var require_lib = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domhandler/lib/node.js
+// node_modules/domhandler/lib/node.js
 var require_node = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domhandler/lib/node.js"(exports) {
+  "node_modules/domhandler/lib/node.js"(exports) {
     "use strict";
     var __extends = exports && exports.__extends || function() {
       var extendStatics = function(d, b) {
@@ -6037,9 +6037,9 @@ var require_node = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domhandler/lib/index.js
+// node_modules/domhandler/lib/index.js
 var require_lib2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domhandler/lib/index.js"(exports) {
+  "node_modules/domhandler/lib/index.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -6200,9 +6200,9 @@ var require_lib2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/generated/decode-data-html.js
+// node_modules/entities/lib/generated/decode-data-html.js
 var require_decode_data_html = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/generated/decode-data-html.js"(exports) {
+  "node_modules/entities/lib/generated/decode-data-html.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = new Uint16Array(
@@ -6214,9 +6214,9 @@ var require_decode_data_html = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/generated/decode-data-xml.js
+// node_modules/entities/lib/generated/decode-data-xml.js
 var require_decode_data_xml = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/generated/decode-data-xml.js"(exports) {
+  "node_modules/entities/lib/generated/decode-data-xml.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = new Uint16Array(
@@ -6228,9 +6228,9 @@ var require_decode_data_xml = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/decode_codepoint.js
+// node_modules/entities/lib/decode_codepoint.js
 var require_decode_codepoint = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/decode_codepoint.js"(exports) {
+  "node_modules/entities/lib/decode_codepoint.js"(exports) {
     "use strict";
     var _a5;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -6292,9 +6292,9 @@ var require_decode_codepoint = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/decode.js
+// node_modules/entities/lib/decode.js
 var require_decode = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/decode.js"(exports) {
+  "node_modules/entities/lib/decode.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -6655,9 +6655,9 @@ var require_decode = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/generated/encode-html.js
+// node_modules/entities/lib/generated/encode-html.js
 var require_encode_html = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/generated/encode-html.js"(exports) {
+  "node_modules/entities/lib/generated/encode-html.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function restoreDiff(arr) {
@@ -6670,9 +6670,9 @@ var require_encode_html = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/escape.js
+// node_modules/entities/lib/escape.js
 var require_escape = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/escape.js"(exports) {
+  "node_modules/entities/lib/escape.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.escapeText = exports.escapeAttribute = exports.escapeUTF8 = exports.escape = exports.encodeXML = exports.getCodePoint = exports.xmlReplacer = void 0;
@@ -6743,9 +6743,9 @@ var require_escape = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/encode.js
+// node_modules/entities/lib/encode.js
 var require_encode = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/encode.js"(exports) {
+  "node_modules/entities/lib/encode.js"(exports) {
     "use strict";
     var __importDefault = exports && exports.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -6798,9 +6798,9 @@ var require_encode = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/index.js
+// node_modules/entities/lib/index.js
 var require_lib3 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/entities/lib/index.js"(exports) {
+  "node_modules/entities/lib/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.decodeXMLStrict = exports.decodeHTML5Strict = exports.decodeHTML4Strict = exports.decodeHTML5 = exports.decodeHTML4 = exports.decodeHTMLAttribute = exports.decodeHTMLStrict = exports.decodeHTML = exports.decodeXML = exports.DecodingMode = exports.EntityDecoder = exports.encodeHTML5 = exports.encodeHTML4 = exports.encodeNonAsciiHTML = exports.encodeHTML = exports.escapeText = exports.escapeAttribute = exports.escapeUTF8 = exports.escape = exports.encodeXML = exports.encode = exports.decodeStrict = exports.decode = exports.EncodingMode = exports.EntityLevel = void 0;
@@ -6928,9 +6928,9 @@ var require_lib3 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/dom-serializer/lib/foreignNames.js
+// node_modules/dom-serializer/lib/foreignNames.js
 var require_foreignNames = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/dom-serializer/lib/foreignNames.js"(exports) {
+  "node_modules/dom-serializer/lib/foreignNames.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.attributeNames = exports.elementNames = void 0;
@@ -7041,9 +7041,9 @@ var require_foreignNames = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/dom-serializer/lib/index.js
+// node_modules/dom-serializer/lib/index.js
 var require_lib4 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/dom-serializer/lib/index.js"(exports) {
+  "node_modules/dom-serializer/lib/index.js"(exports) {
     "use strict";
     var __assign = exports && exports.__assign || function() {
       __assign = Object.assign || function(t) {
@@ -7246,9 +7246,9 @@ var require_lib4 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/stringify.js
+// node_modules/domutils/lib/stringify.js
 var require_stringify = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/stringify.js"(exports) {
+  "node_modules/domutils/lib/stringify.js"(exports) {
     "use strict";
     var __importDefault = exports && exports.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -7304,9 +7304,9 @@ var require_stringify = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/traversal.js
+// node_modules/domutils/lib/traversal.js
 var require_traversal = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/traversal.js"(exports) {
+  "node_modules/domutils/lib/traversal.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getChildren = getChildren;
@@ -7368,9 +7368,9 @@ var require_traversal = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/manipulation.js
+// node_modules/domutils/lib/manipulation.js
 var require_manipulation = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/manipulation.js"(exports) {
+  "node_modules/domutils/lib/manipulation.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.removeElement = removeElement;
@@ -7471,9 +7471,9 @@ var require_manipulation = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/querying.js
+// node_modules/domutils/lib/querying.js
 var require_querying = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/querying.js"(exports) {
+  "node_modules/domutils/lib/querying.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.filter = filter;
@@ -7568,9 +7568,9 @@ var require_querying = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/legacy.js
+// node_modules/domutils/lib/legacy.js
 var require_legacy = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/legacy.js"(exports) {
+  "node_modules/domutils/lib/legacy.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.testElement = testElement;
@@ -7686,9 +7686,9 @@ var require_legacy = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/helpers.js
+// node_modules/domutils/lib/helpers.js
 var require_helpers = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/helpers.js"(exports) {
+  "node_modules/domutils/lib/helpers.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DocumentPosition = void 0;
@@ -7778,9 +7778,9 @@ var require_helpers = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/feeds.js
+// node_modules/domutils/lib/feeds.js
 var require_feeds = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/feeds.js"(exports) {
+  "node_modules/domutils/lib/feeds.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getFeed = getFeed;
@@ -7918,9 +7918,9 @@ var require_feeds = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/index.js
+// node_modules/domutils/lib/index.js
 var require_lib5 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/domutils/lib/index.js"(exports) {
+  "node_modules/domutils/lib/index.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -7973,9 +7973,9 @@ var require_lib5 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/static.js
+// node_modules/cheerio/lib/static.js
 var require_static = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/static.js"(exports) {
+  "node_modules/cheerio/lib/static.js"(exports) {
     "use strict";
     var __assign = exports && exports.__assign || function() {
       __assign = Object.assign || function(t) {
@@ -8118,9 +8118,9 @@ var require_static = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/utils.js
+// node_modules/cheerio/lib/utils.js
 var require_utils = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/utils.js"(exports) {
+  "node_modules/cheerio/lib/utils.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.isHtml = exports.cloneDom = exports.domEach = exports.cssCase = exports.camelCase = exports.isCheerio = exports.isTag = void 0;
@@ -8180,9 +8180,9 @@ var require_utils = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/attributes.js
+// node_modules/cheerio/lib/api/attributes.js
 var require_attributes = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/attributes.js"(exports) {
+  "node_modules/cheerio/lib/api/attributes.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.toggleClass = exports.removeClass = exports.addClass = exports.hasClass = exports.removeAttr = exports.val = exports.data = exports.prop = exports.attr = void 0;
@@ -8582,9 +8582,9 @@ var require_attributes = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/types.js
+// node_modules/css-what/lib/commonjs/types.js
 var require_types2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/types.js"(exports) {
+  "node_modules/css-what/lib/commonjs/types.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.AttributeAction = exports.IgnoreCaseMode = exports.SelectorType = void 0;
@@ -8622,9 +8622,9 @@ var require_types2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/parse.js
+// node_modules/css-what/lib/commonjs/parse.js
 var require_parse = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/parse.js"(exports) {
+  "node_modules/css-what/lib/commonjs/parse.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.parse = exports.isTraversal = void 0;
@@ -8975,9 +8975,9 @@ var require_parse = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/stringify.js
+// node_modules/css-what/lib/commonjs/stringify.js
 var require_stringify2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/stringify.js"(exports) {
+  "node_modules/css-what/lib/commonjs/stringify.js"(exports) {
     "use strict";
     var __spreadArray = exports && exports.__spreadArray || function(to, from, pack) {
       if (pack || arguments.length === 2)
@@ -9100,9 +9100,9 @@ var require_stringify2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/index.js
+// node_modules/css-what/lib/commonjs/index.js
 var require_commonjs = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-what/lib/commonjs/index.js"(exports) {
+  "node_modules/css-what/lib/commonjs/index.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -9141,9 +9141,9 @@ var require_commonjs = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/boolbase/index.js
+// node_modules/boolbase/index.js
 var require_boolbase = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/boolbase/index.js"(exports, module2) {
+  "node_modules/boolbase/index.js"(exports, module2) {
     module2.exports = {
       trueFunc: function trueFunc() {
         return true;
@@ -9155,9 +9155,9 @@ var require_boolbase = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/sort.js
+// node_modules/css-select/lib/sort.js
 var require_sort = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/sort.js"(exports) {
+  "node_modules/css-select/lib/sort.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.isTraversal = void 0;
@@ -9228,9 +9228,9 @@ var require_sort = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/attributes.js
+// node_modules/css-select/lib/attributes.js
 var require_attributes2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/attributes.js"(exports) {
+  "node_modules/css-select/lib/attributes.js"(exports) {
     "use strict";
     var __importDefault = exports && exports.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -9426,9 +9426,9 @@ var require_attributes2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/nth-check/lib/parse.js
+// node_modules/nth-check/lib/parse.js
 var require_parse2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/nth-check/lib/parse.js"(exports) {
+  "node_modules/nth-check/lib/parse.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.parse = void 0;
@@ -9491,9 +9491,9 @@ var require_parse2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/nth-check/lib/compile.js
+// node_modules/nth-check/lib/compile.js
 var require_compile = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/nth-check/lib/compile.js"(exports) {
+  "node_modules/nth-check/lib/compile.js"(exports) {
     "use strict";
     var __importDefault = exports && exports.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -9562,9 +9562,9 @@ var require_compile = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/nth-check/lib/index.js
+// node_modules/nth-check/lib/index.js
 var require_lib6 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/nth-check/lib/index.js"(exports) {
+  "node_modules/nth-check/lib/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.sequence = exports.generate = exports.compile = exports.parse = void 0;
@@ -9590,9 +9590,9 @@ var require_lib6 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/filters.js
+// node_modules/css-select/lib/pseudo-selectors/filters.js
 var require_filters = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/filters.js"(exports) {
+  "node_modules/css-select/lib/pseudo-selectors/filters.js"(exports) {
     "use strict";
     var __importDefault = exports && exports.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -9745,9 +9745,9 @@ var require_filters = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/pseudos.js
+// node_modules/css-select/lib/pseudo-selectors/pseudos.js
 var require_pseudos = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/pseudos.js"(exports) {
+  "node_modules/css-select/lib/pseudo-selectors/pseudos.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.verifyPseudoArgs = exports.pseudos = void 0;
@@ -9834,9 +9834,9 @@ var require_pseudos = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/aliases.js
+// node_modules/css-select/lib/pseudo-selectors/aliases.js
 var require_aliases = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/aliases.js"(exports) {
+  "node_modules/css-select/lib/pseudo-selectors/aliases.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.aliases = void 0;
@@ -9870,9 +9870,9 @@ var require_aliases = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/subselects.js
+// node_modules/css-select/lib/pseudo-selectors/subselects.js
 var require_subselects = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/subselects.js"(exports) {
+  "node_modules/css-select/lib/pseudo-selectors/subselects.js"(exports) {
     "use strict";
     var __spreadArray = exports && exports.__spreadArray || function(to, from, pack) {
       if (pack || arguments.length === 2)
@@ -9975,9 +9975,9 @@ var require_subselects = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/index.js
+// node_modules/css-select/lib/pseudo-selectors/index.js
 var require_pseudo_selectors = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/pseudo-selectors/index.js"(exports) {
+  "node_modules/css-select/lib/pseudo-selectors/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.compilePseudoSelector = exports.aliases = exports.pseudos = exports.filters = void 0;
@@ -10035,9 +10035,9 @@ var require_pseudo_selectors = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/general.js
+// node_modules/css-select/lib/general.js
 var require_general = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/general.js"(exports) {
+  "node_modules/css-select/lib/general.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.compileGeneralSelector = void 0;
@@ -10180,9 +10180,9 @@ var require_general = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/compile.js
+// node_modules/css-select/lib/compile.js
 var require_compile2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/compile.js"(exports) {
+  "node_modules/css-select/lib/compile.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -10317,9 +10317,9 @@ var require_compile2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/index.js
+// node_modules/css-select/lib/index.js
 var require_lib7 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/css-select/lib/index.js"(exports) {
+  "node_modules/css-select/lib/index.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -10439,9 +10439,9 @@ var require_lib7 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio-select/lib/positionals.js
+// node_modules/cheerio-select/lib/positionals.js
 var require_positionals = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio-select/lib/positionals.js"(exports) {
+  "node_modules/cheerio-select/lib/positionals.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getLimit = exports.isFilter = exports.filterNames = void 0;
@@ -10493,9 +10493,9 @@ var require_positionals = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio-select/lib/helpers.js
+// node_modules/cheerio-select/lib/helpers.js
 var require_helpers2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio-select/lib/helpers.js"(exports) {
+  "node_modules/cheerio-select/lib/helpers.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.groupSelectors = exports.getDocumentRoot = void 0;
@@ -10523,9 +10523,9 @@ var require_helpers2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio-select/lib/index.js
+// node_modules/cheerio-select/lib/index.js
 var require_lib8 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio-select/lib/index.js"(exports) {
+  "node_modules/cheerio-select/lib/index.js"(exports) {
     "use strict";
     var __assign = exports && exports.__assign || function() {
       __assign = Object.assign || function(t) {
@@ -10813,9 +10813,9 @@ var require_lib8 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/traversing.js
+// node_modules/cheerio/lib/api/traversing.js
 var require_traversing = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/traversing.js"(exports) {
+  "node_modules/cheerio/lib/api/traversing.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -11200,9 +11200,9 @@ var require_traversing = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/parse.js
+// node_modules/cheerio/lib/parse.js
 var require_parse3 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/parse.js"(exports) {
+  "node_modules/cheerio/lib/parse.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.update = exports.getParse = void 0;
@@ -11252,9 +11252,9 @@ var require_parse3 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/manipulation.js
+// node_modules/cheerio/lib/api/manipulation.js
 var require_manipulation2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/manipulation.js"(exports) {
+  "node_modules/cheerio/lib/api/manipulation.js"(exports) {
     "use strict";
     var __spreadArray = exports && exports.__spreadArray || function(to, from, pack) {
       if (pack || arguments.length === 2)
@@ -11619,9 +11619,9 @@ var require_manipulation2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/css.js
+// node_modules/cheerio/lib/api/css.js
 var require_css = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/css.js"(exports) {
+  "node_modules/cheerio/lib/api/css.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.css = void 0;
@@ -11704,9 +11704,9 @@ var require_css = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/forms.js
+// node_modules/cheerio/lib/api/forms.js
 var require_forms = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/api/forms.js"(exports) {
+  "node_modules/cheerio/lib/api/forms.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.serializeArray = exports.serialize = void 0;
@@ -11751,9 +11751,9 @@ var require_forms = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/cheerio.js
+// node_modules/cheerio/lib/cheerio.js
 var require_cheerio = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/cheerio.js"(exports) {
+  "node_modules/cheerio/lib/cheerio.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -11819,9 +11819,9 @@ var require_cheerio = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/load.js
+// node_modules/cheerio/lib/load.js
 var require_load = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/load.js"(exports) {
+  "node_modules/cheerio/lib/load.js"(exports) {
     "use strict";
     var __extends = exports && exports.__extends || function() {
       var extendStatics = function(d, b) {
@@ -11996,9 +11996,9 @@ var require_load = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/unicode.js
+// node_modules/parse5/dist/cjs/common/unicode.js
 var require_unicode = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/unicode.js"(exports) {
+  "node_modules/parse5/dist/cjs/common/unicode.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.SEQUENCES = exports.CODE_POINTS = exports.REPLACEMENT_CHARACTER = void 0;
@@ -12099,9 +12099,9 @@ var require_unicode = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/error-codes.js
+// node_modules/parse5/dist/cjs/common/error-codes.js
 var require_error_codes = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/error-codes.js"(exports) {
+  "node_modules/parse5/dist/cjs/common/error-codes.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ERR = void 0;
@@ -12171,9 +12171,9 @@ var require_error_codes = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/tokenizer/preprocessor.js
+// node_modules/parse5/dist/cjs/tokenizer/preprocessor.js
 var require_preprocessor = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/tokenizer/preprocessor.js"(exports) {
+  "node_modules/parse5/dist/cjs/tokenizer/preprocessor.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Preprocessor = void 0;
@@ -12350,9 +12350,9 @@ var require_preprocessor = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/token.js
+// node_modules/parse5/dist/cjs/common/token.js
 var require_token = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/token.js"(exports) {
+  "node_modules/parse5/dist/cjs/common/token.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.TokenType = void 0;
@@ -12380,9 +12380,9 @@ var require_token = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-html.js
+// node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-html.js
 var require_decode_data_html2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-html.js"(exports) {
+  "node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-html.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.htmlDecodeTree = void 0;
@@ -12393,9 +12393,9 @@ var require_decode_data_html2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-xml.js
+// node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-xml.js
 var require_decode_data_xml2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-xml.js"(exports) {
+  "node_modules/parse5/node_modules/entities/dist/commonjs/generated/decode-data-xml.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.xmlDecodeTree = void 0;
@@ -12406,9 +12406,9 @@ var require_decode_data_xml2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/decode-codepoint.js
+// node_modules/parse5/node_modules/entities/dist/commonjs/decode-codepoint.js
 var require_decode_codepoint2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/decode-codepoint.js"(exports) {
+  "node_modules/parse5/node_modules/entities/dist/commonjs/decode-codepoint.js"(exports) {
     "use strict";
     var _a5;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -12470,9 +12470,9 @@ var require_decode_codepoint2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/decode.js
+// node_modules/parse5/node_modules/entities/dist/commonjs/decode.js
 var require_decode2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/decode.js"(exports) {
+  "node_modules/parse5/node_modules/entities/dist/commonjs/decode.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.fromCodePoint = exports.replaceCodePoint = exports.decodeCodePoint = exports.xmlDecodeTree = exports.htmlDecodeTree = exports.EntityDecoder = exports.DecodingMode = exports.BinTrieFlags = void 0;
@@ -12879,9 +12879,9 @@ var require_decode2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/html.js
+// node_modules/parse5/dist/cjs/common/html.js
 var require_html = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/html.js"(exports) {
+  "node_modules/parse5/dist/cjs/common/html.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.NUMBERED_HEADERS = exports.SPECIAL_ELEMENTS = exports.TAG_ID = exports.TAG_NAMES = exports.DOCUMENT_MODE = exports.ATTRS = exports.NS = void 0;
@@ -13402,9 +13402,9 @@ var require_html = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/tokenizer/index.js
+// node_modules/parse5/dist/cjs/tokenizer/index.js
 var require_tokenizer = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/tokenizer/index.js"(exports) {
+  "node_modules/parse5/dist/cjs/tokenizer/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Tokenizer = exports.TokenizerMode = void 0;
@@ -16032,9 +16032,9 @@ var require_tokenizer = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/parser/open-element-stack.js
+// node_modules/parse5/dist/cjs/parser/open-element-stack.js
 var require_open_element_stack = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/parser/open-element-stack.js"(exports) {
+  "node_modules/parse5/dist/cjs/parser/open-element-stack.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.OpenElementStack = void 0;
@@ -16358,9 +16358,9 @@ var require_open_element_stack = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/parser/formatting-element-list.js
+// node_modules/parse5/dist/cjs/parser/formatting-element-list.js
 var require_formatting_element_list = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/parser/formatting-element-list.js"(exports) {
+  "node_modules/parse5/dist/cjs/parser/formatting-element-list.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.FormattingElementList = exports.EntryType = void 0;
@@ -16471,9 +16471,9 @@ var require_formatting_element_list = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/tree-adapters/default.js
+// node_modules/parse5/dist/cjs/tree-adapters/default.js
 var require_default = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/tree-adapters/default.js"(exports) {
+  "node_modules/parse5/dist/cjs/tree-adapters/default.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.defaultTreeAdapter = void 0;
@@ -16651,9 +16651,9 @@ var require_default = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/doctype.js
+// node_modules/parse5/dist/cjs/common/doctype.js
 var require_doctype = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/doctype.js"(exports) {
+  "node_modules/parse5/dist/cjs/common/doctype.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.isConforming = isConforming;
@@ -16769,9 +16769,9 @@ var require_doctype = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/foreign-content.js
+// node_modules/parse5/dist/cjs/common/foreign-content.js
 var require_foreign_content = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/common/foreign-content.js"(exports) {
+  "node_modules/parse5/dist/cjs/common/foreign-content.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.SVG_TAG_NAMES_ADJUSTMENT_MAP = void 0;
@@ -17003,9 +17003,9 @@ var require_foreign_content = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/parser/index.js
+// node_modules/parse5/dist/cjs/parser/index.js
 var require_parser = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/parser/index.js"(exports) {
+  "node_modules/parse5/dist/cjs/parser/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Parser = void 0;
@@ -20035,9 +20035,9 @@ var require_parser = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/escape.js
+// node_modules/parse5/node_modules/entities/dist/commonjs/escape.js
 var require_escape2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/node_modules/entities/dist/commonjs/escape.js"(exports) {
+  "node_modules/parse5/node_modules/entities/dist/commonjs/escape.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.escapeText = exports.escapeAttribute = exports.escapeUTF8 = exports.escape = exports.getCodePoint = exports.xmlReplacer = void 0;
@@ -20104,9 +20104,9 @@ var require_escape2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/serializer/index.js
+// node_modules/parse5/dist/cjs/serializer/index.js
 var require_serializer = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/serializer/index.js"(exports) {
+  "node_modules/parse5/dist/cjs/serializer/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.serialize = serialize;
@@ -20227,9 +20227,9 @@ var require_serializer = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/index.js
+// node_modules/parse5/dist/cjs/index.js
 var require_cjs = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5/dist/cjs/index.js"(exports) {
+  "node_modules/parse5/dist/cjs/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.TokenizerMode = exports.Tokenizer = exports.Token = exports.html = exports.foreignContent = exports.ErrorCodes = exports.serializeOuter = exports.serialize = exports.Parser = exports.defaultTreeAdapter = void 0;
@@ -20281,9 +20281,9 @@ var require_cjs = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5-htmlparser2-tree-adapter/dist/cjs/index.js
+// node_modules/parse5-htmlparser2-tree-adapter/dist/cjs/index.js
 var require_cjs2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/parse5-htmlparser2-tree-adapter/dist/cjs/index.js"(exports) {
+  "node_modules/parse5-htmlparser2-tree-adapter/dist/cjs/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.adapter = void 0;
@@ -20496,9 +20496,9 @@ var require_cjs2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/parsers/parse5-adapter.js
+// node_modules/cheerio/lib/parsers/parse5-adapter.js
 var require_parse5_adapter = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/parsers/parse5-adapter.js"(exports) {
+  "node_modules/cheerio/lib/parsers/parse5-adapter.js"(exports) {
     "use strict";
     var __spreadArray = exports && exports.__spreadArray || function(to, from, pack) {
       if (pack || arguments.length === 2)
@@ -20546,9 +20546,9 @@ var require_parse5_adapter = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/htmlparser2/lib/Tokenizer.js
+// node_modules/htmlparser2/lib/Tokenizer.js
 var require_Tokenizer = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/htmlparser2/lib/Tokenizer.js"(exports) {
+  "node_modules/htmlparser2/lib/Tokenizer.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.QuoteType = void 0;
@@ -21319,9 +21319,9 @@ var require_Tokenizer = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/htmlparser2/lib/Parser.js
+// node_modules/htmlparser2/lib/Parser.js
 var require_Parser = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/htmlparser2/lib/Parser.js"(exports) {
+  "node_modules/htmlparser2/lib/Parser.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -21756,9 +21756,9 @@ var require_Parser = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/htmlparser2/lib/index.js
+// node_modules/htmlparser2/lib/index.js
 var require_lib9 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/htmlparser2/lib/index.js"(exports) {
+  "node_modules/htmlparser2/lib/index.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -21847,9 +21847,9 @@ var require_lib9 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/index.js
+// node_modules/cheerio/lib/index.js
 var require_lib10 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/cheerio/lib/index.js"(exports) {
+  "node_modules/cheerio/lib/index.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0)
@@ -21924,9 +21924,9 @@ var require_lib10 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/debug.js
+// node_modules/mensch/lib/debug.js
 var require_debug = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/debug.js"(exports, module2) {
+  "node_modules/mensch/lib/debug.js"(exports, module2) {
     exports = module2.exports = debug;
     function debug(label) {
       return _debug.bind(null, label);
@@ -21939,9 +21939,9 @@ var require_debug = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/lexer.js
+// node_modules/mensch/lib/lexer.js
 var require_lexer = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/lexer.js"(exports, module2) {
+  "node_modules/mensch/lib/lexer.js"(exports, module2) {
     var DEBUG = false;
     var TIMER = false;
     var debug = require_debug()("lex");
@@ -22406,9 +22406,9 @@ var require_lexer = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/parser.js
+// node_modules/mensch/lib/parser.js
 var require_parser2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/parser.js"(exports, module2) {
+  "node_modules/mensch/lib/parser.js"(exports, module2) {
     var DEBUG = false;
     var TIMER = false;
     var debug = require_debug()("parse");
@@ -22574,9 +22574,9 @@ var require_parser2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/stringify.js
+// node_modules/mensch/lib/stringify.js
 var require_stringify3 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/lib/stringify.js"(exports, module2) {
+  "node_modules/mensch/lib/stringify.js"(exports, module2) {
     var DEBUG = false;
     var TIMER = false;
     var debug = require_debug()("stringify");
@@ -22708,9 +22708,9 @@ var require_stringify3 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/index.js
+// node_modules/mensch/index.js
 var require_mensch = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/mensch/index.js"(exports, module2) {
+  "node_modules/mensch/index.js"(exports, module2) {
     module2.exports = {
       lex: require_lexer(),
       parse: require_parser2(),
@@ -22719,9 +22719,9 @@ var require_mensch = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/slick/parser.js
+// node_modules/slick/parser.js
 var require_parser3 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/slick/parser.js"(exports, module2) {
+  "node_modules/slick/parser.js"(exports, module2) {
     "use strict";
     var escapeRe = /([-.*+?^${}()|[\]\/\\])/g;
     var unescapeRe = /\\/g;
@@ -22886,9 +22886,9 @@ var require_parser3 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/selector.js
+// node_modules/juice/lib/selector.js
 var require_selector = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/selector.js"(exports, module2) {
+  "node_modules/juice/lib/selector.js"(exports, module2) {
     "use strict";
     var parser = require_parser3();
     module2.exports = exports = Selector;
@@ -22957,9 +22957,9 @@ var require_selector = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/property.js
+// node_modules/juice/lib/property.js
 var require_property = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/property.js"(exports, module2) {
+  "node_modules/juice/lib/property.js"(exports, module2) {
     "use strict";
     module2.exports = exports = Property;
     var utils = require_utils2();
@@ -22994,9 +22994,9 @@ var require_property = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/utils.js
+// node_modules/juice/lib/utils.js
 var require_utils2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/utils.js"(exports) {
+  "node_modules/juice/lib/utils.js"(exports) {
     "use strict";
     var mensch = require_mensch();
     var Selector = require_selector();
@@ -23115,9 +23115,9 @@ var require_utils2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/cheerio.js
+// node_modules/juice/lib/cheerio.js
 var require_cheerio2 = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/cheerio.js"(exports, module2) {
+  "node_modules/juice/lib/cheerio.js"(exports, module2) {
     "use strict";
     var cheerio = require_lib10();
     var utils = require_utils2();
@@ -23171,9 +23171,9 @@ var require_cheerio2 = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/numbers.js
+// node_modules/juice/lib/numbers.js
 var require_numbers = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/numbers.js"(exports) {
+  "node_modules/juice/lib/numbers.js"(exports) {
     "use strict";
     exports.romanize = function(num) {
       if (isNaN(num))
@@ -23226,9 +23226,9 @@ var require_numbers = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/variables.js
+// node_modules/juice/lib/variables.js
 var require_variables = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/variables.js"(exports, module2) {
+  "node_modules/juice/lib/variables.js"(exports, module2) {
     "use strict";
     var uniqueString = (string) => {
       let str = "";
@@ -23277,9 +23277,9 @@ var require_variables = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/inline.js
+// node_modules/juice/lib/inline.js
 var require_inline = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/lib/inline.js"(exports, module2) {
+  "node_modules/juice/lib/inline.js"(exports, module2) {
     "use strict";
     var utils = require_utils2();
     var numbers = require_numbers();
@@ -23699,9 +23699,9 @@ var require_inline = __commonJS({
   }
 });
 
-// ../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/client.js
+// node_modules/juice/client.js
 var require_client = __commonJS({
-  "../../../../Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/node_modules/juice/client.js"(exports, module2) {
+  "node_modules/juice/client.js"(exports, module2) {
     "use strict";
     var cheerio = require_cheerio2();
     var makeJuiceClient = require_inline();
@@ -68449,164 +68449,20 @@ function checkExtensionPolicyGate(policy, options = {}) {
   };
 }
 
-// views/publish-modal/multi-platform.js
-var QUOTA_POLICY = "truncate";
+// views/publish-modal/multi-platform-policy.js
 var FREE_DAILY_PLATFORM_QUOTA = 1;
-var MODAL_SELECTED_PLATFORM_IDS = "__wechatMultiPlatformSelectedPlatformIds";
-var MATERIAL_COVER_ASSET_TTL_MS = 5 * 60 * 1e3;
-var MAX_MATERIAL_COVER_ASSET_CACHE_ENTRIES = 3;
 function isRecord9(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
 function toRecord5(value) {
   return isRecord9(value) ? value : {};
 }
-function toRecordList2(value) {
-  return Array.isArray(value) ? value.filter(isRecord9).map((item) => ({ ...item })) : [];
-}
 function toText3(value) {
   return typeof value === "string" ? value : "";
 }
-function callBooleanMethod(target, methodName, args = []) {
-  const method = toRecord5(target)[methodName];
-  if (typeof method !== "function")
-    return null;
-  const methodFn = (
-    /** @type {(...methodArgs: unknown[]) => unknown} */
-    method
-  );
-  return methodFn.apply(target, args) === true;
-}
-function toReadableError2(error) {
-  if (error instanceof Error) {
-    const errorRecord = (
-      /** @type {{ code?: unknown }} */
-      error
-    );
-    return {
-      message: error.message,
-      code: toText3(errorRecord.code),
-      stack: toText3(error.stack)
-    };
-  }
-  const record = toRecord5(error);
-  return {
-    message: toText3(record.message) || String(error || ""),
-    code: toText3(record.code),
-    stack: toText3(record.stack)
-  };
-}
-function getPlatformId2(platform) {
-  const record = toRecord5(platform);
-  return toText3(record.id || record.platform);
-}
-function toEnqueueResult(value) {
-  return (
-    /** @type {EnqueueResultLike} */
-    { ...toRecord5(value) }
-  );
-}
-function toBridgeAssets(value) {
-  if (!Array.isArray(value))
-    return [];
-  return value.filter(isRecord9).map((asset) => (
-    /** @type {BridgeAssetLike} */
-    { ...asset }
-  ));
-}
-function toResolvedImages(value) {
-  const record = toRecord5(value);
-  return {
-    markdown: toText3(record.markdown),
-    assets: toBridgeAssets(record.assets),
-    cover: toText3(record.cover),
-    firstImageSrc: toText3(record.firstImageSrc),
-    warnings: Array.isArray(record.warnings) ? record.warnings : []
-  };
-}
-function toBridgeAsset(value) {
-  const record = toRecord5(value);
-  if (!record.filename || !record.mimeType || typeof record.size !== "number" || typeof record.base64 !== "string") {
-    return null;
-  }
-  return (
-    /** @type {BridgeAssetLike} */
-    {
-      ...record,
-      filename: toText3(record.filename),
-      mimeType: toText3(record.mimeType),
-      size: record.size,
-      base64: record.base64,
-      source: isRecord9(record.source) ? { ...record.source } : void 0
-    }
-  );
-}
-function toPlatformStatusBadge2(value) {
-  const record = toRecord5(value);
-  return {
-    cls: toText3(record.cls),
-    text: toText3(record.text),
-    status: toText3(record.status)
-  };
-}
-function toNormalizedPlatform(value) {
-  const record = toRecord5(value);
-  const id = toText3(record.id);
-  const name = toText3(record.name) || id;
-  if (!id)
-    return null;
-  return (
-    /** @type {PlatformLikeRecord} */
-    {
-      ...record,
-      id,
-      name
-    }
-  );
-}
-function toTaskResults(value) {
-  return toRecordList2(value).map((item) => {
-    const record = toRecord5(item);
-    return {
-      platform: toText3(record.id || record.platform),
-      platformName: toText3(record.name),
-      success: record.success === true || record.status === "success",
-      error: toText3(record.error || record.message)
-    };
-  }).filter((item) => item.platform);
-}
-function getRecentTaskPlatforms(result, requestedPlatformIds) {
-  const publishedPlatforms = toUnknownList(result.publishedPlatforms);
-  if (publishedPlatforms.length)
-    return publishedPlatforms;
-  const resultPlatforms = toUnknownList(result.platforms);
-  return resultPlatforms.length ? resultPlatforms : requestedPlatformIds;
-}
-function toUnknownList(value) {
-  return Array.isArray(value) ? value : [];
-}
-async function getResponseArrayBuffer(response) {
-  const responseRecord = toRecord5(response);
-  const arrayBuffer = responseRecord.arrayBuffer;
-  if (typeof arrayBuffer !== "function")
-    return (
-      /** @type {unknown} */
-      arrayBuffer
-    );
-  const readArrayBuffer = (
-    /** @type {() => Promise<unknown>} */
-    arrayBuffer
-  );
-  return readArrayBuffer();
-}
-function asModalElement(element) {
-  return (
-    /** @type {ModalContentElementLike} */
-    element
-  );
-}
-function isUnsupportedBridgeError2(error) {
-  return isUnsupportedBridgeMethodError(toReadableError2(error));
+function toFiniteNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : void 0;
 }
 function getQuotaHintText(selectedCount = 0, { proLicensed = false, freeLimit = FREE_DAILY_PLATFORM_QUOTA } = {}) {
   const limit = Number.isFinite(Number(freeLimit)) ? Math.max(0, Math.floor(Number(freeLimit))) : FREE_DAILY_PLATFORM_QUOTA;
@@ -68623,10 +68479,6 @@ function getQuotaHintText(selectedCount = 0, { proLicensed = false, freeLimit = 
     return `\u5DF2\u9009 ${selectedCount} \u4E2A\u5E73\u53F0\uFF1B\u514D\u8D39\u7248\u6BCF\u5929 ${limit} \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002`;
   }
   return `\u514D\u8D39\u7248\u6BCF\u5929 ${limit} \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002`;
-}
-function toFiniteNumber(value) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : void 0;
 }
 function mergePolicyCapabilityDetails(target, source) {
   const sourceRecord = toRecord5(source);
@@ -68727,9 +68579,9 @@ function mergePluginSkippedPlatformsIntoResult(result, truncation) {
     return result;
   const skippedPlatformIds = parseWechatsyncPlatformIds([
     ...truncation.skippedPlatformIds,
-    ...parseWechatsyncPlatformIds(toUnknownList(result.skippedPlatforms))
+    ...parseWechatsyncPlatformIds(Array.isArray(result.skippedPlatforms) ? result.skippedPlatforms : [])
   ]);
-  const publishedPlatforms = toUnknownList(result.publishedPlatforms).length ? result.publishedPlatforms : truncation.platformIds;
+  const publishedPlatforms = Array.isArray(result.publishedPlatforms) && result.publishedPlatforms.length ? result.publishedPlatforms : truncation.platformIds;
   return {
     ...result,
     quotaBlocked: true,
@@ -68738,29 +68590,24 @@ function mergePluginSkippedPlatformsIntoResult(result, truncation) {
     skippedPlatforms: skippedPlatformIds
   };
 }
-function isMobileClient(app, platformApi = null) {
-  if (typeof (platformApi == null ? void 0 : platformApi.isMobile) === "boolean")
-    return platformApi.isMobile;
-  return toRecord5(app).isMobile === true;
+
+// views/publish-modal/multi-platform-cover-assets.js
+var MATERIAL_COVER_ASSET_TTL_MS = 5 * 60 * 1e3;
+var MAX_MATERIAL_COVER_ASSET_CACHE_ENTRIES = 3;
+function isRecord10(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
 }
-function openPublisherProPage(view) {
-  const openedProPage = callBooleanMethod(view, "openPublisherProPage");
-  if (openedProPage !== null)
-    return openedProPage;
-  const openedExternalUrl = callBooleanMethod(view, "openExternalUrl", ["https://xiaoweibox.top/obsidian-publisher/pro/"]);
-  if (openedExternalUrl !== null)
-    return openedExternalUrl;
-  return false;
+function toRecord6(value) {
+  return isRecord10(value) ? value : {};
 }
-function openPublisherGuidePage(view, section = "install-extension") {
-  const openedGuidePage = callBooleanMethod(view, "openPublisherGuidePage", [section]);
-  if (openedGuidePage !== null)
-    return openedGuidePage;
-  const hash = section === "bridge" ? "bridge" : "install-extension";
-  const openedExternalUrl = callBooleanMethod(view, "openExternalUrl", [`https://xiaoweibox.top/obsidian-publisher/guide/?from=obsidian-plugin#${hash}`]);
-  if (openedExternalUrl !== null)
-    return openedExternalUrl;
-  return false;
+function toText4(value) {
+  return typeof value === "string" ? value : "";
+}
+function toReadableError2(error) {
+  if (error instanceof Error)
+    return { message: error.message };
+  const record = toRecord6(error);
+  return { message: toText4(record.message) || String(error || "") };
 }
 function getBridgeSafeSessionCover(cover) {
   const value = String(cover || "").trim();
@@ -68799,20 +68646,25 @@ function bufferFromArrayBuffer(arrayBuffer) {
   }
   return Buffer.from(arrayBuffer || []);
 }
+function getResponseArrayBuffer(response) {
+  const responseRecord = toRecord6(response);
+  const arrayBuffer = responseRecord.arrayBuffer;
+  if (typeof arrayBuffer !== "function")
+    return Promise.resolve(arrayBuffer);
+  return arrayBuffer();
+}
 function getMaterialCoverAssetCacheKey(view, url) {
   return [
-    toText3(toRecord5(view).sessionThumbMediaId),
+    toText4(toRecord6(view).sessionThumbMediaId),
     String(url || "").trim()
   ].join("::");
 }
 function pruneMaterialCoverAssetCache(view, now = Date.now()) {
-  const viewRecord = toRecord5(view);
-  if (!(viewRecord.wechatMaterialCoverAssetCache instanceof Map))
+  const viewRecord = toRecord6(view);
+  if (!(viewRecord.wechatMaterialCoverAssetCache instanceof Map)) {
     viewRecord.wechatMaterialCoverAssetCache = /* @__PURE__ */ new Map();
-  const cache = (
-    /** @type {Map<string, MaterialCoverCacheEntryLike>} */
-    viewRecord.wechatMaterialCoverAssetCache
-  );
+  }
+  const cache = viewRecord.wechatMaterialCoverAssetCache;
   for (const [key, entry] of cache.entries()) {
     if (!entry || now - entry.cachedAt >= MATERIAL_COVER_ASSET_TTL_MS) {
       cache.delete(key);
@@ -68843,7 +68695,7 @@ function cloneMaterialCoverAsset(cachedAsset, id) {
   };
 }
 async function downloadMaterialCoverAsBridgeAsset(view, coverUrl, assets = [], options = {}) {
-  const viewRecord = toRecord5(view);
+  const viewRecord = toRecord6(view);
   const url = String(coverUrl || "").trim();
   if (!/^https?:\/\//i.test(url)) {
     throw new Error("\u5FAE\u4FE1\u7D20\u6750\u5E93\u5C01\u9762\u7F3A\u5C11\u53EF\u4E0B\u8F7D URL\uFF0C\u65E0\u6CD5\u7528\u4E8E\u591A\u5E73\u53F0\u53D1\u5E03\u3002\u8BF7\u6539\u7528\u672C\u5730\u5C01\u9762\u6216 frontmatter cover\u3002");
@@ -68851,10 +68703,7 @@ async function downloadMaterialCoverAsBridgeAsset(view, coverUrl, assets = [], o
   const now = Date.now();
   const cacheKey = getMaterialCoverAssetCacheKey(view, url);
   pruneMaterialCoverAssetCache(view, now);
-  const cache = (
-    /** @type {Map<string, MaterialCoverCacheEntryLike>} */
-    viewRecord.wechatMaterialCoverAssetCache
-  );
+  const cache = viewRecord.wechatMaterialCoverAssetCache;
   const cached = cache.get(cacheKey);
   if (cached && now - cached.cachedAt < MATERIAL_COVER_ASSET_TTL_MS) {
     const id2 = `image-${assets.length + 1}`;
@@ -68876,7 +68725,7 @@ async function downloadMaterialCoverAsBridgeAsset(view, coverUrl, assets = [], o
   } catch (error) {
     throw new Error(`\u5FAE\u4FE1\u7D20\u6750\u5E93\u5C01\u9762\u4E0B\u8F7D\u5931\u8D25\uFF1A${toReadableError2(error).message}`);
   }
-  const responseRecord = toRecord5(response);
+  const responseRecord = toRecord6(response);
   const arrayBuffer = await getResponseArrayBuffer(response);
   const buffer = bufferFromArrayBuffer(arrayBuffer);
   if (!buffer.length) {
@@ -68885,7 +68734,7 @@ async function downloadMaterialCoverAsBridgeAsset(view, coverUrl, assets = [], o
   if (buffer.length > DEFAULT_MAX_IMAGE_SIZE_BYTES) {
     throw new Error(`\u5FAE\u4FE1\u7D20\u6750\u5E93\u5C01\u9762\u8D85\u8FC7 ${Math.round(DEFAULT_MAX_IMAGE_SIZE_BYTES / 1024 / 1024)} MB\uFF0C\u65E0\u6CD5\u7528\u4E8E\u591A\u5E73\u53F0\u53D1\u5E03\u3002`);
   }
-  const headers = toRecord5(responseRecord.headers);
+  const headers = toRecord6(responseRecord.headers);
   const mimeType = String(headers["content-type"] || headers["Content-Type"] || "image/jpeg").split(";")[0].trim() || "image/jpeg";
   if (!/^image\/(png|jpe?g|gif|webp)$/i.test(mimeType)) {
     throw new Error(`\u5FAE\u4FE1\u7D20\u6750\u5E93\u5C01\u9762\u683C\u5F0F\u4E0D\u652F\u6301\uFF1A${mimeType}`);
@@ -68901,7 +68750,7 @@ async function downloadMaterialCoverAsBridgeAsset(view, coverUrl, assets = [], o
     source: {
       kind: "wechat-material-cover",
       originalSrc: url,
-      thumbMediaId: toText3(viewRecord.sessionThumbMediaId)
+      thumbMediaId: toText4(viewRecord.sessionThumbMediaId)
     }
   };
   assets.push(asset);
@@ -68922,6 +68771,36 @@ async function downloadMaterialCoverAsBridgeAsset(view, coverUrl, assets = [], o
     fromCache: false
   };
 }
+
+// views/publish-modal/multi-platform-modal-ui.js
+var MODAL_SELECTED_PLATFORM_IDS = "__wechatMultiPlatformSelectedPlatformIds";
+function isRecord11(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+function toRecord7(value) {
+  return isRecord11(value) ? value : {};
+}
+function toRecordList2(value) {
+  return Array.isArray(value) ? value.filter(isRecord11).map((item) => ({ ...item })) : [];
+}
+function toText5(value) {
+  return typeof value === "string" ? value : "";
+}
+function asModalElement(element) {
+  return element;
+}
+function getPlatformId2(platform) {
+  const record = toRecord7(platform);
+  return toText5(record.id || record.platform);
+}
+function toNormalizedPlatform(value) {
+  const record = toRecord7(value);
+  const id = toText5(record.id);
+  const name = toText5(record.name) || id;
+  if (!id)
+    return null;
+  return { ...record, id, name };
+}
 function getModalSelectedPlatformIds(modal, defaultSelectedPlatforms) {
   if (!Array.isArray(modal[MODAL_SELECTED_PLATFORM_IDS])) {
     modal[MODAL_SELECTED_PLATFORM_IDS] = Array.from(defaultSelectedPlatforms);
@@ -68931,121 +68810,59 @@ function getModalSelectedPlatformIds(modal, defaultSelectedPlatforms) {
 function saveModalSelectedPlatformIds(modal, selectedPlatforms) {
   modal[MODAL_SELECTED_PLATFORM_IDS] = Array.from(selectedPlatforms);
 }
-async function detectQuotaPolicySupport(bridge, cachedConnection = {}) {
+function renderMultiPlatformModalUI({
+  view,
+  modal,
+  obsidian,
+  shouldOpenModal,
+  bridgeSettings,
+  cachedConnectionRecord,
+  publishModalCapabilities,
+  initialFreeQuotaLimit,
+  getQuotaHintText: getQuotaHintText2,
+  openPublisherProPage: openPublisherProPage2,
+  openPublisherGuidePage: openPublisherGuidePage2
+}) {
   var _a5;
-  const cachedCapabilities = normalizeWechatSyncCapabilities(toRecord5(cachedConnection.capabilities));
-  if (!bridge || typeof bridge.health !== "function")
-    return cachedCapabilities;
-  try {
-    const health = await bridge.health({ timeoutMs: 5e3 });
-    return mergeHealthPolicyCapabilities(cachedCapabilities, health);
-  } catch (error) {
-    if (isUnsupportedBridgeError2(error))
-      return cachedCapabilities;
-    const readableError = toReadableError2(error);
-    (_a5 = console.debug) == null ? void 0 : _a5.call(console, "[Wechatsync] quota feature detection skipped", {
-      code: readableError.code,
-      message: readableError.message
-    });
-    return cachedCapabilities;
-  }
-}
-function resolvePublishModalCapabilities(view, cachedConnection = {}) {
-  const cachedCapabilities = normalizeWechatSyncCapabilities(toRecord5(cachedConnection.capabilities));
-  const bridge = (
-    /** @type {BridgeLike} */
-    view.plugin.getWechatSyncBridgeService()
-  );
-  const activeClient = typeof bridge.getActiveClientDescriptor === "function" ? bridge.getActiveClientDescriptor() : null;
-  const activeClientRecord = toRecord5(activeClient);
-  if (activeClientRecord.capabilities) {
-    return mergePolicyCapabilityDetails(
-      mergePolicyCapabilityDetails(cachedCapabilities, activeClientRecord.capabilities),
-      activeClientRecord
-    );
-  }
-  const status = typeof bridge.getStatus === "function" ? toRecord5(bridge.getStatus()) : {};
-  const connectedClients = toRecordList2(status.connectedClients);
-  const liveClient = connectedClients.find((client) => client.status === "connected" && client.capabilities);
-  const liveClientRecord = toRecord5(liveClient);
-  return mergePolicyCapabilityDetails(
-    mergePolicyCapabilityDetails(cachedCapabilities, liveClientRecord.capabilities),
-    liveClientRecord
-  );
-}
-function getObsidianApi2(view, options = {}) {
-  return (
-    /** @type {ObsidianApiLike} */
-    options.obsidianApi || view.plugin.obsidianApi || getActiveWindowValue("obsidian") || {}
-  );
-}
-async function showMultiPlatformPublishModal(view, options = {}) {
-  var _a5;
-  const obsidian = getObsidianApi2(view, options);
-  const { Notice: Notice2, Platform: Platform2, setIcon } = obsidian;
-  if (!view.currentHtml) {
-    new Notice2(view.getMissingRenderNotice());
-    return;
-  }
-  const modal = options.modal || new obsidian.Modal(view.app);
-  modal.contentEl = asModalElement(modal.contentEl);
-  const shouldOpenModal = !options.modal;
-  const mobileSync = isMobileClient(view.app, Platform2);
-  const bridgeSettings = normalizeMultiPlatformSyncSettings(toRecord5(view.plugin.settings.multiPlatformSync));
-  const cachedConnection = bridgeSettings.connection || normalizeMultiPlatformConnection();
-  const cachedConnectionRecord = toRecord5(cachedConnection);
-  view.preparePublishModalShell(modal, { mode: "multi", mobileSync });
-  const { wechatTab, feishuTab } = view.createPublishModeTabs(modal, "multi");
-  wechatTab.onclick = () => {
-    view.showSyncModal({ modal });
-  };
-  if (feishuTab) {
-    feishuTab.onclick = () => {
-      view.showFeishuSyncModal({ modal });
-    };
-  }
+  const { Notice: Notice2, setIcon } = obsidian;
+  const asElement = asModalElement;
   if (!bridgeSettings.enabled) {
-    const enablePanel = asModalElement(modal.contentEl.createDiv({ cls: "wechat-multiplatform-enable-panel" }));
-    const enableMessage = asModalElement(enablePanel.createDiv({ cls: "wechat-multiplatform-enable-message" }));
-    const enableIcon = asModalElement(enableMessage.createDiv({
+    const enablePanel = asElement(modal.contentEl.createDiv({ cls: "wechat-multiplatform-enable-panel" }));
+    const enableMessage = asElement(enablePanel.createDiv({ cls: "wechat-multiplatform-enable-message" }));
+    const enableIcon = asElement(enableMessage.createDiv({
       cls: "wechat-multiplatform-enable-icon",
       attr: { "aria-hidden": "true" }
     }));
-    if (typeof setIcon === "function") {
+    if (typeof setIcon === "function")
       setIcon(enableIcon, "plug");
-    }
-    const enableCopy = asModalElement(enableMessage.createDiv({ cls: "wechat-multiplatform-enable-copy" }));
+    const enableCopy = asElement(enableMessage.createDiv({ cls: "wechat-multiplatform-enable-copy" }));
     enableCopy.createEl("h3", { text: "\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03" });
     enableCopy.createEl("p", {
       text: "\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\u540E\uFF0C\u53EF\u5C06\u6587\u7AE0\u4FDD\u5B58\u5230\u5C0F\u7EA2\u4E66\u3001\u77E5\u4E4E\u3001\u5934\u6761\u7B49\u5E73\u53F0\u7684\u8349\u7A3F\u7BB1\u3002"
     });
-    const enableActions = asModalElement(enablePanel.createDiv({ cls: "wechat-multiplatform-enable-actions" }));
-    const settingsBtn = asModalElement(enableActions.createEl("button", { text: "\u53BB\u8BBE\u7F6E", cls: "mod-cta" }));
+    const enableActions = asElement(enablePanel.createDiv({ cls: "wechat-multiplatform-enable-actions" }));
+    const settingsBtn = asElement(enableActions.createEl("button", { text: "\u53BB\u8BBE\u7F6E", cls: "mod-cta" }));
     settingsBtn.onclick = () => {
       modal.close();
       if (!view.openPluginSettings()) {
         new Notice2("\u8BF7\u5728\u8BBE\u7F6E\u4E2D\u6253\u5F00 Obsidian \u53D1\u5E03\u52A9\u624B\u5E76\u5F00\u542F\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03");
       }
     };
-    const guideBtn = asModalElement(enableActions.createEl("button", { text: "\u67E5\u770B\u5B89\u88C5\u6559\u7A0B" }));
-    guideBtn.onclick = () => openPublisherGuidePage(view, "install-extension");
+    const guideBtn = asElement(enableActions.createEl("button", { text: "\u67E5\u770B\u5B89\u88C5\u6559\u7A0B" }));
+    guideBtn.onclick = () => openPublisherGuidePage2("install-extension");
     if (shouldOpenModal)
       modal.open();
-    return;
+    return { disabled: true };
   }
-  const intro = asModalElement(modal.contentEl.createDiv({ cls: "wechat-multiplatform-intro" }));
-  const introText = asModalElement(intro.createDiv({ cls: "wechat-multiplatform-intro-text" }));
-  introText.createEl("p", {
-    text: "\u9009\u62E9\u5E73\u53F0\u540E\u901A\u8FC7\u6D4F\u89C8\u5668\u63D2\u4EF6\u4FDD\u5B58\u4E3A\u8349\u7A3F\u3002"
-  });
+  const intro = asElement(modal.contentEl.createDiv({ cls: "wechat-multiplatform-intro" }));
+  const introText = asElement(intro.createDiv({ cls: "wechat-multiplatform-intro-text" }));
+  introText.createEl("p", { text: "\u9009\u62E9\u5E73\u53F0\u540E\u901A\u8FC7\u6D4F\u89C8\u5668\u63D2\u4EF6\u4FDD\u5B58\u4E3A\u8349\u7A3F\u3002" });
   introText.createEl("p", {
     text: "\u{1F4A1} \u63D0\u793A\uFF1A\u591A\u5E73\u53F0\u53D1\u5E03\u80FD\u529B\u4F9D\u8D56\u4E8E\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u5EFA\u8BAE\u5728\u7535\u8111\u7AEF\u4F7F\u7528\u3002",
     cls: "wechat-multiplatform-tip"
   });
-  const publishModalCapabilities = resolvePublishModalCapabilities(view, cachedConnection);
   const isProLicensed = publishModalCapabilities.proLicensed === true;
-  const initialFreeQuotaLimit = resolveInitialFreeQuotaLimit(bridgeSettings, publishModalCapabilities);
-  const quotaHint = asModalElement(modal.contentEl.createDiv({
+  const quotaHint = asElement(modal.contentEl.createDiv({
     cls: `wechat-multiplatform-quota-hint ${isProLicensed ? "is-pro" : "is-free"}`
   }));
   if (isProLicensed) {
@@ -69061,27 +68878,25 @@ async function showMultiPlatformPublishModal(view, options = {}) {
   }
   const quotaText = quotaHint.createEl("span", {
     cls: "wechat-multiplatform-quota-copy",
-    text: getQuotaHintText(0, { proLicensed: isProLicensed, freeLimit: initialFreeQuotaLimit })
+    text: getQuotaHintText2(0, { proLicensed: isProLicensed, freeLimit: initialFreeQuotaLimit })
   });
   if (!isProLicensed) {
-    const quotaUpgradeBtn = asModalElement(quotaHint.createEl("button", {
+    const quotaUpgradeBtn = asElement(quotaHint.createEl("button", {
       text: "\u5347\u7EA7 Pro",
       cls: "wechat-multiplatform-quota-link"
     }));
-    quotaUpgradeBtn.onclick = () => openPublisherProPage(view);
+    quotaUpgradeBtn.onclick = () => openPublisherProPage2();
   }
   const availablePlatforms = toRecordList2(getAvailableWechatsyncPlatforms(bridgeSettings));
   const defaultSelectedPlatforms = new Set(
     parseWechatsyncPlatformIds(bridgeSettings.selectedPlatforms || [])
   );
-  const displayedPlatforms = availablePlatforms.filter((p) => defaultSelectedPlatforms.has(getPlatformId2(p)));
+  const displayedPlatforms = availablePlatforms.filter((platform) => defaultSelectedPlatforms.has(getPlatformId2(platform)));
   const isBridgeReady = cachedConnectionRecord.status === "connected";
   const modalSelectedPlatforms = getModalSelectedPlatformIds(modal, defaultSelectedPlatforms);
-  {
-    const description = describeWechatsyncConnectionState(cachedConnectionRecord, { variant: "modal" });
-    renderWechatsyncConnectionStatusBar(modal.contentEl, description);
-  }
-  const platformListEl = asModalElement(modal.contentEl.createDiv({ cls: "wechat-multiplatform-list" }));
+  const description = describeWechatsyncConnectionState(cachedConnectionRecord, { variant: "modal" });
+  renderWechatsyncConnectionStatusBar(modal.contentEl, description);
+  const platformListEl = asElement(modal.contentEl.createDiv({ cls: "wechat-multiplatform-list" }));
   const selectedPlatforms = /* @__PURE__ */ new Set();
   console.debug("[Wechatsync] render cached platform state", {
     status: cachedConnectionRecord.status,
@@ -69089,26 +68904,25 @@ async function showMultiPlatformPublishModal(view, options = {}) {
     message: cachedConnectionRecord.message,
     ...summarizeWechatsyncPlatformResponse(cachedConnectionRecord.platforms)
   });
-  const btnRow = asModalElement(modal.contentEl.createDiv({ cls: "wechat-modal-buttons" }));
-  const cancelBtn = asModalElement(btnRow.createEl("button", { text: "\u53D6\u6D88" }));
-  const syncBtn = asModalElement(btnRow.createEl("button", { text: "\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6", cls: "mod-cta" }));
-  syncBtn.disabled = true;
-  (_a5 = syncBtn.addClass) == null ? void 0 : _a5.call(syncBtn, "apple-btn-disabled");
+  const btnRow = asElement(modal.contentEl.createDiv({ cls: "wechat-modal-buttons" }));
+  const cancelBtn = asElement(btnRow.createEl("button", { text: "\u53D6\u6D88" }));
+  const syncButton = asElement(btnRow.createEl("button", { text: "\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6", cls: "mod-cta" }));
+  syncButton.disabled = true;
+  (_a5 = syncButton.addClass) == null ? void 0 : _a5.call(syncButton, "apple-btn-disabled");
   cancelBtn.onclick = () => modal.close();
   const updateQuotaHintText = () => {
-    quotaText.textContent = getQuotaHintText(selectedPlatforms.size, {
+    quotaText.textContent = getQuotaHintText2(selectedPlatforms.size, {
       proLicensed: isProLicensed,
       freeLimit: initialFreeQuotaLimit
     });
   };
   const updateSyncButtonState = () => {
     var _a6, _b;
-    syncBtn.disabled = !isBridgeReady || selectedPlatforms.size === 0;
-    if (syncBtn.disabled) {
-      (_a6 = syncBtn.addClass) == null ? void 0 : _a6.call(syncBtn, "apple-btn-disabled");
-    } else {
-      (_b = syncBtn.removeClass) == null ? void 0 : _b.call(syncBtn, "apple-btn-disabled");
-    }
+    syncButton.disabled = !isBridgeReady || selectedPlatforms.size === 0;
+    if (syncButton.disabled)
+      (_a6 = syncButton.addClass) == null ? void 0 : _a6.call(syncButton, "apple-btn-disabled");
+    else
+      (_b = syncButton.removeClass) == null ? void 0 : _b.call(syncButton, "apple-btn-disabled");
     updateQuotaHintText();
   };
   const renderPlatforms = (platforms = []) => {
@@ -69116,29 +68930,29 @@ async function showMultiPlatformPublishModal(view, options = {}) {
     selectedPlatforms.clear();
     const normalizedPlatforms = platforms.map((platform) => normalizeWechatsyncPlatform(platform)).map(toNormalizedPlatform).filter((platform) => platform !== null);
     if (normalizedPlatforms.length === 0) {
-      const empty = asModalElement(platformListEl.createDiv({ cls: "wechat-multiplatform-state" }));
+      const empty = asElement(platformListEl.createDiv({ cls: "wechat-multiplatform-state" }));
       empty.createEl("div", { text: "\u8FD8\u6CA1\u6709\u53EF\u5206\u53D1\u7684\u5E73\u53F0", cls: "wechat-multiplatform-state-title" });
       empty.createEl("p", { text: "\u8BF7\u5148\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u6216\u7A0D\u540E\u91CD\u8BD5\u8BFB\u53D6\u5E73\u53F0\u6E05\u5355\u3002" });
       updateSyncButtonState();
       return;
     }
     for (const platform of normalizedPlatforms) {
-      const authBadge = toPlatformStatusBadge2(getWechatsyncPlatformStatusBadge(platform, { bridgeConnected: isBridgeReady }));
+      const authBadge = getWechatsyncPlatformStatusBadge(platform, { bridgeConnected: isBridgeReady });
       const isSelected = isBridgeReady && modalSelectedPlatforms.has(platform.id);
-      const row = asModalElement(platformListEl.createDiv({
+      const row = asElement(platformListEl.createDiv({
         cls: `wechat-multiplatform-platform ${isSelected ? `${authBadge.cls} is-selected` : ""} ${!isBridgeReady ? "is-disabled" : ""}`.trim()
       }));
       row.setAttribute("title", isSelected ? `${platform.name} \xB7 ${authBadge.text}` : platform.name);
-      const checkbox = asModalElement(row.createEl("input"));
+      const checkbox = asElement(row.createEl("input"));
       checkbox.type = "checkbox";
       checkbox.value = platform.id;
       checkbox.checked = isSelected;
       checkbox.disabled = !isBridgeReady;
       if (isSelected)
         selectedPlatforms.add(platform.id);
-      const label = asModalElement(row.createEl("label", { cls: "wechat-multiplatform-platform-label" }));
+      const label = asElement(row.createEl("label", { cls: "wechat-multiplatform-platform-label" }));
       label.createEl("span", { text: platform.name, cls: "wechat-multiplatform-platform-name" });
-      const statusEl = asModalElement(label.createEl("span", {
+      const statusEl = asElement(label.createEl("span", {
         text: authBadge.text,
         cls: `wechat-multiplatform-platform-status ${authBadge.cls}`
       }));
@@ -69190,8 +69004,246 @@ async function showMultiPlatformPublishModal(view, options = {}) {
     updateSyncButtonState();
   };
   renderPlatforms(displayedPlatforms);
+  return {
+    disabled: false,
+    isBridgeReady,
+    syncButton,
+    selectedPlatforms,
+    updateSyncButtonState
+  };
+}
+
+// views/publish-modal/multi-platform-data.js
+function isRecord12(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+function toRecord8(value) {
+  return isRecord12(value) ? value : {};
+}
+function toRecordList3(value) {
+  return Array.isArray(value) ? value.filter(isRecord12).map((item) => ({ ...item })) : [];
+}
+function toText6(value) {
+  return typeof value === "string" ? value : "";
+}
+function toReadableError3(error) {
+  if (error instanceof Error) {
+    const errorRecord = error;
+    return {
+      message: error.message,
+      code: toText6(errorRecord.code),
+      stack: toText6(error.stack)
+    };
+  }
+  const record = toRecord8(error);
+  return {
+    message: toText6(record.message) || String(error || ""),
+    code: toText6(record.code),
+    stack: toText6(record.stack)
+  };
+}
+function toEnqueueResult(value) {
+  return { ...toRecord8(value) };
+}
+function toBridgeAssets(value) {
+  if (!Array.isArray(value))
+    return [];
+  return value.filter(isRecord12).map((asset) => ({ ...asset }));
+}
+function toResolvedImages(value) {
+  const record = toRecord8(value);
+  return {
+    markdown: toText6(record.markdown),
+    assets: toBridgeAssets(record.assets),
+    cover: toText6(record.cover),
+    firstImageSrc: toText6(record.firstImageSrc),
+    warnings: Array.isArray(record.warnings) ? record.warnings : []
+  };
+}
+function toBridgeAsset(value) {
+  const record = toRecord8(value);
+  if (!record.filename || !record.mimeType || typeof record.size !== "number" || typeof record.base64 !== "string") {
+    return null;
+  }
+  return {
+    ...record,
+    filename: toText6(record.filename),
+    mimeType: toText6(record.mimeType),
+    size: record.size,
+    base64: record.base64,
+    source: isRecord12(record.source) ? { ...record.source } : void 0
+  };
+}
+function toTaskResults(value) {
+  return toRecordList3(value).map((item) => {
+    const record = toRecord8(item);
+    return {
+      platform: toText6(record.id || record.platform),
+      platformName: toText6(record.name),
+      success: record.success === true || record.status === "success",
+      error: toText6(record.error || record.message)
+    };
+  }).filter((item) => item.platform);
+}
+function getRecentTaskPlatforms(result, requestedPlatformIds) {
+  const publishedPlatforms = toUnknownList(result.publishedPlatforms);
+  if (publishedPlatforms.length)
+    return publishedPlatforms;
+  const resultPlatforms = toUnknownList(result.platforms);
+  return resultPlatforms.length ? resultPlatforms : requestedPlatformIds;
+}
+function toUnknownList(value) {
+  return Array.isArray(value) ? value : [];
+}
+function isUnsupportedBridgeError2(error) {
+  return isUnsupportedBridgeMethodError(toReadableError3(error));
+}
+
+// views/publish-modal/multi-platform.js
+var QUOTA_POLICY = "truncate";
+function callBooleanMethod(target, methodName, args = []) {
+  const method = toRecord8(target)[methodName];
+  if (typeof method !== "function")
+    return null;
+  const methodFn = (
+    /** @type {(...methodArgs: unknown[]) => unknown} */
+    method
+  );
+  return methodFn.apply(target, args) === true;
+}
+function asModalElement2(element) {
+  return (
+    /** @type {ModalContentElementLike} */
+    element
+  );
+}
+function isMobileClient(app, platformApi = null) {
+  if (typeof (platformApi == null ? void 0 : platformApi.isMobile) === "boolean")
+    return platformApi.isMobile;
+  return toRecord8(app).isMobile === true;
+}
+function openPublisherProPage(view) {
+  const openedProPage = callBooleanMethod(view, "openPublisherProPage");
+  if (openedProPage !== null)
+    return openedProPage;
+  const openedExternalUrl = callBooleanMethod(view, "openExternalUrl", ["https://xiaoweibox.top/obsidian-publisher/pro/"]);
+  if (openedExternalUrl !== null)
+    return openedExternalUrl;
+  return false;
+}
+function openPublisherGuidePage(view, section = "install-extension") {
+  const openedGuidePage = callBooleanMethod(view, "openPublisherGuidePage", [section]);
+  if (openedGuidePage !== null)
+    return openedGuidePage;
+  const hash = section === "bridge" ? "bridge" : "install-extension";
+  const openedExternalUrl = callBooleanMethod(view, "openExternalUrl", [`https://xiaoweibox.top/obsidian-publisher/guide/?from=obsidian-plugin#${hash}`]);
+  if (openedExternalUrl !== null)
+    return openedExternalUrl;
+  return false;
+}
+async function detectQuotaPolicySupport(bridge, cachedConnection = {}) {
+  var _a5;
+  const cachedCapabilities = normalizeWechatSyncCapabilities(toRecord8(cachedConnection.capabilities));
+  if (!bridge || typeof bridge.health !== "function")
+    return cachedCapabilities;
+  try {
+    const health = await bridge.health({ timeoutMs: 5e3 });
+    return mergeHealthPolicyCapabilities(cachedCapabilities, health);
+  } catch (error) {
+    if (isUnsupportedBridgeError2(error))
+      return cachedCapabilities;
+    const readableError = toReadableError3(error);
+    (_a5 = console.debug) == null ? void 0 : _a5.call(console, "[Wechatsync] quota feature detection skipped", {
+      code: readableError.code,
+      message: readableError.message
+    });
+    return cachedCapabilities;
+  }
+}
+function resolvePublishModalCapabilities(view, cachedConnection = {}) {
+  const cachedCapabilities = normalizeWechatSyncCapabilities(toRecord8(cachedConnection.capabilities));
+  const bridge = (
+    /** @type {BridgeLike} */
+    view.plugin.getWechatSyncBridgeService()
+  );
+  const activeClient = typeof bridge.getActiveClientDescriptor === "function" ? bridge.getActiveClientDescriptor() : null;
+  const activeClientRecord = toRecord8(activeClient);
+  if (activeClientRecord.capabilities) {
+    return mergePolicyCapabilityDetails(
+      mergePolicyCapabilityDetails(cachedCapabilities, activeClientRecord.capabilities),
+      activeClientRecord
+    );
+  }
+  const status = typeof bridge.getStatus === "function" ? toRecord8(bridge.getStatus()) : {};
+  const connectedClients = toRecordList3(status.connectedClients);
+  const liveClient = connectedClients.find((client) => client.status === "connected" && client.capabilities);
+  const liveClientRecord = toRecord8(liveClient);
+  return mergePolicyCapabilityDetails(
+    mergePolicyCapabilityDetails(cachedCapabilities, liveClientRecord.capabilities),
+    liveClientRecord
+  );
+}
+function getObsidianApi2(view, options = {}) {
+  return (
+    /** @type {ObsidianApiLike} */
+    options.obsidianApi || view.plugin.obsidianApi || getActiveWindowValue("obsidian") || {}
+  );
+}
+async function showMultiPlatformPublishModal(view, options = {}) {
+  const obsidian = getObsidianApi2(view, options);
+  const { Notice: Notice2, Platform: Platform2 } = obsidian;
+  if (!view.currentHtml) {
+    new Notice2(view.getMissingRenderNotice());
+    return;
+  }
+  const modal = options.modal || new obsidian.Modal(view.app);
+  modal.contentEl = asModalElement2(modal.contentEl);
+  const shouldOpenModal = !options.modal;
+  const mobileSync = isMobileClient(view.app, Platform2);
+  const bridgeSettings = normalizeMultiPlatformSyncSettings(toRecord8(view.plugin.settings.multiPlatformSync));
+  const cachedConnection = bridgeSettings.connection || normalizeMultiPlatformConnection();
+  const cachedConnectionRecord = toRecord8(cachedConnection);
+  view.preparePublishModalShell(modal, { mode: "multi", mobileSync });
+  const { wechatTab, feishuTab } = view.createPublishModeTabs(modal, "multi");
+  wechatTab.onclick = () => {
+    view.showSyncModal({ modal });
+  };
+  if (feishuTab) {
+    feishuTab.onclick = () => {
+      view.showFeishuSyncModal({ modal });
+    };
+  }
+  const renderModalUi = (publishModalCapabilities2, initialFreeQuotaLimit2) => renderMultiPlatformModalUI({
+    view,
+    modal,
+    obsidian,
+    shouldOpenModal,
+    bridgeSettings,
+    cachedConnectionRecord,
+    publishModalCapabilities: publishModalCapabilities2,
+    initialFreeQuotaLimit: initialFreeQuotaLimit2,
+    getQuotaHintText,
+    openPublisherProPage: () => openPublisherProPage(view),
+    openPublisherGuidePage: (section) => openPublisherGuidePage(view, section)
+  });
+  if (!bridgeSettings.enabled) {
+    const disabledModalUi = renderModalUi({}, 1);
+    if (disabledModalUi.disabled)
+      return;
+  }
+  const publishModalCapabilities = resolvePublishModalCapabilities(view, cachedConnection);
+  const initialFreeQuotaLimit = resolveInitialFreeQuotaLimit(bridgeSettings, publishModalCapabilities);
+  const modalUi = renderModalUi(publishModalCapabilities, initialFreeQuotaLimit);
+  if (modalUi.disabled)
+    return;
+  const {
+    isBridgeReady,
+    syncButton: syncBtn,
+    selectedPlatforms,
+    updateSyncButtonState
+  } = modalUi;
   syncBtn.onclick = async () => {
-    var _a6, _b;
+    var _a5, _b;
     if (!isBridgeReady) {
       new Notice2("\u8BF7\u5148\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u518D\u53D1\u9001\u591A\u5E73\u53F0\u53D1\u5E03\u4EFB\u52A1\u3002", 8e3);
       return;
@@ -69211,7 +69263,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
     const rawCover = getBridgeSafeSessionCover(view.sessionCoverBase64) || publishMeta.cover || "";
     const notice = new Notice2("\u6B63\u5728\u51C6\u5907\u5E76\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6...", 0);
     syncBtn.disabled = true;
-    (_a6 = syncBtn.addClass) == null ? void 0 : _a6.call(syncBtn, "apple-btn-disabled");
+    (_a5 = syncBtn.addClass) == null ? void 0 : _a5.call(syncBtn, "apple-btn-disabled");
     const sendStartedAt = Date.now();
     const requestedPlatformIds = Array.from(selectedPlatforms);
     try {
@@ -69233,7 +69285,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         return;
       }
       const extensionPolicyGate = checkExtensionPolicyGate(effectivePolicy.payload, {
-        currentVersion: toText3(detectedCapabilities.extensionVersion),
+        currentVersion: toText6(detectedCapabilities.extensionVersion),
         remotePolicySupported: detectedCapabilities.remotePolicy === true
       });
       if (!extensionPolicyGate.allowed) {
@@ -69245,14 +69297,14 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         console.debug("[Wechatsync] Obsidian plugin upgrade recommended by policy", {
           currentVersion: getObsidianPluginVersion(view.plugin),
           minObsidianPluginVersion: pluginPolicyGate.minObsidianPluginVersion,
-          policyVersion: toRecord5(effectivePolicy.payload).policyVersion
+          policyVersion: toRecord8(effectivePolicy.payload).policyVersion
         });
       }
       if (extensionPolicyGate.warning) {
         console.debug("[Wechatsync] browser extension upgrade recommended by policy", {
-          currentVersion: toText3(detectedCapabilities.extensionVersion),
+          currentVersion: toText6(detectedCapabilities.extensionVersion),
           minExtensionVersion: extensionPolicyGate.minExtensionVersion,
-          policyVersion: toRecord5(effectivePolicy.payload).policyVersion
+          policyVersion: toRecord8(effectivePolicy.payload).policyVersion
         });
       }
       const platformTruncation = resolvePluginSideQuotaTruncation(
@@ -69266,7 +69318,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
           enqueuedPlatformCount: platformTruncation.platformIds.length,
           skippedPlatformCount: platformTruncation.skippedPlatformIds.length,
           quotaLimit: platformTruncation.quotaLimit,
-          policyVersion: toRecord5(effectivePolicy.payload).policyVersion,
+          policyVersion: toRecord8(effectivePolicy.payload).policyVersion,
           policySource: effectivePolicy.source
         });
       }
@@ -69372,7 +69424,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         remotePolicy: detectedCapabilities.remotePolicy === true
       });
       const currentMultiPlatformSettings = normalizeMultiPlatformSyncSettings(view.plugin.settings.multiPlatformSync);
-      const connectionRecord = toRecord5(currentMultiPlatformSettings.connection);
+      const connectionRecord = toRecord8(currentMultiPlatformSettings.connection);
       if ((result == null ? void 0 : result.accepted) === false) {
         notice.hide();
         modal.close();
@@ -69383,7 +69435,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
             status: "connected",
             checkedAt: Date.now(),
             capabilities: {
-              ...toRecord5(connectionRecord.capabilities),
+              ...toRecord8(connectionRecord.capabilities),
               ...detectedCapabilities
             },
             message: (result == null ? void 0 : result.message) || "\u6D4F\u89C8\u5668\u63D2\u4EF6\u5DF2\u62D2\u7EDD\u672C\u6B21\u53D1\u5E03\u3002"
@@ -69400,10 +69452,10 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         notice.setMessage("\u5DF2\u6295\u9012\uFF0C\u6B63\u5728\u8BFB\u53D6\u63D2\u4EF6\u4EFB\u52A1\u72B6\u6001...");
       const taskSnapshot = (result == null ? void 0 : result.syncId) ? await view.getWechatsyncTaskSnapshot(bridge, result.syncId) : null;
       const immediateResults = toUnknownList(normalizeWechatSyncResponseResults(result));
-      const taskSnapshotRecord = toRecord5(taskSnapshot);
+      const taskSnapshotRecord = toRecord8(taskSnapshot);
       const taskResults = toTaskResults(taskSnapshotRecord.platforms);
       const cachedPlatformsAfterSync = updateCachedPlatformsAfterSync(
-        toRecordList2(connectionRecord.platforms),
+        toRecordList3(connectionRecord.platforms),
         immediateResults.length ? immediateResults : taskResults
       );
       notice.hide();
@@ -69426,7 +69478,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
           checkedAt: Date.now(),
           platforms: cachedPlatformsAfterSync,
           capabilities: {
-            ...toRecord5(connectionRecord.capabilities),
+            ...toRecord8(connectionRecord.capabilities),
             ...detectedCapabilities
           },
           message: ""
@@ -69443,7 +69495,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
       });
     } catch (error) {
       notice.hide();
-      const readableError = toReadableError2(error);
+      const readableError = toReadableError3(error);
       console.error("[Wechatsync] enqueueSyncArticle failed", {
         elapsedMs: Date.now() - sendStartedAt,
         code: readableError.code,
@@ -69457,7 +69509,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         view.plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
           ...currentMultiPlatformSettings,
           connection: {
-            ...toRecord5(currentMultiPlatformSettings.connection),
+            ...toRecord8(currentMultiPlatformSettings.connection),
             status: "failed",
             checkedAt: Date.now(),
             message: displayMessage
@@ -70205,7 +70257,7 @@ var FeishuApiClient = class {
 
 // services/feishu-settings.js
 var FEISHU_FREE_MONTHLY_API_LIMIT = 1e4;
-function toRecord6(value) {
+function toRecord9(value) {
   return value && typeof value === "object" ? (
     /** @type {Record<string, unknown>} */
     value
@@ -70281,7 +70333,7 @@ function createDefaultFeishuApiUsageStats() {
   };
 }
 function normalizeFeishuApiUsageStats(value, now = new Date()) {
-  const source = toRecord6(value);
+  const source = toRecord9(value);
   const currentMonth = getFeishuApiUsageMonthKey(now);
   const month = toStringWithFallback(source.month, currentMonth);
   const count = Math.max(0, Math.floor(Number(source.count) || 0));
@@ -70306,13 +70358,13 @@ function normalizeMermaidRenderProvider(value) {
   return value === "kroki" ? "kroki" : "kroki";
 }
 function normalizeMermaidPreferences(value) {
-  const source = toRecord6(value);
+  const source = toRecord9(value);
   const result = {};
   for (const [path, rawPreference] of Object.entries(source)) {
     const normalizedPath = toTrimmedString(path);
     if (!normalizedPath)
       continue;
-    const preference = toRecord6(rawPreference);
+    const preference = toRecord9(rawPreference);
     result[normalizedPath] = {
       mode: normalizeMermaidRenderMode(preference.mode),
       provider: normalizeMermaidRenderProvider(preference.provider),
@@ -70322,11 +70374,11 @@ function normalizeMermaidPreferences(value) {
   return result;
 }
 function normalizeFeishuSyncSettings(value) {
-  const source = toRecord6(value);
+  const source = toRecord9(value);
   const rawUploadHistory = source.uploadHistory;
   const rawMermaidPreferences = source.mermaidPreferences || source.feishuMermaidPreferences;
   const uploadHistory = Array.isArray(rawUploadHistory) ? rawUploadHistory.map((item) => {
-    const historyItem = toRecord6(item);
+    const historyItem = toRecord9(item);
     if (!Object.keys(historyItem).length)
       return null;
     return {
@@ -70352,7 +70404,7 @@ function normalizeFeishuSyncSettings(value) {
   };
 }
 function incrementFeishuApiUsage(settings, delta = 1, now = new Date()) {
-  const source = toRecord6(settings);
+  const source = toRecord9(settings);
   const current = normalizeFeishuApiUsageStats(source.apiUsage, now);
   const amount = Math.max(0, Math.floor(Number(delta) || 0));
   const next = {
@@ -70364,7 +70416,7 @@ function incrementFeishuApiUsage(settings, delta = 1, now = new Date()) {
   return next;
 }
 function resetFeishuApiUsage(settings, now = new Date()) {
-  const source = toRecord6(settings);
+  const source = toRecord9(settings);
   const next = {
     month: getFeishuApiUsageMonthKey(now),
     count: 0,
@@ -70374,7 +70426,7 @@ function resetFeishuApiUsage(settings, now = new Date()) {
   return next;
 }
 function addFeishuUploadHistory(settings, item) {
-  const targetSettings = toRecord6(settings);
+  const targetSettings = toRecord9(settings);
   if (!Object.keys(targetSettings).length)
     return;
   const rawUploadHistory = targetSettings.uploadHistory;
@@ -70385,7 +70437,7 @@ function addFeishuUploadHistory(settings, item) {
     /** @type {FeishuUploadHistoryItemLike[]} */
     targetSettings.uploadHistory
   );
-  const sourceItem = toRecord6(item);
+  const sourceItem = toRecord9(item);
   const normalizedItem = {
     title: toStringWithFallback(sourceItem.title, "\u65E0\u6807\u9898\u6587\u7AE0"),
     url: toStringWithFallback(sourceItem.url),
@@ -70403,7 +70455,7 @@ function addFeishuUploadHistory(settings, item) {
   }
 }
 function rebindFeishuHistoryByPath(settings, sourcePath, value) {
-  const source = toRecord6(value);
+  const source = toRecord9(value);
   const targetPath = toTrimmedString(sourcePath);
   if (!targetPath)
     return null;
@@ -70421,7 +70473,7 @@ function rebindFeishuHistoryByPath(settings, sourcePath, value) {
   return historyItem;
 }
 function findFeishuHistoryByPath(settings, path) {
-  const source = toRecord6(settings);
+  const source = toRecord9(settings);
   if (!Array.isArray(source.uploadHistory))
     return null;
   const targetPath = String(path || "").trim();
@@ -70433,7 +70485,7 @@ function findFeishuHistoryByPath(settings, path) {
   );
 }
 function removeFeishuHistoryByPath(settings, path) {
-  const source = toRecord6(settings);
+  const source = toRecord9(settings);
   if (!Array.isArray(source.uploadHistory))
     return false;
   const targetPath = String(path || "").trim();
@@ -70450,7 +70502,7 @@ function removeFeishuHistoryByPath(settings, path) {
   return true;
 }
 function updateFeishuHistoryPath(settings, oldPath, newPath) {
-  const source = toRecord6(settings);
+  const source = toRecord9(settings);
   if (!Array.isArray(source.uploadHistory))
     return false;
   const targetOld = String(oldPath || "").trim();
@@ -70467,7 +70519,7 @@ function updateFeishuHistoryPath(settings, oldPath, newPath) {
   return changed;
 }
 function getFeishuMermaidPreferenceByPath(settings, path) {
-  const source = toRecord6(settings);
+  const source = toRecord9(settings);
   const targetPath = toTrimmedString(path);
   if (!targetPath)
     return null;
@@ -70475,13 +70527,13 @@ function getFeishuMermaidPreferenceByPath(settings, path) {
   return preferences[targetPath] || null;
 }
 function setFeishuMermaidPreferenceByPath(settings, path, value) {
-  const source = toRecord6(settings);
+  const source = toRecord9(settings);
   if (!Object.keys(source).length)
     return null;
   const targetPath = toTrimmedString(path);
   if (!targetPath)
     return null;
-  const preference = toRecord6(value);
+  const preference = toRecord9(value);
   const normalized = {
     mode: normalizeMermaidRenderMode(preference.mode),
     provider: normalizeMermaidRenderProvider(preference.provider),
@@ -70493,7 +70545,7 @@ function setFeishuMermaidPreferenceByPath(settings, path, value) {
   return normalized;
 }
 function removeFeishuMermaidPreferenceByPath(settings, path) {
-  const source = toRecord6(settings);
+  const source = toRecord9(settings);
   if (!Object.keys(source).length)
     return false;
   const targetPath = toTrimmedString(path);
@@ -72556,7 +72608,7 @@ async function pMap(array, mapper, concurrency = 3) {
 }
 
 // services/wechat-api.js
-function toReadableError3(error) {
+function toReadableError4(error) {
   if (error instanceof Error)
     return (
       /** @type {ReadableErrorLike} */
@@ -72575,11 +72627,11 @@ function toReadableError3(error) {
   }
   return { message: String(error || "") };
 }
-function isRecord10(value) {
+function isRecord13(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
-function toRecord7(value) {
-  return isRecord10(value) ? value : {};
+function toRecord10(value) {
+  return isRecord13(value) ? value : {};
 }
 function toOptionalText(value) {
   return typeof value === "string" ? value : "";
@@ -72588,23 +72640,23 @@ function toOptionalNumber(value) {
   return typeof value === "number" && Number.isFinite(value) ? value : void 0;
 }
 function parseJsonRecord(value) {
-  if (isRecord10(value))
+  if (isRecord13(value))
     return value;
   if (typeof value !== "string" || !value.trim())
     return {};
   try {
-    return toRecord7(JSON.parse(value));
+    return toRecord10(JSON.parse(value));
   } catch (e) {
     return {};
   }
 }
 function normalizeRequestUrlResponse(response) {
   var _a5;
-  const record = toRecord7(response);
+  const record = toRecord10(response);
   const status = (_a5 = toOptionalNumber(record.status)) != null ? _a5 : 200;
   const headers = (
     /** @type {Record<string, string>} */
-    toRecord7(record.headers)
+    toRecord10(record.headers)
   );
   return {
     status,
@@ -72618,10 +72670,10 @@ function normalizeRequestUrlResponse(response) {
   };
 }
 function getResponseJsonRecord(response) {
-  return toRecord7(response.json);
+  return toRecord10(response.json);
 }
 function getProxyErrorMessage(response) {
-  const body = isRecord10(response.json) ? response.json : parseJsonRecord(response.text);
+  const body = isRecord13(response.json) ? response.json : parseJsonRecord(response.text);
   const bodyError = body.error;
   if (typeof bodyError === "string" && bodyError)
     return bodyError;
@@ -72688,7 +72740,7 @@ var WechatAPI = class {
       try {
         return await operationFn();
       } catch (error) {
-        const readableError = toReadableError3(error);
+        const readableError = toReadableError4(error);
         lastError = error;
         if (readableError.isFatal)
           throw error;
@@ -72742,7 +72794,7 @@ var WechatAPI = class {
         const token = await this.getAccessToken();
         return await actionFn(token);
       } catch (error) {
-        const readableError = toReadableError3(error);
+        const readableError = toReadableError4(error);
         const isTokenExpired = readableError.message && (readableError.message.includes("40001") || readableError.message.includes("42001") || readableError.message.includes("40014"));
         if (isTokenExpired && retryCount < maxRetries) {
           console.warn(`[WechatAPI] Token expired (${readableError.message}), refreshing and retrying...`);
@@ -73047,7 +73099,7 @@ var WechatAPI = class {
           }
         } catch (error) {
           console.error("Upload Error:", error);
-          throw new Error(`\u7F51\u7EDC\u8BF7\u6C42\u5931\u8D25: ${toReadableError3(error).message}`);
+          throw new Error(`\u7F51\u7EDC\u8BF7\u6C42\u5931\u8D25: ${toReadableError4(error).message}`);
         }
       }
     });
@@ -73171,7 +73223,7 @@ function removeElementClass(element, className) {
 }
 
 // services/readable-error.js
-function toReadableError4(error) {
+function toReadableError5(error) {
   if (error instanceof Error)
     return (
       /** @type {{ message: string, isFatal?: boolean, isProxyAuth?: boolean }} */
@@ -73192,11 +73244,11 @@ function toReadableError4(error) {
 }
 
 // services/record-utils.js
-function isRecord11(value) {
+function isRecord14(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
-function toRecord8(value) {
-  return isRecord11(value) ? value : {};
+function toRecord11(value) {
+  return isRecord14(value) ? value : {};
 }
 function toOptionalText2(value) {
   return typeof value === "string" ? value : "";
@@ -73204,25 +73256,25 @@ function toOptionalText2(value) {
 
 // services/ai-layout-records.js
 function toAiLayoutState(value) {
-  return isRecord11(value) ? (
+  return isRecord14(value) ? (
     /** @type {AiLayoutStateLike} */
     value
   ) : null;
 }
 function toAiLayoutJson(value) {
-  return isRecord11(value) ? (
+  return isRecord14(value) ? (
     /** @type {AiLayoutJsonLike} */
     value
   ) : null;
 }
 function toAiLayoutBlock(value) {
-  return isRecord11(value) ? (
+  return isRecord14(value) ? (
     /** @type {AiLayoutBlockLike} */
     value
   ) : {};
 }
 function toAiLayoutGenerationMeta(value) {
-  return isRecord11(value) ? (
+  return isRecord14(value) ? (
     /** @type {AiLayoutGenerationMetaLike} */
     value
   ) : null;
@@ -73411,11 +73463,11 @@ ${quoteLinesForImageSwipeCallout(content)}`;
 }
 
 // services/plugin-settings.js
-function isRecord12(value) {
+function isRecord15(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
-function toRecord9(value) {
-  return isRecord12(value) ? value : {};
+function toRecord12(value) {
+  return isRecord15(value) ? value : {};
 }
 function normalizeSpacingValue(value, min, max) {
   if (value === null || value === void 0)
@@ -73472,7 +73524,7 @@ function createDefaultSettings() {
   };
 }
 function normalizeLoadedSettings(loadedData, options = {}) {
-  const data = toRecord9(loadedData);
+  const data = toRecord12(loadedData);
   const settings = Object.assign(createDefaultSettings(), data);
   const generateId2 = typeof options.generateId === "function" ? options.generateId : generateFallbackId;
   let didMigrate = false;
@@ -73490,7 +73542,7 @@ function normalizeLoadedSettings(loadedData, options = {}) {
   const rawAiSettings = data.ai;
   settings.ai = normalizeAiSettings(rawAiSettings || settings.ai || {});
   if (rawAiSettings !== void 0) {
-    const normalizedRawAi = normalizeAiSettings(toRecord9(rawAiSettings));
+    const normalizedRawAi = normalizeAiSettings(toRecord12(rawAiSettings));
     if (JSON.stringify(normalizedRawAi) !== JSON.stringify(rawAiSettings)) {
       didMigrate = true;
     }
@@ -73514,7 +73566,7 @@ function normalizeLoadedSettings(loadedData, options = {}) {
     console.debug("\u2705 \u5DF2\u5C06\u65E7\u8D26\u53F7\u914D\u7F6E\u8FC1\u79FB\u5230\u65B0\u683C\u5F0F");
   }
   settings.wechatAccounts = settings.wechatAccounts.map((account) => {
-    if (!isRecord12(account)) {
+    if (!isRecord15(account)) {
       didMigrate = true;
       return { id: "", name: "", appId: "", appSecret: "" };
     }
@@ -74449,9 +74501,9 @@ var coreMethods = {
           candidateRenderer: async (markdown, context = {}) => {
             const renderContext = (
               /** @type {RenderCandidateContextLike} */
-              toRecord8(context)
+              toRecord11(context)
             );
-            const contextSettings = isRecord11(renderContext.settings) ? (
+            const contextSettings = isRecord14(renderContext.settings) ? (
               /** @type {PluginSettingsLike} */
               renderContext.settings
             ) : this.plugin.settings;
@@ -74488,7 +74540,7 @@ var coreMethods = {
       console.debug("\u2705 \u4F9D\u8D56\u52A0\u8F7D\u5B8C\u6210");
     } catch (error) {
       console.error("\u274C \u4F9D\u8D56\u52A0\u8F7D\u5931\u8D25:", error);
-      new Notice("\u4F9D\u8D56\u52A0\u8F7D\u5931\u8D25: " + toReadableError4(error).message);
+      new Notice("\u4F9D\u8D56\u52A0\u8F7D\u5931\u8D25: " + toReadableError5(error).message);
     }
   },
   async onThemeChange(value, grid) {
@@ -74782,7 +74834,7 @@ var coreMethods = {
       this.aiPreviewApplied = false;
       this.completeAiLayoutSourceSwitch(sourcePath);
       this.syncPreviewPresentationMode();
-      this.lastRenderError = toReadableError4(error).message || "\u672A\u77E5\u6E32\u67D3\u9519\u8BEF";
+      this.lastRenderError = toReadableError5(error).message || "\u672A\u77E5\u6E32\u67D3\u9519\u8BEF";
       this.showRenderFailurePlaceholder(this.lastRenderError);
       this.updateCurrentDoc();
       if (this.shouldSyncAiLayoutUi()) {
@@ -75347,7 +75399,7 @@ var stylePanelMethods = {
     return { excerpt, cover, cover_dir, coverSrc, title };
   },
   getFrontmatterString(frontmatter, keys) {
-    const frontmatterRecord = toRecord8(frontmatter);
+    const frontmatterRecord = toRecord11(frontmatter);
     if (!frontmatterRecord)
       return "";
     if (!Array.isArray(keys) || keys.length === 0)
@@ -75371,7 +75423,7 @@ var stylePanelMethods = {
   },
   getFrontmatterKeyMap(frontmatter, keys) {
     const result = {};
-    const frontmatterRecord = toRecord8(frontmatter);
+    const frontmatterRecord = toRecord11(frontmatter);
     if (!frontmatterRecord)
       return result;
     if (!Array.isArray(keys) || keys.length === 0)
@@ -75426,7 +75478,7 @@ var stylePanelMethods = {
     return this.isPathInsideDirectoryByTail(normalized, cleanedDir);
   },
   clearInvalidPublishMetaInFrontmatter(frontmatter, cleanedDir) {
-    const frontmatterRecord = toRecord8(frontmatter);
+    const frontmatterRecord = toRecord11(frontmatter);
     if (!frontmatterRecord)
       return false;
     let changed = false;
@@ -75485,13 +75537,13 @@ var stylePanelMethods = {
       const processFrontMatter = (_b = (_a5 = this.app) == null ? void 0 : _a5.fileManager) == null ? void 0 : _b["processFrontMatter"];
       if (typeof processFrontMatter === "function") {
         await processFrontMatter.call(this.app.fileManager, activeFile, (frontmatter) => {
-          this.clearInvalidPublishMetaInFrontmatter(toRecord8(frontmatter), cleanedDir);
+          this.clearInvalidPublishMetaInFrontmatter(toRecord11(frontmatter), cleanedDir);
         });
       } else {
         await this.clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir);
       }
     } catch (error) {
-      return `\u8D44\u6E90\u5DF2\u5220\u9664\uFF0C\u4F46\u6E05\u7406 frontmatter \u4E2D\u5931\u6548\u7684 cover/cover_dir \u5931\u8D25: ${toReadableError4(error).message}`;
+      return `\u8D44\u6E90\u5DF2\u5220\u9664\uFF0C\u4F46\u6E05\u7406 frontmatter \u4E2D\u5931\u6548\u7684 cover/cover_dir \u5931\u8D25: ${toReadableError5(error).message}`;
     }
     return null;
   },
@@ -75591,7 +75643,7 @@ var stylePanelMethods = {
         throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301\u5220\u9664\u63A5\u53E3");
       }
     } catch (error) {
-      return { attempted: true, success: false, warning: `\u5220\u9664\u5931\u8D25 (${normalized}): ${toReadableError4(error).message}` };
+      return { attempted: true, success: false, warning: `\u5220\u9664\u5931\u8D25 (${normalized}): ${toReadableError5(error).message}` };
     }
     const frontmatterWarning = await this.clearInvalidPublishMetaAfterCleanup(activeFile, normalized);
     if (frontmatterWarning) {
@@ -76091,7 +76143,7 @@ var aiLayoutPanelMethods = {
     if (!this.aiLayoutOverlay)
       return;
     const pack = this.getAiRenderColorPalette(colorPaletteId || "tech-green");
-    const tokens = toRecord8(pack.tokens);
+    const tokens = toRecord11(pack.tokens);
     this.aiLayoutOverlay.style.setProperty("--ai-layout-accent", tokens.accent || "#0a84ff");
     this.aiLayoutOverlay.style.setProperty("--ai-layout-accent-deep", tokens.accentDeep || tokens.accent || "#0a84ff");
     this.aiLayoutOverlay.style.setProperty("--ai-layout-accent-soft", tokens.accentSoft || "rgba(0, 122, 255, 0.08)");
@@ -77352,8 +77404,8 @@ var aiLayoutDebugMethods = {
       }
     } catch (error) {
       console.error("AI \u7F16\u6392\u751F\u6210\u5931\u8D25:", error);
-      const readableError = toReadableError4(error);
-      const errorRecord = toRecord8(error);
+      const readableError = toReadableError5(error);
+      const errorRecord = toRecord11(error);
       const errorGenerationMeta = toAiLayoutGenerationMeta(errorRecord.generationMeta);
       const previousState = this.getCurrentArticleLayoutState();
       const isSchemaError = errorRecord.code === "ai-layout-schema-invalid";
@@ -78363,7 +78415,7 @@ var wechatSyncModalMethods = {
           defaultAccountId: this.plugin.settings.defaultAccountId
         })
       );
-      return isRecord11(resolvedAccount) ? (
+      return isRecord14(resolvedAccount) ? (
         /** @type {WechatAccountLike} */
         resolvedAccount
       ) : null;
@@ -78670,7 +78722,7 @@ var wechatMultiPlatformActionMethods = {
       const capabilities = settings.connection.capabilities || {};
       if (capabilities.openSyncTask !== false) {
         try {
-          const result = typeof bridge.openSyncTask === "function" ? toRecord8(await bridge.openSyncTask(taskId, { timeoutMs: 8e3 })) : {};
+          const result = typeof bridge.openSyncTask === "function" ? toRecord11(await bridge.openSyncTask(taskId, { timeoutMs: 8e3 })) : {};
           if ((result == null ? void 0 : result.opened) !== false) {
             new Notice("\u5DF2\u6253\u5F00\u6D4F\u89C8\u5668\u63D2\u4EF6\u4EFB\u52A1\u7A97\u53E3");
             return true;
@@ -78678,8 +78730,8 @@ var wechatMultiPlatformActionMethods = {
         } catch (error) {
           if (!isUnsupportedBridgeMethodError(error))
             throw error;
-          const readableError = toReadableError4(error);
-          const errorRecord = toRecord8(error);
+          const readableError = toReadableError5(error);
+          const errorRecord = toRecord11(error);
           console.warn("[Wechatsync] openSyncTask failed, falling back to task link", {
             code: errorRecord.code,
             message: readableError.message
@@ -78688,7 +78740,7 @@ var wechatMultiPlatformActionMethods = {
       }
       if (capabilities.getSyncTaskLink !== false) {
         try {
-          const linkResult = typeof bridge.getSyncTaskLink === "function" ? toRecord8(await bridge.getSyncTaskLink(taskId, { timeoutMs: 5e3 })) : {};
+          const linkResult = typeof bridge.getSyncTaskLink === "function" ? toRecord11(await bridge.getSyncTaskLink(taskId, { timeoutMs: 5e3 })) : {};
           const url = String((linkResult == null ? void 0 : linkResult.url) || "").trim();
           if ((linkResult == null ? void 0 : linkResult.canOpen) !== false && url) {
             return this.openExternalUrl(url, { allowExtensionUrls: true });
@@ -78700,8 +78752,8 @@ var wechatMultiPlatformActionMethods = {
         } catch (error) {
           if (!isUnsupportedBridgeMethodError(error))
             throw error;
-          const readableError = toReadableError4(error);
-          const errorRecord = toRecord8(error);
+          const readableError = toReadableError5(error);
+          const errorRecord = toRecord11(error);
           console.warn("[Wechatsync] getSyncTaskLink failed", {
             code: errorRecord.code,
             message: readableError.message
@@ -78711,8 +78763,8 @@ var wechatMultiPlatformActionMethods = {
       new Notice(`\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u5386\u53F2\u8BB0\u5F55\u4E2D\u67E5\u770B\u4EFB\u52A1\uFF1A${taskId}`, 1e4);
       return false;
     } catch (error) {
-      const readableError = toReadableError4(error);
-      const errorRecord = toRecord8(error);
+      const readableError = toReadableError5(error);
+      const errorRecord = toRecord11(error);
       console.error("[Wechatsync] open task failed", {
         syncId: taskId,
         code: errorRecord.code,
@@ -78730,7 +78782,7 @@ var wechatMultiPlatformActionMethods = {
     if (!hasWechatSyncCapability(settings, "getSyncTask"))
       return null;
     try {
-      const task = typeof bridge.getSyncTask === "function" ? toRecord8(await bridge.getSyncTask(taskId, { timeoutMs: 5e3 })) : {};
+      const task = typeof bridge.getSyncTask === "function" ? toRecord11(await bridge.getSyncTask(taskId, { timeoutMs: 5e3 })) : {};
       if ((task == null ? void 0 : task.found) === false)
         return task;
       return Object.keys(task).length ? (
@@ -78740,8 +78792,8 @@ var wechatMultiPlatformActionMethods = {
     } catch (error) {
       if (isUnsupportedBridgeMethodError(error))
         return null;
-      const readableError = toReadableError4(error);
-      const errorRecord = toRecord8(error);
+      const readableError = toReadableError5(error);
+      const errorRecord = toRecord11(error);
       console.warn("[Wechatsync] getSyncTask failed after enqueue", {
         syncId: taskId,
         code: errorRecord.code,
@@ -78835,7 +78887,7 @@ var wechatMultiPlatformActionMethods = {
     }
     const rawTaskPlatforms = taskPlatformSource;
     const taskPlatforms = sortPlatformItems(rawTaskPlatforms.filter((item) => {
-      const itemRecord = toRecord8(item);
+      const itemRecord = toRecord11(item);
       const platformId = parseWechatsyncPlatformIds([itemRecord.id || itemRecord.platform || item])[0] || "";
       if (!platformId)
         return false;
@@ -78846,7 +78898,7 @@ var wechatMultiPlatformActionMethods = {
       }
       return true;
     }), (item) => {
-      const itemRecord = toRecord8(item);
+      const itemRecord = toRecord11(item);
       return parseWechatsyncPlatformIds([itemRecord.id || itemRecord.platform || item])[0] || "";
     });
     if (taskId) {
@@ -78865,7 +78917,7 @@ var wechatMultiPlatformActionMethods = {
       }
     }
     for (const item of taskPlatforms) {
-      const itemRecord = toRecord8(item);
+      const itemRecord = toRecord11(item);
       const platformId = String(itemRecord.id || itemRecord.platform || item || "").trim();
       if (!platformId)
         continue;
@@ -79113,7 +79165,7 @@ var wechatSyncActionMethods = {
         defaultAccountId: this.plugin.settings.defaultAccountId
       })
     );
-    const account = isRecord11(accountRecord) ? (
+    const account = isRecord14(accountRecord) ? (
       /** @type {WechatAccountLike} */
       accountRecord
     ) : null;
@@ -79139,7 +79191,7 @@ var wechatSyncActionMethods = {
           processMathFormulas: (html, api, progressCallback) => this.processMathFormulas(String(html || ""), api, progressCallback),
           prepareHtmlForDraft: (html) => this.prepareHtmlForWechatDraft(String(html || "")),
           cleanHtmlForDraft: (html) => this.cleanHtmlForDraft(String(html || "")),
-          cleanupConfiguredDirectory: (file) => this.cleanupConfiguredDirectory(isRecord11(file) ? (
+          cleanupConfiguredDirectory: (file) => this.cleanupConfiguredDirectory(isRecord14(file) ? (
             /** @type {TFileLike} */
             file
           ) : null),
@@ -79209,7 +79261,7 @@ var wechatSyncActionMethods = {
     } catch (error) {
       notice.hide();
       console.error("Wechat Sync Error:", error);
-      const readableError = toReadableError4(error);
+      const readableError = toReadableError5(error);
       const isProxyAuth = readableError.isProxyAuth || /token|服务已于|安全警报/i.test(readableError.message);
       const friendlyMsg = toSyncFriendlyMessage(readableError.message);
       this.showSyncFailureActions(friendlyMsg, {
@@ -79395,7 +79447,7 @@ var materialPickerMethods = {
         grid.empty();
         grid.removeClass("is-loading");
         countLabel.setText("\u52A0\u8F7D\u5931\u8D25");
-        grid.createDiv({ cls: "wechat-material-empty", text: `\u52A0\u8F7D\u5931\u8D25\uFF1A${toReadableError4(error).message}` });
+        grid.createDiv({ cls: "wechat-material-empty", text: `\u52A0\u8F7D\u5931\u8D25\uFF1A${toReadableError5(error).message}` });
       } finally {
         isLoading = false;
       }
@@ -79754,7 +79806,7 @@ var wechatSettingsMethods = {
             await api.getAccessToken();
             new Notice(`\u2705 ${account.name} \u8FDE\u63A5\u6210\u529F\uFF01`);
           } catch (err) {
-            new Notice(`\u274C ${account.name} \u8FDE\u63A5\u5931\u8D25: ${toReadableError4(err).message}`);
+            new Notice(`\u274C ${account.name} \u8FDE\u63A5\u5931\u8D25: ${toReadableError5(err).message}`);
           }
           testBtn.disabled = false;
           testBtn.textContent = "\u6D4B\u8BD5";
@@ -80061,7 +80113,7 @@ var aiSettingsMethods = {
             await testAiProviderConnection(provider, createObsidianFetchAdapter({ requestUrl: getObsidianRequestUrl(), request: getObsidianRequest() }));
             new Notice(`\u2705 ${provider.name} \u8FDE\u63A5\u6210\u529F\uFF01`);
           } catch (error) {
-            new Notice(`\u274C ${provider.name} \u8FDE\u63A5\u5931\u8D25: ${toReadableError4(error).message}`);
+            new Notice(`\u274C ${provider.name} \u8FDE\u63A5\u5931\u8D25: ${toReadableError5(error).message}`);
           }
           testBtn.disabled = false;
           testBtn.textContent = "\u6D4B\u8BD5";
@@ -80286,7 +80338,7 @@ var aiSettingsMethods = {
         await testAiProviderConnection(candidate, createObsidianFetchAdapter({ requestUrl: getObsidianRequestUrl(), request: getObsidianRequest() }));
         new Notice("\u2705 AI Provider \u8FDE\u63A5\u6210\u529F\uFF01");
       } catch (error) {
-        new Notice(`\u274C \u8FDE\u63A5\u5931\u8D25: ${toReadableError4(error).message}`);
+        new Notice(`\u274C \u8FDE\u63A5\u5931\u8D25: ${toReadableError5(error).message}`);
       }
       testBtn.disabled = false;
       testBtn.textContent = "\u6D4B\u8BD5\u8FDE\u63A5";
@@ -80447,7 +80499,7 @@ var wechatAccountModalMethods = {
         await api.getAccessToken();
         new Notice("\u2705 \u8FDE\u63A5\u6210\u529F\uFF01");
       } catch (err) {
-        new Notice(`\u274C \u8FDE\u63A5\u5931\u8D25: ${toReadableError4(err).message}`);
+        new Notice(`\u274C \u8FDE\u63A5\u5931\u8D25: ${toReadableError5(err).message}`);
       }
       testBtn.disabled = false;
       testBtn.textContent = "\u6D4B\u8BD5\u8FDE\u63A5";
@@ -80603,20 +80655,20 @@ AppleStyleSettingTab.prototype[LEGACY_SETTING_RENDER_KEY2] = function legacySett
 };
 
 // services/ai-layout-cache.js
-function isRecord13(value) {
+function isRecord16(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
-function toRecord10(value) {
-  return isRecord13(value) ? value : {};
+function toRecord13(value) {
+  return isRecord16(value) ? value : {};
 }
 function toAiLayoutState2(value) {
-  return isRecord13(value) ? value : null;
+  return isRecord16(value) ? value : null;
 }
 function toAiLayoutSelection2(value) {
-  return isRecord13(value) ? value : {};
+  return isRecord16(value) ? value : {};
 }
 function toAiLayoutFamilyStates2(value) {
-  if (!isRecord13(value))
+  if (!isRecord16(value))
     return {};
   return value;
 }
@@ -80624,8 +80676,8 @@ function getArticleLayoutStateFromSettings(pluginSettings, sourcePath = "", sele
   const normalizedPath = normalizeVaultPath(sourcePath || "");
   if (!normalizedPath)
     return null;
-  const aiSettings = normalizeAiSettings(toRecord10(pluginSettings.ai));
-  const articleLayoutsByPath = toRecord10(aiSettings.articleLayoutsByPath);
+  const aiSettings = normalizeAiSettings(toRecord13(pluginSettings.ai));
+  const articleLayoutsByPath = toRecord13(aiSettings.articleLayoutsByPath);
   const entry = articleLayoutsByPath[normalizedPath] || null;
   const normalizedEntry = normalizeArticleLayoutCacheEntry(entry);
   if (!normalizedEntry)
@@ -80648,7 +80700,7 @@ function saveArticleLayoutStateToSettings(pluginSettings, sourcePath = "", nextS
     pluginSettings.ai = createDefaultAiSettings();
   }
   const aiSettings = pluginSettings.ai;
-  if (!isRecord13(aiSettings.articleLayoutsByPath)) {
+  if (!isRecord16(aiSettings.articleLayoutsByPath)) {
     aiSettings.articleLayoutsByPath = {};
   }
   const articleLayoutsByPath = aiSettings.articleLayoutsByPath;
@@ -80961,7 +81013,7 @@ var AppleStylePlugin = class extends Plugin {
         var _a6;
         const currentSettings = getPluginSettings(this);
         currentSettings["multiPlatformSync"] = normalizeMultiPlatformSyncSettings({
-          ...toRecord8(currentSettings["multiPlatformSync"]),
+          ...toRecord11(currentSettings["multiPlatformSync"]),
           connectedClients: Array.isArray(clients) ? clients : []
         });
         await this.saveSettings();
@@ -80987,8 +81039,8 @@ var AppleStylePlugin = class extends Plugin {
         status
       });
     }).catch((error) => {
-      const errorRecord = toRecord8(error);
-      const readableError = toReadableError4(error);
+      const errorRecord = toRecord11(error);
+      const readableError = toReadableError5(error);
       console.warn("[Wechatsync] bridge warm start failed", {
         reason,
         port: settings.port,

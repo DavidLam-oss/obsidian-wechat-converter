@@ -20,6 +20,16 @@
 
 views/apple-style-view-shared.js、services/wechat-*、services/feishu-*、services/wechatsync-*。
 
+## 多平台发布模块边界
+
+- `multi-platform.js`：公共入口和发布编排，负责文件内容准备、Bridge 请求、设置保存及结果 Modal 调用。
+- `multi-platform-modal-ui.js`：多平台弹窗 DOM、平台选择状态和按钮状态，不直接调用 Bridge。
+- `multi-platform-policy.js`：Pro、每日额度和远端策略计算，不依赖 DOM 或网络。
+- `multi-platform-cover-assets.js`：微信素材封面下载、校验、缓存和 `asset://` 资源生成。
+- `multi-platform-data.js`：Bridge 响应、资源和任务结果的兼容性归一化。
+
+各模块通过单向依赖协作；不要在 UI 模块中加入发布请求，也不要在策略或数据模块中写入设置。
+
 ## 维护规则
 
 - 每次新增、删除、移动文件或调整目录职责后，必须更新本 README。

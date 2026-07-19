@@ -2,7 +2,7 @@
 
 ## 核心功能
 
-承载测试 helper，提供模块加载、Obsidian DOM mock、view 测试封装、路径解析和渲染运行时辅助。
+承载测试 helper，提供模块加载、Obsidian DOM mock、view 测试封装、Modal 夹具、路径解析和渲染运行时辅助。
 
 ## 输入
 
