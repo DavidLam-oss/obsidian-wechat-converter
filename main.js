@@ -73456,9 +73456,11 @@ function quoteLinesForImageSwipeCallout(text) {
   return lines.map((line) => line ? `> ${line}` : ">").join("\n");
 }
 function createImageSwipeCalloutMarkdown(type = "image-swipe", selectedText = "", app = null) {
+  var _a5;
   const copy = getImageSwipeCommandCopy(app, type);
   const content = String(selectedText || "").trim() ? String(selectedText || "").replace(/\s+$/g, "") : copy.placeholder.join("\n");
-  return `> [!${type}] ${copy.title}
+  const title = ((_a5 = IMAGE_SWIPE_COMMAND_COPY[type]) == null ? void 0 : _a5.zhTitle) || IMAGE_SWIPE_COMMAND_COPY["image-swipe"].zhTitle;
+  return `> [!${type}] ${title}
 ${quoteLinesForImageSwipeCallout(content)}`;
 }
 
