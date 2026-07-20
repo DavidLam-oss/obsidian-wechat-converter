@@ -74,12 +74,12 @@ describe('Image swipe editor commands', () => {
     expect(sensitiveCopy.name).toBe('插入横滑敏感图片块');
   });
 
-  it('should keep generated templates localized for non-Chinese Obsidian locales', () => {
+  it('should keep inserted callout titles in Chinese for non-Chinese Obsidian locales', () => {
     const markdown = createImageSwipeCalloutMarkdown('image-swipe', '', {
       vault: { getConfig: () => 'en' },
     });
 
-    expect(markdown).toContain('> [!image-swipe] Swipe to view images');
+    expect(markdown).toContain('> [!image-swipe] 左右滑动查看图片');
     expect(markdown).toContain('> ![[image-1.png]]');
     expect(markdown).toContain('> ![[image-2.png]]');
   });

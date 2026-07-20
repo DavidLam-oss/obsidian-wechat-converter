@@ -106,7 +106,10 @@ function createImageSwipeCalloutMarkdown(type = 'image-swipe', selectedText = ''
   const content = String(selectedText || '').trim()
     ? String(selectedText || '').replace(/\s+$/g, '')
     : copy.placeholder.join('\n');
-  return `> [!${type}] ${copy.title}\n${quoteLinesForImageSwipeCallout(content)}`;
+  // Inserted callouts are article-facing copy and should remain Chinese even
+  // when Obsidian itself is running in another locale.
+  const title = IMAGE_SWIPE_COMMAND_COPY[type]?.zhTitle || IMAGE_SWIPE_COMMAND_COPY['image-swipe'].zhTitle;
+  return `> [!${type}] ${title}\n${quoteLinesForImageSwipeCallout(content)}`;
 }
 
 export {
