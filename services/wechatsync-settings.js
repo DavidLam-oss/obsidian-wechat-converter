@@ -91,6 +91,8 @@ export function createDefaultMultiPlatformSyncSettings() {
     allowRemote: false,
     supportedPlatforms: [],
     connectedClients: [],
+    pairedClients: [],
+    pendingClients: [],
     selectedPlatforms: [],
     recentTasks: [],
     policyCache: null,
@@ -110,6 +112,10 @@ export function normalizeConnectedClient(value) {
   if (!id) return null;
   const status = source.status === 'connected' ? 'connected' : 'disconnected';
   const now = Date.now();
+  const licenseSource = asRecord(source.license);
+  const licenseState = ['pro', 'free', 'unknown'].includes(licenseSource.state)
+    ? licenseSource.state
+    : (source.capabilities?.proLicensed === true ? 'pro' : 'unknown');
   return {
     extensionInstanceId: id,
     browserName: typeof source.browserName === 'string' ? source.browserName : '',
@@ -117,6 +123,12 @@ export function normalizeConnectedClient(value) {
     capabilities: isRecord(source.capabilities)
       ? { ...source.capabilities }
       : {},
+    license: {
+      state: licenseState,
+      observedAt: Number.isFinite(Number(licenseSource.observedAt))
+        ? Number(licenseSource.observedAt)
+        : now,
+    },
     extensionVersion: typeof source.extensionVersion === 'string' ? source.extensionVersion : '',
     status,
     lastSeenAt: Number.isFinite(Number(source.lastSeenAt)) ? Number(source.lastSeenAt) : now,
@@ -128,6 +140,48 @@ export function normalizeConnectedClient(value) {
 export function normalizeConnectedClients(value) {
   if (!Array.isArray(value)) return [];
   return value.map((entry) => normalizeConnectedClient(entry)).filter(Boolean);
+}
+
+export function normalizePairedClient(value) {
+  if (!isRecord(value)) return null;
+  const source = asRecord(value);
+  const extensionInstanceId = String(source.extensionInstanceId || '').trim();
+  const credentialHash = String(source.credentialHash || '').trim();
+  if (!extensionInstanceId || !/^[a-f0-9]{64}$/i.test(credentialHash)) return null;
+  return {
+    extensionInstanceId,
+    credentialHash,
+    pairedAt: Number.isFinite(Number(source.pairedAt)) ? Number(source.pairedAt) : Date.now(),
+    browserName: typeof source.browserName === 'string' ? source.browserName : '',
+    profileLabel: typeof source.profileLabel === 'string' ? source.profileLabel : '',
+  };
+}
+
+export function normalizePairedClients(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map(normalizePairedClient).filter(Boolean).slice(0, 20);
+}
+
+export function normalizePendingClient(value) {
+  if (!isRecord(value)) return null;
+  const source = asRecord(value);
+  const extensionInstanceId = String(source.extensionInstanceId || '').trim();
+  const credentialHash = String(source.credentialHash || '').trim();
+  if (!extensionInstanceId || !/^[a-f0-9]{64}$/i.test(credentialHash)) return null;
+  return {
+    extensionInstanceId,
+    credentialHash,
+    detectedAt: Number.isFinite(Number(source.detectedAt)) ? Number(source.detectedAt) : Date.now(),
+    browserName: typeof source.browserName === 'string' ? source.browserName : '',
+    profileLabel: typeof source.profileLabel === 'string' ? source.profileLabel : '',
+    extensionVersion: typeof source.extensionVersion === 'string' ? source.extensionVersion : '',
+    reason: typeof source.reason === 'string' ? source.reason : 'pairing_required',
+  };
+}
+
+export function normalizePendingClients(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map(normalizePendingClient).filter(Boolean).slice(0, 20);
 }
 
 export function normalizeWechatsyncPlatformId(value = '') {
@@ -199,10 +253,9 @@ export function hasWechatSyncCapability(settings = {}, capability = '') {
 
 export function hasWechatSyncProLicense(settings = {}) {
   const normalized = normalizeMultiPlatformSyncSettings(settings);
-  if (normalized.connection?.capabilities?.proLicensed === true) return true;
   return (normalized.connectedClients || []).some((client) => {
     if (client?.status !== 'connected') return false;
-    return normalizeWechatSyncCapabilities(client.capabilities || {}).proLicensed === true;
+    return client?.license?.state === 'pro';
   });
 }
 
@@ -285,6 +338,8 @@ export function normalizeMultiPlatformSyncSettings(value = {}) {
     connection: normalizeMultiPlatformConnection(source.connection),
     recentTasks: normalizeWechatSyncRecentTasks(source.recentTasks),
     connectedClients: normalizeConnectedClients(source.connectedClients),
+    pairedClients: normalizePairedClients(source.pairedClients),
+    pendingClients: normalizePendingClients(source.pendingClients),
     policyCache: normalizeWechatSyncPolicyCache(source.policyCache),
   };
 }

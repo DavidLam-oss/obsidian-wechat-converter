@@ -176,6 +176,19 @@ describe('§16 Phase 1 normalizeConnectedClient / normalizeConnectedClients', ()
     const defaults = createDefaultMultiPlatformSyncSettings();
     expect(defaults).toHaveProperty('connectedClients');
     expect(defaults.connectedClients).toEqual([]);
+    expect(defaults.pairedClients).toEqual([]);
+    expect(defaults.pendingClients).toEqual([]);
+  });
+
+  it('normalizes paired and pending client registries without persisting raw credentials', () => {
+    const credentialHash = 'a'.repeat(64);
+    const normalized = normalizeMultiPlatformSyncSettings({
+      pairedClients: [{ extensionInstanceId: 'paired-A', credentialHash }],
+      pendingClients: [{ extensionInstanceId: 'pending-B', credentialHash, reason: 'pairing_required' }],
+    });
+    expect(normalized.pairedClients).toMatchObject([{ extensionInstanceId: 'paired-A', credentialHash }]);
+    expect(normalized.pendingClients).toMatchObject([{ extensionInstanceId: 'pending-B', credentialHash }]);
+    expect(JSON.stringify(normalized)).not.toContain('raw-token');
   });
 
   it('normalizeMultiPlatformSyncSettings propagates connectedClients', () => {
@@ -242,13 +255,14 @@ describe('§16 Phase 1 normalizeConnectedClient / normalizeConnectedClients', ()
   it('hasWechatSyncProLicense recognises active Pro from cached connection and connected clients', () => {
     expect(hasWechatSyncProLicense({
       connection: { capabilities: { proLicensed: true } },
-    })).toBe(true);
+    })).toBe(false);
 
     expect(hasWechatSyncProLicense({
       connectedClients: [{
         extensionInstanceId: 'client-1',
         status: 'connected',
         capabilities: { proLicensed: true },
+        license: { state: 'pro', observedAt: Date.now() },
       }],
     })).toBe(true);
 
@@ -257,6 +271,7 @@ describe('§16 Phase 1 normalizeConnectedClient / normalizeConnectedClients', ()
         extensionInstanceId: 'client-2',
         status: 'disconnected',
         capabilities: { proLicensed: true },
+        license: { state: 'pro', observedAt: Date.now() },
       }],
     })).toBe(false);
   });

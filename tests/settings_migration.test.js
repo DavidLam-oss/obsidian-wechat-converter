@@ -36,6 +36,30 @@ describe('AppleStylePlugin - Settings Migration', () => {
     AppleStylePlugin = loadInputModule().default;
   });
 
+  it('serializes bridge lifecycle operations across configuration changes', async () => {
+    const plugin = new AppleStylePlugin();
+    const events = [];
+    let releaseStop;
+
+    const stop = plugin._queueWechatSyncBridgeLifecycle('stop', async () => {
+      events.push('stop:start');
+      await new Promise((resolve) => {
+        releaseStop = resolve;
+      });
+      events.push('stop:end');
+    });
+    const start = plugin._queueWechatSyncBridgeLifecycle('start', async () => {
+      events.push('start');
+    });
+
+    await vi.waitFor(() => {
+      expect(events).toEqual(['stop:start']);
+    });
+    releaseStop();
+    await Promise.all([stop, start]);
+    expect(events).toEqual(['stop:start', 'stop:end', 'start']);
+  });
+
   it('should migrate legacy folder cleanup config to cleanupDirTemplate', async () => {
     const plugin = new AppleStylePlugin();
     plugin.loadData = vi.fn().mockResolvedValue({
@@ -356,6 +380,36 @@ describe('AppleStylePlugin - Settings Migration', () => {
 
     expect(plugin.settings.clientId).toBeTruthy();
     expect(plugin.settings.clientId.startsWith('wp_dev_')).toBe(true);
+    expect(plugin.saveData).toHaveBeenCalledTimes(1);
+  });
+
+  it('resets persisted bridge and Pro runtime state on Obsidian startup', async () => {
+    const plugin = new AppleStylePlugin();
+    plugin.loadData = vi.fn().mockResolvedValue({
+      wechatAccounts: [],
+      defaultAccountId: '',
+      multiPlatformSync: {
+        enabled: true,
+        token: 'migration-token',
+        connectedClients: [{
+          extensionInstanceId: 'browser-A',
+          status: 'connected',
+          capabilities: { proLicensed: true },
+          license: { state: 'pro', observedAt: Date.now() - 1000 },
+        }],
+        connection: {
+          status: 'connected',
+          capabilities: { proLicensed: true, quotaPolicy: true },
+        },
+      },
+    });
+    plugin.saveData = vi.fn().mockResolvedValue(undefined);
+
+    await plugin.loadSettings();
+
+    expect(plugin.settings.multiPlatformSync.connectedClients[0].status).toBe('disconnected');
+    expect(plugin.settings.multiPlatformSync.connection.status).toBe('untested');
+    expect(plugin.settings.multiPlatformSync.connection.capabilities).toEqual({ quotaPolicy: true });
     expect(plugin.saveData).toHaveBeenCalledTimes(1);
   });
 });

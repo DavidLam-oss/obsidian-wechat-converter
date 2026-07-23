@@ -91,7 +91,7 @@ const LEGACY_SETTING_RENDER_KEY = ['dis', 'play'].join('');
  * @typedef {{ setName: (value: string) => WechatSettingLike, setDesc: (value: string) => WechatSettingLike, setHeading: () => WechatSettingLike, addToggle: (handler: (toggle: WechatToggleLike) => unknown) => WechatSettingLike, addText: (handler: (text: WechatTextLike) => unknown) => WechatSettingLike, addButton: (handler: (button: WechatButtonLike) => unknown) => WechatSettingLike }} WechatSettingLike
  * @typedef {new (containerEl: WechatSettingsElement) => WechatSettingLike} WechatSettingConstructor
  * @typedef {new (message: string, timeout?: number) => unknown} WechatNoticeConstructor
- * @typedef {{ listSupportedPlatforms: (options?: Record<string, unknown>) => Promise<unknown>, getAuthSnapshot: (options?: Record<string, unknown>) => Promise<unknown>, start: () => Promise<unknown>, waitForConnection: (timeoutMs: number) => Promise<unknown>, health: (options?: Record<string, unknown>) => Promise<unknown>, getStatus?: () => Promise<unknown>, getDiagnostics?: () => unknown }} WechatBridgeLike
+ * @typedef {{ listSupportedPlatforms: (options?: Record<string, unknown>) => Promise<unknown>, getAuthSnapshot: (options?: Record<string, unknown>) => Promise<unknown>, start: () => Promise<unknown>, waitForConnection: (timeoutMs: number) => Promise<unknown>, health: (options?: Record<string, unknown>) => Promise<unknown>, pairClient?: (id: string) => boolean, unpairClient?: (id: string) => boolean, getStatus?: () => Promise<unknown>, getDiagnostics?: () => unknown }} WechatBridgeLike
  * @typedef {{ multiPlatformSync?: unknown }} WechatPluginSettingsLike
  * @typedef {{ settings: WechatPluginSettingsLike, obsidianApi?: Partial<WechatObsidianApiLike>, activeView?: { openExternalUrl?: (url: string) => boolean }, openExternalUrl?: (url: string) => boolean, saveSettings: () => Promise<void>, startWechatSyncBridgeInBackground: (reason: string) => unknown, getWechatSyncBridgeService: () => WechatBridgeLike, _wechatSyncBridgeService?: { stop?: () => Promise<unknown> } }} WechatPluginLike
  * @typedef {{ plugin: WechatPluginLike, renderSettingsContent?: () => void, renderSettingsTabIntro?: (containerEl: WechatSettingsElement, description: string) => void, [key: string]: unknown }} WechatSettingsTabLike
@@ -551,6 +551,53 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       dot.textContent = '等待连接';
       body.createEl('span', { text: '令牌已填写，请点击下方「测试连接」确认连接。' });
     }
+
+    const pendingClients = Array.isArray(multiPlatformSettings.pendingClients)
+      ? multiPlatformSettings.pendingClients.filter((client) => isRecord(client))
+      : [];
+    if (pendingClients.length > 0) {
+      const pairingPanel = containerEl.createDiv({ cls: 'wechat-bridge-pairing-panel' });
+      pairingPanel.createEl('strong', { text: '发现待配对的浏览器' });
+      pairingPanel.createEl('p', {
+        text: '这些浏览器使用了不同的本地连接凭据。只有你明确批准后，它们才能连接此 Obsidian。',
+      });
+      for (const pending of pendingClients) {
+        const row = pairingPanel.createDiv({ cls: 'wechat-bridge-pairing-row' });
+        const label = pending.profileLabel || pending.browserName || '未命名浏览器';
+        row.createEl('span', { text: `${label}${pending.extensionVersion ? ` · ${pending.extensionVersion}` : ''}` });
+        const approve = row.createEl('button', { text: '批准配对', cls: 'mod-cta' });
+        approve.onclick = async () => {
+          const bridge = plugin.getWechatSyncBridgeService();
+          const paired = bridge.pairClient?.(String(pending.extensionInstanceId));
+          if (!paired) {
+            new Notice('该待配对请求已过期，请重新加载浏览器插件后再试。', 6000);
+            return;
+          }
+          new Notice('已批准此浏览器。请在浏览器插件中点击重新连接或重新加载扩展。', 6000);
+          refreshSettingTab(tab);
+        };
+      }
+    }
+    const pairedClients = Array.isArray(multiPlatformSettings.pairedClients)
+      ? multiPlatformSettings.pairedClients.filter((client) => isRecord(client))
+      : [];
+    if (pairedClients.length > 0) {
+      const pairedPanel = containerEl.createDiv({ cls: 'wechat-bridge-paired-panel' });
+      pairedPanel.createEl('strong', { text: '已配对浏览器' });
+      for (const paired of pairedClients) {
+        const row = pairedPanel.createDiv({ cls: 'wechat-bridge-pairing-row' });
+        const label = paired.profileLabel || paired.browserName || String(paired.extensionInstanceId).slice(0, 8);
+        row.createEl('span', { text: label });
+        const remove = row.createEl('button', { text: '移除' });
+        remove.onclick = () => {
+          const bridge = plugin.getWechatSyncBridgeService();
+          if (bridge.unpairClient?.(String(paired.extensionInstanceId))) {
+            new Notice('已移除此浏览器配对。', 5000);
+            refreshSettingTab(tab);
+          }
+        };
+      }
+    }
   }
 
   // §3.5 + §4.1: allowRemote 是高级功能（127.0.0.1 ↔ 0.0.0.0 切换），
@@ -806,6 +853,10 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
             const reason = diagnostics.lastHelloRejection?.reason;
             if (reason === 'token_mismatch') {
               detailedMessage = '配对令牌不一致。如果你刚刚在浏览器插件设置中重置过令牌，请复制新令牌并粘贴到下方"连接令牌"输入框。';
+            } else if (reason === 'pairing_required') {
+              detailedMessage = '发现一个尚未配对的浏览器。请在上方“待配对的浏览器”中确认并批准。';
+            } else if (reason === 'credential_mismatch') {
+              detailedMessage = '这个浏览器的连接凭据与已保存的配对记录不同。请确认是你正在使用的浏览器后，在上方重新批准配对。';
             } else if (reason === 'hello_timeout') {
               detailedMessage = '浏览器插件连接后未在限定时间内完成握手。可能扩展版本过旧或未启用握手。';
             } else if (reason === 'invalid_payload') {

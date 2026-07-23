@@ -33,6 +33,8 @@ import {
   HELLO_ERROR_INVALID_PAYLOAD,
   HELLO_ERROR_TIMEOUT,
   HELLO_ERROR_TOKEN_MISMATCH,
+  HELLO_ERROR_PAIRING_REQUIRED,
+  HELLO_ERROR_CREDENTIAL_MISMATCH,
   HELLO_ERROR_VERSION_UNSUPPORTED,
   HELLO_ERROR_DUPLICATE_SESSION,
   HELLO_ERROR_TOO_MANY_CLIENTS,
@@ -333,12 +335,57 @@ describe('§3.1 / §3.2 extension_hello handshake', () => {
       ...DEFAULT_TEST_HELLO,
     }));
     const ack = await waitForAck(ws);
-    expect(ack).toMatchObject({ type: 'extension_hello_ack', ok: false, error: HELLO_ERROR_TOKEN_MISMATCH });
+    expect(ack).toMatchObject({ type: 'extension_hello_ack', ok: false, error: HELLO_ERROR_PAIRING_REQUIRED });
     await waitForSocketClose(ws, 1000);
     expect(service.getActiveClientDescriptor()).toBeNull();
     const rejected = auditEvents.find((entry) => /hello_rejected/.test(entry.event));
     expect(rejected).toBeDefined();
-    expect(rejected.details.reason).toBe(HELLO_ERROR_TOKEN_MISMATCH);
+    expect(rejected.details.reason).toBe(HELLO_ERROR_PAIRING_REQUIRED);
+  });
+
+  it('accepts an explicitly approved pending client and rejects later credential drift', async () => {
+    const port = await getFreePort();
+    const service = createWechatSyncBridgeService({
+      WebSocketServer,
+      http,
+      port,
+      token: 'migration-token',
+      helloTimeoutMs: 1000,
+    });
+    cleanup.push(service);
+    await service.start();
+
+    const pendingWs = await openSocket(port);
+    cleanup.push(pendingWs);
+    const pendingAckPromise = waitForAck(pendingWs);
+    pendingWs.send(JSON.stringify({
+      type: 'extension_hello',
+      token: 'profile-token',
+      ...DEFAULT_TEST_HELLO,
+      extensionInstanceId: 'profile-A',
+    }));
+    expect(await pendingAckPromise).toMatchObject({ ok: false, error: HELLO_ERROR_PAIRING_REQUIRED });
+    await waitForSocketClose(pendingWs, 1000);
+    expect((await service.getStatus()).pendingClients).toHaveLength(1);
+    expect(service.pairClient('profile-A')).toBe(true);
+
+    const pairedWs = await openSocket(port);
+    cleanup.push(pairedWs);
+    const pairedAck = await sendHello(pairedWs, {
+      token: 'profile-token',
+      overrides: { extensionInstanceId: 'profile-A' },
+    });
+    expect(pairedAck.ok).toBe(true);
+    pairedWs.close();
+    await waitForSocketClose(pairedWs, 1000);
+
+    const changedWs = await openSocket(port);
+    cleanup.push(changedWs);
+    const changedAck = await sendHello(changedWs, {
+      token: 'changed-token',
+      overrides: { extensionInstanceId: 'profile-A' },
+    });
+    expect(changedAck).toMatchObject({ ok: false, error: HELLO_ERROR_CREDENTIAL_MISMATCH });
   });
 
   it('rejects extension_hello with an invalid payload (non-hello first message)', async () => {

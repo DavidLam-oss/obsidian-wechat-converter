@@ -429,6 +429,7 @@ describe('Wechatsync bridge service', () => {
       WebSocketServer,
       http,
       port,
+      token: 'secret-token',
       requestTimeoutMs: 1000,
       connectTimeoutMs: 1000,
     });
@@ -437,7 +438,7 @@ describe('Wechatsync bridge service', () => {
 
     const extension = await connectExtension(port, () => ({
       error: { code: 403, message: 'Invalid or missing token' },
-    }), { token: '' });
+    }));
     cleanup.push(extension);
 
     await service.waitForConnection(1000);

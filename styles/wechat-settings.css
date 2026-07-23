@@ -312,6 +312,43 @@
   color: var(--text-muted, #666);
 }
 
+.wechat-bridge-pairing-panel {
+  margin: 8px 0 14px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--color-yellow);
+  background: var(--background-secondary);
+}
+
+.wechat-bridge-pairing-panel > p {
+  margin: 4px 0 8px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.wechat-bridge-pairing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+}
+
+.wechat-bridge-pairing-row > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.wechat-bridge-paired-panel {
+  margin: 6px 0 14px;
+}
+
+.wechat-bridge-paired-panel > strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
 .wechat-bridge-status-profile {
   display: inline-block;
   padding: 1px 6px;
@@ -665,4 +702,3 @@
   border-color: var(--interactive-accent);
   box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.15);
 }
-

@@ -244,7 +244,9 @@ describe('AppleStyleView - showMultiPlatformSyncModal platform rows', () => {
 
   it('hides the Pro upgrade button and shows a Pro-specific quota hint when the bridge reports proLicensed', async () => {
     const view = makeView({ selectedPlatforms: ['zhihu'] });
-    view.plugin.settings.multiPlatformSync.connection.capabilities = { proLicensed: true };
+    view.plugin.getWechatSyncBridgeService = vi.fn(() => ({
+      getActiveClientDescriptor: vi.fn(() => ({ license: { state: 'pro', observedAt: Date.now() }, capabilities: { proLicensed: true } })),
+    }));
     view.openPublisherProPage = vi.fn();
     await view.showMultiPlatformSyncModal();
     const modal = modalCapture.getLastModal();
@@ -264,6 +266,7 @@ describe('AppleStyleView - showMultiPlatformSyncModal platform rows', () => {
     const bridge = {
       getActiveClientDescriptor: vi.fn(() => ({
         capabilities: { proLicensed: true },
+        license: { state: 'pro', observedAt: Date.now() },
       })),
     };
     const view = makeView({ selectedPlatforms: ['zhihu'], bridge });
@@ -280,7 +283,7 @@ describe('AppleStyleView - showMultiPlatformSyncModal platform rows', () => {
     const bridge = {
       getStatus: vi.fn(() => ({
         connectedClients: [
-          { status: 'connected', capabilities: { proLicensed: true } },
+          { status: 'connected', capabilities: { proLicensed: true }, license: { state: 'pro', observedAt: Date.now() } },
         ],
       })),
     };

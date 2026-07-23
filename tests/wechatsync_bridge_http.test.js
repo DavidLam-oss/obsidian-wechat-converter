@@ -30,7 +30,7 @@ import http from 'node:http';
 import net from 'node:net';
 import { WebSocket, WebSocketServer } from 'ws';
 import {
-  HELLO_ERROR_TOKEN_MISMATCH,
+  HELLO_ERROR_PAIRING_REQUIRED,
   createWechatSyncBridgeService,
   isOriginAllowedForWebSocket,
 } from '../services/wechatsync-bridge.js';
@@ -329,11 +329,11 @@ describe('§3.3 / §3.4 HTTP Bearer authorization and CORS hardening', () => {
     expect(response.headers['access-control-allow-origin']).toBeUndefined();
   });
 
-  it('skips Authorization when service is configured without a token (backward compatibility)', async () => {
+  it('fails closed when service is configured without a token', async () => {
     const { httpPort } = await startService({ token: '' });
     const response = await httpRequest({ port: httpPort, path: '/status' });
-    expect(response.status).toBe(200);
-    expect(response.json).toMatchObject({ mode: 'primary' });
+    expect(response.status).toBe(503);
+    expect(response.json).toMatchObject({ error: 'bridge_token_not_configured' });
   });
 });
 
@@ -467,7 +467,7 @@ describe('§4.1 diagnostics surface for settings UI state detection', () => {
     expect(diagnostics.helloRejections).toBe(1);
     expect(diagnostics.helloSuccesses).toBe(1);
     expect(diagnostics.lastHelloRejection).toMatchObject({
-      reason: HELLO_ERROR_TOKEN_MISMATCH,
+      reason: HELLO_ERROR_PAIRING_REQUIRED,
     });
   });
 });
@@ -507,4 +507,3 @@ describe('§4.1 EADDRINUSE no longer silently downgrades', () => {
     });
   });
 });
-

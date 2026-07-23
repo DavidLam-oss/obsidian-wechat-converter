@@ -300,6 +300,23 @@ class AppleStylePlugin extends Plugin {
     return false;
   }
 
+  /**
+   * @template T
+   * @param {string} label
+   * @param {() => Promise<T>} operation
+   * @returns {Promise<T>}
+   */
+  _queueWechatSyncBridgeLifecycle(label, operation) {
+    const previous = /** @type {Promise<unknown>} */ (
+      this._wechatSyncBridgeLifecycle || Promise.resolve()
+    );
+    const queued = previous.catch(() => undefined).then(() => operation());
+    this._wechatSyncBridgeLifecycle = queued.catch((error) => {
+      console.warn(`[Wechatsync] bridge ${label} failed:`, error);
+    });
+    return queued;
+  }
+
   getWechatSyncBridgeService() {
     const pluginSettings = getPluginSettings(this);
     const settings = normalizeMultiPlatformSyncSettings(pluginSettings['multiPlatformSync']);
@@ -309,28 +326,47 @@ class AppleStylePlugin extends Plugin {
     }
 
     if (this._wechatSyncBridgeService?.stop) {
-      this._wechatSyncBridgeService.stop().catch((error) => {
+      void this._wechatSyncBridgeService.stop().catch((error) => {
         console.warn('停止旧浏览器插件连接失败:', error);
       });
     }
 
     this._wechatSyncBridgeCacheKey = cacheKey;
-    this._wechatSyncBridgeService = createWechatSyncBridgeService({
-      port: settings.port,
-      token: settings.token,
-      allowRemote: settings.allowRemote,
-      serverVersion: this.manifest?.version || '',
-      initialConnectedClients: settings.connectedClients || [],
-      onClientRegistryChange: async (clients) => {
-        const currentSettings = getPluginSettings(this);
-        currentSettings['multiPlatformSync'] = normalizeMultiPlatformSyncSettings({
-          ...toRecord(currentSettings['multiPlatformSync']),
-          connectedClients: Array.isArray(clients) ? clients : [],
-        });
-        await this.saveSettings();
-        refreshSettingTabCompat(/** @type {SettingTabCompatLike | null | undefined} */ ((/** @type {AppLike} */ (this.app)).setting?.activeTab));
-      },
+    const bridge = createWechatSyncBridgeService({
+        port: settings.port,
+        token: settings.token,
+        allowRemote: settings.allowRemote,
+        serverVersion: this.manifest?.version || '',
+        initialConnectedClients: settings.connectedClients || [],
+        initialPairedClients: settings.pairedClients || [],
+        initialPendingClients: settings.pendingClients || [],
+        onClientRegistryChange: async (clients) => {
+          const currentSettings = getPluginSettings(this);
+          currentSettings['multiPlatformSync'] = normalizeMultiPlatformSyncSettings({
+            ...toRecord(currentSettings['multiPlatformSync']),
+            connectedClients: Array.isArray(clients) ? clients : [],
+          });
+          await this.saveSettings();
+          refreshSettingTabCompat(/** @type {SettingTabCompatLike | null | undefined} */ ((/** @type {AppLike} */ (this.app)).setting?.activeTab));
+        },
+        onPairingRegistryChange: async (registry) => {
+          const currentSettings = getPluginSettings(this);
+          currentSettings['multiPlatformSync'] = normalizeMultiPlatformSyncSettings({
+            ...toRecord(currentSettings['multiPlatformSync']),
+            pairedClients: Array.isArray(registry?.pairedClients) ? registry.pairedClients : [],
+            pendingClients: Array.isArray(registry?.pendingClients) ? registry.pendingClients : [],
+          });
+          await this.saveSettings();
+          refreshSettingTabCompat(/** @type {SettingTabCompatLike | null | undefined} */ ((/** @type {AppLike} */ (this.app)).setting?.activeTab));
+        },
     });
+    /** @type {{ start: () => Promise<unknown>, stop: () => Promise<unknown> }} */
+    const lifecycleBridge = bridge;
+    const startBridge = lifecycleBridge.start;
+    const stopBridge = lifecycleBridge.stop;
+    lifecycleBridge.start = () => this._queueWechatSyncBridgeLifecycle('start', startBridge);
+    lifecycleBridge.stop = () => this._queueWechatSyncBridgeLifecycle('stop', stopBridge);
+    this._wechatSyncBridgeService = bridge;
     return this._wechatSyncBridgeService;
   }
 
@@ -362,8 +398,25 @@ class AppleStylePlugin extends Plugin {
 
   async loadSettings() {
     const { settings, didMigrate } = normalizeLoadedSettings(await this.loadData(), { generateId });
+    const bridgeSettings = normalizeMultiPlatformSyncSettings(settings.multiPlatformSync);
+    const stableCapabilities = { ...(bridgeSettings.connection.capabilities || {}) };
+    delete stableCapabilities.proLicensed;
+    const hadRuntimeConnectionState = bridgeSettings.connection.status === 'connected'
+      || bridgeSettings.connectedClients.some((client) => client.status === 'connected');
+    settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
+      ...bridgeSettings,
+      connectedClients: bridgeSettings.connectedClients.map((client) => ({
+        ...client,
+        status: 'disconnected',
+      })),
+      connection: {
+        ...bridgeSettings.connection,
+        status: 'untested',
+        capabilities: stableCapabilities,
+      },
+    });
     setPluginSettings(this, settings);
-    if (didMigrate) {
+    if (didMigrate || hadRuntimeConnectionState) {
       await this.saveSettings();
     }
   }

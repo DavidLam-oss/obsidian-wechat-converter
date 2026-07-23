@@ -35,6 +35,8 @@ import {
   LOCAL_BIND_HOST,
   REMOTE_BIND_HOST,
   HELLO_ERROR_TOKEN_MISMATCH,
+  HELLO_ERROR_PAIRING_REQUIRED,
+  HELLO_ERROR_CREDENTIAL_MISMATCH,
   HELLO_ERROR_INVALID_PAYLOAD,
   HELLO_ERROR_TIMEOUT,
   HELLO_ERROR_VERSION_UNSUPPORTED,
@@ -42,6 +44,7 @@ import {
   HELLO_ERROR_TOO_MANY_CLIENTS,
   DEFAULT_MAX_CLIENTS,
 } from './wechatsync-constants.js';
+import { createHash, timingSafeEqual } from 'crypto';
 import {
   createMinimalWebSocketServer,
   createWebSocketAcceptKey,
@@ -67,11 +70,13 @@ const MAX_CONNECTED_CLIENT_REGISTRY = 20;
  * @typedef {{ __ws_control: 'close', code?: number } | { __ws_control: 'ping', payload: Buffer }} WebSocketControlFrame
  * @typedef {string | WebSocketControlFrame} WebSocketParsedMessage
  * @typedef {{ send: (data: string | Buffer) => void, close?: () => void, on: (event: string, handler: (...args: unknown[]) => void) => void, readyState?: number }} BridgeSocketLike
- * @typedef {{ extensionInstanceId: string, browserName?: string, profileLabel?: string, capabilities?: Record<string, unknown>, version?: string, extensionId?: string, token?: string }} BridgeHelloLike
+ * @typedef {{ extensionInstanceId: string, browserName?: string, profileLabel?: string, capabilities?: Record<string, unknown>, license?: Record<string, unknown>, version?: string, extensionId?: string, token?: string }} BridgeHelloLike
  * @typedef {{ connectionId: string, ws: BridgeSocketLike, connectedAt: number, origin: string, helloTimeout: number | null }} PendingConnectionLike
  * @typedef {{ timeout: number | null, reject: (error: unknown) => void, resolve: (value: unknown) => void, method: string, startedAt: number }} PendingRequestLike
- * @typedef {{ connectionId: string, ws: BridgeSocketLike, extensionInstanceId: string, extensionId: string, version: string, profileLabel: string, browserName: string, capabilities: Record<string, unknown>, connectedAt: number, authenticatedAt: number, origin: string, pendingRequests: Map<string, PendingRequestLike> }} BridgeSessionLike
- * @typedef {{ extensionInstanceId: string, browserName?: string, profileLabel?: string, capabilities?: Record<string, unknown>, extensionVersion?: string, status?: 'connected' | 'disconnected', lastSeenAt?: number, firstConnectedAt?: number, lastConnectedAt?: number }} ConnectedClientLike
+ * @typedef {{ connectionId: string, ws: BridgeSocketLike, credential: string, extensionInstanceId: string, extensionId: string, version: string, profileLabel: string, browserName: string, capabilities: Record<string, unknown>, license: Record<string, unknown>, connectedAt: number, authenticatedAt: number, origin: string, pendingRequests: Map<string, PendingRequestLike> }} BridgeSessionLike
+ * @typedef {{ extensionInstanceId: string, browserName?: string, profileLabel?: string, capabilities?: Record<string, unknown>, license?: Record<string, unknown>, extensionVersion?: string, status?: 'connected' | 'disconnected', lastSeenAt?: number, firstConnectedAt?: number, lastConnectedAt?: number }} ConnectedClientLike
+ * @typedef {{ extensionInstanceId: string, credentialHash: string, pairedAt?: number, browserName?: string, profileLabel?: string }} PairedClientLike
+ * @typedef {{ extensionInstanceId: string, credentialHash: string, detectedAt?: number, browserName?: string, profileLabel?: string, extensionVersion?: string, reason?: string }} PendingPairingLike
  * @typedef {{ createServer: (handler?: (req: BridgeHttpRequestLike, res: BridgeHttpResponseLike) => void | Promise<void>) => BridgeHttpServerLike }} BridgeHttpModuleLike
  * @typedef {{ on: (event: string, handler: (...args: unknown[]) => void) => unknown, once: (event: string, handler: (...args: unknown[]) => void) => unknown, off?: (event: string, handler: (...args: unknown[]) => void) => unknown, listen: (...args: unknown[]) => unknown, close: (callback?: (...args: unknown[]) => void) => unknown }} BridgeHttpServerLike
  * @typedef {{ headers: Record<string, string | string[] | undefined>, method?: string, url?: string, on: (event: string, handler: (...args: unknown[]) => void) => unknown }} BridgeHttpRequestLike
@@ -83,7 +88,7 @@ const MAX_CONNECTED_CLIENT_REGISTRY = 20;
  * @typedef {{ forceRefresh?: boolean, timeoutMs?: number }} BridgeListPlatformsOptionsLike
  * @typedef {{ timeoutMs?: number }} BridgeTimeoutOptionsLike
  * @typedef {{ platforms?: unknown, title?: unknown, markdown?: unknown, content?: unknown, cover?: unknown, coverThumbnail?: unknown, assets?: unknown, quotaPolicy?: unknown, timeoutMs?: number, source?: string }} BridgeArticleOptionsLike
- * @typedef {{ WebSocketServer?: WebSocketServerCtorLike | null, http?: BridgeHttpModuleLike | null, httpLoader?: () => Promise<BridgeHttpModuleLike | null>, port?: number, token?: string, requestTimeoutMs?: number, connectTimeoutMs?: number, helloTimeoutMs?: number, allowRemote?: boolean, originAllowlist?: Array<string | RegExp> | null, serverVersion?: string, logger?: BridgeLoggerLike, idFactory?: () => string, connectionIdFactory?: () => string, onClientRegistryChange?: ((clients: ConnectedClientLike[]) => void) | null, initialConnectedClients?: ConnectedClientLike[], maxClients?: number }} BridgeServiceOptionsLike
+ * @typedef {{ WebSocketServer?: WebSocketServerCtorLike | null, http?: BridgeHttpModuleLike | null, httpLoader?: () => Promise<BridgeHttpModuleLike | null>, port?: number, token?: string, requestTimeoutMs?: number, connectTimeoutMs?: number, helloTimeoutMs?: number, allowRemote?: boolean, originAllowlist?: Array<string | RegExp> | null, serverVersion?: string, logger?: BridgeLoggerLike, idFactory?: () => string, connectionIdFactory?: () => string, onClientRegistryChange?: ((clients: ConnectedClientLike[]) => void) | null, onPairingRegistryChange?: ((registry: { pairedClients: PairedClientLike[], pendingClients: PendingPairingLike[] }) => void) | null, initialConnectedClients?: ConnectedClientLike[], initialPairedClients?: PairedClientLike[], initialPendingClients?: PendingPairingLike[], maxClients?: number }} BridgeServiceOptionsLike
  */
 
 /**
@@ -109,6 +114,32 @@ function toRecord(value) {
  */
 function toBridgeString(value, fallback = '') {
   return typeof value === 'string' ? value : fallback;
+}
+
+/** @param {unknown} value */
+function hashBridgeCredential(value) {
+  return createHash('sha256').update(String(value || ''), 'utf8').digest('hex');
+}
+
+/**
+ * @param {string} leftHash
+ * @param {string} rightHash
+ */
+function credentialsMatch(leftHash, rightHash) {
+  if (!/^[a-f0-9]{64}$/i.test(leftHash) || !/^[a-f0-9]{64}$/i.test(rightHash)) return false;
+  return timingSafeEqual(Buffer.from(leftHash, 'hex'), Buffer.from(rightHash, 'hex'));
+}
+
+function normalizeRuntimeLicense(value, capabilities = {}) {
+  const source = toRecord(value);
+  const state = ['pro', 'free', 'unknown'].includes(source.state)
+    ? source.state
+    : (toRecord(capabilities).proLicensed === true ? 'pro' : 'unknown');
+  const observedAt = Number(source.observedAt);
+  return {
+    state,
+    observedAt: Number.isFinite(observedAt) && observedAt > 0 ? observedAt : Date.now(),
+  };
 }
 
 /**
@@ -278,7 +309,10 @@ function createWechatSyncBridgeService(options = {}) {
     idFactory = () => `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
     connectionIdFactory = defaultConnectionIdFactory,
     onClientRegistryChange = null,
+    onPairingRegistryChange = null,
     initialConnectedClients = [],
+    initialPairedClients = [],
+    initialPendingClients = [],
     maxClients = DEFAULT_MAX_CLIENTS,
   } = options;
 
@@ -291,7 +325,15 @@ function createWechatSyncBridgeService(options = {}) {
   // visible immediately (status 'disconnected') even before reconnection.
   /** @type {ConnectedClientLike[]} */
   let connectedClients = Array.isArray(initialConnectedClients)
-    ? initialConnectedClients.map((c) => ({ ...c }))
+    ? initialConnectedClients.map((c) => ({ ...c, status: 'disconnected' }))
+    : [];
+  /** @type {PairedClientLike[]} */
+  let pairedClients = Array.isArray(initialPairedClients)
+    ? initialPairedClients.map((c) => ({ ...c }))
+    : [];
+  /** @type {PendingPairingLike[]} */
+  let pendingClients = Array.isArray(initialPendingClients)
+    ? initialPendingClients.map((c) => ({ ...c }))
     : [];
   /** @type {number | null} */
   let _clientRegistryDebounceTimer = null;
@@ -307,6 +349,66 @@ function createWechatSyncBridgeService(options = {}) {
     _clientRegistryDebounceTimer = setBridgeTimeout(() => {
       onClientRegistryChange(connectedClients.map((c) => ({ ...c })));
     }, 1000);
+  }
+
+  function persistPairingRegistry() {
+    onPairingRegistryChange?.({
+      pairedClients: pairedClients.map((client) => ({ ...client })),
+      pendingClients: pendingClients.map((client) => ({ ...client })),
+    });
+  }
+
+  /**
+   * @param {BridgeHelloLike} hello
+   * @param {string} credentialHash
+   * @param {string} reason
+   */
+  function upsertPendingClient(hello, credentialHash, reason) {
+    const next = {
+      extensionInstanceId: hello.extensionInstanceId,
+      credentialHash,
+      detectedAt: Date.now(),
+      browserName: hello.browserName || '',
+      profileLabel: hello.profileLabel || '',
+      extensionVersion: hello.version || '',
+      reason,
+    };
+    const index = pendingClients.findIndex((client) => client.extensionInstanceId === hello.extensionInstanceId);
+    if (index >= 0) pendingClients[index] = next;
+    else pendingClients.push(next);
+    pendingClients = pendingClients
+      .sort((a, b) => Number(b.detectedAt || 0) - Number(a.detectedAt || 0))
+      .slice(0, MAX_CONNECTED_CLIENT_REGISTRY);
+    persistPairingRegistry();
+  }
+
+  /** @param {string} extensionInstanceId */
+  function pairClient(extensionInstanceId) {
+    const pending = pendingClients.find((client) => client.extensionInstanceId === extensionInstanceId);
+    if (!pending) return false;
+    const next = {
+      extensionInstanceId: pending.extensionInstanceId,
+      credentialHash: pending.credentialHash,
+      pairedAt: Date.now(),
+      browserName: pending.browserName || '',
+      profileLabel: pending.profileLabel || '',
+    };
+    const index = pairedClients.findIndex((client) => client.extensionInstanceId === extensionInstanceId);
+    if (index >= 0) pairedClients[index] = next;
+    else pairedClients.push(next);
+    pendingClients = pendingClients.filter((client) => client.extensionInstanceId !== extensionInstanceId);
+    persistPairingRegistry();
+    return true;
+  }
+
+  /** @param {string} extensionInstanceId */
+  function unpairClient(extensionInstanceId) {
+    const previousLength = pairedClients.length;
+    pairedClients = pairedClients.filter((client) => client.extensionInstanceId !== extensionInstanceId);
+    const session = sessions.get(extensionInstanceId);
+    if (session) closeWs(session.ws, 'client-unpaired');
+    if (pairedClients.length !== previousLength) persistPairingRegistry();
+    return pairedClients.length !== previousLength;
   }
 
   // Trim the registry to at most MAX_CONNECTED_CLIENT_REGISTRY entries.
@@ -343,6 +445,7 @@ function createWechatSyncBridgeService(options = {}) {
         browserName: hello.browserName || existing.browserName,
         profileLabel: hello.profileLabel !== undefined ? hello.profileLabel : existing.profileLabel,
         capabilities: hello.capabilities || existing.capabilities,
+        license: normalizeRuntimeLicense(hello.license, hello.capabilities),
         extensionVersion: hello.version || existing.extensionVersion,
         status,
         lastSeenAt: now,
@@ -354,6 +457,7 @@ function createWechatSyncBridgeService(options = {}) {
         browserName: hello.browserName || '',
         profileLabel: hello.profileLabel || '',
         capabilities: hello.capabilities || {},
+        license: normalizeRuntimeLicense(hello.license, hello.capabilities),
         extensionVersion: hello.version || '',
         status,
         lastSeenAt: now,
@@ -467,6 +571,7 @@ function createWechatSyncBridgeService(options = {}) {
       profileLabel: toBridgeString(record.profileLabel),
       browserName: toBridgeString(record.browserName),
       capabilities: toRecord(record.capabilities),
+      license: toRecord(record.license),
     };
   }
 
@@ -569,6 +674,8 @@ function createWechatSyncBridgeService(options = {}) {
       profileLabel: hello.profileLabel || '',
       browserName: hello.browserName || '',
       capabilities: hello.capabilities || {},
+      license: normalizeRuntimeLicense(hello.license, hello.capabilities),
+      credential: hello.token || '',
       connectedAt: pending.connectedAt,
       authenticatedAt: Date.now(),
       origin: origin || pending.origin || '',
@@ -640,12 +747,43 @@ function createWechatSyncBridgeService(options = {}) {
       rejectHello(pending, HELLO_ERROR_INVALID_PAYLOAD, { receivedType: toRecord(parsed).type || '' });
       return;
     }
-    if (token && hello.token !== token) {
-      rejectHello(pending, HELLO_ERROR_TOKEN_MISMATCH, {
+    if (!hello.extensionInstanceId || !hello.token) {
+      rejectHello(pending, HELLO_ERROR_INVALID_PAYLOAD, { missingIdentityOrCredential: true });
+      return;
+    }
+    const credentialHash = hashBridgeCredential(hello.token);
+    const paired = pairedClients.find((client) => client.extensionInstanceId === hello.extensionInstanceId);
+    if (paired && !credentialsMatch(paired.credentialHash, credentialHash)) {
+      upsertPendingClient(hello, credentialHash, HELLO_ERROR_CREDENTIAL_MISMATCH);
+      rejectHello(pending, HELLO_ERROR_CREDENTIAL_MISMATCH, {
         extensionInstanceId: hello.extensionInstanceId,
         extensionId: hello.extensionId,
+        credentialFingerprint: credentialHash.slice(0, 12),
       });
       return;
+    }
+    if (!paired) {
+      if (token && hello.token === token) {
+        pairedClients.push({
+          extensionInstanceId: hello.extensionInstanceId,
+          credentialHash,
+          pairedAt: Date.now(),
+          browserName: hello.browserName || '',
+          profileLabel: hello.profileLabel || '',
+        });
+        pendingClients = pendingClients.filter((client) => client.extensionInstanceId !== hello.extensionInstanceId);
+        persistPairingRegistry();
+      } else {
+        upsertPendingClient(hello, credentialHash, HELLO_ERROR_PAIRING_REQUIRED);
+        rejectHello(pending, HELLO_ERROR_PAIRING_REQUIRED, {
+          extensionInstanceId: hello.extensionInstanceId,
+          extensionId: hello.extensionId,
+          browserName: hello.browserName,
+          profileLabel: hello.profileLabel,
+          credentialFingerprint: credentialHash.slice(0, 12),
+        });
+        return;
+      }
     }
     registerSession(pending, hello, origin);
   }
@@ -791,7 +929,7 @@ function createWechatSyncBridgeService(options = {}) {
    * @returns {{ ok: true } | { ok: false, status: number, reason: string }}
    */
   function isAuthorizedHttpRequest(req) {
-    if (!token) return { ok: true };
+    if (!token) return { ok: false, status: 503, reason: 'bridge_token_not_configured' };
     const header = req.headers['authorization'] || req.headers['Authorization'] || '';
     const value = Array.isArray(header) ? header[0] : header;
     if (!value || typeof value !== 'string') {
@@ -1037,7 +1175,7 @@ function createWechatSyncBridgeService(options = {}) {
     const id = idFactory();
     /** @type {{ id: string, method: string, params: unknown, token?: string }} */
     const message = { id, method, params };
-    if (token) message.token = token;
+    message.token = session.credential;
     const timeoutMs = Number.isFinite(Number(options.timeoutMs)) && Number(options.timeoutMs) > 0
       ? Number(options.timeoutMs)
       : requestTimeoutMs;
@@ -1085,7 +1223,7 @@ function createWechatSyncBridgeService(options = {}) {
     const id = idFactory();
     /** @type {{ id: string, method: string, params: unknown, token?: string }} */
     const message = { id, method, params };
-    if (token) message.token = token;
+    message.token = session.credential;
     debug('Sending one-way request', {
       id,
       method,
@@ -1267,6 +1405,8 @@ function createWechatSyncBridgeService(options = {}) {
       allowRemote: !!allowRemote,
       port,
       connectedClients: connectedClients.map((c) => ({ ...c })),
+      pairedClients: pairedClients.map((c) => ({ ...c })),
+      pendingClients: pendingClients.map((c) => ({ ...c })),
       primaryClientId,
       maxClients,
       diagnostics: getDiagnostics(),
@@ -1300,6 +1440,7 @@ function createWechatSyncBridgeService(options = {}) {
       profileLabel: session.profileLabel,
       browserName: session.browserName,
       capabilities: { ...(session.capabilities || {}) },
+      license: { ...(session.license || {}) },
       connectedAt: session.connectedAt,
       authenticatedAt: session.authenticatedAt,
       origin: session.origin,
@@ -1313,6 +1454,8 @@ function createWechatSyncBridgeService(options = {}) {
     getStatus,
     getDiagnostics,
     getActiveClientDescriptor,
+    pairClient,
+    unpairClient,
     health,
     listSupportedPlatforms,
     listPlatforms,
@@ -1336,6 +1479,8 @@ export {
   LOCAL_BIND_HOST,
   REMOTE_BIND_HOST,
   HELLO_ERROR_TOKEN_MISMATCH,
+  HELLO_ERROR_PAIRING_REQUIRED,
+  HELLO_ERROR_CREDENTIAL_MISMATCH,
   HELLO_ERROR_INVALID_PAYLOAD,
   HELLO_ERROR_TIMEOUT,
   HELLO_ERROR_VERSION_UNSUPPORTED,

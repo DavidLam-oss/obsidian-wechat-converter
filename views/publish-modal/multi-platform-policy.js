@@ -111,6 +111,10 @@ function mergePolicyCapabilityDetails(target, source) {
       next[key] = sourceRecord[key] === true;
     }
   }
+  const license = toRecord(sourceRecord.license);
+  if (license.state === 'pro') next.proLicensed = true;
+  else if (license.state === 'free') next.proLicensed = false;
+  else if (license.state === 'unknown') delete next.proLicensed;
   return next;
 }
 

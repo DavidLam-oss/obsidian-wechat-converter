@@ -341,7 +341,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
       token: 'token',
       supportedPlatforms: [],
       selectedPlatforms: [],
-      connectedClients: [],
+      connectedClients: [{ extensionInstanceId: 'pro-client', status: 'connected', license: { state: 'pro', observedAt: Date.now() } }],
       connection: { status: 'connected', checkedAt: Date.now(), platforms: [], capabilities: { proLicensed: true }, message: '' },
       recentTasks: [],
     } }));
@@ -353,7 +353,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     expect(panel?.textContent).toContain('不再受免费版每日平台数量限制');
   });
 
-  it('labels cached Pro identity as last-known when browser publishing is disabled', () => {
+  it('does not treat stale cached Pro identity as active when browser publishing is disabled', () => {
     const tab = renderTab(makePlugin({ multiPlatformSync: {
       enabled: false,
       port: 9527,
@@ -365,9 +365,9 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
       recentTasks: [],
     } }));
 
-    const panel = tab.containerEl.querySelector('.wechat-multiplatform-onboarding.is-pro');
-    expect(panel?.textContent).toContain('上次连接时识别为 Pro');
-    expect(panel?.textContent).toContain('浏览器插件发布当前已关闭');
+    const panel = tab.containerEl.querySelector('.wechat-multiplatform-onboarding:not(.is-pro)');
+    expect(panel?.textContent).not.toContain('上次连接时识别为 Pro');
+    expect(panel?.textContent).toContain('免费版每天 1 个平台额度');
     expect(panel?.textContent).not.toContain('多平台发布已解锁');
     expect(panel?.textContent).not.toContain('不再受免费版每日平台数量限制');
   });
@@ -644,6 +644,37 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     expect(dot).not.toBeNull();
     expect(dot.classList.contains('is-unknown')).toBe(true);
     expect(dot.textContent).toBe('等待连接');
+  });
+
+  it('shows pending browser pairing and approves only after an explicit click', async () => {
+    const pairClient = vi.fn(() => true);
+    const plugin = makePlugin({ multiPlatformSync: {
+      enabled: true,
+      port: 9527,
+      token: 'migration-token',
+      connectedClients: [],
+      pairedClients: [],
+      pendingClients: [{
+        extensionInstanceId: 'pending-profile',
+        credentialHash: 'a'.repeat(64),
+        browserName: 'comet',
+        profileLabel: '写作号',
+        extensionVersion: '0.2.9',
+        reason: 'pairing_required',
+      }],
+      supportedPlatforms: [],
+      selectedPlatforms: [],
+      connection: { status: 'failed', checkedAt: Date.now(), platforms: [], capabilities: {}, message: '' },
+      recentTasks: [],
+    } });
+    plugin.getWechatSyncBridgeService = vi.fn(() => ({ pairClient }));
+    const tab = renderTab(plugin);
+    const panel = tab.containerEl.querySelector('.wechat-bridge-pairing-panel');
+    expect(panel?.textContent).toContain('写作号');
+    expect(pairClient).not.toHaveBeenCalled();
+    panel.querySelector('button')?.click();
+    await Promise.resolve();
+    expect(pairClient).toHaveBeenCalledWith('pending-profile');
   });
 
   it('§16 Phase 1: 有 profileLabel 时显示 profileLabel（不再叠加 browserName）', () => {

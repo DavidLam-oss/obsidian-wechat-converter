@@ -63333,11 +63333,15 @@ var DEFAULT_SYNC_REQUEST_TIMEOUT_MS = 18e4;
 var DEFAULT_HELLO_TIMEOUT_MS = 3e4;
 var LOCAL_BIND_HOST = "127.0.0.1";
 var REMOTE_BIND_HOST = "0.0.0.0";
-var HELLO_ERROR_TOKEN_MISMATCH = "token_mismatch";
+var HELLO_ERROR_PAIRING_REQUIRED = "pairing_required";
+var HELLO_ERROR_CREDENTIAL_MISMATCH = "credential_mismatch";
 var HELLO_ERROR_INVALID_PAYLOAD = "invalid_payload";
 var HELLO_ERROR_TIMEOUT = "hello_timeout";
 var HELLO_ERROR_TOO_MANY_CLIENTS = "too_many_clients";
 var DEFAULT_MAX_CLIENTS = 4;
+
+// services/wechatsync-bridge.js
+var import_crypto = require("crypto");
 
 // services/wechatsync-bridge-runtime.js
 var WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
@@ -63751,6 +63755,23 @@ function toRecord2(value) {
 function toBridgeString(value, fallback = "") {
   return typeof value === "string" ? value : fallback;
 }
+function hashBridgeCredential(value) {
+  return (0, import_crypto.createHash)("sha256").update(String(value || ""), "utf8").digest("hex");
+}
+function credentialsMatch(leftHash, rightHash) {
+  if (!/^[a-f0-9]{64}$/i.test(leftHash) || !/^[a-f0-9]{64}$/i.test(rightHash))
+    return false;
+  return (0, import_crypto.timingSafeEqual)(Buffer.from(leftHash, "hex"), Buffer.from(rightHash, "hex"));
+}
+function normalizeRuntimeLicense(value, capabilities = {}) {
+  const source = toRecord2(value);
+  const state = ["pro", "free", "unknown"].includes(source.state) ? source.state : toRecord2(capabilities).proLicensed === true ? "pro" : "unknown";
+  const observedAt = Number(source.observedAt);
+  return {
+    state,
+    observedAt: Number.isFinite(observedAt) && observedAt > 0 ? observedAt : Date.now()
+  };
+}
 function setBridgeTimeout(handler, ms) {
   if (typeof window === "undefined" || typeof window.setTimeout !== "function")
     return null;
@@ -63884,12 +63905,17 @@ function createWechatSyncBridgeService(options = {}) {
     idFactory = () => `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
     connectionIdFactory = defaultConnectionIdFactory,
     onClientRegistryChange = null,
+    onPairingRegistryChange = null,
     initialConnectedClients = [],
+    initialPairedClients = [],
+    initialPendingClients = [],
     maxClients = DEFAULT_MAX_CLIENTS
   } = options;
   const bindHost = allowRemote ? REMOTE_BIND_HOST : LOCAL_BIND_HOST;
   let activeHttp = http;
-  let connectedClients = Array.isArray(initialConnectedClients) ? initialConnectedClients.map((c) => ({ ...c })) : [];
+  let connectedClients = Array.isArray(initialConnectedClients) ? initialConnectedClients.map((c) => ({ ...c, status: "disconnected" })) : [];
+  let pairedClients = Array.isArray(initialPairedClients) ? initialPairedClients.map((c) => ({ ...c })) : [];
+  let pendingClients = Array.isArray(initialPendingClients) ? initialPendingClients.map((c) => ({ ...c })) : [];
   let _clientRegistryDebounceTimer = null;
   trimClientRegistry();
   function scheduleRegistryChange() {
@@ -63899,6 +63925,60 @@ function createWechatSyncBridgeService(options = {}) {
     _clientRegistryDebounceTimer = setBridgeTimeout(() => {
       onClientRegistryChange(connectedClients.map((c) => ({ ...c })));
     }, 1e3);
+  }
+  function persistPairingRegistry() {
+    onPairingRegistryChange == null ? void 0 : onPairingRegistryChange({
+      pairedClients: pairedClients.map((client) => ({ ...client })),
+      pendingClients: pendingClients.map((client) => ({ ...client }))
+    });
+  }
+  function upsertPendingClient(hello, credentialHash, reason) {
+    const next = {
+      extensionInstanceId: hello.extensionInstanceId,
+      credentialHash,
+      detectedAt: Date.now(),
+      browserName: hello.browserName || "",
+      profileLabel: hello.profileLabel || "",
+      extensionVersion: hello.version || "",
+      reason
+    };
+    const index = pendingClients.findIndex((client) => client.extensionInstanceId === hello.extensionInstanceId);
+    if (index >= 0)
+      pendingClients[index] = next;
+    else
+      pendingClients.push(next);
+    pendingClients = pendingClients.sort((a, b) => Number(b.detectedAt || 0) - Number(a.detectedAt || 0)).slice(0, MAX_CONNECTED_CLIENT_REGISTRY);
+    persistPairingRegistry();
+  }
+  function pairClient(extensionInstanceId) {
+    const pending = pendingClients.find((client) => client.extensionInstanceId === extensionInstanceId);
+    if (!pending)
+      return false;
+    const next = {
+      extensionInstanceId: pending.extensionInstanceId,
+      credentialHash: pending.credentialHash,
+      pairedAt: Date.now(),
+      browserName: pending.browserName || "",
+      profileLabel: pending.profileLabel || ""
+    };
+    const index = pairedClients.findIndex((client) => client.extensionInstanceId === extensionInstanceId);
+    if (index >= 0)
+      pairedClients[index] = next;
+    else
+      pairedClients.push(next);
+    pendingClients = pendingClients.filter((client) => client.extensionInstanceId !== extensionInstanceId);
+    persistPairingRegistry();
+    return true;
+  }
+  function unpairClient(extensionInstanceId) {
+    const previousLength = pairedClients.length;
+    pairedClients = pairedClients.filter((client) => client.extensionInstanceId !== extensionInstanceId);
+    const session = sessions.get(extensionInstanceId);
+    if (session)
+      closeWs(session.ws, "client-unpaired");
+    if (pairedClients.length !== previousLength)
+      persistPairingRegistry();
+    return pairedClients.length !== previousLength;
   }
   function trimClientRegistry() {
     if (connectedClients.length <= MAX_CONNECTED_CLIENT_REGISTRY)
@@ -63925,6 +64005,7 @@ function createWechatSyncBridgeService(options = {}) {
         browserName: hello.browserName || existing.browserName,
         profileLabel: hello.profileLabel !== void 0 ? hello.profileLabel : existing.profileLabel,
         capabilities: hello.capabilities || existing.capabilities,
+        license: normalizeRuntimeLicense(hello.license, hello.capabilities),
         extensionVersion: hello.version || existing.extensionVersion,
         status,
         lastSeenAt: now,
@@ -63936,6 +64017,7 @@ function createWechatSyncBridgeService(options = {}) {
         browserName: hello.browserName || "",
         profileLabel: hello.profileLabel || "",
         capabilities: hello.capabilities || {},
+        license: normalizeRuntimeLicense(hello.license, hello.capabilities),
         extensionVersion: hello.version || "",
         status,
         lastSeenAt: now,
@@ -64022,7 +64104,8 @@ function createWechatSyncBridgeService(options = {}) {
       version: toBridgeString(record.version),
       profileLabel: toBridgeString(record.profileLabel),
       browserName: toBridgeString(record.browserName),
-      capabilities: toRecord2(record.capabilities)
+      capabilities: toRecord2(record.capabilities),
+      license: toRecord2(record.license)
     };
   }
   function sendHelloAck(ws, { ok, connectionId = "", error = "" }) {
@@ -64098,6 +64181,8 @@ function createWechatSyncBridgeService(options = {}) {
       profileLabel: hello.profileLabel || "",
       browserName: hello.browserName || "",
       capabilities: hello.capabilities || {},
+      license: normalizeRuntimeLicense(hello.license, hello.capabilities),
+      credential: hello.token || "",
       connectedAt: pending.connectedAt,
       authenticatedAt: Date.now(),
       origin: origin || pending.origin || "",
@@ -64155,12 +64240,43 @@ function createWechatSyncBridgeService(options = {}) {
       rejectHello(pending, HELLO_ERROR_INVALID_PAYLOAD, { receivedType: toRecord2(parsed).type || "" });
       return;
     }
-    if (token && hello.token !== token) {
-      rejectHello(pending, HELLO_ERROR_TOKEN_MISMATCH, {
+    if (!hello.extensionInstanceId || !hello.token) {
+      rejectHello(pending, HELLO_ERROR_INVALID_PAYLOAD, { missingIdentityOrCredential: true });
+      return;
+    }
+    const credentialHash = hashBridgeCredential(hello.token);
+    const paired = pairedClients.find((client) => client.extensionInstanceId === hello.extensionInstanceId);
+    if (paired && !credentialsMatch(paired.credentialHash, credentialHash)) {
+      upsertPendingClient(hello, credentialHash, HELLO_ERROR_CREDENTIAL_MISMATCH);
+      rejectHello(pending, HELLO_ERROR_CREDENTIAL_MISMATCH, {
         extensionInstanceId: hello.extensionInstanceId,
-        extensionId: hello.extensionId
+        extensionId: hello.extensionId,
+        credentialFingerprint: credentialHash.slice(0, 12)
       });
       return;
+    }
+    if (!paired) {
+      if (token && hello.token === token) {
+        pairedClients.push({
+          extensionInstanceId: hello.extensionInstanceId,
+          credentialHash,
+          pairedAt: Date.now(),
+          browserName: hello.browserName || "",
+          profileLabel: hello.profileLabel || ""
+        });
+        pendingClients = pendingClients.filter((client) => client.extensionInstanceId !== hello.extensionInstanceId);
+        persistPairingRegistry();
+      } else {
+        upsertPendingClient(hello, credentialHash, HELLO_ERROR_PAIRING_REQUIRED);
+        rejectHello(pending, HELLO_ERROR_PAIRING_REQUIRED, {
+          extensionInstanceId: hello.extensionInstanceId,
+          extensionId: hello.extensionId,
+          browserName: hello.browserName,
+          profileLabel: hello.profileLabel,
+          credentialFingerprint: credentialHash.slice(0, 12)
+        });
+        return;
+      }
     }
     registerSession(pending, hello, origin);
   }
@@ -64285,7 +64401,7 @@ function createWechatSyncBridgeService(options = {}) {
   }
   function isAuthorizedHttpRequest(req) {
     if (!token)
-      return { ok: true };
+      return { ok: false, status: 503, reason: "bridge_token_not_configured" };
     const header = req.headers["authorization"] || req.headers["Authorization"] || "";
     const value = Array.isArray(header) ? header[0] : header;
     if (!value || typeof value !== "string") {
@@ -64504,8 +64620,7 @@ function createWechatSyncBridgeService(options = {}) {
     }
     const id = idFactory();
     const message = { id, method, params };
-    if (token)
-      message.token = token;
+    message.token = session.credential;
     const timeoutMs = Number.isFinite(Number(options2.timeoutMs)) && Number(options2.timeoutMs) > 0 ? Number(options2.timeoutMs) : requestTimeoutMs;
     return new Promise((resolve, reject) => {
       const timeout = setBridgeTimeout(() => {
@@ -64541,8 +64656,7 @@ function createWechatSyncBridgeService(options = {}) {
     }
     const id = idFactory();
     const message = { id, method, params };
-    if (token)
-      message.token = token;
+    message.token = session.credential;
     debug("Sending one-way request", {
       id,
       method,
@@ -64658,6 +64772,8 @@ function createWechatSyncBridgeService(options = {}) {
       allowRemote: !!allowRemote,
       port,
       connectedClients: connectedClients.map((c) => ({ ...c })),
+      pairedClients: pairedClients.map((c) => ({ ...c })),
+      pendingClients: pendingClients.map((c) => ({ ...c })),
       primaryClientId,
       maxClients,
       diagnostics: getDiagnostics()
@@ -64686,6 +64802,7 @@ function createWechatSyncBridgeService(options = {}) {
       profileLabel: session.profileLabel,
       browserName: session.browserName,
       capabilities: { ...session.capabilities || {} },
+      license: { ...session.license || {} },
       connectedAt: session.connectedAt,
       authenticatedAt: session.authenticatedAt,
       origin: session.origin
@@ -64698,6 +64815,8 @@ function createWechatSyncBridgeService(options = {}) {
     getStatus,
     getDiagnostics,
     getActiveClientDescriptor,
+    pairClient,
+    unpairClient,
     health,
     listSupportedPlatforms,
     listPlatforms,
@@ -67131,6 +67250,8 @@ function createDefaultMultiPlatformSyncSettings() {
     allowRemote: false,
     supportedPlatforms: [],
     connectedClients: [],
+    pairedClients: [],
+    pendingClients: [],
     selectedPlatforms: [],
     recentTasks: [],
     policyCache: null,
@@ -67143,6 +67264,7 @@ function createDefaultMultiPlatformSyncSettings() {
   };
 }
 function normalizeConnectedClient(value) {
+  var _a5;
   if (!isRecord6(value))
     return null;
   const source = asRecord4(value);
@@ -67151,11 +67273,17 @@ function normalizeConnectedClient(value) {
     return null;
   const status = source.status === "connected" ? "connected" : "disconnected";
   const now = Date.now();
+  const licenseSource = asRecord4(source.license);
+  const licenseState = ["pro", "free", "unknown"].includes(licenseSource.state) ? licenseSource.state : ((_a5 = source.capabilities) == null ? void 0 : _a5.proLicensed) === true ? "pro" : "unknown";
   return {
     extensionInstanceId: id,
     browserName: typeof source.browserName === "string" ? source.browserName : "",
     profileLabel: typeof source.profileLabel === "string" ? source.profileLabel : "",
     capabilities: isRecord6(source.capabilities) ? { ...source.capabilities } : {},
+    license: {
+      state: licenseState,
+      observedAt: Number.isFinite(Number(licenseSource.observedAt)) ? Number(licenseSource.observedAt) : now
+    },
     extensionVersion: typeof source.extensionVersion === "string" ? source.extensionVersion : "",
     status,
     lastSeenAt: Number.isFinite(Number(source.lastSeenAt)) ? Number(source.lastSeenAt) : now,
@@ -67167,6 +67295,50 @@ function normalizeConnectedClients(value) {
   if (!Array.isArray(value))
     return [];
   return value.map((entry) => normalizeConnectedClient(entry)).filter(Boolean);
+}
+function normalizePairedClient(value) {
+  if (!isRecord6(value))
+    return null;
+  const source = asRecord4(value);
+  const extensionInstanceId = String(source.extensionInstanceId || "").trim();
+  const credentialHash = String(source.credentialHash || "").trim();
+  if (!extensionInstanceId || !/^[a-f0-9]{64}$/i.test(credentialHash))
+    return null;
+  return {
+    extensionInstanceId,
+    credentialHash,
+    pairedAt: Number.isFinite(Number(source.pairedAt)) ? Number(source.pairedAt) : Date.now(),
+    browserName: typeof source.browserName === "string" ? source.browserName : "",
+    profileLabel: typeof source.profileLabel === "string" ? source.profileLabel : ""
+  };
+}
+function normalizePairedClients(value) {
+  if (!Array.isArray(value))
+    return [];
+  return value.map(normalizePairedClient).filter(Boolean).slice(0, 20);
+}
+function normalizePendingClient(value) {
+  if (!isRecord6(value))
+    return null;
+  const source = asRecord4(value);
+  const extensionInstanceId = String(source.extensionInstanceId || "").trim();
+  const credentialHash = String(source.credentialHash || "").trim();
+  if (!extensionInstanceId || !/^[a-f0-9]{64}$/i.test(credentialHash))
+    return null;
+  return {
+    extensionInstanceId,
+    credentialHash,
+    detectedAt: Number.isFinite(Number(source.detectedAt)) ? Number(source.detectedAt) : Date.now(),
+    browserName: typeof source.browserName === "string" ? source.browserName : "",
+    profileLabel: typeof source.profileLabel === "string" ? source.profileLabel : "",
+    extensionVersion: typeof source.extensionVersion === "string" ? source.extensionVersion : "",
+    reason: typeof source.reason === "string" ? source.reason : "pairing_required"
+  };
+}
+function normalizePendingClients(value) {
+  if (!Array.isArray(value))
+    return [];
+  return value.map(normalizePendingClient).filter(Boolean).slice(0, 20);
 }
 function normalizeWechatsyncPlatformId(value = "") {
   const id = String(value || "").trim().toLowerCase();
@@ -67230,14 +67402,12 @@ function hasWechatSyncCapability(settings = {}, capability = "") {
   return capabilities[capability] === true;
 }
 function hasWechatSyncProLicense(settings = {}) {
-  var _a5, _b;
   const normalized = normalizeMultiPlatformSyncSettings(settings);
-  if (((_b = (_a5 = normalized.connection) == null ? void 0 : _a5.capabilities) == null ? void 0 : _b.proLicensed) === true)
-    return true;
   return (normalized.connectedClients || []).some((client) => {
+    var _a5;
     if ((client == null ? void 0 : client.status) !== "connected")
       return false;
-    return normalizeWechatSyncCapabilities(client.capabilities || {}).proLicensed === true;
+    return ((_a5 = client == null ? void 0 : client.license) == null ? void 0 : _a5.state) === "pro";
   });
 }
 function normalizeWechatSyncRecentTasks(value = []) {
@@ -67308,6 +67478,8 @@ function normalizeMultiPlatformSyncSettings(value = {}) {
     connection: normalizeMultiPlatformConnection(source.connection),
     recentTasks: normalizeWechatSyncRecentTasks(source.recentTasks),
     connectedClients: normalizeConnectedClients(source.connectedClients),
+    pairedClients: normalizePairedClients(source.pairedClients),
+    pendingClients: normalizePendingClients(source.pendingClients),
     policyCache: normalizeWechatSyncPolicyCache(source.policyCache)
   };
 }
@@ -67717,6 +67889,50 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       dot.textContent = "\u7B49\u5F85\u8FDE\u63A5";
       body.createEl("span", { text: "\u4EE4\u724C\u5DF2\u586B\u5199\uFF0C\u8BF7\u70B9\u51FB\u4E0B\u65B9\u300C\u6D4B\u8BD5\u8FDE\u63A5\u300D\u786E\u8BA4\u8FDE\u63A5\u3002" });
     }
+    const pendingClients = Array.isArray(multiPlatformSettings.pendingClients) ? multiPlatformSettings.pendingClients.filter((client) => isRecord7(client)) : [];
+    if (pendingClients.length > 0) {
+      const pairingPanel = containerEl.createDiv({ cls: "wechat-bridge-pairing-panel" });
+      pairingPanel.createEl("strong", { text: "\u53D1\u73B0\u5F85\u914D\u5BF9\u7684\u6D4F\u89C8\u5668" });
+      pairingPanel.createEl("p", {
+        text: "\u8FD9\u4E9B\u6D4F\u89C8\u5668\u4F7F\u7528\u4E86\u4E0D\u540C\u7684\u672C\u5730\u8FDE\u63A5\u51ED\u636E\u3002\u53EA\u6709\u4F60\u660E\u786E\u6279\u51C6\u540E\uFF0C\u5B83\u4EEC\u624D\u80FD\u8FDE\u63A5\u6B64 Obsidian\u3002"
+      });
+      for (const pending of pendingClients) {
+        const row = pairingPanel.createDiv({ cls: "wechat-bridge-pairing-row" });
+        const label = pending.profileLabel || pending.browserName || "\u672A\u547D\u540D\u6D4F\u89C8\u5668";
+        row.createEl("span", { text: `${label}${pending.extensionVersion ? ` \xB7 ${pending.extensionVersion}` : ""}` });
+        const approve = row.createEl("button", { text: "\u6279\u51C6\u914D\u5BF9", cls: "mod-cta" });
+        approve.onclick = async () => {
+          var _a6;
+          const bridge = plugin.getWechatSyncBridgeService();
+          const paired = (_a6 = bridge.pairClient) == null ? void 0 : _a6.call(bridge, String(pending.extensionInstanceId));
+          if (!paired) {
+            new Notice2("\u8BE5\u5F85\u914D\u5BF9\u8BF7\u6C42\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u52A0\u8F7D\u6D4F\u89C8\u5668\u63D2\u4EF6\u540E\u518D\u8BD5\u3002", 6e3);
+            return;
+          }
+          new Notice2("\u5DF2\u6279\u51C6\u6B64\u6D4F\u89C8\u5668\u3002\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u70B9\u51FB\u91CD\u65B0\u8FDE\u63A5\u6216\u91CD\u65B0\u52A0\u8F7D\u6269\u5C55\u3002", 6e3);
+          refreshSettingTab(tab);
+        };
+      }
+    }
+    const pairedClients = Array.isArray(multiPlatformSettings.pairedClients) ? multiPlatformSettings.pairedClients.filter((client) => isRecord7(client)) : [];
+    if (pairedClients.length > 0) {
+      const pairedPanel = containerEl.createDiv({ cls: "wechat-bridge-paired-panel" });
+      pairedPanel.createEl("strong", { text: "\u5DF2\u914D\u5BF9\u6D4F\u89C8\u5668" });
+      for (const paired of pairedClients) {
+        const row = pairedPanel.createDiv({ cls: "wechat-bridge-pairing-row" });
+        const label = paired.profileLabel || paired.browserName || String(paired.extensionInstanceId).slice(0, 8);
+        row.createEl("span", { text: label });
+        const remove = row.createEl("button", { text: "\u79FB\u9664" });
+        remove.onclick = () => {
+          var _a6;
+          const bridge = plugin.getWechatSyncBridgeService();
+          if ((_a6 = bridge.unpairClient) == null ? void 0 : _a6.call(bridge, String(paired.extensionInstanceId))) {
+            new Notice2("\u5DF2\u79FB\u9664\u6B64\u6D4F\u89C8\u5668\u914D\u5BF9\u3002", 5e3);
+            refreshSettingTab(tab);
+          }
+        };
+      }
+    }
   }
   const getSupportedPlatformsFromExtension = async (bridge) => {
     const response = await bridge.listSupportedPlatforms({ timeoutMs: 1e4 });
@@ -67929,6 +68145,10 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         const reason = (_d2 = diagnostics.lastHelloRejection) == null ? void 0 : _d2.reason;
         if (reason === "token_mismatch") {
           detailedMessage = '\u914D\u5BF9\u4EE4\u724C\u4E0D\u4E00\u81F4\u3002\u5982\u679C\u4F60\u521A\u521A\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u91CD\u7F6E\u8FC7\u4EE4\u724C\uFF0C\u8BF7\u590D\u5236\u65B0\u4EE4\u724C\u5E76\u7C98\u8D34\u5230\u4E0B\u65B9"\u8FDE\u63A5\u4EE4\u724C"\u8F93\u5165\u6846\u3002';
+        } else if (reason === "pairing_required") {
+          detailedMessage = "\u53D1\u73B0\u4E00\u4E2A\u5C1A\u672A\u914D\u5BF9\u7684\u6D4F\u89C8\u5668\u3002\u8BF7\u5728\u4E0A\u65B9\u201C\u5F85\u914D\u5BF9\u7684\u6D4F\u89C8\u5668\u201D\u4E2D\u786E\u8BA4\u5E76\u6279\u51C6\u3002";
+        } else if (reason === "credential_mismatch") {
+          detailedMessage = "\u8FD9\u4E2A\u6D4F\u89C8\u5668\u7684\u8FDE\u63A5\u51ED\u636E\u4E0E\u5DF2\u4FDD\u5B58\u7684\u914D\u5BF9\u8BB0\u5F55\u4E0D\u540C\u3002\u8BF7\u786E\u8BA4\u662F\u4F60\u6B63\u5728\u4F7F\u7528\u7684\u6D4F\u89C8\u5668\u540E\uFF0C\u5728\u4E0A\u65B9\u91CD\u65B0\u6279\u51C6\u914D\u5BF9\u3002";
         } else if (reason === "hello_timeout") {
           detailedMessage = "\u6D4F\u89C8\u5668\u63D2\u4EF6\u8FDE\u63A5\u540E\u672A\u5728\u9650\u5B9A\u65F6\u95F4\u5185\u5B8C\u6210\u63E1\u624B\u3002\u53EF\u80FD\u6269\u5C55\u7248\u672C\u8FC7\u65E7\u6216\u672A\u542F\u7528\u63E1\u624B\u3002";
         } else if (reason === "invalid_payload") {
@@ -68510,6 +68730,13 @@ function mergePolicyCapabilityDetails(target, source) {
       next[key] = sourceRecord[key] === true;
     }
   }
+  const license = toRecord5(sourceRecord.license);
+  if (license.state === "pro")
+    next.proLicensed = true;
+  else if (license.state === "free")
+    next.proLicensed = false;
+  else if (license.state === "unknown")
+    delete next.proLicensed;
   return next;
 }
 function mergeHealthPolicyCapabilities(cachedCapabilities, health) {
@@ -69162,6 +69389,7 @@ async function detectQuotaPolicySupport(bridge, cachedConnection = {}) {
 }
 function resolvePublishModalCapabilities(view, cachedConnection = {}) {
   const cachedCapabilities = normalizeWechatSyncCapabilities(toRecord8(cachedConnection.capabilities));
+  delete cachedCapabilities.proLicensed;
   const bridge = (
     /** @type {BridgeLike} */
     view.plugin.getWechatSyncBridgeService()
@@ -80991,6 +81219,23 @@ var AppleStylePlugin = class extends Plugin {
     }
     return false;
   }
+  /**
+   * @template T
+   * @param {string} label
+   * @param {() => Promise<T>} operation
+   * @returns {Promise<T>}
+   */
+  _queueWechatSyncBridgeLifecycle(label, operation) {
+    const previous = (
+      /** @type {Promise<unknown>} */
+      this._wechatSyncBridgeLifecycle || Promise.resolve()
+    );
+    const queued = previous.catch(() => void 0).then(() => operation());
+    this._wechatSyncBridgeLifecycle = queued.catch((error) => {
+      console.warn(`[Wechatsync] bridge ${label} failed:`, error);
+    });
+    return queued;
+  }
   getWechatSyncBridgeService() {
     var _a5, _b;
     const pluginSettings = getPluginSettings(this);
@@ -81000,17 +81245,19 @@ var AppleStylePlugin = class extends Plugin {
       return this._wechatSyncBridgeService;
     }
     if ((_a5 = this._wechatSyncBridgeService) == null ? void 0 : _a5.stop) {
-      this._wechatSyncBridgeService.stop().catch((error) => {
+      void this._wechatSyncBridgeService.stop().catch((error) => {
         console.warn("\u505C\u6B62\u65E7\u6D4F\u89C8\u5668\u63D2\u4EF6\u8FDE\u63A5\u5931\u8D25:", error);
       });
     }
     this._wechatSyncBridgeCacheKey = cacheKey;
-    this._wechatSyncBridgeService = createWechatSyncBridgeService({
+    const bridge = createWechatSyncBridgeService({
       port: settings.port,
       token: settings.token,
       allowRemote: settings.allowRemote,
       serverVersion: ((_b = this.manifest) == null ? void 0 : _b.version) || "",
       initialConnectedClients: settings.connectedClients || [],
+      initialPairedClients: settings.pairedClients || [],
+      initialPendingClients: settings.pendingClients || [],
       onClientRegistryChange: async (clients) => {
         var _a6;
         const currentSettings = getPluginSettings(this);
@@ -81024,8 +81271,29 @@ var AppleStylePlugin = class extends Plugin {
           /** @type {AppLike} */
           (_a6 = this.app.setting) == null ? void 0 : _a6.activeTab
         );
+      },
+      onPairingRegistryChange: async (registry) => {
+        var _a6;
+        const currentSettings = getPluginSettings(this);
+        currentSettings["multiPlatformSync"] = normalizeMultiPlatformSyncSettings({
+          ...toRecord11(currentSettings["multiPlatformSync"]),
+          pairedClients: Array.isArray(registry == null ? void 0 : registry.pairedClients) ? registry.pairedClients : [],
+          pendingClients: Array.isArray(registry == null ? void 0 : registry.pendingClients) ? registry.pendingClients : []
+        });
+        await this.saveSettings();
+        refreshSettingTabCompat(
+          /** @type {SettingTabCompatLike | null | undefined} */
+          /** @type {AppLike} */
+          (_a6 = this.app.setting) == null ? void 0 : _a6.activeTab
+        );
       }
     });
+    const lifecycleBridge = bridge;
+    const startBridge = lifecycleBridge.start;
+    const stopBridge = lifecycleBridge.stop;
+    lifecycleBridge.start = () => this._queueWechatSyncBridgeLifecycle("start", startBridge);
+    lifecycleBridge.stop = () => this._queueWechatSyncBridgeLifecycle("stop", stopBridge);
+    this._wechatSyncBridgeService = bridge;
     return this._wechatSyncBridgeService;
   }
   startWechatSyncBridgeInBackground(reason = "manual") {
@@ -81053,8 +81321,24 @@ var AppleStylePlugin = class extends Plugin {
   }
   async loadSettings() {
     const { settings, didMigrate } = normalizeLoadedSettings(await this.loadData(), { generateId });
+    const bridgeSettings = normalizeMultiPlatformSyncSettings(settings.multiPlatformSync);
+    const stableCapabilities = { ...bridgeSettings.connection.capabilities || {} };
+    delete stableCapabilities.proLicensed;
+    const hadRuntimeConnectionState = bridgeSettings.connection.status === "connected" || bridgeSettings.connectedClients.some((client) => client.status === "connected");
+    settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
+      ...bridgeSettings,
+      connectedClients: bridgeSettings.connectedClients.map((client) => ({
+        ...client,
+        status: "disconnected"
+      })),
+      connection: {
+        ...bridgeSettings.connection,
+        status: "untested",
+        capabilities: stableCapabilities
+      }
+    });
     setPluginSettings(this, settings);
-    if (didMigrate) {
+    if (didMigrate || hadRuntimeConnectionState) {
       await this.saveSettings();
     }
   }

@@ -201,6 +201,7 @@ async function detectQuotaPolicySupport(bridge, cachedConnection = {}) {
  */
 function resolvePublishModalCapabilities(view, cachedConnection = {}) {
   const cachedCapabilities = normalizeWechatSyncCapabilities(toRecord(cachedConnection.capabilities));
+  delete cachedCapabilities.proLicensed;
   const bridge = /** @type {BridgeLike} */ (view.plugin.getWechatSyncBridgeService());
   const activeClient = typeof bridge.getActiveClientDescriptor === 'function'
     ? bridge.getActiveClientDescriptor()
