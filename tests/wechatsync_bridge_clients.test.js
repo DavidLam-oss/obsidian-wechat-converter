@@ -555,4 +555,51 @@ describe('§16 Phase 1 — connected clients registry', () => {
     const status = await service.getStatus();
     expect(status.connectedClients).toHaveLength(18);
   });
+
+  it('preserves the offline Pro cache when trimming, even if its lastSeenAt is the oldest', async () => {
+    // E1 regression: a burst of many free-tier browser/profile connections
+    // must not evict the single disconnected entry that carries the cached
+    // Pro license, even though its lastSeenAt is the oldest of the batch.
+    const initial = [];
+    // The lone Pro entry is the *oldest* (smallest lastSeenAt) — under a pure
+    // recency policy it would be the first to be dropped.
+    initial.push({
+      extensionInstanceId: 'pro-old',
+      status: 'disconnected',
+      lastSeenAt: 1_000_000, // oldest
+      firstConnectedAt: 1_000_000,
+      lastConnectedAt: 1_000_000,
+      browserName: 'Chrome',
+      profileLabel: '',
+      capabilities: { proLicensed: true },
+      license: { state: 'pro', observedAt: 1_000_000 },
+      extensionVersion: '0.0.0',
+    });
+    // 20 newer free-tier disconnected entries → 21 total, one over the cap.
+    for (let i = 1; i <= 20; i += 1) {
+      initial.push({
+        extensionInstanceId: `free-${i}`,
+        status: 'disconnected',
+        lastSeenAt: 2_000_000 + i,
+        firstConnectedAt: 2_000_000 + i,
+        lastConnectedAt: 2_000_000 + i,
+        browserName: 'Chrome',
+        profileLabel: '',
+        capabilities: {},
+        license: { state: 'free', observedAt: 2_000_000 + i },
+        extensionVersion: '0.0.0',
+      });
+    }
+    const { service } = await makeService({ initialConnectedClients: initial });
+
+    const status = await service.getStatus();
+    expect(status.connectedClients).toHaveLength(20);
+    const keptIds = status.connectedClients.map((c) => c.extensionInstanceId);
+    // The Pro entry survives despite being the oldest.
+    expect(keptIds).toContain('pro-old');
+    // Exactly one entry was dropped, and it must be the oldest *free* one
+    // (free-1), not the Pro entry.
+    expect(keptIds).not.toContain('free-1');
+    expect(keptIds.filter((id) => id.startsWith('free-'))).toHaveLength(19);
+  });
 });

@@ -45,9 +45,11 @@ const {
   normalizeConnectedClient,
   normalizeConnectedClients,
   hasWechatSyncProLicense,
+  resolveWechatSyncProLicense,
   normalizeMultiPlatformSyncSettings,
   normalizeWechatSyncCapabilities,
 } = require('../services/wechatsync-settings');
+const { PRO_LICENSE_STALENESS_MS } = require('../services/wechatsync-constants');
 
 describe('Sprint 1 §4.1 normalizeMultiPlatformSyncSettings — security defaults', () => {
   // Sprint 3 schema lock: the post-Sprint-3 normalize output may add new
@@ -252,7 +254,7 @@ describe('§16 Phase 1 normalizeConnectedClient / normalizeConnectedClients', ()
     expect(normalized.connection.capabilities.proLicensed).toBe(true);
   });
 
-  it('hasWechatSyncProLicense recognises active Pro from cached connection and connected clients', () => {
+  it('hasWechatSyncProLicense recognises active Pro from connected clients and cached (offline) Pro within the staleness window', () => {
     expect(hasWechatSyncProLicense({
       connection: { capabilities: { proLicensed: true } },
     })).toBe(false);
@@ -266,6 +268,9 @@ describe('§16 Phase 1 normalizeConnectedClient / normalizeConnectedClients', ()
       }],
     })).toBe(true);
 
+    // Offline cache: a disconnected Pro client whose snapshot is still within
+    // the staleness window keeps the user on Pro (the browser extension does
+    // not need to be running to preserve a paid identity).
     expect(hasWechatSyncProLicense({
       connectedClients: [{
         extensionInstanceId: 'client-2',
@@ -273,7 +278,104 @@ describe('§16 Phase 1 normalizeConnectedClient / normalizeConnectedClients', ()
         capabilities: { proLicensed: true },
         license: { state: 'pro', observedAt: Date.now() },
       }],
-    })).toBe(false);
+    })).toBe(true);
+  });
+
+  it('resolveWechatSyncProLicense distinguishes live / cached / none, and expires stale caches', () => {
+    const now = Date.now();
+
+    // Live: a connected Pro client.
+    expect(resolveWechatSyncProLicense({
+      connectedClients: [{
+        extensionInstanceId: 'live',
+        status: 'connected',
+        license: { state: 'pro', observedAt: now },
+      }],
+    }, now)).toEqual(expect.objectContaining({ pro: true, source: 'live' }));
+
+    // Cached: disconnected but within window.
+    const cachedObservedAt = now - (PRO_LICENSE_STALENESS_MS - 1000);
+    const cached = resolveWechatSyncProLicense({
+      connectedClients: [{
+        extensionInstanceId: 'cached',
+        status: 'disconnected',
+        license: { state: 'pro', observedAt: cachedObservedAt },
+      }],
+    }, now);
+    expect(cached.pro).toBe(true);
+    expect(cached.source).toBe('cached');
+    expect(cached.observedAt).toBe(cachedObservedAt);
+    expect(cached.staleAfter).toBe(cachedObservedAt + PRO_LICENSE_STALENESS_MS);
+
+    // Expired: disconnected and past the window → none.
+    expect(resolveWechatSyncProLicense({
+      connectedClients: [{
+        extensionInstanceId: 'stale',
+        status: 'disconnected',
+        license: { state: 'pro', observedAt: now - (PRO_LICENSE_STALENESS_MS + 1000) },
+      }],
+    }, now)).toEqual({ pro: false, source: 'none', observedAt: null, staleAfter: null });
+  });
+
+  it('resolveWechatSyncProLicense is defensive against invalid or clock-skewed observedAt', () => {
+    const now = Date.now();
+
+    // A finite but invalid observedAt (<= 0) survives normalize unchanged and
+    // is untrusted → does not sustain Pro. (A non-finite / missing observedAt
+    // is instead seeded to load-time by normalizeConnectedClient, which is the
+    // legacy-migration path covered by its own test below.)
+    for (const observedAt of [0, -1]) {
+      expect(resolveWechatSyncProLicense({
+        connectedClients: [{
+          extensionInstanceId: 'bad',
+          status: 'disconnected',
+          license: { state: 'pro', observedAt },
+        }],
+      }, now).pro).toBe(false);
+    }
+
+    // A future observedAt (system clock rolled back) must not downgrade a
+    // paying user — treated leniently as "not stale".
+    expect(resolveWechatSyncProLicense({
+      connectedClients: [{
+        extensionInstanceId: 'future',
+        status: 'disconnected',
+        license: { state: 'pro', observedAt: now + 60_000 },
+      }],
+    }, now).pro).toBe(true);
+  });
+
+  it('resolveWechatSyncProLicense returns Pro when any client is Pro within the window (mixed multi-device)', () => {
+    const now = Date.now();
+    const result = resolveWechatSyncProLicense({
+      connectedClients: [
+        {
+          extensionInstanceId: 'free-live',
+          status: 'connected',
+          license: { state: 'free', observedAt: now },
+        },
+        {
+          extensionInstanceId: 'pro-cached',
+          status: 'disconnected',
+          license: { state: 'pro', observedAt: now - 1000 },
+        },
+      ],
+    }, now);
+    expect(result.pro).toBe(true);
+    expect(result.source).toBe('cached');
+  });
+
+  it('resolveWechatSyncProLicense treats a legacy proLicensed-only client as Pro after normalize seeds observedAt', () => {
+    // Legacy persisted data: capabilities.proLicensed:true with no license
+    // object. normalizeConnectedClient derives state:'pro' and seeds
+    // observedAt to load time, so it counts as a fresh cache.
+    expect(resolveWechatSyncProLicense({
+      connectedClients: [{
+        extensionInstanceId: 'legacy',
+        status: 'disconnected',
+        capabilities: { proLicensed: true },
+      }],
+    }).pro).toBe(true);
   });
 
   it('normalizeWechatSyncCapabilities coerces non-boolean proLicensed inputs to false (strict === true)', () => {

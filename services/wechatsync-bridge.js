@@ -418,14 +418,21 @@ function createWechatSyncBridgeService(options = {}) {
 
   // Trim the registry to at most MAX_CONNECTED_CLIENT_REGISTRY entries.
   // Eviction policy: never drop a 'connected' session (those are live and
-  // visible in the UI); among 'disconnected' entries, keep the most
-  // recently seen. Returns the number of entries dropped.
+  // visible in the UI); among 'disconnected' entries, prefer keeping those
+  // whose cached license is 'pro' (so the offline Pro cache survives a burst
+  // of many browser/profile connections), then fall back to most recently
+  // seen. Returns the number of entries dropped.
   function trimClientRegistry() {
     if (connectedClients.length <= MAX_CONNECTED_CLIENT_REGISTRY) return 0;
     const connected = connectedClients.filter((c) => c && c.status === 'connected');
+    const isProClient = (/** @type {ConnectedClientLike} */ c) => toRecord(c && c.license).state === 'pro';
     const disconnected = connectedClients
       .filter((c) => c && c.status !== 'connected')
-      .sort((a, b) => (b.lastSeenAt || 0) - (a.lastSeenAt || 0));
+      .sort((a, b) => {
+        const proDelta = Number(isProClient(b)) - Number(isProClient(a));
+        if (proDelta !== 0) return proDelta;
+        return (b.lastSeenAt || 0) - (a.lastSeenAt || 0);
+      });
     const budgetForDisconnected = Math.max(0, MAX_CONNECTED_CLIENT_REGISTRY - connected.length);
     const keptDisconnected = disconnected.slice(0, budgetForDisconnected);
     const next = [...connected, ...keptDisconnected];

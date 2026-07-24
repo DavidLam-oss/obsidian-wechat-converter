@@ -9,7 +9,7 @@
 
 ## 输出
 
-输出 `createDefaultMultiPlatformSyncSettings`、`normalizeConnectedClient`、`normalizeConnectedClients`、`normalizeWechatsyncPlatformId`、`parseWechatsyncPlatformIds`、`mergeWechatsyncPlatformLists`、`normalizeWechatSyncCapabilities`、`hasWechatSyncCapability`、`hasWechatSyncProLicense`、`normalizeWechatSyncRecentTasks`，用于桥接调用、结果归一化和平台状态展示。
+输出 `createDefaultMultiPlatformSyncSettings`、`normalizeConnectedClient`、`normalizeConnectedClients`、`normalizeWechatsyncPlatformId`、`parseWechatsyncPlatformIds`、`mergeWechatsyncPlatformLists`、`normalizeWechatSyncCapabilities`、`hasWechatSyncCapability`、`resolveWechatSyncProLicense`、`hasWechatSyncProLicense`、`normalizeWechatSyncRecentTasks`，用于桥接调用、结果归一化和平台状态展示。其中 `resolveWechatSyncProLicense` 在浏览器扩展离线时按 `PRO_LICENSE_STALENESS_MS` 窗口回退到本地 license 缓存，区分 live/cached/none 供 UI 精确展示。
 
 ## 定位
 
@@ -34,7 +34,7 @@
 //
 // All functions are pure — no DOM, no Obsidian API, no side effects.
 
-import { DEFAULT_WECHATSYNC_PORT } from './wechatsync-constants.js';
+import { DEFAULT_WECHATSYNC_PORT, PRO_LICENSE_STALENESS_MS } from './wechatsync-constants.js';
 import {
   buildWechatsyncPlatformCatalog,
   getFallbackWechatsyncPlatforms,
@@ -251,12 +251,74 @@ export function hasWechatSyncCapability(settings = {}, capability = '') {
   return capabilities[capability] === true;
 }
 
-export function hasWechatSyncProLicense(settings = {}) {
+/**
+ * Determine whether a persisted connected-client's Pro license snapshot is
+ * still within the offline cache window. Defensive against invalid or
+ * clock-skewed timestamps:
+ *  - non-finite / <= 0 observedAt is untrusted → does not sustain Pro.
+ *  - a future observedAt (system clock rolled back) is treated leniently as
+ *    "not stale" so paying users are not wrongly downgraded.
+ * @param {UnknownRecord} license
+ * @param {number} [now=Date.now()]
+ * @returns {boolean}
+ */
+function isProLicenseWithinStaleness(license, now = Date.now()) {
+  const source = asRecord(license);
+  if (source.state !== 'pro') return false;
+  const observedAt = Number(source.observedAt);
+  if (!Number.isFinite(observedAt) || observedAt <= 0) return false;
+  const age = now - observedAt;
+  if (age < 0) return true; // clock rolled back — do not penalize paid users
+  return age < PRO_LICENSE_STALENESS_MS;
+}
+
+/**
+ * Resolve the effective Pro-license state for the multi-platform sync
+ * feature, distinguishing a live connection from an offline cache hit so the
+ * UI can render accurate messaging.
+ *
+ * `source`:
+ *  - 'live'   — a currently connected client reports Pro.
+ *  - 'cached' — no live Pro connection, but a disconnected client's Pro
+ *               snapshot is still within the staleness window.
+ *  - 'none'   — no Pro signal within the window.
+ *
+ * @param {UnknownRecord} [settings={}]
+ * @param {number} [now=Date.now()]
+ * @returns {{ pro: boolean, source: 'live' | 'cached' | 'none', observedAt: number | null, staleAfter: number | null }}
+ */
+export function resolveWechatSyncProLicense(settings = {}, now = Date.now()) {
   const normalized = normalizeMultiPlatformSyncSettings(settings);
-  return (normalized.connectedClients || []).some((client) => {
-    if (client?.status !== 'connected') return false;
-    return client?.license?.state === 'pro';
-  });
+  const clients = normalized.connectedClients || [];
+  /** @type {UnknownRecord | null} */
+  let liveClient = null;
+  /** @type {UnknownRecord | null} */
+  let cachedClient = null;
+  for (const client of clients) {
+    if (!isProLicenseWithinStaleness(client?.license, now)) continue;
+    if (client?.status === 'connected') {
+      if (!liveClient || Number(client.license.observedAt) > Number(liveClient.license.observedAt)) {
+        liveClient = client;
+      }
+    } else if (!cachedClient || Number(client.license.observedAt) > Number(cachedClient.license.observedAt)) {
+      cachedClient = client;
+    }
+  }
+  const chosen = liveClient || cachedClient;
+  if (!chosen) {
+    return { pro: false, source: 'none', observedAt: null, staleAfter: null };
+  }
+  const observedAt = Number(chosen.license.observedAt);
+  return {
+    pro: true,
+    source: liveClient ? 'live' : 'cached',
+    observedAt: Number.isFinite(observedAt) ? observedAt : null,
+    staleAfter: Number.isFinite(observedAt) ? observedAt + PRO_LICENSE_STALENESS_MS : null,
+  };
+}
+
+export function hasWechatSyncProLicense(settings = {}) {
+  return resolveWechatSyncProLicense(settings).pro;
 }
 
 export function normalizeWechatSyncRecentTasks(value = []) {

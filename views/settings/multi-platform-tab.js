@@ -59,7 +59,7 @@ import {
 
 import {
   getAvailableWechatsyncPlatforms,
-  hasWechatSyncProLicense,
+  resolveWechatSyncProLicense,
   mergeWechatsyncPlatformLists,
   normalizeMultiPlatformSyncSettings,
   normalizeWechatSyncCapabilities,
@@ -314,6 +314,22 @@ function refreshSettingTab(tab) {
 }
 
 /**
+ * Human-friendly relative label for a Pro license observedAt timestamp,
+ * used by the cached (offline) Pro messaging. Floors to whole days; the
+ * same-day case reads as "今天".
+ * @param {number} observedAt
+ * @param {number} [now=Date.now()]
+ * @returns {string}
+ */
+function formatProLicenseObservedAgo(observedAt, now = Date.now()) {
+  const elapsed = now - Number(observedAt);
+  if (!Number.isFinite(elapsed) || elapsed < 0) return '今天';
+  const days = Math.floor(elapsed / (24 * 60 * 60 * 1000));
+  if (days <= 0) return '今天';
+  return `${days} 天前`;
+}
+
+/**
  * @param {WechatSettingsTabLike} tab
  * @param {WechatSettingsElement} containerEl
  * @param {{ obsidianApi?: Partial<WechatObsidianApiLike> }} [options={}]
@@ -324,7 +340,10 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   const pluginSettings = toSettingsRecord(plugin.settings);
   const multiPlatformSettings = normalizeMultiPlatformSyncSettings(pluginSettings.multiPlatformSync);
   plugin.settings.multiPlatformSync = multiPlatformSettings;
-  const isProLicensed = hasWechatSyncProLicense(multiPlatformSettings);
+  const proLicense = resolveWechatSyncProLicense(multiPlatformSettings);
+  const isProLicensed = proLicense.pro;
+  const isProCached = proLicense.source === 'cached';
+  const hasEverConnected = (multiPlatformSettings.connectedClients || []).length > 0;
   const isPublishingEnabled = multiPlatformSettings.enabled;
 
   const renderSettingsTabIntro = tab.renderSettingsTabIntro;
@@ -344,18 +363,27 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   const guide = containerEl.createDiv({
     cls: `wechat-multiplatform-onboarding${isProLicensed ? ' is-pro' : ''}`,
   });
+  const cachedLastSeenText = isProCached && proLicense.observedAt
+    ? formatProLicenseObservedAgo(proLicense.observedAt)
+    : '';
   guide.createEl('div', {
     cls: 'wechat-multiplatform-onboarding-title',
     text: isProLicensed
-      ? (isPublishingEnabled ? 'Pro 已激活：多平台发布已解锁' : '上次连接时识别为 Pro')
+      ? (isProCached
+        ? `Pro 身份已保留（上次识别：${cachedLastSeenText}）`
+        : (isPublishingEnabled ? 'Pro 已激活：多平台发布已解锁' : '上次连接时识别为 Pro'))
       : '下一步：安装浏览器插件并完成配置',
   });
   guide.createEl('p', {
     text: isProLicensed
-      ? (isPublishingEnabled
-        ? '当前浏览器插件授权已同步到 Obsidian，发布到其他平台时不再受免费版每日平台数量限制。'
-        : '浏览器插件发布当前已关闭。重新启用并连接后，Obsidian 会再次确认授权状态。')
-      : '免费版每天 1 个平台额度。想先试用，先安装浏览器插件；已经购买或已经装好浏览器插件，可直接查看配置步骤。',
+      ? (isProCached
+        ? '浏览器插件当前未连接，Obsidian 正在使用上次识别到的 Pro 身份。重新连接浏览器即可刷新状态。'
+        : (isPublishingEnabled
+          ? '当前浏览器插件授权已同步到 Obsidian，发布到其他平台时不再受免费版每日平台数量限制。'
+          : '浏览器插件发布当前已关闭。重新启用并连接后，Obsidian 会再次确认授权状态。'))
+      : (hasEverConnected
+        ? '免费版每天 1 个平台额度。想先试用，先安装浏览器插件；已经购买或已经装好浏览器插件，可直接查看配置步骤。'
+        : '免费版每天 1 个平台额度。已购买 Pro？连接一次浏览器插件即可解锁离线保留，之后浏览器未启动也会保留 Pro 身份。'),
   });
   if (isProLicensed) {
     guide.createEl('span', {

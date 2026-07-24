@@ -372,6 +372,44 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     expect(panel?.textContent).not.toContain('不再受免费版每日平台数量限制');
   });
 
+  it('renders cached (offline) Pro identity with a badge when the browser is disconnected but within the staleness window', () => {
+    const tab = renderTab(makePlugin({ multiPlatformSync: {
+      enabled: true,
+      port: 9527,
+      token: 'token',
+      supportedPlatforms: [],
+      selectedPlatforms: [],
+      // Disconnected client whose Pro snapshot is fresh (observedAt ~ now).
+      connectedClients: [{ extensionInstanceId: 'pro-cached', status: 'disconnected', license: { state: 'pro', observedAt: Date.now() } }],
+      connection: { status: 'untested', checkedAt: 0, platforms: [], capabilities: {}, message: '' },
+      recentTasks: [],
+    } }));
+
+    const panel = tab.containerEl.querySelector('.wechat-multiplatform-onboarding.is-pro');
+    expect(panel?.textContent).toContain('Pro 身份已保留');
+    expect(panel?.textContent).toContain('重新连接浏览器即可刷新状态');
+    const badge = panel?.querySelector('.wechat-pro-identity-badge');
+    expect(badge?.textContent).toBe('Pro');
+  });
+
+  it('keeps the cached Pro badge visible even when browser publishing is toggled off', () => {
+    const tab = renderTab(makePlugin({ multiPlatformSync: {
+      enabled: false,
+      port: 9527,
+      token: 'token',
+      supportedPlatforms: [],
+      selectedPlatforms: [],
+      connectedClients: [{ extensionInstanceId: 'pro-cached', status: 'disconnected', license: { state: 'pro', observedAt: Date.now() } }],
+      connection: { status: 'untested', checkedAt: 0, platforms: [], capabilities: {}, message: '' },
+      recentTasks: [],
+    } }));
+
+    const panel = tab.containerEl.querySelector('.wechat-multiplatform-onboarding.is-pro');
+    expect(panel?.textContent).toContain('Pro 身份已保留');
+    const badge = panel?.querySelector('.wechat-pro-identity-badge');
+    expect(badge?.textContent).toBe('Pro');
+  });
+
   it('does not expose hidden fallback-only platforms in the settings picker', () => {
     const tab = renderTab(makePlugin({ multiPlatformSync: {
       enabled: true,

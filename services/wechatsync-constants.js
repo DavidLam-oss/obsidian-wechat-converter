@@ -42,3 +42,12 @@ export const HELLO_ERROR_VERSION_UNSUPPORTED = 'version_unsupported';
 export const HELLO_ERROR_DUPLICATE_SESSION = 'duplicate_session';
 export const HELLO_ERROR_TOO_MANY_CLIENTS = 'too_many_clients';
 export const DEFAULT_MAX_CLIENTS = 4;
+// Pro license offline cache window. When the browser extension is not
+// running, the Obsidian side keeps treating the user as Pro based on the
+// persisted connectedClients[].license snapshot for this long since the
+// last observedAt. Chosen as the extension's offline ceiling (7d validUntil
+// + 1d grace = 8d) plus a 2d buffer, so the plugin cache never expires
+// before a reconnect can self-correct the state. Disconnected Pro display
+// gates no real capability (publishing requires a live bridge), so a
+// generous window is safe.
+export const PRO_LICENSE_STALENESS_MS = 10 * 24 * 60 * 60 * 1000;

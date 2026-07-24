@@ -63339,6 +63339,7 @@ var HELLO_ERROR_INVALID_PAYLOAD = "invalid_payload";
 var HELLO_ERROR_TIMEOUT = "hello_timeout";
 var HELLO_ERROR_TOO_MANY_CLIENTS = "too_many_clients";
 var DEFAULT_MAX_CLIENTS = 4;
+var PRO_LICENSE_STALENESS_MS = 10 * 24 * 60 * 60 * 1e3;
 
 // node_modules/@noble/hashes/esm/utils.js
 function isBytes(a) {
@@ -64319,7 +64320,13 @@ function createWechatSyncBridgeService(options = {}) {
     if (connectedClients.length <= MAX_CONNECTED_CLIENT_REGISTRY)
       return 0;
     const connected = connectedClients.filter((c) => c && c.status === "connected");
-    const disconnected = connectedClients.filter((c) => c && c.status !== "connected").sort((a, b) => (b.lastSeenAt || 0) - (a.lastSeenAt || 0));
+    const isProClient = (c) => toRecord2(c && c.license).state === "pro";
+    const disconnected = connectedClients.filter((c) => c && c.status !== "connected").sort((a, b) => {
+      const proDelta = Number(isProClient(b)) - Number(isProClient(a));
+      if (proDelta !== 0)
+        return proDelta;
+      return (b.lastSeenAt || 0) - (a.lastSeenAt || 0);
+    });
     const budgetForDisconnected = Math.max(0, MAX_CONNECTED_CLIENT_REGISTRY - connected.length);
     const keptDisconnected = disconnected.slice(0, budgetForDisconnected);
     const next = [...connected, ...keptDisconnected];
@@ -67736,14 +67743,45 @@ function hasWechatSyncCapability(settings = {}, capability = "") {
   const capabilities = normalizeMultiPlatformSyncSettings(settings).connection.capabilities || {};
   return capabilities[capability] === true;
 }
-function hasWechatSyncProLicense(settings = {}) {
+function isProLicenseWithinStaleness(license, now = Date.now()) {
+  const source = asRecord4(license);
+  if (source.state !== "pro")
+    return false;
+  const observedAt = Number(source.observedAt);
+  if (!Number.isFinite(observedAt) || observedAt <= 0)
+    return false;
+  const age = now - observedAt;
+  if (age < 0)
+    return true;
+  return age < PRO_LICENSE_STALENESS_MS;
+}
+function resolveWechatSyncProLicense(settings = {}, now = Date.now()) {
   const normalized = normalizeMultiPlatformSyncSettings(settings);
-  return (normalized.connectedClients || []).some((client) => {
-    var _a5;
-    if ((client == null ? void 0 : client.status) !== "connected")
-      return false;
-    return ((_a5 = client == null ? void 0 : client.license) == null ? void 0 : _a5.state) === "pro";
-  });
+  const clients = normalized.connectedClients || [];
+  let liveClient = null;
+  let cachedClient = null;
+  for (const client of clients) {
+    if (!isProLicenseWithinStaleness(client == null ? void 0 : client.license, now))
+      continue;
+    if ((client == null ? void 0 : client.status) === "connected") {
+      if (!liveClient || Number(client.license.observedAt) > Number(liveClient.license.observedAt)) {
+        liveClient = client;
+      }
+    } else if (!cachedClient || Number(client.license.observedAt) > Number(cachedClient.license.observedAt)) {
+      cachedClient = client;
+    }
+  }
+  const chosen = liveClient || cachedClient;
+  if (!chosen) {
+    return { pro: false, source: "none", observedAt: null, staleAfter: null };
+  }
+  const observedAt = Number(chosen.license.observedAt);
+  return {
+    pro: true,
+    source: liveClient ? "live" : "cached",
+    observedAt: Number.isFinite(observedAt) ? observedAt : null,
+    staleAfter: Number.isFinite(observedAt) ? observedAt + PRO_LICENSE_STALENESS_MS : null
+  };
 }
 function normalizeWechatSyncRecentTasks(value = []) {
   const tasks = Array.isArray(value) ? value : [];
@@ -68053,6 +68091,15 @@ function refreshSettingTab(tab) {
   legacyRender.call(tab);
   return true;
 }
+function formatProLicenseObservedAgo(observedAt, now = Date.now()) {
+  const elapsed = now - Number(observedAt);
+  if (!Number.isFinite(elapsed) || elapsed < 0)
+    return "\u4ECA\u5929";
+  const days = Math.floor(elapsed / (24 * 60 * 60 * 1e3));
+  if (days <= 0)
+    return "\u4ECA\u5929";
+  return `${days} \u5929\u524D`;
+}
 function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   var _a5, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p;
   const { Setting: Setting2, Notice: Notice2 } = getObsidianApi(tab, options);
@@ -68060,7 +68107,10 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   const pluginSettings = toSettingsRecord(plugin.settings);
   const multiPlatformSettings = normalizeMultiPlatformSyncSettings(pluginSettings.multiPlatformSync);
   plugin.settings.multiPlatformSync = multiPlatformSettings;
-  const isProLicensed = hasWechatSyncProLicense(multiPlatformSettings);
+  const proLicense = resolveWechatSyncProLicense(multiPlatformSettings);
+  const isProLicensed = proLicense.pro;
+  const isProCached = proLicense.source === "cached";
+  const hasEverConnected = (multiPlatformSettings.connectedClients || []).length > 0;
   const isPublishingEnabled = multiPlatformSettings.enabled;
   const renderSettingsTabIntro = tab.renderSettingsTabIntro;
   if (typeof renderSettingsTabIntro === "function") {
@@ -68074,12 +68124,13 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   const guide = containerEl.createDiv({
     cls: `wechat-multiplatform-onboarding${isProLicensed ? " is-pro" : ""}`
   });
+  const cachedLastSeenText = isProCached && proLicense.observedAt ? formatProLicenseObservedAgo(proLicense.observedAt) : "";
   guide.createEl("div", {
     cls: "wechat-multiplatform-onboarding-title",
-    text: isProLicensed ? isPublishingEnabled ? "Pro \u5DF2\u6FC0\u6D3B\uFF1A\u591A\u5E73\u53F0\u53D1\u5E03\u5DF2\u89E3\u9501" : "\u4E0A\u6B21\u8FDE\u63A5\u65F6\u8BC6\u522B\u4E3A Pro" : "\u4E0B\u4E00\u6B65\uFF1A\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\u5E76\u5B8C\u6210\u914D\u7F6E"
+    text: isProLicensed ? isProCached ? `Pro \u8EAB\u4EFD\u5DF2\u4FDD\u7559\uFF08\u4E0A\u6B21\u8BC6\u522B\uFF1A${cachedLastSeenText}\uFF09` : isPublishingEnabled ? "Pro \u5DF2\u6FC0\u6D3B\uFF1A\u591A\u5E73\u53F0\u53D1\u5E03\u5DF2\u89E3\u9501" : "\u4E0A\u6B21\u8FDE\u63A5\u65F6\u8BC6\u522B\u4E3A Pro" : "\u4E0B\u4E00\u6B65\uFF1A\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\u5E76\u5B8C\u6210\u914D\u7F6E"
   });
   guide.createEl("p", {
-    text: isProLicensed ? isPublishingEnabled ? "\u5F53\u524D\u6D4F\u89C8\u5668\u63D2\u4EF6\u6388\u6743\u5DF2\u540C\u6B65\u5230 Obsidian\uFF0C\u53D1\u5E03\u5230\u5176\u4ED6\u5E73\u53F0\u65F6\u4E0D\u518D\u53D7\u514D\u8D39\u7248\u6BCF\u65E5\u5E73\u53F0\u6570\u91CF\u9650\u5236\u3002" : "\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03\u5F53\u524D\u5DF2\u5173\u95ED\u3002\u91CD\u65B0\u542F\u7528\u5E76\u8FDE\u63A5\u540E\uFF0CObsidian \u4F1A\u518D\u6B21\u786E\u8BA4\u6388\u6743\u72B6\u6001\u3002" : "\u514D\u8D39\u7248\u6BCF\u5929 1 \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002\u60F3\u5148\u8BD5\u7528\uFF0C\u5148\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF1B\u5DF2\u7ECF\u8D2D\u4E70\u6216\u5DF2\u7ECF\u88C5\u597D\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u53EF\u76F4\u63A5\u67E5\u770B\u914D\u7F6E\u6B65\u9AA4\u3002"
+    text: isProLicensed ? isProCached ? "\u6D4F\u89C8\u5668\u63D2\u4EF6\u5F53\u524D\u672A\u8FDE\u63A5\uFF0CObsidian \u6B63\u5728\u4F7F\u7528\u4E0A\u6B21\u8BC6\u522B\u5230\u7684 Pro \u8EAB\u4EFD\u3002\u91CD\u65B0\u8FDE\u63A5\u6D4F\u89C8\u5668\u5373\u53EF\u5237\u65B0\u72B6\u6001\u3002" : isPublishingEnabled ? "\u5F53\u524D\u6D4F\u89C8\u5668\u63D2\u4EF6\u6388\u6743\u5DF2\u540C\u6B65\u5230 Obsidian\uFF0C\u53D1\u5E03\u5230\u5176\u4ED6\u5E73\u53F0\u65F6\u4E0D\u518D\u53D7\u514D\u8D39\u7248\u6BCF\u65E5\u5E73\u53F0\u6570\u91CF\u9650\u5236\u3002" : "\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03\u5F53\u524D\u5DF2\u5173\u95ED\u3002\u91CD\u65B0\u542F\u7528\u5E76\u8FDE\u63A5\u540E\uFF0CObsidian \u4F1A\u518D\u6B21\u786E\u8BA4\u6388\u6743\u72B6\u6001\u3002" : hasEverConnected ? "\u514D\u8D39\u7248\u6BCF\u5929 1 \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002\u60F3\u5148\u8BD5\u7528\uFF0C\u5148\u5B89\u88C5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF1B\u5DF2\u7ECF\u8D2D\u4E70\u6216\u5DF2\u7ECF\u88C5\u597D\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u53EF\u76F4\u63A5\u67E5\u770B\u914D\u7F6E\u6B65\u9AA4\u3002" : "\u514D\u8D39\u7248\u6BCF\u5929 1 \u4E2A\u5E73\u53F0\u989D\u5EA6\u3002\u5DF2\u8D2D\u4E70 Pro\uFF1F\u8FDE\u63A5\u4E00\u6B21\u6D4F\u89C8\u5668\u63D2\u4EF6\u5373\u53EF\u89E3\u9501\u79BB\u7EBF\u4FDD\u7559\uFF0C\u4E4B\u540E\u6D4F\u89C8\u5668\u672A\u542F\u52A8\u4E5F\u4F1A\u4FDD\u7559 Pro \u8EAB\u4EFD\u3002"
   });
   if (isProLicensed) {
     guide.createEl("span", {
