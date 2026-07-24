@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`node:fs/promises`、`node:path`。
+关键依赖：`node:fs/promises`、`node:path`、`node:module`。
 
 ## 维护规则
 
@@ -26,6 +26,7 @@
 */
 
 import { readdir, readFile } from 'node:fs/promises';
+import { builtinModules } from 'node:module';
 import path from 'node:path';
 
 const ROOT = process.cwd();
@@ -49,7 +50,25 @@ const IGNORED_FILES = new Set([
   'services/ai-layout-runtime/generated-skills.js',
 ]);
 
+const NODE_BUILTIN_NAMES = [...new Set(builtinModules
+  .map((name) => name.replace(/^node:/, '').split('/')[0])
+  .filter((name) => name && !name.startsWith('_')))]
+  .sort((left, right) => right.length - left.length)
+  .map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  .join('|');
+const STATIC_NODE_BUILTIN_IMPORT_PATTERN = new RegExp(
+  String.raw`(?:^|\n)\s*(?:import|export)\s+(?:(?:type\s+)?[\w*$,\s{}]+?\s+from\s+)?['"](?:node:)?(?:${NODE_BUILTIN_NAMES})(?:\/[^'"]*)?['"]`,
+  'm',
+);
+
 const RULES = [
+  {
+    id: 'no-static-node-builtin-import',
+    message: 'Do not statically import Node.js built-in modules in plugin runtime code. Use a guarded dynamic import/require for desktop-only APIs, or a mobile-compatible implementation.',
+    pattern: STATIC_NODE_BUILTIN_IMPORT_PATTERN,
+    extensions: new Set(['.js']),
+    ignoredPathPrefixes: ['server/'],
+  },
   {
     id: 'no-direct-html-write',
     message: 'Avoid direct rendered HTML writes. Use DOM helpers or add a narrow eslint-disable-next-line reason for intentional sanitized rendering.',
@@ -125,7 +144,9 @@ function shouldScanFile(relativePath) {
  * @returns {boolean}
  */
 function ruleAppliesToFile(rule, relativePath) {
-  return !rule.extensions || rule.extensions.has(path.extname(relativePath));
+  if (rule.extensions && !rule.extensions.has(path.extname(relativePath))) return false;
+  const normalizedPath = relativePath.split(path.sep).join('/');
+  return !(rule.ignoredPathPrefixes || []).some((prefix) => normalizedPath.startsWith(prefix));
 }
 
 /**
@@ -186,7 +207,31 @@ function findMatches(source, pattern) {
   return matches;
 }
 
+function runRuleSelfTests() {
+  const blocked = [
+    "import { createHash } from 'crypto';",
+    "import fs from 'node:fs';",
+    "export { Buffer } from 'node:buffer';",
+  ];
+  const allowed = [
+    "const cryptoModule = await import('node:crypto');",
+    "const cryptoModule = Platform.isDesktop ? require('crypto') : null;",
+    "import { sha256 } from '@noble/hashes/sha256';",
+  ];
+  for (const source of blocked) {
+    if (findMatches(source, STATIC_NODE_BUILTIN_IMPORT_PATTERN).length === 0) {
+      throw new Error(`Scan guard self-test failed to block: ${source}`);
+    }
+  }
+  for (const source of allowed) {
+    if (findMatches(source, STATIC_NODE_BUILTIN_IMPORT_PATTERN).length > 0) {
+      throw new Error(`Scan guard self-test rejected an allowed pattern: ${source}`);
+    }
+  }
+}
+
 const findings = [];
+runRuleSelfTests();
 const files = await collectFiles(ROOT);
 
 for (const relativePath of files) {

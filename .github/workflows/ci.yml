@@ -31,10 +31,10 @@ jobs:
         mkdir -p node_modules/obsidian
         cp __mocks__/obsidian.js node_modules/obsidian/index.js
 
-    - name: Fast Obsidian scan-risk guard
+    - name: Fast Obsidian source and mobile compatibility guard
       if: github.event_name == 'push' && github.ref_name != 'main' && github.ref_name != 'master'
       run: npm run scan:guard
 
-    - name: Obsidian scan readiness guard
+    - name: Obsidian mobile and review readiness guard
       if: github.event_name == 'pull_request' || github.ref_name == 'main' || github.ref_name == 'master'
       run: npm run review:guard

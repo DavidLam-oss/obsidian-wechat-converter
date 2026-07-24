@@ -11,7 +11,7 @@
 - `services/native-renderer.js`、`services/obsidian-triplet-renderer.js` 和 serializer 模块承接 native-only 渲染方向。
 - `services/wechat-*` 模块负责微信 token、素材、草稿、HTML 清洗、媒体上传、同步上下文和失败反馈。
 - `services/feishu-*` 模块负责飞书文档同步、媒体处理、设置、API 调用和 Mermaid 远程渲染策略。
-- `services/wechatsync-*` 模块负责浏览器发布助手桥接、平台设置、结果回传和任务状态。
+- `services/wechatsync-*` 模块负责桌面端浏览器发布助手桥接、平台设置、结果回传和任务状态；模块本身必须可在移动端安全加载，桌面专用 Node API 只能在平台守卫后动态获取。
 - `server/` 是可部署的微信代理辅助服务，不是插件运行的必需组件。
 
 ## CLI 接入面

@@ -67,7 +67,7 @@ jobs:
           mkdir -p node_modules/obsidian
           cp __mocks__/obsidian.js node_modules/obsidian/index.js
 
-      - name: Obsidian scan readiness guard
+      - name: Obsidian mobile and release readiness guard
         run: npm run review:guard
 
       - name: Prepare release notes

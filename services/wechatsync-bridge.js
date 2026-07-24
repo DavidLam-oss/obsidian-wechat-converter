@@ -44,7 +44,8 @@ import {
   HELLO_ERROR_TOO_MANY_CLIENTS,
   DEFAULT_MAX_CLIENTS,
 } from './wechatsync-constants.js';
-import { createHash, timingSafeEqual } from 'crypto';
+import { sha256 } from '@noble/hashes/sha256';
+import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils';
 import {
   createMinimalWebSocketServer,
   createWebSocketAcceptKey,
@@ -118,7 +119,7 @@ function toBridgeString(value, fallback = '') {
 
 /** @param {unknown} value */
 function hashBridgeCredential(value) {
-  return createHash('sha256').update(String(value || ''), 'utf8').digest('hex');
+  return bytesToHex(sha256(utf8ToBytes(String(value || ''))));
 }
 
 /**
@@ -127,7 +128,11 @@ function hashBridgeCredential(value) {
  */
 function credentialsMatch(leftHash, rightHash) {
   if (!/^[a-f0-9]{64}$/i.test(leftHash) || !/^[a-f0-9]{64}$/i.test(rightHash)) return false;
-  return timingSafeEqual(Buffer.from(leftHash, 'hex'), Buffer.from(rightHash, 'hex'));
+  let mismatch = 0;
+  for (let index = 0; index < leftHash.length; index += 1) {
+    mismatch |= leftHash.charCodeAt(index) ^ rightHash.charCodeAt(index);
+  }
+  return mismatch === 0;
 }
 
 function normalizeRuntimeLicense(value, capabilities = {}) {
@@ -1492,6 +1497,8 @@ export {
   createWechatSyncBridgeService,
   createWebSocketAcceptKey,
   defaultConnectionIdFactory,
+  credentialsMatch,
+  hashBridgeCredential,
   isOriginAllowedForWebSocket,
   isRecoverableBridgeConnectionError,
   isUnsupportedBridgeMethodError,

@@ -32,7 +32,9 @@ import { WebSocket, WebSocketServer } from 'ws';
 import {
   createWebSocketAcceptKey,
   createWechatSyncBridgeService,
+  credentialsMatch,
   defaultConnectionIdFactory,
+  hashBridgeCredential,
   setBridgeTimeout,
   clearBridgeTimeout,
 } from '../services/wechatsync-bridge.js';
@@ -217,6 +219,19 @@ describe('Wechatsync bridge service', () => {
 
   it('computes the standard WebSocket accept key without Node crypto', () => {
     expect(createWebSocketAcceptKey('dGhlIHNhbXBsZSBub25jZQ==')).toBe('s3pPLMBiTxaQ9kYGzzhZRbK+xOo=');
+  });
+
+  it('hashes bridge credentials without Node crypto while preserving SHA-256 compatibility', () => {
+    expect(hashBridgeCredential('abc')).toBe(
+      'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'
+    );
+  });
+
+  it('compares fixed-length credential hashes without Node crypto', () => {
+    const credentialHash = hashBridgeCredential('secret-token');
+    expect(credentialsMatch(credentialHash, credentialHash)).toBe(true);
+    expect(credentialsMatch(credentialHash, hashBridgeCredential('other-token'))).toBe(false);
+    expect(credentialsMatch(credentialHash, 'invalid')).toBe(false);
   });
 
   it('sends listPlatforms requests to a connected extension client', async () => {
