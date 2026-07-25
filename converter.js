@@ -897,12 +897,10 @@ class AppleStyleConverter {
     while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
 
     // Mac 头部
-    // 关键修正：使用 section 而不是 div，增强在公众号中的兼容性
-    const macHeader = showMac ? `<section style="display:block !important;background:${barBackground} !important;padding:6px 10px 6px 10px !important;border:none !important;border-bottom:1px solid ${borderColor} !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;">
-      <span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;vertical-align:top !important;"></span>
-      <span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;vertical-align:top !important;"></span>
-      <span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#28c840 !important;font-size:0 !important;line-height:0 !important;vertical-align:top !important;"></span>
-    </section>` : '';
+    // 关键修正：
+    // 1. 各红绿灯圆点使用 section 标签而非 span 标签。微信公众号草稿箱 API 会过滤没有文字内容的 span，但对 section 块级容器属性（width/height/border-radius/background）全量保留。
+    // 2. 标签之间不留 HTML 空格/换行，消除间隙，使红绿灯在 Obsidian 预览、剪贴板复制及草稿箱同步中均完美保持 10px 紧凑精致对齐。
+    const macHeader = showMac ? `<section style="display:block !important;background:${barBackground} !important;padding:8px 12px 6px 12px !important;border:none !important;border-bottom:1px solid ${borderColor} !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;font-size:0 !important;"><section style="display:inline-block !important;width:10px !important;height:10px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:6px !important;vertical-align:middle !important;"></section><section style="display:inline-block !important;width:10px !important;height:10px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:6px !important;vertical-align:middle !important;"></section><section style="display:inline-block !important;width:10px !important;height:10px !important;border-radius:50% !important;background:#28c840 !important;vertical-align:middle !important;"></section></section>` : '';
 
     // 统一行高和字体变量
     const lineHeight = '1.75';

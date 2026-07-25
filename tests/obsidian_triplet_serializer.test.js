@@ -160,11 +160,11 @@ describe('Obsidian Triplet Serializer core', () => {
     container.innerHTML = cleanedHtml;
 
     const header = container.querySelector('.code-snippet__fix > section');
-    const dots = Array.from(header?.querySelectorAll('span') || []);
+    const dots = Array.from(header?.querySelectorAll('section') || []);
     expect(dots).toHaveLength(3);
-    expect(header?.getAttribute('style') || '').toContain('padding:6px 10px 6px 10px');
+    expect(header?.getAttribute('style') || '').toContain('padding:8px 12px 6px 12px');
     expect(dots[0]?.getAttribute('style') || '').toContain('background:#ff5f57');
-    expect(dots[0]?.getAttribute('style') || '').toContain('width:9px');
+    expect(dots[0]?.getAttribute('style') || '').toContain('width:10px');
     expect(dots[1]?.getAttribute('style') || '').toContain('background:#ffbd2e');
     expect(dots[2]?.getAttribute('style') || '').toContain('background:#28c840');
   });

@@ -5175,11 +5175,7 @@ var require_converter = __commonJS({
         let lines = content.replace(/\r\n/g, "\n").split("\n");
         while (lines.length && lines[lines.length - 1].trim() === "")
           lines.pop();
-        const macHeader = showMac ? `<section style="display:block !important;background:${barBackground} !important;padding:6px 10px 6px 10px !important;border:none !important;border-bottom:1px solid ${borderColor} !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;">
-      <span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;vertical-align:top !important;"></span>
-      <span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;vertical-align:top !important;"></span>
-      <span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#28c840 !important;font-size:0 !important;line-height:0 !important;vertical-align:top !important;"></span>
-    </section>` : "";
+        const macHeader = showMac ? `<section style="display:block !important;background:${barBackground} !important;padding:8px 12px 6px 12px !important;border:none !important;border-bottom:1px solid ${borderColor} !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;font-size:0 !important;"><section style="display:inline-block !important;width:10px !important;height:10px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:6px !important;vertical-align:middle !important;"></section><section style="display:inline-block !important;width:10px !important;height:10px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:6px !important;vertical-align:middle !important;"></section><section style="display:inline-block !important;width:10px !important;height:10px !important;border-radius:50% !important;background:#28c840 !important;vertical-align:middle !important;"></section></section>` : "";
         const lineHeight = "1.75";
         let codeHtml;
         if (showLineNum) {
@@ -78516,7 +78512,7 @@ var clipboardMethods = {
       })[0];
       const codeLinesHtml = codeLinesNode ? codeLinesNode.innerHTML : codeHtml;
       const directMacHeader = Array.from(block.children).find(
-        (child) => child !== codePre && !child.querySelector("pre") && child.querySelector("span") && !(child.textContent || "").trim()
+        (child) => child !== codePre && !child.querySelector("pre") && (child.querySelector("section") || child.querySelector("span")) && !(child.textContent || "").trim()
       );
       const hasMacHeader = !!directMacHeader;
       const codeLineParts = codeLinesNode ? codeLinesHtml.split(/<br\s*\/?>/i) : [codeLinesHtml];
@@ -78533,12 +78529,12 @@ var clipboardMethods = {
       pre.setAttribute("style", `width:100% !important;max-width:100% !important;margin:0 !important;background:${background} !important;border:none !important;border-radius:0 !important;box-shadow:none !important;overflow-x:scroll !important;overflow-y:hidden !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:stable !important;scrollbar-color:rgba(255,255,255,0.58) rgba(255,255,255,0.18) !important;box-sizing:border-box !important;font-family:'SF Mono',Consolas,Monaco,monospace !important;font-size:13px !important;line-height:1.75 !important;color:#f0f6fc !important;white-space:normal !important;`);
       if (hasMacHeader) {
         const toolbar = activeDocument.createElement("section");
-        const toolbarStyle = "display:block !important;background:#161b22 !important;padding:6px 10px 6px 10px !important;border:none !important;border-bottom:1px solid #30363d !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;box-sizing:border-box !important;width:100% !important;";
+        const toolbarStyle = "display:block !important;background:#161b22 !important;padding:8px 12px 6px 12px !important;border:none !important;border-bottom:1px solid #30363d !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;box-sizing:border-box !important;width:100% !important;font-size:0 !important;";
         toolbar.setAttribute("style", toolbarStyle);
         setElementHtml(toolbar, [
-          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;"></span>',
-          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;"></span>',
-          '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#28c840 !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;"></span>'
+          '<section style="display:inline-block !important;width:10px !important;height:10px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:6px !important;vertical-align:middle !important;"></section>',
+          '<section style="display:inline-block !important;width:10px !important;height:10px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:6px !important;vertical-align:middle !important;"></section>',
+          '<section style="display:inline-block !important;width:10px !important;height:10px !important;border-radius:50% !important;background:#28c840 !important;vertical-align:middle !important;"></section>'
         ].join(""));
         wrapper.appendChild(toolbar);
       }

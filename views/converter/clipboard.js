@@ -502,7 +502,7 @@ transformCodeBlocksForClipboard(root) {
     const directMacHeader = Array.from(block.children).find((child) =>
       child !== codePre &&
       !child.querySelector('pre') &&
-      child.querySelector('span') &&
+      (child.querySelector('section') || child.querySelector('span')) &&
       !(child.textContent || '').trim()
     );
     const hasMacHeader = !!directMacHeader;
@@ -526,13 +526,13 @@ transformCodeBlocksForClipboard(root) {
 
     if (hasMacHeader) {
       const toolbar = activeDocument.createElement('section');
-      const toolbarStyle = 'display:block !important;background:#161b22 !important;padding:6px 10px 6px 10px !important;border:none !important;border-bottom:1px solid #30363d !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;box-sizing:border-box !important;width:100% !important;';
+      const toolbarStyle = 'display:block !important;background:#161b22 !important;padding:8px 12px 6px 12px !important;border:none !important;border-bottom:1px solid #30363d !important;border-radius:8px 8px 0 0 !important;line-height:1 !important;box-sizing:border-box !important;width:100% !important;font-size:0 !important;';
       toolbar.setAttribute('style', toolbarStyle);
       setElementHtml(toolbar, [
-      '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;"></span>',
-      '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:7px !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;"></span>',
-      '<span style="display:inline-block !important;width:9px !important;height:9px !important;border-radius:50% !important;background:#28c840 !important;font-size:0 !important;line-height:0 !important;color:transparent !important;vertical-align:top !important;"></span>',
-    ].join(''));
+        '<section style="display:inline-block !important;width:10px !important;height:10px !important;border-radius:50% !important;background:#ff5f57 !important;margin-right:6px !important;vertical-align:middle !important;"></section>',
+        '<section style="display:inline-block !important;width:10px !important;height:10px !important;border-radius:50% !important;background:#ffbd2e !important;margin-right:6px !important;vertical-align:middle !important;"></section>',
+        '<section style="display:inline-block !important;width:10px !important;height:10px !important;border-radius:50% !important;background:#28c840 !important;vertical-align:middle !important;"></section>',
+      ].join(''));
       wrapper.appendChild(toolbar);
     }
 
