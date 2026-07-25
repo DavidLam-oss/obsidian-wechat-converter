@@ -135,6 +135,7 @@ export {
   parseWechatsyncPlatformIds,
   hasWechatSyncCapability,
   normalizeMultiPlatformSyncSettings,
+  applyClientRegistryToMultiPlatformSettings,
   getAvailableWechatsyncPlatforms,
 } from '../services/wechatsync-settings.js';
 export {

@@ -48,6 +48,7 @@ const {
   resolveWechatSyncProLicense,
   normalizeMultiPlatformSyncSettings,
   normalizeWechatSyncCapabilities,
+  applyClientRegistryToMultiPlatformSettings,
 } = require('../services/wechatsync-settings');
 const { PRO_LICENSE_STALENESS_MS } = require('../services/wechatsync-constants');
 
@@ -421,5 +422,89 @@ describe('§16 Phase 1 normalizeConnectedClient / normalizeConnectedClients', ()
     const once = normalizeMultiPlatformSyncSettings({ connectedClients: [VALID_CLIENT] });
     const twice = normalizeMultiPlatformSyncSettings(once);
     expect(twice.connectedClients).toEqual(once.connectedClients);
+  });
+});
+
+// After a plugin reload, loadSettings resets connection.status to 'untested'
+// while the extension silently reconnects via hello. The registry callback
+// must promote connection.status back to 'connected'; otherwise platform
+// badges keep saying 「需连接浏览器插件」 and the publish modal stays disabled
+// until the user manually clicks 「测试连接」.
+describe('applyClientRegistryToMultiPlatformSettings — hello promotes connection.status', () => {
+  const LIVE_CLIENT = {
+    extensionInstanceId: 'live-1',
+    browserName: 'chrome',
+    status: 'connected',
+    lastSeenAt: 5000,
+  };
+  const OFFLINE_CLIENT = {
+    extensionInstanceId: 'off-1',
+    browserName: 'edge',
+    status: 'disconnected',
+    lastSeenAt: 4000,
+  };
+
+  it('promotes untested → connected when a live client is present (plugin reload recovery)', () => {
+    const next = applyClientRegistryToMultiPlatformSettings(
+      { connection: { status: 'untested' } },
+      [LIVE_CLIENT],
+      777000
+    );
+    expect(next.connection.status).toBe('connected');
+    expect(next.connection.checkedAt).toBe(777000);
+    expect(next.connection.message).toBe('');
+    expect(next.connectedClients).toHaveLength(1);
+    expect(next.connectedClients[0].status).toBe('connected');
+  });
+
+  it('self-heals a failed connection and clears the stale error message', () => {
+    const next = applyClientRegistryToMultiPlatformSettings(
+      { connection: { status: 'failed', message: '连接失败：端口被占用' } },
+      [LIVE_CLIENT],
+      888000
+    );
+    expect(next.connection.status).toBe('connected');
+    expect(next.connection.message).toBe('');
+  });
+
+  it('keeps an existing connected check untouched (heartbeat must not churn checkedAt/platforms)', () => {
+    const next = applyClientRegistryToMultiPlatformSettings(
+      {
+        connection: {
+          status: 'connected',
+          checkedAt: 123456,
+          platforms: [{ id: 'zhihu', name: '知乎', status: 'available' }],
+        },
+      },
+      [LIVE_CLIENT],
+      999000
+    );
+    expect(next.connection.status).toBe('connected');
+    expect(next.connection.checkedAt).toBe(123456);
+    expect(next.connection.platforms.map((platform) => platform.id)).toEqual(['zhihu']);
+  });
+
+  it('leaves connection untouched when no client is live (disconnect keeps last check result)', () => {
+    const next = applyClientRegistryToMultiPlatformSettings(
+      { connection: { status: 'untested' } },
+      [OFFLINE_CLIENT],
+      101000
+    );
+    expect(next.connection.status).toBe('untested');
+    expect(next.connection.checkedAt).toBe(0);
+    expect(next.connectedClients).toHaveLength(1);
+    expect(next.connectedClients[0].status).toBe('disconnected');
+  });
+
+  it('replaces connectedClients wholesale and tolerates a non-array registry', () => {
+    const next = applyClientRegistryToMultiPlatformSettings(
+      { connectedClients: [OFFLINE_CLIENT], connection: { status: 'connected', checkedAt: 42 } },
+      /** @type {never} */ (null),
+      202000
+    );
+    expect(next.connectedClients).toEqual([]);
+    // No live client in the (empty) registry — the last check result stays.
+    expect(next.connection.status).toBe('connected');
+    expect(next.connection.checkedAt).toBe(42);
   });
 });

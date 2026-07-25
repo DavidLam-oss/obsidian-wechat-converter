@@ -321,6 +321,48 @@ export function hasWechatSyncProLicense(settings = {}) {
   return resolveWechatSyncProLicense(settings).pro;
 }
 
+/**
+ * Fold a bridge client-registry snapshot back into the persisted
+ * multi-platform settings. Besides replacing `connectedClients`, a live
+ * (hello-authenticated) client also promotes `connection.status` to
+ * 'connected': the WebSocket handshake is at least as strong a connectivity
+ * proof as the manual 「测试连接」 check, and without this promotion a plugin
+ * reload leaves `connection.status` stuck at 'untested' — platform badges
+ * and the publish modal would keep claiming the bridge is offline even
+ * though the extension has already reconnected.
+ *
+ * The promotion is skipped when the status is already 'connected' so a
+ * previous check's `checkedAt` / cached `platforms` are not overwritten by
+ * every registry heartbeat. Disconnects deliberately leave `connection`
+ * untouched (same as today: the last check result remains the last check
+ * result; the live/offline distinction is rendered from `connectedClients`).
+ *
+ * @param {UnknownRecord} [settings={}]
+ * @param {unknown} [clients=[]]
+ * @param {number} [now=Date.now()]
+ * @returns {ReturnType<typeof normalizeMultiPlatformSyncSettings>}
+ */
+export function applyClientRegistryToMultiPlatformSettings(settings = {}, clients = [], now = Date.now()) {
+  const current = normalizeMultiPlatformSyncSettings(settings);
+  const registry = Array.isArray(clients) ? clients : [];
+  const hasLiveClient = registry.some((client) => asRecord(client).status === 'connected');
+  const connection = asRecord(current.connection);
+  return normalizeMultiPlatformSyncSettings({
+    ...current,
+    connectedClients: registry,
+    ...(hasLiveClient && connection.status !== 'connected'
+      ? {
+        connection: {
+          ...connection,
+          status: 'connected',
+          checkedAt: now,
+          message: '',
+        },
+      }
+      : {}),
+  });
+}
+
 export function normalizeWechatSyncRecentTasks(value = []) {
   const tasks = Array.isArray(value) ? value : [];
   const seen = new Set();

@@ -36,6 +36,7 @@ import {
   createWechatSyncBridgeService,
   stripMarkdownFrontmatter,
   normalizeMultiPlatformSyncSettings,
+  applyClientRegistryToMultiPlatformSettings,
   formatWechatsyncCheckedAt,
   describeWechatsyncConnectionState,
   renderWechatsyncConnectionStatusBar,
@@ -342,10 +343,13 @@ class AppleStylePlugin extends Plugin {
         initialPendingClients: settings.pendingClients || [],
         onClientRegistryChange: async (clients) => {
           const currentSettings = getPluginSettings(this);
-          currentSettings['multiPlatformSync'] = normalizeMultiPlatformSyncSettings({
-            ...toRecord(currentSettings['multiPlatformSync']),
-            connectedClients: Array.isArray(clients) ? clients : [],
-          });
+          // A live hello also promotes connection.status to 'connected' so
+          // platform badges / publish modal recover after a plugin reload
+          // without requiring a manual 「测试连接」 (see service JSDoc).
+          currentSettings['multiPlatformSync'] = applyClientRegistryToMultiPlatformSettings(
+            toRecord(currentSettings['multiPlatformSync']),
+            Array.isArray(clients) ? clients : []
+          );
           await this.saveSettings();
           refreshSettingTabCompat(/** @type {SettingTabCompatLike | null | undefined} */ ((/** @type {AppLike} */ (this.app)).setting?.activeTab));
         },

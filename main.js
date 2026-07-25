@@ -67779,6 +67779,24 @@ function resolveWechatSyncProLicense(settings = {}, now = Date.now()) {
     staleAfter: Number.isFinite(observedAt) ? observedAt + PRO_LICENSE_STALENESS_MS : null
   };
 }
+function applyClientRegistryToMultiPlatformSettings(settings = {}, clients = [], now = Date.now()) {
+  const current = normalizeMultiPlatformSyncSettings(settings);
+  const registry = Array.isArray(clients) ? clients : [];
+  const hasLiveClient = registry.some((client) => asRecord4(client).status === "connected");
+  const connection = asRecord4(current.connection);
+  return normalizeMultiPlatformSyncSettings({
+    ...current,
+    connectedClients: registry,
+    ...hasLiveClient && connection.status !== "connected" ? {
+      connection: {
+        ...connection,
+        status: "connected",
+        checkedAt: now,
+        message: ""
+      }
+    } : {}
+  });
+}
 function normalizeWechatSyncRecentTasks(value = []) {
   const tasks = Array.isArray(value) ? value : [];
   const seen = /* @__PURE__ */ new Set();
@@ -81643,10 +81661,10 @@ var AppleStylePlugin = class extends Plugin {
       onClientRegistryChange: async (clients) => {
         var _a6;
         const currentSettings = getPluginSettings(this);
-        currentSettings["multiPlatformSync"] = normalizeMultiPlatformSyncSettings({
-          ...toRecord11(currentSettings["multiPlatformSync"]),
-          connectedClients: Array.isArray(clients) ? clients : []
-        });
+        currentSettings["multiPlatformSync"] = applyClientRegistryToMultiPlatformSettings(
+          toRecord11(currentSettings["multiPlatformSync"]),
+          Array.isArray(clients) ? clients : []
+        );
         await this.saveSettings();
         refreshSettingTabCompat(
           /** @type {SettingTabCompatLike | null | undefined} */
