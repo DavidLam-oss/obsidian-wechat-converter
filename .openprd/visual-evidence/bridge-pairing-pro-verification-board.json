@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "schema": "openprd.visual-review.v1",
+  "generatedAt": "2026-07-24 00:40:33",
+  "mode": "verification-board",
+  "locale": "zh-CN",
+  "outputPath": ".openprd/visual-evidence/bridge-pairing-pro-verification-board.jpg",
+  "format": "jpg",
+  "boardSource": ".openprd/visual-evidence/bridge-pairing-pro-verification-board.json",
+  "title": "配对与 Pro 状态验收",
+  "route": "重载 Obsidian 插件，打开多平台发布并等待浏览器重新握手",
+  "layout": {
+    "columns": 1,
+    "cardWidth": 720,
+    "rowCount": 1
+  },
+  "items": [
+    {
+      "index": 1,
+      "label": "Obsidian 实际运行状态",
+      "subtitle": "Chrome - Comet 已配对，Pro 状态来自当前握手",
+      "level": "",
+      "levelLabel": "",
+      "verdict": "通过",
+      "metrics": [
+        {
+          "label": "授权",
+          "value": "Pro 已激活且与当前浏览器一致"
+        },
+        {
+          "label": "配对",
+          "value": "已配对浏览器身份与移除操作完整可见"
+        },
+        {
+          "label": "布局",
+          "value": "状态、按钮和平台网格无重叠或截断"
+        }
+      ],
+      "notes": "右上角 BRAT 更新通知与本次插件界面无关。",
+      "media": [
+        {
+          "path": ".openprd/visual-evidence/bridge-pairing-pro-after.jpeg",
+          "label": "多平台发布设置",
+          "original": {
+            "width": 1152,
+            "height": 768,
+            "format": "jpeg"
+          },
+          "rendered": {
+            "width": 720,
+            "height": 480
+          }
+        }
+      ]
+    }
+  ],
+  "canvas": {
+    "width": 768,
+    "height": 720
+  }
+}

@@ -14,7 +14,21 @@
     ],
     "optional": [
       "deps",
-      "type"
+      "type",
+      "test-layer",
+      "test-size",
+      "test-scope",
+      "evidence",
+      "evidence-plan",
+      "upgrade-reason",
+      "waiver",
+      "waiver-reason",
+      "execution-mode",
+      "parallel-group",
+      "write-scope",
+      "owner-role",
+      "local-verify",
+      "integration-owner"
     ],
     "dependencyOrder": "dependencies must appear before dependents"
   }

@@ -80223,6 +80223,29 @@ Object.assign(
 );
 
 // views/settings/settings-tab-shell.js
+function resolveSettingsPaneBackground(el) {
+  var _a5;
+  const win = (
+    /** @type {{ getComputedStyle?: (el: Element) => CSSStyleDeclaration } | null | undefined} */
+    /** @type {{ ownerDocument?: { defaultView?: unknown } } | null | undefined} */
+    (_a5 = el == null ? void 0 : el.ownerDocument) == null ? void 0 : _a5.defaultView
+  );
+  if (!win || typeof win.getComputedStyle !== "function")
+    return "";
+  let node = (
+    /** @type {Element | null} */
+    /** @type {unknown} */
+    el
+  );
+  while (node && node.nodeType === 1) {
+    const bg = win.getComputedStyle(node).backgroundColor;
+    if (bg && bg !== "transparent" && !/^rgba\([^)]*,\s*0\s*\)$/.test(bg)) {
+      return bg;
+    }
+    node = node.parentElement;
+  }
+  return "";
+}
 var settingsTabShellMethods = {
   /** @returns {SettingDefinitionRenderLike[]} */
   getSettingDefinitions() {
@@ -80275,8 +80298,13 @@ var settingsTabShellMethods = {
   renderSettingsContent() {
     const { containerEl } = this;
     containerEl.empty();
-    this.renderGitHubStarBanner(containerEl);
-    const tabBar = containerEl.createDiv({ cls: "apple-settings-tabs" });
+    const stickyHeader = containerEl.createDiv({ cls: "apple-settings-sticky-header" });
+    const paneBackground = resolveSettingsPaneBackground(containerEl);
+    if (paneBackground) {
+      stickyHeader.setCssStyles({ backgroundColor: paneBackground });
+    }
+    this.renderGitHubStarBanner(stickyHeader);
+    const tabBar = stickyHeader.createDiv({ cls: "apple-settings-tabs" });
     const wechatTab = tabBar.createDiv({ cls: "apple-settings-tab active", text: "\u5FAE\u4FE1" });
     const multiTab = tabBar.createDiv({ cls: "apple-settings-tab apple-settings-tab-multi" });
     multiTab.createSpan({ text: MULTI_PLATFORM_TAB_LABEL, cls: "apple-settings-tab-label" });

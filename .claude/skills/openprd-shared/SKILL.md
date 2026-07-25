@@ -7,7 +7,7 @@ description: OpenPrd 工作区、语言规则、门禁和 workspace-first 推理
 adapter=claude
 source=openprd-shared
 version=0.1.19
-checksum=6c941e031e3149dc
+checksum=b38909d6ec1dd2f5
 -->
 
 # OpenPrd Shared
@@ -63,7 +63,7 @@ checksum=6c941e031e3149dc
 - 开发新功能出现新的入口、按钮、tab、卡片、空态或工具格时，默认自动配图标，不等用户提出：先复用项目已有图标体系保持一致性；项目没有时按图标最佳实践路由选型（UI 图标看 Phosphor，落码用 Lucide/Tabler/React Icons，AI 品牌看 LobeHub Icons，技术栈看 Tech Icons，功能图标/插画看 iconfont），把选中的图标名、来源和用途登记到 `.openprd/design/active/asset-spec.md` 的“功能图标”行，再接入实现。只有语义确实不需要图标（如纯文本段落）或用户明确说不要图标时才跳过，并在收口说明原因。
 - `openprd run . --context` 只是建议。规划、分析、review、影响范围说明等请求保持只读，除非当前用户消息明确要求开发、实现、继续任务、深度调研、对标复刻或 commit/push。
 - 用户给出会话 ID 并要求继续时，按工具无关的历史会话精确续接；不要要求或使用工具专属 ID；当前 active change、相似历史或 requirement gate 只能作为背景，不能替代该会话 ID。
-- 代码修改完成后、最终回复前，针对本轮实际 touched code files 运行 `openprd dev-check . <file...>` 或 `node scripts/openprd-dev-check.mjs . <file...>`；700 行以内正常，701-1500 行需注意，超过 1500 行警告。自动优化默认开启：命中需要关注的文件时，先在本轮按 dev-check 给出的动作直接完成高内聚低耦合拆分（不丢任何功能、拆完重跑测试与 dev-check），最终回复以 **OpenPRD 自动优化报告** 为标题复用 dev-check 生成的 Markdown 表格（列：影响对象、问题级别、源文件规模、优化原因、本次处理结果、后续建议），并附一句开关确认：“如果下次不需要自动优化代码结构，回复关闭自动优化即可”；用户说关闭就运行 `openprd dev-check . --auto-refactor off` 转为仅推荐（此时标题回到 **后续建议**，列名回到关注程度、规模信号、预警原因）。不要把“问题级别／关注程度”列改写成纯 emoji，必须保留例如 `🟠 中风险｜建议优先关注` 这类完整标签；如果你改写了表格文案，先用 `node scripts/dev-check-wrapup-copy.mjs --validate` 校验每格不超过 20 字；若报错，按提示缩短后重试。
+- 代码修改完成后、最终回复前，针对本轮实际 touched code files 运行 `openprd dev-check . <file...>`。落在既有职责内、没有新增模块责任的 bounded change 显式加 `--change-scope bounded`：保留结构提醒，但不把历史大文件拆分变成本次交付门槛；新增职责或结构性改动保持默认 structural 行为，自动优化开启时再要求本轮拆分。最终报告按 dev-check 返回的自动优化/仅推荐模式呈现，并保留完整风险标签。
 - 执行中发现可沉淀项时，不要中途打断当前任务：代码扩展识别这类白名单工具补全会自动应用并记录；用户偏好、项目协作规矩和 OpenPrd 默认行为先沉淀为 `.openprd/growth` 候选，收工时再集中运行 `openprd grow . --review` 请用户确认。
 - 维护 OpenPrd 本身时，只要新增或修改配置类能力（阈值、规则、识别、豁免、命令别名、环境差异、用户偏好或策略开关），都要做 grow-aware 自检：高置信应可成长时默认纳入 `openprd grow`；不确定时主动问用户；明确一次性或固定规则时才保持静态配置。
 - 只要实现新增或修改文件，就做文档影响检查；缺失的 `docs/basic/`、文件说明书和文件夹 README 要补齐，已有文档受影响时要更新。

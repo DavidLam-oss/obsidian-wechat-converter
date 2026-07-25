@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "schema": "openprd.visual-review.v1",
+  "generatedAt": "2026-07-17 09:19:04",
+  "mode": "verification-board",
+  "locale": "zh-CN",
+  "outputPath": ".openprd/visual-evidence/multi-platform-enable-verification-board.jpg",
+  "format": "jpg",
+  "boardSource": ".openprd/visual-evidence/multi-platform-enable-verification-board.json",
+  "title": "多平台未启用状态截图实测",
+  "route": "打开多平台发布弹窗，并在未启用浏览器插件发布时检查桌面、深色与窄窗口布局",
+  "layout": {
+    "columns": 3,
+    "cardWidth": 360,
+    "rowCount": 1
+  },
+  "items": [
+    {
+      "index": 1,
+      "label": "浅色桌面",
+      "subtitle": "",
+      "level": "",
+      "levelLabel": "",
+      "verdict": "通过",
+      "metrics": [
+        {
+          "label": "层级",
+          "value": "单一启用面板，无重复说明"
+        },
+        {
+          "label": "操作",
+          "value": "主次按钮横排且完整可见"
+        },
+        {
+          "label": "对齐",
+          "value": "图标、标题、正文与操作同轴"
+        }
+      ],
+      "notes": "",
+      "media": [
+        {
+          "path": ".openprd/visual-evidence/multi-platform-enable-after-720.png",
+          "label": "浅色桌面",
+          "original": {
+            "width": 720,
+            "height": 500,
+            "format": "jpeg"
+          },
+          "rendered": {
+            "width": 324,
+            "height": 225
+          }
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "label": "深色桌面",
+      "subtitle": "",
+      "level": "",
+      "levelLabel": "",
+      "verdict": "通过",
+      "metrics": [
+        {
+          "label": "主题",
+          "value": "沿用 Obsidian 主题变量"
+        },
+        {
+          "label": "对比",
+          "value": "标题、正文和边界清楚"
+        },
+        {
+          "label": "强调",
+          "value": "蓝色只用于图标和主操作"
+        }
+      ],
+      "notes": "",
+      "media": [
+        {
+          "path": ".openprd/visual-evidence/multi-platform-enable-after-dark.png",
+          "label": "深色桌面",
+          "original": {
+            "width": 720,
+            "height": 500,
+            "format": "jpeg"
+          },
+          "rendered": {
+            "width": 324,
+            "height": 225
+          }
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "label": "窄窗口",
+      "subtitle": "",
+      "level": "",
+      "levelLabel": "",
+      "verdict": "通过",
+      "metrics": [
+        {
+          "label": "重排",
+          "value": "内容与操作转为纵向"
+        },
+        {
+          "label": "按钮",
+          "value": "两个操作铺满且不截断"
+        },
+        {
+          "label": "文案",
+          "value": "标题和说明可完整换行"
+        }
+      ],
+      "notes": "",
+      "media": [
+        {
+          "path": ".openprd/visual-evidence/multi-platform-enable-after-narrow.png",
+          "label": "窄窗口",
+          "original": {
+            "width": 440,
+            "height": 600,
+            "format": "jpeg"
+          },
+          "rendered": {
+            "width": 324,
+            "height": 442
+          }
+        }
+      ]
+    }
+  ],
+  "canvas": {
+    "width": 1176,
+    "height": 984
+  }
+}

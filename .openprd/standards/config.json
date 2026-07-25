@@ -51,7 +51,8 @@
       "appliesTo": "agent-touched-code-files",
       "codeFileExtensions": [
         ".json",
-        ".md"
+        ".md",
+        ".yml"
       ],
       "exemptPathSegments": [],
       "exemptFilePatterns": [],

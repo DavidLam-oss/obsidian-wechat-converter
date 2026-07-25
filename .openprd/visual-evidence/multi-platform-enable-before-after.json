@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "schema": "openprd.visual-review.v1",
+  "generatedAt": "2026-07-17 09:18:43",
+  "mode": "before-after",
+  "locale": "zh-CN",
+  "outputPath": ".openprd/visual-evidence/multi-platform-enable-before-after.jpg",
+  "format": "jpg",
+  "labels": {
+    "reference": "修改前",
+    "actual": "修改后"
+  },
+  "reference": {
+    "path": "/var/folders/0h/bbs31r752v7bnznsxttjmtpc0000gn/T/codex-clipboard-d1322452-0f8f-4617-82d7-a7697f50ecc1.png",
+    "original": {
+      "width": 1426,
+      "height": 776,
+      "format": "png"
+    },
+    "rendered": {
+      "width": 1180,
+      "height": 642
+    }
+  },
+  "actual": {
+    "path": ".openprd/visual-evidence/multi-platform-enable-after-720.png",
+    "original": {
+      "width": 720,
+      "height": 500,
+      "format": "jpeg"
+    },
+    "rendered": {
+      "width": 720,
+      "height": 500
+    }
+  },
+  "canvas": {
+    "width": 2432,
+    "height": 690
+  }
+}

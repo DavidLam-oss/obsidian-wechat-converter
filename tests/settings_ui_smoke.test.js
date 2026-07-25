@@ -174,6 +174,34 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     expect(plugin.openExternalUrl).toHaveBeenCalledWith('https://github.com/DavidLam-oss/obsidian-wechat-converter');
   });
 
+  it('pins the GitHub banner and tab bar inside a sticky header shell', () => {
+    const tab = renderTab(makePlugin());
+
+    const sticky = tab.containerEl.querySelector('.apple-settings-sticky-header');
+    expect(sticky).not.toBeNull();
+    // Both the banner and the tab bar must live inside the sticky shell so
+    // they stay pinned together while the settings body scrolls.
+    expect(sticky.querySelector('.apple-settings-github-banner')).not.toBeNull();
+    expect(sticky.querySelector('.apple-settings-tabs')).not.toBeNull();
+    // Tab contents must stay outside the sticky shell.
+    expect(sticky.querySelector('.apple-settings-tab-content')).toBeNull();
+  });
+
+  it('paints the sticky header with the pane\u2019s real opaque background', () => {
+    const plugin = makePlugin();
+    const tab = new AppleStyleSettingTab(plugin.app, plugin);
+    tab.containerEl = createObsidianLikeElement('div');
+    // Simulate a theme that keeps the settings pane transparent and paints
+    // the actual color on an outer modal layer.
+    const modalLayer = createObsidianLikeElement('div');
+    modalLayer.setCssStyles({ backgroundColor: 'rgb(24, 25, 26)' });
+    modalLayer.appendChild(tab.containerEl);
+    tab.renderSettingsContent();
+
+    const sticky = tab.containerEl.querySelector('.apple-settings-sticky-header');
+    expect(sticky.style.backgroundColor).toBe('rgb(24, 25, 26)');
+  });
+
   it('keeps 高级设置 fields that earlier refactors silently dropped', () => {
     // Regression guard for commit d115abd. If you remove either of these,
     // either restore them (recommended) or update this test deliberately.

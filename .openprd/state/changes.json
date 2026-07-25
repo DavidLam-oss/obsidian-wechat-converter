@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "activeChange": null,
+  "updatedAt": "2026-07-18 15:20:02",
+  "changes": {
+    "openprd-generated-change": {
+      "id": "openprd-generated-change",
+      "status": "closed",
+      "activatedAt": "2026-07-16 23:53:16",
+      "updatedAt": "2026-07-18 15:20:02",
+      "closedAt": "2026-07-18 15:20:02",
+      "reason": "PRODUCT.md 和 DESIGN.md 已创建并通过 standards 校验；该 change 为历史文档上下文记录，不涉及运行时代码。"
+    }
+  }
+}

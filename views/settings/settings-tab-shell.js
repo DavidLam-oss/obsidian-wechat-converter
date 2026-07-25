@@ -34,6 +34,33 @@ import {
   renderMultiPlatformSettingsTab,
 } from '../apple-style-view-shared.js';
 
+/**
+ * Resolve the settings pane's effective (opaque) background color.
+ * Themes may leave `.vertical-tab-content` itself transparent and paint the
+ * real pane color on an outer modal element, so a plain CSS `inherit` (or a
+ * hardcoded token) can end up transparent or mismatched. Walking up to the
+ * first opaque computed background always matches what the user actually
+ * sees behind the settings content.
+ * @param {ObsidianElementLike} el
+ * @returns {string} a CSS color, or '' when no opaque ancestor was found
+ */
+function resolveSettingsPaneBackground(el) {
+  const win = /** @type {{ getComputedStyle?: (el: Element) => CSSStyleDeclaration } | null | undefined} */ (
+    /** @type {{ ownerDocument?: { defaultView?: unknown } } | null | undefined} */ (el)?.ownerDocument?.defaultView
+  );
+  if (!win || typeof win.getComputedStyle !== 'function') return '';
+  let node = /** @type {Element | null} */ (/** @type {unknown} */ (el));
+  while (node && node.nodeType === 1) {
+    const bg = win.getComputedStyle(node).backgroundColor;
+    // Skip fully transparent values (keyword or zero-alpha rgba).
+    if (bg && bg !== 'transparent' && !/^rgba\([^)]*,\s*0\s*\)$/.test(bg)) {
+      return bg;
+    }
+    node = node.parentElement;
+  }
+  return '';
+}
+
 /** @type {SettingsTabShellMethodsContract & ThisType<AppleStyleSettingTabContract>} */
 const settingsTabShellMethods = {
   /** @returns {SettingDefinitionRenderLike[]} */
@@ -93,9 +120,19 @@ const settingsTabShellMethods = {
     const { containerEl } = this;
     containerEl.empty();
 
-    this.renderGitHubStarBanner(containerEl);
+    // Sticky shell: keep the GitHub banner + tab bar pinned while the
+    // settings body scrolls underneath (containerEl is the scroll container).
+    const stickyHeader = containerEl.createDiv({ cls: 'apple-settings-sticky-header' });
+    // Repaint the pane's real background on the pinned layer so scrolled
+    // content can never shine through, whatever the active theme uses.
+    const paneBackground = resolveSettingsPaneBackground(containerEl);
+    if (paneBackground) {
+      stickyHeader.setCssStyles({ backgroundColor: paneBackground });
+    }
 
-    const tabBar = containerEl.createDiv({ cls: 'apple-settings-tabs' });
+    this.renderGitHubStarBanner(stickyHeader);
+
+    const tabBar = stickyHeader.createDiv({ cls: 'apple-settings-tabs' });
     const wechatTab = tabBar.createDiv({ cls: 'apple-settings-tab active', text: '微信' });
     const multiTab = tabBar.createDiv({ cls: 'apple-settings-tab apple-settings-tab-multi' });
     multiTab.createSpan({ text: MULTI_PLATFORM_TAB_LABEL, cls: 'apple-settings-tab-label' });

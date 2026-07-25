@@ -7,7 +7,7 @@ description: 驱动 OpenPrd 工作区完成 clarify、synthesize、diagram、fre
 adapter=codex
 source=openprd-harness
 version=0.1.19
-checksum=54c523da4b1bb811
+checksum=e8d51687f2bed843
 -->
 
 # OpenPrd Harness
@@ -18,7 +18,7 @@ checksum=54c523da4b1bb811
 
 1. 先判断当前 executionMode。Codex automation、Claude Code headless、cron、scheduled、unattended task 默认是无人值守自动化：不要运行 `openprd run . --context`，不要要求 `openprd dev-check` / `quality` / `doctor`，按该自动化自己的 runbook、日志、测试和通知合同收口。
 1a. 只有 automation prompt 或环境明确写明“这是 OpenPrd 维护任务”“显式启用 OpenPrd / enable OpenPrd / openprd-maintenance”时，才在自动化里恢复 OpenPrd 工作流。
-2. 互动场景先运行 `openprd run . --context`，获取 hook-stable 执行视图。
+2. 互动场景先运行 `openprd run . --context`，获取 hook-stable 执行视图；该命令默认纯读取，不更新 run-state 或 knowledge adoption，只有 hook/调用方要记录使用时才加 `--record-context`。
 3. 先判断当前用户意图，再决定是否跟随建议。
 - 会话 ID 续接：用户给出会话 ID 并要求继续时，把它当成工具无关的历史会话续接请求；先精确恢复该会话历史，不要把当前 active change、相似历史或当前 requirement gate 当成替代目标，也不要把它称为工具专属 ID。
 4. 面对规划、分析、架构评审、“怎么改”或“会动哪些文件”类请求，保持只读并基于代码、文档和状态回答。
@@ -28,7 +28,7 @@ checksum=54c523da4b1bb811
 5b. `openprd run . --context` 会返回 `runtimeEnvironment`。先按 `.openprd/harness/runtime-environment.json` 和 manifest 的 `platformCapabilityPacks` 判断当前对话是在 Codex、Claude Code 还是 Cursor，再启用对应能力；Codex Image 2、Computer Use、Codex-owned browser window、`openprd canvas` 对话画布和 Codex Agent 前台线程接力都必须有当前 surface 或 thread/session 证据，不能只凭 Codex CLI 或配置文件存在来启用。
 5. 涉及最佳实践、benchmark、对标、参考产品、prompt engineering、Agent harness、context engineering、图标资源、CLI 或 skill 体系设计时，先使用 `$openprd-benchmark-router`。
 6. 先用 `$openprd-requirement-intake` 做需求类型语义分流：直接处理(L0)可直接处理并事后说明，不打开正式 PRD/review/change/tasks；现有功能优化(L1)给对话内 mini-plan 后执行，默认不生成正式 PRD/change/tasks；只有新功能/新流程方案(L2)在改代码前必须先走需求入口：`openprd clarify .` 会生成需求入口自省，并只在对话内输出澄清摘要或简短清单；正式 HTML 评审留给后续 review。若当前问题本质上还在判断值不值得做、先找谁验证、能不能先手工交付，就先补“创业验证透镜”，不要急着把方案写成既定需求。
-6a. 任何界面、页面、视觉、样式或前端体验任务在进入实现前，都要额外读取 `$openprd-frontend-design`，并优先检查 `.openprd/design/active/` 下是否已经补齐 `facts-sheet / asset-spec / image-preflight / direction-plan / selected-direction`。
+6a. 任何界面、页面、视觉、样式或前端体验任务在进入实现前，都要额外读取 `$openprd-frontend-design`；新界面、结构性 UI 改造、设计系统或 Impeccable handoff 还要读取 `$openprd-ui-context`，先运行 `openprd ui-context . --mode auto`，完成 greenfield/brownfield 证据、三个专业方向和用户确认，再编译并校验 PRODUCT.md/DESIGN.md。局部低风险修正走 `local-fix`，复用已有冻结上下文。继续检查 `.openprd/design/active/` 下是否已经补齐 `facts-sheet / asset-spec / image-preflight / direction-plan / selected-direction`。
 7. 事实缺失时，先用 `openprd clarify .` 生成需求入口自省，并在对话里先按“需求判断 / 需求理解 / 功能范围 / 技术方案”给 requirement 摘要；其中“功能范围”和“技术方案”优先用 Markdown 表格，分别写清 `功能模块 | 这次先做什么 | 这次先不做什么` 与 `技术部分 | 初步方案 | 主要负责什么`。`需求判断` 和 `需求理解` 先用 1 到 2 句轻量主句说清这次是什么、核心问题和第一版目标；边界、风险、异常例子和技术细节下沉到后续分项或表格，不要揉成一大段长话，也不要把某条示例文案写成固定模板。若当前更像 0 到 1 验证，摘要里还要主动抬出：第一批最容易触达的社区或种子用户、你为什么算这个社区里的自己人、当前替代方案和痛点证据、先怎么手工交付、手工作战卡怎么写、第一版只做哪一件事、能不能压成周末级 MVP、能不能先用 spreadsheet / 表单 / no-code 跑起来、第一批客户路径、从第一个客户开始怎么收费、客户 1 如何打平成本、有没有 10 个样本和更强付费信号、达到什么条件才允许产品化、增长阶段守什么纪律、这条路是否可逆、是否真在解决客户问题、是否符合团队价值观、是不是你愿意长期住进去的业务形态，以及最低成本先验证什么和验证阶段怎样先活下来。确认该 requirement 摘要后，再用 `openprd capture .` 写回已确认事实，并继续 classify/synthesize/review、生成或检查 change、拆任务。如果用户的下一条回复只是承接上一轮 requirement 摘要的短跟进，而不是提出新范围、改目标或重新发起分析请求，就把它当成对上一轮摘要、默认方向或选项的继续确认，不要重新开一轮泛化 clarify；应直接按当前对话上下文把已确认事实用 canonical capture 路径、`user-confirmed` 来源写回，而不是继续写 `agent-inferred/project-derived` 的用户澄清字段。`clarifyPresentation.mode` 为 `inline` 或 `inline-with-checklist`，直接在对话中先整理首轮项目画像：用户群体、产品形态、第一版切片、暂不处理、不能破坏和风险探针，再压缩成用户容易看懂的总分结构，不打开澄清 HTML。L2 的首轮澄清只能承诺“我先整理需求摘要给你确认，确认后再进入 PRD / review 流程”；不要写成“你回我一句我就开始实现”，也不要把 requirement 摘要确认、review 和实现合成一步。review 重点摘要胶囊应控制在 15 个字以内，作为扫读标签，不写成长句；对用户给稳定 artifact 路径，确认命令使用页面复制出的 `--version`、`--digest` 和 `--work-unit`，不要把可被其他对话覆盖的 active review 当成唯一确认入口，也不要把“可以开做”“继续实现”、单纯的“请帮我实现”，或单独一句“不要评审”当成 `review --mark confirmed` 或 requirement 写入路径的依据。生成 spec 和 tasks 时跟随用户当前主语言；无法判断时使用简体中文兜底。必要专有名词、品牌名、命令名、路径、字段名和 API 术语可以保留原文；如果只是纯内部措辞整理，可用 `openprd capture . --source agent-normalized` 写回，这类非语义规范化不应重开用户 review。默认 approval policy 是 decision-points：需要时保留稳定 `review.html`，但只有用户明确表示不需要进行任何确认时，才允许跳过 requirement 摘要确认并按当前稳定 artifact 的精确 `version + digest + work-unit` 静默记录 review；单纯的“请帮我实现/继续实现”不触发这个豁免。若用户刚刚已经确认了现有功能优化（L1）的 mini-plan、范围边界或正式产品边界，后续承接要写成“已确认，我按这个继续”，不要写成“确认，我们就按这个……”这类像再次索取确认的句子。若用户原始意图已明确要求实现，则在当前 approval policy 满足且 tasks 就绪后直接进入执行；否则先输出执行确认清单，列出本轮目标、将执行内容、不做事项、验证方式和已知风险，再请求明确执行授权，不能只要求用户回复一句确认。
 8. 评审页里的需求关系图、需求流程图和重点摘要不要靠 HTML 截断；`openprd synthesize` 生成版本快照后，不要直接让用户确认 review。必须先用 `openprd review-presentation . --template` 查看展示文案契约，让 Agent 按 reviewPresentation 写短文案，再用 `openprd review-presentation . --presentation <json> --write --fail-on-violation` 校验并写回；脚本会在通过后写入校验元信息并重渲染可确认 review.html。超限时按脚本返回的 jsonPath 和字数限制重新提炼，不手工改快照、不裁剪原文。
 8a. 界面、页面、视觉、样式或前端体验需求要额外判断 UI 影响面：若会明显改变信息架构、核心布局、主视觉、关键路径、组件层级/密度，或用户需要先选设计方向，先做“大界面改动视觉方案评审”。在 PRD 定稿或实现开工前，已有界面时用 Codex Computer Use 截取产品内对应功能当前界面，冷启动没有现有界面时基于已确认 PRD、用户群体、第一版切片和视觉目标生成设计 brief；brief 必须写清用途、受众、气质端点、约束和记忆点；再按生图路由调用内置生图工具（Codex=`imagegen`/Image 2，Cursor=`GenerateImage`）生成至少 3 个不同设计思想方向，横向拼接为一张左上角标注 1/2/3 的大图作为候选效果图展示。主动确认是否符合预期、是否纳入后续效果图/实现截图对比、以及是否按此继续实现；只有确认后才把选定方向、整张图或其中子图整理到 `.openprd/harness/visual-reviews/`。
@@ -37,7 +37,7 @@ checksum=54c523da4b1bb811
 10. 当 PRD 需要进入实现准备时，再运行 `openprd change . --generate --change <id>`。
 11. change/tasks 就绪后，用 `$openprd-test-strategy` 为每个任务确认 test-layer、test-size、test-scope、evidence-plan、升级原因或豁免原因；小改动从单测开始，触达契约、用户主路径、视觉、小程序、性能、安全或成本风险时升级验证层级。并且同步按 execution strategy 标注 `serial / parallel-workers / parallel-workers-isolated`、`write-scope`、`owner-role`、`local-verify` 和 `integration-owner`，让主 Agent 可以做 worker 分片和最终审查。
 12. 长程实现使用 `openprd loop . --plan --change <id>`，并且只有用户明确要求开发、继续任务、深度调研、对标复刻或 commit 时才执行单任务 fresh session。中等规模 L1/L2 任务可先用 `parallel-workers` 让主 Agent 分配多个 worker shard；达到长程阈值后再升级到隔离 loop 会话。
-13. 代码修改完成后、最终回复前，针对本轮实际 touched code files 运行 `openprd dev-check . <file...>` 或 `node scripts/openprd-dev-check.mjs . <file...>` 回顾行数状态：700 行以内正常，701-1500 行需注意，超过 1500 行警告。自动优化默认开启：命中需要关注的文件时，先在本轮直接完成高内聚低耦合拆分（不丢任何功能、行为不变、拆完重跑测试与 dev-check），最终回复以 **OpenPRD 自动优化报告** 为标题复用 dev-check 生成的 Markdown 表格（列：影响对象、问题级别、源文件规模、优化原因、本次处理结果、后续建议），并附一句开关确认：“如果下次不需要自动优化代码结构，回复关闭自动优化即可”；用户确认关闭后运行 `openprd dev-check . --auto-refactor off`，之后转为 **后续建议** 推荐模式（列名回到关注程度、规模信号、预警原因）。窄 bugfix 或小修没有新增职责时可不强制拆，但要在表格里说明本次处理结果。不要把“问题级别／关注程度”列改写成纯 emoji，必须保留例如 `🟠 中风险｜建议优先关注` 这类完整标签；如果你改写了表格文案，先用 `node scripts/dev-check-wrapup-copy.mjs --validate` 校验每格不超过 20 字；若报错，按提示缩短后重试。
+13. 代码修改完成后、最终回复前，针对本轮实际 touched code files 运行 `openprd dev-check . <file...>`。若改动落在既有职责内且没有新增模块责任，显式加 `--change-scope bounded`：保留大文件结构提醒，但不把历史结构债变成本次门槛；新增职责或结构性改动保持默认 structural 行为，自动优化开启时再要求本轮拆分、重跑测试与 dev-check。最终报告按返回的自动优化/仅推荐模式呈现，保留完整风险标签。
 14. 如果执行中发现新代码后缀、豁免路径、命令别名、项目约定或用户偏好，不要中途打断任务。代码扩展识别这类白名单工具补全会自动应用并记录；用户偏好、项目协作规矩和 OpenPrd 默认行为形成 growth candidate，收工时用 `openprd grow . --review` 集中确认。
 15. 维护 OpenPrd 本身时，只要新增或修改配置类能力（阈值、规则、识别、豁免、命令别名、环境差异、用户偏好或策略开关），默认先做 grow-aware 自检：高置信应可成长时直接纳入 `openprd grow` 体系；不确定时主动询问用户是否做成可成长配置。
 16. 实现过程中，每次新增或修改文件都做文档影响检查，补齐缺失的 `docs/basic/`、文件说明书和文件夹 README，并更新受影响文档；涉及后端、脚本、Agent、工具链、服务或数据处理变更时，把 CLI 与 API 视为同级接入面：同步检查命令入口、参数、输出契约、`help`、`doctor`、`dry-run`、`status` 与接口协议、返回结构、身份边界是否受影响，并更新 `docs/basic/backend-structure.md` 或明确写不适用原因。
@@ -51,7 +51,7 @@ checksum=54c523da4b1bb811
 20. 阶段收口、全部实现完成、handoff/commit/release/publish 前，运行 `openprd standards . --verify`、`openprd quality . --verify` 和 `openprd run . --verify`，把 HTML 质量评估报告当作整体 EVO 门禁、日志、业务成本与滥用护栏、测试策略矩阵、冒烟覆盖、性能、极端场景和项目知识的评审产物；L2 或跨页面实现的最终回复必须列出最新 HTML 质量报告和 task-scoped Markdown/HTML 测试报告路径。最终回复优先复用 `run . --verify` 的 `taskReady/workspaceReady` 拆分，不要把任务通过和工作区欠账混成一句泛化尾巴。
 21. `AGENTS.md` 只保留轻量合同；入口路由看 `$openprd-router`，具体命令速查看 `.openprd/harness/command-catalog.md`，更细的工作流步骤、路由边界和 hook 门禁以这份 skill、`$openprd-shared`、`$openprd-test-strategy` 和 `$openprd-benchmark-router` 为准。
 22. hook 会强制阻断几类场景：需求入口未完成就写实现、外部证据不足就直接改第三方集成、skill/AGENTS 变更未先可视化确认、敏感信息场景下直接读原始 vault 文件，以及未经当前用户明确批准的云端热修复、生产远端写入、业务兜底、写死逻辑或缓存补行。
-23. 即使用户已经授权实现，也不自动授权云端热修复、生产远端写入、客户端/服务端补业务数据、接口临时插入业务行、缓存补行、硬编码或写死逻辑。发现这类路径时先停下，说明为什么标准源码/迁移/配置路径不够、影响范围、回滚方式、本地同步计划和验证方式；只有用户明确说允许热修复、允许临时兜底或允许写死后才执行。
+23. 即使用户已经授权实现，也不自动授权云端热修复、生产远端写入、客户端/服务端补业务数据、接口临时插入业务行、缓存补行、硬编码或写死逻辑。发现这类路径时先停下，说明为什么标准源码/迁移/配置路径不够、影响范围、回滚方式、本地同步计划和验证方式；门禁把待批准 capability 绑定到具体动作，用户下一条自然回复“同意/可以”即可批准刚刚那一种能力，授权只在当前轮有效，否定约束不构成批准。
 
 ## 门禁协议
 

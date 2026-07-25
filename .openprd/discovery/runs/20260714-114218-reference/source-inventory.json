@@ -1,0 +1,588 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-14 11:42:18",
+  "sourceRoot": "/tmp/note-to-mp",
+  "summary": {
+    "files": 91,
+    "directories": 13,
+    "truncated": false,
+    "languageBreakdown": {
+      "javascript": 6,
+      "typescript": 62,
+      "css": 12,
+      "markdown": 4,
+      "LICENSE": 1,
+      "json": 5,
+      "yaml": 1
+    },
+    "topLevelDirectories": [
+      "images",
+      "src",
+      "tools",
+      ".github"
+    ]
+  },
+  "files": [
+    {
+      "path": "src/lib/shot-render.es.js",
+      "kind": "implementation",
+      "language": "javascript",
+      "sizeBytes": 37543
+    },
+    {
+      "path": "src/postcss/at-rule.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 3420
+    },
+    {
+      "path": "src/postcss/comment.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 1759
+    },
+    {
+      "path": "src/postcss/container.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 13538
+    },
+    {
+      "path": "src/postcss/css-syntax-error.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 6517
+    },
+    {
+      "path": "src/postcss/declaration.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 3954
+    },
+    {
+      "path": "src/postcss/document.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 1957
+    },
+    {
+      "path": "src/postcss/fromJSON.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 162
+    },
+    {
+      "path": "src/postcss/input.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 4424
+    },
+    {
+      "path": "src/postcss/lazy-result.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 5007
+    },
+    {
+      "path": "src/postcss/list.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 1453
+    },
+    {
+      "path": "src/postcss/no-work-result.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 1573
+    },
+    {
+      "path": "src/postcss/node.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 13874
+    },
+    {
+      "path": "src/postcss/parse.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 135
+    },
+    {
+      "path": "src/postcss/postcss.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 11109
+    },
+    {
+      "path": "src/postcss/postcss.js",
+      "kind": "implementation",
+      "language": "javascript",
+      "sizeBytes": 167163
+    },
+    {
+      "path": "src/postcss/previous-map.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 1827
+    },
+    {
+      "path": "src/postcss/processor.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 3406
+    },
+    {
+      "path": "src/postcss/result.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 4417
+    },
+    {
+      "path": "src/postcss/root.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 2320
+    },
+    {
+      "path": "src/postcss/rule.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 2840
+    },
+    {
+      "path": "src/postcss/stringifier.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 1411
+    },
+    {
+      "path": "src/postcss/stringify.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 165
+    },
+    {
+      "path": "src/postcss/warning.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 2994
+    },
+    {
+      "path": "src/store/ConfigStore.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 2625
+    },
+    {
+      "path": "src/store/createSelectors.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 1612
+    },
+    {
+      "path": "src/store/PluginStore.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 1928
+    },
+    {
+      "path": "src/store/RenderStore.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 1893
+    },
+    {
+      "path": "src/ui/components/AccountSelect.module.css",
+      "kind": "implementation",
+      "language": "css",
+      "sizeBytes": 2026
+    },
+    {
+      "path": "src/ui/components/AccountSelect.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 3931
+    },
+    {
+      "path": "src/ui/components/Announcement.module.css",
+      "kind": "implementation",
+      "language": "css",
+      "sizeBytes": 1360
+    },
+    {
+      "path": "src/ui/components/Announcement.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 1154
+    },
+    {
+      "path": "src/ui/components/Cover.module.css",
+      "kind": "implementation",
+      "language": "css",
+      "sizeBytes": 968
+    },
+    {
+      "path": "src/ui/components/Cover.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 4000
+    },
+    {
+      "path": "src/ui/components/Loading.module.css",
+      "kind": "implementation",
+      "language": "css",
+      "sizeBytes": 1009
+    },
+    {
+      "path": "src/ui/components/Loading.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 1732
+    },
+    {
+      "path": "src/ui/components/MdToImageConverter.module.css",
+      "kind": "implementation",
+      "language": "css",
+      "sizeBytes": 18711
+    },
+    {
+      "path": "src/ui/components/MdToImageConverter.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 50935
+    },
+    {
+      "path": "src/ui/components/NoteList.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 3685
+    },
+    {
+      "path": "src/ui/components/NoteRender.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 5726
+    },
+    {
+      "path": "src/ui/components/Notification.module.css",
+      "kind": "implementation",
+      "language": "css",
+      "sizeBytes": 2562
+    },
+    {
+      "path": "src/ui/components/Notification.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 3478
+    },
+    {
+      "path": "src/ui/components/RedBook.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 2960
+    },
+    {
+      "path": "src/ui/components/ThemeList.module.css",
+      "kind": "implementation",
+      "language": "css",
+      "sizeBytes": 2842
+    },
+    {
+      "path": "src/ui/components/ThemeList.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 4859
+    },
+    {
+      "path": "src/ui/components/Wechat.module.css",
+      "kind": "implementation",
+      "language": "css",
+      "sizeBytes": 1354
+    },
+    {
+      "path": "src/ui/components/Wechat.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 8740
+    },
+    {
+      "path": "src/ui/workflow/resultviewer.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 29801
+    },
+    {
+      "path": "src/ui/workflow/workflow.module.css",
+      "kind": "implementation",
+      "language": "css",
+      "sizeBytes": 10603
+    },
+    {
+      "path": "src/ui/workflow/workflow.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 25362
+    },
+    {
+      "path": "src/ui/preview.module.css",
+      "kind": "implementation",
+      "language": "css",
+      "sizeBytes": 1950
+    },
+    {
+      "path": "src/ui/preview.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 5962
+    },
+    {
+      "path": "src/ui/pubview.module.css",
+      "kind": "implementation",
+      "language": "css",
+      "sizeBytes": 281
+    },
+    {
+      "path": "src/ui/pubview.tsx",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 12228
+    },
+    {
+      "path": "src/wasm/wasm_exec.js",
+      "kind": "implementation",
+      "language": "javascript",
+      "sizeBytes": 16687
+    },
+    {
+      "path": "src/wasm/wasm.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 1980
+    },
+    {
+      "path": "src/article-render.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 22574
+    },
+    {
+      "path": "src/assets.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 19277
+    },
+    {
+      "path": "src/base-render.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 12971
+    },
+    {
+      "path": "src/default-highlight.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 2303
+    },
+    {
+      "path": "src/default-theme.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 6992
+    },
+    {
+      "path": "src/doc-modal.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 2279
+    },
+    {
+      "path": "src/expert-settings.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 2694
+    },
+    {
+      "path": "src/image-bg-modal.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 3228
+    },
+    {
+      "path": "src/imagelib.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 4451
+    },
+    {
+      "path": "src/inline-css.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 5857
+    },
+    {
+      "path": "src/main.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 7627
+    },
+    {
+      "path": "src/note-preview.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 2758
+    },
+    {
+      "path": "src/note-pub.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 1936
+    },
+    {
+      "path": "src/redbook-render.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 3132
+    },
+    {
+      "path": "src/setting-tab.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 15654
+    },
+    {
+      "path": "src/settings.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 8221
+    },
+    {
+      "path": "src/styles.css",
+      "kind": "implementation",
+      "language": "css",
+      "sizeBytes": 2966
+    },
+    {
+      "path": "src/styles.d.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 122
+    },
+    {
+      "path": "src/utils.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 5561
+    },
+    {
+      "path": "src/weixin-api.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 12834
+    },
+    {
+      "path": "src/widgets-modal.ts",
+      "kind": "implementation",
+      "language": "typescript",
+      "sizeBytes": 2474
+    },
+    {
+      "path": "tools/download.mjs",
+      "kind": "implementation",
+      "language": "javascript",
+      "sizeBytes": 2657
+    },
+    {
+      "path": "AGENTS.md",
+      "kind": "document",
+      "language": "markdown",
+      "sizeBytes": 1999
+    },
+    {
+      "path": "CHANGELOG.md",
+      "kind": "document",
+      "language": "markdown",
+      "sizeBytes": 11341
+    },
+    {
+      "path": "esbuild.config.mjs",
+      "kind": "implementation",
+      "language": "javascript",
+      "sizeBytes": 1803
+    },
+    {
+      "path": "GEMINI.md",
+      "kind": "document",
+      "language": "markdown",
+      "sizeBytes": 3928
+    },
+    {
+      "path": "LICENSE",
+      "kind": "implementation",
+      "language": "LICENSE",
+      "sizeBytes": 1065
+    },
+    {
+      "path": "manifest.json",
+      "kind": "implementation",
+      "language": "json",
+      "sizeBytes": 387
+    },
+    {
+      "path": "package-lock.json",
+      "kind": "implementation",
+      "language": "json",
+      "sizeBytes": 148097
+    },
+    {
+      "path": "package.json",
+      "kind": "configuration",
+      "language": "json",
+      "sizeBytes": 1290
+    },
+    {
+      "path": "README.md",
+      "kind": "document",
+      "language": "markdown",
+      "sizeBytes": 11463
+    },
+    {
+      "path": "tsconfig.json",
+      "kind": "configuration",
+      "language": "json",
+      "sizeBytes": 575
+    },
+    {
+      "path": "version-bump.mjs",
+      "kind": "implementation",
+      "language": "javascript",
+      "sizeBytes": 648
+    },
+    {
+      "path": "versions.json",
+      "kind": "implementation",
+      "language": "json",
+      "sizeBytes": 22
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "kind": "configuration",
+      "language": "yaml",
+      "sizeBytes": 906
+    }
+  ],
+  "directories": [
+    "images",
+    "src",
+    "src/core",
+    "src/lib",
+    "src/postcss",
+    "src/store",
+    "src/ui",
+    "src/ui/components",
+    "src/ui/workflow",
+    "src/wasm",
+    "tools",
+    ".github",
+    ".github/workflows"
+  ]
+}

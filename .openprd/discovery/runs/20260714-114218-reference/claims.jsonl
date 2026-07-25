@@ -1,0 +1,8 @@
+{"id":"claim:meta-title","status":"seeded","source":"openprd-snapshot","confidence":0.7,"path":"meta.title","summary":"标题: obsidian-wechat-converter"}
+{"id":"claim:meta-owner","status":"seeded","source":"openprd-snapshot","confidence":0.7,"path":"meta.owner","summary":"负责人: 待补充"}
+{"id":"claim:meta-version","status":"seeded","source":"openprd-snapshot","confidence":0.7,"path":"meta.version","summary":"版本: v0000"}
+{"id":"claim:meta-status","status":"seeded","source":"openprd-snapshot","confidence":0.7,"path":"meta.status","summary":"状态: initialized"}
+{"id":"claim:meta-producttype","status":"seeded","source":"openprd-snapshot","confidence":0.7,"path":"meta.productType","summary":"产品场景: consumer"}
+{"id":"claim:handoff-owner","status":"seeded","source":"openprd-snapshot","confidence":0.7,"path":"handoff.owner","summary":"交接负责人: 待补充"}
+{"id":"claim:handoff-nextstep","status":"seeded","source":"openprd-snapshot","confidence":0.7,"path":"handoff.nextStep","summary":"下一步: 评审已生成的 PRD，并准备交接。"}
+{"id":"claim:handoff-targetsystem","status":"seeded","source":"openprd-snapshot","confidence":0.7,"path":"handoff.targetSystem","summary":"目标系统: OpenPrd"}

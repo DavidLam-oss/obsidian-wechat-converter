@@ -1,0 +1,15 @@
+[
+  {
+    "versionNumber": 1,
+    "versionId": "v0001",
+    "createdAt": "2026-07-16 23:50:27",
+    "title": "项目级产品与设计上下文文档",
+    "owner": "项目维护者",
+    "productType": "consumer",
+    "templatePack": "consumer",
+    "status": "synthesized",
+    "digest": "533f38f9e205300464e70ec093f910cf415faf0521f07cb6ae8a2601d32eb3b1",
+    "workUnitId": "wu-20260716235027-837ed729",
+    "targetRoot": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter"
+  }
+]

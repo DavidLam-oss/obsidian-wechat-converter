@@ -4427,6 +4427,35 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
 /* ========================================
    设置面板 Tab 导航
    ======================================== */
+/* Sticky shell: containerEl (.vertical-tab-content) is the scroll container.
+   The container has --size-4-8 (32px) top padding. To keep the pinned banner + tabs
+   fully opaque with no scrolled text peeking above the banner or under the tabs:
+   - top and margin-top use -var(--size-4-8) so the sticky border box covers from
+     scrollTop + 0 all the way through the container's top padding.
+   - padding-bottom (instead of margin-bottom) keeps the area below the tab bar
+     inside the opaque border box so scrolling text disappears smoothly behind it. */
+.apple-settings-sticky-header {
+  position: sticky;
+  top: calc(-1 * var(--size-4-8, 32px));
+  z-index: 10;
+  margin-top: calc(-1 * var(--size-4-8, 32px));
+  padding-top: var(--size-4-8, 32px);
+  padding-bottom: 16px;
+  margin-bottom: 0;
+  /* Opaque fallback; render code overrides this inline with the pane's real
+     computed background (themes may keep the pane itself transparent and
+     paint the color on an outer modal layer, so `inherit` is not safe). */
+  background-color: var(--background-primary);
+  /* Soft elevation so content sliding underneath reads as a separate layer. */
+  box-shadow: 0 10px 12px -12px color-mix(in srgb, var(--background-modifier-box-shadow) 60%, transparent);
+}
+
+/* Spacing below the pinned bar lives on sticky header padding-bottom instead,
+   so the tab bar area remains opaque when content slides underneath. */
+.apple-settings-sticky-header .apple-settings-tabs {
+  margin-bottom: 0;
+}
+
 .apple-settings-github-banner {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;

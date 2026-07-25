@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "generatedAt": "2026-07-07 23:59:54",
-  "nextReadyNode": "clarify",
+  "generatedAt": "2026-07-24 08:38:09",
+  "nextReadyNode": "diagram",
   "workflow": [
     {
       "id": "brainstorm",
@@ -14,7 +14,7 @@
       "id": "clarify",
       "label": "clarify",
       "kind": "workflow-step",
-      "status": "ready",
+      "status": "done",
       "dependsOn": []
     },
     {
@@ -30,7 +30,7 @@
       "id": "interview",
       "label": "interview",
       "kind": "workflow-step",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "classify"
       ]
@@ -39,7 +39,7 @@
       "id": "synthesize",
       "label": "synthesize",
       "kind": "workflow-step",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "classify",
         "interview"
@@ -49,7 +49,7 @@
       "id": "validate",
       "label": "validate",
       "kind": "workflow-step",
-      "status": "blocked",
+      "status": "ready",
       "dependsOn": [
         "synthesize"
       ]
@@ -58,7 +58,7 @@
       "id": "diagram",
       "label": "diagram",
       "kind": "workflow-step",
-      "status": "blocked",
+      "status": "ready",
       "dependsOn": [
         "synthesize"
       ]
@@ -67,7 +67,7 @@
       "id": "review",
       "label": "review",
       "kind": "workflow-step",
-      "status": "blocked",
+      "status": "done",
       "dependsOn": [
         "synthesize"
       ]
@@ -79,7 +79,7 @@
       "status": "blocked",
       "dependsOn": [
         "validate",
-        "review"
+        "diagram"
       ]
     },
     {
@@ -122,7 +122,7 @@
       "id": "open-questions",
       "label": "open-questions.md",
       "kind": "record",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "interview"
       ]
@@ -131,7 +131,7 @@
       "id": "progress",
       "label": "progress.md",
       "kind": "record",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "classify"
       ]
@@ -149,7 +149,7 @@
       "id": "architecture-diagram",
       "label": "architecture-diagram.html",
       "kind": "artifact",
-      "status": "blocked",
+      "status": "ready",
       "dependsOn": [
         "diagram"
       ]
@@ -158,7 +158,7 @@
       "id": "product-flow-diagram",
       "label": "product-flow-diagram.html",
       "kind": "artifact",
-      "status": "blocked",
+      "status": "ready",
       "dependsOn": [
         "diagram"
       ]
@@ -167,7 +167,7 @@
       "id": "prd",
       "label": "prd.md",
       "kind": "artifact",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "synthesize"
       ]
@@ -176,7 +176,7 @@
       "id": "intake-reflection",
       "label": "intake-reflection.md",
       "kind": "record",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "clarify"
       ]
@@ -185,7 +185,7 @@
       "id": "review-file",
       "label": "review.html",
       "kind": "artifact",
-      "status": "blocked",
+      "status": "done",
       "dependsOn": [
         "synthesize",
         "review"
@@ -195,7 +195,7 @@
       "id": "flows",
       "label": "flows.md",
       "kind": "artifact",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "synthesize"
       ]
@@ -204,7 +204,7 @@
       "id": "roles",
       "label": "roles.md",
       "kind": "artifact",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "synthesize"
       ]
@@ -231,7 +231,7 @@
       "id": "clarify",
       "label": "clarify",
       "kind": "workflow-step",
-      "status": "ready",
+      "status": "done",
       "dependsOn": []
     },
     {
@@ -247,7 +247,7 @@
       "id": "interview",
       "label": "interview",
       "kind": "workflow-step",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "classify"
       ]
@@ -256,7 +256,7 @@
       "id": "synthesize",
       "label": "synthesize",
       "kind": "workflow-step",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "classify",
         "interview"
@@ -266,7 +266,7 @@
       "id": "validate",
       "label": "validate",
       "kind": "workflow-step",
-      "status": "blocked",
+      "status": "ready",
       "dependsOn": [
         "synthesize"
       ]
@@ -275,7 +275,7 @@
       "id": "diagram",
       "label": "diagram",
       "kind": "workflow-step",
-      "status": "blocked",
+      "status": "ready",
       "dependsOn": [
         "synthesize"
       ]
@@ -284,7 +284,7 @@
       "id": "review",
       "label": "review",
       "kind": "workflow-step",
-      "status": "blocked",
+      "status": "done",
       "dependsOn": [
         "synthesize"
       ]
@@ -296,7 +296,7 @@
       "status": "blocked",
       "dependsOn": [
         "validate",
-        "review"
+        "diagram"
       ]
     },
     {
@@ -337,7 +337,7 @@
       "id": "open-questions",
       "label": "open-questions.md",
       "kind": "record",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "interview"
       ]
@@ -346,7 +346,7 @@
       "id": "progress",
       "label": "progress.md",
       "kind": "record",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "classify"
       ]
@@ -364,7 +364,7 @@
       "id": "architecture-diagram",
       "label": "architecture-diagram.html",
       "kind": "artifact",
-      "status": "blocked",
+      "status": "ready",
       "dependsOn": [
         "diagram"
       ]
@@ -373,7 +373,7 @@
       "id": "product-flow-diagram",
       "label": "product-flow-diagram.html",
       "kind": "artifact",
-      "status": "blocked",
+      "status": "ready",
       "dependsOn": [
         "diagram"
       ]
@@ -382,7 +382,7 @@
       "id": "prd",
       "label": "prd.md",
       "kind": "artifact",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "synthesize"
       ]
@@ -391,7 +391,7 @@
       "id": "intake-reflection",
       "label": "intake-reflection.md",
       "kind": "record",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "clarify"
       ]
@@ -400,7 +400,7 @@
       "id": "review-file",
       "label": "review.html",
       "kind": "artifact",
-      "status": "blocked",
+      "status": "done",
       "dependsOn": [
         "synthesize",
         "review"
@@ -410,7 +410,7 @@
       "id": "flows",
       "label": "flows.md",
       "kind": "artifact",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "synthesize"
       ]
@@ -419,7 +419,7 @@
       "id": "roles",
       "label": "roles.md",
       "kind": "artifact",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "synthesize"
       ]
@@ -546,195 +546,5 @@
       "relation": "produces"
     }
   ],
-  "blockers": [
-    {
-      "id": "problem.problemStatement",
-      "label": "问题陈述",
-      "question": "我们要解决什么问题？",
-      "section": "problem",
-      "status": "blocked"
-    },
-    {
-      "id": "problem.whyNow",
-      "label": "为什么是现在",
-      "question": "为什么现在是解决这个问题的合适时机？",
-      "section": "problem",
-      "status": "blocked"
-    },
-    {
-      "id": "problem.evidence",
-      "label": "证据",
-      "question": "有哪些证据支持这个问题？",
-      "section": "problem",
-      "status": "blocked"
-    },
-    {
-      "id": "users.primaryUsers",
-      "label": "主要用户",
-      "question": "主要用户是谁？",
-      "section": "users",
-      "status": "blocked"
-    },
-    {
-      "id": "users.stakeholders",
-      "label": "相关方",
-      "question": "还有谁会参与或受到影响？",
-      "section": "users",
-      "status": "blocked"
-    },
-    {
-      "id": "goals.goals",
-      "label": "目标",
-      "question": "我们希望达成什么结果？",
-      "section": "goals",
-      "status": "blocked"
-    },
-    {
-      "id": "goals.successMetrics",
-      "label": "成功指标",
-      "question": "如何衡量成功？",
-      "section": "goals",
-      "status": "blocked"
-    },
-    {
-      "id": "goals.acceptanceGoals",
-      "label": "验收目标",
-      "question": "满足什么条件才能认为完成？",
-      "section": "goals",
-      "status": "blocked"
-    },
-    {
-      "id": "scope.inScope",
-      "label": "范围内",
-      "question": "这个版本包含哪些范围？",
-      "section": "scope",
-      "status": "blocked"
-    },
-    {
-      "id": "scope.outOfScope",
-      "label": "范围外",
-      "question": "哪些内容明确不在范围内？",
-      "section": "scope",
-      "status": "blocked"
-    },
-    {
-      "id": "scenarios.primaryFlows",
-      "label": "主流程",
-      "question": "主要用户流程是什么？",
-      "section": "scenarios",
-      "status": "blocked"
-    },
-    {
-      "id": "scenarios.edgeCases",
-      "label": "边界情况",
-      "question": "哪些边界情况需要处理？",
-      "section": "scenarios",
-      "status": "blocked"
-    },
-    {
-      "id": "scenarios.failureModes",
-      "label": "失败模式",
-      "question": "需要处理哪些失败模式？",
-      "section": "scenarios",
-      "status": "blocked"
-    },
-    {
-      "id": "requirements.functional",
-      "label": "功能需求",
-      "question": "产品必须做什么？",
-      "section": "requirements",
-      "status": "blocked"
-    },
-    {
-      "id": "requirements.nonFunctional",
-      "label": "非功能需求",
-      "question": "有哪些性能、可靠性或安全要求？",
-      "section": "requirements",
-      "status": "blocked"
-    },
-    {
-      "id": "requirements.businessRules",
-      "label": "业务规则",
-      "question": "需要遵守哪些业务规则？",
-      "section": "requirements",
-      "status": "blocked"
-    },
-    {
-      "id": "constraints.technical",
-      "label": "技术约束",
-      "question": "存在哪些技术约束？",
-      "section": "constraints",
-      "status": "blocked"
-    },
-    {
-      "id": "constraints.compliance",
-      "label": "合规要求",
-      "question": "是否存在合规或策略约束？",
-      "section": "constraints",
-      "status": "blocked"
-    },
-    {
-      "id": "constraints.dependencies",
-      "label": "依赖",
-      "question": "这个需求依赖什么？",
-      "section": "constraints",
-      "status": "blocked"
-    },
-    {
-      "id": "risks.assumptions",
-      "label": "假设",
-      "question": "我们做了哪些假设？",
-      "section": "risks",
-      "status": "blocked"
-    },
-    {
-      "id": "risks.risks",
-      "label": "风险",
-      "question": "需要关注哪些风险？",
-      "section": "risks",
-      "status": "blocked"
-    },
-    {
-      "id": "risks.openQuestions",
-      "label": "开放问题",
-      "question": "还有哪些问题未解决？",
-      "section": "risks",
-      "status": "blocked"
-    },
-    {
-      "id": "typeSpecific.fields.persona",
-      "label": "用户画像",
-      "question": "目标用户画像是什么？",
-      "section": "consumer",
-      "status": "blocked"
-    },
-    {
-      "id": "typeSpecific.fields.segment",
-      "label": "用户分层",
-      "question": "目标用户分层是什么？",
-      "section": "consumer",
-      "status": "blocked"
-    },
-    {
-      "id": "typeSpecific.fields.journey",
-      "label": "用户旅程",
-      "question": "要优化哪段用户旅程？",
-      "section": "consumer",
-      "status": "blocked"
-    },
-    {
-      "id": "typeSpecific.fields.activationMetric",
-      "label": "激活指标",
-      "question": "哪个激活指标代表早期成功？",
-      "section": "consumer",
-      "status": "blocked"
-    },
-    {
-      "id": "typeSpecific.fields.retentionMetric",
-      "label": "留存指标",
-      "question": "哪个留存指标代表持续价值？",
-      "section": "consumer",
-      "status": "blocked"
-    }
-  ]
+  "blockers": []
 }

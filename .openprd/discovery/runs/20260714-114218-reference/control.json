@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "runId": "20260714-114218-reference",
+  "mode": "reference",
+  "status": "active",
+  "iteration": 1,
+  "maxIterations": 10,
+  "createdAt": "2026-07-14 11:42:18",
+  "updatedAt": "2026-07-14 11:42:18",
+  "projectRoot": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter",
+  "openprdWorkspaceRoot": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd",
+  "sourceRoot": "/tmp/note-to-mp",
+  "referencePath": "/tmp/note-to-mp",
+  "latestPrdVersion": "v0000",
+  "nextAction": "调研 问题陈述"
+}

@@ -1,4 +1,39 @@
 {
   "version": 1,
-  "candidates": []
+  "candidates": [
+    {
+      "version": 1,
+      "id": "code-extension-yml",
+      "type": "code-extension",
+      "key": ".yml",
+      "scope": "project",
+      "status": "applied",
+      "title": "新增代码文件扩展名 .yml",
+      "summary": "检测到 .github/workflows/ci.yml 看起来像代码文件，但 .yml 尚未纳入 OpenPrd dev-check 代码扩展名配置。",
+      "evidence": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "lineCount": 40,
+          "reason": "code-punctuation"
+        }
+      ],
+      "confidence": 0.55,
+      "suggestedPatch": {
+        "file": ".openprd/standards/config.json",
+        "op": "append",
+        "path": "developmentStandards.codeFileLines.codeFileExtensions",
+        "value": ".yml"
+      },
+      "appliedAt": "2026-07-24T00:37:40.266Z",
+      "appliedChanges": [
+        "developmentStandards.codeFileLines.codeFileExtensions += .yml"
+      ],
+      "applyMode": "auto",
+      "applyReason": "safe-code-extension",
+      "rejectedAt": null,
+      "notes": null,
+      "createdAt": "2026-07-24T00:37:40.262Z",
+      "updatedAt": "2026-07-24T00:37:40.266Z"
+    }
+  ]
 }

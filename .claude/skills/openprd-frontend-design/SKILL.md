@@ -7,12 +7,14 @@ description: OpenPrd 前端设计框架 skill：为界面、页面、视觉、�
 adapter=claude
 source=openprd-frontend-design
 version=0.1.19
-checksum=1a87f83d24bb900a
+checksum=c1dce7f1b79de34b
 -->
 
 # OpenPrd Frontend Design
 
 当任务涉及界面、页面、视觉、样式、组件层级、信息架构、内容型页面或前端体验时，使用这份 skill。
+
+如果任务会新建界面、结构性改变信息架构/核心布局/视觉系统，或后续要交给 Impeccable，实现前同时读取 `skills/openprd-ui-context/SKILL.md`。由 UI Context 负责 greenfield/brownfield 项目理解、三个专业方向、用户确认以及 PRODUCT.md/DESIGN.md 编译；本 skill 继续提供审美资产框架与反模板化门禁。低风险局部修正使用 UI Context 的 `local-fix` 路径，不重复冻结完整合同。
 
 ## 核心目标
 

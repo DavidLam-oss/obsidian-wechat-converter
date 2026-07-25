@@ -1,0 +1,264 @@
+{
+  "versionNumber": 1,
+  "versionId": "v0001",
+  "createdAt": "2026-07-16 23:50:27",
+  "projectRoot": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter",
+  "workspaceRoot": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd",
+  "schema": "prd-core",
+  "templatePack": "consumer",
+  "productType": "consumer",
+  "title": "项目级产品与设计上下文文档",
+  "owner": "项目维护者",
+  "status": "synthesized",
+  "sections": {
+    "meta": {
+      "title": "项目级产品与设计上下文文档",
+      "owner": "项目维护者",
+      "status": "clarifying",
+      "version": "v0001",
+      "productType": "consumer",
+      "date": "2026-07-16"
+    },
+    "problem": {
+      "problemStatement": "基于现有 Obsidian 插件代码与界面事实，新增根目录 PRODUCT.md 和 DESIGN.md，为后续产品、交互与视觉调整提供统一且可复用的依据。",
+      "whyNow": "在继续规划自定义 CSS、高亮、飞书体验和跨仓库授权状态修复前，先建立稳定的产品与设计依据，减少后续方案冲突、遗漏和过度设计。",
+      "evidence": [
+        "README 与 docs/basic 已描述目标用户、产品边界和核心发布流程",
+        "styles、themes 与 views 已形成可提取的颜色、字体、间距、圆角和组件模式",
+        "现有浅色、深色、飞书与多平台截图可用于核对实际视觉语言"
+      ]
+    },
+    "users": {
+      "primaryUsers": [
+        "在 Obsidian 中写作并发布到微信公众号、飞书云文档或其他内容平台的创作者",
+        "重视 Markdown 渲染还原、媒体兼容与多平台草稿工作流的技术写作者和内容运营者"
+      ],
+      "secondaryUsers": [],
+      "stakeholders": [
+        "项目维护者",
+        "后续参与产品、设计和代码修改的 Agent 或开发者",
+        "依赖稳定预览与发布流程的现有用户"
+      ]
+    },
+    "goals": {
+      "goals": [
+        "建立项目级产品上下文",
+        "建立项目级视觉与交互规范",
+        "为后续修复规划提供不冲突、可验证的设计依据"
+      ],
+      "successMetrics": [
+        "两份文档位于项目根目录且结构完整",
+        "DESIGN.md 的 token 与现有样式源一致",
+        "后续方案能够引用明确的产品边界、视觉原则和可访问性约束"
+      ],
+      "acceptanceGoals": [
+        "PRODUCT.md 覆盖用户、产品目的、品牌性格、反例、设计原则和可访问性",
+        "DESIGN.md 基于现有 styles、themes、views 与截图，包含标准 token frontmatter 和固定六章节",
+        "明确区分 Obsidian 插件操作界面与文章输出主题",
+        "最终只新增两份根目录文档且内容可由仓库事实追溯"
+      ]
+    },
+    "validation": {
+      "community": [],
+      "seedUsers": [],
+      "communityFit": [],
+      "currentAlternative": null,
+      "painEvidence": [],
+      "manualPath": [],
+      "manualPlaybook": [],
+      "commitmentSignals": [],
+      "firstValidationStep": "完成文档结构与事实一致性检查后，以两份文档为依据继续整理已确认的修复规划。",
+      "defaultAlivePlan": [],
+      "paymentProof": [],
+      "mvpSlice": null,
+      "weekendTest": null,
+      "smallestExecution": [],
+      "productizeGate": [],
+      "firstCustomerPath": [],
+      "pricingHypothesis": null,
+      "customerOneProfitability": null,
+      "growthDiscipline": [],
+      "reversibility": null,
+      "customerTruth": null,
+      "valuesFit": null
+    },
+    "scope": {
+      "inScope": [
+        "新增根目录 PRODUCT.md",
+        "新增根目录 DESIGN.md",
+        "校验文档结构、设计 token 与仓库事实一致性"
+      ],
+      "outOfScope": [
+        "不修改实现代码",
+        "不修改 AGENTS.md",
+        "不创建额外设计配置或独立页面",
+        "不修改凭据、业务参数或云端状态"
+      ]
+    },
+    "scenarios": {
+      "primaryFlows": [
+        "维护者或 Agent 在规划产品、交互或视觉改动前读取 PRODUCT.md 与 DESIGN.md",
+        "根据 PRODUCT.md 判断用户、范围、非目标和不可破坏行为",
+        "根据 DESIGN.md 选择现有 token、组件和交互模式"
+      ],
+      "edgeCases": [
+        "现有实现与推荐规范不完全一致时，记录为历史现状而不是全部提升为未来标准",
+        "文章输出主题与插件 UI 使用不同视觉角色时保持边界",
+        "Obsidian 主题变量与文档中的十六进制基准值同时存在时，以运行时主题变量优先"
+      ],
+      "failureModes": [
+        "文档虚构项目事实",
+        "把文章主题色误作插件状态色",
+        "文档增加未授权的产品范围或实现要求",
+        "YAML 或固定章节结构不可被工具解析"
+      ]
+    },
+    "requirements": {
+      "functional": [
+        "PRODUCT.md 使用 product register",
+        "DESIGN.md 遵循标准 YAML token frontmatter 与 Overview、Colors、Typography、Elevation、Components、Do's and Don'ts 六章节",
+        "文档使用自然中文并保持结构清楚、美观、可扫描"
+      ],
+      "nonFunctional": [
+        "自然中文",
+        "结构清楚且可扫描",
+        "内容可由仓库事实追溯",
+        "不修改运行时行为",
+        "避免重复规则和过度设计"
+      ],
+      "businessRules": [
+        "只新增 PRODUCT.md 和 DESIGN.md",
+        "项目事实优先于通用模板",
+        "运行时 Obsidian 主题变量优先于静态颜色基准",
+        "插件 UI 与文章输出保持独立视觉边界"
+      ]
+    },
+    "businessGuardrails": {
+      "costDrivers": [],
+      "usageLimits": [],
+      "abusePrevention": [],
+      "monitoringSignals": [],
+      "alertThresholds": [],
+      "stopLossActions": []
+    },
+    "constraints": {
+      "technical": [
+        "事实来源限于 README、AGENTS.md、docs/basic、styles、themes、views 与现有截图",
+        "保留当前工作区既有未提交改动",
+        "不把历史实现中的不一致全部提升为未来标准"
+      ],
+      "compliance": [
+        "不记录凭据、授权码、用户数据或云端状态",
+        "不改变现有安全、隐私和平台职责边界"
+      ],
+      "dependencies": [
+        "Obsidian 原生设计变量与控件",
+        "项目现有 styles 和 themes 源文件",
+        "impeccable PRODUCT.md 与 DESIGN.md 结构规范"
+      ]
+    },
+    "risks": {
+      "assumptions": [
+        "仓库中的 README、docs/basic、样式源与截图代表当前产品事实",
+        "项目默认设计 register 为 product",
+        "中文是主要用户可见语言"
+      ],
+      "risks": [
+        "将历史视觉不一致写成强制标准",
+        "文档过长导致实际开发难以使用",
+        "插件 UI 与文章输出规范混淆"
+      ],
+      "openQuestions": [
+        "当前无阻塞性开放问题"
+      ]
+    },
+    "handoff": {
+      "owner": "项目维护者",
+      "nextStep": "完成文档结构与事实一致性检查后，以两份文档为依据继续整理已确认的修复规划。",
+      "targetSystem": "obsidian-wechat-converter 项目根目录文档"
+    },
+    "typeSpecific": {
+      "kind": "consumer",
+      "title": "个人消费者场景专项",
+      "fields": {
+        "persona": "在 Obsidian 中完成内容创作，希望以较低排版与搬运成本稳定发布到微信、飞书及其他平台的个人创作者和技术写作者。",
+        "segment": "以中文内容创作为主、重视技术内容还原与多平台草稿效率的 Obsidian 用户。",
+        "journey": [
+          "打开当前笔记并检查实时预览",
+          "调整主题、字体、间距和发布参数",
+          "复制富 HTML 或选择目标平台同步",
+          "查看成功结果、链接、失败原因与恢复动作"
+        ],
+        "activationMetric": "用户能从当前笔记生成可信预览，并成功完成一次复制或草稿同步。",
+        "retentionMetric": "用户在后续内容中持续复用预览与发布工作流，并减少目标平台中的重复排版和搬运。"
+      }
+    }
+  },
+  "reviewPresentation": {
+    "diagram": {
+      "type": "map",
+      "note": "项目级产品与设计文档的范围关系"
+    },
+    "mapNodes": {
+      "problem": {
+        "title": "问题定义",
+        "text": "项目缺少统一的产品与设计上下文"
+      },
+      "goal": {
+        "title": "目标",
+        "text": "让后续功能与界面决策保持一致"
+      },
+      "scope": {
+        "title": "范围",
+        "text": "仅新增两份根目录说明文档"
+      },
+      "flow": {
+        "title": "使用方式",
+        "text": "先理解产品，再按设计规范实施"
+      },
+      "risk": {
+        "title": "风险控制",
+        "text": "不修改代码与现有运行行为"
+      }
+    },
+    "flowNodes": [],
+    "flowEdges": [],
+    "panels": {
+      "flow": [
+        {
+          "summary": "新增产品上下文",
+          "detail": "后续工作可快速理解用户、任务与核心工作流。"
+        }
+      ],
+      "function": [
+        {
+          "summary": "新增设计规范",
+          "detail": "统一界面气质、设计 token 与组件使用原则。"
+        }
+      ],
+      "guardrail": [
+        {
+          "summary": "明确产品边界",
+          "detail": "区分插件操作界面与导出文章主题，避免语义混用。"
+        }
+      ],
+      "risk": [
+        {
+          "summary": "保持现有行为",
+          "detail": "本次只写文档，不修改运行代码、配置或云端状态。"
+        }
+      ]
+    }
+  },
+  "workUnitId": "wu-20260716235027-837ed729",
+  "targetRoot": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter",
+  "content": "# 项目级产品与设计上下文文档\n> 语言规则：用户可见说明、PRD、spec 和 tasks 跟随用户当前主语言；无法判断时才使用简体中文兜底。PRD、OpenPrd、OpenSpec、API、SDK、CLI、TypeScript、JSON、HTTP、WebSocket、字段 key、命令名、品牌名、产品名和协议名等必要专有名词保留原文。\n- 版本: v0001\n- 负责人: 项目维护者\n- 产品场景: 面向个人消费者场景\n- 场景模板: 面向个人消费者场景\n- 状态: synthesized\n- 生成时间: 2026-07-16 23:50:27\n## 元信息\n\n- 标题: 项目级产品与设计上下文文档\n- 负责人: 项目维护者\n- 状态: clarifying\n- 版本: v0001\n- 产品场景: 面向个人消费者场景\n- 日期: 2026-07-16\n\n## 问题\n\n- 问题陈述: 基于现有 Obsidian 插件代码与界面事实，新增根目录 PRODUCT.md 和 DESIGN.md，为后续产品、交互与视觉调整提供统一且可复用的依据。\n- 为什么是现在: 在继续规划自定义 CSS、高亮、飞书体验和跨仓库授权状态修复前，先建立稳定的产品与设计依据，减少后续方案冲突、遗漏和过度设计。\n- 证据:\n  - README 与 docs/basic 已描述目标用户、产品边界和核心发布流程\n  - styles、themes 与 views 已形成可提取的颜色、字体、间距、圆角和组件模式\n  - 现有浅色、深色、飞书与多平台截图可用于核对实际视觉语言\n\n## 用户与相关方\n\n- 主要用户:\n  - 在 Obsidian 中写作并发布到微信公众号、飞书云文档或其他内容平台的创作者\n  - 重视 Markdown 渲染还原、媒体兼容与多平台草稿工作流的技术写作者和内容运营者\n- 次要用户:\n  - 待补充\n- 相关方:\n  - 项目维护者\n  - 后续参与产品、设计和代码修改的 Agent 或开发者\n  - 依赖稳定预览与发布流程的现有用户\n\n## 目标与成功标准\n\n- 目标:\n  - 建立项目级产品上下文\n  - 建立项目级视觉与交互规范\n  - 为后续修复规划提供不冲突、可验证的设计依据\n- 成功指标:\n  - 两份文档位于项目根目录且结构完整\n  - DESIGN.md 的 token 与现有样式源一致\n  - 后续方案能够引用明确的产品边界、视觉原则和可访问性约束\n- 验收目标:\n  - PRODUCT.md 覆盖用户、产品目的、品牌性格、反例、设计原则和可访问性\n  - DESIGN.md 基于现有 styles、themes、views 与截图，包含标准 token frontmatter 和固定六章节\n  - 明确区分 Obsidian 插件操作界面与文章输出主题\n  - 最终只新增两份根目录文档且内容可由仓库事实追溯\n\n## 验证与创业闭环\n\n- 可触达社区:\n  - 待补充\n- 第一批种子用户:\n  - 待补充\n- 社区契合与触达依据:\n  - 待补充\n- 当前替代方案: 待补充\n- 痛点与替代证据:\n  - 待补充\n- 手工交付路径:\n  - 待补充\n- 手工作战卡:\n  - 待补充\n- 承诺信号:\n  - 待补充\n- 首个低成本验证: 完成文档结构与事实一致性检查后，以两份文档为依据继续整理已确认的修复规划。\n- 先活下来方案:\n  - 待补充\n- 付费验证信号:\n  - 待补充\n- 第一版只做一件事: 待补充\n- 周末级验证: 待补充\n- 最小工具桥接:\n  - 待补充\n- 产品化门槛:\n  - 待补充\n- 第一批客户路径:\n  - 待补充\n- 初始收费假设: 待补充\n- 客户 1 盈利路径: 待补充\n- 销售与增长纪律:\n  - 待补充\n- 可逆性判断: 待补充\n- 客户真问题校验: 待补充\n- 价值观一致性: 待补充\n\n## 范围与非目标\n\n- 范围内:\n  - 新增根目录 PRODUCT.md\n  - 新增根目录 DESIGN.md\n  - 校验文档结构、设计 token 与仓库事实一致性\n- 范围外:\n  - 不修改实现代码\n  - 不修改 AGENTS.md\n  - 不创建额外设计配置或独立页面\n  - 不修改凭据、业务参数或云端状态\n\n## 场景与流程\n\n- 主流程:\n  - 维护者或 Agent 在规划产品、交互或视觉改动前读取 PRODUCT.md 与 DESIGN.md\n  - 根据 PRODUCT.md 判断用户、范围、非目标和不可破坏行为\n  - 根据 DESIGN.md 选择现有 token、组件和交互模式\n- 边界情况:\n  - 现有实现与推荐规范不完全一致时，记录为历史现状而不是全部提升为未来标准\n  - 文章输出主题与插件 UI 使用不同视觉角色时保持边界\n  - Obsidian 主题变量与文档中的十六进制基准值同时存在时，以运行时主题变量优先\n- 失败模式:\n  - 文档虚构项目事实\n  - 把文章主题色误作插件状态色\n  - 文档增加未授权的产品范围或实现要求\n  - YAML 或固定章节结构不可被工具解析\n\n## 可视化图表\n\n### 产品流程\n\n```mermaid\nflowchart LR\n  entry[\"入口触发<br/>维护者或 Agent 在规划产品、交互或视觉改动前读取 PRODUCT.md 与 DESIGN.md\"]\n  experience[\"产品内步骤<br/>根据 PRODUCT.md 判断用户、范围、非目标和不可破坏行为\"]\n  decision{\"决策点<br/>现有实现与推荐规范不完全一致时，记录为历史现状而不是全部提升为未来标准\"}\n  success([\"成功结果<br/>两份文档位于项目根目录且结构完整\"])\n  failure[[\"失败与恢复<br/>文档虚构项目事实\"]]\n  entry -->|\"维护者或 Agent 在规划产品、交互或视觉改动前读取 PRODUCT.md 与 …\"| experience\n  experience -->|\"根据 PRODUCT.md 判断用户、范围、非目标和不可破坏行为\"| decision\n  decision -->|\"建立项目级产品上下文\"| success\n  decision -.->|\"文档虚构项目事实\"| failure\n```\n\n### 架构\n\n```mermaid\nflowchart LR\n  users[\"主要用户<br/>在 Obsidian 中写作并发布到微信公众号、飞书云文档或其他内容平台的创作者 · 重视 Markdown 渲染还原、媒体兼…\"]\n  subgraph solution[\"方案边界\"]\n    experience[\"个人消费者场景层<br/>维护者或 Agent 在规划产品、交互或视觉改动前读取 PRODUCT.md 与 DESIGN.md · 根据 PRODUCT…\"]\n    core[\"核心产品逻辑<br/>基于现有 Obsidian 插件代码与界面事实，新增根目录 PRODUCT.md 和 DESIGN.md，为后续产品、交互与视…\"]\n    integrations[\"依赖与集成<br/>Obsidian 原生设计变量与控件 · 项目现有 styles 和 themes 源文件 · impeccable PROD…\"]\n    governance[[\"约束与可靠性<br/>不记录凭据、授权码、用户数据或云端状态 · 不改变现有安全、隐私和平台职责边界\"]]\n    delivery[\"验证与交接<br/>两份文档位于项目根目录且结构完整 · DESIGN.md 的 token 与现有样式源一致 · 后续方案能够引用明确的产品边界…\"]\n  end\n  users -->|\"维护者或 Agent 在规划产品、交互或视觉改动前读取 PRODUCT.md …\"| experience\n  experience -->|\"产品动作与编排\"| core\n  core -->|\"依赖与外部服务\"| integrations\n  core -.->|\"策略、可靠性与合规\"| governance\n  core -->|\"成功标准与交接\"| delivery\n  integrations -->|\"运营就绪\"| delivery\n  governance -.->|\"评审与确认\"| delivery\n```\n\n## 需求\n\n- 功能需求:\n  - PRODUCT.md 使用 product register\n  - DESIGN.md 遵循标准 YAML token frontmatter 与 Overview、Colors、Typography、Elevation、Components、Do's and Don'ts 六章节\n  - 文档使用自然中文并保持结构清楚、美观、可扫描\n- 非功能需求:\n  - 自然中文\n  - 结构清楚且可扫描\n  - 内容可由仓库事实追溯\n  - 不修改运行时行为\n  - 避免重复规则和过度设计\n- 业务规则:\n  - 只新增 PRODUCT.md 和 DESIGN.md\n  - 项目事实优先于通用模板\n  - 运行时 Obsidian 主题变量优先于静态颜色基准\n  - 插件 UI 与文章输出保持独立视觉边界\n\n## 业务护栏\n\n- 成本来源:\n  - 待补充\n- 额度与限制:\n  - 待补充\n- 滥用防护:\n  - 待补充\n- 监控信号:\n  - 待补充\n- 报警阈值:\n  - 待补充\n- 止损动作:\n  - 待补充\n\n## 约束、依赖与风险\n\n- 技术约束:\n  - 事实来源限于 README、AGENTS.md、docs/basic、styles、themes、views 与现有截图\n  - 保留当前工作区既有未提交改动\n  - 不把历史实现中的不一致全部提升为未来标准\n- 合规要求:\n  - 不记录凭据、授权码、用户数据或云端状态\n  - 不改变现有安全、隐私和平台职责边界\n- 依赖:\n  - Obsidian 原生设计变量与控件\n  - 项目现有 styles 和 themes 源文件\n  - impeccable PRODUCT.md 与 DESIGN.md 结构规范\n- 假设:\n  - 仓库中的 README、docs/basic、样式源与截图代表当前产品事实\n  - 项目默认设计 register 为 product\n  - 中文是主要用户可见语言\n- 风险:\n  - 将历史视觉不一致写成强制标准\n  - 文档过长导致实际开发难以使用\n  - 插件 UI 与文章输出规范混淆\n- 开放问题:\n  - 当前无阻塞性开放问题\n\n## 类型专项模块\n\n- 类型: 个人消费者场景专项\n- persona: 在 Obsidian 中完成内容创作，希望以较低排版与搬运成本稳定发布到微信、飞书及其他平台的个人创作者和技术写作者。\n- segment: 以中文内容创作为主、重视技术内容还原与多平台草稿效率的 Obsidian 用户。\n- journey:\n  - 打开当前笔记并检查实时预览\n  - 调整主题、字体、间距和发布参数\n  - 复制富 HTML 或选择目标平台同步\n  - 查看成功结果、链接、失败原因与恢复动作\n- activationMetric: 用户能从当前笔记生成可信预览，并成功完成一次复制或草稿同步。\n- retentionMetric: 用户在后续内容中持续复用预览与发布工作流，并减少目标平台中的重复排版和搬运。\n\n## 交接\n\n- 负责人: 项目维护者\n- 下一步: 完成文档结构与事实一致性检查后，以两份文档为依据继续整理已确认的修复规划。\n- 目标系统: obsidian-wechat-converter 项目根目录文档\n",
+  "digest": "533f38f9e205300464e70ec093f910cf415faf0521f07cb6ae8a2601d32eb3b1",
+  "reviewPresentationMeta": {
+    "validatedAt": "2026-07-16T15:52:26.881Z",
+    "source": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/review-presentation-v0001.json",
+    "presentationHash": "099a4759bc5d817a69e0d04049e8a6157299ca1c3248698c6c2a7f2a3c2233f5",
+    "violationsHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "validator": "openprd review-presentation"
+  }
+}

@@ -1,0 +1,1140 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-14 11:42:18",
+  "mode": "reference",
+  "summary": {
+    "total": 118,
+    "pending": 118,
+    "covered": 0,
+    "blocked": 0
+  },
+  "nextPendingItem": {
+    "id": "field:problem-problemstatement",
+    "title": "问题陈述",
+    "kind": "missing-prd-field",
+    "status": "pending",
+    "priority": "high",
+    "target": "problem.problemStatement",
+    "prompt": "我们要解决什么问题？",
+    "source": "openprd-analysis",
+    "claimIds": []
+  },
+  "items": [
+    {
+      "id": "field:problem-problemstatement",
+      "title": "问题陈述",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "problem.problemStatement",
+      "prompt": "我们要解决什么问题？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:problem-whynow",
+      "title": "为什么是现在",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "problem.whyNow",
+      "prompt": "为什么现在是解决这个问题的合适时机？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:problem-evidence",
+      "title": "证据",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "problem.evidence",
+      "prompt": "有哪些证据支持这个问题？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:users-primaryusers",
+      "title": "主要用户",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "users.primaryUsers",
+      "prompt": "主要用户是谁？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:users-stakeholders",
+      "title": "相关方",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "users.stakeholders",
+      "prompt": "还有谁会参与或受到影响？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:goals-goals",
+      "title": "目标",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "goals.goals",
+      "prompt": "我们希望达成什么结果？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:goals-successmetrics",
+      "title": "成功指标",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "goals.successMetrics",
+      "prompt": "如何衡量成功？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:goals-acceptancegoals",
+      "title": "验收目标",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "goals.acceptanceGoals",
+      "prompt": "满足什么条件才能认为完成？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:scope-inscope",
+      "title": "范围内",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "scope.inScope",
+      "prompt": "这个版本包含哪些范围？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:scope-outofscope",
+      "title": "范围外",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "scope.outOfScope",
+      "prompt": "哪些内容明确不在范围内？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:scenarios-primaryflows",
+      "title": "主流程",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "scenarios.primaryFlows",
+      "prompt": "主要用户流程是什么？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:scenarios-edgecases",
+      "title": "边界情况",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "scenarios.edgeCases",
+      "prompt": "哪些边界情况需要处理？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:scenarios-failuremodes",
+      "title": "失败模式",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "scenarios.failureModes",
+      "prompt": "需要处理哪些失败模式？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:requirements-functional",
+      "title": "功能需求",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "requirements.functional",
+      "prompt": "产品必须做什么？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:requirements-nonfunctional",
+      "title": "非功能需求",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "requirements.nonFunctional",
+      "prompt": "有哪些性能、可靠性或安全要求？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:requirements-businessrules",
+      "title": "业务规则",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "requirements.businessRules",
+      "prompt": "需要遵守哪些业务规则？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:constraints-technical",
+      "title": "技术约束",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "constraints.technical",
+      "prompt": "存在哪些技术约束？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:constraints-compliance",
+      "title": "合规要求",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "constraints.compliance",
+      "prompt": "是否存在合规或策略约束？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:constraints-dependencies",
+      "title": "依赖",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "constraints.dependencies",
+      "prompt": "这个需求依赖什么？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:risks-assumptions",
+      "title": "假设",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "risks.assumptions",
+      "prompt": "我们做了哪些假设？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:risks-risks",
+      "title": "风险",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "risks.risks",
+      "prompt": "需要关注哪些风险？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:risks-openquestions",
+      "title": "开放问题",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "risks.openQuestions",
+      "prompt": "还有哪些问题未解决？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:typespecific-fields-persona",
+      "title": "用户画像",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "typeSpecific.fields.persona",
+      "prompt": "目标用户画像是什么？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:typespecific-fields-segment",
+      "title": "用户分层",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "typeSpecific.fields.segment",
+      "prompt": "目标用户分层是什么？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:typespecific-fields-journey",
+      "title": "用户旅程",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "typeSpecific.fields.journey",
+      "prompt": "要优化哪段用户旅程？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:typespecific-fields-activationmetric",
+      "title": "激活指标",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "typeSpecific.fields.activationMetric",
+      "prompt": "哪个激活指标代表早期成功？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "field:typespecific-fields-retentionmetric",
+      "title": "留存指标",
+      "kind": "missing-prd-field",
+      "status": "pending",
+      "priority": "high",
+      "target": "typeSpecific.fields.retentionMetric",
+      "prompt": "哪个留存指标代表持续价值？",
+      "source": "openprd-analysis",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-lib-shot-render-es-js",
+      "title": "src/lib/shot-render.es.js",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/lib/shot-render.es.js",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-at-rule-d-ts",
+      "title": "src/postcss/at-rule.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/at-rule.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-comment-d-ts",
+      "title": "src/postcss/comment.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/comment.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-container-d-ts",
+      "title": "src/postcss/container.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/container.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-css-syntax-error-d-ts",
+      "title": "src/postcss/css-syntax-error.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/css-syntax-error.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-declaration-d-ts",
+      "title": "src/postcss/declaration.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/declaration.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-document-d-ts",
+      "title": "src/postcss/document.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/document.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-fromjson-d-ts",
+      "title": "src/postcss/fromJSON.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/fromJSON.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-input-d-ts",
+      "title": "src/postcss/input.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/input.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-lazy-result-d-ts",
+      "title": "src/postcss/lazy-result.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/lazy-result.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-list-d-ts",
+      "title": "src/postcss/list.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/list.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-no-work-result-d-ts",
+      "title": "src/postcss/no-work-result.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/no-work-result.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-node-d-ts",
+      "title": "src/postcss/node.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/node.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-parse-d-ts",
+      "title": "src/postcss/parse.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/parse.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-postcss-d-ts",
+      "title": "src/postcss/postcss.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/postcss.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-postcss-js",
+      "title": "src/postcss/postcss.js",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/postcss.js",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-previous-map-d-ts",
+      "title": "src/postcss/previous-map.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/previous-map.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-processor-d-ts",
+      "title": "src/postcss/processor.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/processor.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-result-d-ts",
+      "title": "src/postcss/result.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/result.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-root-d-ts",
+      "title": "src/postcss/root.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/root.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-rule-d-ts",
+      "title": "src/postcss/rule.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/rule.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-stringifier-d-ts",
+      "title": "src/postcss/stringifier.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/stringifier.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-stringify-d-ts",
+      "title": "src/postcss/stringify.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/stringify.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-postcss-warning-d-ts",
+      "title": "src/postcss/warning.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/postcss/warning.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-store-configstore-ts",
+      "title": "src/store/ConfigStore.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/store/ConfigStore.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-store-createselectors-ts",
+      "title": "src/store/createSelectors.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/store/createSelectors.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-store-pluginstore-ts",
+      "title": "src/store/PluginStore.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/store/PluginStore.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-store-renderstore-ts",
+      "title": "src/store/RenderStore.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/store/RenderStore.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-accountselect-module-css",
+      "title": "src/ui/components/AccountSelect.module.css",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/AccountSelect.module.css",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-accountselect-tsx",
+      "title": "src/ui/components/AccountSelect.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/AccountSelect.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-announcement-module-css",
+      "title": "src/ui/components/Announcement.module.css",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/Announcement.module.css",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-announcement-tsx",
+      "title": "src/ui/components/Announcement.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/Announcement.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-cover-module-css",
+      "title": "src/ui/components/Cover.module.css",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/Cover.module.css",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-cover-tsx",
+      "title": "src/ui/components/Cover.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/Cover.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-loading-module-css",
+      "title": "src/ui/components/Loading.module.css",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/Loading.module.css",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-loading-tsx",
+      "title": "src/ui/components/Loading.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/Loading.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-mdtoimageconverter-module-css",
+      "title": "src/ui/components/MdToImageConverter.module.css",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/MdToImageConverter.module.css",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-mdtoimageconverter-tsx",
+      "title": "src/ui/components/MdToImageConverter.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/MdToImageConverter.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-notelist-tsx",
+      "title": "src/ui/components/NoteList.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/NoteList.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-noterender-tsx",
+      "title": "src/ui/components/NoteRender.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/NoteRender.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-notification-module-css",
+      "title": "src/ui/components/Notification.module.css",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/Notification.module.css",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-notification-tsx",
+      "title": "src/ui/components/Notification.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/Notification.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-redbook-tsx",
+      "title": "src/ui/components/RedBook.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/RedBook.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-themelist-module-css",
+      "title": "src/ui/components/ThemeList.module.css",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/ThemeList.module.css",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-themelist-tsx",
+      "title": "src/ui/components/ThemeList.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/ThemeList.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-wechat-module-css",
+      "title": "src/ui/components/Wechat.module.css",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/Wechat.module.css",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-components-wechat-tsx",
+      "title": "src/ui/components/Wechat.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/components/Wechat.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-workflow-resultviewer-tsx",
+      "title": "src/ui/workflow/resultviewer.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/workflow/resultviewer.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-workflow-workflow-module-css",
+      "title": "src/ui/workflow/workflow.module.css",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/workflow/workflow.module.css",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-workflow-workflow-tsx",
+      "title": "src/ui/workflow/workflow.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/workflow/workflow.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-preview-module-css",
+      "title": "src/ui/preview.module.css",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/preview.module.css",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-preview-tsx",
+      "title": "src/ui/preview.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/preview.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-pubview-module-css",
+      "title": "src/ui/pubview.module.css",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/pubview.module.css",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-ui-pubview-tsx",
+      "title": "src/ui/pubview.tsx",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/ui/pubview.tsx",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-wasm-wasm-exec-js",
+      "title": "src/wasm/wasm_exec.js",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/wasm/wasm_exec.js",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-wasm-wasm-ts",
+      "title": "src/wasm/wasm.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/wasm/wasm.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-article-render-ts",
+      "title": "src/article-render.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/article-render.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-assets-ts",
+      "title": "src/assets.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/assets.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-base-render-ts",
+      "title": "src/base-render.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/base-render.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-default-highlight-ts",
+      "title": "src/default-highlight.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/default-highlight.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-default-theme-ts",
+      "title": "src/default-theme.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/default-theme.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-doc-modal-ts",
+      "title": "src/doc-modal.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/doc-modal.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-expert-settings-ts",
+      "title": "src/expert-settings.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/expert-settings.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-image-bg-modal-ts",
+      "title": "src/image-bg-modal.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/image-bg-modal.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-imagelib-ts",
+      "title": "src/imagelib.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/imagelib.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-inline-css-ts",
+      "title": "src/inline-css.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/inline-css.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-main-ts",
+      "title": "src/main.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/main.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-note-preview-ts",
+      "title": "src/note-preview.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/note-preview.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-note-pub-ts",
+      "title": "src/note-pub.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/note-pub.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-redbook-render-ts",
+      "title": "src/redbook-render.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/redbook-render.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-setting-tab-ts",
+      "title": "src/setting-tab.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/setting-tab.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-settings-ts",
+      "title": "src/settings.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/settings.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-styles-css",
+      "title": "src/styles.css",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/styles.css",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-styles-d-ts",
+      "title": "src/styles.d.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/styles.d.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-utils-ts",
+      "title": "src/utils.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/utils.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-weixin-api-ts",
+      "title": "src/weixin-api.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/weixin-api.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:src-widgets-modal-ts",
+      "title": "src/widgets-modal.ts",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "src/widgets-modal.ts",
+      "claimIds": []
+    },
+    {
+      "id": "source:tools-download-mjs",
+      "title": "tools/download.mjs",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "tools/download.mjs",
+      "claimIds": []
+    },
+    {
+      "id": "source:agents-md",
+      "title": "AGENTS.md",
+      "kind": "document-evidence",
+      "status": "pending",
+      "priority": "low",
+      "source": "AGENTS.md",
+      "claimIds": []
+    },
+    {
+      "id": "source:changelog-md",
+      "title": "CHANGELOG.md",
+      "kind": "document-evidence",
+      "status": "pending",
+      "priority": "low",
+      "source": "CHANGELOG.md",
+      "claimIds": []
+    },
+    {
+      "id": "source:esbuild-config-mjs",
+      "title": "esbuild.config.mjs",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "esbuild.config.mjs",
+      "claimIds": []
+    },
+    {
+      "id": "source:gemini-md",
+      "title": "GEMINI.md",
+      "kind": "document-evidence",
+      "status": "pending",
+      "priority": "low",
+      "source": "GEMINI.md",
+      "claimIds": []
+    },
+    {
+      "id": "source:license",
+      "title": "LICENSE",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "LICENSE",
+      "claimIds": []
+    },
+    {
+      "id": "source:manifest-json",
+      "title": "manifest.json",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "manifest.json",
+      "claimIds": []
+    },
+    {
+      "id": "source:package-lock-json",
+      "title": "package-lock.json",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "package-lock.json",
+      "claimIds": []
+    },
+    {
+      "id": "source:package-json",
+      "title": "package.json",
+      "kind": "configuration-evidence",
+      "status": "pending",
+      "priority": "low",
+      "source": "package.json",
+      "claimIds": []
+    },
+    {
+      "id": "source:readme-md",
+      "title": "README.md",
+      "kind": "document-evidence",
+      "status": "pending",
+      "priority": "low",
+      "source": "README.md",
+      "claimIds": []
+    },
+    {
+      "id": "source:tsconfig-json",
+      "title": "tsconfig.json",
+      "kind": "configuration-evidence",
+      "status": "pending",
+      "priority": "low",
+      "source": "tsconfig.json",
+      "claimIds": []
+    },
+    {
+      "id": "source:version-bump-mjs",
+      "title": "version-bump.mjs",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "version-bump.mjs",
+      "claimIds": []
+    },
+    {
+      "id": "source:versions-json",
+      "title": "versions.json",
+      "kind": "implementation-evidence",
+      "status": "pending",
+      "priority": "medium",
+      "source": "versions.json",
+      "claimIds": []
+    },
+    {
+      "id": "source:github-workflows-release-yml",
+      "title": ".github/workflows/release.yml",
+      "kind": "configuration-evidence",
+      "status": "pending",
+      "priority": "low",
+      "source": ".github/workflows/release.yml",
+      "claimIds": []
+    }
+  ]
+}

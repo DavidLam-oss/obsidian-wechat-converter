@@ -1,25 +1,55 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-07T15:59:58.777Z",
+  "updatedAt": "2026-07-24T00:41:04.114Z",
   "summary": {
-    "eventCount": 2,
-    "observed": 0,
+    "eventCount": 4,
+    "observed": 2,
     "pendingObserved": 0,
-    "autoApplied": 0,
+    "autoApplied": 1,
     "manualApplied": 0,
     "reconciledAutoApplied": 0,
     "rejected": 0,
-    "skipped": 0,
+    "skipped": 1,
     "completionCheckpoints": 2,
-    "skippedReasons": {},
+    "skippedReasons": {
+      "candidate-applied": 1
+    },
     "current": {
-      "total": 0,
+      "total": 1,
       "pending": 0,
-      "applied": 0,
+      "applied": 1,
       "rejected": 0
     }
   },
   "recentEvents": [
+    {
+      "version": 1,
+      "at": "2026-07-24T00:37:40.271Z",
+      "action": "observe",
+      "outcome": "skipped-candidate-applied",
+      "candidateId": "code-extension-yml",
+      "candidateType": "code-extension",
+      "scope": "project",
+      "autoApplied": false,
+      "applyMode": null,
+      "reason": "candidate-applied",
+      "changed": []
+    },
+    {
+      "version": 1,
+      "at": "2026-07-24T00:37:40.266Z",
+      "action": "observe",
+      "outcome": "auto-applied",
+      "candidateId": "code-extension-yml",
+      "candidateType": "code-extension",
+      "scope": "project",
+      "autoApplied": true,
+      "applyMode": "auto",
+      "reason": "safe-code-extension",
+      "changed": [
+        "developmentStandards.codeFileLines.codeFileExtensions += .yml"
+      ]
+    },
     {
       "version": 1,
       "at": "2026-07-07T14:23:39.436Z",

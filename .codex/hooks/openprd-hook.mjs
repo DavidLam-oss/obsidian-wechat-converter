@@ -2,7 +2,7 @@
 adapter=codex
 source=codex-hooks
 version=0.1.19
-checksum=466f2e5da639bc0c
+checksum=cfc52a4ca9d45da1
 */
 
 import fs from 'node:fs';
@@ -1494,7 +1494,7 @@ function changeRequirementSummary(root, changeId) {
 }
 
 function runOpenPrdContext(cwd, prompt = null) {
-  const args = ['run', '.', '--context', '--json', '--hook-inject'];
+  const args = ['run', '.', '--context', '--record-context', '--json', '--hook-inject'];
   if (String(prompt || '').trim()) {
     args.push('--message', String(prompt).trim());
   }
@@ -1567,6 +1567,17 @@ function knowledgeSkillContextLines(knowledgeSkills) {
   return lines;
 }
 
+function insightProfileContextLines(guidance) {
+  const contract = Array.isArray(guidance?.contract) ? guidance.contract.filter(Boolean).slice(0, 4) : [];
+  if (contract.length === 0) {
+    return [];
+  }
+  return [
+    '个人协作偏好（本机画像，仅用于调整本轮协作方式）:',
+    ...contract.map((item) => `- ${item}`),
+  ];
+}
+
 function renderRunContextText(result) {
   const lines = [
     '当前进展参考',
@@ -1594,6 +1605,7 @@ function renderRunContextText(result) {
   if (result.discovery) {
     lines.push('调研进度: ' + result.discovery.runId + ' 已覆盖 ' + result.discovery.summary.covered + '/' + result.discovery.summary.total + '，待处理 ' + result.discovery.summary.pending);
   }
+  lines.push(...insightProfileContextLines(result.collaborationGuidance));
   lines.push(...knowledgeSkillContextLines(result.knowledgeSkills));
   lines.push('对外表达: 面向用户时，请优先说“本次调整”“后续任务”“继续落地”“完成后检查”这类人话，不要直接复述内部编号、命令、路径、版本号或流程术语。');
   const recommendation = result.recommendation || {};
@@ -2669,20 +2681,77 @@ function isRuntimeAutonomyRiskFile(file) {
   return true;
 }
 
-function hasExplicitAutonomyRiskApproval(intent = null) {
-  const text = String(intent?.promptText || '');
-  if (!text.trim()) {
+function autonomyRiskCapabilitiesFromPrompt(prompt = '') {
+  const text = String(prompt || '').trim();
+  if (!text) {
+    return [];
+  }
+  const capabilities = [];
+  const cloudTerms = /(云端|线上|生产环境|生产远端|远端|热修复|hotfix|production|prod)/i;
+  const fallbackTerms = /(兜底|临时兜底|fallback|fall\s*back|写死|硬编码|hardcode|hard-coded|hard coded)/i;
+  const approvalOrAction = /(允许|批准|同意|确认|可以|请|直接|执行|部署|发布|写入|应用|修复|处理|使用|采用|必须|这次|现在|deploy|release|apply|run|use)/i;
+  const negation = /(不要|禁止|不允许|不得|不能|避免|默认不|未明确|未经|除非|do\s+not|don't|never)/i;
+  const capabilityRequested = (terms) => {
+    if (!terms.test(text) || !approvalOrAction.test(text)) {
+      return false;
+    }
+    const clauses = text.split(/[。！？!?；;\n]/).map((item) => item.trim()).filter(Boolean);
+    if (clauses.some((clause) => terms.test(clause) && negation.test(clause))) {
+      return false;
+    }
+    return clauses.some((clause) => terms.test(clause) && approvalOrAction.test(clause) && !negation.test(clause));
+  };
+  if (capabilityRequested(cloudTerms)) {
+    capabilities.push('cloud-hotfix');
+  }
+  if (capabilityRequested(fallbackTerms)) {
+    capabilities.push('hardcoded-fallback');
+  }
+  return capabilities;
+}
+
+function grantAutonomyAuthorizationLease(root, capabilities, prompt, options = {}) {
+  const normalized = [...new Set((capabilities ?? []).filter(Boolean))];
+  if (normalized.length === 0) {
+    return null;
+  }
+  const state = readTurnState(root);
+  const lease = {
+    version: 1,
+    capabilities: normalized,
+    scope: 'current-turn',
+    source: options.source ?? 'explicit-current-prompt',
+    grantedAt: now(),
+    promptPreview: preview(prompt, 240),
+  };
+  writeTurnState(root, {
+    ...state,
+    autonomyAuthorizationLease: lease,
+  });
+  return lease;
+}
+
+function hasScopedAutonomyRiskApproval(root, intent = null, detection = null) {
+  if (!detection?.kind) {
     return false;
   }
-  const riskTerms = /(云端|线上|生产环境|远端|热修复|hotfix|兜底|临时兜底|fallback|fall\s*back|写死|硬编码|hardcode|hard-coded|hard coded)/i;
-  if (!riskTerms.test(text)) {
-    return false;
+  const lease = readTurnState(root).autonomyAuthorizationLease;
+  if (lease?.scope === 'current-turn' && lease.capabilities?.includes(detection.kind)) {
+    return true;
   }
-  const negatedRisk = /(不要|禁止|不允许|不得|不能|避免|默认不|未明确|未经|除非).{0,48}(云端|线上|生产环境|远端|热修复|hotfix|兜底|临时兜底|fallback|fall\s*back|写死|硬编码|hardcode|hard-coded|hard coded)|(云端|线上|生产环境|远端|热修复|hotfix|兜底|临时兜底|fallback|fall\s*back|写死|硬编码|hardcode|hard-coded|hard coded).{0,48}(不要|禁止|不允许|不得|不能|避免|默认不|未明确|未经|除非)/i;
-  if (negatedRisk.test(text)) {
-    return false;
-  }
-  return /(明确)?(允许|批准|同意|确认|可以|请|直接|必须|这次|现在).{0,40}(云端|线上|生产环境|远端|热修复|hotfix|兜底|临时兜底|fallback|fall\s*back|写死|硬编码|hardcode|hard-coded|hard coded)|(云端|线上|生产环境|远端|热修复|hotfix|兜底|临时兜底|fallback|fall\s*back|写死|硬编码|hardcode|hard-coded|hard coded).{0,40}(允许|批准|同意|确认|可以|直接|必须|这次|现在)/i.test(text);
+  return autonomyRiskCapabilitiesFromPrompt(intent?.promptText).includes(detection.kind);
+}
+
+function addedPatchText(payload) {
+  const toolInput = payload?.tool_input ?? payload?.toolInput ?? payload?.input ?? null;
+  const patch = typeof toolInput === 'string'
+    ? toolInput
+    : (typeof toolInput?.patch === 'string' ? toolInput.patch : '');
+  return patch
+    .split(/\r?\n/)
+    .filter((line) => line.startsWith('+') && !line.startsWith('+++'))
+    .map((line) => line.slice(1))
+    .join('\n');
 }
 
 function detectHighRiskAutonomyMutation(root, payload, intent, risk) {
@@ -2690,19 +2759,16 @@ function detectHighRiskAutonomyMutation(root, payload, intent, risk) {
     return null;
   }
   const command = commandText(payload);
-  const text = [
-    toolName(payload),
-    command,
-    payloadText(payload),
-  ].filter(Boolean).join('\n');
+  const actionText = [toolName(payload), command].filter(Boolean).join('\n');
+  const patchAdditions = addedPatchText(payload);
   const touched = extractTouchedFiles(root, payload);
   const runtimeTarget = touched.length === 0 || touched.some((file) => isRuntimeAutonomyRiskFile(file));
-  const cloudMutation = /(?:\b(?:ssh|scp|rsync)\b[^\n]*(?:prod|production|线上|生产|云端|server|remote)|\b(?:kubectl|helm)\b[^\n]*(?:apply|patch|set|delete|rollout|scale|exec)[^\n]*(?:prod|production|线上|生产|云端|cluster)|\b(?:vercel|wrangler|fly|flyctl|railway|firebase)\b[^\n]*(?:deploy|up)[^\n]*(?:--prod|prod|production|线上|生产)|\bsupabase\s+db\s+push\b[^\n]*(?:--linked|--db-url|prod|production|线上|生产)|\bcurl\b[^\n]*(?:-X|--request)\s*(?:POST|PUT|PATCH|DELETE)\b[^\n]*(?:prod|production|线上|生产|云端|api\.))/i.test(text);
+  const cloudMutation = /(?:\b(?:ssh|scp|rsync)\b[^\n]*(?:prod|production|线上|生产|云端|server|remote)|\b(?:kubectl|helm)\b[^\n]*(?:apply|patch|set|delete|rollout|scale|exec)[^\n]*(?:prod|production|线上|生产|云端|cluster)|\b(?:vercel|wrangler|fly|flyctl|railway|firebase)\b[^\n]*(?:deploy|up)[^\n]*(?:--prod|prod|production|线上|生产)|\bsupabase\s+db\s+push\b[^\n]*(?:--linked|--db-url|prod|production|线上|生产)|\bcurl\b[^\n]*(?:-X|--request)\s*(?:POST|PUT|PATCH|DELETE)\b[^\n]*(?:prod|production|线上|生产|云端|api\.))/i.test(actionText);
   if (cloudMutation) {
     return {
       kind: 'cloud-hotfix',
       title: '云端/生产远端写入',
-      details: preview(command || text, 260),
+      details: preview(command || actionText, 260),
     };
   }
   if (!runtimeTarget) {
@@ -2711,14 +2777,13 @@ function detectHighRiskAutonomyMutation(root, payload, intent, risk) {
   // 只保留真实业务权益/计费类词汇；配置、服务端、客户端、缓存、feature 这类
   // 基础设施通用词在正常代码里大量出现，叠加“fallback/兜底”会造成海量误拦。
   const businessTerms = /(业务|权益|会员|额度|价格|计费|订阅|套餐|entitlement|membership|billing|quota|price|paywall|subscription|localstorage)/i;
-  const fallbackTerms = /(兜底|fallback|fall\s*back|临时补|临时插入|补行|补进|本地补|客户端补|服务端补|缓存补|默认插入|补一条|补数据)/i;
-  const hardcodeTerms = /(写死|硬编码|hardcode|hard-coded|hard coded)/i;
-  const fixedBusinessValue = /(unlimited|premium|pro|vip|admin|owner|free|trial|quota|limit|count_limit|free_limit|权益|会员).{0,80}(?:=|:).{0,80}(?:unlimited|premium|pro|vip|admin|owner|free|true|false|999999|Infinity)/i;
-  if ((businessTerms.test(text) && (fallbackTerms.test(text) || hardcodeTerms.test(text))) || fixedBusinessValue.test(text)) {
+  const suspiciousFallbackAssignment = /(?:const|let|var)\s+[A-Za-z0-9_$]*(?:fallback|hardcod)[A-Za-z0-9_$]*\s*=|(?:return|set|insert|push)\s*\([^\n]*(?:unlimited|premium|pro|vip|admin|owner|free|true|false|999999|Infinity)/i;
+  const fixedBusinessValue = /(?:entitlement|membership|billing|quota|price|paywall|subscription|权益|会员)[^\n]{0,80}(?:=|:)[^\n]{0,80}(?:unlimited|premium|pro|vip|admin|owner|free|true|false|999999|Infinity)/i;
+  if (businessTerms.test(patchAdditions) && (suspiciousFallbackAssignment.test(patchAdditions) || fixedBusinessValue.test(patchAdditions))) {
     return {
       kind: 'hardcoded-fallback',
       title: '业务兜底/写死逻辑',
-      details: preview(touched.length > 0 ? `${touched.join(', ')}\n${command || text}` : command || text, 260),
+      details: preview(touched.length > 0 ? `${touched.join(', ')}\n${patchAdditions}` : patchAdditions, 260),
     };
   }
   return null;
@@ -2730,7 +2795,7 @@ function formatHighRiskAutonomyBlock(detection) {
     '当前用户消息只授权了本轮实现范围，不等于授权 Agent 私自做云端热修复、生产远端写入、业务兜底、写死逻辑或缓存补行。',
     detection.details ? `Matched action: ${detection.details}` : null,
     '默认路径：先改本地源码、配置、迁移或数据修复脚本，让本地与云端保持同一事实源；完成后再按正常发布/部署路径验证。',
-    '如果这次确实必须临时处理，请先让用户明确说“允许这次云端热修复”或“允许这次临时兜底/写死”，并说明影响范围、回滚方式和如何同步回本地源码/配置/迁移。',
+    '如果这次确实必须临时处理，先说明影响范围、回滚方式和如何同步回本地源码/配置/迁移。用户下一条自然回复“同意”或“可以”即可；授权只绑定到刚刚被拦的这一类动作，并且只在当前轮有效。',
   ].filter(Boolean).join('\n');
 }
 
@@ -2746,6 +2811,13 @@ function isFrontendTaskIntent(intent = null) {
     return false;
   }
   return /(界面|页面|前端|首页|落地页|原型|导览|展览|馆藏|网站|web\s*page|landing|dashboard|hero|layout|静态单页|静态页|样式|视觉|app\s*首页|官网)/i.test(text);
+}
+
+function isStructuralUiContextIntent(intent = null) {
+  if (!isFrontendTaskIntent(intent) || intent?.visualMockupRequest) return false;
+  const text = String(intent?.promptText || '');
+  if (intent?.requirementTier === 'l2') return true;
+  return /(ui\s*context|impeccable|信息架构|设计系统|视觉系统|结构性|全站|整体.{0,8}(界面|页面|视觉|布局)|重构.{0,8}(界面|页面|首页|导航)|新建.{0,8}(界面|页面|首页|网站|dashboard)|从零.{0,8}(界面|页面|网站|app)|核心页面|关键用户流程|完整.{0,8}(界面|页面|网站|原型)|首页.{0,8}(实现|开发|重做|改版)|静态原型)/i.test(text);
 }
 
 function promptHasExplicitVisualReference(intent = null) {
@@ -2834,6 +2906,38 @@ function frontendDesignPreflightIssues(root, intent, implementationFiles) {
       file: 'selected-direction.md',
       reason: '进入实现前先锁定选中的 lens、theme、layout 和组件。',
     });
+  }
+  return issues;
+}
+
+function fullProjectFileHash(root, relativePath) {
+  try {
+    return crypto.createHash('sha256').update(fs.readFileSync(path.join(root, relativePath))).digest('hex');
+  } catch {
+    return null;
+  }
+}
+
+function uiContextPreflightIssues(root, intent, implementationFiles) {
+  if (!isStructuralUiContextIntent(intent) || implementationFiles.length === 0) return [];
+  const base = path.join(root, '.openprd', 'design', 'ui-context');
+  const validation = readJsonSync(path.join(base, 'validation.json'), null);
+  const handoff = readJsonSync(path.join(base, 'impeccable-handoff.json'), null);
+  const issues = [];
+  if (!validation?.ok) issues.push('缺少通过状态的 UI Context validation.json。');
+  if (handoff?.status !== 'ready') issues.push('Impeccable handoff 仍是 blocked 或尚未生成。');
+  if (handoff?.contractDigests?.product !== fullProjectFileHash(root, 'PRODUCT.md')) {
+    issues.push('PRODUCT.md 已变化或未绑定到当前 handoff。');
+  }
+  if (handoff?.contractDigests?.design !== fullProjectFileHash(root, 'DESIGN.md')) {
+    issues.push('DESIGN.md 已变化或未绑定到当前 handoff。');
+  }
+  const activeDesignDigests = handoff?.activeDesignDigests ?? {};
+  for (const filename of ['facts-sheet.md', 'asset-spec.md', 'image-preflight.md', 'direction-plan.md', 'selected-direction.md']) {
+    const relativePath = path.join('.openprd', 'design', 'active', filename);
+    if (activeDesignDigests[filename] !== fullProjectFileHash(root, relativePath)) {
+      issues.push(`${relativePath} 已变化或未绑定到当前 handoff。`);
+    }
   }
   return issues;
 }
@@ -3520,6 +3624,18 @@ function largeUiVisualDirectionMessage() {
   ].join('\n');
 }
 
+function uiContextWorkflowMessage(intent = null) {
+  if (!isStructuralUiContextIntent(intent)) {
+    return null;
+  }
+  return [
+    'OpenPrd UI Context 工作流:',
+    '新界面、结构性 UI 改造、设计系统或 Impeccable handoff：先读取 `$openprd-ui-context`，运行 `openprd ui-context . --mode auto`。greenfield 从已确认 PRD/review 编译 planned UI topology；brownfield 使用可选 CodeGraph 加本地确定性扫描。planned topology 不得冒充 CodeGraph 或现有代码事实。',
+    '中间 skill 负责产品设计、UX 架构、专业审美判断和三个异源方向；用户只确认方向、明暗、密度、品牌强度、动效与参考约束等高价值变量。',
+    '方向确认后运行 `openprd ui-context . --direction <1|2|3> --source user-confirmed`。UI Context skill 负责基于专业判断编译 PRODUCT.md、DESIGN.md 和 active design artifacts；Host API 负责证据、确认、lint 与 handoff，不生成平庸模板。已有合同冲突时显式使用 `--contract-decision preserve|merge|refresh`，禁止静默覆盖。`openprd ui-context . --check` 通过后才交给 Impeccable；局部低风险修正走 `--mode local-fix` 复用已有冻结上下文。',
+  ].join('\n');
+}
+
 function visualLocalAdjustmentMessage() {
   return [
     '如果这轮验收重点在局部变化，不要只改代码后凭主观判断收尾。',
@@ -3679,6 +3795,7 @@ function contextMessage(cwd, intent = null, gate = null, progress = null) {
         visualMockupMessage(intent, cwd),
         canvasCollaborationMessage(intent),
         learningReviewMessage(intent),
+        uiContextWorkflowMessage(intent),
         largeUiVisualDirectionMessage(),
         visualLocalAdjustmentMessage(),
         requirementRoutingSummary(),
@@ -3702,6 +3819,7 @@ function contextMessage(cwd, intent = null, gate = null, progress = null) {
       visualMockupMessage(intent, cwd),
       canvasCollaborationMessage(intent),
       learningReviewMessage(intent),
+      uiContextWorkflowMessage(intent),
       largeUiVisualDirectionMessage(),
       visualLocalAdjustmentMessage(),
       requirementRoutingSummary(),
@@ -3730,6 +3848,7 @@ function contextMessage(cwd, intent = null, gate = null, progress = null) {
     visualMockupMessage(intent, cwd),
     canvasCollaborationMessage(intent),
     learningReviewMessage(intent),
+    uiContextWorkflowMessage(intent),
     largeUiVisualDirectionMessage(intent),
     requirementRoutingSummary(),
     'OpenPrd 下一步只是建议。规划、分析、审查类请求保持只读；只有用户当前明确要求开发、深度调研、对标复刻或继续任务时才执行。',
@@ -4152,7 +4271,44 @@ function handle(eventName, cwd, payload) {
     let skillGate = readNamedGate(root, 'skill-visualization', sessionId);
     let researchGate = readNamedGate(root, 'research', sessionId);
     let weappGate = readNamedGate(root, 'weapp', sessionId);
+    let autonomyRiskGate = readNamedGate(root, 'autonomy-risk', sessionId);
     const shortAffirmative = isShortAffirmativeConfirmation(prompt);
+    const naturalRiskApproval = shortAffirmative
+      || /^(?:可以[，,\s]*)?(?:我)?同意[。！!,.，\s]*$|^(?:按这个|就这样|开始吧|继续吧)[。！!,.，\s]*$/i.test(stripMarkdown(prompt));
+    const explicitRiskCapabilities = autonomyRiskCapabilitiesFromPrompt(prompt);
+    if (autonomyRiskGate?.active && naturalRiskApproval) {
+      grantAutonomyAuthorizationLease(root, [autonomyRiskGate.kind], prompt, {
+        source: 'pending-risk-natural-confirmation',
+      });
+      autonomyRiskGate = writeNamedGate(root, 'autonomy-risk', {
+        ...autonomyRiskGate,
+        active: false,
+        status: 'authorized-for-current-turn',
+        confirmedAt: now(),
+        confirmationPreview: preview(prompt, 240),
+      }, sessionId);
+    } else if (explicitRiskCapabilities.length > 0) {
+      grantAutonomyAuthorizationLease(root, explicitRiskCapabilities, prompt, {
+        source: 'explicit-current-prompt',
+      });
+      if (autonomyRiskGate?.active) {
+        autonomyRiskGate = writeNamedGate(root, 'autonomy-risk', {
+          ...autonomyRiskGate,
+          active: false,
+          status: explicitRiskCapabilities.includes(autonomyRiskGate.kind)
+            ? 'authorized-for-current-turn'
+            : 'superseded-by-different-risk-scope',
+          closedAt: now(),
+        }, sessionId);
+      }
+    } else if (autonomyRiskGate?.active) {
+      autonomyRiskGate = writeNamedGate(root, 'autonomy-risk', {
+        ...autonomyRiskGate,
+        active: false,
+        status: 'superseded-by-new-prompt',
+        closedAt: now(),
+      }, sessionId);
+    }
     let progress = isBlockingRequirementGate(gate) ? evaluateRequirementGateProgress(root, sessionId) : null;
     const clarificationFollowup = isBlockingRequirementGate(gate)
       ? looksLikeClarificationFollowupReply(prompt, intent)
@@ -4348,7 +4504,18 @@ function handle(eventName, cwd, payload) {
       ].join('\n'));
     }
     const autonomyRisk = detectHighRiskAutonomyMutation(root, payload, turnIntent, risk);
-    if (autonomyRisk && !hasExplicitAutonomyRiskApproval(turnIntent)) {
+    if (autonomyRisk && !hasScopedAutonomyRiskApproval(root, turnIntent, autonomyRisk)) {
+      writeNamedGate(root, 'autonomy-risk', {
+        version: 1,
+        active: true,
+        kind: autonomyRisk.kind,
+        title: autonomyRisk.title,
+        details: autonomyRisk.details ?? null,
+        status: 'awaiting-scoped-authorization',
+        openedAt: now(),
+        updatedAt: now(),
+        promptPreview: preview(turnIntent?.promptText || '', 240),
+      }, sessionId);
       appendEvent(root, { ...baseEvent, outcome: 'blocked-high-risk-autonomy', autonomyRisk });
       recordRunHook(root, baseEvent, 'blocked-high-risk-autonomy');
       updateHookState(root, baseEvent);
@@ -4490,6 +4657,18 @@ function handle(eventName, cwd, payload) {
         frontendTargets.length > 0 ? `Trying to edit: ${frontendTargets.join(', ')}.` : null,
         'Before touching implementation files, update the required files under `.openprd/design/active/` and remove every `待填写` placeholder. If something truly does not apply, write `不适用` or a clear gap note instead of leaving the template unchanged.',
         ...designIssues.map((issue) => `- ${issue.file}: ${issue.reason}`),
+      ].filter(Boolean).join('\n'));
+    }
+    const uiContextIssues = uiContextPreflightIssues(root, turnIntent, frontendTargets);
+    if (uiContextIssues.length > 0) {
+      appendEvent(root, { ...baseEvent, outcome: 'blocked-ui-context-preflight' });
+      recordRunHook(root, baseEvent, 'blocked-ui-context-preflight');
+      updateHookState(root, baseEvent);
+      return blockHook([
+        'OpenPrd blocked a structural frontend implementation write because UI Context is not ready.',
+        frontendTargets.length > 0 ? `Trying to edit: ${frontendTargets.join(', ')}.` : null,
+        'Run the full greenfield/brownfield evidence flow, record a user-confirmed direction, compile PRODUCT.md/DESIGN.md through the UI Context skill, then run `openprd ui-context . --check`.',
+        ...uiContextIssues.map((issue) => `- ${issue}`),
       ].filter(Boolean).join('\n'));
     }
     if (turnIntent.browserSafetyRequest && isHighRiskBrowserAction(payload)) {
