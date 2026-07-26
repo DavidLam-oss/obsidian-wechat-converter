@@ -4175,7 +4175,7 @@ var init_apple_theme = __esm({
             if (config.blockquoteStyle === "center") {
               const centeredBackground = quoteCalloutStyleMode === "neutral" ? _AppleTheme.QUOTE_CALLOUT_NEUTRAL_BG : config.blockquoteBg || color + "1F";
               const centeredRuleColor = quoteCalloutStyleMode === "neutral" ? _AppleTheme.QUOTE_NEUTRAL_BORDER : `${color}55`;
-              return `font-family: ${_AppleTheme.FONTS.serif}; font-size: ${sizes.base}px; line-height: 1.85; color: #4f4a45; background: ${centeredBackground}; width: 92%; box-sizing: border-box; margin: 24px auto; padding: 18px 20px; text-align: justify; border-top: 1px solid ${centeredRuleColor}; border-bottom: 1px solid ${centeredRuleColor}; border-radius: ${r.sm}px;`;
+              return `font-family: ${_AppleTheme.FONTS.serif}; font-size: ${sizes.base}px; line-height: 1.85; color: #4f4a45; background: ${centeredBackground}; width: 92%; box-sizing: border-box; margin: 24px auto; padding: 18px 20px; text-align: justify; border-top: 1px solid ${centeredRuleColor}; border-bottom: 1px solid ${centeredRuleColor}; border-left: none; border-right: none; border-radius: ${r.sm}px;`;
             }
             if (config.blockquoteStyle === "paper") {
               const paperBg = quoteCalloutStyleMode === "neutral" ? _AppleTheme.QUOTE_CALLOUT_NEUTRAL_BG : config.blockquoteBg || color + "1F";

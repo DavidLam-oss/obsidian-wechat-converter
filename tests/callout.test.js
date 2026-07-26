@@ -618,7 +618,8 @@ describe('Classic Theme Blockquote Style Differentiation', () => {
 
     const blockquoteStyle = theme.getStyle('blockquote');
 
-    expect(blockquoteStyle).not.toContain('border-left:');
+    expect(blockquoteStyle).toContain('border-left: none');
+    expect(blockquoteStyle).toContain('border-right: none');
     expect(blockquoteStyle).toContain('font-family: \'Times New Roman\', Georgia, \'SimSun\', serif');
     expect(blockquoteStyle).toContain('width: 92%');
     expect(blockquoteStyle).toContain('border-top: 1px solid #6f42c155');
@@ -686,7 +687,7 @@ describe('Neutral Quote And Callout Style Mode', () => {
 
     const blockquoteStyle = theme.getStyle('blockquote');
 
-    expect(blockquoteStyle).not.toContain('border-left:');
+    expect(blockquoteStyle).toContain('border-left: none');
     expect(blockquoteStyle).toContain('background: #f9f9f9');
     expect(blockquoteStyle).toContain('border-top: 1px solid #d9d9d9');
     expect(blockquoteStyle).toContain('border-bottom: 1px solid #d9d9d9');
