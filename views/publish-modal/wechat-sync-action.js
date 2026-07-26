@@ -35,6 +35,8 @@ import {
   toReadableError,
   isRecord,
 } from '../apple-style-view-shared.js';
+import { STICKER_MAX_CONTENT_LENGTH } from '../../services/sticker-extractor.js';
+import { syncStickerDraft } from '../../services/wechat-sync.js';
 
 /** @type {WechatSyncActionMethodsContract & ThisType<AppleStyleViewContract>} */
 const wechatSyncActionMethods = {
@@ -51,8 +53,16 @@ async onSyncToWechat() {
     return;
   }
 
-  if (!this.currentHtml) {
+  const isStickerMode = this.previewMode === 'sticker';
+
+  // 贴图发布不依赖文章 HTML 渲染结果，只有文章模式需要这层拦截。
+  if (!isStickerMode && !this.currentHtml) {
     new Notice(this.getMissingRenderNotice());
+    return;
+  }
+
+  if (isStickerMode) {
+    await this.onSyncStickerToWechat(account);
     return;
   }
 
@@ -148,6 +158,71 @@ async onSyncToWechat() {
         accountId: account.id || '',
       } : null
     });
+  }
+}
+,
+
+async onSyncStickerToWechat(account) {
+  const notice = new Notice(`🚀 正在使用 ${account.name} 同步贴图...`, 0);
+
+  try {
+    // 以侧边栏最新的提取结果为准（含用户拖拽后的顺序与排除项）。
+    const stickerData = await this.buildStickerData();
+    const images = Array.isArray(stickerData.images) ? stickerData.images : [];
+    const content = typeof stickerData.content === 'string' ? stickerData.content : '';
+
+    if (images.length === 0) {
+      notice.hide();
+      new Notice('⚠️ 微信贴图至少需要 1 张图片，请先在笔记正文中插入图片');
+      return;
+    }
+
+    if (content.length > STICKER_MAX_CONTENT_LENGTH) {
+      notice.hide();
+      new Notice(`⚠️ 贴图文案 ${content.length} 字，超出微信 ${STICKER_MAX_CONTENT_LENGTH} 字上限，请精简后再同步`);
+      return;
+    }
+
+    const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
+    /** @type {string[]} */
+    const imageMediaIds = [];
+
+    for (let i = 0; i < images.length; i++) {
+      notice.setMessage(`🚀 正在上传贴图图片 (${i + 1}/${images.length})...`);
+      const imgSrc = images[i];
+      let uploadRes;
+      try {
+        const blob = await this.srcToBlob(imgSrc);
+        // uploadCover 走的是永久图片素材接口，内部已处理 access_token 与重试。
+        uploadRes = /** @type {{ media_id?: unknown }} */ (await api.uploadCover(blob));
+      } catch (uploadError) {
+        throw new Error(`第 ${i + 1} 张图片上传失败（${imgSrc}）：${toReadableError(uploadError).message}`);
+      }
+      const mediaId = uploadRes && typeof uploadRes.media_id === 'string' ? uploadRes.media_id : '';
+      if (!mediaId) {
+        throw new Error(`第 ${i + 1} 张图片上传后未返回 media_id（${imgSrc}）`);
+      }
+      imageMediaIds.push(mediaId);
+    }
+
+    notice.setMessage('🚀 正在创建微信贴图草稿...');
+    const title = (this.sessionTitle || stickerData.title || '未命名贴图').slice(0, 64);
+    const stickerDraftRes = await syncStickerDraft({
+      account,
+      api,
+      title,
+      content,
+      imageMediaIds,
+    });
+
+    notice.hide();
+    const mediaIdHint = stickerDraftRes?.mediaId ? `（MediaID: ${stickerDraftRes.mediaId.slice(0, 8)}...）` : '';
+    new Notice(`✅ 贴图已发送到微信草稿箱${mediaIdHint}，请前往公众号后台查看`);
+  } catch (error) {
+    notice.hide();
+    console.error('Wechat Sticker Sync Error:', error);
+    const readableError = toReadableError(error);
+    new Notice(`❌ 贴图同步失败：${toSyncFriendlyMessage(readableError.message)}`, 10000);
   }
 }
 };

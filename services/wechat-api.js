@@ -466,6 +466,41 @@ export class WechatAPI {
   }
 
   /**
+   * 创建微信贴图草稿 (newspic 模式)
+   *
+   * @param {object} options
+   * @param {string} options.title - 贴图标题 (必填)
+   * @param {string} [options.content=''] - 贴图纯文本描述
+   * @param {string[]} options.imageMediaIds - 图片素材 media_id 数组 (最少 1 张，最多 9 张)
+   * @param {number|boolean} [options.needOpenComment=0] - 是否开启留言
+   * @param {number|boolean} [options.onlyFansCanComment=0] - 是否仅粉丝可留言
+   * @returns {Promise<Record<string, unknown>>}
+   */
+  async createImageDraft({ title, content = '', imageMediaIds, needOpenComment = 0, onlyFansCanComment = 0 }) {
+    if (!title || typeof title !== 'string' || !title.trim()) {
+      throw new Error('创建贴图草稿失败: 标题 (title) 为必填项');
+    }
+    if (!Array.isArray(imageMediaIds) || imageMediaIds.length === 0) {
+      throw new Error('创建贴图草稿失败: 微信贴图要求至少包含 1 张图片素材');
+    }
+
+    const max9Images = imageMediaIds.slice(0, 9).map((id) => ({ image_media_id: id }));
+
+    const article = {
+      article_type: 'newspic',
+      title: title.trim(),
+      content: content || '',
+      need_open_comment: needOpenComment ? 1 : 0,
+      only_fans_can_comment: onlyFansCanComment ? 1 : 0,
+      image_info: {
+        image_list: max9Images
+      }
+    };
+
+    return this.createDraft(article);
+  }
+
+  /**
    * @returns {Promise<Record<string, unknown>>}
    */
   async getDraftCount() {

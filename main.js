@@ -63319,6 +63319,26 @@ function createWechatSyncService(deps) {
     }
   };
 }
+async function syncStickerDraft({ account, api, title, content = "", imageMediaIds }) {
+  const stickerApi = (
+    /** @type {StickerApiLike} */
+    api
+  );
+  if (!stickerApi || typeof stickerApi.createImageDraft !== "function") {
+    throw new Error("\u5F53\u524D\u5FAE\u4FE1 API \u5B9E\u4F8B\u672A\u652F\u6301 createImageDraft \u65B9\u6CD5");
+  }
+  const res = await stickerApi.createImageDraft({
+    title,
+    content,
+    imageMediaIds,
+    needOpenComment: account.openComment ? 1 : 0,
+    onlyFansCanComment: account.onlyFansCanComment ? 1 : 0
+  });
+  const mediaId = res && typeof res.media_id === "string" ? res.media_id : "";
+  return {
+    mediaId
+  };
+}
 
 // services/wechatsync-constants.js
 var DEFAULT_WECHATSYNC_PORT = 9527;
@@ -73572,6 +73592,37 @@ var WechatAPI = class {
     });
   }
   /**
+   * 创建微信贴图草稿 (newspic 模式)
+   *
+   * @param {object} options
+   * @param {string} options.title - 贴图标题 (必填)
+   * @param {string} [options.content=''] - 贴图纯文本描述
+   * @param {string[]} options.imageMediaIds - 图片素材 media_id 数组 (最少 1 张，最多 9 张)
+   * @param {number|boolean} [options.needOpenComment=0] - 是否开启留言
+   * @param {number|boolean} [options.onlyFansCanComment=0] - 是否仅粉丝可留言
+   * @returns {Promise<Record<string, unknown>>}
+   */
+  async createImageDraft({ title, content = "", imageMediaIds, needOpenComment = 0, onlyFansCanComment = 0 }) {
+    if (!title || typeof title !== "string" || !title.trim()) {
+      throw new Error("\u521B\u5EFA\u8D34\u56FE\u8349\u7A3F\u5931\u8D25: \u6807\u9898 (title) \u4E3A\u5FC5\u586B\u9879");
+    }
+    if (!Array.isArray(imageMediaIds) || imageMediaIds.length === 0) {
+      throw new Error("\u521B\u5EFA\u8D34\u56FE\u8349\u7A3F\u5931\u8D25: \u5FAE\u4FE1\u8D34\u56FE\u8981\u6C42\u81F3\u5C11\u5305\u542B 1 \u5F20\u56FE\u7247\u7D20\u6750");
+    }
+    const max9Images = imageMediaIds.slice(0, 9).map((id) => ({ image_media_id: id }));
+    const article = {
+      article_type: "newspic",
+      title: title.trim(),
+      content: content || "",
+      need_open_comment: needOpenComment ? 1 : 0,
+      only_fans_can_comment: onlyFansCanComment ? 1 : 0,
+      image_info: {
+        image_list: max9Images
+      }
+    };
+    return this.createDraft(article);
+  }
+  /**
    * @returns {Promise<Record<string, unknown>>}
    */
   async getDraftCount() {
@@ -75279,17 +75330,48 @@ var coreMethods = {
   },
   updateCurrentDoc() {
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (activeView && this.docTitleText) {
-      this.docTitleText.setText(activeView.file.basename);
+    const file = activeView ? activeView.file : this.lastActiveFile;
+    if (file && this.docTitleText) {
+      this.docTitleText.setText(file.basename);
       this.docTitleText.setCssStyles({ color: "var(--apple-primary)" });
-    } else if (this.lastActiveFile && this.docTitleText) {
-      this.docTitleText.setText(this.lastActiveFile.basename);
-      this.docTitleText.setCssStyles({ color: "var(--apple-primary)" });
+      const selfRec = toRecord11(this);
+      const bottomRow = (
+        /** @type {HTMLElement} */
+        selfRec.headerBottomRow
+      );
+      if (bottomRow) {
+        bottomRow.classList.remove("hidden");
+      }
     } else if (this.docTitleText) {
       this.docTitleText.setText("\u672A\u9009\u62E9\u6587\u6863");
       this.docTitleText.setCssStyles({ color: "var(--apple-tertiary)" });
+      const selfRec = toRecord11(this);
+      const bottomRow = (
+        /** @type {HTMLElement} */
+        selfRec.headerBottomRow
+      );
+      if (bottomRow) {
+        bottomRow.classList.add("hidden");
+      }
+    }
+    const headerEl = this.containerEl ? this.containerEl.querySelector(".apple-preview-header") : null;
+    if (headerEl && this.containerEl) {
+      const h = (
+        /** @type {HTMLElement} */
+        headerEl.offsetHeight || (file ? 80 : 48)
+      );
+      this.containerEl.style.setProperty("--apple-header-height", h + "px");
     }
     this.updateAiToolbarState();
+    if (this.previewMode === "sticker") {
+      if (this.copyBtn && typeof this.copyBtn.classList === "object") {
+        this.copyBtn.classList.add("hidden");
+      }
+    } else {
+      if (this.copyBtn && typeof this.copyBtn.classList === "object") {
+        this.copyBtn.classList.remove("hidden");
+      }
+    }
   },
   setPlaceholder() {
     this.previewContainer.empty();
@@ -75348,6 +75430,10 @@ var coreMethods = {
   },
   async convertCurrent(silent = false, options = {}) {
     var _a5, _b, _c;
+    if (this.previewMode === "sticker") {
+      this.renderStickerPreview();
+      return;
+    }
     const {
       showLoading = false,
       loadingText = "\u6B63\u5728\u6E32\u67D3\u9884\u89C8...",
@@ -75557,36 +75643,257 @@ var coreMethods = {
   }
 };
 
+// services/markdown-cleaner.js
+function normalizeImageKey(src) {
+  if (typeof src !== "string")
+    return "";
+  let value = src.trim();
+  if (!value)
+    return "";
+  value = value.split("#")[0].split("?")[0].trim();
+  try {
+    value = decodeURIComponent(value);
+  } catch (e) {
+  }
+  const segments = value.split(/[\\/]/);
+  const fileName = segments[segments.length - 1] || value;
+  return fileName.trim().toLowerCase();
+}
+function findImageOrderIndex(src, imageOrder) {
+  if (!Array.isArray(imageOrder) || imageOrder.length === 0)
+    return 0;
+  const exactIndex = imageOrder.indexOf(src);
+  if (exactIndex !== -1)
+    return exactIndex + 1;
+  const key = normalizeImageKey(src);
+  if (!key)
+    return 0;
+  const keyIndex = imageOrder.findIndex((item) => normalizeImageKey(item) === key);
+  return keyIndex === -1 ? 0 : keyIndex + 1;
+}
+function cleanMarkdownToPlainText(markdown, options = {}) {
+  if (typeof markdown !== "string") {
+    return { text: "", hasCodeBlocks: false, hasTables: false, imageCount: 0 };
+  }
+  const insertImageIndex = Boolean(options.insertImageIndex);
+  const imageOrder = Array.isArray(options.imageOrder) ? options.imageOrder.filter((item) => typeof item === "string") : [];
+  let text = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "");
+  const codeBlockRegex = /```[\s\S]*?```/g;
+  const tableRegex = /\|[^\n]+\|\n\|[\s:|-]+\|\n(\|[^\n]+\|\n?)*/g;
+  const hasCodeBlocks = codeBlockRegex.test(text);
+  const hasTables = tableRegex.test(text);
+  text = text.replace(/```[\s\S]*?```/g, "");
+  text = text.replace(/\|[^\n]+\|\n\|[\s:|-]+\|\n(\|[^\n]+\|\n?)*/g, "");
+  text = text.replace(/~~[\s\S]*?~~/g, "");
+  let imageCounter = 0;
+  const imageTagRegex = /!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]|!\[([^\]]*)\]\(([^)]+)\)/g;
+  text = text.replace(imageTagRegex, (match, wikiSrc, altText, stdSrc) => {
+    imageCounter++;
+    if (!insertImageIndex) {
+      return "";
+    }
+    const src = String(wikiSrc || stdSrc || "").trim();
+    if (imageOrder.length > 0) {
+      const mappedIndex = findImageOrderIndex(src, imageOrder);
+      return mappedIndex === 0 ? "" : `[\u914D\u56FE ${mappedIndex}]`;
+    }
+    return `[\u914D\u56FE ${imageCounter}]`;
+  });
+  text = text.replace(/<[^>]+>/g, "");
+  text = text.replace(/^#{1,6}\s+(.+)$/gm, "$1");
+  text = text.replace(/(\*\*|__)(.*?)\1/g, "$2");
+  text = text.replace(/(\*|_)(.*?)\1/g, "$2");
+  text = text.replace(/`([^`]+)`/g, "$1");
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1");
+  text = text.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_, target, alias) => String(alias || target));
+  text = text.replace(/^>\s?/gm, "");
+  text = text.replace(/^[\s]*[-*+]\s+/gm, "\u2022 ");
+  const cleanedLines = text.split("\n").map((line) => line.trim()).filter((line, idx, arr) => {
+    if (line === "" && idx > 0 && arr[idx - 1] === "") {
+      return false;
+    }
+    return true;
+  });
+  return {
+    text: cleanedLines.join("\n").trim(),
+    hasCodeBlocks,
+    hasTables,
+    imageCount: imageCounter
+  };
+}
+
+// services/sticker-extractor.js
+var STICKER_MAX_IMAGES = 9;
+var STICKER_MAX_CONTENT_LENGTH = 1e3;
+function extractMarkdownImageSources(markdown) {
+  if (typeof markdown !== "string")
+    return [];
+  const sources = [];
+  const seenKeys = /* @__PURE__ */ new Set();
+  const push = (raw) => {
+    const src = raw.trim();
+    if (!src)
+      return;
+    const key = normalizeImageKey(src) || src;
+    if (seenKeys.has(key))
+      return;
+    seenKeys.add(key);
+    sources.push(src);
+  };
+  const wikiRegex = /!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+  let match;
+  while ((match = wikiRegex.exec(markdown)) !== null) {
+    push(match[1]);
+  }
+  const stdRegex = /!\[[^\]]*\]\(([^)]+)\)/g;
+  while ((match = stdRegex.exec(markdown)) !== null) {
+    push(match[1]);
+  }
+  return sources;
+}
+function reconcileStickerImageOrder({ defaultImages, order = [], removedKeys = [], limit = STICKER_MAX_IMAGES }) {
+  const available = Array.isArray(defaultImages) ? defaultImages.filter((item) => typeof item === "string") : [];
+  const userOrder = Array.isArray(order) ? order.filter((item) => typeof item === "string") : [];
+  const removed = new Set(
+    (Array.isArray(removedKeys) ? removedKeys : []).filter((item) => typeof item === "string").map((item) => normalizeImageKey(item) || item)
+  );
+  if (userOrder.length === 0 && removed.size === 0) {
+    return available.slice(0, limit);
+  }
+  const availableByKey = /* @__PURE__ */ new Map();
+  for (const src of available) {
+    availableByKey.set(normalizeImageKey(src) || src, src);
+  }
+  const result = [];
+  const used = /* @__PURE__ */ new Set();
+  for (const src of userOrder) {
+    const key = normalizeImageKey(src) || src;
+    if (!availableByKey.has(key) || used.has(key) || removed.has(key))
+      continue;
+    used.add(key);
+    result.push(availableByKey.get(key) || src);
+  }
+  for (const src of available) {
+    const key = normalizeImageKey(src) || src;
+    if (used.has(key) || removed.has(key))
+      continue;
+    used.add(key);
+    result.push(src);
+  }
+  return result.slice(0, limit);
+}
+function extractStickerData({
+  markdown = "",
+  frontmatter = {},
+  fallbackTitle = "\u672A\u547D\u540D\u8D34\u56FE",
+  insertImageIndex = false,
+  imageOrder = [],
+  removedImageKeys = []
+}) {
+  const fm = frontmatter && typeof frontmatter === "object" ? frontmatter : {};
+  const rawTitle = typeof fm.title === "string" && fm.title.trim() ? fm.title.trim() : fallbackTitle;
+  const title = rawTitle || "\u672A\u547D\u540D\u8D34\u56FE";
+  const frontmatterImages = [];
+  const frontmatterKeys = /* @__PURE__ */ new Set();
+  const pushFrontmatterImage = (value) => {
+    if (typeof value !== "string")
+      return;
+    const trimmed = value.trim();
+    if (!trimmed)
+      return;
+    const key = normalizeImageKey(trimmed) || trimmed;
+    if (frontmatterKeys.has(key))
+      return;
+    frontmatterKeys.add(key);
+    frontmatterImages.push(trimmed);
+  };
+  pushFrontmatterImage(fm.cover);
+  if (Array.isArray(fm.images)) {
+    for (const img of fm.images) {
+      pushFrontmatterImage(img);
+    }
+  }
+  const bodyImages = extractMarkdownImageSources(markdown);
+  const combined = [...frontmatterImages];
+  for (const img of bodyImages) {
+    const key = normalizeImageKey(img) || img;
+    if (frontmatterKeys.has(key))
+      continue;
+    frontmatterKeys.add(key);
+    combined.push(img);
+  }
+  const finalImages = reconcileStickerImageOrder({
+    defaultImages: combined,
+    order: imageOrder,
+    removedKeys: removedImageKeys,
+    limit: STICKER_MAX_IMAGES
+  });
+  const cleaned = cleanMarkdownToPlainText(markdown, { insertImageIndex, imageOrder: finalImages });
+  return {
+    title: String(title).trim(),
+    content: cleaned.text,
+    images: finalImages,
+    hasCodeBlocks: cleaned.hasCodeBlocks,
+    hasTables: cleaned.hasTables
+  };
+}
+
 // views/converter/style-panel.js
 var stylePanelMethods = {
   createSettingsPanel(container) {
-    const toolbar = container.createEl("div", { cls: "apple-top-toolbar" });
-    this.currentDocLabel = toolbar.createEl("div", { cls: "apple-toolbar-title" });
+    const header = container.createEl("div", { cls: "apple-preview-header" });
+    const topRow = header.createEl("div", { cls: "apple-preview-header-top apple-top-toolbar" });
+    this.currentDocLabel = topRow.createEl("div", { cls: "apple-toolbar-title" });
     if (!isMobileClient3(this.app)) {
       const pluginLine = this.currentDocLabel.createDiv({ cls: "apple-toolbar-plugin-line" });
       pluginLine.createEl("span", { text: APPLE_STYLE_VIEW_TITLE, cls: "apple-toolbar-plugin-name" });
-      pluginLine.createEl("span", { text: "\u516C\u4F17\u53F7\u9884\u89C8", cls: "apple-toolbar-preview-badge" });
     }
     this.docTitleText = this.currentDocLabel.createDiv({ text: "\u672A\u9009\u62E9\u6587\u6863", cls: "apple-toolbar-doc-name" });
-    const actions = toolbar.createEl("div", { cls: "apple-toolbar-actions" });
+    const bottomRow = header.createEl("div", { cls: "apple-preview-header-bottom hidden" });
+    this.headerBottomRow = bottomRow;
+    const segment = bottomRow.createEl("div", { cls: "apple-preview-mode-segment" });
+    const setIcon = getObsidianSetIcon();
+    const selfRec = toRecord11(this);
+    selfRec.btnArticleMode = segment.createEl("button", {
+      cls: "apple-mode-btn active",
+      attr: { "aria-label": "\u6587\u7AE0\u6392\u7248\u6A21\u5F0F", "title": "\u6587\u7AE0\u6392\u7248\u6A21\u5F0F" }
+    });
+    const btnArt = (
+      /** @type {HTMLElement} */
+      selfRec.btnArticleMode
+    );
+    if (typeof setIcon === "function") {
+      setIcon(btnArt, "align-left");
+    }
+    selfRec.btnStickerMode = segment.createEl("button", {
+      cls: "apple-mode-btn",
+      attr: { "aria-label": "\u5FAE\u4FE1\u8D34\u56FE\u6A21\u5F0F", "title": "\u5FAE\u4FE1\u8D34\u56FE\u6A21\u5F0F" }
+    });
+    const btnStk = (
+      /** @type {HTMLElement} */
+      selfRec.btnStickerMode
+    );
+    if (typeof setIcon === "function") {
+      setIcon(btnStk, "layout-grid");
+    }
+    btnArt.addEventListener("click", () => this.switchPreviewMode("article"));
+    btnStk.addEventListener("click", () => this.switchPreviewMode("sticker"));
+    const actions = bottomRow.createEl("div", { cls: "apple-toolbar-actions" });
     const createIconBtn = (icon, title, onClick) => {
       const btn = actions.createEl("div", {
         cls: "apple-icon-btn",
-        attr: { "aria-label": title }
+        attr: { "aria-label": title, "title": title }
         // Tooltip
       });
-      const setIcon = getObsidianSetIcon();
       if (typeof setIcon === "function") {
         setIcon(btn, icon);
       }
       btn.addEventListener("click", onClick);
       return btn;
     };
-    const settingsButton = createIconBtn("sliders-horizontal", "\u6837\u5F0F\u8BBE\u7F6E", () => {
-      this.togglePanel(this.settingsOverlay, settingsButton, () => this.resetSettingsPanelViewState());
+    const settingsButton = createIconBtn("sliders-horizontal", "\u516C\u4F17\u53F7\u6392\u7248\u6837\u5F0F\u8BBE\u7F6E", () => {
+      this.toggleSettingsPanel();
     });
-    settingsButton.setAttribute("aria-label", "\u516C\u4F17\u53F7\u6392\u7248\u6837\u5F0F\u8BBE\u7F6E");
-    settingsButton.setAttribute("title", "\u516C\u4F17\u53F7\u6392\u7248\u6837\u5F0F\u8BBE\u7F6E");
     this.settingsBtn = settingsButton;
     this.aiLayoutBtn = createIconBtn("sparkles", "AI \u7F16\u6392", () => this.onAiLayoutButtonClick());
     if (!isMobileClient3(this.app)) {
@@ -75598,7 +75905,18 @@ var stylePanelMethods = {
     this.settingsOverlay = container.createEl("div", { cls: "apple-settings-overlay" });
     const settingsArea = this.settingsOverlay.createEl("div", { cls: "apple-settings-area" });
     this.settingsArea = settingsArea;
-    this.createSection(settingsArea, "\u4E3B\u9898", (section) => {
+    const articleSettingsWrapper = (
+      /** @type {ObsidianElementLike} */
+      settingsArea.createEl("div", { cls: "apple-settings-article-wrapper" })
+    );
+    this.articleSettingsWrapper = articleSettingsWrapper;
+    const stickerSettingsWrapper = (
+      /** @type {ObsidianElementLike} */
+      settingsArea.createEl("div", { cls: "apple-settings-sticker-wrapper hidden" })
+    );
+    this.stickerSettingsWrapper = stickerSettingsWrapper;
+    const targetArea = articleSettingsWrapper;
+    this.createSection(targetArea, "\u4E3B\u9898", (section) => {
       const grid = section.createEl("div", { cls: "apple-btn-grid" });
       const themes = getAppleThemeApi().getThemeList();
       themes.forEach((t) => {
@@ -75611,7 +75929,7 @@ var stylePanelMethods = {
         btn.addEventListener("click", () => this.onThemeChange(t.value, grid));
       });
     });
-    this.createSection(settingsArea, "\u5B57\u4F53", (section) => {
+    this.createSection(targetArea, "\u5B57\u4F53", (section) => {
       const select = (
         /** @type {ObsidianInputLike} */
         section.createEl("select", { cls: "apple-select" })
@@ -75630,7 +75948,7 @@ var stylePanelMethods = {
       });
       select.addEventListener("change", (e) => this.onFontFamilyChange(getEventTargetValue(e, this.plugin.settings.fontFamily)));
     });
-    this.createSection(settingsArea, "\u5B57\u53F7", (section) => {
+    this.createSection(targetArea, "\u5B57\u53F7", (section) => {
       const grid = section.createEl("div", { cls: "apple-btn-row" });
       const sizeOpts = [
         { value: 1, label: "\u5C0F" },
@@ -75648,7 +75966,7 @@ var stylePanelMethods = {
         btn.addEventListener("click", () => this.onFontSizeChange(s.value, grid));
       });
     });
-    this.createSection(settingsArea, "\u4E3B\u9898\u8272", (section) => {
+    this.createSection(targetArea, "\u4E3B\u9898\u8272", (section) => {
       const grid = section.createEl("div", { cls: "apple-color-grid" });
       const colors = getAppleThemeApi().getColorList();
       colors.forEach((c) => {
@@ -75693,7 +76011,7 @@ var stylePanelMethods = {
         await this.onColorChange("custom", grid);
       });
     });
-    this.createSection(settingsArea, "\u9875\u9762\u4E24\u4FA7\u7559\u767D", (section) => {
+    this.createSection(targetArea, "\u9875\u9762\u4E24\u4FA7\u7559\u767D", (section) => {
       const mobile = isMobileClient3(this.app);
       const container2 = section.createEl("div", {
         cls: "apple-slider-container",
@@ -75738,7 +76056,7 @@ var stylePanelMethods = {
         await this.convertCurrent(true);
       });
     });
-    const spacingGroup = settingsArea.createEl("details", { cls: "apple-settings-details" });
+    const spacingGroup = targetArea.createEl("details", { cls: "apple-settings-details" });
     this.settingsSpacingGroup = spacingGroup;
     const spacingSummary = spacingGroup.createEl("summary", { cls: "apple-settings-summary" });
     spacingSummary.createEl("span", { text: "\u6392\u7248\u95F4\u8DDD" });
@@ -75804,7 +76122,7 @@ var stylePanelMethods = {
     buildSpacingSlider("\u884C\u95F4\u8DDD", 1.4, 2.2, 0.05, () => this.getEffectiveLineHeight(), "lineHeight", "lineHeight");
     buildSpacingSlider("\u6BB5\u95F4\u8DDD", 8, 40, 1, () => this.getEffectiveParagraphGap(), "paragraphGap", "paragraphGap");
     buildSpacingSlider("\u5B57\u95F4\u8DDD", 0, 2, 0.5, () => this.getEffectiveLetterSpacing(), "letterSpacing", "letterSpacing");
-    const advancedOptions = settingsArea.createEl("details", { cls: "apple-settings-details" });
+    const advancedOptions = targetArea.createEl("details", { cls: "apple-settings-details" });
     this.settingsAdvancedOptions = advancedOptions;
     advancedOptions.createEl("summary", {
       cls: "apple-settings-summary",
@@ -75959,6 +76277,49 @@ var stylePanelMethods = {
           filter: "grayscale(100%)"
         });
       }
+    }
+    const stickerWrapperRaw = (
+      /** @type {unknown} */
+      this.stickerSettingsWrapper
+    );
+    if (stickerWrapperRaw && typeof stickerWrapperRaw === "object" && "createDiv" in stickerWrapperRaw) {
+      const stickerWrapper = (
+        /** @type {ObsidianElementLike} */
+        stickerWrapperRaw
+      );
+      const stickerHeader = (
+        /** @type {ObsidianElementLike} */
+        stickerWrapper.createDiv({ cls: "apple-settings-sticker-header" })
+      );
+      stickerHeader.createEl("span", { text: "\u5FAE\u4FE1\u8D34\u56FE\u8BBE\u7F6E", cls: "title" });
+      const indexSection = this.createSection(stickerWrapper, "\u914D\u56FE\u5E8F\u53F7\u6807\u6CE8", (section) => {
+        const container2 = section.createEl("div", { cls: "apple-sticker-toggle-row" });
+        container2.createEl("span", { text: "\u6B63\u6587\u63D2\u5165\u914D\u56FE\u5E8F\u53F7", cls: "apple-sticker-toggle-label" });
+        const toggle = container2.createDiv({ cls: "apple-toggle" });
+        const checkbox = toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" });
+        checkbox.checked = Boolean(this.insertStickerImageIndex);
+        toggle.createEl("span", { cls: "apple-toggle-slider" });
+        container2.addEventListener("click", (e) => {
+          if (e.target !== checkbox) {
+            e.preventDefault();
+            checkbox.checked = !checkbox.checked;
+            checkbox.dispatchEvent(new Event("change"));
+          }
+        });
+        checkbox.addEventListener("change", () => {
+          this.insertStickerImageIndex = checkbox.checked;
+          this.renderStickerPreview();
+        });
+        this.stickerIndexToggleState = { checkbox, toggle };
+      });
+      indexSection.classList.add("apple-settings-inline-toggle");
+      this.createSection(stickerWrapper, "\u6392\u7248\u4F18\u5316\u8BF4\u660E", (section) => {
+        const card = section.createDiv({ cls: "apple-settings-info-card" });
+        card.createEl("p", {
+          text: "\xB7 \u81EA\u52A8\u5FFD\u7565 Frontmatter YAML \u5934\u4FE1\u606F\n\xB7 \u81EA\u52A8\u5265\u79BB\u4E0D\u652F\u6301\u7684\u4EE3\u7801\u5757\u4E0E\u8868\u683C\u4EE5\u4FDD\u8BC1\u6587\u6848\u7EAF\u51C0\n\xB7 \u652F\u6301\u62D6\u62FD\u66F4\u6539\u8D34\u56FE\u56FE\u7247\u987A\u5E8F",
+          cls: "apple-settings-info-card-text"
+        });
+      });
     }
     this.aiLayoutOverlay = container.createEl("div", { cls: "apple-ai-layout-overlay" });
     this.createAiLayoutPanel(this.aiLayoutOverlay);
@@ -76444,6 +76805,315 @@ var stylePanelMethods = {
     removeElementClass(this.aiLayoutOverlay, "visible");
     removeElementClass(this.settingsBtn, "active");
     removeElementClass(this.aiLayoutBtn, "active");
+  },
+  toggleSettingsPanel() {
+    const artWrapper = (
+      /** @type {unknown} */
+      this.articleSettingsWrapper
+    );
+    const stkWrapper = (
+      /** @type {unknown} */
+      this.stickerSettingsWrapper
+    );
+    if (this.previewMode === "sticker") {
+      if (artWrapper && typeof artWrapper === "object" && "classList" in artWrapper) {
+        artWrapper.classList.add("hidden");
+      }
+      if (stkWrapper && typeof stkWrapper === "object" && "classList" in stkWrapper) {
+        stkWrapper.classList.remove("hidden");
+      }
+      const toggleState = toRecord11(this.stickerIndexToggleState);
+      const checkbox = toggleState ? toRecord11(toggleState.checkbox) : null;
+      if (checkbox && typeof checkbox.checked === "boolean") {
+        checkbox.checked = Boolean(this.insertStickerImageIndex);
+      }
+    } else {
+      if (stkWrapper && typeof stkWrapper === "object" && "classList" in stkWrapper) {
+        stkWrapper.classList.add("hidden");
+      }
+      if (artWrapper && typeof artWrapper === "object" && "classList" in artWrapper) {
+        artWrapper.classList.remove("hidden");
+      }
+    }
+    this.togglePanel(this.settingsOverlay, this.settingsBtn, () => this.resetSettingsPanelViewState());
+  },
+  switchPreviewMode(mode) {
+    if (this.previewMode === mode)
+      return;
+    this.previewMode = mode;
+    const articleBtn = (
+      /** @type {unknown} */
+      this.btnArticleMode
+    );
+    const stickerBtn = (
+      /** @type {unknown} */
+      this.btnStickerMode
+    );
+    if (articleBtn && stickerBtn) {
+      const aEl = (
+        /** @type {Element} */
+        articleBtn
+      );
+      const sEl = (
+        /** @type {Element} */
+        stickerBtn
+      );
+      if (mode === "article") {
+        aEl.classList.add("active");
+        sEl.classList.remove("active");
+      } else {
+        sEl.classList.add("active");
+        aEl.classList.remove("active");
+      }
+    }
+    this.closeTransientPanels();
+    if (mode === "sticker") {
+      if (this.aiLayoutBtn && typeof this.aiLayoutBtn.classList === "object")
+        this.aiLayoutBtn.classList.add("hidden");
+      if (this.copyBtn && typeof this.copyBtn.classList === "object")
+        this.copyBtn.classList.add("hidden");
+      this.renderStickerPreview();
+    } else {
+      if (this.aiLayoutBtn && typeof this.aiLayoutBtn.classList === "object")
+        this.aiLayoutBtn.classList.remove("hidden");
+      if (this.copyBtn && typeof this.copyBtn.classList === "object")
+        this.copyBtn.classList.remove("hidden");
+      this.convertCurrent(true);
+    }
+    const headerEl = this.containerEl ? this.containerEl.querySelector(".apple-preview-header") : null;
+    if (headerEl && this.containerEl) {
+      const h = (
+        /** @type {HTMLElement} */
+        headerEl.offsetHeight || 80
+      );
+      this.containerEl.style.setProperty("--apple-header-height", h + "px");
+    }
+  },
+  getStickerUiState(filePath) {
+    const selfRecord = toRecord11(this);
+    if (!selfRecord.stickerUiStates) {
+      selfRecord.stickerUiStates = /* @__PURE__ */ new Map();
+    }
+    const states = (
+      /** @type {Map<string, { order: string[], removedKeys: string[] }>} */
+      selfRecord.stickerUiStates
+    );
+    const key = filePath || "";
+    let state = states.get(key);
+    if (!state) {
+      state = { order: [], removedKeys: [] };
+      states.set(key, state);
+    }
+    return state;
+  },
+  resolveStickerImageSrc(src, sourcePath) {
+    var _a5, _b, _c;
+    const raw = String(src || "");
+    if (!raw || /^(data:|https?:\/\/|app:\/\/|capacitor:\/\/)/i.test(raw))
+      return raw;
+    const linkFile = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.metadataCache) == null ? void 0 : _b.getFirstLinkpathDest) == null ? void 0 : _c.call(_b, raw, sourcePath || "");
+    if (!linkFile)
+      return raw;
+    const vault = toRecord11(this.app.vault);
+    const getResourcePathRaw = "getResourcePath" in vault ? vault.getResourcePath : null;
+    if (typeof getResourcePathRaw !== "function")
+      return raw;
+    const getResourcePath = (
+      /** @type {(file: unknown) => unknown} */
+      getResourcePathRaw
+    );
+    const resolved = getResourcePath(linkFile);
+    return typeof resolved === "string" && resolved ? resolved : raw;
+  },
+  async buildStickerData() {
+    const activeFile = this.getPublishContextFile();
+    const sourcePath = activeFile && typeof activeFile.path === "string" ? activeFile.path : "";
+    let markdown = "";
+    const source = (
+      /** @type {MarkdownSourceResultLike} */
+      await resolveMarkdownSource({
+        app: this.app,
+        lastActiveFile: this.lastActiveFile,
+        MarkdownViewType: MarkdownView
+      })
+    );
+    if (source.ok && typeof source.markdown === "string") {
+      markdown = source.markdown;
+    } else if (typeof this.lastResolvedMarkdown === "string") {
+      markdown = this.lastResolvedMarkdown;
+    }
+    const fileCache = activeFile ? this.app.metadataCache.getFileCache(activeFile) : null;
+    const frontmatter = fileCache && fileCache.frontmatter && typeof fileCache.frontmatter === "object" ? (
+      /** @type {Record<string, unknown>} */
+      fileCache.frontmatter
+    ) : {};
+    const fallbackTitle = activeFile && typeof activeFile.basename === "string" ? activeFile.basename : "\u672A\u547D\u540D\u8D34\u56FE";
+    const uiState = this.getStickerUiState(sourcePath);
+    const extracted = extractStickerData({
+      markdown,
+      frontmatter,
+      fallbackTitle,
+      insertImageIndex: Boolean(this.insertStickerImageIndex),
+      imageOrder: uiState.order,
+      removedImageKeys: uiState.removedKeys
+    });
+    uiState.order = [...extracted.images];
+    const stickerData = {
+      title: extracted.title,
+      content: extracted.content,
+      images: extracted.images,
+      hasCodeBlocks: extracted.hasCodeBlocks,
+      hasTables: extracted.hasTables,
+      // 弹窗与侧边栏都需要可直接显示的地址（vault 内图片必须转成 app:// 资源路径）
+      imageDisplaySources: extracted.images.map((src) => this.resolveStickerImageSrc(src, sourcePath)),
+      sourcePath
+    };
+    this.previewStickerData = stickerData;
+    return stickerData;
+  },
+  async renderStickerPreview() {
+    if (!this.previewContainer)
+      return void 0;
+    const selfRecord = toRecord11(this);
+    const generation = (typeof selfRecord.stickerRenderGeneration === "number" ? selfRecord.stickerRenderGeneration : 0) + 1;
+    selfRecord.stickerRenderGeneration = generation;
+    const stickerData = await this.buildStickerData();
+    if (this.previewMode !== "sticker" || selfRecord.stickerRenderGeneration !== generation)
+      return void 0;
+    this.previewContainer.empty();
+    const stickerContainer = this.previewContainer.createEl("div", { cls: "apple-sticker-preview-wrapper" });
+    const uiState = this.getStickerUiState(stickerData.sourcePath || "");
+    const strippedParts = [];
+    if (stickerData.hasCodeBlocks)
+      strippedParts.push("\u4EE3\u7801\u5757");
+    if (stickerData.hasTables)
+      strippedParts.push("\u8868\u683C");
+    if (strippedParts.length > 0) {
+      const notice = stickerContainer.createEl("div", { cls: "apple-sticker-notice-warning" });
+      notice.createEl("span", { cls: "apple-sticker-notice-icon", text: "\u26A0\uFE0F" });
+      const noticeContent = notice.createEl("div", { cls: "apple-sticker-notice-content" });
+      noticeContent.createEl("span", { cls: "apple-sticker-notice-title", text: `\u5DF2\u81EA\u52A8\u79FB\u9664${strippedParts.join("\u4E0E")}` });
+      noticeContent.createEl("span", {
+        cls: "apple-sticker-notice-desc",
+        text: "\u5FAE\u4FE1\u8D34\u56FE\u6587\u6848\u53EA\u652F\u6301\u7EAF\u6587\u672C\uFF0C\u8FD9\u90E8\u5206\u5185\u5BB9\u4E0D\u4F1A\u51FA\u73B0\u5728\u8349\u7A3F\u91CC\u3002"
+      });
+    }
+    const imagesSection = stickerContainer.createEl("div", { cls: "apple-sticker-images-section" });
+    const sectionHeader = imagesSection.createEl("div", { cls: "apple-sticker-section-header" });
+    const sectionTitle = sectionHeader.createEl("div", { cls: "apple-sticker-section-title" });
+    const setIcon = getObsidianSetIcon();
+    if (typeof setIcon === "function") {
+      const iconSpan = sectionTitle.createEl("span", { cls: "apple-sticker-section-icon-lucide" });
+      setIcon(iconSpan, "image");
+    }
+    sectionTitle.createEl("span", { text: "\u8D34\u56FE\u56FE\u7247\u5217\u8868" });
+    sectionHeader.createEl("span", {
+      cls: "apple-sticker-count-badge",
+      text: `${stickerData.images.length} / ${STICKER_MAX_IMAGES} \u5F20`
+    });
+    if (stickerData.images.length === 0) {
+      const emptyBox = imagesSection.createEl("div", { cls: "apple-sticker-empty-notice" });
+      emptyBox.createEl("span", { cls: "apple-sticker-empty-icon", text: "\u{1F5BC}\uFE0F" });
+      emptyBox.createEl("span", { text: "\u5F53\u524D\u6587\u7AE0\u672A\u627E\u5230\u53EF\u7528\u56FE\u7247\uFF0C\u8BF7\u5148\u5728\u7B14\u8BB0\u6B63\u6587\u4E2D\u63D2\u5165\u56FE\u7247\u3002" });
+      if (uiState.removedKeys.length > 0) {
+        const restoreBtn = imagesSection.createEl("button", {
+          cls: "apple-sticker-restore-btn",
+          text: `\u6062\u590D\u5DF2\u5220\u9664\u7684 ${uiState.removedKeys.length} \u5F20\u56FE\u7247`
+        });
+        restoreBtn.addEventListener("click", () => {
+          uiState.removedKeys = [];
+          uiState.order = [];
+          this.renderStickerPreview();
+        });
+      }
+    } else {
+      const grid = imagesSection.createEl("div", { cls: "apple-sticker-image-grid" });
+      stickerData.images.forEach((imgSrc, idx) => {
+        const item = grid.createEl("div", { cls: "apple-sticker-image-item" });
+        const img = (
+          /** @type {ObsidianInputLike} */
+          item.createEl("img", { cls: "apple-sticker-img-thumb" })
+        );
+        img.src = stickerData.imageDisplaySources[idx] || imgSrc;
+        item.createEl("div", { cls: "apple-sticker-image-badge", text: `# ${idx + 1}` });
+        const removeBtn = item.createEl("button", { cls: "apple-sticker-img-remove-btn", text: "\u2715", attr: { title: "\u4E0D\u53D1\u8FD9\u5F20" } });
+        removeBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const removedKey = normalizeImageKey(imgSrc) || imgSrc;
+          if (!uiState.removedKeys.includes(removedKey)) {
+            uiState.removedKeys.push(removedKey);
+          }
+          uiState.order = stickerData.images.filter((_, i) => i !== idx);
+          this.renderStickerPreview();
+        });
+        item.setAttribute("draggable", "true");
+        item.addEventListener("dragstart", (e) => {
+          e.stopPropagation();
+          if (e.dataTransfer) {
+            e.dataTransfer.setData("text/plain", String(idx));
+            e.dataTransfer.effectAllowed = "move";
+          }
+          item.classList.add("dragging");
+        });
+        item.addEventListener("dragend", (e) => {
+          e.stopPropagation();
+          item.classList.remove("dragging");
+        });
+        item.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = "move";
+          }
+        });
+        item.addEventListener("drop", (e) => {
+          var _a5;
+          e.preventDefault();
+          e.stopPropagation();
+          const fromIdx = parseInt(((_a5 = e.dataTransfer) == null ? void 0 : _a5.getData("text/plain")) || "", 10);
+          if (!isNaN(fromIdx) && fromIdx !== idx) {
+            const reordered = [...stickerData.images];
+            const [moved] = reordered.splice(fromIdx, 1);
+            reordered.splice(idx, 0, moved);
+            uiState.order = reordered;
+            this.renderStickerPreview();
+          }
+        });
+      });
+    }
+    const hintLine = imagesSection.createEl("div", { cls: "apple-sticker-hint-line" });
+    const hintIcon = hintLine.createSpan({ cls: "apple-sticker-hint-icon" });
+    if (typeof setIcon === "function") {
+      setIcon(hintIcon, "info");
+    }
+    hintLine.createEl("span", {
+      cls: "apple-sticker-hint-text",
+      text: "\u56FE\u7247\u6309\u6B63\u6587\u987A\u5E8F\u63D0\u53D6\uFF0C\u53EF\u62D6\u62FD\u8C03\u6574\u6216\u70B9\u53F3\u4E0A\u89D2 \u2715 \u6392\u9664\uFF1B\u5220\u9664\u53EA\u5F71\u54CD\u8FD9\u6B21\u53D1\u5E03\uFF0C\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u3002"
+    });
+    const textSection = stickerContainer.createEl("div", { cls: "apple-sticker-text-section" });
+    const textHeader = textSection.createEl("div", { cls: "apple-sticker-section-header" });
+    const textTitle = textHeader.createEl("div", { cls: "apple-sticker-section-title" });
+    if (typeof setIcon === "function") {
+      const iconSpan = textTitle.createEl("span", { cls: "apple-sticker-section-icon-lucide" });
+      setIcon(iconSpan, "file-text");
+    }
+    textTitle.createEl("span", { text: "\u8D34\u56FE\u63CF\u8FF0\u6587\u6848" });
+    const charCount = stickerData.content ? stickerData.content.length : 0;
+    const isOverLimit = charCount > STICKER_MAX_CONTENT_LENGTH;
+    const countBadge = textHeader.createEl("span", { cls: "apple-sticker-count-badge" });
+    countBadge.createEl("span", {
+      cls: `apple-sticker-count-current${isOverLimit ? " is-error" : ""}`,
+      text: `${charCount}`
+    });
+    countBadge.createEl("span", {
+      cls: "apple-sticker-count-total",
+      text: ` / ${STICKER_MAX_CONTENT_LENGTH}`
+    });
+    textSection.createEl("div", {
+      cls: "apple-sticker-text-preview",
+      text: stickerData.content || "(\u6B63\u6587\u65E0\u7EAF\u6587\u672C\u5185\u5BB9)"
+    });
+    return stickerContainer;
   }
 };
 
@@ -76473,6 +77143,15 @@ var aiLayoutPanelMethods = {
     var _a5;
     if (!this.aiLayoutBtn)
       return;
+    if (this.previewMode === "sticker") {
+      this.aiLayoutBtn.classList.add("hidden");
+      this.aiLayoutBtn.hidden = true;
+      if (this.aiLayoutOverlay)
+        this.aiLayoutOverlay.classList.remove("visible");
+      this.aiLayoutBtn.classList.remove("active");
+      return;
+    }
+    this.aiLayoutBtn.classList.remove("hidden");
     const aiSettings = ((_a5 = this.plugin.settings) == null ? void 0 : _a5.ai) || createDefaultAiSettings();
     const enabled = aiSettings.enabled === true;
     const hasProvider = !!resolveAiProvider(aiSettings);
@@ -78971,7 +79650,7 @@ var wechatModalShellMethods = {
 var wechatSyncModalMethods = {
   showSyncModal(options = {}) {
     var _a5, _b, _c;
-    if (!this.currentHtml) {
+    if (this.previewMode !== "sticker" && !this.currentHtml) {
       new Notice(this.getMissingRenderNotice());
       return;
     }
@@ -79107,11 +79786,14 @@ var wechatSyncModalMethods = {
       advancedOptions.setAttribute("open", "");
     advancedOptions.createEl("summary", {
       cls: "wechat-sync-advanced-summary",
-      text: "\u9AD8\u7EA7\u9009\u9879\uFF08\u6807\u9898\u3001\u5C01\u9762\u4E0E\u6458\u8981\uFF09"
+      text: this.previewMode === "sticker" ? "\u8D34\u56FE\u53D1\u5E03\u914D\u7F6E\uFF08\u6807\u9898\u4E0E\u914D\u56FE\uFF09" : "\u9AD8\u7EA7\u9009\u9879\uFF08\u6807\u9898\u3001\u5C01\u9762\u4E0E\u6458\u8981\uFF09"
     });
     const advancedBody = advancedOptions.createDiv({ cls: "wechat-sync-advanced-body" });
     const titleSection = advancedBody.createDiv({ cls: "wechat-modal-section" });
-    titleSection.createEl("label", { text: "\u6587\u7AE0\u6807\u9898", cls: "wechat-modal-label" });
+    titleSection.createEl("label", {
+      text: this.previewMode === "sticker" ? "\u8D34\u56FE\u6807\u9898" : "\u6587\u7AE0\u6807\u9898",
+      cls: "wechat-modal-label"
+    });
     const initialTitle = (cachedState == null ? void 0 : cachedState.title) !== void 0 ? cachedState.title : frontmatterMeta.title || (activeFile ? activeFile.basename : "");
     const titleInput = (
       /** @type {ObsidianInputLike} */
@@ -79131,12 +79813,63 @@ var wechatSyncModalMethods = {
       }
     });
     const coverSection = advancedBody.createDiv({ cls: "wechat-modal-section" });
-    coverSection.createEl("label", { text: "\u5C01\u9762\u56FE", cls: "wechat-modal-label" });
+    coverSection.createEl("label", {
+      text: this.previewMode === "sticker" ? "\u8D34\u56FE\u914D\u56FE\u5217\u8868" : "\u5C01\u9762\u56FE",
+      cls: "wechat-modal-label"
+    });
     const coverContent = coverSection.createDiv({ cls: "wechat-modal-cover-content" });
     const coverPreview = coverContent.createDiv({ cls: "wechat-modal-cover-preview" });
+    const stickerStatusEl = coverSection.createDiv({ cls: "wechat-modal-sticker-status" });
+    if (this.previewMode !== "sticker") {
+      stickerStatusEl.setCssStyles({ display: "none" });
+    }
     const updatePreview = () => {
       coverPreview.empty();
       coverPreview.removeClass("has-material-cover");
+      if (this.previewMode === "sticker") {
+        const stickerData = this.previewStickerData;
+        const stickerImages = stickerData && Array.isArray(stickerData.images) ? stickerData.images : [];
+        const displaySources = stickerData && Array.isArray(stickerData.imageDisplaySources) ? stickerData.imageDisplaySources : [];
+        const stickerContent = stickerData && typeof stickerData.content === "string" ? stickerData.content : "";
+        const stickerCharCount = stickerContent.length;
+        coverPreview.addClass("has-sticker-preview");
+        const stickerGrid = coverPreview.createDiv({ cls: "wechat-modal-sticker-grid-preview" });
+        if (stickerImages.length === 0) {
+          stickerGrid.createEl("div", { text: "\u672A\u68C0\u6D4B\u5230\u56FE\u7247\u7D20\u6750\uFF08\u8D34\u56FE\u8981\u6C42\u81F3\u5C11\u6709\u4E00\u5F20\u56FE\u7247\uFF09", cls: "wechat-modal-no-cover" });
+        } else {
+          stickerImages.slice(0, 4).forEach((imgSrc, idx) => {
+            stickerGrid.createEl("img", { attr: { src: displaySources[idx] || imgSrc } });
+          });
+          if (stickerImages.length > 4) {
+            stickerGrid.createEl("div", { cls: "more-badge", text: `+${stickerImages.length - 4}` });
+          }
+        }
+        if (stickerImages.length === 0) {
+          syncBtn.disabled = true;
+          syncBtn.setText("\u56FE\u7247\u4E0D\u8DB3\uFF0C\u65E0\u6CD5\u540C\u6B65");
+          syncBtn.addClass("apple-btn-disabled");
+          syncBtn.setAttribute("title", "\u5FAE\u4FE1\u8D34\u56FE\u8981\u6C42\u81F3\u5C11\u5305\u542B 1 \u5F20\u56FE\u7247\u7D20\u6750\uFF0C\u8BF7\u5148\u5728\u7B14\u8BB0\u4E2D\u63D2\u5165\u56FE\u7247");
+        } else if (stickerCharCount > STICKER_MAX_CONTENT_LENGTH) {
+          syncBtn.disabled = true;
+          syncBtn.setText("\u6587\u5B57\u8D85\u957F\uFF0C\u65E0\u6CD5\u540C\u6B65");
+          syncBtn.addClass("apple-btn-disabled");
+          syncBtn.setAttribute(
+            "title",
+            `\u5FAE\u4FE1\u8D34\u56FE\u9650\u5236\u6587\u6848\u5728 ${STICKER_MAX_CONTENT_LENGTH} \u5B57\u4EE5\u5185\uFF0C\u5F53\u524D\u4E3A ${stickerCharCount} \u5B57\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u540C\u6B65`
+          );
+        } else {
+          syncBtn.disabled = false;
+          syncBtn.setText("\u540C\u6B65\u5230\u8D34\u56FE\u8349\u7A3F");
+          syncBtn.removeClass("apple-btn-disabled");
+          syncBtn.removeAttribute("title");
+        }
+        stickerStatusEl.empty();
+        stickerStatusEl.createEl("span", {
+          text: `\u5171 ${stickerImages.length} \u5F20\u56FE\u7247 \xB7 \u6587\u6848 ${stickerCharCount} / ${STICKER_MAX_CONTENT_LENGTH} \u5B57`,
+          cls: stickerCharCount > STICKER_MAX_CONTENT_LENGTH ? "is-error" : ""
+        });
+        return;
+      }
       if (thumbMediaId) {
         coverPreview.addClass("has-material-cover");
         const materialPreview = coverPreview.createDiv({ cls: "wechat-modal-cover-material-preview" });
@@ -79180,7 +79913,13 @@ var wechatSyncModalMethods = {
       text: "\u4ECE\u7D20\u6750\u5E93\u9009\u62E9",
       cls: "wechat-cover-select-material-btn"
     });
+    if (this.previewMode === "sticker") {
+      coverBtns.setCssStyles({ display: "none" });
+    }
     const digestSection = advancedBody.createDiv({ cls: "wechat-modal-section" });
+    if (this.previewMode === "sticker") {
+      digestSection.setCssStyles({ display: "none" });
+    }
     digestSection.createEl("label", { text: "\u6587\u7AE0\u6458\u8981\uFF08\u53EF\u9009\uFF09", cls: "wechat-modal-label" });
     const autoDigest = htmlToText(this.currentHtml || "").replace(/\s+/g, " ").trim().substring(0, 45);
     const initialDigest = (cachedState == null ? void 0 : cachedState.digest) !== void 0 ? cachedState.digest : frontmatterMeta.excerpt || autoDigest;
@@ -79217,6 +79956,8 @@ var wechatSyncModalMethods = {
       if (!draftStatusEl)
         return;
       draftStatusEl.empty();
+      if (this.previewMode === "sticker")
+        return;
       if (!draftAssociation || forceNewDraft)
         return;
       let confirmUnlink = false;
@@ -79251,8 +79992,12 @@ var wechatSyncModalMethods = {
     const syncBtn = btnRow.createEl("button", { text: getSyncButtonText(), cls: "mod-cta" });
     updatePreview();
     updateDraftStatusUI();
+    if (this.previewMode === "sticker") {
+      void this.buildStickerData().then(() => updatePreview()).catch(() => void 0);
+    }
     syncBtn.onclick = async () => {
-      if (!coverBase64 && !thumbMediaId) {
+      const isStickerMode = this.previewMode === "sticker";
+      if (!isStickerMode && !coverBase64 && !thumbMediaId) {
         new Notice("\u274C \u8BF7\u5148\u8BBE\u7F6E\u5C01\u9762\u56FE");
         return;
       }
@@ -79260,8 +80005,8 @@ var wechatSyncModalMethods = {
       this.selectedAccountId = selectedAccountId;
       this.sessionCoverBase64 = coverBase64;
       this.sessionThumbMediaId = thumbMediaId;
-      this.sessionDraftMediaId = !forceNewDraft && (draftAssociation == null ? void 0 : draftAssociation.mediaId) ? draftAssociation.mediaId : "";
-      this.sessionDraftIndex = !forceNewDraft && Number.isInteger(draftAssociation == null ? void 0 : draftAssociation.index) ? draftAssociation.index : 0;
+      this.sessionDraftMediaId = !isStickerMode && !forceNewDraft && (draftAssociation == null ? void 0 : draftAssociation.mediaId) ? draftAssociation.mediaId : "";
+      this.sessionDraftIndex = !isStickerMode && !forceNewDraft && Number.isInteger(draftAssociation == null ? void 0 : draftAssociation.index) ? draftAssociation.index : 0;
       this.sessionTitle = titleInput.value.trim() || frontmatterMeta.title || (activeFile ? activeFile.basename : "\u65E0\u6807\u9898\u6587\u7AE0");
       this.sessionDigest = digestInput.value.trim() || autoDigest || "\u4E00\u952E\u540C\u6B65\u81EA Obsidian";
       await this.onSyncToWechat();
@@ -79803,8 +80548,13 @@ var wechatSyncActionMethods = {
       this.promptConfigureWechatAccount();
       return;
     }
-    if (!this.currentHtml) {
+    const isStickerMode = this.previewMode === "sticker";
+    if (!isStickerMode && !this.currentHtml) {
       new Notice(this.getMissingRenderNotice());
+      return;
+    }
+    if (isStickerMode) {
+      await this.onSyncStickerToWechat(account);
       return;
     }
     const notice = new Notice(`\u{1F680} \u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65...`, 0);
@@ -79902,6 +80652,60 @@ var wechatSyncActionMethods = {
           accountId: account.id || ""
         } : null
       });
+    }
+  },
+  async onSyncStickerToWechat(account) {
+    const notice = new Notice(`\u{1F680} \u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65\u8D34\u56FE...`, 0);
+    try {
+      const stickerData = await this.buildStickerData();
+      const images = Array.isArray(stickerData.images) ? stickerData.images : [];
+      const content = typeof stickerData.content === "string" ? stickerData.content : "";
+      if (images.length === 0) {
+        notice.hide();
+        new Notice("\u26A0\uFE0F \u5FAE\u4FE1\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247\uFF0C\u8BF7\u5148\u5728\u7B14\u8BB0\u6B63\u6587\u4E2D\u63D2\u5165\u56FE\u7247");
+        return;
+      }
+      if (content.length > STICKER_MAX_CONTENT_LENGTH) {
+        notice.hide();
+        new Notice(`\u26A0\uFE0F \u8D34\u56FE\u6587\u6848 ${content.length} \u5B57\uFF0C\u8D85\u51FA\u5FAE\u4FE1 ${STICKER_MAX_CONTENT_LENGTH} \u5B57\u4E0A\u9650\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u540C\u6B65`);
+        return;
+      }
+      const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
+      const imageMediaIds = [];
+      for (let i = 0; i < images.length; i++) {
+        notice.setMessage(`\u{1F680} \u6B63\u5728\u4E0A\u4F20\u8D34\u56FE\u56FE\u7247 (${i + 1}/${images.length})...`);
+        const imgSrc = images[i];
+        let uploadRes;
+        try {
+          const blob = await this.srcToBlob(imgSrc);
+          uploadRes = /** @type {{ media_id?: unknown }} */
+          await api.uploadCover(blob);
+        } catch (uploadError) {
+          throw new Error(`\u7B2C ${i + 1} \u5F20\u56FE\u7247\u4E0A\u4F20\u5931\u8D25\uFF08${imgSrc}\uFF09\uFF1A${toReadableError5(uploadError).message}`);
+        }
+        const mediaId = uploadRes && typeof uploadRes.media_id === "string" ? uploadRes.media_id : "";
+        if (!mediaId) {
+          throw new Error(`\u7B2C ${i + 1} \u5F20\u56FE\u7247\u4E0A\u4F20\u540E\u672A\u8FD4\u56DE media_id\uFF08${imgSrc}\uFF09`);
+        }
+        imageMediaIds.push(mediaId);
+      }
+      notice.setMessage("\u{1F680} \u6B63\u5728\u521B\u5EFA\u5FAE\u4FE1\u8D34\u56FE\u8349\u7A3F...");
+      const title = (this.sessionTitle || stickerData.title || "\u672A\u547D\u540D\u8D34\u56FE").slice(0, 64);
+      const stickerDraftRes = await syncStickerDraft({
+        account,
+        api,
+        title,
+        content,
+        imageMediaIds
+      });
+      notice.hide();
+      const mediaIdHint = (stickerDraftRes == null ? void 0 : stickerDraftRes.mediaId) ? `\uFF08MediaID: ${stickerDraftRes.mediaId.slice(0, 8)}...\uFF09` : "";
+      new Notice(`\u2705 \u8D34\u56FE\u5DF2\u53D1\u9001\u5230\u5FAE\u4FE1\u8349\u7A3F\u7BB1${mediaIdHint}\uFF0C\u8BF7\u524D\u5F80\u516C\u4F17\u53F7\u540E\u53F0\u67E5\u770B`);
+    } catch (error) {
+      notice.hide();
+      console.error("Wechat Sticker Sync Error:", error);
+      const readableError = toReadableError5(error);
+      new Notice(`\u274C \u8D34\u56FE\u540C\u6B65\u5931\u8D25\uFF1A${toSyncFriendlyMessage(readableError.message)}`, 1e4);
     }
   }
 };
@@ -80113,6 +80917,10 @@ var AppleStyleView = class extends ItemView {
     this.nativeRenderPipeline = null;
     this.theme = null;
     this.lastActiveFile = null;
+    this.previewMode = "article";
+    this.previewStickerData = null;
+    this.insertStickerImageIndex = false;
+    this.stickerUiStates = /* @__PURE__ */ new Map();
     this.sessionCoverBase64 = "";
     this.sessionThumbMediaId = "";
     this.sessionDraftMediaId = "";

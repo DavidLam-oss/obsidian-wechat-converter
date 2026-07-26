@@ -30,7 +30,8 @@
    ======================================== */
 .apple-settings-overlay {
   position: absolute;
-  top: 48px; /* 紧贴工具栏下方 */
+  /* 顶栏高度由 JS 按实际行数写入 --apple-header-height（单行/双行不同） */
+  top: var(--apple-header-height, 98px);
   left: 0;
   right: 0;
   /* 调整透明度：0.85 -> 0.72，增加通透感 */
@@ -84,10 +85,10 @@
 }
 
 .apple-converter-container.apple-converter-mobile .apple-settings-overlay {
-  top: 56px;
+  top: var(--apple-header-height, 106px);
   left: clamp(10px, 3.2vw, 16px);
   right: clamp(10px, 3.2vw, 16px);
-  max-height: calc(100% - 56px - max(8px, env(safe-area-inset-bottom)));
+  max-height: calc(100% - var(--apple-header-height, 106px) - max(8px, env(safe-area-inset-bottom)));
   border-radius: 14px;
   border: 1px solid var(--apple-border);
   box-shadow:
@@ -820,5 +821,69 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   height: 38px;
   background: var(--apple-accent);
   /* Blue */
+}
+
+/* 微信贴图模式专属设置样式重塑 */
+.apple-settings-sticker-header {
+  margin: 0 4px 4px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--apple-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.apple-settings-sticker-wrapper .apple-setting-section {
+  gap: 8px;
+  padding: 12px 4px;
+  border-top: 1px solid color-mix(in srgb, var(--background-modifier-border) 82%, transparent);
+}
+
+.apple-settings-sticker-wrapper .apple-setting-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.apple-settings-sticker-wrapper .apple-setting-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-normal);
+  text-transform: none;
+  letter-spacing: 0.1px;
+  margin-bottom: 0;
+}
+
+.apple-settings-sticker-wrapper .apple-setting-content {
+  width: 100%;
+}
+
+.apple-sticker-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  cursor: pointer;
+  user-select: none;
+}
+
+.apple-sticker-toggle-label {
+  font-size: 12px;
+  color: var(--text-normal);
+}
+
+.apple-settings-info-card {
+  margin-top: 2px;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--text-normal) 3%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-normal) 6%, transparent);
+  border-radius: 10px;
+}
+
+.apple-settings-info-card-text {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-line;
 }
 

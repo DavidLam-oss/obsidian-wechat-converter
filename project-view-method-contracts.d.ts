@@ -230,6 +230,11 @@ interface AppleStyleViewContract {
      */
     onSyncToWechat(): Promise<void>;
     /**
+     * 处理微信贴图（newspic）草稿发布逻辑
+     * @param {WechatAccountLike} account
+     */
+    onSyncStickerToWechat(account: WechatAccountLike): Promise<void>;
+    /**
      * @param {string} src
      * @returns {unknown}
      */

@@ -80,6 +80,14 @@ hasCurrentArticleAiLayoutCache() {
 
 updateAiToolbarState() {
   if (!this.aiLayoutBtn) return;
+  if (this.previewMode === 'sticker') {
+    this.aiLayoutBtn.classList.add('hidden');
+    this.aiLayoutBtn.hidden = true;
+    if (this.aiLayoutOverlay) this.aiLayoutOverlay.classList.remove('visible');
+    this.aiLayoutBtn.classList.remove('active');
+    return;
+  }
+  this.aiLayoutBtn.classList.remove('hidden');
   const aiSettings = this.plugin.settings?.ai || createDefaultAiSettings();
   const enabled = aiSettings.enabled === true;
   const hasProvider = !!resolveAiProvider(aiSettings);

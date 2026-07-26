@@ -81,6 +81,7 @@ async onOpen() {
   // 创建设置面板
   this.createSettingsPanel(container);
 
+
   // 创建预览区 - 根据设置决定是否使用手机框
   const usePhoneFrame = this.plugin.settings.usePhoneFrame && !isMobileClient(this.app);
   const previewWrapper = container.createEl('div', {
@@ -598,17 +599,43 @@ async applyCustomCss(html) {
 
 updateCurrentDoc() {
   const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-  if (activeView && this.docTitleText) {
-    this.docTitleText.setText(activeView.file.basename);
+  const file = activeView ? activeView.file : this.lastActiveFile;
+
+  if (file && this.docTitleText) {
+    this.docTitleText.setText(file.basename);
     this.docTitleText.setCssStyles({ color: 'var(--apple-primary)' }); // 恢复激活色
-  } else if (this.lastActiveFile && this.docTitleText) {
-    this.docTitleText.setText(this.lastActiveFile.basename);
-    this.docTitleText.setCssStyles({ color: 'var(--apple-primary)' });
+    const selfRec = toRecord(this);
+    const bottomRow = /** @type {HTMLElement} */ (selfRec.headerBottomRow);
+    if (bottomRow) {
+      bottomRow.classList.remove('hidden');
+    }
   } else if (this.docTitleText) {
     this.docTitleText.setText('未选择文档');
     this.docTitleText.setCssStyles({ color: 'var(--apple-tertiary)' }); // 灰色提示
+    const selfRec = toRecord(this);
+    const bottomRow = /** @type {HTMLElement} */ (selfRec.headerBottomRow);
+    if (bottomRow) {
+      bottomRow.classList.add('hidden');
+    }
   }
+
+  const headerEl = this.containerEl ? this.containerEl.querySelector('.apple-preview-header') : null;
+  if (headerEl && this.containerEl) {
+    const h = /** @type {HTMLElement} */ (headerEl).offsetHeight || (file ? 80 : 48);
+    this.containerEl.style.setProperty('--apple-header-height', h + 'px');
+  }
+
   this.updateAiToolbarState();
+
+  if (this.previewMode === 'sticker') {
+    if (this.copyBtn && typeof this.copyBtn.classList === 'object') {
+      this.copyBtn.classList.add('hidden');
+    }
+  } else {
+    if (this.copyBtn && typeof this.copyBtn.classList === 'object') {
+      this.copyBtn.classList.remove('hidden');
+    }
+  }
 }
 ,
 
@@ -673,6 +700,10 @@ getMissingRenderNotice() {
 ,
 
 async convertCurrent(silent = false, options = {}) {
+  if (this.previewMode === 'sticker') {
+    this.renderStickerPreview();
+    return;
+  }
   const {
     showLoading = false,
     loadingText = '正在渲染预览...',

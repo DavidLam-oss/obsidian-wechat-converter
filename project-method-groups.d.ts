@@ -163,6 +163,12 @@ type CoreMethodsContract = Pick<
 type StylePanelMethodsContract = Pick<
     AppleStyleViewContract,
     | 'createSettingsPanel'
+    | 'switchPreviewMode'
+    | 'getStickerUiState'
+    | 'resolveStickerImageSrc'
+    | 'buildStickerData'
+    | 'renderStickerPreview'
+    | 'toggleSettingsPanel'
     | 'createAccountSelector'
     | 'getFirstImageFromArticle'
     | 'getPublishContextFile'
@@ -244,6 +250,7 @@ type WechatPreviewExportMethodsContract = Pick<
 type WechatSyncActionMethodsContract = Pick<
     AppleStyleViewContract,
     | 'onSyncToWechat'
+    | 'onSyncStickerToWechat'
 >;
 
 type WechatSyncModalMethodsContract = Pick<

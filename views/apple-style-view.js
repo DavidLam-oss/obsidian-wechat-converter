@@ -53,6 +53,18 @@ class AppleStyleView extends ItemView {
     this.theme = null;
     /** @type {TFileLike | null} */
     this.lastActiveFile = null;
+    /** @type {'article' | 'sticker'} */
+    this.previewMode = 'article';
+    /** @type {StickerPreviewDataLike | null} */
+    this.previewStickerData = null;
+    /** @type {boolean} */
+    this.insertStickerImageIndex = false;
+    /**
+     * 贴图模式的按笔记交互状态：拖拽后的顺序与被排除的图片。
+     * 只影响这次发布，不会改写笔记正文。
+     * @type {Map<string, { order: string[], removedKeys: string[] }>}
+     */
+    this.stickerUiStates = new Map();
     /** @type {string | null} */
     this.sessionCoverBase64 = ''; // 本次文章的临时封面
     /** @type {string} */

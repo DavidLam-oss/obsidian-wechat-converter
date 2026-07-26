@@ -445,6 +445,16 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
+.wechat-modal-buttons .mod-cta.is-disabled,
+.wechat-modal-buttons .mod-cta.is-disabled:hover {
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 /* 测试连接按钮 - 绿色文字 */
 .wechat-modal-buttons .wechat-btn-test {
   color: var(--text-success);

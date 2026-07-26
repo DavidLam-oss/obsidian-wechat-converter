@@ -28,6 +28,19 @@
  * This file has no runtime output and exists only for JSDoc type checking.
  */
 
+/** 微信贴图提取结果：侧边栏预览、发布弹窗与同步动作共用 */
+interface StickerPreviewDataLike {
+    title: string;
+    content: string;
+    /** 原始图片地址（用于上传） */
+    images: string[];
+    /** 可直接显示的图片地址（用于预览缩略图） */
+    imageDisplaySources: string[];
+    hasCodeBlocks: boolean;
+    hasTables: boolean;
+    sourcePath: string;
+}
+
 interface AppleStyleViewContract extends ItemViewBaseLike {
     /** @type {AppleStylePluginLike} */
     plugin: AppleStylePluginLike;
@@ -267,6 +280,21 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
      * @param {ObsidianElementLike} container
      */
     createSettingsPanel(container: ObsidianElementLike): void;
+    /** 预览模式：文章排版 / 微信贴图 */
+    previewMode: 'article' | 'sticker';
+    /** 最近一次贴图提取结果，供发布弹窗与同步动作复用 */
+    previewStickerData: StickerPreviewDataLike | null;
+    /** 是否在贴图文案中插入 [配图 N] 序号 */
+    insertStickerImageIndex: boolean;
+    switchPreviewMode(mode: string): void;
+    /** 读取/初始化某个笔记的贴图交互状态（排序与排除项） */
+    getStickerUiState(filePath: string): { order: string[]; removedKeys: string[] };
+    /** 把 vault 内图片地址解析成可直接显示的资源地址 */
+    resolveStickerImageSrc(src: string, sourcePath: string): string;
+    /** 提取当前笔记的贴图数据（标题、文案、图片顺序） */
+    buildStickerData(): Promise<StickerPreviewDataLike>;
+    renderStickerPreview(): Promise<ObsidianElementLike | undefined>;
+    toggleSettingsPanel(): void;
     saveTimeout: number;
     /**
      * 创建账号选择器

@@ -37,26 +37,65 @@ import {
   getEventTargetValue,
   getImageSwipeCommandCopy,
   isMobileClient,
+  resolveMarkdownSource,
+  MarkdownView,
 } from '../apple-style-view-shared.js';
+import {
+  extractStickerData,
+  STICKER_MAX_IMAGES,
+  STICKER_MAX_CONTENT_LENGTH,
+} from '../../services/sticker-extractor.js';
+import { normalizeImageKey } from '../../services/markdown-cleaner.js';
 
 /** @type {StylePanelMethodsContract & ThisType<AppleStyleViewContract>} */
 export const stylePanelMethods = {
 createSettingsPanel(container) {
 
-  // 1. 创建顶部工具栏
-  const toolbar = container.createEl('div', { cls: 'apple-top-toolbar' });
+  // 1. 创建顶部双行 Header 容器
+  const header = container.createEl('div', { cls: 'apple-preview-header' });
 
-  // 1.1 左侧：双层信息（插件名 + 文档名）
-  this.currentDocLabel = toolbar.createEl('div', { cls: 'apple-toolbar-title' });
+  // 1.1 第一行：Title Row
+  const topRow = header.createEl('div', { cls: 'apple-preview-header-top apple-top-toolbar' });
+  this.currentDocLabel = topRow.createEl('div', { cls: 'apple-toolbar-title' });
   if (!isMobileClient(this.app)) {
     const pluginLine = this.currentDocLabel.createDiv({ cls: 'apple-toolbar-plugin-line' });
     pluginLine.createEl('span', { text: APPLE_STYLE_VIEW_TITLE, cls: 'apple-toolbar-plugin-name' });
-    pluginLine.createEl('span', { text: '公众号预览', cls: 'apple-toolbar-preview-badge' });
   }
   this.docTitleText = this.currentDocLabel.createDiv({ text: '未选择文档', cls: 'apple-toolbar-doc-name' });
 
-  // 1.2 右侧：操作按钮组
-  const actions = toolbar.createEl('div', { cls: 'apple-toolbar-actions' });
+  // 1.2 第二行：Action Row (初始隐藏，由 updateCurrentDoc 根据是否有选定文档展现)
+  const bottomRow = header.createEl('div', { cls: 'apple-preview-header-bottom hidden' });
+  this.headerBottomRow = bottomRow;
+
+  // 1.2.1 第二行左侧：微型 Icon 分段模式切换胶囊
+  const segment = bottomRow.createEl('div', { cls: 'apple-preview-mode-segment' });
+  const setIcon = getObsidianSetIcon();
+
+  const selfRec = toRecord(this);
+  
+  selfRec.btnArticleMode = segment.createEl('button', {
+    cls: 'apple-mode-btn active',
+    attr: { 'aria-label': '文章排版模式', 'title': '文章排版模式' }
+  });
+  const btnArt = /** @type {HTMLElement} */ (selfRec.btnArticleMode);
+  if (typeof setIcon === 'function') {
+    setIcon(btnArt, 'align-left');
+  }
+
+  selfRec.btnStickerMode = segment.createEl('button', {
+    cls: 'apple-mode-btn',
+    attr: { 'aria-label': '微信贴图模式', 'title': '微信贴图模式' }
+  });
+  const btnStk = /** @type {HTMLElement} */ (selfRec.btnStickerMode);
+  if (typeof setIcon === 'function') {
+    setIcon(btnStk, 'layout-grid');
+  }
+
+  btnArt.addEventListener('click', () => this.switchPreviewMode('article'));
+  btnStk.addEventListener('click', () => this.switchPreviewMode('sticker'));
+
+  // 1.2.2 第二行右侧：操作按钮组
+  const actions = bottomRow.createEl('div', { cls: 'apple-toolbar-actions' });
 
   // 按钮工厂函数
   /**
@@ -68,9 +107,8 @@ createSettingsPanel(container) {
   const createIconBtn = (icon, title, onClick) => {
     const btn = actions.createEl('div', {
       cls: 'apple-icon-btn',
-      attr: { 'aria-label': title } // Tooltip
+      attr: { 'aria-label': title, 'title': title } // Tooltip
     });
-    const setIcon = getObsidianSetIcon();
     if (typeof setIcon === 'function') {
       setIcon(btn, icon);
     }
@@ -79,11 +117,9 @@ createSettingsPanel(container) {
   };
 
   // [设置] 按钮
-  const settingsButton = createIconBtn('sliders-horizontal', '样式设置', () => {
-    this.togglePanel(this.settingsOverlay, settingsButton, () => this.resetSettingsPanelViewState());
+  const settingsButton = createIconBtn('sliders-horizontal', '公众号排版样式设置', () => {
+    this.toggleSettingsPanel();
   });
-  settingsButton.setAttribute('aria-label', '公众号排版样式设置');
-  settingsButton.setAttribute('title', '公众号排版样式设置');
   this.settingsBtn = settingsButton;
 
   this.aiLayoutBtn = createIconBtn('sparkles', 'AI 编排', () => this.onAiLayoutButtonClick());
@@ -103,8 +139,16 @@ createSettingsPanel(container) {
   const settingsArea = this.settingsOverlay.createEl('div', { cls: 'apple-settings-area' });
   this.settingsArea = settingsArea;
 
+  const articleSettingsWrapper = /** @type {ObsidianElementLike} */ (settingsArea.createEl('div', { cls: 'apple-settings-article-wrapper' }));
+  this.articleSettingsWrapper = articleSettingsWrapper;
+
+  const stickerSettingsWrapper = /** @type {ObsidianElementLike} */ (settingsArea.createEl('div', { cls: 'apple-settings-sticker-wrapper hidden' }));
+  this.stickerSettingsWrapper = stickerSettingsWrapper;
+
+  const targetArea = articleSettingsWrapper;
+
   // === 主题选择 ===
-  this.createSection(settingsArea, '主题', (section) => {
+  this.createSection(targetArea, '主题', (section) => {
     const grid = section.createEl('div', { cls: 'apple-btn-grid' });
     const themes = getAppleThemeApi().getThemeList();
     themes.forEach(t => {
@@ -119,7 +163,7 @@ createSettingsPanel(container) {
   });
 
   // === 字体选择 ===
-  this.createSection(settingsArea, '字体', (section) => {
+  this.createSection(targetArea, '字体', (section) => {
     const select = /** @type {ObsidianInputLike} */ (section.createEl('select', { cls: 'apple-select' }));
     [
       { value: 'sans-serif', label: '无衬线' },
@@ -133,7 +177,7 @@ createSettingsPanel(container) {
   });
 
   // === 字号选择 ===
-  this.createSection(settingsArea, '字号', (section) => {
+  this.createSection(targetArea, '字号', (section) => {
     const grid = section.createEl('div', { cls: 'apple-btn-row' });
     const sizeOpts = [
       { value: 1, label: '小' },
@@ -154,7 +198,7 @@ createSettingsPanel(container) {
   });
 
   // === 主题色 (移到标题样式上方) ===
-  this.createSection(settingsArea, '主题色', (section) => {
+  this.createSection(targetArea, '主题色', (section) => {
     const grid = section.createEl('div', { cls: 'apple-color-grid' });
     const colors = getAppleThemeApi().getColorList();
 
@@ -212,7 +256,7 @@ createSettingsPanel(container) {
   });
 
   // === 页面两侧留白 ===
-  this.createSection(settingsArea, '页面两侧留白', (section) => {
+  this.createSection(targetArea, '页面两侧留白', (section) => {
     const mobile = isMobileClient(this.app);
     const container = section.createEl('div', {
       cls: 'apple-slider-container',
@@ -261,7 +305,7 @@ createSettingsPanel(container) {
   });
 
   // === 排版间距（折叠：呼吸感微调，默认收起） ===
-  const spacingGroup = settingsArea.createEl('details', { cls: 'apple-settings-details' });
+  const spacingGroup = targetArea.createEl('details', { cls: 'apple-settings-details' });
   this.settingsSpacingGroup = spacingGroup;
   const spacingSummary = spacingGroup.createEl('summary', { cls: 'apple-settings-summary' });
   spacingSummary.createEl('span', { text: '排版间距' });
@@ -344,7 +388,7 @@ createSettingsPanel(container) {
   buildSpacingSlider('段间距', 8, 40, 1, () => this.getEffectiveParagraphGap(), 'paragraphGap', 'paragraphGap');
   buildSpacingSlider('字间距', 0, 2, 0.5, () => this.getEffectiveLetterSpacing(), 'letterSpacing', 'letterSpacing');
 
-  const advancedOptions = settingsArea.createEl('details', { cls: 'apple-settings-details' });
+  const advancedOptions = targetArea.createEl('details', { cls: 'apple-settings-details' });
   this.settingsAdvancedOptions = advancedOptions;
   advancedOptions.createEl('summary', {
     cls: 'apple-settings-summary',
@@ -506,6 +550,49 @@ createSettingsPanel(container) {
         filter: 'grayscale(100%)',
       });
     }
+  }
+
+  // === 3. 渲染贴图模式专属设置 ===
+  const stickerWrapperRaw = /** @type {unknown} */ (this.stickerSettingsWrapper);
+  if (stickerWrapperRaw && typeof stickerWrapperRaw === 'object' && 'createDiv' in stickerWrapperRaw) {
+    const stickerWrapper = /** @type {ObsidianElementLike} */ (stickerWrapperRaw);
+    const stickerHeader = /** @type {ObsidianElementLike} */ (stickerWrapper.createDiv({ cls: 'apple-settings-sticker-header' }));
+    stickerHeader.createEl('span', { text: '微信贴图设置', cls: 'title' });
+
+    // 3.2 配图序号标注开关
+    const indexSection = this.createSection(stickerWrapper, '配图序号标注', (section) => {
+      const container = section.createEl('div', { cls: 'apple-sticker-toggle-row' });
+      container.createEl('span', { text: '正文插入配图序号', cls: 'apple-sticker-toggle-label' });
+
+      const toggle = container.createDiv({ cls: 'apple-toggle' });
+      const checkbox = toggle.createEl('input', { type: 'checkbox', cls: 'apple-toggle-input' });
+      checkbox.checked = Boolean(this.insertStickerImageIndex);
+      toggle.createEl('span', { cls: 'apple-toggle-slider' });
+
+      container.addEventListener('click', (e) => {
+        if (e.target !== checkbox) {
+          e.preventDefault();
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event('change'));
+        }
+      });
+
+      checkbox.addEventListener('change', () => {
+        this.insertStickerImageIndex = checkbox.checked;
+        this.renderStickerPreview();
+      });
+      this.stickerIndexToggleState = { checkbox, toggle };
+    });
+    indexSection.classList.add('apple-settings-inline-toggle');
+
+    // 3.3 过滤说明
+    this.createSection(stickerWrapper, '排版优化说明', (section) => {
+      const card = section.createDiv({ cls: 'apple-settings-info-card' });
+      card.createEl('p', {
+        text: '· 自动忽略 Frontmatter YAML 头信息\n· 自动剥离不支持的代码块与表格以保证文案纯净\n· 支持拖拽更改贴图图片顺序',
+        cls: 'apple-settings-info-card-text'
+      });
+    });
   }
 
   this.aiLayoutOverlay = container.createEl('div', { cls: 'apple-ai-layout-overlay' });
@@ -1058,6 +1145,330 @@ closeTransientPanels() {
   removeElementClass(this.aiLayoutOverlay, 'visible');
   removeElementClass(this.settingsBtn, 'active');
   removeElementClass(this.aiLayoutBtn, 'active');
+}
+,
+
+
+toggleSettingsPanel() {
+  const artWrapper = /** @type {unknown} */ (this.articleSettingsWrapper);
+  const stkWrapper = /** @type {unknown} */ (this.stickerSettingsWrapper);
+
+  if (this.previewMode === 'sticker') {
+    if (artWrapper && typeof artWrapper === 'object' && 'classList' in artWrapper) {
+      /** @type {Element} */ (artWrapper).classList.add('hidden');
+    }
+    if (stkWrapper && typeof stkWrapper === 'object' && 'classList' in stkWrapper) {
+      /** @type {Element} */ (stkWrapper).classList.remove('hidden');
+    }
+    const toggleState = toRecord(this.stickerIndexToggleState);
+    const checkbox = toggleState ? toRecord(toggleState.checkbox) : null;
+    if (checkbox && typeof checkbox.checked === 'boolean') {
+      checkbox.checked = Boolean(this.insertStickerImageIndex);
+    }
+  } else {
+    if (stkWrapper && typeof stkWrapper === 'object' && 'classList' in stkWrapper) {
+      /** @type {Element} */ (stkWrapper).classList.add('hidden');
+    }
+    if (artWrapper && typeof artWrapper === 'object' && 'classList' in artWrapper) {
+      /** @type {Element} */ (artWrapper).classList.remove('hidden');
+    }
+  }
+
+  this.togglePanel(this.settingsOverlay, this.settingsBtn, () => this.resetSettingsPanelViewState());
+}
+,
+
+switchPreviewMode(mode) {
+  if (this.previewMode === mode) return;
+  this.previewMode = mode;
+
+  const articleBtn = /** @type {unknown} */ (this.btnArticleMode);
+  const stickerBtn = /** @type {unknown} */ (this.btnStickerMode);
+
+  if (articleBtn && stickerBtn) {
+    const aEl = /** @type {Element} */ (articleBtn);
+    const sEl = /** @type {Element} */ (stickerBtn);
+    if (mode === 'article') {
+      aEl.classList.add('active');
+      sEl.classList.remove('active');
+    } else {
+      sEl.classList.add('active');
+      aEl.classList.remove('active');
+    }
+  }
+
+  // 跨模式切换时收起悬浮面板：文章设置与贴图设置内容不同，留在屏幕上会造成误解。
+  this.closeTransientPanels();
+
+  if (mode === 'sticker') {
+    if (this.aiLayoutBtn && typeof this.aiLayoutBtn.classList === 'object') this.aiLayoutBtn.classList.add('hidden');
+    if (this.copyBtn && typeof this.copyBtn.classList === 'object') this.copyBtn.classList.add('hidden');
+    this.renderStickerPreview();
+  } else {
+    if (this.aiLayoutBtn && typeof this.aiLayoutBtn.classList === 'object') this.aiLayoutBtn.classList.remove('hidden');
+    if (this.copyBtn && typeof this.copyBtn.classList === 'object') this.copyBtn.classList.remove('hidden');
+    this.convertCurrent(true);
+  }
+
+  const headerEl = this.containerEl ? this.containerEl.querySelector('.apple-preview-header') : null;
+  if (headerEl && this.containerEl) {
+    const h = /** @type {HTMLElement} */ (headerEl).offsetHeight || 80;
+    this.containerEl.style.setProperty('--apple-header-height', h + 'px');
+  }
+}
+,
+
+getStickerUiState(filePath) {
+  const selfRecord = toRecord(this);
+  if (!selfRecord.stickerUiStates) {
+    selfRecord.stickerUiStates = new Map();
+  }
+  const states = /** @type {Map<string, { order: string[], removedKeys: string[] }>} */ (selfRecord.stickerUiStates);
+  const key = filePath || '';
+  let state = states.get(key);
+  if (!state) {
+    state = { order: [], removedKeys: [] };
+    states.set(key, state);
+  }
+  return state;
+}
+,
+
+resolveStickerImageSrc(src, sourcePath) {
+  const raw = String(src || '');
+  if (!raw || /^(data:|https?:\/\/|app:\/\/|capacitor:\/\/)/i.test(raw)) return raw;
+
+  const linkFile = this.app?.metadataCache?.getFirstLinkpathDest?.(raw, sourcePath || '');
+  if (!linkFile) return raw;
+
+  const vault = toRecord(this.app.vault);
+  const getResourcePathRaw = ('getResourcePath' in vault) ? vault.getResourcePath : null;
+  if (typeof getResourcePathRaw !== 'function') return raw;
+
+  const getResourcePath = /** @type {(file: unknown) => unknown} */ (getResourcePathRaw);
+  const resolved = getResourcePath(linkFile);
+  return typeof resolved === 'string' && resolved ? resolved : raw;
+}
+,
+
+async buildStickerData() {
+  const activeFile = this.getPublishContextFile();
+  const sourcePath = activeFile && typeof activeFile.path === 'string' ? activeFile.path : '';
+
+  // 贴图模式不复用 convertCurrent 的文章渲染结果：直接读当前笔记，
+  // 这样在贴图模式下编辑正文，预览也能实时更新。
+  let markdown = '';
+  const source = /** @type {MarkdownSourceResultLike} */ (await resolveMarkdownSource({
+    app: this.app,
+    lastActiveFile: this.lastActiveFile,
+    MarkdownViewType: MarkdownView,
+  }));
+  if (source.ok && typeof source.markdown === 'string') {
+    markdown = source.markdown;
+  } else if (typeof this.lastResolvedMarkdown === 'string') {
+    markdown = this.lastResolvedMarkdown;
+  }
+
+  const fileCache = activeFile ? this.app.metadataCache.getFileCache(activeFile) : null;
+  const frontmatter = (fileCache && fileCache.frontmatter && typeof fileCache.frontmatter === 'object')
+    ? /** @type {Record<string, unknown>} */ (fileCache.frontmatter)
+    : {};
+  const fallbackTitle = activeFile && typeof activeFile.basename === 'string' ? activeFile.basename : '未命名贴图';
+  const uiState = this.getStickerUiState(sourcePath);
+
+  const extracted = extractStickerData({
+    markdown,
+    frontmatter,
+    fallbackTitle,
+    insertImageIndex: Boolean(this.insertStickerImageIndex),
+    imageOrder: uiState.order,
+    removedImageKeys: uiState.removedKeys,
+  });
+
+  // 用对齐后的结果回写用户顺序，避免下一次渲染继续携带已失效的路径。
+  uiState.order = [...extracted.images];
+
+  /** @type {StickerPreviewDataLike} */
+  const stickerData = {
+    title: extracted.title,
+    content: extracted.content,
+    images: extracted.images,
+    hasCodeBlocks: extracted.hasCodeBlocks,
+    hasTables: extracted.hasTables,
+    // 弹窗与侧边栏都需要可直接显示的地址（vault 内图片必须转成 app:// 资源路径）
+    imageDisplaySources: extracted.images.map((src) => this.resolveStickerImageSrc(src, sourcePath)),
+    sourcePath,
+  };
+
+  this.previewStickerData = stickerData;
+  return stickerData;
+}
+,
+
+async renderStickerPreview() {
+  if (!this.previewContainer) return undefined;
+
+  // 连续输入会触发多次渲染：只让最后一次结果落到 DOM，避免卡片重复堆叠。
+  const selfRecord = toRecord(this);
+  const generation = (typeof selfRecord.stickerRenderGeneration === 'number' ? selfRecord.stickerRenderGeneration : 0) + 1;
+  selfRecord.stickerRenderGeneration = generation;
+
+  const stickerData = await this.buildStickerData();
+  if (this.previewMode !== 'sticker' || selfRecord.stickerRenderGeneration !== generation) return undefined;
+
+  this.previewContainer.empty();
+  const stickerContainer = this.previewContainer.createEl('div', { cls: 'apple-sticker-preview-wrapper' });
+  const uiState = this.getStickerUiState(stickerData.sourcePath || '');
+
+  // 1. 被过滤内容提醒（代码块 / 表格在微信贴图里无法呈现）
+  const strippedParts = [];
+  if (stickerData.hasCodeBlocks) strippedParts.push('代码块');
+  if (stickerData.hasTables) strippedParts.push('表格');
+  if (strippedParts.length > 0) {
+    const notice = stickerContainer.createEl('div', { cls: 'apple-sticker-notice-warning' });
+    notice.createEl('span', { cls: 'apple-sticker-notice-icon', text: '⚠️' });
+    const noticeContent = notice.createEl('div', { cls: 'apple-sticker-notice-content' });
+    noticeContent.createEl('span', { cls: 'apple-sticker-notice-title', text: `已自动移除${strippedParts.join('与')}` });
+    noticeContent.createEl('span', {
+      cls: 'apple-sticker-notice-desc',
+      text: '微信贴图文案只支持纯文本，这部分内容不会出现在草稿里。',
+    });
+  }
+
+  // 2. 图片卡片墙预览与交互（上限 9 张）
+  const imagesSection = stickerContainer.createEl('div', { cls: 'apple-sticker-images-section' });
+  const sectionHeader = imagesSection.createEl('div', { cls: 'apple-sticker-section-header' });
+  const sectionTitle = sectionHeader.createEl('div', { cls: 'apple-sticker-section-title' });
+  const setIcon = getObsidianSetIcon();
+  if (typeof setIcon === 'function') {
+    const iconSpan = sectionTitle.createEl('span', { cls: 'apple-sticker-section-icon-lucide' });
+    setIcon(iconSpan, 'image');
+  }
+  sectionTitle.createEl('span', { text: '贴图图片列表' });
+  sectionHeader.createEl('span', {
+    cls: 'apple-sticker-count-badge',
+    text: `${stickerData.images.length} / ${STICKER_MAX_IMAGES} 张`
+  });
+
+  if (stickerData.images.length === 0) {
+    const emptyBox = imagesSection.createEl('div', { cls: 'apple-sticker-empty-notice' });
+    emptyBox.createEl('span', { cls: 'apple-sticker-empty-icon', text: '🖼️' });
+    emptyBox.createEl('span', { text: '当前文章未找到可用图片，请先在笔记正文中插入图片。' });
+    if (uiState.removedKeys.length > 0) {
+      const restoreBtn = imagesSection.createEl('button', {
+        cls: 'apple-sticker-restore-btn',
+        text: `恢复已删除的 ${uiState.removedKeys.length} 张图片`,
+      });
+      restoreBtn.addEventListener('click', () => {
+        uiState.removedKeys = [];
+        uiState.order = [];
+        this.renderStickerPreview();
+      });
+    }
+  } else {
+    const grid = imagesSection.createEl('div', { cls: 'apple-sticker-image-grid' });
+    stickerData.images.forEach((imgSrc, idx) => {
+      const item = grid.createEl('div', { cls: 'apple-sticker-image-item' });
+
+      const img = /** @type {ObsidianInputLike} */ (item.createEl('img', { cls: 'apple-sticker-img-thumb' }));
+      img.src = stickerData.imageDisplaySources[idx] || imgSrc;
+
+      // 编号 Badge (透明黑质感)
+      item.createEl('div', { cls: 'apple-sticker-image-badge', text: `# ${idx + 1}` });
+
+      // 移除按钮
+      const removeBtn = item.createEl('button', { cls: 'apple-sticker-img-remove-btn', text: '✕', attr: { title: '不发这张' } });
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // 只记录在贴图里排除这张图，不改动笔记正文。
+        const removedKey = normalizeImageKey(imgSrc) || imgSrc;
+        if (!uiState.removedKeys.includes(removedKey)) {
+          uiState.removedKeys.push(removedKey);
+        }
+        uiState.order = stickerData.images.filter((_, i) => i !== idx);
+        this.renderStickerPreview();
+      });
+
+      // 支持拖动排序
+      item.setAttribute('draggable', 'true');
+      item.addEventListener('dragstart', (e) => {
+        e.stopPropagation();
+        if (e.dataTransfer) {
+          e.dataTransfer.setData('text/plain', String(idx));
+          e.dataTransfer.effectAllowed = 'move';
+        }
+        item.classList.add('dragging');
+      });
+
+      item.addEventListener('dragend', (e) => {
+        e.stopPropagation();
+        item.classList.remove('dragging');
+      });
+
+      item.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.dataTransfer) {
+          e.dataTransfer.dropEffect = 'move';
+        }
+      });
+
+      item.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const fromIdx = parseInt(e.dataTransfer?.getData('text/plain') || '', 10);
+        if (!isNaN(fromIdx) && fromIdx !== idx) {
+          const reordered = [...stickerData.images];
+          const [moved] = reordered.splice(fromIdx, 1);
+          reordered.splice(idx, 0, moved);
+          // 顺序按文件记忆：文案里的 [配图 N] 会在下一次提取时跟着重新编号。
+          uiState.order = reordered;
+          this.renderStickerPreview();
+        }
+      });
+    });
+
+  }
+
+  // 💡 温馨提示：贴图提取自正文，如需添加请在发布弹窗操作
+  const hintLine = imagesSection.createEl('div', { cls: 'apple-sticker-hint-line' });
+  const hintIcon = hintLine.createSpan({ cls: 'apple-sticker-hint-icon' });
+  if (typeof setIcon === 'function') {
+    setIcon(hintIcon, 'info');
+  }
+  hintLine.createEl('span', {
+    cls: 'apple-sticker-hint-text',
+    text: '图片按正文顺序提取，可拖拽调整或点右上角 ✕ 排除；删除只影响这次发布，不会改动笔记。'
+  });
+
+  // 3. 纯文本正文预览
+  const textSection = stickerContainer.createEl('div', { cls: 'apple-sticker-text-section' });
+  const textHeader = textSection.createEl('div', { cls: 'apple-sticker-section-header' });
+  const textTitle = textHeader.createEl('div', { cls: 'apple-sticker-section-title' });
+  if (typeof setIcon === 'function') {
+    const iconSpan = textTitle.createEl('span', { cls: 'apple-sticker-section-icon-lucide' });
+    setIcon(iconSpan, 'file-text');
+  }
+  textTitle.createEl('span', { text: '贴图描述文案' });
+  
+  const charCount = stickerData.content ? stickerData.content.length : 0;
+  const isOverLimit = charCount > STICKER_MAX_CONTENT_LENGTH;
+  const countBadge = textHeader.createEl('span', { cls: 'apple-sticker-count-badge' });
+  countBadge.createEl('span', {
+    cls: `apple-sticker-count-current${isOverLimit ? ' is-error' : ''}`,
+    text: `${charCount}`
+  });
+  countBadge.createEl('span', {
+    cls: 'apple-sticker-count-total',
+    text: ` / ${STICKER_MAX_CONTENT_LENGTH}`
+  });
+
+  textSection.createEl('div', {
+    cls: 'apple-sticker-text-preview',
+    text: stickerData.content || '(正文无纯文本内容)'
+  });
+
+  return stickerContainer;
 }
 ,
 };

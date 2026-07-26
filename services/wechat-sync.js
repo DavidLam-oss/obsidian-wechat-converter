@@ -482,3 +482,39 @@ export function createWechatSyncService(deps) {
     },
   };
 }
+
+/**
+ * @typedef {{ createImageDraft?: (options: Record<string, unknown>) => Promise<{ media_id?: string }> }} StickerApiLike
+ */
+
+/**
+ * 微信贴图（newspic）草稿发布函数
+ *
+ * @param {object} options
+ * @param {WechatAccountLike} options.account
+ * @param {StickerApiLike} options.api - WechatAPI 实例
+ * @param {string} options.title - 贴图标题
+ * @param {string} [options.content=''] - 贴图纯文本描述
+ * @param {string[]} options.imageMediaIds - 图片素材 media_id 列表
+ * @returns {Promise<{ mediaId: string }>}
+ */
+export async function syncStickerDraft({ account, api, title, content = '', imageMediaIds }) {
+  const stickerApi = /** @type {StickerApiLike} */ (api);
+  if (!stickerApi || typeof stickerApi.createImageDraft !== 'function') {
+    throw new Error('当前微信 API 实例未支持 createImageDraft 方法');
+  }
+
+  const res = await stickerApi.createImageDraft({
+    title,
+    content,
+    imageMediaIds,
+    needOpenComment: account.openComment ? 1 : 0,
+    onlyFansCanComment: account.onlyFansCanComment ? 1 : 0
+  });
+
+  const mediaId = res && typeof res.media_id === 'string' ? res.media_id : '';
+
+  return {
+    mediaId
+  };
+}
