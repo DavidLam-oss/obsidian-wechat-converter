@@ -307,7 +307,8 @@ describe('AppleTheme Color Logic', () => {
       const theme = new AppleTheme({ theme: 'serif', themeColor: 'blue' });
       const blockquoteStyle = theme.getStyle('blockquote');
 
-      expect(blockquoteStyle).not.toContain('border-left:');
+      expect(blockquoteStyle).toContain('border-left: none');
+      expect(blockquoteStyle).toContain('border-right: none');
       expect(blockquoteStyle).toContain('width: 92%;');
       expect(blockquoteStyle).toContain('margin: 24px auto;');
       expect(blockquoteStyle).toContain('border-top: 1px solid #0366d655;');
