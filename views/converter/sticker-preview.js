@@ -45,6 +45,15 @@ import {
   renderStickerImageList,
 } from '../shared/sticker-image-list.js';
 
+const STICKER_TRANSFORM_LABELS = {
+  codeBlocks: '代码块',
+  mermaid: '流程图',
+  pluginBlocks: '查询块',
+  tables: '表格',
+  math: '公式',
+  footnotes: '脚注',
+};
+
 /** @type {StickerPreviewMethodsContract & ThisType<AppleStyleViewContract>} */
 export const stickerPreviewMethods = {
 getStickerUiState(filePath) {
@@ -230,20 +239,20 @@ async renderStickerPreview() {
   const stickerContainer = this.previewContainer.createEl('div', { cls: 'apple-sticker-preview-wrapper' });
   const uiState = this.getStickerUiState(stickerData.sourcePath || '');
 
-  // 1. 被过滤内容提醒（代码块 / 表格在微信贴图里无法呈现）
+  // 1. 复杂结构转换提醒（说明降级范围，但不暗示作者内容已被删除）
   const strippedParts = (Array.isArray(stickerData.removed) ? stickerData.removed : [])
     .filter((entry) => entry?.count > 0)
-    .map((entry) => `${entry.kind} ${entry.count} 处`);
+    .map((entry) => `${STICKER_TRANSFORM_LABELS[entry.kind] || '内容'} ${entry.count} 处`);
   if (strippedParts.length > 0) {
     const notice = stickerContainer.createEl('div', { cls: 'apple-sticker-notice-warning' });
     const noticeIcon = notice.createEl('span', { cls: 'apple-sticker-notice-icon' });
     const noticeSetIcon = getObsidianSetIcon();
     if (typeof noticeSetIcon === 'function') noticeSetIcon(noticeIcon, 'info');
     const noticeContent = notice.createEl('div', { cls: 'apple-sticker-notice-content' });
-    noticeContent.createEl('span', { cls: 'apple-sticker-notice-title', text: `已清理：${strippedParts.join('、')}` });
+    noticeContent.createEl('span', { cls: 'apple-sticker-notice-title', text: `已转换：${strippedParts.join('、')}` });
     noticeContent.createEl('span', {
       cls: 'apple-sticker-notice-desc',
-      text: '清理只影响贴图草稿，不会改动笔记原文。',
+      text: '内容已转换为适合贴图的纯文本，不会改动笔记原文。',
     });
   }
 

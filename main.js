@@ -76437,6 +76437,11 @@ function normalizeImageKey(src) {
   }
   return value.replace(/\\/g, "/").replace(/\/+/g, "/").replace(/^\.\//, "").trim().toLowerCase();
 }
+var PLAIN_TEXT_HORIZONTAL_RULE = "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500";
+function isImageEmbedTarget(src) {
+  const value = String(src || "").split("#")[0].split("?")[0].trim().toLowerCase();
+  return /\.(?:png|jpe?g|gif|webp|bmp|svg|avif|heic|heif)$/.test(value);
+}
 function findImageOrderIndex(src, imageOrder) {
   if (!Array.isArray(imageOrder) || imageOrder.length === 0)
     return 0;
@@ -76458,11 +76463,21 @@ function findImageOrderIndex(src, imageOrder) {
   });
   return keyIndex === -1 ? 0 : keyIndex + 1;
 }
-function removeFencedBlocks(value) {
+var NON_TEXT_FENCE_LANGUAGES = /* @__PURE__ */ new Set([
+  "dataview",
+  "dataviewjs",
+  "tasks",
+  "query",
+  "templater",
+  "meta-bind",
+  "button"
+]);
+function convertFencedBlocks(value, protectBlock) {
   const lines = value.split("\n");
   const output = [];
   let codeBlocks = 0;
   let mermaid = 0;
+  let pluginBlocks = 0;
   for (let index = 0; index < lines.length; ) {
     const opening = lines[index].match(/^\s*(`{3,}|~{3,})\s*([A-Za-z0-9_-]*)/);
     if (!opening) {
@@ -76472,49 +76487,76 @@ function removeFencedBlocks(value) {
     }
     const marker = opening[1];
     const language = String(opening[2] || "").toLowerCase();
-    if (language === "mermaid")
-      mermaid += 1;
-    else
-      codeBlocks += 1;
     index += 1;
     const closeRegex = new RegExp(`^\\s*${marker[0]}{${marker.length},}\\s*$`);
+    const contentLines = [];
     while (index < lines.length && !closeRegex.test(lines[index])) {
+      contentLines.push(lines[index]);
       index += 1;
     }
     if (index < lines.length)
       index += 1;
+    if (language === "mermaid") {
+      mermaid += 1;
+      output.push("[\u6D41\u7A0B\u56FE]");
+      continue;
+    }
+    if (NON_TEXT_FENCE_LANGUAGES.has(language)) {
+      pluginBlocks += 1;
+      output.push("[\u67E5\u8BE2\u5185\u5BB9\u672A\u5C55\u5F00]");
+      continue;
+    }
+    codeBlocks += 1;
+    const content = contentLines.join("\n").replace(/^\n+|\n+$/g, "");
+    output.push(protectBlock(content ? `\u3010\u4EE3\u7801\u3011
+${content}` : "\u3010\u4EE3\u7801\u3011"));
   }
-  return { text: output.join("\n"), codeBlocks, mermaid };
+  return { text: output.join("\n"), codeBlocks, mermaid, pluginBlocks };
 }
-function removeMarkdownTables(value) {
+function splitMarkdownTableRow(line) {
+  return line.trim().replace(/^\||\|$/g, "").split(/(?<!\\)\|/).map((cell) => cell.trim().replace(/\\\|/g, "|"));
+}
+function convertMarkdownTables(value) {
   const lines = value.split("\n");
-  const removed = /* @__PURE__ */ new Set();
+  const replacements = /* @__PURE__ */ new Map();
   let count = 0;
   const isTableRow = (line) => line.includes("|") && line.trim().replace(/^\||\|$/g, "").includes("|");
   const isDelimiter = (line) => {
     if (!isTableRow(line))
       return false;
-    const cells = line.trim().replace(/^\||\|$/g, "").split("|");
+    const cells = splitMarkdownTableRow(line);
     return cells.length >= 2 && cells.every((cell) => /^\s*:?-{3,}:?\s*$/.test(cell));
   };
   for (let index = 1; index < lines.length; index++) {
-    if (!isDelimiter(lines[index]) || !isTableRow(lines[index - 1]) || removed.has(index))
+    if (!isDelimiter(lines[index]) || !isTableRow(lines[index - 1]) || replacements.has(index))
       continue;
     count += 1;
-    removed.add(index - 1);
-    removed.add(index);
+    replacements.set(index - 1, splitMarkdownTableRow(lines[index - 1]).join(" \uFF5C "));
+    replacements.set(index, null);
     let cursor = index + 1;
     while (cursor < lines.length && isTableRow(lines[cursor]) && lines[cursor].trim()) {
-      removed.add(cursor);
+      replacements.set(cursor, splitMarkdownTableRow(lines[cursor]).join(" \uFF5C "));
       cursor += 1;
     }
   }
   return {
-    text: lines.filter((_, index) => !removed.has(index)).join("\n"),
+    text: lines.flatMap((line, index) => {
+      if (!replacements.has(index))
+        return [line];
+      const replacement = replacements.get(index);
+      return replacement === null ? [] : [replacement];
+    }).join("\n"),
     count
   };
 }
-function removeInlineMath(value) {
+function formatMathFallback(content, isBlock = false) {
+  const normalized = String(content || "").trim().replace(/\s+/g, " ");
+  if (!isBlock && normalized && normalized.length <= 80 && !/[\\{}^_]/.test(normalized)) {
+    return normalized;
+  }
+  return "[\u516C\u5F0F]";
+}
+function convertInlineMath(value) {
   let output = "";
   let count = 0;
   for (let index = 0; index < value.length; ) {
@@ -76535,6 +76577,7 @@ function removeInlineMath(value) {
     const content = value.slice(index + 1, closing);
     if (closing < value.length && value[closing] === "$" && content.trim() && !/^\s|\s$/.test(content)) {
       count += 1;
+      output += formatMathFallback(content);
       index = closing + 1;
       continue;
     }
@@ -76542,6 +76585,86 @@ function removeInlineMath(value) {
     index += 1;
   }
   return { text: output, count };
+}
+function convertFootnotes(value) {
+  const lines = value.split("\n");
+  const definitions = /* @__PURE__ */ new Map();
+  const bodyLines = [];
+  for (let index = 0; index < lines.length; ) {
+    const definition = lines[index].match(/^\[\^([^\]]+)\]:\s*(.*)$/);
+    if (!definition) {
+      bodyLines.push(lines[index]);
+      index += 1;
+      continue;
+    }
+    const label = definition[1];
+    const content = [definition[2]];
+    index += 1;
+    while (index < lines.length && /^(?: {2,}|\t)/.test(lines[index])) {
+      content.push(lines[index].trim());
+      index += 1;
+    }
+    definitions.set(label, content.filter(Boolean).join(" "));
+  }
+  const numbers = /* @__PURE__ */ new Map();
+  const ensureNumber = (label) => {
+    if (!numbers.has(label))
+      numbers.set(label, numbers.size + 1);
+    return numbers.get(label);
+  };
+  let text = bodyLines.join("\n");
+  text = text.replace(/\[\^([^\]]+)\]/g, (_match, label) => `[${ensureNumber(label)}]`);
+  text = text.replace(/\^\[([^\]]+)\]/g, (_match, content) => {
+    const label = `inline-${numbers.size + definitions.size + 1}`;
+    definitions.set(label, String(content).trim());
+    return `[${ensureNumber(label)}]`;
+  });
+  for (const label of definitions.keys())
+    ensureNumber(label);
+  if (definitions.size > 0) {
+    const notes = Array.from(definitions.entries()).map(([label, content]) => `\u6CE8${ensureNumber(label)}\uFF1A${content}`).join("\n");
+    text = `${text.trimEnd()}
+
+${notes}`;
+  }
+  return { text, count: definitions.size };
+}
+function removeDuplicateLeadingHeading(value, title) {
+  const normalizedTitle = String(title || "").trim();
+  if (!normalizedTitle)
+    return value;
+  const match = value.match(/^(\s*)#\s+([^\n]+)\r?\n?/);
+  if (!match)
+    return value;
+  const headingText = match[2].replace(/(\*\*|__|~~|==|`)/g, "").trim();
+  return headingText === normalizedTitle ? value.slice(match[0].length) : value;
+}
+function convertHtmlToPlainText(value) {
+  let output = value.replace(/<!--[\s\S]*?-->/g, "").replace(/<(script|style|iframe|object|embed|form)[^>]*>[\s\S]*?<\/\1>/gi, "").replace(/<br\s*\/?>/gi, "\n").replace(/<li\b[^>]*>/gi, "\u2022 ").replace(/<\/(?:p|div|section|article|aside|blockquote|li|h[1-6]|tr|table|ul|ol|pre)>/gi, "\n").replace(/<\/(?:td|th)>/gi, " \uFF5C ").replace(/<[^>]+>/g, "");
+  const entities = {
+    amp: "&",
+    lt: "<",
+    gt: ">",
+    quot: '"',
+    apos: "'",
+    nbsp: " "
+  };
+  output = output.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos|nbsp);/gi, (_match, entity) => {
+    const key = String(entity).toLowerCase();
+    if (key.startsWith("#x"))
+      return String.fromCodePoint(Number.parseInt(key.slice(2), 16));
+    if (key.startsWith("#"))
+      return String.fromCodePoint(Number.parseInt(key.slice(1), 10));
+    return entities[key] || "";
+  });
+  return output;
+}
+function formatNonImageEmbed(target, alias) {
+  const rawTarget = String(target || "").trim();
+  const label = String(alias || "").trim() || rawTarget.split("/").pop() || rawTarget;
+  const path = rawTarget.split("#")[0].split("?")[0];
+  const hasFileExtension = /\.[A-Za-z0-9]{1,8}$/.test(path);
+  return hasFileExtension ? `\u3010\u9644\u4EF6\uFF1A${label}\u3011` : `\u3010\u5F15\u7528\uFF1A${label}\u3011`;
 }
 function replaceProtected(value, regex, replacer) {
   return value.replace(regex, (...args) => replacer(args[0], ...args.slice(1, -2)));
@@ -76563,58 +76686,73 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
   const counts = {
     codeBlocks: 0,
     mermaid: 0,
+    pluginBlocks: 0,
     tables: 0,
     math: 0,
     footnotes: 0
   };
   let text = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "");
-  const fenced = removeFencedBlocks(text);
+  text = removeDuplicateLeadingHeading(text, String(options.title || ""));
+  const protectedBlocks = [];
+  const protectBlock = (value) => {
+    const token = `\0B${protectedBlocks.length}X\0`;
+    protectedBlocks.push(value);
+    return token;
+  };
+  const fenced = convertFencedBlocks(text, protectBlock);
   text = fenced.text;
   counts.codeBlocks = fenced.codeBlocks;
   counts.mermaid = fenced.mermaid;
+  counts.pluginBlocks = fenced.pluginBlocks;
   text = text.replace(/%%[\s\S]*?%%/g, "");
-  text = text.replace(/\$\$[\s\S]*?\$\$/g, () => {
+  text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_match, content) => {
     counts.math += 1;
-    return "";
+    return formatMathFallback(content, true);
   });
-  text = text.replace(/\\\[[\s\S]*?\\\]/g, () => {
+  text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_match, content) => {
     counts.math += 1;
-    return "";
+    return formatMathFallback(content, true);
   });
-  text = text.replace(/\\\([^)\n]*?\\\)/g, () => {
+  text = text.replace(/\\\(([^)\n]*?)\\\)/g, (_match, content) => {
     counts.math += 1;
-    return "";
+    return formatMathFallback(content);
   });
-  const inlineMath = removeInlineMath(text);
+  const inlineMath = convertInlineMath(text);
   text = inlineMath.text;
   counts.math += inlineMath.count;
-  const tables = removeMarkdownTables(text);
+  const tables = convertMarkdownTables(text);
   text = tables.text;
   counts.tables = tables.count;
-  text = text.replace(/^\[\^[^\]]+\]:[^\n]*(?:\n(?: {2,}|\t)[^\n]*)*/gm, () => {
-    counts.footnotes += 1;
-    return "";
-  });
-  text = text.replace(/\[\^[^\]]+\]/g, "");
-  text = text.replace(/^\s{0,3}(?:-{3,}|\*{3,}|_{3,})\s*$/gm, "");
-  text = text.replace(/~~[\s\S]*?~~/g, "");
+  const footnotes = convertFootnotes(text);
+  text = footnotes.text;
+  counts.footnotes = footnotes.count;
+  text = text.replace(
+    /^\s{0,3}(?:(?:-\s*){3,}|(?:\*\s*){3,}|(?:_\s*){3,})$/gm,
+    PLAIN_TEXT_HORIZONTAL_RULE
+  );
+  text = text.replace(/~~([\s\S]*?)~~/g, "$1");
   let imageCounter = 0;
-  const imageTagRegex = /!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]|!\[([^\]]*)\]\(([^)]+)\)/g;
-  text = text.replace(imageTagRegex, (match, wikiSrc, altText, stdSrc) => {
+  const imageTagRegex = /!\[\[([^\]|]+)(?:\|([^\]]+))?\]\]|!\[([^\]]*)\]\(([^)]+)\)/g;
+  text = text.replace(imageTagRegex, (match, wikiSrc, wikiAlias, altText, stdSrc) => {
+    if (wikiSrc && !isImageEmbedTarget(wikiSrc)) {
+      return formatNonImageEmbed(wikiSrc, wikiAlias);
+    }
     imageCounter++;
     if (!insertImageIndex) {
       return "";
     }
     const src = String(wikiSrc || stdSrc || "").trim();
+    const rawAlt = String(wikiSrc ? wikiAlias || "" : altText || "").trim();
+    const readableAlt = /^(?:\d+|\d+x\d+)$/i.test(rawAlt) ? "" : rawAlt;
     if (imageOrder.length > 0) {
       const mappedIndex = findImageOrderIndex(src, imageOrder);
-      return mappedIndex === 0 ? "" : `[\u914D\u56FE ${mappedIndex}]`;
+      return mappedIndex === 0 ? "" : `[\u914D\u56FE ${mappedIndex}${readableAlt ? `\uFF1A${readableAlt}` : ""}]`;
     }
-    return `[\u914D\u56FE ${imageCounter}]`;
+    return `[\u914D\u56FE ${imageCounter}${readableAlt ? `\uFF1A${readableAlt}` : ""}]`;
   });
   text = text.replace(/!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, "");
   text = text.replace(/^\s*>\s*\[![^\]]+\][+-]?\s*/gmi, "");
-  text = text.replace(/<[^>]+>/g, "");
+  text = convertHtmlToPlainText(text);
   text = text.replace(/^#{1,6}\s+(.+)$/gm, "$1");
   text = text.replace(/==([\s\S]*?)==/g, "$1");
   const protectedValues = [];
@@ -76624,12 +76762,23 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
     return token;
   };
   text = replaceProtected(text, /(`+)([^`\n]*?)\1/g, (_match, _ticks, content) => protect(content));
-  text = replaceProtected(text, /\[([^\]]+)\]\((?:<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\)/g, (_match, label) => protect(label));
+  text = replaceProtected(
+    text,
+    /\[([^\]]+)\]\((<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\)/g,
+    (_match, label, destination) => {
+      const href = String(destination || "").replace(/^<|>$/g, "");
+      const readable = /^(?:https?:\/\/|mailto:|tel:)/i.test(href) && href !== label ? `${label}\uFF1A${href}` : label;
+      return protect(readable);
+    }
+  );
   text = replaceProtected(text, /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_match, target, alias) => protect(String(alias || target)));
   text = text.replace(/(\*\*|__)(.*?)\1/g, "$2");
   text = text.replace(/(\*|_)(.*?)\1/g, "$2");
   text = text.replace(/\u0000P(\d+)X\u0000/g, (_, index) => protectedValues[Number(index)] || "");
-  text = text.replace(/^(\s*[-*+]\s+)\[[ xX]\]\s+/gm, "$1");
+  text = text.replace(
+    /^(\s*)[-*+]\s+\[([ xX])\]\s+/gm,
+    (_match, indent, state) => `${indent}${String(state).toLowerCase() === "x" ? "\u2611" : "\u2610"} `
+  );
   text = text.replace(/^>\s?/gm, "");
   text = text.replace(/^[\s]*[-*+]\s+/gm, "\u2022 ");
   const cleanedLines = text.split("\n").map((line) => line.trim()).filter((line, idx, arr) => {
@@ -76639,9 +76788,10 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
     return true;
   });
   const removed = Object.entries(counts).filter(([, count]) => count > 0).map(([kind, count]) => ({ kind, count }));
+  const cleanedText = cleanedLines.join("\n").trim().replace(/\u0000B(\d+)X\u0000/g, (_, index) => protectedBlocks[Number(index)] || "");
   return {
-    text: cleanedLines.join("\n").trim(),
-    hasCodeBlocks: counts.codeBlocks + counts.mermaid > 0,
+    text: cleanedText,
+    hasCodeBlocks: counts.codeBlocks + counts.mermaid + counts.pluginBlocks > 0,
     hasTables: counts.tables > 0,
     hasMath: counts.math > 0,
     hasFootnotes: counts.footnotes > 0,
@@ -76863,6 +77013,8 @@ function extractMarkdownImageItems(markdown, options = {}) {
   const wikiRegex = /!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
   let match;
   while ((match = wikiRegex.exec(source)) !== null) {
+    if (!isImageEmbedTarget(match[1]))
+      continue;
     push(match[1]);
   }
   const stdRegex = /!\[[^\]]*\]\(([^)]+)\)/g;
@@ -76929,7 +77081,8 @@ function extractStickerData({
   const finalImages = finalImageItems.map((item) => getStickerImageItemSrc(item)).filter(Boolean);
   const cleaned = cleanMarkdownToPlainText(markdown, {
     insertImageIndex,
-    imageOrder: finalImageItems
+    imageOrder: finalImageItems,
+    title: String(title).trim()
   });
   return {
     title: String(title).trim(),
@@ -77107,6 +77260,14 @@ function renderStickerImageList(container, {
 }
 
 // views/converter/sticker-preview.js
+var STICKER_TRANSFORM_LABELS = {
+  codeBlocks: "\u4EE3\u7801\u5757",
+  mermaid: "\u6D41\u7A0B\u56FE",
+  pluginBlocks: "\u67E5\u8BE2\u5757",
+  tables: "\u8868\u683C",
+  math: "\u516C\u5F0F",
+  footnotes: "\u811A\u6CE8"
+};
 var stickerPreviewMethods = {
   getStickerUiState(filePath) {
     const selfRecord = toRecord11(this);
@@ -77272,7 +77433,7 @@ var stickerPreviewMethods = {
     this.previewContainer.empty();
     const stickerContainer = this.previewContainer.createEl("div", { cls: "apple-sticker-preview-wrapper" });
     const uiState = this.getStickerUiState(stickerData.sourcePath || "");
-    const strippedParts = (Array.isArray(stickerData.removed) ? stickerData.removed : []).filter((entry) => (entry == null ? void 0 : entry.count) > 0).map((entry) => `${entry.kind} ${entry.count} \u5904`);
+    const strippedParts = (Array.isArray(stickerData.removed) ? stickerData.removed : []).filter((entry) => (entry == null ? void 0 : entry.count) > 0).map((entry) => `${STICKER_TRANSFORM_LABELS[entry.kind] || "\u5185\u5BB9"} ${entry.count} \u5904`);
     if (strippedParts.length > 0) {
       const notice = stickerContainer.createEl("div", { cls: "apple-sticker-notice-warning" });
       const noticeIcon = notice.createEl("span", { cls: "apple-sticker-notice-icon" });
@@ -77280,10 +77441,10 @@ var stickerPreviewMethods = {
       if (typeof noticeSetIcon === "function")
         noticeSetIcon(noticeIcon, "info");
       const noticeContent = notice.createEl("div", { cls: "apple-sticker-notice-content" });
-      noticeContent.createEl("span", { cls: "apple-sticker-notice-title", text: `\u5DF2\u6E05\u7406\uFF1A${strippedParts.join("\u3001")}` });
+      noticeContent.createEl("span", { cls: "apple-sticker-notice-title", text: `\u5DF2\u8F6C\u6362\uFF1A${strippedParts.join("\u3001")}` });
       noticeContent.createEl("span", {
         cls: "apple-sticker-notice-desc",
-        text: "\u6E05\u7406\u53EA\u5F71\u54CD\u8D34\u56FE\u8349\u7A3F\uFF0C\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u539F\u6587\u3002"
+        text: "\u5185\u5BB9\u5DF2\u8F6C\u6362\u4E3A\u9002\u5408\u8D34\u56FE\u7684\u7EAF\u6587\u672C\uFF0C\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u539F\u6587\u3002"
       });
     }
     const imagesSection = stickerContainer.createEl("div", { cls: "apple-sticker-images-section" });
@@ -80153,7 +80314,7 @@ var wechatAccountStateMethods = {
   showSyncFailureActions(message, options = {}) {
     var _a5, _b, _c;
     if (typeof getObsidianModalClass() !== "function") {
-      new Notice(`\u274C \u540C\u6B65\u5931\u8D25: ${message}`);
+      new Notice(`\u540C\u6B65\u5931\u8D25: ${message}`);
       return;
     }
     const modal = createObsidianModal(this.app);
@@ -81003,7 +81164,7 @@ var wechatSyncModalMethods = {
     syncBtn.onclick = async () => {
       const isStickerMode = this.previewMode === "sticker";
       if (!isStickerMode && !coverBase64 && !thumbMediaId) {
-        new Notice("\u274C \u8BF7\u5148\u8BBE\u7F6E\u5C01\u9762\u56FE");
+        new Notice("\u8BF7\u5148\u8BBE\u7F6E\u5C01\u9762\u56FE");
         return;
       }
       modal.close();
@@ -81600,6 +81761,8 @@ async function resolveStickerMediaIds({
 }
 
 // views/publish-modal/wechat-sync-action.js
+var WECHAT_SYNC_SUCCESS_NOTICE = "\u540C\u6B65\u6210\u529F\uFF01\u8BF7\u524D\u5F80\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0\u8349\u7A3F\u7BB1\u67E5\u770B";
+var WECHAT_UPDATE_SUCCESS_NOTICE = "\u66F4\u65B0\u6210\u529F\uFF01\u5FAE\u4FE1\u8349\u7A3F\u5DF2\u66F4\u65B0";
 var wechatSyncActionMethods = {
   async onSyncToWechat() {
     const accountRecord = (
@@ -81627,7 +81790,7 @@ var wechatSyncActionMethods = {
       await this.onSyncStickerToWechat(account);
       return;
     }
-    const notice = new Notice(`\u{1F680} \u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65...`, 0);
+    const notice = new Notice(`\u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65...`, 0);
     const activeFile = this.getPublishContextFile();
     const publishMeta = this.getFrontmatterPublishMeta(activeFile);
     try {
@@ -81690,7 +81853,7 @@ var wechatSyncActionMethods = {
         await this.plugin.saveSettings();
       }
       notice.hide();
-      new Notice(isUpdate ? "\u2705 \u66F4\u65B0\u6210\u529F\uFF01\u5FAE\u4FE1\u8349\u7A3F\u5DF2\u66F4\u65B0" : "\u2705 \u540C\u6B65\u6210\u529F\uFF01\u8BF7\u524D\u5F80\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0\u8349\u7A3F\u7BB1\u67E5\u770B");
+      new Notice(isUpdate ? WECHAT_UPDATE_SUCCESS_NOTICE : WECHAT_SYNC_SUCCESS_NOTICE);
       const failedImageSources = Array.from(/* @__PURE__ */ new Set([
         ...Array.isArray(imageUploadFailures) ? imageUploadFailures.map((item) => item == null ? void 0 : item.src).filter(Boolean) : [],
         ...Array.isArray(placeholderImageSources) ? placeholderImageSources.filter(Boolean) : []
@@ -81698,15 +81861,15 @@ var wechatSyncActionMethods = {
       if (failedImageSources.length > 0) {
         const preview = failedImageSources.slice(0, 3).join("\u3001");
         const suffix = failedImageSources.length > 3 ? ` \u7B49 ${failedImageSources.length} \u5F20` : "";
-        new Notice(`\u26A0\uFE0F \u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6709 ${failedImageSources.length} \u5F20\u6B63\u6587\u56FE\u7247\u672A\u540C\u6B65\uFF1A${preview}${suffix}\u3002\u8BF7\u5728\u5FAE\u4FE1\u540E\u53F0\u624B\u52A8\u8865\u4F20\u3002`, 1e4);
+        new Notice(`\u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6709 ${failedImageSources.length} \u5F20\u6B63\u6587\u56FE\u7247\u672A\u540C\u6B65\uFF1A${preview}${suffix}\u3002\u8BF7\u5728\u5FAE\u4FE1\u540E\u53F0\u624B\u52A8\u8865\u4F20\u3002`, 1e4);
       }
       if (Array.isArray(draftWarnings) && draftWarnings.length > 0) {
         const preview = draftWarnings.slice(0, 3).map((item) => `${(item == null ? void 0 : item.message) || "\u6B63\u6587\u5B58\u5728\u53EF\u7591\u5185\u5BB9"}${(item == null ? void 0 : item.value) ? `\uFF1A${item.value}` : ""}`).join("\uFF1B");
         const suffix = draftWarnings.length > 3 ? `\uFF1B\u53E6\u6709 ${draftWarnings.length - 3} \u9879` : "";
-        new Notice(`\u26A0\uFE0F \u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6B63\u6587\u68C0\u67E5\u53D1\u73B0 ${draftWarnings.length} \u9879\u63D0\u9192\uFF1A${preview}${suffix}`, 1e4);
+        new Notice(`\u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6B63\u6587\u68C0\u67E5\u53D1\u73B0 ${draftWarnings.length} \u9879\u63D0\u9192\uFF1A${preview}${suffix}`, 1e4);
       }
       if (cleanupResult == null ? void 0 : cleanupResult.warning) {
-        new Notice(`\u26A0\uFE0F \u8D44\u6E90\u6E05\u7406\u5931\u8D25\uFF1A${cleanupResult.warning}`, 7e3);
+        new Notice(`\u8D44\u6E90\u6E05\u7406\u5931\u8D25\uFF1A${cleanupResult.warning}`, 7e3);
       }
     } catch (error) {
       notice.hide();
@@ -81725,7 +81888,7 @@ var wechatSyncActionMethods = {
     }
   },
   async onSyncStickerToWechat(account) {
-    const notice = new Notice(`\u{1F680} \u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65\u8D34\u56FE...`, 0);
+    const notice = new Notice(`\u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65\u8D34\u56FE...`, 0);
     try {
       const sourcePath = typeof this.sessionStickerSourcePath === "string" ? this.sessionStickerSourcePath : "";
       const stickerData = await this.buildStickerData(sourcePath ? { sourcePath } : {});
@@ -81734,22 +81897,22 @@ var wechatSyncActionMethods = {
       const title = String(this.sessionTitle || stickerData.title || "\u672A\u547D\u540D\u8D34\u56FE").trim();
       if (imageItems.length === 0) {
         notice.hide();
-        new Notice("\u26A0\uFE0F \u5FAE\u4FE1\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247\uFF0C\u8BF7\u5148\u5728\u7B14\u8BB0\u6B63\u6587\u4E2D\u63D2\u5165\u56FE\u7247");
+        new Notice("\u5FAE\u4FE1\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247\uFF0C\u8BF7\u5148\u5728\u7B14\u8BB0\u6B63\u6587\u4E2D\u63D2\u5165\u56FE\u7247");
         return;
       }
       if (imageItems.length > STICKER_MAX_IMAGES) {
         notice.hide();
-        new Notice(`\u26A0\uFE0F \u5FAE\u4FE1\u8D34\u56FE\u6700\u591A\u652F\u6301 ${STICKER_MAX_IMAGES} \u5F20\u56FE\u7247\uFF0C\u8BF7\u5148\u79FB\u9664\u591A\u4F59\u56FE\u7247`);
+        new Notice(`\u5FAE\u4FE1\u8D34\u56FE\u6700\u591A\u652F\u6301 ${STICKER_MAX_IMAGES} \u5F20\u56FE\u7247\uFF0C\u8BF7\u5148\u79FB\u9664\u591A\u4F59\u56FE\u7247`);
         return;
       }
       if (content.length > STICKER_MAX_CONTENT_LENGTH) {
         notice.hide();
-        new Notice(`\u26A0\uFE0F \u8D34\u56FE\u6587\u6848 ${content.length} \u5B57\uFF0C\u8D85\u51FA\u5FAE\u4FE1 ${STICKER_MAX_CONTENT_LENGTH} \u5B57\u4E0A\u9650\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u540C\u6B65`);
+        new Notice(`\u8D34\u56FE\u6587\u6848 ${content.length} \u5B57\uFF0C\u8D85\u51FA\u5FAE\u4FE1 ${STICKER_MAX_CONTENT_LENGTH} \u5B57\u4E0A\u9650\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u540C\u6B65`);
         return;
       }
       if (title.length > STICKER_MAX_TITLE_LENGTH) {
         notice.hide();
-        new Notice(`\u26A0\uFE0F \u8D34\u56FE\u6807\u9898 ${title.length} \u5B57\uFF0C\u8D85\u51FA ${STICKER_MAX_TITLE_LENGTH} \u5B57\u4E0A\u9650\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u540C\u6B65`);
+        new Notice(`\u8D34\u56FE\u6807\u9898 ${title.length} \u5B57\uFF0C\u8D85\u51FA ${STICKER_MAX_TITLE_LENGTH} \u5B57\u4E0A\u9650\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u540C\u6B65`);
         return;
       }
       const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
@@ -81762,11 +81925,11 @@ var wechatSyncActionMethods = {
         srcToBlob: (src) => this.srcToBlob(src),
         cache: this.stickerUploadCache,
         onProgress: (current, total) => {
-          notice.setMessage(`\u{1F680} \u6B63\u5728\u51C6\u5907\u8D34\u56FE\u56FE\u7247 (${current}/${total})...`);
+          notice.setMessage(`\u6B63\u5728\u51C6\u5907\u8D34\u56FE\u56FE\u7247 (${current}/${total})...`);
         }
       });
-      notice.setMessage("\u{1F680} \u6B63\u5728\u521B\u5EFA\u5FAE\u4FE1\u8D34\u56FE\u8349\u7A3F...");
-      const stickerDraftRes = await syncStickerDraft({
+      notice.setMessage("\u6B63\u5728\u521B\u5EFA\u5FAE\u4FE1\u8D34\u56FE\u8349\u7A3F...");
+      await syncStickerDraft({
         account,
         api,
         title,
@@ -81774,13 +81937,12 @@ var wechatSyncActionMethods = {
         imageMediaIds
       });
       notice.hide();
-      const mediaIdHint = (stickerDraftRes == null ? void 0 : stickerDraftRes.mediaId) ? `\uFF08MediaID: ${stickerDraftRes.mediaId.slice(0, 8)}...\uFF09` : "";
-      new Notice(`\u2705 \u8D34\u56FE\u5DF2\u53D1\u9001\u5230\u5FAE\u4FE1\u8349\u7A3F\u7BB1${mediaIdHint}\uFF0C\u8BF7\u524D\u5F80\u516C\u4F17\u53F7\u540E\u53F0\u67E5\u770B`);
+      new Notice(WECHAT_SYNC_SUCCESS_NOTICE);
     } catch (error) {
       notice.hide();
       console.error("Wechat Sticker Sync Error:", error);
       const readableError = toReadableError5(error);
-      new Notice(`\u274C \u8D34\u56FE\u540C\u6B65\u5931\u8D25\uFF1A${toSyncFriendlyMessage(readableError.message)}`, 1e4);
+      new Notice(`\u8D34\u56FE\u540C\u6B65\u5931\u8D25\uFF1A${toSyncFriendlyMessage(readableError.message)}`, 1e4);
     }
   }
 };

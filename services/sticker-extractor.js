@@ -28,7 +28,7 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment -- reason: compatibility order inputs intentionally accept legacy strings and unified image items */
 
-import { cleanMarkdownToPlainText } from './markdown-cleaner.js';
+import { cleanMarkdownToPlainText, isImageEmbedTarget } from './markdown-cleaner.js';
 import {
   createBodyStickerImageItem,
   getStickerImageItemSrc,
@@ -104,6 +104,7 @@ function extractMarkdownImageItems(markdown, options = {}) {
   const wikiRegex = /!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
   let match;
   while ((match = wikiRegex.exec(source)) !== null) {
+    if (!isImageEmbedTarget(match[1])) continue;
     push(match[1]);
   }
 
@@ -251,6 +252,7 @@ function extractStickerData({
   const cleaned = cleanMarkdownToPlainText(markdown, {
     insertImageIndex,
     imageOrder: finalImageItems,
+    title: String(title).trim(),
   });
 
   return {

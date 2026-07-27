@@ -86,7 +86,7 @@ console.log(1);
     const data = extractStickerData({ markdown: md });
     expect(data.hasCodeBlocks).toBe(true);
     expect(data.hasTables).toBe(true);
-    expect(data.content).toBe('');
+    expect(data.content).toBe('【代码】\nconsole.log(1);\nA ｜ B\n1 ｜ 2');
     expect(data.removed).toEqual([
       { kind: 'codeBlocks', count: 1 },
       { kind: 'tables', count: 1 },
@@ -116,6 +116,40 @@ console.log(1);
       '![[real.png]]',
     ].join('\n');
     expect(extractMarkdownImageSources(md)).toEqual(['real.png']);
+  });
+
+  it('should not treat note, pdf, or audio embeds as sticker images', () => {
+    const md = [
+      '![[real.png]]',
+      '![[Other Note]]',
+      '![[manual.pdf]]',
+      '![[recording.mp3]]',
+    ].join('\n');
+    const data = extractStickerData({ markdown: md, insertImageIndex: true });
+    expect(data.images).toEqual(['real.png']);
+    expect(data.content).toBe([
+      '[配图 1]',
+      '【引用：Other Note】',
+      '【附件：manual.pdf】',
+      '【附件：recording.mp3】',
+    ].join('\n'));
+  });
+
+  it('should remove a leading H1 when it duplicates the sticker title', () => {
+    const data = extractStickerData({
+      markdown: '# 同一个标题\n正文内容',
+      frontmatter: { title: '同一个标题' },
+    });
+    expect(data.title).toBe('同一个标题');
+    expect(data.content).toBe('正文内容');
+  });
+
+  it('should keep a leading H1 when it differs from the sticker title', () => {
+    const data = extractStickerData({
+      markdown: '# 正文小节\n正文内容',
+      frontmatter: { title: '贴图标题' },
+    });
+    expect(data.content).toBe('正文小节\n正文内容');
   });
 
   it('should use an injected canonical body identity', () => {

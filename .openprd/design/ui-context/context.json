@@ -1,7 +1,7 @@
 {
   "version": 1,
   "action": "ui-context-init",
-  "generatedAt": "2026-07-27 10:17:46",
+  "generatedAt": "2026-07-27 12:50:54",
   "mode": {
     "mode": "brownfield",
     "source": "project-derived",
@@ -14,11 +14,11 @@
     "specUrl": "https://github.com/google-labs-code/design.md/blob/bde692f2bc92ef7fdd0cf277b2704ab074b70efd/docs/spec.md"
   },
   "scan": {
-    "scannedAt": "2026-07-27 10:17:46",
+    "scannedAt": "2026-07-27 12:50:54",
     "truncated": false,
     "counts": {
-      "files": 445,
-      "uiImplementation": 34,
+      "files": 450,
+      "uiImplementation": 36,
       "styles": 13,
       "assets": 24
     },
@@ -39,6 +39,7 @@
       "views/publish-modal/multi-platform-modal-ui.js",
       "views/publish-modal/multi-platform-policy.js",
       "views/publish-modal/multi-platform.js",
+      "views/publish-modal/sticker-publish-content.js",
       "views/publish-modal/wechat-account-state.js",
       "views/publish-modal/wechat-modal-shell.js",
       "views/publish-modal/wechat-multiplatform-actions.js",
@@ -54,6 +55,7 @@
       "views/settings/settings-tab-shell.js",
       "views/settings/wechat-account-modal.js",
       "views/settings/wechat-tab.js",
+      "views/shared/sticker-image-list.js",
       "views/shared/view-constants.js",
       "views/shared/view-dom-helpers.js",
       "views/shared/view-state-utils.js"
@@ -151,23 +153,33 @@
   "contracts": {
     "product": {
       "path": "PRODUCT.md",
-      "state": "existing-unmanaged",
+      "state": "openprd-managed",
       "marker": {
-        "count": 0,
-        "fields": {},
-        "error": "missing"
+        "count": 1,
+        "fields": {
+          "status": "frozen",
+          "direction": "direction-1",
+          "source": "user-confirmed",
+          "schema": "google-labs-code/design.md@bde692f2bc92ef7fdd0cf277b2704ab074b70efd"
+        },
+        "error": null
       }
     },
     "design": {
       "path": "DESIGN.md",
-      "state": "existing-unmanaged",
+      "state": "openprd-managed",
       "marker": {
-        "count": 0,
-        "fields": {},
-        "error": "missing"
+        "count": 1,
+        "fields": {
+          "status": "frozen",
+          "direction": "direction-1",
+          "source": "user-confirmed",
+          "schema": "google-labs-code/design.md@bde692f2bc92ef7fdd0cf277b2704ab074b70efd"
+        },
+        "error": null
       }
     },
-    "conflict": true
+    "conflict": false
   },
   "evidenceBlockers": [],
   "evidencePolicy": {
@@ -176,5 +188,5 @@
     "inferenceMustNotMasqueradeAsFact": true
   },
   "next": "run-openprd-ui-context-skill-and-generate-three-directions",
-  "contextFingerprint": "d603b4a42fa011dafba361f2195c37c056cac0cbecddca6788aff8bcdd230907"
+  "contextFingerprint": "fad01ae7d53601dd6f2e71960aa4592675bcd997a3f7a5fc7744df72077a6014"
 }

@@ -2,7 +2,7 @@
 
 - source: project-derived
 - CodeGraph: unavailable-or-unverified（可选输入）
-- UI implementation files: 34
+- UI implementation files: 36
 - style files: 13
 - asset files: 24
 
@@ -32,6 +32,7 @@
 - UI: views/publish-modal/multi-platform-modal-ui.js
 - UI: views/publish-modal/multi-platform-policy.js
 - UI: views/publish-modal/multi-platform.js
+- UI: views/publish-modal/sticker-publish-content.js
 - UI: views/publish-modal/wechat-account-state.js
 - UI: views/publish-modal/wechat-modal-shell.js
 - UI: views/publish-modal/wechat-multiplatform-actions.js
@@ -47,6 +48,7 @@
 - UI: views/settings/settings-tab-shell.js
 - UI: views/settings/wechat-account-modal.js
 - UI: views/settings/wechat-tab.js
+- UI: views/shared/sticker-image-list.js
 - UI: views/shared/view-constants.js
 - UI: views/shared/view-dom-helpers.js
 - UI: views/shared/view-state-utils.js

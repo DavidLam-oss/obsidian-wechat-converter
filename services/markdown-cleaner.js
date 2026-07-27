@@ -5,11 +5,11 @@
 
 ## 输入
 
-接收原始 Markdown 字符串，以及是否插入配图序号、贴图最终图片顺序等选项。
+接收原始 Markdown 字符串，以及贴图标题、是否插入配图序号、贴图最终图片顺序等选项。
 
 ## 输出
 
-输出 `normalizeImageKey`、`cleanMarkdownToPlainText`，供贴图提取与预览复用。
+输出图片嵌入判定、地址归一化与保留语义的纯文本降级结果，供贴图提取与预览复用。
 
 ## 定位
 
@@ -61,6 +61,26 @@ function normalizeImageKey(src) {
     .toLowerCase();
 }
 
+const PLAIN_TEXT_HORIZONTAL_RULE = '────────';
+
+/**
+ * 判断 Obsidian wiki embed 是否指向图片文件。
+ *
+ * 标准 Markdown 的 `![](...)` 已经明确表达图片，不需要扩展名兜底；只有
+ * `![[...]]` 同时可能表示笔记、PDF、音频等嵌入，因此必须按文件类型区分。
+ *
+ * @param {unknown} src
+ * @returns {boolean}
+ */
+function isImageEmbedTarget(src) {
+  const value = String(src || '')
+    .split('#')[0]
+    .split('?')[0]
+    .trim()
+    .toLowerCase();
+  return /\.(?:png|jpe?g|gif|webp|bmp|svg|avif|heic|heif)$/.test(value);
+}
+
 /**
  * 在贴图顺序列表中查找某个正文图片地址的序号（从 1 开始）。
  *
@@ -93,15 +113,29 @@ function findImageOrderIndex(src, imageOrder) {
   return keyIndex === -1 ? 0 : keyIndex + 1;
 }
 
+const NON_TEXT_FENCE_LANGUAGES = new Set([
+  'dataview',
+  'dataviewjs',
+  'tasks',
+  'query',
+  'templater',
+  'meta-bind',
+  'button',
+]);
+
 /**
+ * 把普通代码块降级为纯文本；流程图和查询类执行块只保留可理解的占位。
+ *
  * @param {string} value
- * @returns {{text:string, codeBlocks:number, mermaid:number}}
+ * @param {(value:string)=>string} protectBlock
+ * @returns {{text:string, codeBlocks:number, mermaid:number, pluginBlocks:number}}
  */
-function removeFencedBlocks(value) {
+function convertFencedBlocks(value, protectBlock) {
   const lines = value.split('\n');
   const output = [];
   let codeBlocks = 0;
   let mermaid = 0;
+  let pluginBlocks = 0;
 
   for (let index = 0; index < lines.length;) {
     const opening = lines[index].match(/^\s*(`{3,}|~{3,})\s*([A-Za-z0-9_-]*)/);
@@ -113,61 +147,107 @@ function removeFencedBlocks(value) {
 
     const marker = opening[1];
     const language = String(opening[2] || '').toLowerCase();
-    if (language === 'mermaid') mermaid += 1;
-    else codeBlocks += 1;
     index += 1;
     const closeRegex = new RegExp(`^\\s*${marker[0]}{${marker.length},}\\s*$`);
+    const contentLines = [];
     while (index < lines.length && !closeRegex.test(lines[index])) {
+      contentLines.push(lines[index]);
       index += 1;
     }
     if (index < lines.length) index += 1;
+
+    if (language === 'mermaid') {
+      mermaid += 1;
+      output.push('[流程图]');
+      continue;
+    }
+    if (NON_TEXT_FENCE_LANGUAGES.has(language)) {
+      pluginBlocks += 1;
+      output.push('[查询内容未展开]');
+      continue;
+    }
+
+    codeBlocks += 1;
+    const content = contentLines.join('\n').replace(/^\n+|\n+$/g, '');
+    output.push(protectBlock(content ? `【代码】\n${content}` : '【代码】'));
   }
 
-  return { text: output.join('\n'), codeBlocks, mermaid };
+  return { text: output.join('\n'), codeBlocks, mermaid, pluginBlocks };
 }
 
 /**
- * 移除 GFM/Obsidian 表格块，保留普通包含竖线的段落。
+ * @param {string} line
+ * @returns {string[]}
+ */
+function splitMarkdownTableRow(line) {
+  return line
+    .trim()
+    .replace(/^\||\|$/g, '')
+    .split(/(?<!\\)\|/)
+    .map((cell) => cell.trim().replace(/\\\|/g, '|'));
+}
+
+/**
+ * 把 GFM/Obsidian 表格降级为逐行纯文本，保留所有单元格内容。
  *
  * @param {string} value
  * @returns {{text:string,count:number}}
  */
-function removeMarkdownTables(value) {
+function convertMarkdownTables(value) {
   const lines = value.split('\n');
-  const removed = new Set();
+  const replacements = new Map();
   let count = 0;
   const isTableRow = (line) => line.includes('|') && line.trim().replace(/^\||\|$/g, '').includes('|');
   const isDelimiter = (line) => {
     if (!isTableRow(line)) return false;
-    const cells = line.trim().replace(/^\||\|$/g, '').split('|');
+    const cells = splitMarkdownTableRow(line);
     return cells.length >= 2 && cells.every((cell) => /^\s*:?-{3,}:?\s*$/.test(cell));
   };
 
   for (let index = 1; index < lines.length; index++) {
-    if (!isDelimiter(lines[index]) || !isTableRow(lines[index - 1]) || removed.has(index)) continue;
+    if (!isDelimiter(lines[index]) || !isTableRow(lines[index - 1]) || replacements.has(index)) continue;
     count += 1;
-    removed.add(index - 1);
-    removed.add(index);
+    replacements.set(index - 1, splitMarkdownTableRow(lines[index - 1]).join(' ｜ '));
+    replacements.set(index, null);
     let cursor = index + 1;
     while (cursor < lines.length && isTableRow(lines[cursor]) && lines[cursor].trim()) {
-      removed.add(cursor);
+      replacements.set(cursor, splitMarkdownTableRow(lines[cursor]).join(' ｜ '));
       cursor += 1;
     }
   }
 
   return {
-    text: lines.filter((_, index) => !removed.has(index)).join('\n'),
+    text: lines
+      .flatMap((line, index) => {
+        if (!replacements.has(index)) return [line];
+        const replacement = replacements.get(index);
+        return replacement === null ? [] : [replacement];
+      })
+      .join('\n'),
     count,
   };
 }
 
 /**
- * 只移除边界明确的行内数学表达式；货币 `$12`、转义 `\\$` 和未闭合 `$` 保留。
+ * @param {string} content
+ * @param {boolean} [isBlock]
+ * @returns {string}
+ */
+function formatMathFallback(content, isBlock = false) {
+  const normalized = String(content || '').trim().replace(/\s+/g, ' ');
+  if (!isBlock && normalized && normalized.length <= 80 && !/[\\{}^_]/.test(normalized)) {
+    return normalized;
+  }
+  return '[公式]';
+}
+
+/**
+ * 只转换边界明确的行内数学表达式；货币 `$12`、转义 `\\$` 和未闭合 `$` 保留。
  *
  * @param {string} value
  * @returns {{text:string,count:number}}
  */
-function removeInlineMath(value) {
+function convertInlineMath(value) {
   let output = '';
   let count = 0;
   for (let index = 0; index < value.length;) {
@@ -191,6 +271,7 @@ function removeInlineMath(value) {
       && !/^\s|\s$/.test(content)
     ) {
       count += 1;
+      output += formatMathFallback(content);
       index = closing + 1;
       continue;
     }
@@ -198,6 +279,122 @@ function removeInlineMath(value) {
     index += 1;
   }
   return { text: output, count };
+}
+
+/**
+ * 将脚注引用转换为顺序编号，并把定义追加为文末注释。
+ *
+ * @param {string} value
+ * @returns {{text:string,count:number}}
+ */
+function convertFootnotes(value) {
+  const lines = value.split('\n');
+  /** @type {Map<string,string>} */
+  const definitions = new Map();
+  const bodyLines = [];
+
+  for (let index = 0; index < lines.length;) {
+    const definition = lines[index].match(/^\[\^([^\]]+)\]:\s*(.*)$/);
+    if (!definition) {
+      bodyLines.push(lines[index]);
+      index += 1;
+      continue;
+    }
+
+    const label = definition[1];
+    const content = [definition[2]];
+    index += 1;
+    while (index < lines.length && /^(?: {2,}|\t)/.test(lines[index])) {
+      content.push(lines[index].trim());
+      index += 1;
+    }
+    definitions.set(label, content.filter(Boolean).join(' '));
+  }
+
+  /** @type {Map<string,number>} */
+  const numbers = new Map();
+  const ensureNumber = (label) => {
+    if (!numbers.has(label)) numbers.set(label, numbers.size + 1);
+    return numbers.get(label);
+  };
+
+  let text = bodyLines.join('\n');
+  text = text.replace(/\[\^([^\]]+)\]/g, (_match, label) => `[${ensureNumber(label)}]`);
+  text = text.replace(/\^\[([^\]]+)\]/g, (_match, content) => {
+    const label = `inline-${numbers.size + definitions.size + 1}`;
+    definitions.set(label, String(content).trim());
+    return `[${ensureNumber(label)}]`;
+  });
+
+  for (const label of definitions.keys()) ensureNumber(label);
+  if (definitions.size > 0) {
+    const notes = Array.from(definitions.entries())
+      .map(([label, content]) => `注${ensureNumber(label)}：${content}`)
+      .join('\n');
+    text = `${text.trimEnd()}\n\n${notes}`;
+  }
+
+  return { text, count: definitions.size };
+}
+
+/**
+ * @param {string} value
+ * @param {string} title
+ * @returns {string}
+ */
+function removeDuplicateLeadingHeading(value, title) {
+  const normalizedTitle = String(title || '').trim();
+  if (!normalizedTitle) return value;
+  const match = value.match(/^(\s*)#\s+([^\n]+)\r?\n?/);
+  if (!match) return value;
+  const headingText = match[2]
+    .replace(/(\*\*|__|~~|==|`)/g, '')
+    .trim();
+  return headingText === normalizedTitle ? value.slice(match[0].length) : value;
+}
+
+/**
+ * @param {string} value
+ * @returns {string}
+ */
+function convertHtmlToPlainText(value) {
+  let output = value
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<(script|style|iframe|object|embed|form)[^>]*>[\s\S]*?<\/\1>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<li\b[^>]*>/gi, '• ')
+    .replace(/<\/(?:p|div|section|article|aside|blockquote|li|h[1-6]|tr|table|ul|ol|pre)>/gi, '\n')
+    .replace(/<\/(?:td|th)>/gi, ' ｜ ')
+    .replace(/<[^>]+>/g, '');
+
+  const entities = {
+    amp: '&',
+    lt: '<',
+    gt: '>',
+    quot: '"',
+    apos: "'",
+    nbsp: ' ',
+  };
+  output = output.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos|nbsp);/gi, (_match, entity) => {
+    const key = String(entity).toLowerCase();
+    if (key.startsWith('#x')) return String.fromCodePoint(Number.parseInt(key.slice(2), 16));
+    if (key.startsWith('#')) return String.fromCodePoint(Number.parseInt(key.slice(1), 10));
+    return entities[key] || '';
+  });
+  return output;
+}
+
+/**
+ * @param {string} target
+ * @param {string} alias
+ * @returns {string}
+ */
+function formatNonImageEmbed(target, alias) {
+  const rawTarget = String(target || '').trim();
+  const label = String(alias || '').trim() || rawTarget.split('/').pop() || rawTarget;
+  const path = rawTarget.split('#')[0].split('?')[0];
+  const hasFileExtension = /\.[A-Za-z0-9]{1,8}$/.test(path);
+  return hasFileExtension ? `【附件：${label}】` : `【引用：${label}】`;
 }
 
 /**
@@ -217,6 +414,7 @@ function replaceProtected(value, regex, replacer) {
  * @param {object} [options]
  * @param {boolean} [options.insertImageIndex=false] - 是否在原图片位置插入 [配图 N] 指引
  * @param {Array<string|object>} [options.imageOrder] - 贴图图片网格最终顺序
+ * @param {string} [options.title] - 已单独用于贴图标题的文字，用于去掉正文开头的重复 H1
  * @returns {{
  *   text: string,
  *   hasCodeBlocks: boolean,
@@ -250,6 +448,7 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
   const counts = {
     codeBlocks: 0,
     mermaid: 0,
+    pluginBlocks: 0,
     tables: 0,
     math: 0,
     footnotes: 0,
@@ -257,69 +456,87 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
 
   // 0. Frontmatter
   let text = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '');
+  text = removeDuplicateLeadingHeading(text, String(options.title || ''));
+
+  /** @type {string[]} */
+  const protectedBlocks = [];
+  const protectBlock = (value) => {
+    const token = `\u0000B${protectedBlocks.length}X\u0000`;
+    protectedBlocks.push(value);
+    return token;
+  };
 
   // 1. fenced code / Mermaid（支持反引号、波浪线和未闭合 fence）
-  const fenced = removeFencedBlocks(text);
+  const fenced = convertFencedBlocks(text, protectBlock);
   text = fenced.text;
   counts.codeBlocks = fenced.codeBlocks;
   counts.mermaid = fenced.mermaid;
+  counts.pluginBlocks = fenced.pluginBlocks;
 
   // 2. Obsidian comments
   text = text.replace(/%%[\s\S]*?%%/g, '');
 
-  // 3. block/inline math，保守区分货币与转义美元符
-  text = text.replace(/\$\$[\s\S]*?\$\$/g, () => {
+  // 3. block/inline math，简单行内公式保留文字，复杂公式使用可见占位。
+  text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_match, content) => {
     counts.math += 1;
-    return '';
+    return formatMathFallback(content, true);
   });
-  text = text.replace(/\\\[[\s\S]*?\\\]/g, () => {
+  text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_match, content) => {
     counts.math += 1;
-    return '';
+    return formatMathFallback(content, true);
   });
-  text = text.replace(/\\\([^)\n]*?\\\)/g, () => {
+  text = text.replace(/\\\(([^)\n]*?)\\\)/g, (_match, content) => {
     counts.math += 1;
-    return '';
+    return formatMathFallback(content);
   });
-  const inlineMath = removeInlineMath(text);
+  const inlineMath = convertInlineMath(text);
   text = inlineMath.text;
   counts.math += inlineMath.count;
 
   // 4. tables
-  const tables = removeMarkdownTables(text);
+  const tables = convertMarkdownTables(text);
   text = tables.text;
   counts.tables = tables.count;
 
   // 5. footnote definitions（含缩进续行）与引用
-  text = text.replace(/^\[\^[^\]]+\]:[^\n]*(?:\n(?: {2,}|\t)[^\n]*)*/gm, () => {
-    counts.footnotes += 1;
-    return '';
-  });
-  text = text.replace(/\[\^[^\]]+\]/g, '');
+  const footnotes = convertFootnotes(text);
+  text = footnotes.text;
+  counts.footnotes = footnotes.count;
 
-  // 6. horizontal rules
-  text = text.replace(/^\s{0,3}(?:-{3,}|\*{3,}|_{3,})\s*$/gm, '');
+  // 6. horizontal rules：保留分段语义，并统一不同 Markdown 写法。
+  text = text.replace(
+    /^\s{0,3}(?:(?:-\s*){3,}|(?:\*\s*){3,}|(?:_\s*){3,})$/gm,
+    PLAIN_TEXT_HORIZONTAL_RULE
+  );
 
-  // 7. strikethrough
-  text = text.replace(/~~[\s\S]*?~~/g, '');
+  // 7. strikethrough：纯文本无法展示删除线，但作者主动保留的文字不能静默丢失。
+  text = text.replace(/~~([\s\S]*?)~~/g, '$1');
 
   // 8. images and non-image embeds
   let imageCounter = 0;
-  const imageTagRegex = /!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]|!\[([^\]]*)\]\(([^)]+)\)/g;
+  const imageTagRegex = /!\[\[([^\]|]+)(?:\|([^\]]+))?\]\]|!\[([^\]]*)\]\(([^)]+)\)/g;
 
-  text = text.replace(imageTagRegex, (match, wikiSrc, altText, stdSrc) => {
+  text = text.replace(imageTagRegex, (match, wikiSrc, wikiAlias, altText, stdSrc) => {
+    if (wikiSrc && !isImageEmbedTarget(wikiSrc)) {
+      return formatNonImageEmbed(wikiSrc, wikiAlias);
+    }
     imageCounter++;
     if (!insertImageIndex) {
       return '';
     }
     const src = String(wikiSrc || stdSrc || '').trim();
+    const rawAlt = String(wikiSrc ? wikiAlias || '' : altText || '').trim();
+    const readableAlt = /^(?:\d+|\d+x\d+)$/i.test(rawAlt) ? '' : rawAlt;
 
     if (imageOrder.length > 0) {
       const mappedIndex = findImageOrderIndex(src, imageOrder);
       // 用户在侧边栏删掉了这张图：正文里不再保留它的序号占位。
-      return mappedIndex === 0 ? '' : `[配图 ${mappedIndex}]`;
+      return mappedIndex === 0
+        ? ''
+        : `[配图 ${mappedIndex}${readableAlt ? `：${readableAlt}` : ''}]`;
     }
 
-    return `[配图 ${imageCounter}]`;
+    return `[配图 ${imageCounter}${readableAlt ? `：${readableAlt}` : ''}]`;
   });
 
   text = text.replace(/!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, '');
@@ -328,7 +545,7 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
   text = text.replace(/^\s*>\s*\[![^\]]+\][+-]?\s*/gmi, '');
 
   // 10. HTML
-  text = text.replace(/<[^>]+>/g, '');
+  text = convertHtmlToPlainText(text);
 
   // 11. headings and highlights
   text = text.replace(/^#{1,6}\s+(.+)$/gm, '$1');
@@ -343,7 +560,17 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
     return token;
   };
   text = replaceProtected(text, /(`+)([^`\n]*?)\1/g, (_match, _ticks, content) => protect(content));
-  text = replaceProtected(text, /\[([^\]]+)\]\((?:<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\)/g, (_match, label) => protect(label));
+  text = replaceProtected(
+    text,
+    /\[([^\]]+)\]\((<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\)/g,
+    (_match, label, destination) => {
+      const href = String(destination || '').replace(/^<|>$/g, '');
+      const readable = /^(?:https?:\/\/|mailto:|tel:)/i.test(href) && href !== label
+        ? `${label}：${href}`
+        : label;
+      return protect(readable);
+    }
+  );
   text = replaceProtected(text, /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_match, target, alias) => protect(String(alias || target)));
 
   // 13. emphasis
@@ -352,7 +579,10 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
   text = text.replace(/\u0000P(\d+)X\u0000/g, (_, index) => protectedValues[Number(index)] || '');
 
   // 14. tasks, quotes and lists
-  text = text.replace(/^(\s*[-*+]\s+)\[[ xX]\]\s+/gm, '$1');
+  text = text.replace(
+    /^(\s*)[-*+]\s+\[([ xX])\]\s+/gm,
+    (_match, indent, state) => `${indent}${String(state).toLowerCase() === 'x' ? '☑' : '☐'} `
+  );
   text = text.replace(/^>\s?/gm, '');
   text = text.replace(/^[\s]*[-*+]\s+/gm, '• ');
 
@@ -372,9 +602,14 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
     .filter(([, count]) => count > 0)
     .map(([kind, count]) => ({ kind, count }));
 
+  const cleanedText = cleanedLines
+    .join('\n')
+    .trim()
+    .replace(/\u0000B(\d+)X\u0000/g, (_, index) => protectedBlocks[Number(index)] || '');
+
   return {
-    text: cleanedLines.join('\n').trim(),
-    hasCodeBlocks: counts.codeBlocks + counts.mermaid > 0,
+    text: cleanedText,
+    hasCodeBlocks: counts.codeBlocks + counts.mermaid + counts.pluginBlocks > 0,
     hasTables: counts.tables > 0,
     hasMath: counts.math > 0,
     hasFootnotes: counts.footnotes > 0,
@@ -385,5 +620,6 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
 
 export {
   normalizeImageKey,
+  isImageEmbedTarget,
   cleanMarkdownToPlainText
 };

@@ -28,6 +28,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const { loadInputModule } = require('./helpers/input-module.cjs');
+const { createObsidianLikeElement } = require('./helpers/obsidian-dom.js');
 
 describe('AppleStyleView - Sticker Mode Integration', () => {
   let AppleStyleView;
@@ -69,5 +70,36 @@ describe('AppleStyleView - Sticker Mode Integration', () => {
     view.switchPreviewMode('article');
     expect(view.previewMode).toBe('article');
     expect(view.convertCurrent).toHaveBeenCalled();
+  });
+
+  it('should describe semantic conversions with user-facing labels', async () => {
+    const leaf = { view: null };
+    const plugin = { settings: { wechatAccounts: [] } };
+    const view = new AppleStyleView(leaf, plugin);
+    view.previewMode = 'sticker';
+    view.previewContainer = createObsidianLikeElement();
+    view.buildStickerData = vi.fn().mockResolvedValue({
+      title: '测试',
+      content: '正文',
+      imageItems: [],
+      imageDisplaySources: [],
+      sourcePath: 'test.md',
+      removed: [
+        { kind: 'codeBlocks', count: 1 },
+        { kind: 'tables', count: 2 },
+      ],
+    });
+    view.getStickerUiState = vi.fn().mockReturnValue({
+      order: [],
+      removedKeys: [],
+      undoItems: [],
+    });
+
+    await view.renderStickerPreview();
+
+    expect(view.previewContainer.querySelector('.apple-sticker-notice-title')?.textContent)
+      .toBe('已转换：代码块 1 处、表格 2 处');
+    expect(view.previewContainer.querySelector('.apple-sticker-notice-desc')?.textContent)
+      .toBe('内容已转换为适合贴图的纯文本，不会改动笔记原文。');
   });
 });

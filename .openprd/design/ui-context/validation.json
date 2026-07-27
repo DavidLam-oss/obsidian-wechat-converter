@@ -1,7 +1,7 @@
 {
   "version": 1,
   "action": "ui-context-check",
-  "checkedAt": "2026-07-27 12:29:16",
+  "checkedAt": "2026-07-27 22:25:57",
   "ok": true,
   "schemaTarget": {
     "id": "google-labs-code/design.md",
@@ -13,9 +13,9 @@
     "version": 1,
     "direction": "direction-1",
     "source": "user-confirmed",
-    "confirmedAt": "2026-07-27 10:17:46",
+    "confirmedAt": "2026-07-27 12:50:54",
     "mode": "brownfield",
-    "contextFingerprint": "d603b4a42fa011dafba361f2195c37c056cac0cbecddca6788aff8bcdd230907",
+    "contextFingerprint": "fad01ae7d53601dd6f2e71960aa4592675bcd997a3f7a5fc7744df72077a6014",
     "contractDecision": "merge",
     "contractPolicy": "merge-existing-contracts"
   },
@@ -33,17 +33,17 @@
       "DESIGN.md"
     ],
     "instruction": "Preserve the confirmed product boundary and visual direction; use shape/craft/critique/polish for implementation and refinement.",
-    "contextFingerprint": "d603b4a42fa011dafba361f2195c37c056cac0cbecddca6788aff8bcdd230907",
+    "contextFingerprint": "fad01ae7d53601dd6f2e71960aa4592675bcd997a3f7a5fc7744df72077a6014",
     "contractDigests": {
       "product": "090856a2cc4a9c6fcedeea367ab9fd3b524f194f5d3e30885fa325480c55cf49",
       "design": "0fe965ad574ca33d655bad76255837ac01d39aa06306808c0e719c507eaa4bc9"
     },
     "activeDesignDigests": {
       "facts-sheet.md": "c9784619fda2ad672e69c6001b669ff6d646bde5ba3fcfd266c1a2b65509857c",
-      "asset-spec.md": "4abe9672dbde832133a8bd3e217702c408294668e8d8ac2e2b0d25589897bdaf",
+      "asset-spec.md": "c7bd2a57726743d93e2dccb8bdebd56e7f38e80b5c8c88d6f87f199c3f292582",
       "image-preflight.md": "3d91011dba83d09e55145ec71b29e81144d1912d875cd35929e4bedb5fbcdc87",
       "direction-plan.md": "9cf2b34dd7ae7ac9be522faee55070e03854e9e9f5a7ac4cd5037fd540ee4f5d",
-      "selected-direction.md": "4c95525edad8775b1c97e9757ff79a0b4313878f7733081382aaf2825879d636"
+      "selected-direction.md": "cb7ead798a273620ecfa299cd1a2183c44655fe31fb01c8429775c445ffd883b"
     }
   }
 }

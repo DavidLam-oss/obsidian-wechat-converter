@@ -1,21 +1,21 @@
 {
   "version": 1,
   "action": "ui-context-local-fix",
-  "generatedAt": "2026-07-27 12:29:16",
+  "generatedAt": "2026-07-27 22:25:57",
   "ok": true,
   "mode": {
     "mode": "local-fix",
     "source": "user-confirmed",
     "reason": "explicit-local-fix"
   },
-  "reusedContextFingerprint": "d603b4a42fa011dafba361f2195c37c056cac0cbecddca6788aff8bcdd230907",
+  "reusedContextFingerprint": "fad01ae7d53601dd6f2e71960aa4592675bcd997a3f7a5fc7744df72077a6014",
   "confirmation": {
     "version": 1,
     "direction": "direction-1",
     "source": "user-confirmed",
-    "confirmedAt": "2026-07-27 10:17:46",
+    "confirmedAt": "2026-07-27 12:50:54",
     "mode": "brownfield",
-    "contextFingerprint": "d603b4a42fa011dafba361f2195c37c056cac0cbecddca6788aff8bcdd230907",
+    "contextFingerprint": "fad01ae7d53601dd6f2e71960aa4592675bcd997a3f7a5fc7744df72077a6014",
     "contractDecision": "merge",
     "contractPolicy": "merge-existing-contracts"
   },

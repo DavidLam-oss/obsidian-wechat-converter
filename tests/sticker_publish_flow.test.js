@@ -91,7 +91,9 @@ describe('WeChat sticker publish flow', () => {
       setMessage(message) {
         this.message = message;
       }
-      hide() {}
+      hide() {
+        this.hidden = true;
+      }
     };
 
     const inputModule = loadInputModule();
@@ -345,6 +347,21 @@ describe('WeChat sticker publish flow', () => {
   });
 
   describe('onSyncToWechat in sticker mode', () => {
+    it('should keep article and sticker wechat notices free of emoji and success media ids', () => {
+      const noticeSources = [
+        'views/publish-modal/wechat-sync-action.js',
+        'views/publish-modal/wechat-account-state.js',
+        'views/publish-modal/wechat-sync-modal.js',
+      ].map((filePath) => readFileSync(resolve(process.cwd(), filePath), 'utf8')).join('\n');
+
+      expect(noticeSources).not.toMatch(/🚀|✅|⚠️|❌/u);
+      expect(noticeSources).not.toContain('MediaID');
+      expect(noticeSources).toContain(
+        "new Notice(isUpdate ? WECHAT_UPDATE_SUCCESS_NOTICE : WECHAT_SYNC_SUCCESS_NOTICE)"
+      );
+      expect(noticeSources).toContain('new Notice(WECHAT_SYNC_SUCCESS_NOTICE)');
+    });
+
     it('should publish without a rendered article html', async () => {
       view.currentHtml = '';
       const stickerSpy = vi.spyOn(view, 'onSyncStickerToWechat').mockResolvedValue(undefined);
@@ -378,7 +395,10 @@ describe('WeChat sticker publish flow', () => {
         content: '一段文案',
         imageMediaIds: ['media-x', 'media-x'],
       });
-      expect(notices.some((notice) => String(notice.message).includes('贴图已发送到微信草稿箱'))).toBe(true);
+      const successNotice = notices.at(-1);
+      expect(successNotice.message).toBe('同步成功！请前往微信公众号后台草稿箱查看');
+      expect(successNotice.message).not.toContain('MediaID');
+      expect(notices.map((notice) => String(notice.message)).join('')).not.toMatch(/🚀|✅|⚠️|❌/u);
     });
 
     it('should refuse to call the api when the caption is over the limit', async () => {
@@ -413,6 +433,7 @@ describe('WeChat sticker publish flow', () => {
       const failure = notices.find((notice) => String(notice.message).includes('贴图同步失败'));
       expect(failure).toBeTruthy();
       expect(String(failure.message)).toContain('第 1 张图片上传失败');
+      expect(String(failure.message)).not.toMatch(/🚀|✅|⚠️|❌/u);
     });
   });
 });

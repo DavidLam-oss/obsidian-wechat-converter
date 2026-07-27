@@ -459,7 +459,7 @@ showSyncModal(options = {}) {
     const isStickerMode = this.previewMode === 'sticker';
     // 贴图发布没有封面概念，图片本身就是内容。
     if (!isStickerMode && !coverBase64 && !thumbMediaId) {
-      new Notice('❌ 请先设置封面图');
+      new Notice('请先设置封面图');
       return;
     }
     modal.close();
