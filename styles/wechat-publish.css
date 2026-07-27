@@ -553,7 +553,171 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   background: color-mix(in srgb, var(--apple-tertiary) 36%, transparent);
 }
 
+/* 微信贴图发布：方向 1（顺序优先单列） */
+.wechat-sticker-publish-content {
+  gap: 0;
+  padding-bottom: 2px;
+}
+
+.wechat-publish-shell .modal-content.wechat-sticker-publish-content {
+  height: min(86vh, 920px);
+  min-height: min(620px, 86vh);
+}
+
+.wechat-sticker-publish-content .wechat-publish-mode-tabs {
+  margin-bottom: 18px;
+}
+
+.sticker-publish-account,
+.sticker-publish-title,
+.sticker-publish-images {
+  margin-bottom: 16px;
+}
+
+.sticker-publish-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.sticker-publish-section-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 7px;
+  color: var(--text-normal);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.sticker-publish-section-icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  color: var(--interactive-accent);
+}
+
+.sticker-publish-count {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 550;
+}
+
+.sticker-publish-image-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.sticker-publish-image-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1px solid color-mix(in srgb, var(--text-normal) 12%, transparent);
+  border-radius: 7px;
+  color: var(--text-muted);
+  background: var(--background-secondary);
+  font-size: 11.5px;
+}
+
+.sticker-publish-image-actions button:hover {
+  color: var(--text-normal);
+  border-color: color-mix(in srgb, var(--interactive-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--interactive-accent) 7%, var(--background-secondary));
+}
+
+.sticker-publish-image-actions button span:first-child {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+}
+
+.sticker-publish-image-body.wechat-modal-sticker-grid-preview {
+  display: block;
+  padding: 0;
+}
+
+.sticker-publish-image-body.wechat-modal-sticker-grid-preview img {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.sticker-publish-restore-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 8px;
+  margin-top: 8px;
+}
+
+.sticker-publish-restore-row button {
+  padding: 2px 4px;
+  border: 0;
+  color: var(--text-muted);
+  background: transparent;
+  font-size: 11px;
+}
+
+.sticker-publish-restore-row button:hover {
+  color: var(--interactive-accent);
+}
+
+.sticker-publish-status {
+  padding: 11px 12px;
+  border: 1px solid color-mix(in srgb, var(--text-normal) 9%, transparent);
+  border-radius: 9px;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--background-secondary) 74%, transparent);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.sticker-publish-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+.sticker-publish-cleaning-note {
+  margin-top: 5px;
+}
+
+.sticker-publish-account-warning {
+  margin-top: 7px;
+  color: var(--text-warning);
+}
+
+.sticker-publish-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin-top: 16px;
+  padding-top: 12px;
+  background: linear-gradient(to bottom, transparent, var(--background-primary) 12px);
+}
+
+@media (max-width: 520px) {
+  .sticker-publish-section-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .sticker-publish-image-actions {
+    width: 100%;
+  }
+
+  .sticker-publish-image-actions button {
+    flex: 1;
+    justify-content: center;
+    min-height: 38px;
+  }
+}
+
 .wechat-multiplatform-shell .modal-content.wechat-multiplatform-modal:not(.wechat-multiplatform-result-modal) {
   overflow: hidden;
 }
-

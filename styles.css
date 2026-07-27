@@ -2923,6 +2923,183 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   font-family: var(--font-text, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
 }
 
+/* 侧栏与发布弹窗共用的贴图顺序网格 */
+.sticker-image-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sticker-image-list.is-empty {
+  display: flex;
+  min-height: 116px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  color: var(--text-muted);
+  border: 1px dashed color-mix(in srgb, var(--text-muted) 34%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--background-secondary) 72%, transparent);
+  text-align: center;
+}
+
+.sticker-image-list__empty-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--text-faint);
+}
+
+.sticker-image-list__empty-text {
+  max-width: 320px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.sticker-image-list__item {
+  position: relative;
+  min-width: 0;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--text-normal) 12%, transparent);
+  border-radius: 10px;
+  background: var(--background-secondary);
+  box-shadow: 0 1px 4px rgba(20, 28, 42, 0.08);
+  cursor: grab;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.sticker-image-list__item:hover,
+.sticker-image-list__item:focus-visible {
+  border-color: color-mix(in srgb, var(--interactive-accent) 56%, transparent);
+  box-shadow: 0 5px 14px rgba(20, 28, 42, 0.14);
+  outline: none;
+}
+
+.sticker-image-list__item.is-dragging {
+  opacity: 0.58;
+  transform: scale(0.97);
+}
+
+.sticker-image-list__thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sticker-image-list__item.has-image-error::before {
+  content: "图片暂不可预览";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.sticker-image-list__order,
+.sticker-image-list__source {
+  position: absolute;
+  bottom: 6px;
+  z-index: 1;
+  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+  border-radius: 6px;
+  color: #ffffff;
+  background: rgba(18, 24, 33, 0.72);
+  backdrop-filter: blur(6px);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.sticker-image-list__order {
+  left: 6px;
+}
+
+.sticker-image-list__source {
+  right: 6px;
+  font-weight: 500;
+}
+
+.sticker-image-list__remove,
+.sticker-image-list__move-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  color: #ffffff;
+  background: rgba(18, 24, 33, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.sticker-image-list__remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+}
+
+.sticker-image-list__remove:hover {
+  background: var(--text-error);
+}
+
+.sticker-image-list__move-controls {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.sticker-image-list__item:hover .sticker-image-list__move-controls,
+.sticker-image-list__item:focus-within .sticker-image-list__move-controls {
+  opacity: 1;
+}
+
+.sticker-image-list__move-controls button:disabled {
+  opacity: 0.35;
+}
+
+.apple-sticker-restore-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .sticker-image-list__move-controls {
+    opacity: 1;
+  }
+
+  .sticker-image-list__remove,
+  .sticker-image-list__move-controls button {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (max-width: 420px) {
+  .sticker-image-list {
+    gap: 7px;
+  }
+
+  .sticker-image-list__source {
+    display: none;
+  }
+}
 /*
 ## 核心功能
 
@@ -4254,10 +4431,174 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   background: color-mix(in srgb, var(--apple-tertiary) 36%, transparent);
 }
 
+/* 微信贴图发布：方向 1（顺序优先单列） */
+.wechat-sticker-publish-content {
+  gap: 0;
+  padding-bottom: 2px;
+}
+
+.wechat-publish-shell .modal-content.wechat-sticker-publish-content {
+  height: min(86vh, 920px);
+  min-height: min(620px, 86vh);
+}
+
+.wechat-sticker-publish-content .wechat-publish-mode-tabs {
+  margin-bottom: 18px;
+}
+
+.sticker-publish-account,
+.sticker-publish-title,
+.sticker-publish-images {
+  margin-bottom: 16px;
+}
+
+.sticker-publish-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.sticker-publish-section-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 7px;
+  color: var(--text-normal);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.sticker-publish-section-icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  color: var(--interactive-accent);
+}
+
+.sticker-publish-count {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 550;
+}
+
+.sticker-publish-image-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.sticker-publish-image-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1px solid color-mix(in srgb, var(--text-normal) 12%, transparent);
+  border-radius: 7px;
+  color: var(--text-muted);
+  background: var(--background-secondary);
+  font-size: 11.5px;
+}
+
+.sticker-publish-image-actions button:hover {
+  color: var(--text-normal);
+  border-color: color-mix(in srgb, var(--interactive-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--interactive-accent) 7%, var(--background-secondary));
+}
+
+.sticker-publish-image-actions button span:first-child {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+}
+
+.sticker-publish-image-body.wechat-modal-sticker-grid-preview {
+  display: block;
+  padding: 0;
+}
+
+.sticker-publish-image-body.wechat-modal-sticker-grid-preview img {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.sticker-publish-restore-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 8px;
+  margin-top: 8px;
+}
+
+.sticker-publish-restore-row button {
+  padding: 2px 4px;
+  border: 0;
+  color: var(--text-muted);
+  background: transparent;
+  font-size: 11px;
+}
+
+.sticker-publish-restore-row button:hover {
+  color: var(--interactive-accent);
+}
+
+.sticker-publish-status {
+  padding: 11px 12px;
+  border: 1px solid color-mix(in srgb, var(--text-normal) 9%, transparent);
+  border-radius: 9px;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--background-secondary) 74%, transparent);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.sticker-publish-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+.sticker-publish-cleaning-note {
+  margin-top: 5px;
+}
+
+.sticker-publish-account-warning {
+  margin-top: 7px;
+  color: var(--text-warning);
+}
+
+.sticker-publish-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin-top: 16px;
+  padding-top: 12px;
+  background: linear-gradient(to bottom, transparent, var(--background-primary) 12px);
+}
+
+@media (max-width: 520px) {
+  .sticker-publish-section-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .sticker-publish-image-actions {
+    width: 100%;
+  }
+
+  .sticker-publish-image-actions button {
+    flex: 1;
+    justify-content: center;
+    min-height: 38px;
+  }
+}
+
 .wechat-multiplatform-shell .modal-content.wechat-multiplatform-modal:not(.wechat-multiplatform-result-modal) {
   overflow: hidden;
 }
-
 /*
 ## 核心功能
 

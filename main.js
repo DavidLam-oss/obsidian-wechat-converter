@@ -75632,6 +75632,22 @@ var coreMethods = {
     if (this.mermaidImageCache) {
       this.mermaidImageCache.clear();
     }
+    if (this.stickerUiStates) {
+      for (const state of this.stickerUiStates.values()) {
+        if (!(state == null ? void 0 : state.objectUrls))
+          continue;
+        for (const objectUrl of state.objectUrls) {
+          window.URL.revokeObjectURL(objectUrl);
+        }
+        state.objectUrls.clear();
+      }
+      this.stickerUiStates.clear();
+    }
+    if (this.stickerUploadCache) {
+      this.stickerUploadCache.clear();
+    }
+    this.stickerModalGeneration = (this.stickerModalGeneration || 0) + 1;
+    this.sessionStickerSourcePath = "";
     console.debug("\u{1F34E} \u53D1\u5E03\u52A9\u624B\u9762\u677F\u5DF2\u5173\u95ED");
   },
   simpleHash(str) {
@@ -75651,39 +75667,175 @@ function normalizeImageKey(src) {
   if (!value)
     return "";
   value = value.split("#")[0].split("?")[0].trim();
+  if (value.startsWith("<") && value.endsWith(">")) {
+    value = value.slice(1, -1).trim();
+  }
   try {
     value = decodeURIComponent(value);
   } catch (e) {
   }
-  const segments = value.split(/[\\/]/);
-  const fileName = segments[segments.length - 1] || value;
-  return fileName.trim().toLowerCase();
+  return value.replace(/\\/g, "/").replace(/\/+/g, "/").replace(/^\.\//, "").trim().toLowerCase();
 }
 function findImageOrderIndex(src, imageOrder) {
   if (!Array.isArray(imageOrder) || imageOrder.length === 0)
     return 0;
-  const exactIndex = imageOrder.indexOf(src);
+  const exactIndex = imageOrder.findIndex((item) => item === src);
   if (exactIndex !== -1)
     return exactIndex + 1;
   const key = normalizeImageKey(src);
   if (!key)
     return 0;
-  const keyIndex = imageOrder.findIndex((item) => normalizeImageKey(item) === key);
+  const keyIndex = imageOrder.findIndex((item) => {
+    var _a5;
+    if (typeof item === "string") {
+      return normalizeImageKey(item.replace(/^body:/, "")) === key;
+    }
+    if (!item || typeof item !== "object")
+      return false;
+    const itemSrc = typeof item.displaySrc === "string" ? item.displaySrc : ((_a5 = item.uploadRef) == null ? void 0 : _a5.kind) === "src" && typeof item.uploadRef.src === "string" ? item.uploadRef.src : "";
+    return normalizeImageKey(itemSrc) === key;
+  });
   return keyIndex === -1 ? 0 : keyIndex + 1;
+}
+function removeFencedBlocks(value) {
+  const lines = value.split("\n");
+  const output = [];
+  let codeBlocks = 0;
+  let mermaid = 0;
+  for (let index = 0; index < lines.length; ) {
+    const opening = lines[index].match(/^\s*(`{3,}|~{3,})\s*([A-Za-z0-9_-]*)/);
+    if (!opening) {
+      output.push(lines[index]);
+      index += 1;
+      continue;
+    }
+    const marker = opening[1];
+    const language = String(opening[2] || "").toLowerCase();
+    if (language === "mermaid")
+      mermaid += 1;
+    else
+      codeBlocks += 1;
+    index += 1;
+    const closeRegex = new RegExp(`^\\s*${marker[0]}{${marker.length},}\\s*$`);
+    while (index < lines.length && !closeRegex.test(lines[index])) {
+      index += 1;
+    }
+    if (index < lines.length)
+      index += 1;
+  }
+  return { text: output.join("\n"), codeBlocks, mermaid };
+}
+function removeMarkdownTables(value) {
+  const lines = value.split("\n");
+  const removed = /* @__PURE__ */ new Set();
+  let count = 0;
+  const isTableRow = (line) => line.includes("|") && line.trim().replace(/^\||\|$/g, "").includes("|");
+  const isDelimiter = (line) => {
+    if (!isTableRow(line))
+      return false;
+    const cells = line.trim().replace(/^\||\|$/g, "").split("|");
+    return cells.length >= 2 && cells.every((cell) => /^\s*:?-{3,}:?\s*$/.test(cell));
+  };
+  for (let index = 1; index < lines.length; index++) {
+    if (!isDelimiter(lines[index]) || !isTableRow(lines[index - 1]) || removed.has(index))
+      continue;
+    count += 1;
+    removed.add(index - 1);
+    removed.add(index);
+    let cursor = index + 1;
+    while (cursor < lines.length && isTableRow(lines[cursor]) && lines[cursor].trim()) {
+      removed.add(cursor);
+      cursor += 1;
+    }
+  }
+  return {
+    text: lines.filter((_, index) => !removed.has(index)).join("\n"),
+    count
+  };
+}
+function removeInlineMath(value) {
+  let output = "";
+  let count = 0;
+  for (let index = 0; index < value.length; ) {
+    const char = value[index];
+    if (char !== "$" || value[index - 1] === "\\" || /\d/.test(value[index + 1] || "")) {
+      output += char;
+      index += 1;
+      continue;
+    }
+    let closing = index + 1;
+    while (closing < value.length) {
+      if (value[closing] === "\n")
+        break;
+      if (value[closing] === "$" && value[closing - 1] !== "\\")
+        break;
+      closing += 1;
+    }
+    const content = value.slice(index + 1, closing);
+    if (closing < value.length && value[closing] === "$" && content.trim() && !/^\s|\s$/.test(content)) {
+      count += 1;
+      index = closing + 1;
+      continue;
+    }
+    output += char;
+    index += 1;
+  }
+  return { text: output, count };
+}
+function replaceProtected(value, regex, replacer) {
+  return value.replace(regex, (...args) => replacer(args[0], ...args.slice(1, -2)));
 }
 function cleanMarkdownToPlainText(markdown, options = {}) {
   if (typeof markdown !== "string") {
-    return { text: "", hasCodeBlocks: false, hasTables: false, imageCount: 0 };
+    return {
+      text: "",
+      hasCodeBlocks: false,
+      hasTables: false,
+      hasMath: false,
+      hasFootnotes: false,
+      imageCount: 0,
+      removed: []
+    };
   }
   const insertImageIndex = Boolean(options.insertImageIndex);
-  const imageOrder = Array.isArray(options.imageOrder) ? options.imageOrder.filter((item) => typeof item === "string") : [];
+  const imageOrder = Array.isArray(options.imageOrder) ? options.imageOrder.filter((item) => typeof item === "string" || item && typeof item === "object") : [];
+  const counts = {
+    codeBlocks: 0,
+    mermaid: 0,
+    tables: 0,
+    math: 0,
+    footnotes: 0
+  };
   let text = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "");
-  const codeBlockRegex = /```[\s\S]*?```/g;
-  const tableRegex = /\|[^\n]+\|\n\|[\s:|-]+\|\n(\|[^\n]+\|\n?)*/g;
-  const hasCodeBlocks = codeBlockRegex.test(text);
-  const hasTables = tableRegex.test(text);
-  text = text.replace(/```[\s\S]*?```/g, "");
-  text = text.replace(/\|[^\n]+\|\n\|[\s:|-]+\|\n(\|[^\n]+\|\n?)*/g, "");
+  const fenced = removeFencedBlocks(text);
+  text = fenced.text;
+  counts.codeBlocks = fenced.codeBlocks;
+  counts.mermaid = fenced.mermaid;
+  text = text.replace(/%%[\s\S]*?%%/g, "");
+  text = text.replace(/\$\$[\s\S]*?\$\$/g, () => {
+    counts.math += 1;
+    return "";
+  });
+  text = text.replace(/\\\[[\s\S]*?\\\]/g, () => {
+    counts.math += 1;
+    return "";
+  });
+  text = text.replace(/\\\([^)\n]*?\\\)/g, () => {
+    counts.math += 1;
+    return "";
+  });
+  const inlineMath = removeInlineMath(text);
+  text = inlineMath.text;
+  counts.math += inlineMath.count;
+  const tables = removeMarkdownTables(text);
+  text = tables.text;
+  counts.tables = tables.count;
+  text = text.replace(/^\[\^[^\]]+\]:[^\n]*(?:\n(?: {2,}|\t)[^\n]*)*/gm, () => {
+    counts.footnotes += 1;
+    return "";
+  });
+  text = text.replace(/\[\^[^\]]+\]/g, "");
+  text = text.replace(/^\s{0,3}(?:-{3,}|\*{3,}|_{3,})\s*$/gm, "");
   text = text.replace(/~~[\s\S]*?~~/g, "");
   let imageCounter = 0;
   const imageTagRegex = /!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]|!\[([^\]]*)\]\(([^)]+)\)/g;
@@ -75699,13 +75851,24 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
     }
     return `[\u914D\u56FE ${imageCounter}]`;
   });
+  text = text.replace(/!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, "");
+  text = text.replace(/^\s*>\s*\[![^\]]+\][+-]?\s*/gmi, "");
   text = text.replace(/<[^>]+>/g, "");
   text = text.replace(/^#{1,6}\s+(.+)$/gm, "$1");
+  text = text.replace(/==([\s\S]*?)==/g, "$1");
+  const protectedValues = [];
+  const protect = (value) => {
+    const token = `\0P${protectedValues.length}X\0`;
+    protectedValues.push(value);
+    return token;
+  };
+  text = replaceProtected(text, /(`+)([^`\n]*?)\1/g, (_match, _ticks, content) => protect(content));
+  text = replaceProtected(text, /\[([^\]]+)\]\((?:<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\)/g, (_match, label) => protect(label));
+  text = replaceProtected(text, /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_match, target, alias) => protect(String(alias || target)));
   text = text.replace(/(\*\*|__)(.*?)\1/g, "$2");
   text = text.replace(/(\*|_)(.*?)\1/g, "$2");
-  text = text.replace(/`([^`]+)`/g, "$1");
-  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1");
-  text = text.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_, target, alias) => String(alias || target));
+  text = text.replace(/\u0000P(\d+)X\u0000/g, (_, index) => protectedValues[Number(index)] || "");
+  text = text.replace(/^(\s*[-*+]\s+)\[[ xX]\]\s+/gm, "$1");
   text = text.replace(/^>\s?/gm, "");
   text = text.replace(/^[\s]*[-*+]\s+/gm, "\u2022 ");
   const cleanedLines = text.split("\n").map((line) => line.trim()).filter((line, idx, arr) => {
@@ -75714,73 +75877,240 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
     }
     return true;
   });
+  const removed = Object.entries(counts).filter(([, count]) => count > 0).map(([kind, count]) => ({ kind, count }));
   return {
     text: cleanedLines.join("\n").trim(),
-    hasCodeBlocks,
-    hasTables,
-    imageCount: imageCounter
+    hasCodeBlocks: counts.codeBlocks + counts.mermaid > 0,
+    hasTables: counts.tables > 0,
+    hasMath: counts.math > 0,
+    hasFootnotes: counts.footnotes > 0,
+    imageCount: imageCounter,
+    removed
   };
+}
+
+// services/sticker-image-items.js
+var STICKER_IMAGE_SOURCES = /* @__PURE__ */ new Set(["body", "upload", "material", "render"]);
+function getStickerImageItemSrc(item) {
+  var _a5;
+  if (!item || typeof item !== "object")
+    return "";
+  if (typeof item.displaySrc === "string" && item.displaySrc.trim()) {
+    return item.displaySrc.trim();
+  }
+  if (((_a5 = item.uploadRef) == null ? void 0 : _a5.kind) === "src" && typeof item.uploadRef.src === "string") {
+    return item.uploadRef.src.trim();
+  }
+  return "";
+}
+function isStickerImageItem(item) {
+  if (!item || typeof item !== "object")
+    return false;
+  if (!STICKER_IMAGE_SOURCES.has(item.source))
+    return false;
+  if (typeof item.key !== "string" || !item.key.trim())
+    return false;
+  const ref = item.uploadRef;
+  if (!ref || typeof ref !== "object")
+    return false;
+  if (ref.kind === "src")
+    return typeof ref.src === "string" && Boolean(ref.src.trim());
+  if (ref.kind === "blob")
+    return Boolean(ref.blob);
+  if (ref.kind === "media") {
+    return typeof ref.mediaId === "string" && Boolean(ref.mediaId.trim()) && typeof ref.accountId === "string" && Boolean(ref.accountId.trim());
+  }
+  return false;
+}
+function normalizeStickerImageItem(item) {
+  if (!isStickerImageItem(item))
+    return null;
+  const normalized = {
+    source: item.source,
+    key: item.key.trim(),
+    uploadRef: item.uploadRef
+  };
+  if (typeof item.displaySrc === "string" && item.displaySrc.trim()) {
+    normalized.displaySrc = item.displaySrc.trim();
+  }
+  if (typeof item.name === "string" && item.name.trim()) {
+    normalized.name = item.name.trim();
+  }
+  if (typeof item.fingerprint === "string" && item.fingerprint.trim()) {
+    normalized.fingerprint = item.fingerprint.trim();
+  }
+  return normalized;
+}
+function createBodyStickerImageItem(src, resolveIdentity) {
+  if (typeof src !== "string" || !src.trim())
+    return null;
+  const value = src.trim();
+  const resolved = typeof resolveIdentity === "function" ? resolveIdentity(value) : "";
+  const identity = normalizeImageKey(resolved || value);
+  if (!identity)
+    return null;
+  return {
+    source: "body",
+    key: `body:${identity}`,
+    displaySrc: value,
+    uploadRef: { kind: "src", src: value },
+    name: value.split(/[\\/]/).pop() || value
+  };
+}
+function createUploadStickerImageItem({ blob, fingerprint, displaySrc, name = "" }) {
+  if (!blob || typeof fingerprint !== "string" || !fingerprint.trim())
+    return null;
+  return {
+    source: "upload",
+    key: `upload:${fingerprint.trim()}`,
+    displaySrc: typeof displaySrc === "string" ? displaySrc.trim() : "",
+    uploadRef: { kind: "blob", blob },
+    name: typeof name === "string" ? name.trim() : "",
+    fingerprint: fingerprint.trim()
+  };
+}
+function createMaterialStickerImageItem({ mediaId, accountId, displaySrc = "", name = "" }) {
+  if (typeof mediaId !== "string" || !mediaId.trim())
+    return null;
+  if (typeof accountId !== "string" || !accountId.trim())
+    return null;
+  return {
+    source: "material",
+    key: `material:${accountId.trim()}:${mediaId.trim()}`,
+    displaySrc: typeof displaySrc === "string" ? displaySrc.trim() : "",
+    uploadRef: {
+      kind: "media",
+      mediaId: mediaId.trim(),
+      accountId: accountId.trim()
+    },
+    name: typeof name === "string" ? name.trim() : ""
+  };
+}
+function resolveStickerOrderKey(value, available) {
+  if (value && typeof value === "object" && typeof value.key === "string") {
+    return value.key.trim();
+  }
+  if (typeof value !== "string" || !value.trim())
+    return "";
+  const raw = value.trim();
+  const exactKey = available.find((item) => item.key === raw);
+  if (exactKey)
+    return exactKey.key;
+  const exactSrc = available.find((item) => getStickerImageItemSrc(item) === raw);
+  if (exactSrc)
+    return exactSrc.key;
+  const normalized = normalizeImageKey(raw);
+  const normalizedMatches = available.filter((item) => {
+    if (item.source !== "body")
+      return false;
+    return normalizeImageKey(getStickerImageItemSrc(item)) === normalized;
+  });
+  return normalizedMatches.length === 1 ? normalizedMatches[0].key : raw;
+}
+function reconcileStickerImageItems({
+  defaultItems = [],
+  manualItems = [],
+  order = [],
+  removedKeys = [],
+  limit = 9
+}) {
+  const candidates = [];
+  const candidateKeys = /* @__PURE__ */ new Set();
+  for (const candidate of [...defaultItems, ...manualItems]) {
+    const item = normalizeStickerImageItem(candidate);
+    if (!item || candidateKeys.has(item.key))
+      continue;
+    candidateKeys.add(item.key);
+    candidates.push(item);
+  }
+  const removed = new Set(
+    (Array.isArray(removedKeys) ? removedKeys : []).map((value) => resolveStickerOrderKey(value, candidates)).filter(Boolean)
+  );
+  const byKey = new Map(candidates.map((item) => [item.key, item]));
+  const result = [];
+  const used = /* @__PURE__ */ new Set();
+  for (const value of Array.isArray(order) ? order : []) {
+    const key = resolveStickerOrderKey(value, candidates);
+    const item = byKey.get(key);
+    if (!item || used.has(key) || removed.has(key))
+      continue;
+    used.add(key);
+    result.push(item);
+  }
+  for (const item of candidates) {
+    if (used.has(item.key) || removed.has(item.key))
+      continue;
+    used.add(item.key);
+    result.push(item);
+  }
+  const safeLimit = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : 9;
+  while (result.length > safeLimit) {
+    let removeIndex = -1;
+    for (let index = result.length - 1; index >= 0; index--) {
+      if (result[index].source === "body") {
+        removeIndex = index;
+        break;
+      }
+    }
+    result.splice(removeIndex === -1 ? result.length - 1 : removeIndex, 1);
+  }
+  return result;
 }
 
 // services/sticker-extractor.js
 var STICKER_MAX_IMAGES = 9;
 var STICKER_MAX_CONTENT_LENGTH = 1e3;
-function extractMarkdownImageSources(markdown) {
+function stripNonBodyImageRegions(markdown) {
+  const withoutFrontmatter = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "");
+  const lines = withoutFrontmatter.split("\n");
+  const kept = [];
+  let fenceChar = "";
+  let fenceLength = 0;
+  for (const line of lines) {
+    if (fenceChar) {
+      const close = line.match(/^\s*(`{3,}|~{3,})\s*$/);
+      if (close && close[1][0] === fenceChar && close[1].length >= fenceLength) {
+        fenceChar = "";
+        fenceLength = 0;
+      }
+      continue;
+    }
+    const open = line.match(/^\s*(`{3,}|~{3,})/);
+    if (open) {
+      fenceChar = open[1][0];
+      fenceLength = open[1].length;
+      continue;
+    }
+    kept.push(line);
+  }
+  return kept.join("\n").replace(/%%[\s\S]*?%%/g, "");
+}
+function extractMarkdownImageItems(markdown, options = {}) {
   if (typeof markdown !== "string")
     return [];
-  const sources = [];
+  const source = stripNonBodyImageRegions(markdown);
+  const items = [];
   const seenKeys = /* @__PURE__ */ new Set();
   const push = (raw) => {
     const src = raw.trim();
     if (!src)
       return;
-    const key = normalizeImageKey(src) || src;
-    if (seenKeys.has(key))
+    const item = createBodyStickerImageItem(src, options.resolveBodyImageIdentity);
+    if (!item || seenKeys.has(item.key))
       return;
-    seenKeys.add(key);
-    sources.push(src);
+    seenKeys.add(item.key);
+    items.push(item);
   };
   const wikiRegex = /!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
   let match;
-  while ((match = wikiRegex.exec(markdown)) !== null) {
+  while ((match = wikiRegex.exec(source)) !== null) {
     push(match[1]);
   }
   const stdRegex = /!\[[^\]]*\]\(([^)]+)\)/g;
-  while ((match = stdRegex.exec(markdown)) !== null) {
+  while ((match = stdRegex.exec(source)) !== null) {
     push(match[1]);
   }
-  return sources;
-}
-function reconcileStickerImageOrder({ defaultImages, order = [], removedKeys = [], limit = STICKER_MAX_IMAGES }) {
-  const available = Array.isArray(defaultImages) ? defaultImages.filter((item) => typeof item === "string") : [];
-  const userOrder = Array.isArray(order) ? order.filter((item) => typeof item === "string") : [];
-  const removed = new Set(
-    (Array.isArray(removedKeys) ? removedKeys : []).filter((item) => typeof item === "string").map((item) => normalizeImageKey(item) || item)
-  );
-  if (userOrder.length === 0 && removed.size === 0) {
-    return available.slice(0, limit);
-  }
-  const availableByKey = /* @__PURE__ */ new Map();
-  for (const src of available) {
-    availableByKey.set(normalizeImageKey(src) || src, src);
-  }
-  const result = [];
-  const used = /* @__PURE__ */ new Set();
-  for (const src of userOrder) {
-    const key = normalizeImageKey(src) || src;
-    if (!availableByKey.has(key) || used.has(key) || removed.has(key))
-      continue;
-    used.add(key);
-    result.push(availableByKey.get(key) || src);
-  }
-  for (const src of available) {
-    const key = normalizeImageKey(src) || src;
-    if (used.has(key) || removed.has(key))
-      continue;
-    used.add(key);
-    result.push(src);
-  }
-  return result.slice(0, limit);
+  return items;
 }
 function extractStickerData({
   markdown = "",
@@ -75788,12 +76118,14 @@ function extractStickerData({
   fallbackTitle = "\u672A\u547D\u540D\u8D34\u56FE",
   insertImageIndex = false,
   imageOrder = [],
-  removedImageKeys = []
+  removedImageKeys = [],
+  manualImageItems = [],
+  resolveBodyImageIdentity
 }) {
   const fm = frontmatter && typeof frontmatter === "object" ? frontmatter : {};
   const rawTitle = typeof fm.title === "string" && fm.title.trim() ? fm.title.trim() : fallbackTitle;
   const title = rawTitle || "\u672A\u547D\u540D\u8D34\u56FE";
-  const frontmatterImages = [];
+  const frontmatterItems = [];
   const frontmatterKeys = /* @__PURE__ */ new Set();
   const pushFrontmatterImage = (value) => {
     if (typeof value !== "string")
@@ -75801,11 +76133,11 @@ function extractStickerData({
     const trimmed = value.trim();
     if (!trimmed)
       return;
-    const key = normalizeImageKey(trimmed) || trimmed;
-    if (frontmatterKeys.has(key))
+    const item = createBodyStickerImageItem(trimmed, resolveBodyImageIdentity);
+    if (!item || frontmatterKeys.has(item.key))
       return;
-    frontmatterKeys.add(key);
-    frontmatterImages.push(trimmed);
+    frontmatterKeys.add(item.key);
+    frontmatterItems.push(item);
   };
   pushFrontmatterImage(fm.cover);
   if (Array.isArray(fm.images)) {
@@ -75813,29 +76145,197 @@ function extractStickerData({
       pushFrontmatterImage(img);
     }
   }
-  const bodyImages = extractMarkdownImageSources(markdown);
-  const combined = [...frontmatterImages];
-  for (const img of bodyImages) {
-    const key = normalizeImageKey(img) || img;
-    if (frontmatterKeys.has(key))
+  const bodyItems = extractMarkdownImageItems(markdown, { resolveBodyImageIdentity });
+  const defaultItems = [...frontmatterItems];
+  for (const item of bodyItems) {
+    if (frontmatterKeys.has(item.key))
       continue;
-    frontmatterKeys.add(key);
-    combined.push(img);
+    frontmatterKeys.add(item.key);
+    defaultItems.push(item);
   }
-  const finalImages = reconcileStickerImageOrder({
-    defaultImages: combined,
+  const finalImageItems = reconcileStickerImageItems({
+    defaultItems,
+    manualItems: Array.isArray(manualImageItems) ? manualImageItems : [],
     order: imageOrder,
     removedKeys: removedImageKeys,
     limit: STICKER_MAX_IMAGES
   });
-  const cleaned = cleanMarkdownToPlainText(markdown, { insertImageIndex, imageOrder: finalImages });
+  const finalImages = finalImageItems.map((item) => getStickerImageItemSrc(item)).filter(Boolean);
+  const cleaned = cleanMarkdownToPlainText(markdown, {
+    insertImageIndex,
+    imageOrder: finalImageItems
+  });
   return {
     title: String(title).trim(),
     content: cleaned.text,
     images: finalImages,
+    imageItems: finalImageItems,
     hasCodeBlocks: cleaned.hasCodeBlocks,
-    hasTables: cleaned.hasTables
+    hasTables: cleaned.hasTables,
+    hasMath: cleaned.hasMath,
+    hasFootnotes: cleaned.hasFootnotes,
+    removed: cleaned.removed
   };
+}
+
+// views/shared/sticker-image-list.js
+function moveStickerImageItem(items, fromIndex, toIndex) {
+  const list = Array.isArray(items) ? [...items] : [];
+  if (!Number.isInteger(fromIndex) || !Number.isInteger(toIndex) || fromIndex < 0 || toIndex < 0 || fromIndex >= list.length || toIndex >= list.length || fromIndex === toIndex) {
+    return list;
+  }
+  const [moved] = list.splice(fromIndex, 1);
+  list.splice(toIndex, 0, moved);
+  return list;
+}
+function renderStickerImageList(container, {
+  items = [],
+  getDisplaySrc = (item) => item.displaySrc || "",
+  onMove,
+  onRemove,
+  setIcon,
+  emptyText = "\u8FD8\u6CA1\u6709\u53EF\u53D1\u5E03\u7684\u56FE\u7247\u3002",
+  focusKey = ""
+} = {}) {
+  const grid = container.createDiv({ cls: "sticker-image-list" });
+  grid.setAttribute("role", "list");
+  grid.setAttribute("aria-label", "\u8D34\u56FE\u56FE\u7247\u987A\u5E8F");
+  if (!items.length) {
+    grid.addClass("is-empty");
+    const emptyIcon = grid.createDiv({ cls: "sticker-image-list__empty-icon" });
+    if (typeof setIcon === "function")
+      setIcon(emptyIcon, "image");
+    grid.createDiv({ cls: "sticker-image-list__empty-text", text: emptyText });
+    return grid;
+  }
+  const sourceLabels = {
+    body: "\u6B63\u6587",
+    upload: "\u672C\u5730",
+    material: "\u7D20\u6750\u5E93",
+    render: "\u6E32\u67D3"
+  };
+  items.forEach((item, index) => {
+    const cell = grid.createDiv({ cls: "sticker-image-list__item" });
+    cell.setAttribute("role", "listitem");
+    cell.setAttribute("tabindex", "0");
+    cell.setAttribute("draggable", "true");
+    cell.dataset.stickerKey = item.key;
+    cell.setAttribute("aria-label", `\u7B2C ${index + 1} \u5F20\u56FE\u7247\uFF0C${sourceLabels[item.source] || "\u56FE\u7247"}`);
+    const src = getDisplaySrc(item, index);
+    if (src) {
+      const image = cell.createEl("img", {
+        cls: "sticker-image-list__thumb",
+        attr: {
+          src,
+          alt: item.name || `\u7B2C ${index + 1} \u5F20\u8D34\u56FE`,
+          draggable: "false"
+        }
+      });
+      image.onerror = () => cell.addClass("has-image-error");
+    } else {
+      cell.addClass("has-image-error");
+    }
+    cell.createDiv({ cls: "sticker-image-list__order", text: String(index + 1) });
+    cell.createDiv({
+      cls: "sticker-image-list__source",
+      text: sourceLabels[item.source] || "\u56FE\u7247"
+    });
+    const removeButton = cell.createEl("button", {
+      cls: "sticker-image-list__remove",
+      attr: {
+        type: "button",
+        title: "\u4E0D\u53D1\u5E03\u8FD9\u5F20\u56FE\u7247",
+        "aria-label": `\u79FB\u9664\u7B2C ${index + 1} \u5F20\u56FE\u7247`
+      }
+    });
+    if (typeof setIcon === "function")
+      setIcon(removeButton, "x");
+    else
+      removeButton.setText("\u79FB\u9664");
+    removeButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onRemove == null ? void 0 : onRemove(item, index);
+    });
+    const moveControls = cell.createDiv({ cls: "sticker-image-list__move-controls" });
+    const previousButton = moveControls.createEl("button", {
+      attr: {
+        type: "button",
+        title: "\u5411\u524D\u79FB\u52A8",
+        "aria-label": `\u5C06\u7B2C ${index + 1} \u5F20\u56FE\u7247\u5411\u524D\u79FB\u52A8`
+      }
+    });
+    const nextButton = moveControls.createEl("button", {
+      attr: {
+        type: "button",
+        title: "\u5411\u540E\u79FB\u52A8",
+        "aria-label": `\u5C06\u7B2C ${index + 1} \u5F20\u56FE\u7247\u5411\u540E\u79FB\u52A8`
+      }
+    });
+    if (typeof setIcon === "function") {
+      setIcon(previousButton, "chevron-left");
+      setIcon(nextButton, "chevron-right");
+    } else {
+      previousButton.setText("\u524D");
+      nextButton.setText("\u540E");
+    }
+    previousButton.disabled = index === 0;
+    nextButton.disabled = index === items.length - 1;
+    previousButton.onclick = (event) => {
+      event.stopPropagation();
+      if (index > 0)
+        onMove == null ? void 0 : onMove(index, index - 1, item);
+    };
+    nextButton.onclick = (event) => {
+      event.stopPropagation();
+      if (index < items.length - 1)
+        onMove == null ? void 0 : onMove(index, index + 1, item);
+    };
+    cell.addEventListener("keydown", (event) => {
+      let targetIndex = index;
+      if (event.key === "ArrowLeft")
+        targetIndex = Math.max(0, index - 1);
+      if (event.key === "ArrowRight")
+        targetIndex = Math.min(items.length - 1, index + 1);
+      if (event.key === "ArrowUp")
+        targetIndex = Math.max(0, index - 3);
+      if (event.key === "ArrowDown")
+        targetIndex = Math.min(items.length - 1, index + 3);
+      if (event.key === "Home")
+        targetIndex = 0;
+      if (event.key === "End")
+        targetIndex = items.length - 1;
+      if (targetIndex === index)
+        return;
+      event.preventDefault();
+      onMove == null ? void 0 : onMove(index, targetIndex, item);
+    });
+    cell.addEventListener("dragstart", (event) => {
+      if (!event.dataTransfer)
+        return;
+      event.dataTransfer.setData("text/plain", String(index));
+      event.dataTransfer.effectAllowed = "move";
+      cell.addClass("is-dragging");
+    });
+    cell.addEventListener("dragend", () => cell.removeClass("is-dragging"));
+    cell.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      if (event.dataTransfer)
+        event.dataTransfer.dropEffect = "move";
+    });
+    cell.addEventListener("drop", (event) => {
+      var _a5;
+      event.preventDefault();
+      const fromIndex = Number.parseInt(((_a5 = event.dataTransfer) == null ? void 0 : _a5.getData("text/plain")) || "", 10);
+      if (Number.isInteger(fromIndex) && fromIndex !== index) {
+        onMove == null ? void 0 : onMove(fromIndex, index, items[fromIndex]);
+      }
+    });
+    if (focusKey && item.key === focusKey) {
+      window.setTimeout(() => cell.focus(), 0);
+    }
+  });
+  return grid;
 }
 
 // views/converter/style-panel.js
@@ -76895,16 +77395,63 @@ var stylePanelMethods = {
       selfRecord.stickerUiStates = /* @__PURE__ */ new Map();
     }
     const states = (
-      /** @type {Map<string, { order: string[], removedKeys: string[] }>} */
+      /** @type {Map<string, {
+      * order: string[],
+      * removedKeys: string[],
+      * manualItems: object[],
+      * undoItems: Array<{item:object,index:number,wasManual:boolean}>,
+      * objectUrls: Set<string>
+      * }>} */
       selfRecord.stickerUiStates
     );
     const key = filePath || "";
     let state = states.get(key);
     if (!state) {
-      state = { order: [], removedKeys: [] };
+      state = {
+        order: [],
+        removedKeys: [],
+        manualItems: [],
+        undoItems: [],
+        objectUrls: /* @__PURE__ */ new Set()
+      };
       states.set(key, state);
     }
     return state;
+  },
+  removeStickerImageItem(filePath, item, index) {
+    const uiState = this.getStickerUiState(filePath);
+    const wasManual = (item == null ? void 0 : item.source) !== "body";
+    uiState.undoItems.push({ item, index, wasManual });
+    if (uiState.undoItems.length > 9)
+      uiState.undoItems.shift();
+    if (wasManual) {
+      uiState.manualItems = uiState.manualItems.filter((candidate) => candidate.key !== item.key);
+    } else if (!uiState.removedKeys.includes(item.key)) {
+      uiState.removedKeys.push(item.key);
+    }
+    uiState.order = uiState.order.filter((key) => key !== item.key);
+  },
+  restoreLastStickerImage(filePath) {
+    const uiState = this.getStickerUiState(filePath);
+    const undo = uiState.undoItems.pop();
+    if (!(undo == null ? void 0 : undo.item))
+      return "";
+    const item = undo.item;
+    if (undo.wasManual && !uiState.manualItems.some((candidate) => candidate.key === item.key)) {
+      uiState.manualItems.push(item);
+    }
+    uiState.removedKeys = uiState.removedKeys.filter((key) => key !== item.key);
+    const nextOrder = uiState.order.filter((key) => key !== item.key);
+    nextOrder.splice(Math.min(Math.max(undo.index, 0), nextOrder.length), 0, item.key);
+    uiState.order = nextOrder;
+    return item.key;
+  },
+  restoreAllStickerImages(filePath) {
+    const uiState = this.getStickerUiState(filePath);
+    while (uiState.undoItems.length > 0) {
+      this.restoreLastStickerImage(filePath);
+    }
+    uiState.removedKeys = [];
   },
   resolveStickerImageSrc(src, sourcePath) {
     var _a5, _b, _c;
@@ -76925,22 +77472,33 @@ var stylePanelMethods = {
     const resolved = getResourcePath(linkFile);
     return typeof resolved === "string" && resolved ? resolved : raw;
   },
-  async buildStickerData() {
-    const activeFile = this.getPublishContextFile();
+  async buildStickerData(options = {}) {
+    var _a5, _b, _c;
+    const requestedSourcePath = typeof options.sourcePath === "string" ? options.sourcePath : "";
+    const activeFile = requestedSourcePath ? ((_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.vault) == null ? void 0 : _b.getAbstractFileByPath) == null ? void 0 : _c.call(_b, requestedSourcePath)) || this.getPublishContextFile() : this.getPublishContextFile();
     const sourcePath = activeFile && typeof activeFile.path === "string" ? activeFile.path : "";
     let markdown = "";
-    const source = (
-      /** @type {MarkdownSourceResultLike} */
-      await resolveMarkdownSource({
-        app: this.app,
-        lastActiveFile: this.lastActiveFile,
-        MarkdownViewType: MarkdownView
-      })
-    );
-    if (source.ok && typeof source.markdown === "string") {
-      markdown = source.markdown;
-    } else if (typeof this.lastResolvedMarkdown === "string") {
-      markdown = this.lastResolvedMarkdown;
+    if (requestedSourcePath && activeFile && activeFile.path === requestedSourcePath) {
+      const vault = toRecord11(this.app.vault);
+      const cachedReadRaw = "cachedRead" in vault ? vault.cachedRead : null;
+      if (typeof cachedReadRaw === "function") {
+        markdown = String(await cachedReadRaw.call(this.app.vault, activeFile));
+      }
+    }
+    if (!markdown) {
+      const source = (
+        /** @type {MarkdownSourceResultLike} */
+        await resolveMarkdownSource({
+          app: this.app,
+          lastActiveFile: this.lastActiveFile,
+          MarkdownViewType: MarkdownView
+        })
+      );
+      if (source.ok && typeof source.markdown === "string") {
+        markdown = source.markdown;
+      } else if (typeof this.lastResolvedMarkdown === "string") {
+        markdown = this.lastResolvedMarkdown;
+      }
     }
     const fileCache = activeFile ? this.app.metadataCache.getFileCache(activeFile) : null;
     const frontmatter = fileCache && fileCache.frontmatter && typeof fileCache.frontmatter === "object" ? (
@@ -76949,23 +77507,34 @@ var stylePanelMethods = {
     ) : {};
     const fallbackTitle = activeFile && typeof activeFile.basename === "string" ? activeFile.basename : "\u672A\u547D\u540D\u8D34\u56FE";
     const uiState = this.getStickerUiState(sourcePath);
+    const resolveBodyImageIdentity = (src) => {
+      var _a6, _b2, _c2;
+      const resolved = (_c2 = (_b2 = (_a6 = this.app) == null ? void 0 : _a6.metadataCache) == null ? void 0 : _b2.getFirstLinkpathDest) == null ? void 0 : _c2.call(_b2, src, sourcePath);
+      return resolved && typeof resolved.path === "string" ? normalizeVaultPath(resolved.path) : normalizeVaultPath(src);
+    };
     const extracted = extractStickerData({
       markdown,
       frontmatter,
       fallbackTitle,
       insertImageIndex: Boolean(this.insertStickerImageIndex),
       imageOrder: uiState.order,
-      removedImageKeys: uiState.removedKeys
+      removedImageKeys: uiState.removedKeys,
+      manualImageItems: uiState.manualItems,
+      resolveBodyImageIdentity
     });
-    uiState.order = [...extracted.images];
+    uiState.order = extracted.imageItems.map((item) => item.key);
     const stickerData = {
       title: extracted.title,
       content: extracted.content,
       images: extracted.images,
+      imageItems: extracted.imageItems,
       hasCodeBlocks: extracted.hasCodeBlocks,
       hasTables: extracted.hasTables,
+      hasMath: extracted.hasMath,
+      hasFootnotes: extracted.hasFootnotes,
+      removed: extracted.removed,
       // 弹窗与侧边栏都需要可直接显示的地址（vault 内图片必须转成 app:// 资源路径）
-      imageDisplaySources: extracted.images.map((src) => this.resolveStickerImageSrc(src, sourcePath)),
+      imageDisplaySources: extracted.imageItems.map((item) => item.source === "body" ? this.resolveStickerImageSrc(getStickerImageItemSrc(item), sourcePath) : item.displaySrc || getStickerImageItemSrc(item)),
       sourcePath
     };
     this.previewStickerData = stickerData;
@@ -76983,19 +77552,18 @@ var stylePanelMethods = {
     this.previewContainer.empty();
     const stickerContainer = this.previewContainer.createEl("div", { cls: "apple-sticker-preview-wrapper" });
     const uiState = this.getStickerUiState(stickerData.sourcePath || "");
-    const strippedParts = [];
-    if (stickerData.hasCodeBlocks)
-      strippedParts.push("\u4EE3\u7801\u5757");
-    if (stickerData.hasTables)
-      strippedParts.push("\u8868\u683C");
+    const strippedParts = (Array.isArray(stickerData.removed) ? stickerData.removed : []).filter((entry) => (entry == null ? void 0 : entry.count) > 0).map((entry) => `${entry.kind} ${entry.count} \u5904`);
     if (strippedParts.length > 0) {
       const notice = stickerContainer.createEl("div", { cls: "apple-sticker-notice-warning" });
-      notice.createEl("span", { cls: "apple-sticker-notice-icon", text: "\u26A0\uFE0F" });
+      const noticeIcon = notice.createEl("span", { cls: "apple-sticker-notice-icon" });
+      const noticeSetIcon = getObsidianSetIcon();
+      if (typeof noticeSetIcon === "function")
+        noticeSetIcon(noticeIcon, "info");
       const noticeContent = notice.createEl("div", { cls: "apple-sticker-notice-content" });
-      noticeContent.createEl("span", { cls: "apple-sticker-notice-title", text: `\u5DF2\u81EA\u52A8\u79FB\u9664${strippedParts.join("\u4E0E")}` });
+      noticeContent.createEl("span", { cls: "apple-sticker-notice-title", text: `\u5DF2\u6E05\u7406\uFF1A${strippedParts.join("\u3001")}` });
       noticeContent.createEl("span", {
         cls: "apple-sticker-notice-desc",
-        text: "\u5FAE\u4FE1\u8D34\u56FE\u6587\u6848\u53EA\u652F\u6301\u7EAF\u6587\u672C\uFF0C\u8FD9\u90E8\u5206\u5185\u5BB9\u4E0D\u4F1A\u51FA\u73B0\u5728\u8349\u7A3F\u91CC\u3002"
+        text: "\u6E05\u7406\u53EA\u5F71\u54CD\u8D34\u56FE\u8349\u7A3F\uFF0C\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u539F\u6587\u3002"
       });
     }
     const imagesSection = stickerContainer.createEl("div", { cls: "apple-sticker-images-section" });
@@ -77009,77 +77577,49 @@ var stylePanelMethods = {
     sectionTitle.createEl("span", { text: "\u8D34\u56FE\u56FE\u7247\u5217\u8868" });
     sectionHeader.createEl("span", {
       cls: "apple-sticker-count-badge",
-      text: `${stickerData.images.length} / ${STICKER_MAX_IMAGES} \u5F20`
+      text: `${stickerData.imageItems.length} / ${STICKER_MAX_IMAGES} \u5F20`
     });
-    if (stickerData.images.length === 0) {
-      const emptyBox = imagesSection.createEl("div", { cls: "apple-sticker-empty-notice" });
-      emptyBox.createEl("span", { cls: "apple-sticker-empty-icon", text: "\u{1F5BC}\uFE0F" });
-      emptyBox.createEl("span", { text: "\u5F53\u524D\u6587\u7AE0\u672A\u627E\u5230\u53EF\u7528\u56FE\u7247\uFF0C\u8BF7\u5148\u5728\u7B14\u8BB0\u6B63\u6587\u4E2D\u63D2\u5165\u56FE\u7247\u3002" });
-      if (uiState.removedKeys.length > 0) {
-        const restoreBtn = imagesSection.createEl("button", {
-          cls: "apple-sticker-restore-btn",
-          text: `\u6062\u590D\u5DF2\u5220\u9664\u7684 ${uiState.removedKeys.length} \u5F20\u56FE\u7247`
-        });
-        restoreBtn.addEventListener("click", () => {
-          uiState.removedKeys = [];
-          uiState.order = [];
-          this.renderStickerPreview();
-        });
-      }
-    } else {
-      const grid = imagesSection.createEl("div", { cls: "apple-sticker-image-grid" });
-      stickerData.images.forEach((imgSrc, idx) => {
-        const item = grid.createEl("div", { cls: "apple-sticker-image-item" });
-        const img = (
-          /** @type {ObsidianInputLike} */
-          item.createEl("img", { cls: "apple-sticker-img-thumb" })
+    renderStickerImageList(imagesSection, {
+      items: stickerData.imageItems,
+      getDisplaySrc: (_, index) => stickerData.imageDisplaySources[index] || "",
+      setIcon,
+      emptyText: "\u6B63\u6587\u4E2D\u8FD8\u6CA1\u6709\u56FE\u7247\uFF1B\u53EF\u5728\u53D1\u5E03\u5F39\u7A97\u4E2D\u6DFB\u52A0\u672C\u5730\u56FE\u7247\u6216\u516C\u4F17\u53F7\u7D20\u6750\u3002",
+      onMove: (fromIndex, toIndex, movedItem) => {
+        uiState.order = moveStickerImageItem(
+          stickerData.imageItems.map((item) => item.key),
+          fromIndex,
+          toIndex
         );
-        img.src = stickerData.imageDisplaySources[idx] || imgSrc;
-        item.createEl("div", { cls: "apple-sticker-image-badge", text: `# ${idx + 1}` });
-        const removeBtn = item.createEl("button", { cls: "apple-sticker-img-remove-btn", text: "\u2715", attr: { title: "\u4E0D\u53D1\u8FD9\u5F20" } });
-        removeBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const removedKey = normalizeImageKey(imgSrc) || imgSrc;
-          if (!uiState.removedKeys.includes(removedKey)) {
-            uiState.removedKeys.push(removedKey);
-          }
-          uiState.order = stickerData.images.filter((_, i) => i !== idx);
-          this.renderStickerPreview();
+        selfRecord.stickerFocusKey = (movedItem == null ? void 0 : movedItem.key) || "";
+        void this.renderStickerPreview();
+      },
+      onRemove: (item, index) => {
+        this.removeStickerImageItem(stickerData.sourcePath, item, index);
+        void this.renderStickerPreview();
+      },
+      focusKey: typeof selfRecord.stickerFocusKey === "string" ? selfRecord.stickerFocusKey : ""
+    });
+    selfRecord.stickerFocusKey = "";
+    if (uiState.undoItems.length > 0 || uiState.removedKeys.length > 0) {
+      const restoreRow = imagesSection.createDiv({ cls: "apple-sticker-restore-row" });
+      if (uiState.undoItems.length > 0) {
+        const undoButton = restoreRow.createEl("button", {
+          cls: "apple-sticker-restore-btn",
+          text: "\u64A4\u9500\u4E0A\u6B21\u79FB\u9664"
         });
-        item.setAttribute("draggable", "true");
-        item.addEventListener("dragstart", (e) => {
-          e.stopPropagation();
-          if (e.dataTransfer) {
-            e.dataTransfer.setData("text/plain", String(idx));
-            e.dataTransfer.effectAllowed = "move";
-          }
-          item.classList.add("dragging");
-        });
-        item.addEventListener("dragend", (e) => {
-          e.stopPropagation();
-          item.classList.remove("dragging");
-        });
-        item.addEventListener("dragover", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (e.dataTransfer) {
-            e.dataTransfer.dropEffect = "move";
-          }
-        });
-        item.addEventListener("drop", (e) => {
-          var _a5;
-          e.preventDefault();
-          e.stopPropagation();
-          const fromIdx = parseInt(((_a5 = e.dataTransfer) == null ? void 0 : _a5.getData("text/plain")) || "", 10);
-          if (!isNaN(fromIdx) && fromIdx !== idx) {
-            const reordered = [...stickerData.images];
-            const [moved] = reordered.splice(fromIdx, 1);
-            reordered.splice(idx, 0, moved);
-            uiState.order = reordered;
-            this.renderStickerPreview();
-          }
-        });
+        undoButton.onclick = () => {
+          selfRecord.stickerFocusKey = this.restoreLastStickerImage(stickerData.sourcePath);
+          void this.renderStickerPreview();
+        };
+      }
+      const restoreAllButton = restoreRow.createEl("button", {
+        cls: "apple-sticker-restore-btn",
+        text: "\u6062\u590D\u5168\u90E8"
       });
+      restoreAllButton.onclick = () => {
+        this.restoreAllStickerImages(stickerData.sourcePath);
+        void this.renderStickerPreview();
+      };
     }
     const hintLine = imagesSection.createEl("div", { cls: "apple-sticker-hint-line" });
     const hintIcon = hintLine.createSpan({ cls: "apple-sticker-hint-icon" });
@@ -77088,7 +77628,7 @@ var stylePanelMethods = {
     }
     hintLine.createEl("span", {
       cls: "apple-sticker-hint-text",
-      text: "\u56FE\u7247\u6309\u6B63\u6587\u987A\u5E8F\u63D0\u53D6\uFF0C\u53EF\u62D6\u62FD\u8C03\u6574\u6216\u70B9\u53F3\u4E0A\u89D2 \u2715 \u6392\u9664\uFF1B\u5220\u9664\u53EA\u5F71\u54CD\u8FD9\u6B21\u53D1\u5E03\uFF0C\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u3002"
+      text: "\u8FD9\u91CC\u786E\u8BA4\u53D1\u5E03\u987A\u5E8F\uFF1B\u6DFB\u52A0\u672C\u5730\u56FE\u7247\u6216\u516C\u4F17\u53F7\u7D20\u6750\uFF0C\u8BF7\u6253\u5F00\u53D1\u5E03\u5F39\u7A97\u3002\u79FB\u9664\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u3002"
     });
     const textSection = stickerContainer.createEl("div", { cls: "apple-sticker-text-section" });
     const textHeader = textSection.createEl("div", { cls: "apple-sticker-section-header" });
@@ -79605,6 +80145,7 @@ var wechatAccountStateMethods = {
 var wechatModalShellMethods = {
   preparePublishModalShell(modal, { mode = "wechat", mobileSync = false } = {}) {
     var _a5, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q;
+    this.stickerModalGeneration = (this.stickerModalGeneration || 0) + 1;
     modal.titleEl.setText("\u53D1\u5E03\u4E0E\u5206\u53D1");
     (_b = (_a5 = modal.titleEl).removeClass) == null ? void 0 : _b.call(_a5, "wechat-multiplatform-title");
     if (typeof modal.contentEl.empty === "function") {
@@ -79645,6 +80186,280 @@ var wechatModalShellMethods = {
     return { wechatTab, feishuTab, multiPlatformTab };
   }
 };
+
+// views/publish-modal/sticker-publish-content.js
+function getStickerModalItems(data) {
+  if (Array.isArray(data == null ? void 0 : data.imageItems))
+    return data.imageItems;
+  return (Array.isArray(data == null ? void 0 : data.images) ? data.images : []).map((src) => createBodyStickerImageItem(src)).filter(Boolean);
+}
+function renderStickerPublishContent(view, {
+  modal,
+  accounts,
+  activeFile,
+  sourcePath,
+  frontmatterMeta,
+  shouldOpenModal
+}) {
+  var _a5, _b;
+  modal.contentEl.addClass("wechat-sticker-publish-content");
+  const setIcon = getObsidianSetIcon();
+  const generation = view.stickerModalGeneration;
+  view.sessionStickerSourcePath = sourcePath;
+  const defaultId = view.plugin.settings.defaultAccountId;
+  const hasDefault = accounts.some((account) => account.id === defaultId);
+  let selectedAccountId = hasDefault ? defaultId : ((_a5 = accounts[0]) == null ? void 0 : _a5.id) || "";
+  let focusKey = "";
+  let currentData = ((_b = view.previewStickerData) == null ? void 0 : _b.sourcePath) === sourcePath ? view.previewStickerData : null;
+  const accountSection = modal.contentEl.createDiv({ cls: "wechat-modal-section sticker-publish-account" });
+  accountSection.createEl("label", { text: "\u53D1\u5E03\u8D26\u53F7", cls: "wechat-modal-label" });
+  if (accounts.length === 1) {
+    selectedAccountId = accounts[0].id;
+    accountSection.createDiv({
+      cls: "wechat-sync-account-single",
+      text: `${accounts[0].name}\uFF08\u9ED8\u8BA4\uFF09`
+    });
+  } else {
+    const accountSelect = accountSection.createEl("select", { cls: "wechat-account-select" });
+    for (const account of accounts) {
+      const option = accountSelect.createEl("option", {
+        value: account.id,
+        text: account.id === defaultId ? `${account.name}\uFF08\u9ED8\u8BA4\uFF09` : account.name
+      });
+      option.selected = account.id === selectedAccountId;
+    }
+    accountSelect.addEventListener("change", (event) => {
+      selectedAccountId = getEventTargetValue(event, selectedAccountId);
+      renderCurrent();
+    });
+  }
+  const titleSection = modal.contentEl.createDiv({ cls: "wechat-modal-section sticker-publish-title" });
+  titleSection.createEl("label", { text: "\u8D34\u56FE\u6807\u9898", cls: "wechat-modal-label" });
+  const titleInput = titleSection.createEl("input", {
+    type: "text",
+    cls: "wechat-modal-title-input",
+    placeholder: "\u9ED8\u8BA4\u4F7F\u7528 frontmatter title \u6216\u6587\u4EF6\u540D"
+  });
+  titleInput.maxLength = 64;
+  titleInput.value = String(frontmatterMeta.title || (activeFile == null ? void 0 : activeFile.basename) || "\u672A\u547D\u540D\u8D34\u56FE");
+  const imageSection = modal.contentEl.createDiv({ cls: "wechat-modal-section sticker-publish-images" });
+  const imageHeader = imageSection.createDiv({ cls: "sticker-publish-section-header" });
+  const imageTitle = imageHeader.createDiv({ cls: "sticker-publish-section-title" });
+  const imageIcon = imageTitle.createSpan({ cls: "sticker-publish-section-icon" });
+  if (typeof setIcon === "function")
+    setIcon(imageIcon, "images");
+  imageTitle.createSpan({ text: "\u53D1\u5E03\u56FE\u7247" });
+  const imageCount = imageTitle.createSpan({ cls: "sticker-publish-count" });
+  const imageActions = imageHeader.createDiv({ cls: "sticker-publish-image-actions" });
+  const localButton = imageActions.createEl("button", { attr: { type: "button" } });
+  const localIcon = localButton.createSpan();
+  if (typeof setIcon === "function")
+    setIcon(localIcon, "plus");
+  localButton.createSpan({ text: "\u672C\u5730\u56FE\u7247" });
+  const materialButton = imageActions.createEl("button", { attr: { type: "button" } });
+  const materialIcon = materialButton.createSpan();
+  if (typeof setIcon === "function")
+    setIcon(materialIcon, "library");
+  materialButton.createSpan({ text: "\u516C\u4F17\u53F7\u7D20\u6750" });
+  const imageBody = imageSection.createDiv({ cls: "sticker-publish-image-body wechat-modal-sticker-grid-preview" });
+  const restoreRow = imageSection.createDiv({ cls: "sticker-publish-restore-row" });
+  const statusSection = modal.contentEl.createDiv({ cls: "sticker-publish-status" });
+  modal.contentEl.createDiv({ cls: "wechat-draft-status" });
+  const buttonRow = modal.contentEl.createDiv({ cls: "wechat-modal-buttons sticker-publish-footer" });
+  const cancelButton = buttonRow.createEl("button", { text: "\u53D6\u6D88" });
+  const syncButton = buttonRow.createEl("button", { text: "\u540C\u6B65\u5230\u8D34\u56FE\u8349\u7A3F", cls: "mod-cta" });
+  cancelButton.onclick = () => modal.close();
+  const getSelectedAccount = () => accounts.find((account) => account.id === selectedAccountId) || accounts[0] || null;
+  const refreshData = async () => {
+    const nextData = await view.buildStickerData({ sourcePath });
+    if (view.stickerModalGeneration !== generation)
+      return;
+    currentData = nextData;
+    renderCurrent();
+  };
+  function renderCurrent() {
+    var _a6;
+    const data = currentData;
+    const items = getStickerModalItems(data);
+    const displaySources = Array.isArray(data == null ? void 0 : data.imageDisplaySources) ? data.imageDisplaySources : [];
+    const content = typeof (data == null ? void 0 : data.content) === "string" ? data.content : "";
+    const uiState = view.getStickerUiState(sourcePath);
+    const selectedAccount = getSelectedAccount();
+    const foreignMaterialCount = items.filter((item) => {
+      var _a7;
+      return ((_a7 = item.uploadRef) == null ? void 0 : _a7.kind) === "media" && item.uploadRef.accountId !== (selectedAccount == null ? void 0 : selectedAccount.id);
+    }).length;
+    imageCount.setText(`${items.length} / ${STICKER_MAX_IMAGES}`);
+    imageBody.empty();
+    renderStickerImageList(imageBody, {
+      items,
+      getDisplaySrc: (item, index) => item.source === "body" ? displaySources[index] || item.displaySrc || "" : item.displaySrc || displaySources[index] || "",
+      setIcon,
+      emptyText: "\u5148\u6DFB\u52A0 1\u20139 \u5F20\u56FE\u7247\uFF1B\u53D1\u5E03\u987A\u5E8F\u6309\u8FD9\u91CC\u4ECE\u5DE6\u5230\u53F3\u6392\u5217\u3002",
+      focusKey,
+      onMove: (fromIndex, toIndex, movedItem) => {
+        uiState.order = moveStickerImageItem(
+          items.map((item) => item.key),
+          fromIndex,
+          toIndex
+        );
+        focusKey = (movedItem == null ? void 0 : movedItem.key) || "";
+        void refreshData();
+      },
+      onRemove: (item, index) => {
+        view.removeStickerImageItem(sourcePath, item, index);
+        focusKey = "";
+        void refreshData();
+      }
+    });
+    focusKey = "";
+    restoreRow.empty();
+    if (uiState.undoItems.length > 0) {
+      const undoButton = restoreRow.createEl("button", { text: "\u64A4\u9500\u4E0A\u6B21\u79FB\u9664" });
+      undoButton.onclick = () => {
+        focusKey = view.restoreLastStickerImage(sourcePath);
+        void refreshData();
+      };
+    }
+    if (uiState.removedKeys.length > 0 || uiState.undoItems.length > 0) {
+      const restoreAllButton = restoreRow.createEl("button", { text: "\u6062\u590D\u5168\u90E8" });
+      restoreAllButton.onclick = () => {
+        view.restoreAllStickerImages(sourcePath);
+        void refreshData();
+      };
+    }
+    statusSection.empty();
+    const summary = statusSection.createDiv({ cls: "sticker-publish-summary" });
+    summary.createSpan({ text: `${items.length} \u5F20\u56FE\u7247` });
+    summary.createSpan({ text: `\u6587\u6848 ${content.length} / ${STICKER_MAX_CONTENT_LENGTH} \u5B57` });
+    const removed = (Array.isArray(data == null ? void 0 : data.removed) ? data.removed : []).filter((entry) => (entry == null ? void 0 : entry.count) > 0).map((entry) => `${entry.kind} ${entry.count} \u5904`);
+    if (removed.length > 0) {
+      statusSection.createDiv({
+        cls: "sticker-publish-cleaning-note",
+        text: `\u5DF2\u4E3A\u8D34\u56FE\u6E05\u7406\uFF1A${removed.join("\u3001")}\u3002\u7B14\u8BB0\u539F\u6587\u672A\u6539\u52A8\u3002`
+      });
+    }
+    if (foreignMaterialCount > 0) {
+      statusSection.createDiv({
+        cls: "sticker-publish-account-warning",
+        text: `\u6709 ${foreignMaterialCount} \u5F20\u516C\u4F17\u53F7\u7D20\u6750\u4E0D\u5C5E\u4E8E\u5F53\u524D\u8D26\u53F7\uFF0C\u8BF7\u79FB\u9664\u6216\u5207\u56DE\u539F\u8D26\u53F7\u3002`
+      });
+    }
+    let disabledReason = "";
+    if (items.length === 0)
+      disabledReason = "\u5FAE\u4FE1\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247";
+    else if (content.length > STICKER_MAX_CONTENT_LENGTH) {
+      disabledReason = `\u5F53\u524D\u6587\u6848 ${content.length} \u5B57\uFF0C\u8D85\u8FC7 ${STICKER_MAX_CONTENT_LENGTH} \u5B57\u4E0A\u9650`;
+    } else if (foreignMaterialCount > 0) {
+      disabledReason = "\u5F53\u524D\u8D26\u53F7\u4E0D\u80FD\u4F7F\u7528\u5176\u4ED6\u516C\u4F17\u53F7\u7684\u7D20\u6750";
+    }
+    syncButton.disabled = Boolean(disabledReason);
+    (_a6 = syncButton.toggleClass) == null ? void 0 : _a6.call(syncButton, "apple-btn-disabled", Boolean(disabledReason));
+    syncButton.setText(
+      items.length === 0 ? "\u56FE\u7247\u4E0D\u8DB3\uFF0C\u65E0\u6CD5\u540C\u6B65" : content.length > STICKER_MAX_CONTENT_LENGTH ? "\u6587\u5B57\u8D85\u957F\uFF0C\u65E0\u6CD5\u540C\u6B65" : "\u540C\u6B65\u5230\u8D34\u56FE\u8349\u7A3F"
+    );
+    if (disabledReason)
+      syncButton.setAttribute("title", disabledReason);
+    else
+      syncButton.removeAttribute("title");
+  }
+  localButton.onclick = () => {
+    const activeDocument = getActiveDocumentCompat();
+    if (!activeDocument)
+      return;
+    const input = activeDocument.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.multiple = true;
+    input.onchange = () => {
+      const files = Array.from(input.files || []);
+      const uiState = view.getStickerUiState(sourcePath);
+      for (const file of files) {
+        const fingerprint = `${file.name}:${file.size}:${file.lastModified}:${file.type}`;
+        const existing = uiState.manualItems.find((item2) => item2.key === `upload:${fingerprint}`);
+        if (existing)
+          continue;
+        const objectUrl = window.URL.createObjectURL(file);
+        const item = createUploadStickerImageItem({
+          blob: file,
+          fingerprint,
+          displaySrc: objectUrl,
+          name: file.name
+        });
+        if (!item) {
+          window.URL.revokeObjectURL(objectUrl);
+          continue;
+        }
+        uiState.objectUrls.add(objectUrl);
+        uiState.manualItems.push(item);
+        uiState.order.push(item.key);
+      }
+      void refreshData();
+    };
+    input.click();
+  };
+  materialButton.onclick = async () => {
+    const account = getSelectedAccount();
+    if (!account) {
+      new Notice("\u8BF7\u5148\u9009\u62E9\u516C\u4F17\u53F7\u8D26\u53F7");
+      return;
+    }
+    const api = new WechatAPI(
+      account.appId,
+      account.appSecret,
+      view.plugin.settings.proxyUrl,
+      view.plugin.settings.clientId
+    );
+    await view.showMaterialPickerModal(api, (material) => {
+      const item = createMaterialStickerImageItem({
+        mediaId: material.mediaId,
+        accountId: account.id,
+        displaySrc: material.url,
+        name: material.name
+      });
+      if (!item)
+        return;
+      const uiState = view.getStickerUiState(sourcePath);
+      if (!uiState.manualItems.some((candidate) => candidate.key === item.key)) {
+        uiState.manualItems.push(item);
+        uiState.order.push(item.key);
+      }
+      void refreshData();
+    }, {
+      title: "\u4ECE\u516C\u4F17\u53F7\u7D20\u6750\u5E93\u6DFB\u52A0\u56FE\u7247",
+      confirmText: "\u6DFB\u52A0\u8FD9\u5F20\u56FE\u7247"
+    });
+  };
+  syncButton.onclick = async () => {
+    if (syncButton.disabled)
+      return;
+    const account = getSelectedAccount();
+    if (!account) {
+      new Notice("\u8BF7\u5148\u9009\u62E9\u516C\u4F17\u53F7\u8D26\u53F7");
+      return;
+    }
+    view.selectedAccountId = account.id;
+    view.sessionStickerSourcePath = sourcePath;
+    view.sessionTitle = titleInput.value.trim() || String(frontmatterMeta.title || (activeFile == null ? void 0 : activeFile.basename) || "\u672A\u547D\u540D\u8D34\u56FE");
+    view.sessionDraftMediaId = "";
+    view.sessionDraftIndex = 0;
+    modal.close();
+    await view.onSyncToWechat();
+  };
+  renderCurrent();
+  void refreshData().catch((error) => {
+    if (view.stickerModalGeneration !== generation)
+      return;
+    statusSection.empty();
+    statusSection.createDiv({
+      cls: "sticker-publish-account-warning",
+      text: `\u6682\u65F6\u65E0\u6CD5\u8BFB\u53D6\u8D34\u56FE\u5185\u5BB9\uFF1A${(error == null ? void 0 : error.message) || "\u672A\u77E5\u9519\u8BEF"}`
+    });
+    syncButton.disabled = true;
+  });
+  if (shouldOpenModal)
+    modal.open();
+}
 
 // views/publish-modal/wechat-sync-modal.js
 var wechatSyncModalMethods = {
@@ -79710,6 +80525,17 @@ var wechatSyncModalMethods = {
     const defaultId = this.plugin.settings.defaultAccountId;
     const hasDefault = accounts.some((account) => account.id === defaultId);
     let selectedAccountId = hasDefault ? defaultId : ((_c = accounts[0]) == null ? void 0 : _c.id) || "";
+    if (this.previewMode === "sticker") {
+      renderStickerPublishContent(this, {
+        modal,
+        accounts,
+        activeFile,
+        sourcePath: currentPath || "",
+        frontmatterMeta,
+        shouldOpenModal
+      });
+      return;
+    }
     let coverBase64 = (cachedState == null ? void 0 : cachedState.coverBase64) || frontmatterMeta.coverSrc || this.getFirstImageFromArticle() || "";
     let thumbMediaId = (cachedState == null ? void 0 : cachedState.thumbMediaId) || "";
     let materialCover = (cachedState == null ? void 0 : cachedState.materialCover) || null;
@@ -80529,6 +81355,71 @@ var wechatMultiPlatformActionMethods = {
   }
 };
 
+// services/sticker-media-resolver.js
+function getStickerAccountKey(account) {
+  return String((account == null ? void 0 : account.id) || (account == null ? void 0 : account.appId) || "").trim();
+}
+function getStickerUploadCacheKey(item, account) {
+  const accountKey = getStickerAccountKey(account);
+  const itemKey = String((item == null ? void 0 : item.fingerprint) || (item == null ? void 0 : item.key) || "").trim();
+  return accountKey && itemKey ? `${accountKey}::${itemKey}` : "";
+}
+async function resolveStickerMediaIds({
+  items,
+  account,
+  api,
+  srcToBlob,
+  cache = /* @__PURE__ */ new Map(),
+  onProgress
+}) {
+  const safeItems = Array.isArray(items) ? items : [];
+  const accountKey = getStickerAccountKey(account);
+  if (!accountKey)
+    throw new Error("\u5F53\u524D\u516C\u4F17\u53F7\u8D26\u53F7\u7F3A\u5C11\u53EF\u7528\u8EAB\u4EFD");
+  const mediaIds = [];
+  for (let index = 0; index < safeItems.length; index += 1) {
+    const item = safeItems[index];
+    onProgress == null ? void 0 : onProgress(index + 1, safeItems.length, item);
+    const uploadRef = item == null ? void 0 : item.uploadRef;
+    if ((uploadRef == null ? void 0 : uploadRef.kind) === "media") {
+      if (uploadRef.accountId !== accountKey && uploadRef.accountId !== (account == null ? void 0 : account.id)) {
+        throw new Error(`\u7B2C ${index + 1} \u5F20\u7D20\u6750\u5C5E\u4E8E\u5176\u4ED6\u516C\u4F17\u53F7\uFF0C\u8BF7\u79FB\u9664\u540E\u91CD\u65B0\u9009\u62E9`);
+      }
+      mediaIds.push(uploadRef.mediaId);
+      continue;
+    }
+    const cacheKey = getStickerUploadCacheKey(item, account);
+    const cachedMediaId = cacheKey ? cache.get(cacheKey) : "";
+    if (cachedMediaId) {
+      mediaIds.push(cachedMediaId);
+      continue;
+    }
+    let mediaId = "";
+    try {
+      let blob;
+      if ((uploadRef == null ? void 0 : uploadRef.kind) === "blob") {
+        blob = uploadRef.blob;
+      } else if ((uploadRef == null ? void 0 : uploadRef.kind) === "src") {
+        blob = await srcToBlob(uploadRef.src);
+      } else {
+        throw new Error("\u7F3A\u5C11\u53EF\u4E0A\u4F20\u5185\u5BB9");
+      }
+      const response = await api.uploadCover(blob);
+      mediaId = typeof (response == null ? void 0 : response.media_id) === "string" ? response.media_id.trim() : "";
+      if (!mediaId)
+        throw new Error("\u4E0A\u4F20\u540E\u672A\u8FD4\u56DE media_id");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error || "\u672A\u77E5\u9519\u8BEF");
+      const label = (item == null ? void 0 : item.name) || (uploadRef == null ? void 0 : uploadRef.src) || (item == null ? void 0 : item.key) || "\u672A\u77E5\u56FE\u7247";
+      throw new Error(`\u7B2C ${index + 1} \u5F20\u56FE\u7247\u4E0A\u4F20\u5931\u8D25\uFF08${label}\uFF09\uFF1A${message}`);
+    }
+    if (cacheKey)
+      cache.set(cacheKey, mediaId);
+    mediaIds.push(mediaId);
+  }
+  return mediaIds;
+}
+
 // views/publish-modal/wechat-sync-action.js
 var wechatSyncActionMethods = {
   async onSyncToWechat() {
@@ -80657,10 +81548,11 @@ var wechatSyncActionMethods = {
   async onSyncStickerToWechat(account) {
     const notice = new Notice(`\u{1F680} \u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65\u8D34\u56FE...`, 0);
     try {
-      const stickerData = await this.buildStickerData();
-      const images = Array.isArray(stickerData.images) ? stickerData.images : [];
+      const sourcePath = typeof this.sessionStickerSourcePath === "string" ? this.sessionStickerSourcePath : "";
+      const stickerData = await this.buildStickerData(sourcePath ? { sourcePath } : {});
+      const imageItems = Array.isArray(stickerData.imageItems) ? stickerData.imageItems : (Array.isArray(stickerData.images) ? stickerData.images : []).map((src) => createBodyStickerImageItem(src)).filter(Boolean);
       const content = typeof stickerData.content === "string" ? stickerData.content : "";
-      if (images.length === 0) {
+      if (imageItems.length === 0) {
         notice.hide();
         new Notice("\u26A0\uFE0F \u5FAE\u4FE1\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247\uFF0C\u8BF7\u5148\u5728\u7B14\u8BB0\u6B63\u6587\u4E2D\u63D2\u5165\u56FE\u7247");
         return;
@@ -80671,24 +81563,18 @@ var wechatSyncActionMethods = {
         return;
       }
       const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
-      const imageMediaIds = [];
-      for (let i = 0; i < images.length; i++) {
-        notice.setMessage(`\u{1F680} \u6B63\u5728\u4E0A\u4F20\u8D34\u56FE\u56FE\u7247 (${i + 1}/${images.length})...`);
-        const imgSrc = images[i];
-        let uploadRes;
-        try {
-          const blob = await this.srcToBlob(imgSrc);
-          uploadRes = /** @type {{ media_id?: unknown }} */
-          await api.uploadCover(blob);
-        } catch (uploadError) {
-          throw new Error(`\u7B2C ${i + 1} \u5F20\u56FE\u7247\u4E0A\u4F20\u5931\u8D25\uFF08${imgSrc}\uFF09\uFF1A${toReadableError5(uploadError).message}`);
+      if (!this.stickerUploadCache)
+        this.stickerUploadCache = /* @__PURE__ */ new Map();
+      const imageMediaIds = await resolveStickerMediaIds({
+        items: imageItems,
+        account,
+        api,
+        srcToBlob: (src) => this.srcToBlob(src),
+        cache: this.stickerUploadCache,
+        onProgress: (current, total) => {
+          notice.setMessage(`\u{1F680} \u6B63\u5728\u51C6\u5907\u8D34\u56FE\u56FE\u7247 (${current}/${total})...`);
         }
-        const mediaId = uploadRes && typeof uploadRes.media_id === "string" ? uploadRes.media_id : "";
-        if (!mediaId) {
-          throw new Error(`\u7B2C ${i + 1} \u5F20\u56FE\u7247\u4E0A\u4F20\u540E\u672A\u8FD4\u56DE media_id\uFF08${imgSrc}\uFF09`);
-        }
-        imageMediaIds.push(mediaId);
-      }
+      });
       notice.setMessage("\u{1F680} \u6B63\u5728\u521B\u5EFA\u5FAE\u4FE1\u8D34\u56FE\u8349\u7A3F...");
       const title = (this.sessionTitle || stickerData.title || "\u672A\u547D\u540D\u8D34\u56FE").slice(0, 64);
       const stickerDraftRes = await syncStickerDraft({
@@ -80760,10 +81646,10 @@ var materialPickerMethods = {
       fromCache: false
     };
   },
-  async showMaterialPickerModal(api, onSelect) {
+  async showMaterialPickerModal(api, onSelect, options = {}) {
     var _a5, _b, _c;
     const modal = createObsidianModal(this.app);
-    modal.titleEl.setText("\u4ECE\u7D20\u6750\u5E93\u9009\u62E9\u5C01\u9762");
+    modal.titleEl.setText(options.title || "\u4ECE\u7D20\u6750\u5E93\u9009\u62E9\u5C01\u9762");
     (_a5 = modal.modalEl) == null ? void 0 : _a5.addClass("wechat-material-picker-modal");
     modal.contentEl.addClass("wechat-material-picker");
     if (isMobileClient3(this.app)) {
@@ -80783,7 +81669,10 @@ var materialPickerMethods = {
     const grid = modal.contentEl.createDiv({ cls: "wechat-material-grid" });
     const footer = modal.contentEl.createDiv({ cls: "wechat-material-footer" });
     const pagination = footer.createDiv({ cls: "wechat-material-pagination" });
-    const confirmBtn = footer.createEl("button", { text: "\u4F7F\u7528\u8FD9\u5F20\u5C01\u9762", cls: "mod-cta wechat-material-confirm" });
+    const confirmBtn = footer.createEl("button", {
+      text: options.confirmText || "\u4F7F\u7528\u8FD9\u5F20\u5C01\u9762",
+      cls: "mod-cta wechat-material-confirm"
+    });
     confirmBtn.disabled = true;
     const renderLoadingSkeleton = () => {
       grid.empty();
@@ -80855,7 +81744,7 @@ var materialPickerMethods = {
         };
       }
     };
-    const loadPage = async (page, options = {}) => {
+    const loadPage = async (page, options2 = {}) => {
       if (isLoading)
         return;
       isLoading = true;
@@ -80869,7 +81758,7 @@ var materialPickerMethods = {
       try {
         const offset = (currentPage - 1) * pageSize;
         const data = await this.loadWechatMaterialPage(api, "image", offset, pageSize, {
-          forceRefresh: options.forceRefresh === true
+          forceRefresh: options2.forceRefresh === true
         });
         totalCount = Number.isFinite(data.total_count) ? data.total_count : 0;
         const items = Array.isArray(data.item) ? data.item : [];
@@ -80921,6 +81810,9 @@ var AppleStyleView = class extends ItemView {
     this.previewStickerData = null;
     this.insertStickerImageIndex = false;
     this.stickerUiStates = /* @__PURE__ */ new Map();
+    this.stickerUploadCache = /* @__PURE__ */ new Map();
+    this.sessionStickerSourcePath = "";
+    this.stickerModalGeneration = 0;
     this.sessionCoverBase64 = "";
     this.sessionThumbMediaId = "";
     this.sessionDraftMediaId = "";

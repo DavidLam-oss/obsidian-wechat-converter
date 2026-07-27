@@ -12,6 +12,13 @@
 
 输出渲染结果、triplet renderer/serializer 子模块、同步 payload、bridge runtime、媒体上传结果、清洗 HTML、设置模型和错误消息。
 
+## 微信贴图模块
+
+- `markdown-cleaner.js`：把 Markdown 保守清理为贴图纯文本，并报告被移除结构。
+- `sticker-extractor.js`：提取正文图片、标题和清理后的文案。
+- `sticker-image-items.js`：统一正文、本地上传和公众号素材图片项，只做同来源去重。
+- `sticker-media-resolver.js`：校验素材所属账号、复用成功上传缓存并解析 media_id。
+
 ## 定位
 
 位于 services/，是业务服务层；UI 只调用服务，不在视图文件内重复核心规则。

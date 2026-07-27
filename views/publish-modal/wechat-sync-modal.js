@@ -39,6 +39,7 @@ import {
   isMobileClient,
 } from '../apple-style-view-shared.js';
 import { STICKER_MAX_CONTENT_LENGTH } from '../../services/sticker-extractor.js';
+import { renderStickerPublishContent } from './sticker-publish-content.js';
 
 /** @type {WechatSyncModalMethodsContract & ThisType<AppleStyleViewContract>} */
 const wechatSyncModalMethods = {
@@ -113,6 +114,18 @@ showSyncModal(options = {}) {
   const defaultId = this.plugin.settings.defaultAccountId;
   const hasDefault = accounts.some((account) => account.id === defaultId);
   let selectedAccountId = hasDefault ? defaultId : (accounts[0]?.id || '');
+
+  if (this.previewMode === 'sticker') {
+    renderStickerPublishContent(this, {
+      modal,
+      accounts,
+      activeFile,
+      sourcePath: currentPath || '',
+      frontmatterMeta,
+      shouldOpenModal,
+    });
+    return;
+  }
 
   // 封面逻辑：优先使用缓存 -> frontmatter.cover -> 文章第一张图
   let coverBase64 = cachedState?.coverBase64 || frontmatterMeta.coverSrc || this.getFirstImageFromArticle() || '';

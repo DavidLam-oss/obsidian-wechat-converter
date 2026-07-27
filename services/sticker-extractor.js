@@ -9,8 +9,8 @@
 
 ## 输出
 
-输出 `STICKER_MAX_IMAGES`、`STICKER_MAX_CONTENT_LENGTH`、`extractMarkdownImageSources`、
-`reconcileStickerImageOrder`、`extractStickerData`，供贴图预览与发布链路复用。
+输出 `STICKER_MAX_IMAGES`、`STICKER_MAX_CONTENT_LENGTH`、`extractMarkdownImageItems`、
+兼容的图片地址数组与 `extractStickerData`，供贴图预览与发布链路复用。
 
 ## 定位
 
@@ -26,7 +26,14 @@
 - 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
 */
 
-import { cleanMarkdownToPlainText, normalizeImageKey } from './markdown-cleaner.js';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment -- reason: compatibility order inputs intentionally accept legacy strings and unified image items */
+
+import { cleanMarkdownToPlainText } from './markdown-cleaner.js';
+import {
+  createBodyStickerImageItem,
+  getStickerImageItemSrc,
+  reconcileStickerImageItems,
+} from './sticker-image-items.js';
 
 /** 微信贴图九宫格图片上限 */
 const STICKER_MAX_IMAGES = 9;
@@ -35,16 +42,52 @@ const STICKER_MAX_IMAGES = 9;
 const STICKER_MAX_CONTENT_LENGTH = 1000;
 
 /**
- * 从 Markdown 源码中提取正文内包含的所有图片路径/URL
+ * @param {string} markdown
+ * @returns {string}
+ */
+function stripNonBodyImageRegions(markdown) {
+  const withoutFrontmatter = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '');
+  const lines = withoutFrontmatter.split('\n');
+  const kept = [];
+  let fenceChar = '';
+  let fenceLength = 0;
+
+  for (const line of lines) {
+    if (fenceChar) {
+      const close = line.match(/^\s*(`{3,}|~{3,})\s*$/);
+      if (close && close[1][0] === fenceChar && close[1].length >= fenceLength) {
+        fenceChar = '';
+        fenceLength = 0;
+      }
+      continue;
+    }
+    const open = line.match(/^\s*(`{3,}|~{3,})/);
+    if (open) {
+      fenceChar = open[1][0];
+      fenceLength = open[1].length;
+      continue;
+    }
+    kept.push(line);
+  }
+
+  return kept.join('\n').replace(/%%[\s\S]*?%%/g, '');
+}
+
+/**
+ * 从 Markdown 源码中提取正文内包含的所有图片项。
+ * fenced code、Mermaid、Obsidian 注释和 Frontmatter 内的伪图片不会进入正文候选。
  *
  * @param {string} markdown
- * @returns {string[]}
+ * @param {{resolveBodyImageIdentity?:(src:string)=>string}} [options]
+ * @returns {import('./sticker-image-items.js').StickerImageItem[]}
  */
-function extractMarkdownImageSources(markdown) {
+function extractMarkdownImageItems(markdown, options = {}) {
   if (typeof markdown !== 'string') return [];
 
-  /** @type {string[]} */
-  const sources = [];
+  const source = stripNonBodyImageRegions(markdown);
+
+  /** @type {import('./sticker-image-items.js').StickerImageItem[]} */
+  const items = [];
   /** @type {Set<string>} */
   const seenKeys = new Set();
 
@@ -52,26 +95,39 @@ function extractMarkdownImageSources(markdown) {
   const push = (raw) => {
     const src = raw.trim();
     if (!src) return;
-    const key = normalizeImageKey(src) || src;
-    if (seenKeys.has(key)) return;
-    seenKeys.add(key);
-    sources.push(src);
+    const item = createBodyStickerImageItem(src, options.resolveBodyImageIdentity);
+    if (!item || seenKeys.has(item.key)) return;
+    seenKeys.add(item.key);
+    items.push(item);
   };
 
   // 1. Wiki link 图片格式: ![[path/to/image.png]] 或 ![[path/to/image.png|alt]]
   const wikiRegex = /!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
   let match;
-  while ((match = wikiRegex.exec(markdown)) !== null) {
+  while ((match = wikiRegex.exec(source)) !== null) {
     push(match[1]);
   }
 
   // 2. 标准 Markdown 图片格式: ![alt](path/to/image.png)
   const stdRegex = /!\[[^\]]*\]\(([^)]+)\)/g;
-  while ((match = stdRegex.exec(markdown)) !== null) {
+  while ((match = stdRegex.exec(source)) !== null) {
     push(match[1]);
   }
 
-  return sources;
+  return items;
+}
+
+/**
+ * 兼容旧调用方的图片地址数组。
+ *
+ * @param {string} markdown
+ * @param {{resolveBodyImageIdentity?:(src:string)=>string}} [options]
+ * @returns {string[]}
+ */
+function extractMarkdownImageSources(markdown, options = {}) {
+  return extractMarkdownImageItems(markdown, options)
+    .map((item) => getStickerImageItemSrc(item))
+    .filter(Boolean);
 }
 
 /**
@@ -90,47 +146,16 @@ function extractMarkdownImageSources(markdown) {
  * @returns {string[]}
  */
 function reconcileStickerImageOrder({ defaultImages, order = [], removedKeys = [], limit = STICKER_MAX_IMAGES }) {
-  const available = Array.isArray(defaultImages) ? defaultImages.filter((item) => typeof item === 'string') : [];
-  const userOrder = Array.isArray(order) ? order.filter((item) => typeof item === 'string') : [];
-  const removed = new Set(
-    (Array.isArray(removedKeys) ? removedKeys : [])
-      .filter((item) => typeof item === 'string')
-      .map((item) => normalizeImageKey(item) || item)
-  );
-
-  if (userOrder.length === 0 && removed.size === 0) {
-    return available.slice(0, limit);
-  }
-
-  /** @type {Map<string, string>} */
-  const availableByKey = new Map();
-  for (const src of available) {
-    availableByKey.set(normalizeImageKey(src) || src, src);
-  }
-
-  /** @type {string[]} */
-  const result = [];
-  /** @type {Set<string>} */
-  const used = new Set();
-
-  // 1. 用户顺序优先，但只保留正文中依然存在的图片
-  for (const src of userOrder) {
-    const key = normalizeImageKey(src) || src;
-    if (!availableByKey.has(key) || used.has(key) || removed.has(key)) continue;
-    used.add(key);
-    // 以正文中的最新写法为准，避免路径改名后失效
-    result.push(availableByKey.get(key) || src);
-  }
-
-  // 2. 正文新增的图片补到末尾
-  for (const src of available) {
-    const key = normalizeImageKey(src) || src;
-    if (used.has(key) || removed.has(key)) continue;
-    used.add(key);
-    result.push(src);
-  }
-
-  return result.slice(0, limit);
+  const defaultItems = (Array.isArray(defaultImages) ? defaultImages : [])
+    .filter((item) => typeof item === 'string')
+    .map((src) => createBodyStickerImageItem(src))
+    .filter(Boolean);
+  return reconcileStickerImageItems({
+    defaultItems,
+    order,
+    removedKeys,
+    limit,
+  }).map((item) => getStickerImageItemSrc(item));
 }
 
 /**
@@ -141,14 +166,20 @@ function reconcileStickerImageOrder({ defaultImages, order = [], removedKeys = [
  * @param {Record<string, unknown>} [params.frontmatter={}] - 解析后的 Frontmatter 对象
  * @param {string} [params.fallbackTitle='未命名贴图'] - 备用标题 (文件 basename)
  * @param {boolean} [params.insertImageIndex=false] - 是否在正文插入 [配图 N] 指引
- * @param {string[]} [params.imageOrder] - 用户在侧边栏调整后的图片顺序
+ * @param {Array<string|object>} [params.imageOrder] - 用户在侧边栏调整后的图片 key/旧路径
  * @param {string[]} [params.removedImageKeys] - 用户在侧边栏删除过的图片 key
+ * @param {import('./sticker-image-items.js').StickerImageItem[]} [params.manualImageItems]
+ * @param {(src:string)=>string} [params.resolveBodyImageIdentity]
  * @returns {{
  *   title: string,
  *   content: string,
  *   images: string[],
+ *   imageItems: import('./sticker-image-items.js').StickerImageItem[],
  *   hasCodeBlocks: boolean,
- *   hasTables: boolean
+ *   hasTables: boolean,
+ *   hasMath: boolean,
+ *   hasFootnotes: boolean,
+ *   removed: Array<{kind:string,count:number}>
  * }}
  */
 function extractStickerData({
@@ -157,15 +188,17 @@ function extractStickerData({
   fallbackTitle = '未命名贴图',
   insertImageIndex = false,
   imageOrder = [],
-  removedImageKeys = []
+  removedImageKeys = [],
+  manualImageItems = [],
+  resolveBodyImageIdentity,
 }) {
   const fm = frontmatter && typeof frontmatter === 'object' ? frontmatter : {};
   const rawTitle = typeof fm.title === 'string' && fm.title.trim() ? fm.title.trim() : fallbackTitle;
   const title = rawTitle || '未命名贴图';
 
   // 1. 从 Frontmatter 收集 cover 和 images
-  /** @type {string[]} */
-  const frontmatterImages = [];
+  /** @type {import('./sticker-image-items.js').StickerImageItem[]} */
+  const frontmatterItems = [];
   /** @type {Set<string>} */
   const frontmatterKeys = new Set();
   /** @param {unknown} value */
@@ -173,10 +206,10 @@ function extractStickerData({
     if (typeof value !== 'string') return;
     const trimmed = value.trim();
     if (!trimmed) return;
-    const key = normalizeImageKey(trimmed) || trimmed;
-    if (frontmatterKeys.has(key)) return;
-    frontmatterKeys.add(key);
-    frontmatterImages.push(trimmed);
+    const item = createBodyStickerImageItem(trimmed, resolveBodyImageIdentity);
+    if (!item || frontmatterKeys.has(item.key)) return;
+    frontmatterKeys.add(item.key);
+    frontmatterItems.push(item);
   };
 
   pushFrontmatterImage(fm.cover);
@@ -187,41 +220,49 @@ function extractStickerData({
   }
 
   // 2. 从正文中提取图片
-  const bodyImages = extractMarkdownImageSources(markdown);
+  const bodyItems = extractMarkdownImageItems(markdown, { resolveBodyImageIdentity });
 
-  // 3. 合并去重（frontmatter 优先），得到默认顺序
-  /** @type {string[]} */
-  const combined = [...frontmatterImages];
-  for (const img of bodyImages) {
-    const key = normalizeImageKey(img) || img;
-    if (frontmatterKeys.has(key)) continue;
-    frontmatterKeys.add(key);
-    combined.push(img);
+  // 3. 同来源去重（frontmatter 优先），跨来源手动项不自动合并
+  const defaultItems = [...frontmatterItems];
+  for (const item of bodyItems) {
+    if (frontmatterKeys.has(item.key)) continue;
+    frontmatterKeys.add(item.key);
+    defaultItems.push(item);
   }
 
-  // 4. 与用户在侧边栏的排序/删除操作对齐
-  const finalImages = reconcileStickerImageOrder({
-    defaultImages: combined,
+  // 4. 与用户排序/删除和本地/素材手动项对齐
+  const finalImageItems = reconcileStickerImageItems({
+    defaultItems,
+    manualItems: Array.isArray(manualImageItems) ? manualImageItems : [],
     order: imageOrder,
     removedKeys: removedImageKeys,
     limit: STICKER_MAX_IMAGES
   });
+  const finalImages = finalImageItems.map((item) => getStickerImageItemSrc(item)).filter(Boolean);
 
   // 5. 清洗得出纯文本 content 及代码块/表格识别
-  const cleaned = cleanMarkdownToPlainText(markdown, { insertImageIndex, imageOrder: finalImages });
+  const cleaned = cleanMarkdownToPlainText(markdown, {
+    insertImageIndex,
+    imageOrder: finalImageItems,
+  });
 
   return {
     title: String(title).trim(),
     content: cleaned.text,
     images: finalImages,
+    imageItems: finalImageItems,
     hasCodeBlocks: cleaned.hasCodeBlocks,
-    hasTables: cleaned.hasTables
+    hasTables: cleaned.hasTables,
+    hasMath: cleaned.hasMath,
+    hasFootnotes: cleaned.hasFootnotes,
+    removed: cleaned.removed,
   };
 }
 
 export {
   STICKER_MAX_IMAGES,
   STICKER_MAX_CONTENT_LENGTH,
+  extractMarkdownImageItems,
   extractMarkdownImageSources,
   reconcileStickerImageOrder,
   extractStickerData

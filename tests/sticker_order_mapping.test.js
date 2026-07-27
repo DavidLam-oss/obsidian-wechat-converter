@@ -88,14 +88,18 @@ describe('reconcileStickerImageOrder', () => {
 });
 
 describe('normalizeImageKey', () => {
-  it('should compare by decoded file name and ignore query/anchor noise', () => {
-    expect(normalizeImageKey('attachments/My%20Pic.PNG')).toBe('my pic.png');
+  it('should compare by decoded full path and ignore query/anchor noise', () => {
+    expect(normalizeImageKey('attachments/My%20Pic.PNG')).toBe('attachments/my pic.png');
     expect(normalizeImageKey('a.png?v=2')).toBe('a.png');
     expect(normalizeImageKey('a.png#anchor')).toBe('a.png');
   });
 
   it('should not treat 1.png and 11.png as the same image', () => {
     expect(normalizeImageKey('1.png')).not.toBe(normalizeImageKey('11.png'));
+  });
+
+  it('should not collapse the same basename from different folders', () => {
+    expect(normalizeImageKey('a/cover.png')).not.toBe(normalizeImageKey('b/cover.png'));
   });
 });
 
@@ -142,10 +146,10 @@ describe('[配图 N] renumbering after reorder', () => {
     expect(content).not.toContain('[配图 3]');
   });
 
-  it('should keep markers when the body path differs from the grid path', () => {
+  it('should keep markers when the full body paths are present in the grid order', () => {
     const result = cleanMarkdownToPlainText('![](attachments/a.png)\n\n![](attachments/b.png)', {
       insertImageIndex: true,
-      imageOrder: ['b.png', 'a.png'],
+      imageOrder: ['attachments/b.png', 'attachments/a.png'],
     });
     expect(result.text.split('\n').filter(Boolean)).toEqual(['[配图 2]', '[配图 1]']);
   });

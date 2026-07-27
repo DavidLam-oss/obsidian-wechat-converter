@@ -76,9 +76,9 @@ async loadWechatMaterialPage(api, type, offset, count, options = {}) {
 }
 ,
 
-async showMaterialPickerModal(api, onSelect) {
+async showMaterialPickerModal(api, onSelect, options = {}) {
   const modal = createObsidianModal(this.app);
-  modal.titleEl.setText('从素材库选择封面');
+  modal.titleEl.setText(options.title || '从素材库选择封面');
   modal.modalEl?.addClass('wechat-material-picker-modal');
   modal.contentEl.addClass('wechat-material-picker');
 
@@ -102,7 +102,10 @@ async showMaterialPickerModal(api, onSelect) {
   const grid = modal.contentEl.createDiv({ cls: 'wechat-material-grid' });
   const footer = modal.contentEl.createDiv({ cls: 'wechat-material-footer' });
   const pagination = footer.createDiv({ cls: 'wechat-material-pagination' });
-  const confirmBtn = footer.createEl('button', { text: '使用这张封面', cls: 'mod-cta wechat-material-confirm' });
+  const confirmBtn = footer.createEl('button', {
+    text: options.confirmText || '使用这张封面',
+    cls: 'mod-cta wechat-material-confirm',
+  });
   confirmBtn.disabled = true;
 
   const renderLoadingSkeleton = () => {

@@ -1,4 +1,14 @@
+<!-- OPENPRD:UI-CONTEXT
+status=frozen
+direction=direction-1
+source=user-confirmed
+schema=google-labs-code/design.md@bde692f2bc92ef7fdd0cf277b2704ab074b70efd
+-->
 # Product
+
+## Product Context
+
+本合同在保留现有发布工作台边界的基础上，合并 2026-07-27 已确认的微信贴图发布体验：用户可以在侧边栏和发布弹窗中检查、补充、移除并排序最多 9 张图片，看到的顺序就是最终发布顺序。内容清洗、图片来源和账号归属必须可预期，不修改源 Markdown，也不扩展到文章模式、飞书或 HTML 转长图。
 
 ## Register
 
@@ -67,3 +77,53 @@ product
 - 设置页、弹窗和移动布局中的文字不截断关键含义，长标题与长路径可以换行或安全省略。
 - 动效只用于表达状态，尊重减少动态效果的系统偏好。
 - 用户可见文案使用自然中文，避免不必要的英文缩写和内部技术术语。
+
+## Jobs and Flows
+
+### 整理贴图
+
+入口是转换器侧边栏的贴图预览。用户查看从当前笔记提取的图片，可移除、撤销和调整顺序；当图片不足 9 张时，可在发布弹窗中添加本地图片或选择当前公众号账号的永久素材。成功条件是 `imageItems` 中最多 9 项的顺序与网格一致，失败时保留现有顺序并说明可恢复动作。
+
+### 发布贴图
+
+用户从侧边栏打开“发布微信贴图”弹窗，确认账号、标题、图片顺序和内容清理摘要后创建微信贴图草稿。发布过程中锁定来源笔记和账号上下文；账号切换会重新校验素材归属。上传失败可重试，已成功上传的同一图片在当前视图会话中复用，避免重复占用素材与流量。
+
+### 恢复误操作
+
+移除图片后立即更新网格并提供撤销；本地图片的 Object URL 只有在撤销窗口结束、文件切换、视图关闭或弹窗销毁后才释放。异步素材选择或文件读取如果来自过期弹窗，不得写回当前状态。
+
+## Current UI Topology
+
+- `views/converter/style-panel.js`：侧边栏贴图预览与当前文档状态入口。
+- `views/publish-modal/wechat-sync-modal.js`：微信发布弹窗框架、账号与标题字段。
+- `views/shared/sticker-image-list.js`：侧边栏与弹窗共享的有序图片网格。
+- `views/publish-modal/sticker-image-section.js`：弹窗图片添加、素材选择、撤销与生命周期。
+- `services/sticker-extractor.js`：Markdown 图片候选与统一 `imageItems` 数据模型。
+- `services/markdown-cleaner.js`：贴图正文的保守清洗与清理摘要。
+- `views/publish-modal/wechat-sync-action.js`：媒体解析、上传复用与贴图草稿创建。
+
+CodeGraph 在本次环境中未安装或未配置；上述拓扑来自 UI Context 扫描、源码调用链与用户确认方案，保留 `evidence-gap: codegraph-unavailable`。
+
+## States and Edge Cases
+
+- 0 张图片：保留简短说明和两个明确添加入口，不显示死胡同空态。
+- 1–9 张图片：网格顺序是唯一发布顺序；鼠标、触摸与键盘操作产生同一状态。
+- 超过 9 张：先汇总所有来源，再从尾部裁掉正文自动提取项；不静默打乱手动项相对顺序。
+- 同名不同路径：正文图片使用规范化 vault 路径识别，不以 basename 合并。
+- 跨来源相同内容：默认不自动去重；仅同一来源按稳定 key 或指纹去重。
+- 账号切换：永久素材必须属于当前账号；切换后重新校验，不跨账号复用 `media_id`。
+- 文件/弹窗切换：过期异步结果被 generation guard 丢弃，并释放临时 URL。
+- 上传部分成功：保留成功缓存，重试只处理未成功项。
+
+## Evidence and Decisions
+
+- 用户于 2026-07-27 确认方向 1“顺序优先的单列编排”。
+- 色板沿用 Obsidian 中性表面和既有系统蓝；九宫格顺序是视觉与交互记忆点。
+- 参考集：`.openprd/harness/visual-reviews/reference-sets/sticker-publish-direction-1/`。
+- 需求与技术边界：`docs/plans/2026-07-26-sticker-publish-modal-and-content-cleaning-plan.md`。
+
+## Conflicts and Open Questions
+
+- 参考稿中的示例照片、空槽占位和高度只作为层级证据，不作为必须逐像素复制的产品内容。
+- CodeGraph 能力缺席，由确定性本地扫描补足；实现阶段若出现动态依赖边，再单独记录。
+- 微信真实草稿效果仍需人工账号实测；自动化测试负责数据模型、状态、上传复用与 DOM 交互契约。

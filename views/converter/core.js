@@ -926,6 +926,21 @@ async onClose() {
   if (this.mermaidImageCache) {
     this.mermaidImageCache.clear();
   }
+  if (this.stickerUiStates) {
+    for (const state of this.stickerUiStates.values()) {
+      if (!state?.objectUrls) continue;
+      for (const objectUrl of state.objectUrls) {
+        window.URL.revokeObjectURL(objectUrl);
+      }
+      state.objectUrls.clear();
+    }
+    this.stickerUiStates.clear();
+  }
+  if (this.stickerUploadCache) {
+    this.stickerUploadCache.clear();
+  }
+  this.stickerModalGeneration = (this.stickerModalGeneration || 0) + 1;
+  this.sessionStickerSourcePath = '';
 
   console.debug('🍎 发布助手面板已关闭');
 }

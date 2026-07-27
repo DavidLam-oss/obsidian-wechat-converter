@@ -62,9 +62,21 @@ class AppleStyleView extends ItemView {
     /**
      * 贴图模式的按笔记交互状态：拖拽后的顺序与被排除的图片。
      * 只影响这次发布，不会改写笔记正文。
-     * @type {Map<string, { order: string[], removedKeys: string[] }>}
+     * @type {Map<string, {
+     *   order: string[],
+     *   removedKeys: string[],
+     *   manualItems: object[],
+     *   undoItems: object[],
+     *   objectUrls: Set<string>
+     * }>}
      */
     this.stickerUiStates = new Map();
+    /** @type {Map<string, string>} */
+    this.stickerUploadCache = new Map();
+    /** @type {string} */
+    this.sessionStickerSourcePath = '';
+    /** @type {number} */
+    this.stickerModalGeneration = 0;
     /** @type {string | null} */
     this.sessionCoverBase64 = ''; // 本次文章的临时封面
     /** @type {string} */

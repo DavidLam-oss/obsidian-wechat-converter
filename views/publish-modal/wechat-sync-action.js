@@ -36,6 +36,8 @@ import {
   isRecord,
 } from '../apple-style-view-shared.js';
 import { STICKER_MAX_CONTENT_LENGTH } from '../../services/sticker-extractor.js';
+import { createBodyStickerImageItem } from '../../services/sticker-image-items.js';
+import { resolveStickerMediaIds } from '../../services/sticker-media-resolver.js';
 import { syncStickerDraft } from '../../services/wechat-sync.js';
 
 /** @type {WechatSyncActionMethodsContract & ThisType<AppleStyleViewContract>} */
@@ -167,11 +169,18 @@ async onSyncStickerToWechat(account) {
 
   try {
     // 以侧边栏最新的提取结果为准（含用户拖拽后的顺序与排除项）。
-    const stickerData = await this.buildStickerData();
-    const images = Array.isArray(stickerData.images) ? stickerData.images : [];
+    const sourcePath = typeof this.sessionStickerSourcePath === 'string'
+      ? this.sessionStickerSourcePath
+      : '';
+    const stickerData = await this.buildStickerData(sourcePath ? { sourcePath } : {});
+    const imageItems = Array.isArray(stickerData.imageItems)
+      ? stickerData.imageItems
+      : (Array.isArray(stickerData.images) ? stickerData.images : [])
+        .map((src) => createBodyStickerImageItem(src))
+        .filter(Boolean);
     const content = typeof stickerData.content === 'string' ? stickerData.content : '';
 
-    if (images.length === 0) {
+    if (imageItems.length === 0) {
       notice.hide();
       new Notice('⚠️ 微信贴图至少需要 1 张图片，请先在笔记正文中插入图片');
       return;
@@ -184,26 +193,17 @@ async onSyncStickerToWechat(account) {
     }
 
     const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
-    /** @type {string[]} */
-    const imageMediaIds = [];
-
-    for (let i = 0; i < images.length; i++) {
-      notice.setMessage(`🚀 正在上传贴图图片 (${i + 1}/${images.length})...`);
-      const imgSrc = images[i];
-      let uploadRes;
-      try {
-        const blob = await this.srcToBlob(imgSrc);
-        // uploadCover 走的是永久图片素材接口，内部已处理 access_token 与重试。
-        uploadRes = /** @type {{ media_id?: unknown }} */ (await api.uploadCover(blob));
-      } catch (uploadError) {
-        throw new Error(`第 ${i + 1} 张图片上传失败（${imgSrc}）：${toReadableError(uploadError).message}`);
-      }
-      const mediaId = uploadRes && typeof uploadRes.media_id === 'string' ? uploadRes.media_id : '';
-      if (!mediaId) {
-        throw new Error(`第 ${i + 1} 张图片上传后未返回 media_id（${imgSrc}）`);
-      }
-      imageMediaIds.push(mediaId);
-    }
+    if (!this.stickerUploadCache) this.stickerUploadCache = new Map();
+    const imageMediaIds = await resolveStickerMediaIds({
+      items: imageItems,
+      account,
+      api,
+      srcToBlob: (src) => this.srcToBlob(src),
+      cache: this.stickerUploadCache,
+      onProgress: (current, total) => {
+        notice.setMessage(`🚀 正在准备贴图图片 (${current}/${total})...`);
+      },
+    });
 
     notice.setMessage('🚀 正在创建微信贴图草稿...');
     const title = (this.sessionTitle || stickerData.title || '未命名贴图').slice(0, 64);

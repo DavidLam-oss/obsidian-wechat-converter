@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "action": "ui-context-init",
+  "generatedAt": "2026-07-27 10:17:46",
+  "mode": {
+    "mode": "brownfield",
+    "source": "project-derived",
+    "reason": "ui-implementation-detected"
+  },
+  "schemaTarget": {
+    "id": "google-labs-code/design.md",
+    "version": "alpha",
+    "commit": "bde692f2bc92ef7fdd0cf277b2704ab074b70efd",
+    "specUrl": "https://github.com/google-labs-code/design.md/blob/bde692f2bc92ef7fdd0cf277b2704ab074b70efd/docs/spec.md"
+  },
+  "scan": {
+    "scannedAt": "2026-07-27 10:17:46",
+    "truncated": false,
+    "counts": {
+      "files": 445,
+      "uiImplementation": 34,
+      "styles": 13,
+      "assets": 24
+    },
+    "uiFiles": [
+      "server/app.js",
+      "views/apple-style-view-shared.js",
+      "views/apple-style-view.js",
+      "views/connection-status-bar.js",
+      "views/converter/ai-layout-debug.js",
+      "views/converter/ai-layout-panel.js",
+      "views/converter/clipboard.js",
+      "views/converter/core.js",
+      "views/converter/style-panel.js",
+      "views/publish-modal/feishu.js",
+      "views/publish-modal/material-picker.js",
+      "views/publish-modal/multi-platform-cover-assets.js",
+      "views/publish-modal/multi-platform-data.js",
+      "views/publish-modal/multi-platform-modal-ui.js",
+      "views/publish-modal/multi-platform-policy.js",
+      "views/publish-modal/multi-platform.js",
+      "views/publish-modal/wechat-account-state.js",
+      "views/publish-modal/wechat-modal-shell.js",
+      "views/publish-modal/wechat-multiplatform-actions.js",
+      "views/publish-modal/wechat-preview-export.js",
+      "views/publish-modal/wechat-sync-action.js",
+      "views/publish-modal/wechat-sync-modal.js",
+      "views/publish-modal/wechat.js",
+      "views/settings/ai-section.js",
+      "views/settings/apple-style-setting-tab.js",
+      "views/settings/confirm-modal.js",
+      "views/settings/feishu-tab.js",
+      "views/settings/multi-platform-tab.js",
+      "views/settings/settings-tab-shell.js",
+      "views/settings/wechat-account-modal.js",
+      "views/settings/wechat-tab.js",
+      "views/shared/view-constants.js",
+      "views/shared/view-dom-helpers.js",
+      "views/shared/view-state-utils.js"
+    ],
+    "styleFiles": [
+      "styles/ai-layout.css",
+      "styles/base.css",
+      "styles/feishu.css",
+      "styles/material-picker.css",
+      "styles/multi-platform.css",
+      "styles/preview.css",
+      "styles/settings-base.css",
+      "styles/settings-tabs.css",
+      "styles/style-panel.css",
+      "styles/toolbar.css",
+      "styles/wechat-publish.css",
+      "styles/wechat-settings.css",
+      "styles.css"
+    ],
+    "assetFiles": [
+      "images/AI.png",
+      "images/AI_completed.png",
+      "images/AI_render.png",
+      "images/AI_setup.png",
+      "images/code_render.png",
+      "images/feishu_doc_result.png",
+      "images/feishu_publish_modal.png",
+      "images/feishu_settings_tab.png",
+      "images/icon-source.png",
+      "images/icon.png",
+      "images/math_render.png",
+      "images/mermaid_render.png",
+      "images/multiplatform_extension_setup.png",
+      "images/multiplatform_platform_list.png",
+      "images/multiplatform_publish_modal.png",
+      "images/multiplatform_task_center.png",
+      "images/origion_style.png",
+      "images/phone_style.png",
+      "images/plugin_setup.png",
+      "images/setting_panel_dark.png",
+      "images/setting_panel_light.png",
+      "images/support-alipay.jpg",
+      "images/support-wechat.png",
+      "images/wechat_sync_popup.png"
+    ],
+    "package": {
+      "path": "package.json",
+      "dependencies": [
+        "@eslint/js",
+        "@microsoft/eslint-plugin-sdl",
+        "@noble/hashes",
+        "@types/node",
+        "@typescript-eslint/eslint-plugin",
+        "@typescript-eslint/parser",
+        "@typescript-eslint/utils",
+        "@vitest/coverage-v8",
+        "esbuild",
+        "eslint",
+        "eslint-plugin-obsidian",
+        "eslint-plugin-obsidianmd",
+        "globals",
+        "highlight.js",
+        "jsdom",
+        "juice",
+        "markdown-it",
+        "markdown-it-mathjax3",
+        "obsidian",
+        "tslib",
+        "typescript",
+        "vitest",
+        "ws"
+      ],
+      "uiDependencies": [
+        "@vitest/coverage-v8",
+        "vitest"
+      ],
+      "codeGraphDependency": false
+    },
+    "codeGraph": {
+      "status": "unavailable-or-unverified",
+      "source": "evidence-gap",
+      "markers": [],
+      "packageDependency": false,
+      "environmentConfigured": false,
+      "required": false
+    },
+    "frozenPrd": {
+      "status": "missing-or-unfrozen",
+      "source": "evidence-gap",
+      "version": null,
+      "digest": null,
+      "path": null
+    }
+  },
+  "contracts": {
+    "product": {
+      "path": "PRODUCT.md",
+      "state": "existing-unmanaged",
+      "marker": {
+        "count": 0,
+        "fields": {},
+        "error": "missing"
+      }
+    },
+    "design": {
+      "path": "DESIGN.md",
+      "state": "existing-unmanaged",
+      "marker": {
+        "count": 0,
+        "fields": {},
+        "error": "missing"
+      }
+    },
+    "conflict": true
+  },
+  "evidenceBlockers": [],
+  "evidencePolicy": {
+    "codeGraphFacts": "brownfield-only-and-explicitly-sourced",
+    "plannedTopology": "greenfield-plan-derived-from-confirmed-prd",
+    "inferenceMustNotMasqueradeAsFact": true
+  },
+  "next": "run-openprd-ui-context-skill-and-generate-three-directions",
+  "contextFingerprint": "d603b4a42fa011dafba361f2195c37c056cac0cbecddca6788aff8bcdd230907"
+}

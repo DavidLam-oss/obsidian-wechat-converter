@@ -175,8 +175,13 @@ interface AppleStyleViewContract {
     /**
      * @param {WechatAPI} api
      * @param {(material: WechatMaterialSelectionLike) => unknown} onSelect
+     * @param {{ title?: string, confirmText?: string }} [options]
      */
-    showMaterialPickerModal(api: WechatApiContract, onSelect: (material: WechatMaterialSelectionLike) => unknown): Promise<void>;
+    showMaterialPickerModal(
+        api: WechatApiContract,
+        onSelect: (material: WechatMaterialSelectionLike) => unknown,
+        options?: { title?: string; confirmText?: string }
+    ): Promise<void>;
     /**
      * @param {unknown} syncId
      * @returns {Promise<boolean>}

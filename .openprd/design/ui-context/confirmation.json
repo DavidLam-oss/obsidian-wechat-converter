@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "direction": "direction-1",
+  "source": "user-confirmed",
+  "confirmedAt": "2026-07-27 10:17:46",
+  "mode": "brownfield",
+  "contextFingerprint": "d603b4a42fa011dafba361f2195c37c056cac0cbecddca6788aff8bcdd230907",
+  "contractDecision": "merge",
+  "contractPolicy": "merge-existing-contracts"
+}
