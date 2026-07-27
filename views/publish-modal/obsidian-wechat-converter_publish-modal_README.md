@@ -14,6 +14,7 @@
 
 ## 微信贴图发布
 
+- `publish-context.js`：适配当前文件、账号、frontmatter 和发布后清理方法契约。
 - `sticker-publish-content.js`：按顺序优先的单列流程编排账号、标题、图片网格、清理摘要与发布按钮。
 - `material-picker.js`：封面与贴图共用的公众号素材选择器，可配置标题和确认文案。
 - `wechat-sync-action.js`：把统一图片项解析为永久素材并创建贴图草稿。
@@ -24,7 +25,7 @@
 
 ## 依赖
 
-views/apple-style-view-shared.js、services/wechat-*、services/feishu-*、services/wechatsync-*。
+views/apple-style-view-shared.js、services/publish-cleanup.js、services/wechat-*、services/feishu-*、services/wechatsync-*。
 
 ## 多平台发布模块边界
 

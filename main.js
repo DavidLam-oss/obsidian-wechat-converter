@@ -4457,7 +4457,7 @@ var require_converter = __commonJS({
     function isRecord17(value) {
       return !!value && typeof value === "object" && !Array.isArray(value);
     }
-    function toRecord14(value) {
+    function toRecord15(value) {
       return isRecord17(value) ? value : {};
     }
     function toText7(value) {
@@ -4577,7 +4577,7 @@ var require_converter = __commonJS({
       typeof window !== "undefined" ? window : {}
     );
     function getRuntimeDependency(name) {
-      const runtimeWindow = typeof window !== "undefined" ? toRecord14(window) : {};
+      const runtimeWindow = typeof window !== "undefined" ? toRecord15(window) : {};
       if (typeof runtimeWindow[name] !== "undefined") {
         return runtimeWindow[name];
       }
@@ -63202,7 +63202,7 @@ function createWechatSyncService(deps) {
     processMathFormulas: processMathFormulas2,
     prepareHtmlForDraft = async (html) => html,
     cleanHtmlForDraft: cleanHtmlForDraft2,
-    cleanupConfiguredDirectory,
+    cleanupConfiguredDirectory: cleanupConfiguredDirectory2,
     getFirstImageFromArticle
   } = deps;
   return {
@@ -63310,7 +63310,7 @@ function createWechatSyncService(deps) {
         const draftRes = await api.createDraft(article);
         mediaId = (draftRes == null ? void 0 : draftRes.media_id) || "";
       }
-      const cleanupResult = await cleanupConfiguredDirectory(activeFile);
+      const cleanupResult = await cleanupConfiguredDirectory2(activeFile);
       return {
         article,
         mediaId,
@@ -75680,6 +75680,746 @@ var coreMethods = {
   }
 };
 
+// views/converter/settings-panel.js
+var settingsPanelMethods = {
+  createSettingsPanel(container) {
+    const header = container.createEl("div", { cls: "apple-preview-header" });
+    const topRow = header.createEl("div", { cls: "apple-preview-header-top apple-top-toolbar" });
+    this.currentDocLabel = topRow.createEl("div", { cls: "apple-toolbar-title" });
+    if (!isMobileClient3(this.app)) {
+      const pluginLine = this.currentDocLabel.createDiv({ cls: "apple-toolbar-plugin-line" });
+      pluginLine.createEl("span", { text: APPLE_STYLE_VIEW_TITLE, cls: "apple-toolbar-plugin-name" });
+    }
+    this.docTitleText = this.currentDocLabel.createDiv({ text: "\u672A\u9009\u62E9\u6587\u6863", cls: "apple-toolbar-doc-name" });
+    const bottomRow = header.createEl("div", { cls: "apple-preview-header-bottom hidden" });
+    this.headerBottomRow = bottomRow;
+    const segment = bottomRow.createEl("div", { cls: "apple-preview-mode-segment" });
+    const setIcon = getObsidianSetIcon();
+    const selfRec = toRecord11(this);
+    selfRec.btnArticleMode = segment.createEl("button", {
+      cls: "apple-mode-btn active",
+      attr: { "aria-label": "\u6587\u7AE0\u6392\u7248\u6A21\u5F0F", "title": "\u6587\u7AE0\u6392\u7248\u6A21\u5F0F" }
+    });
+    const btnArt = (
+      /** @type {HTMLElement} */
+      selfRec.btnArticleMode
+    );
+    if (typeof setIcon === "function") {
+      setIcon(btnArt, "align-left");
+    }
+    selfRec.btnStickerMode = segment.createEl("button", {
+      cls: "apple-mode-btn",
+      attr: { "aria-label": "\u5FAE\u4FE1\u8D34\u56FE\u6A21\u5F0F", "title": "\u5FAE\u4FE1\u8D34\u56FE\u6A21\u5F0F" }
+    });
+    const btnStk = (
+      /** @type {HTMLElement} */
+      selfRec.btnStickerMode
+    );
+    if (typeof setIcon === "function") {
+      setIcon(btnStk, "layout-grid");
+    }
+    btnArt.addEventListener("click", () => this.switchPreviewMode("article"));
+    btnStk.addEventListener("click", () => this.switchPreviewMode("sticker"));
+    const actions = bottomRow.createEl("div", { cls: "apple-toolbar-actions" });
+    const createIconBtn = (icon, title, onClick) => {
+      const btn = actions.createEl("div", {
+        cls: "apple-icon-btn",
+        attr: { "aria-label": title, "title": title }
+        // Tooltip
+      });
+      if (typeof setIcon === "function") {
+        setIcon(btn, icon);
+      }
+      btn.addEventListener("click", onClick);
+      return btn;
+    };
+    const settingsButton = createIconBtn("sliders-horizontal", "\u516C\u4F17\u53F7\u6392\u7248\u6837\u5F0F\u8BBE\u7F6E", () => {
+      this.toggleSettingsPanel();
+    });
+    this.settingsBtn = settingsButton;
+    this.aiLayoutBtn = createIconBtn("sparkles", "AI \u7F16\u6392", () => this.onAiLayoutButtonClick());
+    if (!isMobileClient3(this.app)) {
+      this.copyBtn = createIconBtn("copy", "\u590D\u5236\u5230\u516C\u4F17\u53F7", () => this.copyHTML());
+    } else {
+      this.copyBtn = null;
+    }
+    createIconBtn("send", "\u53D1\u5E03\u4E0E\u5206\u53D1", () => this.showSyncModal());
+    this.settingsOverlay = container.createEl("div", { cls: "apple-settings-overlay" });
+    const settingsArea = this.settingsOverlay.createEl("div", { cls: "apple-settings-area" });
+    this.settingsArea = settingsArea;
+    const articleSettingsWrapper = (
+      /** @type {ObsidianElementLike} */
+      settingsArea.createEl("div", { cls: "apple-settings-article-wrapper" })
+    );
+    this.articleSettingsWrapper = articleSettingsWrapper;
+    const stickerSettingsWrapper = (
+      /** @type {ObsidianElementLike} */
+      settingsArea.createEl("div", { cls: "apple-settings-sticker-wrapper hidden" })
+    );
+    this.stickerSettingsWrapper = stickerSettingsWrapper;
+    const targetArea = articleSettingsWrapper;
+    this.createSection(targetArea, "\u4E3B\u9898", (section) => {
+      const grid = section.createEl("div", { cls: "apple-btn-grid" });
+      const themes = getAppleThemeApi().getThemeList();
+      themes.forEach((t) => {
+        const btn = grid.createEl("button", {
+          cls: `apple-btn-theme ${this.plugin.settings.theme === t.value ? "active" : ""}`,
+          text: t.label,
+          attr: { title: t.label }
+        });
+        btn.dataset.value = t.value;
+        btn.addEventListener("click", () => this.onThemeChange(t.value, grid));
+      });
+    });
+    this.createSection(targetArea, "\u5B57\u4F53", (section) => {
+      const select = (
+        /** @type {ObsidianInputLike} */
+        section.createEl("select", { cls: "apple-select" })
+      );
+      [
+        { value: "sans-serif", label: "\u65E0\u886C\u7EBF" },
+        { value: "serif", label: "\u886C\u7EBF" },
+        { value: "monospace", label: "\u7B49\u5BBD" }
+      ].forEach((opt) => {
+        const option = (
+          /** @type {ObsidianInputLike} */
+          select.createEl("option", { value: opt.value, text: opt.label })
+        );
+        if (this.plugin.settings.fontFamily === opt.value)
+          option.selected = true;
+      });
+      select.addEventListener("change", (e) => this.onFontFamilyChange(getEventTargetValue(e, this.plugin.settings.fontFamily)));
+    });
+    this.createSection(targetArea, "\u5B57\u53F7", (section) => {
+      const grid = section.createEl("div", { cls: "apple-btn-row" });
+      const sizeOpts = [
+        { value: 1, label: "\u5C0F" },
+        { value: 2, label: "\u8F83\u5C0F" },
+        { value: 3, label: "\u63A8\u8350" },
+        { value: 4, label: "\u8F83\u5927" },
+        { value: 5, label: "\u5927" }
+      ];
+      sizeOpts.forEach((s) => {
+        const btn = grid.createEl("button", {
+          cls: `apple-btn-size ${this.plugin.settings.fontSize === s.value ? "active" : ""}`,
+          text: s.label
+        });
+        btn.dataset.value = s.value;
+        btn.addEventListener("click", () => this.onFontSizeChange(s.value, grid));
+      });
+    });
+    this.createSection(targetArea, "\u4E3B\u9898\u8272", (section) => {
+      const grid = section.createEl("div", { cls: "apple-color-grid" });
+      const colors = getAppleThemeApi().getColorList();
+      colors.forEach((c) => {
+        const btn = grid.createEl("button", {
+          cls: `apple-btn-color ${this.plugin.settings.themeColor === c.value ? "active" : ""}`
+        });
+        btn.dataset.value = c.value;
+        btn.style.setProperty("--btn-color", c.color);
+        btn.addEventListener("click", () => this.onColorChange(c.value, grid));
+      });
+      const customBtn = grid.createEl("button", {
+        cls: `apple-btn-custom-text ${this.plugin.settings.themeColor === "custom" ? "active" : ""}`,
+        text: "\u81EA\u5B9A\u4E49",
+        title: "\u81EA\u5B9A\u4E49\u989C\u8272"
+      });
+      customBtn.dataset.value = "custom";
+      const colorInput = (
+        /** @type {ObsidianInputLike} */
+        grid.createEl("input", {
+          type: "color",
+          cls: "apple-color-picker-hidden"
+        })
+      );
+      colorInput.value = this.plugin.settings.customColor || "#000000";
+      colorInput.setCssStyles({
+        visibility: "hidden",
+        width: "0",
+        height: "0",
+        position: "absolute"
+      });
+      customBtn.addEventListener("click", () => {
+        colorInput.click();
+      });
+      colorInput.addEventListener("input", (e) => {
+        customBtn.style.setProperty("--btn-color", getEventTargetValue(e, this.plugin.settings.customColor));
+      });
+      colorInput.addEventListener("change", async (e) => {
+        const newColor = getEventTargetValue(e, this.plugin.settings.customColor);
+        customBtn.style.setProperty("--btn-color", newColor);
+        this.plugin.settings.customColor = newColor;
+        this.theme.update({ customColor: newColor });
+        await this.onColorChange("custom", grid);
+      });
+    });
+    this.createSection(targetArea, "\u9875\u9762\u4E24\u4FA7\u7559\u767D", (section) => {
+      const mobile = isMobileClient3(this.app);
+      const container2 = section.createEl("div", {
+        cls: "apple-slider-container",
+        style: "width: 100%; display: flex; align-items: center; gap: 10px;"
+      });
+      const slider = (
+        /** @type {ObsidianInputLike} */
+        container2.createEl("input", {
+          type: "range",
+          cls: "apple-slider",
+          attr: { min: 0, max: mobile ? 36 : 40, step: 1 }
+        })
+      );
+      slider.value = this.plugin.settings.sidePadding;
+      slider.setCssStyles({ flex: "1" });
+      const valueLabel = container2.createEl("span", {
+        text: `${this.plugin.settings.sidePadding}px`,
+        style: "font-size: 12px; color: var(--apple-secondary); min-width: 32px; text-align: right;"
+      });
+      slider.addEventListener("input", (e) => {
+        const val = parseInt(getEventTargetValue(e, String(this.plugin.settings.sidePadding)), 10);
+        valueLabel.setText(`${val}px`);
+        this.plugin.settings.sidePadding = val;
+        this.theme.update({ sidePadding: val });
+        if (this.saveTimeout)
+          window.clearTimeout(this.saveTimeout);
+        this.saveTimeout = window.setTimeout(async () => {
+          await this.plugin.saveSettings();
+        }, 500);
+        this.scheduleSidePaddingPreview(mobile ? 220 : 120);
+      });
+      slider.addEventListener("change", async (e) => {
+        const val = parseInt(getEventTargetValue(e, String(this.plugin.settings.sidePadding)), 10);
+        valueLabel.setText(`${val}px`);
+        this.plugin.settings.sidePadding = val;
+        this.theme.update({ sidePadding: val });
+        if (this.sidePaddingPreviewTimer) {
+          window.clearTimeout(this.sidePaddingPreviewTimer);
+          this.sidePaddingPreviewTimer = null;
+        }
+        await this.plugin.saveSettings();
+        await this.convertCurrent(true);
+      });
+    });
+    const spacingGroup = targetArea.createEl("details", { cls: "apple-settings-details" });
+    this.settingsSpacingGroup = spacingGroup;
+    const spacingSummary = spacingGroup.createEl("summary", { cls: "apple-settings-summary" });
+    spacingSummary.createEl("span", { text: "\u6392\u7248\u95F4\u8DDD" });
+    this.settingsSpacingValues = spacingSummary.createEl("span", {
+      attr: {
+        style: "margin-left: auto; margin-right: 8px; font-size: 11px; font-weight: 400; color: var(--apple-secondary);"
+      }
+    });
+    const spacingArea = spacingGroup.createDiv({ cls: "apple-settings-area apple-settings-advanced-area" });
+    this.updateSpacingSummary();
+    const buildSpacingSlider = (label, min, max, step, getEffective, settingsKey, updateKey) => {
+      this.createSection(spacingArea, label, (section) => {
+        const container2 = section.createEl("div", {
+          cls: "apple-slider-container",
+          style: "width: 100%; display: flex; align-items: center; gap: 10px;"
+        });
+        const slider = (
+          /** @type {ObsidianInputLike} */
+          container2.createEl("input", {
+            type: "range",
+            cls: "apple-slider",
+            attr: { min: String(min), max: String(max), step: String(step) }
+          })
+        );
+        const initial = getEffective();
+        slider.value = String(initial);
+        slider.setCssStyles({ flex: "1" });
+        const valueLabel = container2.createEl("span", {
+          text: this.formatSpacingValue(initial),
+          style: "font-size: 12px; color: var(--apple-secondary); min-width: 32px; text-align: right;"
+        });
+        this.spacingSliderRefs.push({ slider, valueLabel, getEffective });
+        const applyValue = (raw) => {
+          const val = Number(raw);
+          valueLabel.setText(this.formatSpacingValue(val));
+          this.plugin.settings[settingsKey] = val;
+          this.theme.update({ [updateKey]: val });
+          this.updateSpacingSummary();
+        };
+        slider.addEventListener("input", (e) => {
+          const val = Number(getEventTargetValue(e, String(getEffective())));
+          applyValue(val);
+          if (this.saveTimeout)
+            window.clearTimeout(this.saveTimeout);
+          this.saveTimeout = window.setTimeout(async () => {
+            await this.plugin.saveSettings();
+          }, 500);
+          this.scheduleSidePaddingPreview(120);
+        });
+        slider.addEventListener("change", async (e) => {
+          const val = Number(getEventTargetValue(e, String(getEffective())));
+          applyValue(val);
+          if (this.sidePaddingPreviewTimer) {
+            window.clearTimeout(this.sidePaddingPreviewTimer);
+            this.sidePaddingPreviewTimer = null;
+          }
+          await this.plugin.saveSettings();
+          await this.convertCurrent(true);
+        });
+      });
+    };
+    this.spacingSliderRefs = [];
+    buildSpacingSlider("\u884C\u95F4\u8DDD", 1.4, 2.2, 0.05, () => this.getEffectiveLineHeight(), "lineHeight", "lineHeight");
+    buildSpacingSlider("\u6BB5\u95F4\u8DDD", 8, 40, 1, () => this.getEffectiveParagraphGap(), "paragraphGap", "paragraphGap");
+    buildSpacingSlider("\u5B57\u95F4\u8DDD", 0, 2, 0.5, () => this.getEffectiveLetterSpacing(), "letterSpacing", "letterSpacing");
+    const advancedOptions = targetArea.createEl("details", { cls: "apple-settings-details" });
+    this.settingsAdvancedOptions = advancedOptions;
+    advancedOptions.createEl("summary", {
+      cls: "apple-settings-summary",
+      text: "\u9AD8\u7EA7\u9009\u9879"
+    });
+    const advancedArea = advancedOptions.createDiv({ cls: "apple-settings-area apple-settings-advanced-area" });
+    this.settingsAdvancedArea = advancedArea;
+    const quoteStyleSection = this.createSection(advancedArea, "\u5F15\u7528\u6837\u5F0F", (section) => {
+      const select = (
+        /** @type {ObsidianInputLike} */
+        section.createEl("select", { cls: "apple-select" })
+      );
+      [
+        { value: "theme", label: "\u7ECF\u5178\u4E3B\u9898\u8272" },
+        { value: "neutral", label: "\u4E2D\u6027\u7070\uFF08\u63A8\u8350\uFF09" }
+      ].forEach((opt) => {
+        const option = (
+          /** @type {ObsidianInputLike} */
+          select.createEl("option", { value: opt.value, text: opt.label })
+        );
+        if (this.plugin.settings.quoteCalloutStyleMode === opt.value)
+          option.selected = true;
+      });
+      select.addEventListener("change", (e) => this.onQuoteCalloutStyleModeChange(getEventTargetValue(e, this.plugin.settings.quoteCalloutStyleMode)));
+      section.createEl("span", {
+        text: "\u4E2D\u6027\u7070\u66F4\u9002\u5408\u957F\u6587\u9605\u8BFB\uFF1B\u7ECF\u5178\u4E3B\u9898\u8272\u517C\u5BB9\u73B0\u6709\u98CE\u683C\u3002",
+        attr: {
+          style: "font-size: 11px; color: var(--apple-secondary); margin-top: 8px; opacity: 0.8; font-weight: 500; display: block;"
+        }
+      });
+    });
+    quoteStyleSection.classList.add("apple-settings-featured");
+    const headingStyleSection = this.createSection(advancedArea, "\u6807\u9898\u6837\u5F0F", (section) => {
+      const row = section.createEl("div", { cls: "apple-settings-inline-row" });
+      const toggle = row.createEl("label", { cls: "apple-toggle" });
+      const checkbox = (
+        /** @type {ObsidianInputLike} */
+        toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" })
+      );
+      checkbox.checked = this.plugin.settings.coloredHeader;
+      toggle.createEl("span", { cls: "apple-toggle-slider" });
+      section.createEl("span", {
+        text: "\u6807\u9898\u4F7F\u7528\u52A0\u6DF1\u4E3B\u9898\u8272",
+        attr: {
+          style: "font-size: 11px; color: var(--apple-secondary); opacity: 0.8; font-weight: 500; display: block;"
+        }
+      });
+      checkbox.addEventListener("change", async () => {
+        this.plugin.settings.coloredHeader = checkbox.checked;
+        await this.plugin.saveSettings();
+        this.theme.update({ coloredHeader: checkbox.checked });
+        await this.convertCurrent(true);
+      });
+    });
+    headingStyleSection.classList.add("apple-settings-inline-toggle");
+    const punctuationSection = this.createSection(advancedArea, "\u6B63\u6587\u6807\u70B9\u6807\u51C6\u5316", (section) => {
+      const row = section.createEl("div", { cls: "apple-settings-inline-row" });
+      const toggle = row.createEl("label", { cls: "apple-toggle" });
+      const checkbox = (
+        /** @type {ObsidianInputLike} */
+        toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" })
+      );
+      checkbox.checked = this.plugin.settings.normalizeChinesePunctuation === true;
+      toggle.createEl("span", { cls: "apple-toggle-slider" });
+      section.createEl("span", {
+        text: "\u4EC5\u4F5C\u7528\u4E8E\u9884\u89C8 / \u590D\u5236 / \u540C\u6B65\u7ED3\u679C",
+        attr: {
+          style: "font-size: 11px; color: var(--apple-secondary); opacity: 0.8; font-weight: 500; display: block;"
+        }
+      });
+      checkbox.addEventListener("change", async () => {
+        this.plugin.settings.normalizeChinesePunctuation = checkbox.checked;
+        await this.plugin.saveSettings();
+        await this.convertCurrent(true);
+      });
+    });
+    punctuationSection.classList.add("apple-settings-inline-toggle");
+    const macCodeSection = this.createSection(advancedArea, "Mac \u98CE\u683C\u4EE3\u7801\u5757", (section) => {
+      const row = section.createEl("div", { cls: "apple-settings-inline-row" });
+      const toggle = row.createEl("label", { cls: "apple-toggle" });
+      const checkbox = (
+        /** @type {ObsidianInputLike} */
+        toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" })
+      );
+      checkbox.checked = this.plugin.settings.macCodeBlock;
+      toggle.createEl("span", { cls: "apple-toggle-slider" });
+      checkbox.addEventListener("change", () => this.onMacCodeBlockChange(checkbox.checked));
+    });
+    macCodeSection.classList.add("apple-settings-inline-toggle");
+    const codeLineNumberSection = this.createSection(advancedArea, "\u663E\u793A\u4EE3\u7801\u884C\u53F7", (section) => {
+      const row = section.createEl("div", { cls: "apple-settings-inline-row" });
+      const toggle = row.createEl("label", { cls: "apple-toggle" });
+      const checkbox = (
+        /** @type {ObsidianInputLike} */
+        toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" })
+      );
+      checkbox.checked = this.plugin.settings.codeLineNumber;
+      toggle.createEl("span", { cls: "apple-toggle-slider" });
+      checkbox.addEventListener("change", () => this.onCodeLineNumberChange(checkbox.checked));
+    });
+    codeLineNumberSection.classList.add("apple-settings-inline-toggle");
+    const captionSection = this.createSection(advancedArea, "\u663E\u793A\u56FE\u7247\u8BF4\u660E\u6587\u5B57", (section) => {
+      const row = section.createEl("div", { cls: "apple-settings-inline-row" });
+      const toggle = row.createEl("label", { cls: "apple-toggle" });
+      const checkbox = (
+        /** @type {ObsidianInputLike} */
+        toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" })
+      );
+      checkbox.checked = this.plugin.settings.showImageCaption;
+      toggle.createEl("span", { cls: "apple-toggle-slider" });
+      section.createEl("span", {
+        text: "\u5173\u95ED\u6C34\u5370\u65F6\uFF0C\u5728\u56FE\u7247\u4E0B\u65B9\u663E\u793A\u8BF4\u660E\u6587\u5B57",
+        attr: {
+          style: "font-size: 11px; color: var(--apple-secondary); opacity: 0.8; font-weight: 500; display: block;"
+        }
+      });
+      checkbox.addEventListener("change", async () => {
+        this.plugin.settings.showImageCaption = checkbox.checked;
+        await this.plugin.saveSettings();
+        if (this.converter) {
+          this.converter.updateConfig({ showImageCaption: checkbox.checked });
+          await this.convertCurrent(true);
+        }
+      });
+      this.captionToggleState = { checkbox, toggle };
+    });
+    captionSection.classList.add("apple-settings-inline-toggle");
+    this.createSection(advancedArea, "\u6A2A\u6ED1\u56FE\u7247\u5757", (section) => {
+      const imageBlockCommand = getImageSwipeCommandCopy(this.app, "image-swipe").name;
+      const sensitiveImageBlockCommand = getImageSwipeCommandCopy(this.app, "image-sensitive").name;
+      section.createEl("span", {
+        text: `\u9009\u4E2D\u591A\u5F20\u56FE\u7247\uFF0C\u6253\u5F00\u547D\u4EE4\u9762\u677F\uFF0C\u8FD0\u884C\u300C${imageBlockCommand}\u300D\u6216\u300C${sensitiveImageBlockCommand}\u300D\u3002`,
+        attr: {
+          style: "font-size: 11px; color: var(--apple-secondary); opacity: 0.78; font-weight: 500; line-height: 1.6; display: block;"
+        }
+      });
+    });
+    if (this.plugin.settings.enableWatermark) {
+      const captionDesc = captionSection.querySelector(".apple-setting-content > span");
+      if (captionDesc) {
+        captionDesc.setText("\u56E0\u5168\u5C40\u8BBE\u7F6E\u4E2D\u5DF2\u5F00\u542F\u6C34\u5370\uFF0C\u6B64\u9009\u9879\u9ED8\u8BA4\u5F00\u542F");
+      }
+      const toggleState = this.captionToggleState;
+      if (toggleState == null ? void 0 : toggleState.checkbox) {
+        toggleState.checkbox.checked = true;
+        toggleState.checkbox.disabled = true;
+      }
+      if (toggleState == null ? void 0 : toggleState.toggle) {
+        toggleState.toggle.setCssStyles({
+          pointerEvents: "none",
+          opacity: "0.6",
+          filter: "grayscale(100%)"
+        });
+      }
+    }
+    const stickerWrapperRaw = (
+      /** @type {unknown} */
+      this.stickerSettingsWrapper
+    );
+    if (stickerWrapperRaw && typeof stickerWrapperRaw === "object" && "createDiv" in stickerWrapperRaw) {
+      const stickerWrapper = (
+        /** @type {ObsidianElementLike} */
+        stickerWrapperRaw
+      );
+      const stickerHeader = (
+        /** @type {ObsidianElementLike} */
+        stickerWrapper.createDiv({ cls: "apple-settings-sticker-header" })
+      );
+      stickerHeader.createEl("span", { text: "\u5FAE\u4FE1\u8D34\u56FE\u8BBE\u7F6E", cls: "title" });
+      const indexSection = this.createSection(stickerWrapper, "\u914D\u56FE\u5E8F\u53F7\u6807\u6CE8", (section) => {
+        const container2 = section.createEl("div", { cls: "apple-sticker-toggle-row" });
+        container2.createEl("span", { text: "\u6B63\u6587\u63D2\u5165\u914D\u56FE\u5E8F\u53F7", cls: "apple-sticker-toggle-label" });
+        const toggle = container2.createDiv({ cls: "apple-toggle" });
+        const checkbox = toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" });
+        checkbox.checked = Boolean(this.insertStickerImageIndex);
+        toggle.createEl("span", { cls: "apple-toggle-slider" });
+        container2.addEventListener("click", (e) => {
+          if (e.target !== checkbox) {
+            e.preventDefault();
+            checkbox.checked = !checkbox.checked;
+            checkbox.dispatchEvent(new Event("change"));
+          }
+        });
+        checkbox.addEventListener("change", () => {
+          this.insertStickerImageIndex = checkbox.checked;
+          this.renderStickerPreview();
+        });
+        this.stickerIndexToggleState = { checkbox, toggle };
+      });
+      indexSection.classList.add("apple-settings-inline-toggle");
+      this.createSection(stickerWrapper, "\u6392\u7248\u4F18\u5316\u8BF4\u660E", (section) => {
+        const card = section.createDiv({ cls: "apple-settings-info-card" });
+        card.createEl("p", {
+          text: "\xB7 \u81EA\u52A8\u5FFD\u7565 Frontmatter YAML \u5934\u4FE1\u606F\n\xB7 \u81EA\u52A8\u5265\u79BB\u4E0D\u652F\u6301\u7684\u4EE3\u7801\u5757\u4E0E\u8868\u683C\u4EE5\u4FDD\u8BC1\u6587\u6848\u7EAF\u51C0\n\xB7 \u652F\u6301\u62D6\u62FD\u66F4\u6539\u8D34\u56FE\u56FE\u7247\u987A\u5E8F",
+          cls: "apple-settings-info-card-text"
+        });
+      });
+    }
+    this.aiLayoutOverlay = container.createEl("div", { cls: "apple-ai-layout-overlay" });
+    this.createAiLayoutPanel(this.aiLayoutOverlay);
+    this.updateAiToolbarState();
+  },
+  createSection(parent, label, builder) {
+    const section = parent.createEl("div", { cls: "apple-setting-section" });
+    section.createEl("label", { cls: "apple-setting-label", text: label });
+    const content = section.createEl("div", { cls: "apple-setting-content" });
+    builder(content);
+    return section;
+  },
+  getEffectiveLineHeight() {
+    const configured = this.plugin.settings.lineHeight;
+    if (configured !== null && configured !== void 0)
+      return configured;
+    const cfg = this.getThemeConfigSafe();
+    return cfg ? cfg.lineHeight : 1.8;
+  },
+  getEffectiveParagraphGap() {
+    const configured = this.plugin.settings.paragraphGap;
+    if (configured !== null && configured !== void 0)
+      return configured;
+    const cfg = this.getThemeConfigSafe();
+    return cfg ? cfg.paragraphGap : 18;
+  },
+  getEffectiveLetterSpacing() {
+    const configured = this.plugin.settings.letterSpacing;
+    if (configured !== null && configured !== void 0)
+      return configured;
+    return 0;
+  },
+  getThemeConfigSafe() {
+    const theme = this.theme;
+    if (theme && typeof theme.getThemeConfig === "function") {
+      try {
+        return theme.getThemeConfig();
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  },
+  formatSpacingValue(val) {
+    const num = Number(val);
+    if (!Number.isFinite(num))
+      return "0";
+    return parseFloat(num.toFixed(2)).toString();
+  },
+  updateSpacingSummary() {
+    const el = this.settingsSpacingValues;
+    if (!el)
+      return;
+    const lh = this.formatSpacingValue(this.getEffectiveLineHeight());
+    const pg = this.formatSpacingValue(this.getEffectiveParagraphGap());
+    const ls = this.formatSpacingValue(this.getEffectiveLetterSpacing());
+    el.setText(`\u884C\u8DDD ${lh} \xB7 \u6BB5\u8DDD ${pg} \xB7 \u5B57\u8DDD ${ls}`);
+  },
+  // 切换主题后刷新间距滑块显示：跟随主题(null)的滑块同步新主题默认值；
+  // 用户手动设过(非 null)的保持不变（getEffective 直接返回用户值）。
+  refreshSpacingSliders() {
+    if (!this.spacingSliderRefs)
+      return;
+    this.spacingSliderRefs.forEach(({ slider, valueLabel, getEffective }) => {
+      const v = getEffective();
+      slider.value = String(v);
+      valueLabel.setText(this.formatSpacingValue(v));
+    });
+    this.updateSpacingSummary();
+  }
+};
+
+// views/converter/panel-shell.js
+var panelShellMethods = {
+  resetSettingsPanelViewState() {
+    var _a5;
+    const advancedOptions = this.settingsAdvancedOptions || ((_a5 = this.settingsOverlay) == null ? void 0 : _a5.querySelector(".apple-settings-details"));
+    if (advancedOptions)
+      advancedOptions.open = false;
+    if (this.settingsSpacingGroup)
+      this.settingsSpacingGroup.open = false;
+    const scrollTargets = [
+      this.settingsOverlay,
+      this.settingsArea,
+      this.settingsAdvancedArea
+    ].filter(Boolean);
+    const resetScroll = () => {
+      scrollTargets.forEach((target) => {
+        target.scrollTop = 0;
+      });
+    };
+    resetScroll();
+    if (typeof requestAnimationFrame === "function") {
+      window.requestAnimationFrame(resetScroll);
+    }
+  },
+  resetAiLayoutPanelViewState() {
+    this.aiAdvancedOpen = false;
+    this.aiLayoutDebugMode = "";
+    this.aiLayoutPendingAnchor = null;
+    const scrollTargets = [
+      this.aiLayoutOverlay,
+      this.aiLayoutArea,
+      this.aiAdvancedBody,
+      this.aiDebugPanelBody
+    ].filter(Boolean);
+    const resetScroll = () => {
+      scrollTargets.forEach((target) => {
+        target.scrollTop = 0;
+      });
+    };
+    resetScroll();
+    if (typeof requestAnimationFrame === "function") {
+      window.requestAnimationFrame(resetScroll);
+    }
+  },
+  togglePanel(overlay, button, onOpen) {
+    if (!overlay || !button)
+      return;
+    const willOpen = !overlay.classList.contains("visible");
+    this.closeTransientPanels();
+    if (willOpen) {
+      overlay.classList.add("visible");
+      button.classList.add("active");
+      if (typeof onOpen === "function")
+        onOpen();
+    }
+  },
+  canScrollElementInDirection(element, deltaY) {
+    if (!element)
+      return false;
+    const maxScroll = Math.max(0, (element.scrollHeight || 0) - (element.clientHeight || 0));
+    if (maxScroll <= 0)
+      return false;
+    if (deltaY < 0)
+      return (element.scrollTop || 0) > 0;
+    if (deltaY > 0)
+      return (element.scrollTop || 0) < maxScroll - 1;
+    return true;
+  },
+  attachOverlayScrollGuard(overlay, nestedSelectors = []) {
+    if (!overlay || overlay.__appleScrollGuardAttached)
+      return;
+    const normalizedSelectors = Array.isArray(nestedSelectors) ? nestedSelectors.filter(Boolean) : [];
+    const handleWheel = (event) => {
+      if (!overlay.classList.contains("visible"))
+        return;
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      const nestedScrollable = (
+        /** @type {Element | null} */
+        target ? normalizedSelectors.map((selector) => target.closest(selector)).find(Boolean) : null
+      );
+      const activeScrollable = nestedScrollable || overlay;
+      if (!this.canScrollElementInDirection(activeScrollable, event.deltaY)) {
+        event.preventDefault();
+      }
+      event.stopPropagation();
+    };
+    const handleTouchMove = (event) => {
+      if (!overlay.classList.contains("visible"))
+        return;
+      event.stopPropagation();
+    };
+    overlay.addEventListener("wheel", handleWheel, { passive: false });
+    overlay.addEventListener("touchmove", handleTouchMove, { passive: false });
+    overlay.__appleScrollGuardAttached = true;
+  },
+  closeTransientPanels() {
+    removeElementClass(this.settingsOverlay, "visible");
+    removeElementClass(this.aiLayoutOverlay, "visible");
+    removeElementClass(this.settingsBtn, "active");
+    removeElementClass(this.aiLayoutBtn, "active");
+  },
+  toggleSettingsPanel() {
+    const artWrapper = (
+      /** @type {unknown} */
+      this.articleSettingsWrapper
+    );
+    const stkWrapper = (
+      /** @type {unknown} */
+      this.stickerSettingsWrapper
+    );
+    if (this.previewMode === "sticker") {
+      if (artWrapper && typeof artWrapper === "object" && "classList" in artWrapper) {
+        artWrapper.classList.add("hidden");
+      }
+      if (stkWrapper && typeof stkWrapper === "object" && "classList" in stkWrapper) {
+        stkWrapper.classList.remove("hidden");
+      }
+      const toggleState = toRecord11(this.stickerIndexToggleState);
+      const checkbox = toggleState ? toRecord11(toggleState.checkbox) : null;
+      if (checkbox && typeof checkbox.checked === "boolean") {
+        checkbox.checked = Boolean(this.insertStickerImageIndex);
+      }
+    } else {
+      if (stkWrapper && typeof stkWrapper === "object" && "classList" in stkWrapper) {
+        stkWrapper.classList.add("hidden");
+      }
+      if (artWrapper && typeof artWrapper === "object" && "classList" in artWrapper) {
+        artWrapper.classList.remove("hidden");
+      }
+    }
+    this.togglePanel(this.settingsOverlay, this.settingsBtn, () => this.resetSettingsPanelViewState());
+  },
+  switchPreviewMode(mode) {
+    if (this.previewMode === mode)
+      return;
+    this.previewMode = mode;
+    const articleBtn = (
+      /** @type {unknown} */
+      this.btnArticleMode
+    );
+    const stickerBtn = (
+      /** @type {unknown} */
+      this.btnStickerMode
+    );
+    if (articleBtn && stickerBtn) {
+      const aEl = (
+        /** @type {Element} */
+        articleBtn
+      );
+      const sEl = (
+        /** @type {Element} */
+        stickerBtn
+      );
+      if (mode === "article") {
+        aEl.classList.add("active");
+        sEl.classList.remove("active");
+      } else {
+        sEl.classList.add("active");
+        aEl.classList.remove("active");
+      }
+    }
+    this.closeTransientPanels();
+    if (mode === "sticker") {
+      if (this.aiLayoutBtn && typeof this.aiLayoutBtn.classList === "object")
+        this.aiLayoutBtn.classList.add("hidden");
+      if (this.copyBtn && typeof this.copyBtn.classList === "object")
+        this.copyBtn.classList.add("hidden");
+      this.renderStickerPreview();
+    } else {
+      if (this.aiLayoutBtn && typeof this.aiLayoutBtn.classList === "object")
+        this.aiLayoutBtn.classList.remove("hidden");
+      if (this.copyBtn && typeof this.copyBtn.classList === "object")
+        this.copyBtn.classList.remove("hidden");
+      this.convertCurrent(true);
+    }
+    const headerEl = this.containerEl ? this.containerEl.querySelector(".apple-preview-header") : null;
+    if (headerEl && this.containerEl) {
+      const h = (
+        /** @type {HTMLElement} */
+        headerEl.offsetHeight || 80
+      );
+      this.containerEl.style.setProperty("--apple-header-height", h + "px");
+    }
+  }
+};
+
 // services/markdown-cleaner.js
 function normalizeImageKey(src) {
   if (typeof src !== "string")
@@ -76255,7 +76995,8 @@ function renderStickerImageList(container, {
         attr: {
           src,
           alt: item.name || `\u7B2C ${index + 1} \u5F20\u8D34\u56FE`,
-          draggable: "false"
+          draggable: "false",
+          decoding: "async"
         }
       });
       image.onerror = () => cell.addClass("has-image-error");
@@ -76365,1057 +77106,8 @@ function renderStickerImageList(container, {
   return grid;
 }
 
-// views/converter/style-panel.js
-var stylePanelMethods = {
-  createSettingsPanel(container) {
-    const header = container.createEl("div", { cls: "apple-preview-header" });
-    const topRow = header.createEl("div", { cls: "apple-preview-header-top apple-top-toolbar" });
-    this.currentDocLabel = topRow.createEl("div", { cls: "apple-toolbar-title" });
-    if (!isMobileClient3(this.app)) {
-      const pluginLine = this.currentDocLabel.createDiv({ cls: "apple-toolbar-plugin-line" });
-      pluginLine.createEl("span", { text: APPLE_STYLE_VIEW_TITLE, cls: "apple-toolbar-plugin-name" });
-    }
-    this.docTitleText = this.currentDocLabel.createDiv({ text: "\u672A\u9009\u62E9\u6587\u6863", cls: "apple-toolbar-doc-name" });
-    const bottomRow = header.createEl("div", { cls: "apple-preview-header-bottom hidden" });
-    this.headerBottomRow = bottomRow;
-    const segment = bottomRow.createEl("div", { cls: "apple-preview-mode-segment" });
-    const setIcon = getObsidianSetIcon();
-    const selfRec = toRecord11(this);
-    selfRec.btnArticleMode = segment.createEl("button", {
-      cls: "apple-mode-btn active",
-      attr: { "aria-label": "\u6587\u7AE0\u6392\u7248\u6A21\u5F0F", "title": "\u6587\u7AE0\u6392\u7248\u6A21\u5F0F" }
-    });
-    const btnArt = (
-      /** @type {HTMLElement} */
-      selfRec.btnArticleMode
-    );
-    if (typeof setIcon === "function") {
-      setIcon(btnArt, "align-left");
-    }
-    selfRec.btnStickerMode = segment.createEl("button", {
-      cls: "apple-mode-btn",
-      attr: { "aria-label": "\u5FAE\u4FE1\u8D34\u56FE\u6A21\u5F0F", "title": "\u5FAE\u4FE1\u8D34\u56FE\u6A21\u5F0F" }
-    });
-    const btnStk = (
-      /** @type {HTMLElement} */
-      selfRec.btnStickerMode
-    );
-    if (typeof setIcon === "function") {
-      setIcon(btnStk, "layout-grid");
-    }
-    btnArt.addEventListener("click", () => this.switchPreviewMode("article"));
-    btnStk.addEventListener("click", () => this.switchPreviewMode("sticker"));
-    const actions = bottomRow.createEl("div", { cls: "apple-toolbar-actions" });
-    const createIconBtn = (icon, title, onClick) => {
-      const btn = actions.createEl("div", {
-        cls: "apple-icon-btn",
-        attr: { "aria-label": title, "title": title }
-        // Tooltip
-      });
-      if (typeof setIcon === "function") {
-        setIcon(btn, icon);
-      }
-      btn.addEventListener("click", onClick);
-      return btn;
-    };
-    const settingsButton = createIconBtn("sliders-horizontal", "\u516C\u4F17\u53F7\u6392\u7248\u6837\u5F0F\u8BBE\u7F6E", () => {
-      this.toggleSettingsPanel();
-    });
-    this.settingsBtn = settingsButton;
-    this.aiLayoutBtn = createIconBtn("sparkles", "AI \u7F16\u6392", () => this.onAiLayoutButtonClick());
-    if (!isMobileClient3(this.app)) {
-      this.copyBtn = createIconBtn("copy", "\u590D\u5236\u5230\u516C\u4F17\u53F7", () => this.copyHTML());
-    } else {
-      this.copyBtn = null;
-    }
-    createIconBtn("send", "\u53D1\u5E03\u4E0E\u5206\u53D1", () => this.showSyncModal());
-    this.settingsOverlay = container.createEl("div", { cls: "apple-settings-overlay" });
-    const settingsArea = this.settingsOverlay.createEl("div", { cls: "apple-settings-area" });
-    this.settingsArea = settingsArea;
-    const articleSettingsWrapper = (
-      /** @type {ObsidianElementLike} */
-      settingsArea.createEl("div", { cls: "apple-settings-article-wrapper" })
-    );
-    this.articleSettingsWrapper = articleSettingsWrapper;
-    const stickerSettingsWrapper = (
-      /** @type {ObsidianElementLike} */
-      settingsArea.createEl("div", { cls: "apple-settings-sticker-wrapper hidden" })
-    );
-    this.stickerSettingsWrapper = stickerSettingsWrapper;
-    const targetArea = articleSettingsWrapper;
-    this.createSection(targetArea, "\u4E3B\u9898", (section) => {
-      const grid = section.createEl("div", { cls: "apple-btn-grid" });
-      const themes = getAppleThemeApi().getThemeList();
-      themes.forEach((t) => {
-        const btn = grid.createEl("button", {
-          cls: `apple-btn-theme ${this.plugin.settings.theme === t.value ? "active" : ""}`,
-          text: t.label,
-          attr: { title: t.label }
-        });
-        btn.dataset.value = t.value;
-        btn.addEventListener("click", () => this.onThemeChange(t.value, grid));
-      });
-    });
-    this.createSection(targetArea, "\u5B57\u4F53", (section) => {
-      const select = (
-        /** @type {ObsidianInputLike} */
-        section.createEl("select", { cls: "apple-select" })
-      );
-      [
-        { value: "sans-serif", label: "\u65E0\u886C\u7EBF" },
-        { value: "serif", label: "\u886C\u7EBF" },
-        { value: "monospace", label: "\u7B49\u5BBD" }
-      ].forEach((opt) => {
-        const option = (
-          /** @type {ObsidianInputLike} */
-          select.createEl("option", { value: opt.value, text: opt.label })
-        );
-        if (this.plugin.settings.fontFamily === opt.value)
-          option.selected = true;
-      });
-      select.addEventListener("change", (e) => this.onFontFamilyChange(getEventTargetValue(e, this.plugin.settings.fontFamily)));
-    });
-    this.createSection(targetArea, "\u5B57\u53F7", (section) => {
-      const grid = section.createEl("div", { cls: "apple-btn-row" });
-      const sizeOpts = [
-        { value: 1, label: "\u5C0F" },
-        { value: 2, label: "\u8F83\u5C0F" },
-        { value: 3, label: "\u63A8\u8350" },
-        { value: 4, label: "\u8F83\u5927" },
-        { value: 5, label: "\u5927" }
-      ];
-      sizeOpts.forEach((s) => {
-        const btn = grid.createEl("button", {
-          cls: `apple-btn-size ${this.plugin.settings.fontSize === s.value ? "active" : ""}`,
-          text: s.label
-        });
-        btn.dataset.value = s.value;
-        btn.addEventListener("click", () => this.onFontSizeChange(s.value, grid));
-      });
-    });
-    this.createSection(targetArea, "\u4E3B\u9898\u8272", (section) => {
-      const grid = section.createEl("div", { cls: "apple-color-grid" });
-      const colors = getAppleThemeApi().getColorList();
-      colors.forEach((c) => {
-        const btn = grid.createEl("button", {
-          cls: `apple-btn-color ${this.plugin.settings.themeColor === c.value ? "active" : ""}`
-        });
-        btn.dataset.value = c.value;
-        btn.style.setProperty("--btn-color", c.color);
-        btn.addEventListener("click", () => this.onColorChange(c.value, grid));
-      });
-      const customBtn = grid.createEl("button", {
-        cls: `apple-btn-custom-text ${this.plugin.settings.themeColor === "custom" ? "active" : ""}`,
-        text: "\u81EA\u5B9A\u4E49",
-        title: "\u81EA\u5B9A\u4E49\u989C\u8272"
-      });
-      customBtn.dataset.value = "custom";
-      const colorInput = (
-        /** @type {ObsidianInputLike} */
-        grid.createEl("input", {
-          type: "color",
-          cls: "apple-color-picker-hidden"
-        })
-      );
-      colorInput.value = this.plugin.settings.customColor || "#000000";
-      colorInput.setCssStyles({
-        visibility: "hidden",
-        width: "0",
-        height: "0",
-        position: "absolute"
-      });
-      customBtn.addEventListener("click", () => {
-        colorInput.click();
-      });
-      colorInput.addEventListener("input", (e) => {
-        customBtn.style.setProperty("--btn-color", getEventTargetValue(e, this.plugin.settings.customColor));
-      });
-      colorInput.addEventListener("change", async (e) => {
-        const newColor = getEventTargetValue(e, this.plugin.settings.customColor);
-        customBtn.style.setProperty("--btn-color", newColor);
-        this.plugin.settings.customColor = newColor;
-        this.theme.update({ customColor: newColor });
-        await this.onColorChange("custom", grid);
-      });
-    });
-    this.createSection(targetArea, "\u9875\u9762\u4E24\u4FA7\u7559\u767D", (section) => {
-      const mobile = isMobileClient3(this.app);
-      const container2 = section.createEl("div", {
-        cls: "apple-slider-container",
-        style: "width: 100%; display: flex; align-items: center; gap: 10px;"
-      });
-      const slider = (
-        /** @type {ObsidianInputLike} */
-        container2.createEl("input", {
-          type: "range",
-          cls: "apple-slider",
-          attr: { min: 0, max: mobile ? 36 : 40, step: 1 }
-        })
-      );
-      slider.value = this.plugin.settings.sidePadding;
-      slider.setCssStyles({ flex: "1" });
-      const valueLabel = container2.createEl("span", {
-        text: `${this.plugin.settings.sidePadding}px`,
-        style: "font-size: 12px; color: var(--apple-secondary); min-width: 32px; text-align: right;"
-      });
-      slider.addEventListener("input", (e) => {
-        const val = parseInt(getEventTargetValue(e, String(this.plugin.settings.sidePadding)), 10);
-        valueLabel.setText(`${val}px`);
-        this.plugin.settings.sidePadding = val;
-        this.theme.update({ sidePadding: val });
-        if (this.saveTimeout)
-          window.clearTimeout(this.saveTimeout);
-        this.saveTimeout = window.setTimeout(async () => {
-          await this.plugin.saveSettings();
-        }, 500);
-        this.scheduleSidePaddingPreview(mobile ? 220 : 120);
-      });
-      slider.addEventListener("change", async (e) => {
-        const val = parseInt(getEventTargetValue(e, String(this.plugin.settings.sidePadding)), 10);
-        valueLabel.setText(`${val}px`);
-        this.plugin.settings.sidePadding = val;
-        this.theme.update({ sidePadding: val });
-        if (this.sidePaddingPreviewTimer) {
-          window.clearTimeout(this.sidePaddingPreviewTimer);
-          this.sidePaddingPreviewTimer = null;
-        }
-        await this.plugin.saveSettings();
-        await this.convertCurrent(true);
-      });
-    });
-    const spacingGroup = targetArea.createEl("details", { cls: "apple-settings-details" });
-    this.settingsSpacingGroup = spacingGroup;
-    const spacingSummary = spacingGroup.createEl("summary", { cls: "apple-settings-summary" });
-    spacingSummary.createEl("span", { text: "\u6392\u7248\u95F4\u8DDD" });
-    this.settingsSpacingValues = spacingSummary.createEl("span", {
-      attr: {
-        style: "margin-left: auto; margin-right: 8px; font-size: 11px; font-weight: 400; color: var(--apple-secondary);"
-      }
-    });
-    const spacingArea = spacingGroup.createDiv({ cls: "apple-settings-area apple-settings-advanced-area" });
-    this.updateSpacingSummary();
-    const buildSpacingSlider = (label, min, max, step, getEffective, settingsKey, updateKey) => {
-      this.createSection(spacingArea, label, (section) => {
-        const container2 = section.createEl("div", {
-          cls: "apple-slider-container",
-          style: "width: 100%; display: flex; align-items: center; gap: 10px;"
-        });
-        const slider = (
-          /** @type {ObsidianInputLike} */
-          container2.createEl("input", {
-            type: "range",
-            cls: "apple-slider",
-            attr: { min: String(min), max: String(max), step: String(step) }
-          })
-        );
-        const initial = getEffective();
-        slider.value = String(initial);
-        slider.setCssStyles({ flex: "1" });
-        const valueLabel = container2.createEl("span", {
-          text: this.formatSpacingValue(initial),
-          style: "font-size: 12px; color: var(--apple-secondary); min-width: 32px; text-align: right;"
-        });
-        this.spacingSliderRefs.push({ slider, valueLabel, getEffective });
-        const applyValue = (raw) => {
-          const val = Number(raw);
-          valueLabel.setText(this.formatSpacingValue(val));
-          this.plugin.settings[settingsKey] = val;
-          this.theme.update({ [updateKey]: val });
-          this.updateSpacingSummary();
-        };
-        slider.addEventListener("input", (e) => {
-          const val = Number(getEventTargetValue(e, String(getEffective())));
-          applyValue(val);
-          if (this.saveTimeout)
-            window.clearTimeout(this.saveTimeout);
-          this.saveTimeout = window.setTimeout(async () => {
-            await this.plugin.saveSettings();
-          }, 500);
-          this.scheduleSidePaddingPreview(120);
-        });
-        slider.addEventListener("change", async (e) => {
-          const val = Number(getEventTargetValue(e, String(getEffective())));
-          applyValue(val);
-          if (this.sidePaddingPreviewTimer) {
-            window.clearTimeout(this.sidePaddingPreviewTimer);
-            this.sidePaddingPreviewTimer = null;
-          }
-          await this.plugin.saveSettings();
-          await this.convertCurrent(true);
-        });
-      });
-    };
-    this.spacingSliderRefs = [];
-    buildSpacingSlider("\u884C\u95F4\u8DDD", 1.4, 2.2, 0.05, () => this.getEffectiveLineHeight(), "lineHeight", "lineHeight");
-    buildSpacingSlider("\u6BB5\u95F4\u8DDD", 8, 40, 1, () => this.getEffectiveParagraphGap(), "paragraphGap", "paragraphGap");
-    buildSpacingSlider("\u5B57\u95F4\u8DDD", 0, 2, 0.5, () => this.getEffectiveLetterSpacing(), "letterSpacing", "letterSpacing");
-    const advancedOptions = targetArea.createEl("details", { cls: "apple-settings-details" });
-    this.settingsAdvancedOptions = advancedOptions;
-    advancedOptions.createEl("summary", {
-      cls: "apple-settings-summary",
-      text: "\u9AD8\u7EA7\u9009\u9879"
-    });
-    const advancedArea = advancedOptions.createDiv({ cls: "apple-settings-area apple-settings-advanced-area" });
-    this.settingsAdvancedArea = advancedArea;
-    const quoteStyleSection = this.createSection(advancedArea, "\u5F15\u7528\u6837\u5F0F", (section) => {
-      const select = (
-        /** @type {ObsidianInputLike} */
-        section.createEl("select", { cls: "apple-select" })
-      );
-      [
-        { value: "theme", label: "\u7ECF\u5178\u4E3B\u9898\u8272" },
-        { value: "neutral", label: "\u4E2D\u6027\u7070\uFF08\u63A8\u8350\uFF09" }
-      ].forEach((opt) => {
-        const option = (
-          /** @type {ObsidianInputLike} */
-          select.createEl("option", { value: opt.value, text: opt.label })
-        );
-        if (this.plugin.settings.quoteCalloutStyleMode === opt.value)
-          option.selected = true;
-      });
-      select.addEventListener("change", (e) => this.onQuoteCalloutStyleModeChange(getEventTargetValue(e, this.plugin.settings.quoteCalloutStyleMode)));
-      section.createEl("span", {
-        text: "\u4E2D\u6027\u7070\u66F4\u9002\u5408\u957F\u6587\u9605\u8BFB\uFF1B\u7ECF\u5178\u4E3B\u9898\u8272\u517C\u5BB9\u73B0\u6709\u98CE\u683C\u3002",
-        attr: {
-          style: "font-size: 11px; color: var(--apple-secondary); margin-top: 8px; opacity: 0.8; font-weight: 500; display: block;"
-        }
-      });
-    });
-    quoteStyleSection.classList.add("apple-settings-featured");
-    const headingStyleSection = this.createSection(advancedArea, "\u6807\u9898\u6837\u5F0F", (section) => {
-      const row = section.createEl("div", { cls: "apple-settings-inline-row" });
-      const toggle = row.createEl("label", { cls: "apple-toggle" });
-      const checkbox = (
-        /** @type {ObsidianInputLike} */
-        toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" })
-      );
-      checkbox.checked = this.plugin.settings.coloredHeader;
-      toggle.createEl("span", { cls: "apple-toggle-slider" });
-      section.createEl("span", {
-        text: "\u6807\u9898\u4F7F\u7528\u52A0\u6DF1\u4E3B\u9898\u8272",
-        attr: {
-          style: "font-size: 11px; color: var(--apple-secondary); opacity: 0.8; font-weight: 500; display: block;"
-        }
-      });
-      checkbox.addEventListener("change", async () => {
-        this.plugin.settings.coloredHeader = checkbox.checked;
-        await this.plugin.saveSettings();
-        this.theme.update({ coloredHeader: checkbox.checked });
-        await this.convertCurrent(true);
-      });
-    });
-    headingStyleSection.classList.add("apple-settings-inline-toggle");
-    const punctuationSection = this.createSection(advancedArea, "\u6B63\u6587\u6807\u70B9\u6807\u51C6\u5316", (section) => {
-      const row = section.createEl("div", { cls: "apple-settings-inline-row" });
-      const toggle = row.createEl("label", { cls: "apple-toggle" });
-      const checkbox = (
-        /** @type {ObsidianInputLike} */
-        toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" })
-      );
-      checkbox.checked = this.plugin.settings.normalizeChinesePunctuation === true;
-      toggle.createEl("span", { cls: "apple-toggle-slider" });
-      section.createEl("span", {
-        text: "\u4EC5\u4F5C\u7528\u4E8E\u9884\u89C8 / \u590D\u5236 / \u540C\u6B65\u7ED3\u679C",
-        attr: {
-          style: "font-size: 11px; color: var(--apple-secondary); opacity: 0.8; font-weight: 500; display: block;"
-        }
-      });
-      checkbox.addEventListener("change", async () => {
-        this.plugin.settings.normalizeChinesePunctuation = checkbox.checked;
-        await this.plugin.saveSettings();
-        await this.convertCurrent(true);
-      });
-    });
-    punctuationSection.classList.add("apple-settings-inline-toggle");
-    const macCodeSection = this.createSection(advancedArea, "Mac \u98CE\u683C\u4EE3\u7801\u5757", (section) => {
-      const row = section.createEl("div", { cls: "apple-settings-inline-row" });
-      const toggle = row.createEl("label", { cls: "apple-toggle" });
-      const checkbox = (
-        /** @type {ObsidianInputLike} */
-        toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" })
-      );
-      checkbox.checked = this.plugin.settings.macCodeBlock;
-      toggle.createEl("span", { cls: "apple-toggle-slider" });
-      checkbox.addEventListener("change", () => this.onMacCodeBlockChange(checkbox.checked));
-    });
-    macCodeSection.classList.add("apple-settings-inline-toggle");
-    const codeLineNumberSection = this.createSection(advancedArea, "\u663E\u793A\u4EE3\u7801\u884C\u53F7", (section) => {
-      const row = section.createEl("div", { cls: "apple-settings-inline-row" });
-      const toggle = row.createEl("label", { cls: "apple-toggle" });
-      const checkbox = (
-        /** @type {ObsidianInputLike} */
-        toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" })
-      );
-      checkbox.checked = this.plugin.settings.codeLineNumber;
-      toggle.createEl("span", { cls: "apple-toggle-slider" });
-      checkbox.addEventListener("change", () => this.onCodeLineNumberChange(checkbox.checked));
-    });
-    codeLineNumberSection.classList.add("apple-settings-inline-toggle");
-    const captionSection = this.createSection(advancedArea, "\u663E\u793A\u56FE\u7247\u8BF4\u660E\u6587\u5B57", (section) => {
-      const row = section.createEl("div", { cls: "apple-settings-inline-row" });
-      const toggle = row.createEl("label", { cls: "apple-toggle" });
-      const checkbox = (
-        /** @type {ObsidianInputLike} */
-        toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" })
-      );
-      checkbox.checked = this.plugin.settings.showImageCaption;
-      toggle.createEl("span", { cls: "apple-toggle-slider" });
-      section.createEl("span", {
-        text: "\u5173\u95ED\u6C34\u5370\u65F6\uFF0C\u5728\u56FE\u7247\u4E0B\u65B9\u663E\u793A\u8BF4\u660E\u6587\u5B57",
-        attr: {
-          style: "font-size: 11px; color: var(--apple-secondary); opacity: 0.8; font-weight: 500; display: block;"
-        }
-      });
-      checkbox.addEventListener("change", async () => {
-        this.plugin.settings.showImageCaption = checkbox.checked;
-        await this.plugin.saveSettings();
-        if (this.converter) {
-          this.converter.updateConfig({ showImageCaption: checkbox.checked });
-          await this.convertCurrent(true);
-        }
-      });
-      this.captionToggleState = { checkbox, toggle };
-    });
-    captionSection.classList.add("apple-settings-inline-toggle");
-    this.createSection(advancedArea, "\u6A2A\u6ED1\u56FE\u7247\u5757", (section) => {
-      const imageBlockCommand = getImageSwipeCommandCopy(this.app, "image-swipe").name;
-      const sensitiveImageBlockCommand = getImageSwipeCommandCopy(this.app, "image-sensitive").name;
-      section.createEl("span", {
-        text: `\u9009\u4E2D\u591A\u5F20\u56FE\u7247\uFF0C\u6253\u5F00\u547D\u4EE4\u9762\u677F\uFF0C\u8FD0\u884C\u300C${imageBlockCommand}\u300D\u6216\u300C${sensitiveImageBlockCommand}\u300D\u3002`,
-        attr: {
-          style: "font-size: 11px; color: var(--apple-secondary); opacity: 0.78; font-weight: 500; line-height: 1.6; display: block;"
-        }
-      });
-    });
-    if (this.plugin.settings.enableWatermark) {
-      const captionDesc = captionSection.querySelector(".apple-setting-content > span");
-      if (captionDesc) {
-        captionDesc.setText("\u56E0\u5168\u5C40\u8BBE\u7F6E\u4E2D\u5DF2\u5F00\u542F\u6C34\u5370\uFF0C\u6B64\u9009\u9879\u9ED8\u8BA4\u5F00\u542F");
-      }
-      const toggleState = this.captionToggleState;
-      if (toggleState == null ? void 0 : toggleState.checkbox) {
-        toggleState.checkbox.checked = true;
-        toggleState.checkbox.disabled = true;
-      }
-      if (toggleState == null ? void 0 : toggleState.toggle) {
-        toggleState.toggle.setCssStyles({
-          pointerEvents: "none",
-          opacity: "0.6",
-          filter: "grayscale(100%)"
-        });
-      }
-    }
-    const stickerWrapperRaw = (
-      /** @type {unknown} */
-      this.stickerSettingsWrapper
-    );
-    if (stickerWrapperRaw && typeof stickerWrapperRaw === "object" && "createDiv" in stickerWrapperRaw) {
-      const stickerWrapper = (
-        /** @type {ObsidianElementLike} */
-        stickerWrapperRaw
-      );
-      const stickerHeader = (
-        /** @type {ObsidianElementLike} */
-        stickerWrapper.createDiv({ cls: "apple-settings-sticker-header" })
-      );
-      stickerHeader.createEl("span", { text: "\u5FAE\u4FE1\u8D34\u56FE\u8BBE\u7F6E", cls: "title" });
-      const indexSection = this.createSection(stickerWrapper, "\u914D\u56FE\u5E8F\u53F7\u6807\u6CE8", (section) => {
-        const container2 = section.createEl("div", { cls: "apple-sticker-toggle-row" });
-        container2.createEl("span", { text: "\u6B63\u6587\u63D2\u5165\u914D\u56FE\u5E8F\u53F7", cls: "apple-sticker-toggle-label" });
-        const toggle = container2.createDiv({ cls: "apple-toggle" });
-        const checkbox = toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" });
-        checkbox.checked = Boolean(this.insertStickerImageIndex);
-        toggle.createEl("span", { cls: "apple-toggle-slider" });
-        container2.addEventListener("click", (e) => {
-          if (e.target !== checkbox) {
-            e.preventDefault();
-            checkbox.checked = !checkbox.checked;
-            checkbox.dispatchEvent(new Event("change"));
-          }
-        });
-        checkbox.addEventListener("change", () => {
-          this.insertStickerImageIndex = checkbox.checked;
-          this.renderStickerPreview();
-        });
-        this.stickerIndexToggleState = { checkbox, toggle };
-      });
-      indexSection.classList.add("apple-settings-inline-toggle");
-      this.createSection(stickerWrapper, "\u6392\u7248\u4F18\u5316\u8BF4\u660E", (section) => {
-        const card = section.createDiv({ cls: "apple-settings-info-card" });
-        card.createEl("p", {
-          text: "\xB7 \u81EA\u52A8\u5FFD\u7565 Frontmatter YAML \u5934\u4FE1\u606F\n\xB7 \u81EA\u52A8\u5265\u79BB\u4E0D\u652F\u6301\u7684\u4EE3\u7801\u5757\u4E0E\u8868\u683C\u4EE5\u4FDD\u8BC1\u6587\u6848\u7EAF\u51C0\n\xB7 \u652F\u6301\u62D6\u62FD\u66F4\u6539\u8D34\u56FE\u56FE\u7247\u987A\u5E8F",
-          cls: "apple-settings-info-card-text"
-        });
-      });
-    }
-    this.aiLayoutOverlay = container.createEl("div", { cls: "apple-ai-layout-overlay" });
-    this.createAiLayoutPanel(this.aiLayoutOverlay);
-    this.updateAiToolbarState();
-  },
-  createAccountSelector(parent) {
-    const accounts = this.plugin.settings.wechatAccounts || [];
-    if (accounts.length === 0)
-      return;
-    const section = parent.createEl("div", { cls: "apple-setting-section wechat-account-selector" });
-    section.createEl("label", { cls: "apple-setting-label", text: "\u540C\u6B65\u8D26\u53F7" });
-    const select = (
-      /** @type {ObsidianInputLike} */
-      section.createEl("select", { cls: "wechat-account-select" })
-    );
-    const defaultId = this.plugin.settings.defaultAccountId;
-    for (const account of accounts) {
-      const option = (
-        /** @type {ObsidianInputLike} */
-        select.createEl("option", {
-          value: account.id,
-          text: account.id === defaultId ? `${account.name} (\u9ED8\u8BA4)` : account.name
-        })
-      );
-      if (account.id === defaultId) {
-        option.selected = true;
-      }
-    }
-    this.selectedAccountId = defaultId;
-    select.addEventListener("change", (event) => {
-      this.selectedAccountId = getEventTargetValue(event, defaultId);
-    });
-  },
-  getFirstImageFromArticle() {
-    if (!this.currentHtml)
-      return null;
-    const tempDiv = createHtmlContainer("div", this.currentHtml);
-    const imgs = Array.from(tempDiv.querySelectorAll("img"));
-    for (const img of imgs) {
-      if (img.alt === "logo")
-        continue;
-      const src = String(img.getAttribute("src") || img.src || "").trim();
-      if (src)
-        return src;
-    }
-    return null;
-  },
-  getPublishContextFile() {
-    var _a5, _b, _c;
-    const activeFile = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.workspace) == null ? void 0 : _b.getActiveFile) == null ? void 0 : _c.call(_b);
-    if (activeFile)
-      return activeFile;
-    if (this.lastActiveFile)
-      return this.lastActiveFile;
-    return null;
-  },
-  getFrontmatterPublishMeta(activeFile) {
-    var _a5, _b, _c, _d;
-    if (!activeFile) {
-      return { excerpt: "", cover: "", cover_dir: "", coverSrc: null, title: "" };
-    }
-    const frontmatter = (_d = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.metadataCache) == null ? void 0 : _b.getFileCache) == null ? void 0 : _c.call(_b, activeFile)) == null ? void 0 : _d.frontmatter;
-    const excerpt = this.getFrontmatterString(frontmatter, ["excerpt"]);
-    const cover = this.getFrontmatterString(frontmatter, ["cover"]);
-    const cover_dir = this.getFrontmatterString(frontmatter, ["cover_dir", "coverDir", "cover-dir", "coverdir", "CoverDIR"]);
-    const title = this.getFrontmatterString(frontmatter, ["title"]);
-    const coverSrc = cover ? this.resolveVaultPathToResourceSrc(cover) : null;
-    return { excerpt, cover, cover_dir, coverSrc, title };
-  },
-  getFrontmatterString(frontmatter, keys) {
-    const frontmatterRecord = toRecord11(frontmatter);
-    if (!frontmatterRecord)
-      return "";
-    if (!Array.isArray(keys) || keys.length === 0)
-      return "";
-    const normalizedTargets = new Set(keys.map((key) => this.normalizeFrontmatterKey(key)));
-    for (const key of keys) {
-      const value = frontmatterRecord[key];
-      if (typeof value === "string" && value.trim())
-        return value.trim();
-    }
-    for (const [key, value] of Object.entries(frontmatterRecord)) {
-      if (!normalizedTargets.has(this.normalizeFrontmatterKey(key)))
-        continue;
-      if (typeof value === "string" && value.trim())
-        return value.trim();
-    }
-    return "";
-  },
-  normalizeFrontmatterKey(key) {
-    return String(key || "").toLowerCase().replace(/[_-]/g, "");
-  },
-  getFrontmatterKeyMap(frontmatter, keys) {
-    const result = {};
-    const frontmatterRecord = toRecord11(frontmatter);
-    if (!frontmatterRecord)
-      return result;
-    if (!Array.isArray(keys) || keys.length === 0)
-      return result;
-    const normalizedTargets = new Set(keys.map((key) => this.normalizeFrontmatterKey(key)));
-    for (const [key, value] of Object.entries(frontmatterRecord)) {
-      if (!normalizedTargets.has(this.normalizeFrontmatterKey(key)))
-        continue;
-      if (typeof value !== "string")
-        continue;
-      const normalizedValue = this.normalizeVaultPath(value);
-      if (!normalizedValue)
-        continue;
-      result[key] = normalizedValue;
-    }
-    return result;
-  },
-  /** @param {string} filePath @param {string} dirPath @returns {boolean} */
-  isPathInsideDirectory(filePath, dirPath) {
-    const file = this.normalizeVaultPath(filePath);
-    const dir = this.normalizeVaultPath(dirPath);
-    if (!file || !dir)
-      return false;
-    if (file === dir)
-      return true;
-    return file.startsWith(`${dir}/`);
-  },
-  /** @param {string} filePath @param {string} dirPath @returns {boolean} */
-  isPathInsideDirectoryByTail(filePath, dirPath) {
-    const file = this.normalizeVaultPath(filePath);
-    const dir = this.normalizeVaultPath(dirPath);
-    if (!file || !dir)
-      return false;
-    const dirSegments = dir.split("/").filter(Boolean);
-    if (dirSegments.length < 2)
-      return false;
-    for (let i = 1; i <= dirSegments.length - 2; i++) {
-      const tailDir = dirSegments.slice(i).join("/");
-      if (this.isPathInsideDirectory(file, tailDir)) {
-        return true;
-      }
-    }
-    return false;
-  },
-  /** @param {string} pathValue @param {string} cleanedDir @returns {boolean} */
-  shouldClearFrontmatterPathAfterCleanup(pathValue, cleanedDir) {
-    const normalized = this.normalizeVaultPath(pathValue);
-    if (!normalized)
-      return false;
-    if (this.isPathInsideDirectory(normalized, cleanedDir))
-      return true;
-    return this.isPathInsideDirectoryByTail(normalized, cleanedDir);
-  },
-  clearInvalidPublishMetaInFrontmatter(frontmatter, cleanedDir) {
-    const frontmatterRecord = toRecord11(frontmatter);
-    if (!frontmatterRecord)
-      return false;
-    let changed = false;
-    const coverMap = this.getFrontmatterKeyMap(frontmatter, ["cover"]);
-    const coverDirMap = this.getFrontmatterKeyMap(frontmatter, ["cover_dir", "coverDir", "cover-dir", "coverdir", "CoverDIR"]);
-    for (const [key, value] of Object.entries(coverMap)) {
-      if (this.shouldClearFrontmatterPathAfterCleanup(value, cleanedDir)) {
-        frontmatterRecord[key] = "";
-        changed = true;
-      }
-    }
-    for (const [key, value] of Object.entries(coverDirMap)) {
-      if (this.shouldClearFrontmatterPathAfterCleanup(value, cleanedDir)) {
-        frontmatterRecord[key] = "";
-        changed = true;
-      }
-    }
-    return changed;
-  },
-  /** @param {TFileLike} activeFile @param {string} cleanedDir @returns {Promise<boolean>} */
-  async clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir) {
-    var _a5;
-    const vault = (_a5 = this.app) == null ? void 0 : _a5.vault;
-    if (!vault || typeof vault.read !== "function" || typeof vault.modify !== "function") {
-      return false;
-    }
-    const source = await vault.read(activeFile);
-    if (typeof source !== "string" || !source.startsWith("---"))
-      return false;
-    const match = source.match(/^(---[ \t]*\r?\n)([\s\S]*?)(\r?\n(?:---|\.\.\.)[ \t]*(?:\r?\n|$))/);
-    if (!match)
-      return false;
-    let changed = false;
-    const body = match[2].replace(/^([ \t]*)(cover|cover_dir|coverDir|cover-dir|coverdir|CoverDIR)([ \t]*:[ \t]*)(.*)$/gmi, (line, indent, key, separator, rawValue) => {
-      const value = String(rawValue || "").trim().replace(/^['"]|['"]$/g, "");
-      if (!this.shouldClearFrontmatterPathAfterCleanup(value, cleanedDir)) {
-        return line;
-      }
-      changed = true;
-      return `${indent}${key}${separator}''`;
-    });
-    if (!changed)
-      return false;
-    await vault.modify(activeFile, `${match[1]}${body}${match[3]}${source.slice(match[0].length)}`);
-    return true;
-  },
-  /** @param {TFileLike | null | undefined} activeFile @param {string} cleanedDirPath @returns {Promise<string | null>} */
-  async clearInvalidPublishMetaAfterCleanup(activeFile, cleanedDirPath) {
-    var _a5, _b;
-    if (!activeFile || !cleanedDirPath)
-      return null;
-    const cleanedDir = this.normalizeVaultPath(cleanedDirPath);
-    if (!cleanedDir)
-      return null;
-    try {
-      const processFrontMatter = (_b = (_a5 = this.app) == null ? void 0 : _a5.fileManager) == null ? void 0 : _b["processFrontMatter"];
-      if (typeof processFrontMatter === "function") {
-        await processFrontMatter.call(this.app.fileManager, activeFile, (frontmatter) => {
-          this.clearInvalidPublishMetaInFrontmatter(toRecord11(frontmatter), cleanedDir);
-        });
-      } else {
-        await this.clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir);
-      }
-    } catch (error) {
-      return `\u8D44\u6E90\u5DF2\u5220\u9664\uFF0C\u4F46\u6E05\u7406 frontmatter \u4E2D\u5931\u6548\u7684 cover/cover_dir \u5931\u8D25: ${toReadableError5(error).message}`;
-    }
-    return null;
-  },
-  /** @param {unknown} vaultPath @returns {string | null} */
-  resolveVaultPathToResourceSrc(vaultPath) {
-    if (typeof vaultPath !== "string")
-      return null;
-    const normalized = vaultPath.trim().replace(/\\/g, "/").replace(/^\/+/, "");
-    if (!normalized)
-      return null;
-    try {
-      const file = this.app.vault.getAbstractFileByPath(normalized);
-      if (!file)
-        return null;
-      if (typeof file.extension !== "string")
-        return null;
-      return this.app.vault.getResourcePath(file);
-    } catch (e) {
-      return null;
-    }
-  },
-  /** @param {unknown} vaultPath @returns {string} */
-  normalizeVaultPath(vaultPath) {
-    return normalizeVaultPath(vaultPath);
-  },
-  /** @returns {string} */
-  getVaultConfigDir() {
-    var _a5, _b;
-    const configDir = (_b = (_a5 = this.app) == null ? void 0 : _a5.vault) == null ? void 0 : _b.configDir;
-    return typeof configDir === "string" ? this.normalizeVaultPath(configDir) : "";
-  },
-  /** @returns {string} */
-  getCleanupDirTemplate() {
-    var _a5, _b;
-    const raw = typeof ((_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.cleanupDirTemplate) === "string" ? this.plugin.settings.cleanupDirTemplate : "";
-    return this.normalizeVaultPath(raw);
-  },
-  /** @param {TFileLike | null | undefined} activeFile @returns {{ path: string, warning?: string }} */
-  resolveCleanupDirPath(activeFile) {
-    const template = this.getCleanupDirTemplate();
-    if (!template) {
-      return { path: "", warning: "\u672A\u914D\u7F6E\u6E05\u7406\u76EE\u5F55\uFF0C\u8BF7\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u5148\u586B\u5199\u76EE\u5F55\u540E\u518D\u542F\u7528\u81EA\u52A8\u6E05\u7406" };
-    }
-    const hasNotePlaceholder = /\{\{\s*note\s*\}\}/i.test(template);
-    if (hasNotePlaceholder && !activeFile) {
-      return { path: "", warning: "\u5F53\u524D\u6CA1\u6709\u6D3B\u52A8\u6587\u6863\uFF0C\u65E0\u6CD5\u89E3\u6790\u6E05\u7406\u76EE\u5F55\u4E2D\u7684 {{note}}" };
-    }
-    const noteName = typeof (activeFile == null ? void 0 : activeFile.basename) === "string" ? activeFile.basename.trim() : "";
-    const resolved = template.replace(/\{\{\s*note\s*\}\}/gi, noteName);
-    const normalized = this.normalizeVaultPath(resolved);
-    if (!normalized) {
-      return { path: "", warning: "\u6E05\u7406\u76EE\u5F55\u4E3A\u7A7A\uFF0C\u8BF7\u68C0\u67E5\u8BBE\u7F6E\u503C" };
-    }
-    return { path: normalized };
-  },
-  /** @param {string} vaultPath @returns {boolean} */
-  isSafeCleanupDirPath(vaultPath) {
-    const normalized = this.normalizeVaultPath(vaultPath);
-    if (!normalized)
-      return false;
-    if (normalized === ".")
-      return false;
-    if (normalized.includes(".."))
-      return false;
-    const configDir = this.getVaultConfigDir();
-    if (configDir && (normalized === configDir || normalized.startsWith(`${configDir}/`)))
-      return false;
-    return true;
-  },
-  async cleanupConfiguredDirectory(activeFile) {
-    if (!this.plugin.settings.cleanupAfterSync) {
-      return { attempted: false };
-    }
-    const useSystemTrash = this.plugin.settings.cleanupUseSystemTrash !== false;
-    const resolved = this.resolveCleanupDirPath(activeFile);
-    if (!resolved.path) {
-      return { attempted: true, success: false, warning: resolved.warning || "\u672A\u89E3\u6790\u5230\u6E05\u7406\u76EE\u5F55" };
-    }
-    const normalized = resolved.path;
-    if (!this.isSafeCleanupDirPath(normalized)) {
-      return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u5F55\u4E0D\u5B89\u5168\uFF0C\u5DF2\u8DF3\u8FC7: ${normalized}` };
-    }
-    const abstractFile = this.app.vault.getAbstractFileByPath(normalized);
-    if (!abstractFile) {
-      return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u5F55\u4E0D\u5B58\u5728: ${normalized}` };
-    }
-    const isFile = typeof abstractFile.extension === "string";
-    if (isFile) {
-      return { attempted: true, success: false, warning: `\u6E05\u7406\u8DEF\u5F84\u4E0D\u662F\u76EE\u5F55\uFF0C\u5DF2\u8DF3\u8FC7: ${normalized}` };
-    }
-    try {
-      if (typeof this.app.vault.trash === "function") {
-        await this.app.vault.trash(abstractFile, useSystemTrash);
-      } else if (typeof this.app.vault.delete === "function") {
-        await this.app.vault.delete(abstractFile, true);
-      } else {
-        throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301\u5220\u9664\u63A5\u53E3");
-      }
-    } catch (error) {
-      return { attempted: true, success: false, warning: `\u5220\u9664\u5931\u8D25 (${normalized}): ${toReadableError5(error).message}` };
-    }
-    const frontmatterWarning = await this.clearInvalidPublishMetaAfterCleanup(activeFile, normalized);
-    if (frontmatterWarning) {
-      return { attempted: true, success: true, cleanedPath: normalized, warning: frontmatterWarning };
-    }
-    return { attempted: true, success: true, cleanedPath: normalized };
-  },
-  createSection(parent, label, builder) {
-    const section = parent.createEl("div", { cls: "apple-setting-section" });
-    section.createEl("label", { cls: "apple-setting-label", text: label });
-    const content = section.createEl("div", { cls: "apple-setting-content" });
-    builder(content);
-    return section;
-  },
-  getEffectiveLineHeight() {
-    const configured = this.plugin.settings.lineHeight;
-    if (configured !== null && configured !== void 0)
-      return configured;
-    const cfg = this.getThemeConfigSafe();
-    return cfg ? cfg.lineHeight : 1.8;
-  },
-  getEffectiveParagraphGap() {
-    const configured = this.plugin.settings.paragraphGap;
-    if (configured !== null && configured !== void 0)
-      return configured;
-    const cfg = this.getThemeConfigSafe();
-    return cfg ? cfg.paragraphGap : 18;
-  },
-  getEffectiveLetterSpacing() {
-    const configured = this.plugin.settings.letterSpacing;
-    if (configured !== null && configured !== void 0)
-      return configured;
-    return 0;
-  },
-  getThemeConfigSafe() {
-    const theme = this.theme;
-    if (theme && typeof theme.getThemeConfig === "function") {
-      try {
-        return theme.getThemeConfig();
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
-  },
-  formatSpacingValue(val) {
-    const num = Number(val);
-    if (!Number.isFinite(num))
-      return "0";
-    return parseFloat(num.toFixed(2)).toString();
-  },
-  updateSpacingSummary() {
-    const el = this.settingsSpacingValues;
-    if (!el)
-      return;
-    const lh = this.formatSpacingValue(this.getEffectiveLineHeight());
-    const pg = this.formatSpacingValue(this.getEffectiveParagraphGap());
-    const ls = this.formatSpacingValue(this.getEffectiveLetterSpacing());
-    el.setText(`\u884C\u8DDD ${lh} \xB7 \u6BB5\u8DDD ${pg} \xB7 \u5B57\u8DDD ${ls}`);
-  },
-  // 切换主题后刷新间距滑块显示：跟随主题(null)的滑块同步新主题默认值；
-  // 用户手动设过(非 null)的保持不变（getEffective 直接返回用户值）。
-  refreshSpacingSliders() {
-    if (!this.spacingSliderRefs)
-      return;
-    this.spacingSliderRefs.forEach(({ slider, valueLabel, getEffective }) => {
-      const v = getEffective();
-      slider.value = String(v);
-      valueLabel.setText(this.formatSpacingValue(v));
-    });
-    this.updateSpacingSummary();
-  },
-  resetSettingsPanelViewState() {
-    var _a5;
-    const advancedOptions = this.settingsAdvancedOptions || ((_a5 = this.settingsOverlay) == null ? void 0 : _a5.querySelector(".apple-settings-details"));
-    if (advancedOptions)
-      advancedOptions.open = false;
-    if (this.settingsSpacingGroup)
-      this.settingsSpacingGroup.open = false;
-    const scrollTargets = [
-      this.settingsOverlay,
-      this.settingsArea,
-      this.settingsAdvancedArea
-    ].filter(Boolean);
-    const resetScroll = () => {
-      scrollTargets.forEach((target) => {
-        target.scrollTop = 0;
-      });
-    };
-    resetScroll();
-    if (typeof requestAnimationFrame === "function") {
-      window.requestAnimationFrame(resetScroll);
-    }
-  },
-  resetAiLayoutPanelViewState() {
-    this.aiAdvancedOpen = false;
-    this.aiLayoutDebugMode = "";
-    this.aiLayoutPendingAnchor = null;
-    const scrollTargets = [
-      this.aiLayoutOverlay,
-      this.aiLayoutArea,
-      this.aiAdvancedBody,
-      this.aiDebugPanelBody
-    ].filter(Boolean);
-    const resetScroll = () => {
-      scrollTargets.forEach((target) => {
-        target.scrollTop = 0;
-      });
-    };
-    resetScroll();
-    if (typeof requestAnimationFrame === "function") {
-      window.requestAnimationFrame(resetScroll);
-    }
-  },
-  togglePanel(overlay, button, onOpen) {
-    if (!overlay || !button)
-      return;
-    const willOpen = !overlay.classList.contains("visible");
-    this.closeTransientPanels();
-    if (willOpen) {
-      overlay.classList.add("visible");
-      button.classList.add("active");
-      if (typeof onOpen === "function")
-        onOpen();
-    }
-  },
-  canScrollElementInDirection(element, deltaY) {
-    if (!element)
-      return false;
-    const maxScroll = Math.max(0, (element.scrollHeight || 0) - (element.clientHeight || 0));
-    if (maxScroll <= 0)
-      return false;
-    if (deltaY < 0)
-      return (element.scrollTop || 0) > 0;
-    if (deltaY > 0)
-      return (element.scrollTop || 0) < maxScroll - 1;
-    return true;
-  },
-  attachOverlayScrollGuard(overlay, nestedSelectors = []) {
-    if (!overlay || overlay.__appleScrollGuardAttached)
-      return;
-    const normalizedSelectors = Array.isArray(nestedSelectors) ? nestedSelectors.filter(Boolean) : [];
-    const handleWheel = (event) => {
-      if (!overlay.classList.contains("visible"))
-        return;
-      const target = event.target instanceof HTMLElement ? event.target : null;
-      const nestedScrollable = (
-        /** @type {Element | null} */
-        target ? normalizedSelectors.map((selector) => target.closest(selector)).find(Boolean) : null
-      );
-      const activeScrollable = nestedScrollable || overlay;
-      if (!this.canScrollElementInDirection(activeScrollable, event.deltaY)) {
-        event.preventDefault();
-      }
-      event.stopPropagation();
-    };
-    const handleTouchMove = (event) => {
-      if (!overlay.classList.contains("visible"))
-        return;
-      event.stopPropagation();
-    };
-    overlay.addEventListener("wheel", handleWheel, { passive: false });
-    overlay.addEventListener("touchmove", handleTouchMove, { passive: false });
-    overlay.__appleScrollGuardAttached = true;
-  },
-  closeTransientPanels() {
-    removeElementClass(this.settingsOverlay, "visible");
-    removeElementClass(this.aiLayoutOverlay, "visible");
-    removeElementClass(this.settingsBtn, "active");
-    removeElementClass(this.aiLayoutBtn, "active");
-  },
-  toggleSettingsPanel() {
-    const artWrapper = (
-      /** @type {unknown} */
-      this.articleSettingsWrapper
-    );
-    const stkWrapper = (
-      /** @type {unknown} */
-      this.stickerSettingsWrapper
-    );
-    if (this.previewMode === "sticker") {
-      if (artWrapper && typeof artWrapper === "object" && "classList" in artWrapper) {
-        artWrapper.classList.add("hidden");
-      }
-      if (stkWrapper && typeof stkWrapper === "object" && "classList" in stkWrapper) {
-        stkWrapper.classList.remove("hidden");
-      }
-      const toggleState = toRecord11(this.stickerIndexToggleState);
-      const checkbox = toggleState ? toRecord11(toggleState.checkbox) : null;
-      if (checkbox && typeof checkbox.checked === "boolean") {
-        checkbox.checked = Boolean(this.insertStickerImageIndex);
-      }
-    } else {
-      if (stkWrapper && typeof stkWrapper === "object" && "classList" in stkWrapper) {
-        stkWrapper.classList.add("hidden");
-      }
-      if (artWrapper && typeof artWrapper === "object" && "classList" in artWrapper) {
-        artWrapper.classList.remove("hidden");
-      }
-    }
-    this.togglePanel(this.settingsOverlay, this.settingsBtn, () => this.resetSettingsPanelViewState());
-  },
-  switchPreviewMode(mode) {
-    if (this.previewMode === mode)
-      return;
-    this.previewMode = mode;
-    const articleBtn = (
-      /** @type {unknown} */
-      this.btnArticleMode
-    );
-    const stickerBtn = (
-      /** @type {unknown} */
-      this.btnStickerMode
-    );
-    if (articleBtn && stickerBtn) {
-      const aEl = (
-        /** @type {Element} */
-        articleBtn
-      );
-      const sEl = (
-        /** @type {Element} */
-        stickerBtn
-      );
-      if (mode === "article") {
-        aEl.classList.add("active");
-        sEl.classList.remove("active");
-      } else {
-        sEl.classList.add("active");
-        aEl.classList.remove("active");
-      }
-    }
-    this.closeTransientPanels();
-    if (mode === "sticker") {
-      if (this.aiLayoutBtn && typeof this.aiLayoutBtn.classList === "object")
-        this.aiLayoutBtn.classList.add("hidden");
-      if (this.copyBtn && typeof this.copyBtn.classList === "object")
-        this.copyBtn.classList.add("hidden");
-      this.renderStickerPreview();
-    } else {
-      if (this.aiLayoutBtn && typeof this.aiLayoutBtn.classList === "object")
-        this.aiLayoutBtn.classList.remove("hidden");
-      if (this.copyBtn && typeof this.copyBtn.classList === "object")
-        this.copyBtn.classList.remove("hidden");
-      this.convertCurrent(true);
-    }
-    const headerEl = this.containerEl ? this.containerEl.querySelector(".apple-preview-header") : null;
-    if (headerEl && this.containerEl) {
-      const h = (
-        /** @type {HTMLElement} */
-        headerEl.offsetHeight || 80
-      );
-      this.containerEl.style.setProperty("--apple-header-height", h + "px");
-    }
-  },
+// views/converter/sticker-preview.js
+var stickerPreviewMethods = {
   getStickerUiState(filePath) {
     const selfRecord = toRecord11(this);
     if (!selfRecord.stickerUiStates) {
@@ -79974,6 +79666,355 @@ var clipboardMethods = {
   }
 };
 
+// services/publish-cleanup.js
+function toRecord13(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? (
+    /** @type {Record<string, unknown>} */
+    value
+  ) : null;
+}
+function normalizeFrontmatterKey(key) {
+  return String(key || "").toLowerCase().replace(/[_-]/g, "");
+}
+function getFrontmatterKeyMap(frontmatter, keys) {
+  const result = {};
+  const frontmatterRecord = toRecord13(frontmatter);
+  if (!frontmatterRecord || !Array.isArray(keys) || keys.length === 0)
+    return result;
+  const normalizedTargets = new Set(keys.map(normalizeFrontmatterKey));
+  for (const [key, value] of Object.entries(frontmatterRecord)) {
+    if (!normalizedTargets.has(normalizeFrontmatterKey(key)))
+      continue;
+    if (typeof value !== "string")
+      continue;
+    const normalizedValue = normalizeVaultPath(value);
+    if (normalizedValue)
+      result[key] = normalizedValue;
+  }
+  return result;
+}
+function isPathInsideDirectory(filePath, dirPath) {
+  const file = normalizeVaultPath(filePath);
+  const dir = normalizeVaultPath(dirPath);
+  if (!file || !dir)
+    return false;
+  return file === dir || file.startsWith(`${dir}/`);
+}
+function isPathInsideDirectoryByTail(filePath, dirPath) {
+  const file = normalizeVaultPath(filePath);
+  const dir = normalizeVaultPath(dirPath);
+  if (!file || !dir)
+    return false;
+  const dirSegments = dir.split("/").filter(Boolean);
+  if (dirSegments.length < 2)
+    return false;
+  for (let index = 1; index <= dirSegments.length - 2; index += 1) {
+    const tailDir = dirSegments.slice(index).join("/");
+    if (isPathInsideDirectory(file, tailDir))
+      return true;
+  }
+  return false;
+}
+function shouldClearFrontmatterPathAfterCleanup(pathValue, cleanedDir) {
+  const normalized = normalizeVaultPath(pathValue);
+  if (!normalized)
+    return false;
+  return isPathInsideDirectory(normalized, cleanedDir) || isPathInsideDirectoryByTail(normalized, cleanedDir);
+}
+function clearInvalidPublishMetaInFrontmatter(frontmatter, cleanedDir) {
+  const frontmatterRecord = toRecord13(frontmatter);
+  if (!frontmatterRecord)
+    return false;
+  let changed = false;
+  const coverMap = getFrontmatterKeyMap(frontmatter, ["cover"]);
+  const coverDirMap = getFrontmatterKeyMap(
+    frontmatter,
+    ["cover_dir", "coverDir", "cover-dir", "coverdir", "CoverDIR"]
+  );
+  for (const [key, value] of Object.entries(coverMap)) {
+    if (shouldClearFrontmatterPathAfterCleanup(value, cleanedDir)) {
+      frontmatterRecord[key] = "";
+      changed = true;
+    }
+  }
+  for (const [key, value] of Object.entries(coverDirMap)) {
+    if (shouldClearFrontmatterPathAfterCleanup(value, cleanedDir)) {
+      frontmatterRecord[key] = "";
+      changed = true;
+    }
+  }
+  return changed;
+}
+async function clearInvalidPublishMetaByTextFallback({
+  vault,
+  activeFile,
+  cleanedDir
+}) {
+  if (!vault || typeof vault.read !== "function" || typeof vault.modify !== "function") {
+    return false;
+  }
+  const source = await vault.read(activeFile);
+  if (typeof source !== "string" || !source.startsWith("---"))
+    return false;
+  const match = source.match(/^(---[ \t]*\r?\n)([\s\S]*?)(\r?\n(?:---|\.\.\.)[ \t]*(?:\r?\n|$))/);
+  if (!match)
+    return false;
+  let changed = false;
+  const body = match[2].replace(
+    /^([ \t]*)(cover|cover_dir|coverDir|cover-dir|coverdir|CoverDIR)([ \t]*:[ \t]*)(.*)$/gmi,
+    (line, indent, key, separator, rawValue) => {
+      const value = String(rawValue || "").trim().replace(/^['"]|['"]$/g, "");
+      if (!shouldClearFrontmatterPathAfterCleanup(value, cleanedDir))
+        return line;
+      changed = true;
+      return `${indent}${key}${separator}''`;
+    }
+  );
+  if (!changed)
+    return false;
+  await vault.modify(activeFile, `${match[1]}${body}${match[3]}${source.slice(match[0].length)}`);
+  return true;
+}
+async function clearInvalidPublishMetaAfterCleanup({
+  app,
+  activeFile,
+  cleanedDirPath
+}) {
+  var _a5;
+  if (!activeFile || !cleanedDirPath)
+    return null;
+  const cleanedDir = normalizeVaultPath(cleanedDirPath);
+  if (!cleanedDir)
+    return null;
+  try {
+    const processFrontMatter = (_a5 = app == null ? void 0 : app.fileManager) == null ? void 0 : _a5["processFrontMatter"];
+    if (typeof processFrontMatter === "function") {
+      await processFrontMatter.call(app.fileManager, activeFile, (frontmatter) => {
+        clearInvalidPublishMetaInFrontmatter(frontmatter, cleanedDir);
+      });
+    } else {
+      await clearInvalidPublishMetaByTextFallback({
+        vault: app == null ? void 0 : app.vault,
+        activeFile,
+        cleanedDir
+      });
+    }
+  } catch (error) {
+    return `\u8D44\u6E90\u5DF2\u5220\u9664\uFF0C\u4F46\u6E05\u7406 frontmatter \u4E2D\u5931\u6548\u7684 cover/cover_dir \u5931\u8D25: ${toReadableError5(error).message}`;
+  }
+  return null;
+}
+function resolveCleanupDirPath(templateValue, activeFile) {
+  const template = normalizeVaultPath(templateValue);
+  if (!template) {
+    return { path: "", warning: "\u672A\u914D\u7F6E\u6E05\u7406\u76EE\u5F55\uFF0C\u8BF7\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u5148\u586B\u5199\u76EE\u5F55\u540E\u518D\u542F\u7528\u81EA\u52A8\u6E05\u7406" };
+  }
+  const hasNotePlaceholder = /\{\{\s*note\s*\}\}/i.test(template);
+  if (hasNotePlaceholder && !activeFile) {
+    return { path: "", warning: "\u5F53\u524D\u6CA1\u6709\u6D3B\u52A8\u6587\u6863\uFF0C\u65E0\u6CD5\u89E3\u6790\u6E05\u7406\u76EE\u5F55\u4E2D\u7684 {{note}}" };
+  }
+  const noteName = typeof (activeFile == null ? void 0 : activeFile.basename) === "string" ? activeFile.basename.trim() : "";
+  const resolved = template.replace(/\{\{\s*note\s*\}\}/gi, noteName);
+  const normalized = normalizeVaultPath(resolved);
+  if (!normalized)
+    return { path: "", warning: "\u6E05\u7406\u76EE\u5F55\u4E3A\u7A7A\uFF0C\u8BF7\u68C0\u67E5\u8BBE\u7F6E\u503C" };
+  return { path: normalized };
+}
+function isSafeCleanupDirPath(vaultPath, configDirValue) {
+  const normalized = normalizeVaultPath(vaultPath);
+  if (!normalized || normalized === "." || normalized.includes(".."))
+    return false;
+  const configDir = normalizeVaultPath(configDirValue);
+  return !configDir || normalized !== configDir && !normalized.startsWith(`${configDir}/`);
+}
+async function cleanupConfiguredDirectory({
+  app,
+  settings,
+  activeFile
+}) {
+  var _a5, _b, _c;
+  if (!(settings == null ? void 0 : settings.cleanupAfterSync))
+    return { attempted: false };
+  const useSystemTrash = settings.cleanupUseSystemTrash !== false;
+  const resolved = resolveCleanupDirPath(settings.cleanupDirTemplate, activeFile);
+  if (!resolved.path) {
+    return { attempted: true, success: false, warning: resolved.warning || "\u672A\u89E3\u6790\u5230\u6E05\u7406\u76EE\u5F55" };
+  }
+  const normalized = resolved.path;
+  if (!isSafeCleanupDirPath(normalized, (_a5 = app == null ? void 0 : app.vault) == null ? void 0 : _a5.configDir)) {
+    return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u5F55\u4E0D\u5B89\u5168\uFF0C\u5DF2\u8DF3\u8FC7: ${normalized}` };
+  }
+  const abstractFile = (_c = (_b = app == null ? void 0 : app.vault) == null ? void 0 : _b.getAbstractFileByPath) == null ? void 0 : _c.call(_b, normalized);
+  if (!abstractFile) {
+    return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u5F55\u4E0D\u5B58\u5728: ${normalized}` };
+  }
+  if (typeof abstractFile.extension === "string") {
+    return { attempted: true, success: false, warning: `\u6E05\u7406\u8DEF\u5F84\u4E0D\u662F\u76EE\u5F55\uFF0C\u5DF2\u8DF3\u8FC7: ${normalized}` };
+  }
+  try {
+    if (typeof app.vault.trash === "function") {
+      await app.vault.trash(abstractFile, useSystemTrash);
+    } else if (typeof app.vault.delete === "function") {
+      await app.vault.delete(abstractFile, true);
+    } else {
+      throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301\u5220\u9664\u63A5\u53E3");
+    }
+  } catch (error) {
+    return {
+      attempted: true,
+      success: false,
+      warning: `\u5220\u9664\u5931\u8D25 (${normalized}): ${toReadableError5(error).message}`
+    };
+  }
+  const frontmatterWarning = await clearInvalidPublishMetaAfterCleanup({
+    app,
+    activeFile,
+    cleanedDirPath: normalized
+  });
+  return frontmatterWarning ? { attempted: true, success: true, cleanedPath: normalized, warning: frontmatterWarning } : { attempted: true, success: true, cleanedPath: normalized };
+}
+
+// views/publish-modal/publish-context.js
+var publishContextMethods = {
+  createAccountSelector(parent) {
+    const accounts = this.plugin.settings.wechatAccounts || [];
+    if (accounts.length === 0)
+      return;
+    const section = parent.createEl("div", { cls: "apple-setting-section wechat-account-selector" });
+    section.createEl("label", { cls: "apple-setting-label", text: "\u540C\u6B65\u8D26\u53F7" });
+    const select = (
+      /** @type {ObsidianInputLike} */
+      section.createEl("select", { cls: "wechat-account-select" })
+    );
+    const defaultId = this.plugin.settings.defaultAccountId;
+    for (const account of accounts) {
+      const option = (
+        /** @type {ObsidianInputLike} */
+        select.createEl("option", {
+          value: account.id,
+          text: account.id === defaultId ? `${account.name} (\u9ED8\u8BA4)` : account.name
+        })
+      );
+      if (account.id === defaultId)
+        option.selected = true;
+    }
+    this.selectedAccountId = defaultId;
+    select.addEventListener("change", (event) => {
+      this.selectedAccountId = getEventTargetValue(event, defaultId);
+    });
+  },
+  getFirstImageFromArticle() {
+    if (!this.currentHtml)
+      return null;
+    const tempDiv = createHtmlContainer("div", this.currentHtml);
+    const imgs = Array.from(tempDiv.querySelectorAll("img"));
+    for (const img of imgs) {
+      if (img.alt === "logo")
+        continue;
+      const src = String(img.getAttribute("src") || img.src || "").trim();
+      if (src)
+        return src;
+    }
+    return null;
+  },
+  getPublishContextFile() {
+    var _a5, _b, _c;
+    return ((_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.workspace) == null ? void 0 : _b.getActiveFile) == null ? void 0 : _c.call(_b)) || this.lastActiveFile || null;
+  },
+  getFrontmatterPublishMeta(activeFile) {
+    var _a5, _b, _c, _d;
+    if (!activeFile) {
+      return { excerpt: "", cover: "", cover_dir: "", coverSrc: null, title: "" };
+    }
+    const frontmatter = (_d = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.metadataCache) == null ? void 0 : _b.getFileCache) == null ? void 0 : _c.call(_b, activeFile)) == null ? void 0 : _d.frontmatter;
+    const excerpt = this.getFrontmatterString(frontmatter, ["excerpt"]);
+    const cover = this.getFrontmatterString(frontmatter, ["cover"]);
+    const cover_dir = this.getFrontmatterString(
+      frontmatter,
+      ["cover_dir", "coverDir", "cover-dir", "coverdir", "CoverDIR"]
+    );
+    const title = this.getFrontmatterString(frontmatter, ["title"]);
+    const coverSrc = cover ? this.resolveVaultPathToResourceSrc(cover) : null;
+    return { excerpt, cover, cover_dir, coverSrc, title };
+  },
+  getFrontmatterString(frontmatter, keys) {
+    const frontmatterRecord = toRecord11(frontmatter);
+    if (!frontmatterRecord || !Array.isArray(keys) || keys.length === 0)
+      return "";
+    const normalizedTargets = new Set(keys.map(normalizeFrontmatterKey));
+    for (const key of keys) {
+      const value = frontmatterRecord[key];
+      if (typeof value === "string" && value.trim())
+        return value.trim();
+    }
+    for (const [key, value] of Object.entries(frontmatterRecord)) {
+      if (!normalizedTargets.has(normalizeFrontmatterKey(key)))
+        continue;
+      if (typeof value === "string" && value.trim())
+        return value.trim();
+    }
+    return "";
+  },
+  normalizeFrontmatterKey,
+  getFrontmatterKeyMap,
+  isPathInsideDirectory,
+  isPathInsideDirectoryByTail,
+  shouldClearFrontmatterPathAfterCleanup,
+  clearInvalidPublishMetaInFrontmatter,
+  clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir) {
+    var _a5;
+    return clearInvalidPublishMetaByTextFallback({
+      vault: (_a5 = this.app) == null ? void 0 : _a5.vault,
+      activeFile,
+      cleanedDir
+    });
+  },
+  clearInvalidPublishMetaAfterCleanup(activeFile, cleanedDirPath) {
+    return clearInvalidPublishMetaAfterCleanup({
+      app: this.app,
+      activeFile,
+      cleanedDirPath
+    });
+  },
+  resolveVaultPathToResourceSrc(vaultPath) {
+    if (typeof vaultPath !== "string")
+      return null;
+    const normalized = vaultPath.trim().replace(/\\/g, "/").replace(/^\/+/, "");
+    if (!normalized)
+      return null;
+    try {
+      const file = this.app.vault.getAbstractFileByPath(normalized);
+      if (!file || typeof file.extension !== "string")
+        return null;
+      return this.app.vault.getResourcePath(file);
+    } catch (e) {
+      return null;
+    }
+  },
+  normalizeVaultPath,
+  getVaultConfigDir() {
+    var _a5, _b;
+    return normalizeVaultPath((_b = (_a5 = this.app) == null ? void 0 : _a5.vault) == null ? void 0 : _b.configDir);
+  },
+  getCleanupDirTemplate() {
+    var _a5, _b;
+    return normalizeVaultPath((_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.cleanupDirTemplate);
+  },
+  resolveCleanupDirPath(activeFile) {
+    return resolveCleanupDirPath(this.getCleanupDirTemplate(), activeFile);
+  },
+  isSafeCleanupDirPath(vaultPath) {
+    return isSafeCleanupDirPath(vaultPath, this.getVaultConfigDir());
+  },
+  cleanupConfiguredDirectory(activeFile) {
+    return cleanupConfiguredDirectory({
+      app: this.app,
+      settings: this.plugin.settings,
+      activeFile
+    });
+  }
+};
+
 // views/publish-modal/wechat-preview-export.js
 var wechatPreviewExportMethods = {
   getCurrentExportHtml() {
@@ -82062,10 +82103,13 @@ var AppleStyleView = class extends ItemView {
 Object.assign(
   AppleStyleView.prototype,
   coreMethods,
-  stylePanelMethods,
+  settingsPanelMethods,
+  panelShellMethods,
+  stickerPreviewMethods,
   aiLayoutPanelMethods,
   aiLayoutDebugMethods,
   clipboardMethods,
+  publishContextMethods,
   wechatPublishMethods,
   materialPickerMethods
 );
@@ -83164,7 +83208,7 @@ AppleStyleSettingTab.prototype[LEGACY_SETTING_RENDER_KEY2] = function legacySett
 function isRecord16(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
-function toRecord13(value) {
+function toRecord14(value) {
   return isRecord16(value) ? value : {};
 }
 function toAiLayoutState2(value) {
@@ -83182,8 +83226,8 @@ function getArticleLayoutStateFromSettings(pluginSettings, sourcePath = "", sele
   const normalizedPath = normalizeVaultPath(sourcePath || "");
   if (!normalizedPath)
     return null;
-  const aiSettings = normalizeAiSettings(toRecord13(pluginSettings.ai));
-  const articleLayoutsByPath = toRecord13(aiSettings.articleLayoutsByPath);
+  const aiSettings = normalizeAiSettings(toRecord14(pluginSettings.ai));
+  const articleLayoutsByPath = toRecord14(aiSettings.articleLayoutsByPath);
   const entry = articleLayoutsByPath[normalizedPath] || null;
   const normalizedEntry = normalizeArticleLayoutCacheEntry(entry);
   if (!normalizedEntry)

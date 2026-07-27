@@ -645,6 +645,22 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   gap: 8px;
 }
 
+.sticker-publish-image-body .sticker-image-list__item {
+  /*
+   * Obsidian 的 Modal 入场会对整层做 transform/opacity 动画。
+   * 图片卡片若同时声明 transform transition，Electron 会为每张卡片额外建合成层，
+   * 与下方的 backdrop-filter 叠加后会在弹窗打开时反复重绘，表现为图片区闪烁和抖动。
+   */
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.sticker-publish-image-body .sticker-image-list__order,
+.sticker-publish-image-body .sticker-image-list__source,
+.sticker-publish-image-body .sticker-image-list__remove,
+.sticker-publish-image-body .sticker-image-list__move-controls button {
+  backdrop-filter: none;
+}
+
 .sticker-publish-image-body.wechat-modal-sticker-grid-preview img {
   width: 100%;
   height: 100%;

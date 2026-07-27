@@ -19,6 +19,10 @@
 - `sticker-image-items.js`：统一正文、本地上传和公众号素材图片项，只做同来源去重。
 - `sticker-media-resolver.js`：校验素材所属账号、复用成功上传缓存并解析 media_id。
 
+## 发布清理模块
+
+- `publish-cleanup.js`：负责发布后目录解析、安全校验、删除和失效 `cover` / `cover_dir` 清理；视图层只保留兼容适配。
+
 ## 定位
 
 位于 services/，是业务服务层；UI 只调用服务，不在视图文件内重复核心规则。

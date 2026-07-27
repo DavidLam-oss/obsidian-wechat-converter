@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`./apple-style-view-shared.js`、`./converter/core.js`、`./converter/style-panel.js`、`./converter/ai-layout-panel.js`、`./converter/ai-layout-debug.js`、`./converter/clipboard.js`、`./publish-modal/wechat.js`、`./publish-modal/material-picker.js`。
+关键依赖：`./apple-style-view-shared.js`、`./converter/core.js`、`./converter/settings-panel.js`、`./converter/panel-shell.js`、`./converter/sticker-preview.js`、`./publish-modal/publish-context.js`、`./publish-modal/wechat.js`。
 
 ## 维护规则
 
@@ -27,10 +27,13 @@
 
 import { ItemView } from './apple-style-view-shared.js';
 import { coreMethods } from './converter/core.js';
-import { stylePanelMethods } from './converter/style-panel.js';
+import { settingsPanelMethods } from './converter/settings-panel.js';
+import { panelShellMethods } from './converter/panel-shell.js';
+import { stickerPreviewMethods } from './converter/sticker-preview.js';
 import { aiLayoutPanelMethods } from './converter/ai-layout-panel.js';
 import { aiLayoutDebugMethods } from './converter/ai-layout-debug.js';
 import { clipboardMethods } from './converter/clipboard.js';
+import { publishContextMethods } from './publish-modal/publish-context.js';
 import { wechatPublishMethods } from './publish-modal/wechat.js';
 import { materialPickerMethods } from './publish-modal/material-picker.js';
 
@@ -287,10 +290,13 @@ class AppleStyleView extends ItemView {
 Object.assign(
   AppleStyleView.prototype,
   coreMethods,
-  stylePanelMethods,
+  settingsPanelMethods,
+  panelShellMethods,
+  stickerPreviewMethods,
   aiLayoutPanelMethods,
   aiLayoutDebugMethods,
   clipboardMethods,
+  publishContextMethods,
   wechatPublishMethods,
   materialPickerMethods,
 );

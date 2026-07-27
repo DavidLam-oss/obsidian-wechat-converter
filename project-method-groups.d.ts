@@ -160,15 +160,44 @@ type CoreMethodsContract = Pick<
     | 'simpleHash'
 >;
 
-type StylePanelMethodsContract = Pick<
+type SettingsPanelMethodsContract = Pick<
     AppleStyleViewContract,
     | 'createSettingsPanel'
+    | 'createSection'
+    | 'getEffectiveLineHeight'
+    | 'getEffectiveParagraphGap'
+    | 'getEffectiveLetterSpacing'
+    | 'getThemeConfigSafe'
+    | 'formatSpacingValue'
+    | 'updateSpacingSummary'
+    | 'refreshSpacingSliders'
+>;
+
+type PanelShellMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'resetSettingsPanelViewState'
+    | 'resetAiLayoutPanelViewState'
+    | 'togglePanel'
+    | 'canScrollElementInDirection'
+    | 'attachOverlayScrollGuard'
+    | 'closeTransientPanels'
+    | 'toggleSettingsPanel'
     | 'switchPreviewMode'
+>;
+
+type StickerPreviewMethodsContract = Pick<
+    AppleStyleViewContract,
     | 'getStickerUiState'
+    | 'removeStickerImageItem'
+    | 'restoreLastStickerImage'
+    | 'restoreAllStickerImages'
     | 'resolveStickerImageSrc'
     | 'buildStickerData'
     | 'renderStickerPreview'
-    | 'toggleSettingsPanel'
+>;
+
+type PublishContextMethodsContract = Pick<
+    AppleStyleViewContract,
     | 'createAccountSelector'
     | 'getFirstImageFromArticle'
     | 'getPublishContextFile'
@@ -189,20 +218,6 @@ type StylePanelMethodsContract = Pick<
     | 'resolveCleanupDirPath'
     | 'isSafeCleanupDirPath'
     | 'cleanupConfiguredDirectory'
-    | 'createSection'
-    | 'getEffectiveLineHeight'
-    | 'getEffectiveParagraphGap'
-    | 'getEffectiveLetterSpacing'
-    | 'getThemeConfigSafe'
-    | 'formatSpacingValue'
-    | 'updateSpacingSummary'
-    | 'refreshSpacingSliders'
-    | 'resetSettingsPanelViewState'
-    | 'resetAiLayoutPanelViewState'
-    | 'togglePanel'
-    | 'canScrollElementInDirection'
-    | 'attachOverlayScrollGuard'
-    | 'closeTransientPanels'
 >;
 
 type MaterialPickerMethodsContract = Pick<

@@ -108,6 +108,7 @@ function renderStickerImageList(container, {
           src,
           alt: item.name || `第 ${index + 1} 张贴图`,
           draggable: 'false',
+          decoding: 'async',
         },
       });
       image.onerror = () => cell.addClass('has-image-error');

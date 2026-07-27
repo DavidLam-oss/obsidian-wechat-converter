@@ -26,6 +26,8 @@
 */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 const { loadInputModule } = require('./helpers/input-module.cjs');
 const { createObsidianLikeElement } = require('./helpers/obsidian-dom.js');
@@ -124,7 +126,22 @@ describe('WeChat sticker publish flow', () => {
         'app://vault/a.png',
         'app://vault/b.png',
       ]);
+      expect(thumbs.every((img) => img.getAttribute('decoding') === 'async')).toBe(true);
       expect(view.buildStickerData).not.toHaveBeenCalled();
+    });
+
+    it('should keep publish thumbnails out of nested modal compositor effects', () => {
+      const css = readFileSync(
+        resolve(process.cwd(), 'styles/wechat-publish.css'),
+        'utf8'
+      );
+
+      expect(css).toMatch(
+        /\.sticker-publish-image-body \.sticker-image-list__item\s*\{[\s\S]*?transition:\s*border-color 140ms ease,\s*box-shadow 140ms ease;/
+      );
+      expect(css).toMatch(
+        /\.sticker-publish-image-body \.sticker-image-list__order,[\s\S]*?\.sticker-publish-image-body \.sticker-image-list__move-controls button\s*\{[\s\S]*?backdrop-filter:\s*none;/
+      );
     });
 
     it('should wait for sticker data before opening when the current source has no cache', async () => {
