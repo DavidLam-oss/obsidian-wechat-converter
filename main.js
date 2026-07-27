@@ -76695,7 +76695,7 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
   text = removeDuplicateLeadingHeading(text, String(options.title || ""));
   const protectedBlocks = [];
   const protectBlock = (value) => {
-    const token = `\0B${protectedBlocks.length}X\0`;
+    const token = `\uE000B${protectedBlocks.length}X\uE001`;
     protectedBlocks.push(value);
     return token;
   };
@@ -76757,7 +76757,7 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
   text = text.replace(/==([\s\S]*?)==/g, "$1");
   const protectedValues = [];
   const protect = (value) => {
-    const token = `\0P${protectedValues.length}X\0`;
+    const token = `\uE000P${protectedValues.length}X\uE001`;
     protectedValues.push(value);
     return token;
   };
@@ -76774,7 +76774,7 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
   text = replaceProtected(text, /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_match, target, alias) => protect(String(alias || target)));
   text = text.replace(/(\*\*|__)(.*?)\1/g, "$2");
   text = text.replace(/(\*|_)(.*?)\1/g, "$2");
-  text = text.replace(/\u0000P(\d+)X\u0000/g, (_, index) => protectedValues[Number(index)] || "");
+  text = text.replace(/\uE000P(\d+)X\uE001/g, (_, index) => protectedValues[Number(index)] || "");
   text = text.replace(
     /^(\s*)[-*+]\s+\[([ xX])\]\s+/gm,
     (_match, indent, state) => `${indent}${String(state).toLowerCase() === "x" ? "\u2611" : "\u2610"} `
@@ -76788,7 +76788,7 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
     return true;
   });
   const removed = Object.entries(counts).filter(([, count]) => count > 0).map(([kind, count]) => ({ kind, count }));
-  const cleanedText = cleanedLines.join("\n").trim().replace(/\u0000B(\d+)X\u0000/g, (_, index) => protectedBlocks[Number(index)] || "");
+  const cleanedText = cleanedLines.join("\n").trim().replace(/\uE000B(\d+)X\uE001/g, (_, index) => protectedBlocks[Number(index)] || "");
   return {
     text: cleanedText,
     hasCodeBlocks: counts.codeBlocks + counts.mermaid + counts.pluginBlocks > 0,

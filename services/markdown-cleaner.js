@@ -461,7 +461,7 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
   /** @type {string[]} */
   const protectedBlocks = [];
   const protectBlock = (value) => {
-    const token = `\u0000B${protectedBlocks.length}X\u0000`;
+    const token = `\uE000B${protectedBlocks.length}X\uE001`;
     protectedBlocks.push(value);
     return token;
   };
@@ -555,7 +555,7 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
   /** @type {string[]} */
   const protectedValues = [];
   const protect = (value) => {
-    const token = `\u0000P${protectedValues.length}X\u0000`;
+    const token = `\uE000P${protectedValues.length}X\uE001`;
     protectedValues.push(value);
     return token;
   };
@@ -576,7 +576,7 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
   // 13. emphasis
   text = text.replace(/(\*\*|__)(.*?)\1/g, '$2');
   text = text.replace(/(\*|_)(.*?)\1/g, '$2');
-  text = text.replace(/\u0000P(\d+)X\u0000/g, (_, index) => protectedValues[Number(index)] || '');
+  text = text.replace(/\uE000P(\d+)X\uE001/g, (_, index) => protectedValues[Number(index)] || '');
 
   // 14. tasks, quotes and lists
   text = text.replace(
@@ -605,7 +605,7 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
   const cleanedText = cleanedLines
     .join('\n')
     .trim()
-    .replace(/\u0000B(\d+)X\u0000/g, (_, index) => protectedBlocks[Number(index)] || '');
+    .replace(/\uE000B(\d+)X\uE001/g, (_, index) => protectedBlocks[Number(index)] || '');
 
   return {
     text: cleanedText,
@@ -623,3 +623,5 @@ export {
   isImageEmbedTarget,
   cleanMarkdownToPlainText
 };
+
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: resume typed linting after Markdown compatibility normalization */

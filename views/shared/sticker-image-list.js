@@ -215,3 +215,5 @@ export {
   moveStickerImageItem,
   renderStickerImageList,
 };
+
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return -- reason: resume typed linting after the shared sticker image renderer boundary */

@@ -482,3 +482,5 @@ export {
   getStickerModalItems,
   renderStickerPublishContent,
 };
+
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: resume typed linting after the dynamic sticker publish UI boundary */

@@ -278,3 +278,5 @@ export {
   reconcileStickerImageOrder,
   extractStickerData
 };
+
+/* eslint-enable @typescript-eslint/no-unsafe-assignment -- reason: resume typed linting after legacy sticker order normalization */
