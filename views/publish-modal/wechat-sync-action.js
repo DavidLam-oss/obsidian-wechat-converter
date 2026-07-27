@@ -35,7 +35,11 @@ import {
   toReadableError,
   isRecord,
 } from '../apple-style-view-shared.js';
-import { STICKER_MAX_CONTENT_LENGTH } from '../../services/sticker-extractor.js';
+import {
+  STICKER_MAX_CONTENT_LENGTH,
+  STICKER_MAX_IMAGES,
+  STICKER_MAX_TITLE_LENGTH,
+} from '../../services/sticker-extractor.js';
 import { createBodyStickerImageItem } from '../../services/sticker-image-items.js';
 import { resolveStickerMediaIds } from '../../services/sticker-media-resolver.js';
 import { syncStickerDraft } from '../../services/wechat-sync.js';
@@ -179,16 +183,28 @@ async onSyncStickerToWechat(account) {
         .map((src) => createBodyStickerImageItem(src))
         .filter(Boolean);
     const content = typeof stickerData.content === 'string' ? stickerData.content : '';
+    const title = String(this.sessionTitle || stickerData.title || '未命名贴图').trim();
 
     if (imageItems.length === 0) {
       notice.hide();
       new Notice('⚠️ 微信贴图至少需要 1 张图片，请先在笔记正文中插入图片');
       return;
     }
+    if (imageItems.length > STICKER_MAX_IMAGES) {
+      notice.hide();
+      new Notice(`⚠️ 微信贴图最多支持 ${STICKER_MAX_IMAGES} 张图片，请先移除多余图片`);
+      return;
+    }
 
     if (content.length > STICKER_MAX_CONTENT_LENGTH) {
       notice.hide();
       new Notice(`⚠️ 贴图文案 ${content.length} 字，超出微信 ${STICKER_MAX_CONTENT_LENGTH} 字上限，请精简后再同步`);
+      return;
+    }
+
+    if (title.length > STICKER_MAX_TITLE_LENGTH) {
+      notice.hide();
+      new Notice(`⚠️ 贴图标题 ${title.length} 字，超出 ${STICKER_MAX_TITLE_LENGTH} 字上限，请精简后再同步`);
       return;
     }
 
@@ -206,7 +222,6 @@ async onSyncStickerToWechat(account) {
     });
 
     notice.setMessage('🚀 正在创建微信贴图草稿...');
-    const title = (this.sessionTitle || stickerData.title || '未命名贴图').slice(0, 64);
     const stickerDraftRes = await syncStickerDraft({
       account,
       api,

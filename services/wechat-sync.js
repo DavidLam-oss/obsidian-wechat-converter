@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`./dom-utils.js`。
+关键依赖：`./dom-utils.js`、`./sticker-constants.js`。
 
 ## 维护规则
 
@@ -26,6 +26,10 @@
 */
 
 import { createHtmlContainer, getActiveDocument } from './dom-utils.js';
+import {
+  STICKER_MAX_IMAGES,
+  STICKER_MAX_TITLE_LENGTH,
+} from './sticker-constants.js';
 
 /**
  * @typedef {{ mediaId: string, fingerprint?: string, uploadedAt?: number }} CoverCacheEntry
@@ -503,9 +507,22 @@ export async function syncStickerDraft({ account, api, title, content = '', imag
   if (!stickerApi || typeof stickerApi.createImageDraft !== 'function') {
     throw new Error('当前微信 API 实例未支持 createImageDraft 方法');
   }
+  const normalizedTitle = String(title || '').trim();
+  if (normalizedTitle.length === 0) {
+    throw new Error('微信贴图标题不能为空');
+  }
+  if (normalizedTitle.length > STICKER_MAX_TITLE_LENGTH) {
+    throw new Error(`微信贴图标题不能超过 ${STICKER_MAX_TITLE_LENGTH} 字`);
+  }
+  if (!Array.isArray(imageMediaIds) || imageMediaIds.length === 0) {
+    throw new Error('微信贴图至少需要 1 张图片');
+  }
+  if (imageMediaIds.length > STICKER_MAX_IMAGES) {
+    throw new Error(`微信贴图最多支持 ${STICKER_MAX_IMAGES} 张图片`);
+  }
 
   const res = await stickerApi.createImageDraft({
-    title,
+    title: normalizedTitle,
     content,
     imageMediaIds,
     needOpenComment: account.openComment ? 1 : 0,

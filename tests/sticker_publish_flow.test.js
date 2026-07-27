@@ -48,6 +48,7 @@ function installModalMock(obsidianMock) {
 
     close() {
       this.isOpen = false;
+      this.onClose?.();
     }
   }
 
@@ -123,6 +124,147 @@ describe('WeChat sticker publish flow', () => {
         'app://vault/a.png',
         'app://vault/b.png',
       ]);
+      expect(view.buildStickerData).not.toHaveBeenCalled();
+    });
+
+    it('should wait for sticker data before opening when the current source has no cache', async () => {
+      view.previewStickerData = null;
+      let resolveStickerData;
+      view.buildStickerData = vi.fn(() => new Promise((resolve) => {
+        resolveStickerData = resolve;
+      }));
+
+      view.showSyncModal();
+
+      const modal = getLastModal();
+      expect(modal.isOpen).not.toBe(true);
+
+      resolveStickerData(createStickerData());
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(modal.isOpen).toBe(true);
+      expect(modal.contentEl.querySelectorAll('.wechat-modal-sticker-grid-preview img')).toHaveLength(2);
+    });
+
+    it('should show a 20-character title counter and block over-limit titles', () => {
+      view.previewStickerData = createStickerData();
+      view.buildStickerData = vi.fn(async () => view.previewStickerData);
+
+      view.showSyncModal();
+
+      const modal = getLastModal();
+      const titleInput = modal.contentEl.querySelector('.sticker-publish-title .wechat-modal-title-input');
+      const titleCount = modal.contentEl.querySelector('.sticker-publish-title .sticker-publish-count');
+      const titleCountValue = titleCount.querySelector('.sticker-publish-count-value');
+      const syncBtn = modal.contentEl.querySelector('.wechat-modal-buttons .mod-cta');
+      expect(titleCount.textContent).toBe('6/20 字');
+      expect(titleCountValue.textContent).toBe('6');
+      expect(titleCountValue.classList.contains('is-error')).toBe(false);
+
+      titleInput.value = '字'.repeat(21);
+      titleInput.dispatchEvent(new Event('input'));
+
+      expect(titleCount.textContent).toBe('21/20 字');
+      expect(titleCountValue.textContent).toBe('21');
+      expect(titleCountValue.classList.contains('is-error')).toBe(true);
+      expect(titleCount.classList.contains('is-error')).toBe(false);
+      expect(syncBtn.disabled).toBe(true);
+      expect(syncBtn.textContent).toBe('标题超长，无法同步');
+      expect(syncBtn.getAttribute('title')).toContain('21 字');
+    });
+
+    it('should reuse article-mode image action copy and button styling', () => {
+      view.previewStickerData = createStickerData();
+      view.buildStickerData = vi.fn(async () => view.previewStickerData);
+
+      view.showSyncModal();
+
+      const modal = getLastModal();
+      const imageActions = modal.contentEl.querySelector('.sticker-publish-image-actions');
+      const actionButtons = Array.from(imageActions.querySelectorAll('button'));
+
+      expect(imageActions.classList.contains('wechat-modal-cover-btns')).toBe(true);
+      expect(actionButtons.map((button) => button.textContent)).toEqual(['上传', '从素材库选择']);
+      expect(actionButtons[1].classList.contains('wechat-cover-select-material-btn')).toBe(true);
+      expect(actionButtons.every((button) => button.querySelector('svg') === null)).toBe(true);
+    });
+
+    it('should place publish checks before a compact image area and disable adding at 20 images', () => {
+      const images = Array.from({ length: 20 }, (_, index) => `img-${index + 1}.png`);
+      view.previewStickerData = createStickerData({
+        images,
+        imageDisplaySources: images.map((src) => `app://vault/${src}`),
+      });
+      view.buildStickerData = vi.fn(async () => view.previewStickerData);
+
+      view.showSyncModal();
+
+      const modal = getLastModal();
+      const status = modal.contentEl.querySelector('.sticker-publish-status');
+      const imageSection = modal.contentEl.querySelector('.sticker-publish-images');
+      const actionButtons = Array.from(modal.contentEl.querySelectorAll('.sticker-publish-image-actions button'));
+      expect(status.nextElementSibling).toBe(imageSection);
+      expect(status.textContent).toContain('图片 20 / 20 张');
+      expect(actionButtons).toHaveLength(2);
+      expect(actionButtons.every((button) => button.disabled)).toBe(true);
+      expect(actionButtons[0].getAttribute('title')).toContain('最多 20 张');
+    });
+
+    it('should refresh the sidebar preview once the modal closes after an image edit', async () => {
+      view.previewStickerData = createStickerData();
+      view.buildStickerData = vi.fn(async () => view.previewStickerData);
+      view.renderStickerPreview = vi.fn();
+
+      view.showSyncModal();
+
+      const modal = getLastModal();
+      modal.contentEl.querySelector('.sticker-image-list__remove').click();
+      await Promise.resolve();
+      modal.close();
+
+      expect(view.renderStickerPreview).toHaveBeenCalledTimes(1);
+    });
+
+    it('should only accept the remaining local-image slot and report overflow', () => {
+      const images = Array.from({ length: 19 }, (_, index) => `img-${index + 1}.png`);
+      view.previewStickerData = createStickerData({
+        images,
+        imageDisplaySources: images.map((src) => `app://vault/${src}`),
+      });
+      view.buildStickerData = vi.fn(async () => view.previewStickerData);
+      view.showSyncModal();
+
+      const modal = getLastModal();
+      const originalCreateElement = document.createElement.bind(document);
+      const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tagName, options) => {
+        const element = originalCreateElement(tagName, options);
+        if (String(tagName).toLowerCase() !== 'input') return element;
+        const files = [
+          new File(['a'], 'new-a.png', { type: 'image/png', lastModified: 1 }),
+          new File(['b'], 'new-b.png', { type: 'image/png', lastModified: 2 }),
+        ];
+        Object.defineProperty(element, 'files', { configurable: true, value: files });
+        element.click = () => element.onchange?.();
+        return element;
+      });
+      const originalCreateObjectUrl = window.URL.createObjectURL;
+      const originalRevokeObjectUrl = window.URL.revokeObjectURL;
+      window.URL.createObjectURL = vi.fn((file) => `blob:${file.name}`);
+      window.URL.revokeObjectURL = vi.fn();
+
+      try {
+        modal.contentEl.querySelector('.sticker-publish-image-actions button').click();
+      } finally {
+        createElementSpy.mockRestore();
+        window.URL.createObjectURL = originalCreateObjectUrl;
+        window.URL.revokeObjectURL = originalRevokeObjectUrl;
+      }
+
+      const uiState = view.getStickerUiState('note-a.md');
+      expect(uiState.manualItems).toHaveLength(1);
+      expect(uiState.manualItems[0].name).toBe('new-a.png');
+      expect(notices.some((notice) => String(notice.message).includes('另有 1 张超过 20 张上限，未添加'))).toBe(true);
     });
 
     it('should block syncing when the caption exceeds the wechat limit', () => {
@@ -230,6 +372,17 @@ describe('WeChat sticker publish flow', () => {
 
       expect(view.srcToBlob).not.toHaveBeenCalled();
       expect(notices.some((notice) => String(notice.message).includes('超出微信 1000 字上限'))).toBe(true);
+    });
+
+    it('should refuse to upload images when the sticker title exceeds 20 characters', async () => {
+      view.buildStickerData = vi.fn(async () => createStickerData());
+      view.sessionTitle = '字'.repeat(21);
+      view.srcToBlob = vi.fn();
+
+      await view.onSyncStickerToWechat({ id: 'acc-1', name: '账号1', appId: 'wx1', appSecret: 'sec1' });
+
+      expect(view.srcToBlob).not.toHaveBeenCalled();
+      expect(notices.some((notice) => String(notice.message).includes('超出 20 字上限'))).toBe(true);
     });
 
     it('should report which image failed to upload', async () => {

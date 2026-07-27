@@ -57,6 +57,8 @@ interface StickerPreviewDataLike {
     imageItems: StickerImageItemLike[];
     /** 可直接显示的图片地址（用于预览缩略图） */
     imageDisplaySources: string[];
+    /** 超过公开接口 20 张上限、未进入本次发布列表的图片数量 */
+    omittedImageCount: number;
     hasCodeBlocks: boolean;
     hasTables: boolean;
     hasMath: boolean;

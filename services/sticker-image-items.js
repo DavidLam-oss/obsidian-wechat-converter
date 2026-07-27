@@ -1,7 +1,7 @@
 /*
 ## 核心功能
 
-定义微信贴图统一图片项，并负责同来源去重、用户顺序恢复、手动图片保留与九宫格裁剪。
+定义微信贴图统一图片项，并负责同来源去重、用户顺序恢复、手动图片保留与平台上限裁剪。
 
 ## 输入
 
@@ -23,7 +23,7 @@
 
 - `key` 是不透明身份，只能比较，不能从中反解析业务字段。
 - 默认只做同来源去重；跨来源内容相同也保留，除非用户手动移除。
-- 超过九宫格上限时优先从尾部裁掉正文自动项，保留手动项相对顺序。
+- 超过平台上限时优先从尾部裁掉正文自动项，保留手动项相对顺序。
 */
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: runtime guards normalize legacy and cross-source image records before use */
@@ -195,7 +195,7 @@ function resolveStickerOrderKey(value, available) {
  * @param {StickerImageItem[]} [params.manualItems]
  * @param {(string|StickerImageItem)[]} [params.order]
  * @param {string[]} [params.removedKeys]
- * @param {number} [params.limit=9]
+ * @param {number} [params.limit=20]
  * @returns {StickerImageItem[]}
  */
 function reconcileStickerImageItems({
@@ -203,7 +203,7 @@ function reconcileStickerImageItems({
   manualItems = [],
   order = [],
   removedKeys = [],
-  limit = 9,
+  limit = 20,
 }) {
   /** @type {StickerImageItem[]} */
   const candidates = [];
@@ -240,7 +240,7 @@ function reconcileStickerImageItems({
     result.push(item);
   }
 
-  const safeLimit = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : 9;
+  const safeLimit = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : 20;
   while (result.length > safeLimit) {
     let removeIndex = -1;
     for (let index = result.length - 1; index >= 0; index--) {

@@ -49,25 +49,14 @@ describe('sticker-extractor', () => {
     ]);
   });
 
-  it('should prioritize Frontmatter images and limit total to 9', () => {
+  it('should prioritize Frontmatter images, limit total to 20, and report omitted images', () => {
     const frontmatter = {
       title: 'FM 标题',
       cover: 'cover.jpg',
       images: ['img1.png', 'img2.png']
     };
 
-    const md = `
-![[img2.png]]
-![[img3.png]]
-![[img4.png]]
-![[img5.png]]
-![[img6.png]]
-![[img7.png]]
-![[img8.png]]
-![[img9.png]]
-![[img10.png]]
-![[img11.png]]
-`;
+    const md = Array.from({ length: 22 }, (_, index) => `![[img${index + 2}.png]]`).join('\n');
 
     const data = extractStickerData({
       markdown: md,
@@ -79,8 +68,9 @@ describe('sticker-extractor', () => {
     expect(data.images[0]).toBe('cover.jpg');
     expect(data.images[1]).toBe('img1.png');
     expect(data.images[2]).toBe('img2.png');
-    expect(data.images.length).toBe(9); // 最多 9 张
-    expect(data.imageItems).toHaveLength(9);
+    expect(data.images.length).toBe(20);
+    expect(data.imageItems).toHaveLength(20);
+    expect(data.omittedImageCount).toBe(4);
     expect(data.imageItems.every((item) => item.source === 'body')).toBe(true);
   });
 

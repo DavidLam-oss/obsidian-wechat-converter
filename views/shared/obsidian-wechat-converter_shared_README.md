@@ -10,7 +10,7 @@
 
 ## 输出
 
-输出可复用 helper、常量、状态读写工具和可访问的贴图九宫格，供 converter、publish modal 和 settings 使用。
+输出可复用 helper、常量、状态读写工具和可访问的贴图图片网格，供 converter、publish modal 和 settings 使用。
 
 ## 定位
 

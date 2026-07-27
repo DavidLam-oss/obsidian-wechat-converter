@@ -9,7 +9,7 @@
 
 ## 输出
 
-输出自动化断言结果，保护拖拽排序后文案序号与九宫格顺序一致。
+输出自动化断言结果，保护拖拽排序后文案序号与图片网格顺序一致。
 
 ## 定位
 
@@ -80,8 +80,8 @@ describe('reconcileStickerImageOrder', () => {
     expect(result).toEqual(['b.png', 'attachments/a.png']);
   });
 
-  it('should cap the result at the nine-grid limit', () => {
-    const many = Array.from({ length: 12 }, (_, i) => `img-${i}.png`);
+  it('should cap the result at the public api image limit', () => {
+    const many = Array.from({ length: 25 }, (_, i) => `img-${i}.png`);
     const result = reconcileStickerImageOrder({ defaultImages: many, order: [], removedKeys: [] });
     expect(result).toHaveLength(STICKER_MAX_IMAGES);
   });
@@ -128,7 +128,7 @@ describe('[配图 N] renumbering after reorder', () => {
     });
 
     expect(images).toEqual(['c.png', 'a.png', 'b.png']);
-    // a.png 现在排第 2，c.png 排第 1：正文里的序号要跟着九宫格走
+    // a.png 现在排第 2，c.png 排第 1：正文里的序号要跟着图片网格走
     const lines = content.split('\n').filter(Boolean);
     expect(lines).toEqual(['第一段', '[配图 2]', '第二段', '[配图 3]', '第三段', '[配图 1]']);
   });

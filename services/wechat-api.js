@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`./obsidian-compat.js`、`./concurrency.js`。
+关键依赖：`./obsidian-compat.js`、`./concurrency.js`、`./sticker-constants.js`。
 
 ## 维护规则
 
@@ -27,6 +27,7 @@
 
 import { getObsidianRequestUrl } from './obsidian-compat.js';
 import { sleep } from './concurrency.js';
+import { STICKER_MAX_IMAGES } from './sticker-constants.js';
 
 /** @param {unknown} error @returns {ReadableErrorLike} */
 function toReadableError(error) {
@@ -471,7 +472,7 @@ export class WechatAPI {
    * @param {object} options
    * @param {string} options.title - 贴图标题 (必填)
    * @param {string} [options.content=''] - 贴图纯文本描述
-   * @param {string[]} options.imageMediaIds - 图片素材 media_id 数组 (最少 1 张，最多 9 张)
+   * @param {string[]} options.imageMediaIds - 图片素材 media_id 数组 (最少 1 张，最多 20 张)
    * @param {number|boolean} [options.needOpenComment=0] - 是否开启留言
    * @param {number|boolean} [options.onlyFansCanComment=0] - 是否仅粉丝可留言
    * @returns {Promise<Record<string, unknown>>}
@@ -483,8 +484,10 @@ export class WechatAPI {
     if (!Array.isArray(imageMediaIds) || imageMediaIds.length === 0) {
       throw new Error('创建贴图草稿失败: 微信贴图要求至少包含 1 张图片素材');
     }
-
-    const max9Images = imageMediaIds.slice(0, 9).map((id) => ({ image_media_id: id }));
+    if (imageMediaIds.length > STICKER_MAX_IMAGES) {
+      throw new Error(`创建贴图草稿失败: 微信贴图最多支持 ${STICKER_MAX_IMAGES} 张图片素材`);
+    }
+    const imageList = imageMediaIds.map((id) => ({ image_media_id: id }));
 
     const article = {
       article_type: 'newspic',
@@ -493,7 +496,7 @@ export class WechatAPI {
       need_open_comment: needOpenComment ? 1 : 0,
       only_fans_can_comment: onlyFansCanComment ? 1 : 0,
       image_info: {
-        image_list: max9Images
+        image_list: imageList
       }
     };
 

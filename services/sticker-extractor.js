@@ -9,7 +9,7 @@
 
 ## 输出
 
-输出 `STICKER_MAX_IMAGES`、`STICKER_MAX_CONTENT_LENGTH`、`extractMarkdownImageItems`、
+输出 `STICKER_MAX_IMAGES`、`STICKER_MAX_TITLE_LENGTH`、`STICKER_MAX_CONTENT_LENGTH`、`extractMarkdownImageItems`、
 兼容的图片地址数组与 `extractStickerData`，供贴图预览与发布链路复用。
 
 ## 定位
@@ -18,7 +18,7 @@
 
 ## 依赖
 
-关键依赖：`./markdown-cleaner.js`。
+关键依赖：`./markdown-cleaner.js`、`./sticker-image-items.js`、`./sticker-constants.js`。
 
 ## 维护规则
 
@@ -34,12 +34,11 @@ import {
   getStickerImageItemSrc,
   reconcileStickerImageItems,
 } from './sticker-image-items.js';
-
-/** 微信贴图九宫格图片上限 */
-const STICKER_MAX_IMAGES = 9;
-
-/** 微信贴图文案字数上限 */
-const STICKER_MAX_CONTENT_LENGTH = 1000;
+import {
+  STICKER_MAX_IMAGES,
+  STICKER_MAX_TITLE_LENGTH,
+  STICKER_MAX_CONTENT_LENGTH,
+} from './sticker-constants.js';
 
 /**
  * @param {string} markdown
@@ -136,7 +135,7 @@ function extractMarkdownImageSources(markdown, options = {}) {
  * 用户拖拽排序、删除图片后，笔记正文仍可能继续被编辑（新增/删除图片）。这里做三件事：
  * 1. 保留用户排好的顺序，但丢掉正文中已不存在的图片；
  * 2. 正文新增的图片追加到末尾（除非用户明确删除过它）；
- * 3. 统一裁剪到九宫格上限。
+ * 3. 统一裁剪到微信贴图公共接口上限。
  *
  * @param {object} params
  * @param {string[]} params.defaultImages - 按正文顺序提取出的图片
@@ -175,6 +174,7 @@ function reconcileStickerImageOrder({ defaultImages, order = [], removedKeys = [
  *   content: string,
  *   images: string[],
  *   imageItems: import('./sticker-image-items.js').StickerImageItem[],
+ *   omittedImageCount: number,
  *   hasCodeBlocks: boolean,
  *   hasTables: boolean,
  *   hasMath: boolean,
@@ -231,6 +231,13 @@ function extractStickerData({
   }
 
   // 4. 与用户排序/删除和本地/素材手动项对齐
+  const allAvailableImageItems = reconcileStickerImageItems({
+    defaultItems,
+    manualItems: Array.isArray(manualImageItems) ? manualImageItems : [],
+    order: imageOrder,
+    removedKeys: removedImageKeys,
+    limit: Number.MAX_SAFE_INTEGER
+  });
   const finalImageItems = reconcileStickerImageItems({
     defaultItems,
     manualItems: Array.isArray(manualImageItems) ? manualImageItems : [],
@@ -251,6 +258,7 @@ function extractStickerData({
     content: cleaned.text,
     images: finalImages,
     imageItems: finalImageItems,
+    omittedImageCount: Math.max(0, allAvailableImageItems.length - finalImageItems.length),
     hasCodeBlocks: cleaned.hasCodeBlocks,
     hasTables: cleaned.hasTables,
     hasMath: cleaned.hasMath,
@@ -261,6 +269,7 @@ function extractStickerData({
 
 export {
   STICKER_MAX_IMAGES,
+  STICKER_MAX_TITLE_LENGTH,
   STICKER_MAX_CONTENT_LENGTH,
   extractMarkdownImageItems,
   extractMarkdownImageSources,

@@ -66,7 +66,7 @@ function normalizeImageKey(src) {
  *
  * @param {string} src - 正文中书写的图片地址
  * @param {Array<string|{key?:string,displaySrc?:string,uploadRef?:{kind?:string,src?:string}}>} imageOrder
- * 贴图九宫格的最终顺序
+ * 贴图图片网格的最终顺序
  * @returns {number} 命中返回 1-based 序号，未命中返回 0
  */
 function findImageOrderIndex(src, imageOrder) {
@@ -216,7 +216,7 @@ function replaceProtected(value, regex, replacer) {
  * @param {string} markdown - 原始 Markdown 字符串
  * @param {object} [options]
  * @param {boolean} [options.insertImageIndex=false] - 是否在原图片位置插入 [配图 N] 指引
- * @param {Array<string|object>} [options.imageOrder] - 贴图九宫格最终顺序
+ * @param {Array<string|object>} [options.imageOrder] - 贴图图片网格最终顺序
  * @returns {{
  *   text: string,
  *   hasCodeBlocks: boolean,

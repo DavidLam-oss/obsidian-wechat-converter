@@ -72,4 +72,38 @@ describe('wechat-sync - syncStickerDraft', () => {
       })
     ).rejects.toThrow('当前微信 API 实例未支持 createImageDraft 方法');
   });
+
+  it('should reject titles longer than 20 characters before calling the api', async () => {
+    const mockApi = {
+      createImageDraft: vi.fn().mockResolvedValue({ media_id: 'sticker-123' })
+    };
+
+    await expect(
+      syncStickerDraft({
+        account: { appId: 'wx123', appSecret: 'secret123' },
+        api: mockApi,
+        title: '字'.repeat(21),
+        imageMediaIds: ['m1']
+      })
+    ).rejects.toThrow('微信贴图标题不能超过 20 字');
+
+    expect(mockApi.createImageDraft).not.toHaveBeenCalled();
+  });
+
+  it('should reject more than 20 images before calling the api', async () => {
+    const mockApi = {
+      createImageDraft: vi.fn().mockResolvedValue({ media_id: 'sticker-123' })
+    };
+
+    await expect(
+      syncStickerDraft({
+        account: { appId: 'wx123', appSecret: 'secret123' },
+        api: mockApi,
+        title: '测试贴图',
+        imageMediaIds: Array.from({ length: 21 }, (_, index) => `m${index + 1}`)
+      })
+    ).rejects.toThrow('微信贴图最多支持 20 张图片');
+
+    expect(mockApi.createImageDraft).not.toHaveBeenCalled();
+  });
 });

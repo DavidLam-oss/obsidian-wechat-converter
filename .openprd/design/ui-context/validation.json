@@ -1,7 +1,7 @@
 {
   "version": 1,
   "action": "ui-context-check",
-  "checkedAt": "2026-07-27 10:48:11",
+  "checkedAt": "2026-07-27 12:29:16",
   "ok": true,
   "schemaTarget": {
     "id": "google-labs-code/design.md",
@@ -39,11 +39,11 @@
       "design": "0fe965ad574ca33d655bad76255837ac01d39aa06306808c0e719c507eaa4bc9"
     },
     "activeDesignDigests": {
-      "facts-sheet.md": "f0b829f2ec0ccd5b49d4ce893b96258a263b95bc6d8976ea75608152fddcdca9",
-      "asset-spec.md": "fe7c3fd58a0aa01ba443703adf97624e352c9ed64396525cfe62816d8b048720",
+      "facts-sheet.md": "c9784619fda2ad672e69c6001b669ff6d646bde5ba3fcfd266c1a2b65509857c",
+      "asset-spec.md": "4abe9672dbde832133a8bd3e217702c408294668e8d8ac2e2b0d25589897bdaf",
       "image-preflight.md": "3d91011dba83d09e55145ec71b29e81144d1912d875cd35929e4bedb5fbcdc87",
-      "direction-plan.md": "c4954e8f65060c0d4cea3b9757e3080ca32dde5a0f48a947eabc6ace6a5ea78b",
-      "selected-direction.md": "d68ecb6d289e3efb172a58fa1d0ba0a0366d8be898025bcfb6de879bbe9883c0"
+      "direction-plan.md": "9cf2b34dd7ae7ac9be522faee55070e03854e9e9f5a7ac4cd5037fd540ee4f5d",
+      "selected-direction.md": "4c95525edad8775b1c97e9757ff79a0b4313878f7733081382aaf2825879d636"
     }
   }
 }

@@ -1372,6 +1372,7 @@ async buildStickerData(options = {}) {
     content: extracted.content,
     images: extracted.images,
     imageItems: extracted.imageItems,
+    omittedImageCount: extracted.omittedImageCount,
     hasCodeBlocks: extracted.hasCodeBlocks,
     hasTables: extracted.hasTables,
     hasMath: extracted.hasMath,
@@ -1423,7 +1424,7 @@ async renderStickerPreview() {
     });
   }
 
-  // 2. 图片卡片墙预览与交互（上限 9 张）
+  // 2. 图片卡片墙预览与交互（上限 20 张）
   const imagesSection = stickerContainer.createEl('div', { cls: 'apple-sticker-images-section' });
   const sectionHeader = imagesSection.createEl('div', { cls: 'apple-sticker-section-header' });
   const sectionTitle = sectionHeader.createEl('div', { cls: 'apple-sticker-section-title' });

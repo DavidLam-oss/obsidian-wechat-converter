@@ -62998,6 +62998,11 @@ function renderArticleLayoutHtml(layout, { imageRefs = [], mode = "preview", ren
   return `<section style="${wrapperStyle}">${blocksHtml}</section>`;
 }
 
+// services/sticker-constants.js
+var STICKER_MAX_IMAGES = 20;
+var STICKER_MAX_TITLE_LENGTH = 20;
+var STICKER_MAX_CONTENT_LENGTH = 1e3;
+
 // services/wechat-sync.js
 function createDraftContentIssue(code, message, value = "") {
   return {
@@ -63327,8 +63332,21 @@ async function syncStickerDraft({ account, api, title, content = "", imageMediaI
   if (!stickerApi || typeof stickerApi.createImageDraft !== "function") {
     throw new Error("\u5F53\u524D\u5FAE\u4FE1 API \u5B9E\u4F8B\u672A\u652F\u6301 createImageDraft \u65B9\u6CD5");
   }
+  const normalizedTitle = String(title || "").trim();
+  if (normalizedTitle.length === 0) {
+    throw new Error("\u5FAE\u4FE1\u8D34\u56FE\u6807\u9898\u4E0D\u80FD\u4E3A\u7A7A");
+  }
+  if (normalizedTitle.length > STICKER_MAX_TITLE_LENGTH) {
+    throw new Error(`\u5FAE\u4FE1\u8D34\u56FE\u6807\u9898\u4E0D\u80FD\u8D85\u8FC7 ${STICKER_MAX_TITLE_LENGTH} \u5B57`);
+  }
+  if (!Array.isArray(imageMediaIds) || imageMediaIds.length === 0) {
+    throw new Error("\u5FAE\u4FE1\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247");
+  }
+  if (imageMediaIds.length > STICKER_MAX_IMAGES) {
+    throw new Error(`\u5FAE\u4FE1\u8D34\u56FE\u6700\u591A\u652F\u6301 ${STICKER_MAX_IMAGES} \u5F20\u56FE\u7247`);
+  }
   const res = await stickerApi.createImageDraft({
-    title,
+    title: normalizedTitle,
     content,
     imageMediaIds,
     needOpenComment: account.openComment ? 1 : 0,
@@ -73597,7 +73615,7 @@ var WechatAPI = class {
    * @param {object} options
    * @param {string} options.title - 贴图标题 (必填)
    * @param {string} [options.content=''] - 贴图纯文本描述
-   * @param {string[]} options.imageMediaIds - 图片素材 media_id 数组 (最少 1 张，最多 9 张)
+   * @param {string[]} options.imageMediaIds - 图片素材 media_id 数组 (最少 1 张，最多 20 张)
    * @param {number|boolean} [options.needOpenComment=0] - 是否开启留言
    * @param {number|boolean} [options.onlyFansCanComment=0] - 是否仅粉丝可留言
    * @returns {Promise<Record<string, unknown>>}
@@ -73609,7 +73627,10 @@ var WechatAPI = class {
     if (!Array.isArray(imageMediaIds) || imageMediaIds.length === 0) {
       throw new Error("\u521B\u5EFA\u8D34\u56FE\u8349\u7A3F\u5931\u8D25: \u5FAE\u4FE1\u8D34\u56FE\u8981\u6C42\u81F3\u5C11\u5305\u542B 1 \u5F20\u56FE\u7247\u7D20\u6750");
     }
-    const max9Images = imageMediaIds.slice(0, 9).map((id) => ({ image_media_id: id }));
+    if (imageMediaIds.length > STICKER_MAX_IMAGES) {
+      throw new Error(`\u521B\u5EFA\u8D34\u56FE\u8349\u7A3F\u5931\u8D25: \u5FAE\u4FE1\u8D34\u56FE\u6700\u591A\u652F\u6301 ${STICKER_MAX_IMAGES} \u5F20\u56FE\u7247\u7D20\u6750`);
+    }
+    const imageList = imageMediaIds.map((id) => ({ image_media_id: id }));
     const article = {
       article_type: "newspic",
       title: title.trim(),
@@ -73617,7 +73638,7 @@ var WechatAPI = class {
       need_open_comment: needOpenComment ? 1 : 0,
       only_fans_can_comment: onlyFansCanComment ? 1 : 0,
       image_info: {
-        image_list: max9Images
+        image_list: imageList
       }
     };
     return this.createDraft(article);
@@ -76012,7 +76033,7 @@ function reconcileStickerImageItems({
   manualItems = [],
   order = [],
   removedKeys = [],
-  limit = 9
+  limit = 20
 }) {
   const candidates = [];
   const candidateKeys = /* @__PURE__ */ new Set();
@@ -76043,7 +76064,7 @@ function reconcileStickerImageItems({
     used.add(item.key);
     result.push(item);
   }
-  const safeLimit = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : 9;
+  const safeLimit = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : 20;
   while (result.length > safeLimit) {
     let removeIndex = -1;
     for (let index = result.length - 1; index >= 0; index--) {
@@ -76058,8 +76079,6 @@ function reconcileStickerImageItems({
 }
 
 // services/sticker-extractor.js
-var STICKER_MAX_IMAGES = 9;
-var STICKER_MAX_CONTENT_LENGTH = 1e3;
 function stripNonBodyImageRegions(markdown) {
   const withoutFrontmatter = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "");
   const lines = withoutFrontmatter.split("\n");
@@ -76153,6 +76172,13 @@ function extractStickerData({
     frontmatterKeys.add(item.key);
     defaultItems.push(item);
   }
+  const allAvailableImageItems = reconcileStickerImageItems({
+    defaultItems,
+    manualItems: Array.isArray(manualImageItems) ? manualImageItems : [],
+    order: imageOrder,
+    removedKeys: removedImageKeys,
+    limit: Number.MAX_SAFE_INTEGER
+  });
   const finalImageItems = reconcileStickerImageItems({
     defaultItems,
     manualItems: Array.isArray(manualImageItems) ? manualImageItems : [],
@@ -76170,6 +76196,7 @@ function extractStickerData({
     content: cleaned.text,
     images: finalImages,
     imageItems: finalImageItems,
+    omittedImageCount: Math.max(0, allAvailableImageItems.length - finalImageItems.length),
     hasCodeBlocks: cleaned.hasCodeBlocks,
     hasTables: cleaned.hasTables,
     hasMath: cleaned.hasMath,
@@ -77528,6 +77555,7 @@ var stylePanelMethods = {
       content: extracted.content,
       images: extracted.images,
       imageItems: extracted.imageItems,
+      omittedImageCount: extracted.omittedImageCount,
       hasCodeBlocks: extracted.hasCodeBlocks,
       hasTables: extracted.hasTables,
       hasMath: extracted.hasMath,
@@ -80211,6 +80239,7 @@ function renderStickerPublishContent(view, {
   let selectedAccountId = hasDefault ? defaultId : ((_a5 = accounts[0]) == null ? void 0 : _a5.id) || "";
   let focusKey = "";
   let currentData = ((_b = view.previewStickerData) == null ? void 0 : _b.sourcePath) === sourcePath ? view.previewStickerData : null;
+  let previewNeedsRefresh = false;
   const accountSection = modal.contentEl.createDiv({ cls: "wechat-modal-section sticker-publish-account" });
   accountSection.createEl("label", { text: "\u53D1\u5E03\u8D26\u53F7", cls: "wechat-modal-label" });
   if (accounts.length === 1) {
@@ -80234,14 +80263,18 @@ function renderStickerPublishContent(view, {
     });
   }
   const titleSection = modal.contentEl.createDiv({ cls: "wechat-modal-section sticker-publish-title" });
-  titleSection.createEl("label", { text: "\u8D34\u56FE\u6807\u9898", cls: "wechat-modal-label" });
+  const titleHeader = titleSection.createDiv({ cls: "sticker-publish-field-header" });
+  titleHeader.createEl("label", { text: "\u8D34\u56FE\u6807\u9898", cls: "wechat-modal-label" });
+  const titleCount = titleHeader.createSpan({ cls: "sticker-publish-count" });
+  const titleCountValue = titleCount.createSpan({ cls: "sticker-publish-count-value" });
+  titleCount.createSpan({ text: `/${STICKER_MAX_TITLE_LENGTH} \u5B57` });
   const titleInput = titleSection.createEl("input", {
     type: "text",
     cls: "wechat-modal-title-input",
     placeholder: "\u9ED8\u8BA4\u4F7F\u7528 frontmatter title \u6216\u6587\u4EF6\u540D"
   });
-  titleInput.maxLength = 64;
   titleInput.value = String(frontmatterMeta.title || (activeFile == null ? void 0 : activeFile.basename) || "\u672A\u547D\u540D\u8D34\u56FE");
+  const statusSection = modal.contentEl.createDiv({ cls: "sticker-publish-status" });
   const imageSection = modal.contentEl.createDiv({ cls: "wechat-modal-section sticker-publish-images" });
   const imageHeader = imageSection.createDiv({ cls: "sticker-publish-section-header" });
   const imageTitle = imageHeader.createDiv({ cls: "sticker-publish-section-title" });
@@ -80250,26 +80283,47 @@ function renderStickerPublishContent(view, {
     setIcon(imageIcon, "images");
   imageTitle.createSpan({ text: "\u53D1\u5E03\u56FE\u7247" });
   const imageCount = imageTitle.createSpan({ cls: "sticker-publish-count" });
-  const imageActions = imageHeader.createDiv({ cls: "sticker-publish-image-actions" });
-  const localButton = imageActions.createEl("button", { attr: { type: "button" } });
-  const localIcon = localButton.createSpan();
-  if (typeof setIcon === "function")
-    setIcon(localIcon, "plus");
-  localButton.createSpan({ text: "\u672C\u5730\u56FE\u7247" });
-  const materialButton = imageActions.createEl("button", { attr: { type: "button" } });
-  const materialIcon = materialButton.createSpan();
-  if (typeof setIcon === "function")
-    setIcon(materialIcon, "library");
-  materialButton.createSpan({ text: "\u516C\u4F17\u53F7\u7D20\u6750" });
+  const imageActions = imageHeader.createDiv({
+    cls: "sticker-publish-image-actions wechat-modal-cover-btns"
+  });
+  const localButton = imageActions.createEl("button", {
+    text: "\u4E0A\u4F20",
+    attr: { type: "button" }
+  });
+  const materialButton = imageActions.createEl("button", {
+    text: "\u4ECE\u7D20\u6750\u5E93\u9009\u62E9",
+    cls: "wechat-cover-select-material-btn",
+    attr: { type: "button" }
+  });
   const imageBody = imageSection.createDiv({ cls: "sticker-publish-image-body wechat-modal-sticker-grid-preview" });
   const restoreRow = imageSection.createDiv({ cls: "sticker-publish-restore-row" });
-  const statusSection = modal.contentEl.createDiv({ cls: "sticker-publish-status" });
   modal.contentEl.createDiv({ cls: "wechat-draft-status" });
   const buttonRow = modal.contentEl.createDiv({ cls: "wechat-modal-buttons sticker-publish-footer" });
   const cancelButton = buttonRow.createEl("button", { text: "\u53D6\u6D88" });
   const syncButton = buttonRow.createEl("button", { text: "\u540C\u6B65\u5230\u8D34\u56FE\u8349\u7A3F", cls: "mod-cta" });
   cancelButton.onclick = () => modal.close();
+  let currentItems = [];
+  let currentContent = "";
+  let currentForeignMaterialCount = 0;
   const getSelectedAccount = () => accounts.find((account) => account.id === selectedAccountId) || accounts[0] || null;
+  const markPreviewDirty = () => {
+    previewNeedsRefresh = true;
+  };
+  const originalOnClose = typeof modal.onClose === "function" ? (
+    /** @type {() => void} */
+    modal.onClose.bind(modal)
+  ) : null;
+  modal.onClose = () => {
+    var _a6;
+    if (originalOnClose)
+      originalOnClose();
+    if (!previewNeedsRefresh || view.previewMode !== "sticker")
+      return;
+    previewNeedsRefresh = false;
+    Promise.resolve((_a6 = view.renderStickerPreview) == null ? void 0 : _a6.call(view)).catch((error) => {
+      console.error("Sticker preview refresh after modal close failed:", error);
+    });
+  };
   const refreshData = async () => {
     const nextData = await view.buildStickerData({ sourcePath });
     if (view.stickerModalGeneration !== generation)
@@ -80277,8 +80331,49 @@ function renderStickerPublishContent(view, {
     currentData = nextData;
     renderCurrent();
   };
+  function updatePublishState() {
+    var _a6, _b2, _c;
+    const titleLength = titleInput.value.length;
+    const normalizedTitleLength = titleInput.value.trim().length;
+    const imageLimitReached = currentItems.length >= STICKER_MAX_IMAGES;
+    titleCountValue.setText(String(titleLength));
+    (_a6 = titleCountValue.toggleClass) == null ? void 0 : _a6.call(titleCountValue, "is-error", titleLength > STICKER_MAX_TITLE_LENGTH);
+    (_b2 = imageCount.toggleClass) == null ? void 0 : _b2.call(imageCount, "is-error", currentItems.length > STICKER_MAX_IMAGES);
+    localButton.disabled = imageLimitReached;
+    materialButton.disabled = imageLimitReached || !getSelectedAccount();
+    const imageLimitHint = `\u8D34\u56FE\u6700\u591A ${STICKER_MAX_IMAGES} \u5F20\uFF0C\u8BF7\u5148\u79FB\u9664\u4E00\u5F20`;
+    if (imageLimitReached) {
+      localButton.setAttribute("title", imageLimitHint);
+      materialButton.setAttribute("title", imageLimitHint);
+    } else {
+      localButton.removeAttribute("title");
+      materialButton.removeAttribute("title");
+    }
+    let disabledReason = "";
+    if (currentItems.length === 0)
+      disabledReason = "\u5FAE\u4FE1\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247";
+    else if (currentItems.length > STICKER_MAX_IMAGES) {
+      disabledReason = `\u5F53\u524D\u6709 ${currentItems.length} \u5F20\u56FE\u7247\uFF0C\u8D85\u8FC7 ${STICKER_MAX_IMAGES} \u5F20\u4E0A\u9650`;
+    } else if (normalizedTitleLength === 0)
+      disabledReason = "\u8BF7\u8F93\u5165\u8D34\u56FE\u6807\u9898";
+    else if (titleLength > STICKER_MAX_TITLE_LENGTH) {
+      disabledReason = `\u5F53\u524D\u6807\u9898 ${titleLength} \u5B57\uFF0C\u8D85\u8FC7 ${STICKER_MAX_TITLE_LENGTH} \u5B57\u4E0A\u9650`;
+    } else if (currentContent.length > STICKER_MAX_CONTENT_LENGTH) {
+      disabledReason = `\u5F53\u524D\u6587\u6848 ${currentContent.length} \u5B57\uFF0C\u8D85\u8FC7 ${STICKER_MAX_CONTENT_LENGTH} \u5B57\u4E0A\u9650`;
+    } else if (currentForeignMaterialCount > 0) {
+      disabledReason = "\u5F53\u524D\u8D26\u53F7\u4E0D\u80FD\u4F7F\u7528\u5176\u4ED6\u516C\u4F17\u53F7\u7684\u7D20\u6750";
+    }
+    syncButton.disabled = Boolean(disabledReason);
+    (_c = syncButton.toggleClass) == null ? void 0 : _c.call(syncButton, "apple-btn-disabled", Boolean(disabledReason));
+    syncButton.setText(
+      currentItems.length === 0 ? "\u56FE\u7247\u4E0D\u8DB3\uFF0C\u65E0\u6CD5\u540C\u6B65" : currentItems.length > STICKER_MAX_IMAGES ? "\u56FE\u7247\u8D85\u9650\uFF0C\u65E0\u6CD5\u540C\u6B65" : normalizedTitleLength === 0 ? "\u8BF7\u8F93\u5165\u8D34\u56FE\u6807\u9898" : titleLength > STICKER_MAX_TITLE_LENGTH ? "\u6807\u9898\u8D85\u957F\uFF0C\u65E0\u6CD5\u540C\u6B65" : currentContent.length > STICKER_MAX_CONTENT_LENGTH ? "\u6587\u5B57\u8D85\u957F\uFF0C\u65E0\u6CD5\u540C\u6B65" : "\u540C\u6B65\u5230\u8D34\u56FE\u8349\u7A3F"
+    );
+    if (disabledReason)
+      syncButton.setAttribute("title", disabledReason);
+    else
+      syncButton.removeAttribute("title");
+  }
   function renderCurrent() {
-    var _a6;
     const data = currentData;
     const items = getStickerModalItems(data);
     const displaySources = Array.isArray(data == null ? void 0 : data.imageDisplaySources) ? data.imageDisplaySources : [];
@@ -80286,16 +80381,19 @@ function renderStickerPublishContent(view, {
     const uiState = view.getStickerUiState(sourcePath);
     const selectedAccount = getSelectedAccount();
     const foreignMaterialCount = items.filter((item) => {
-      var _a7;
-      return ((_a7 = item.uploadRef) == null ? void 0 : _a7.kind) === "media" && item.uploadRef.accountId !== (selectedAccount == null ? void 0 : selectedAccount.id);
+      var _a6;
+      return ((_a6 = item.uploadRef) == null ? void 0 : _a6.kind) === "media" && item.uploadRef.accountId !== (selectedAccount == null ? void 0 : selectedAccount.id);
     }).length;
+    currentItems = items;
+    currentContent = content;
+    currentForeignMaterialCount = foreignMaterialCount;
     imageCount.setText(`${items.length} / ${STICKER_MAX_IMAGES}`);
     imageBody.empty();
     renderStickerImageList(imageBody, {
       items,
       getDisplaySrc: (item, index) => item.source === "body" ? displaySources[index] || item.displaySrc || "" : item.displaySrc || displaySources[index] || "",
       setIcon,
-      emptyText: "\u5148\u6DFB\u52A0 1\u20139 \u5F20\u56FE\u7247\uFF1B\u53D1\u5E03\u987A\u5E8F\u6309\u8FD9\u91CC\u4ECE\u5DE6\u5230\u53F3\u6392\u5217\u3002",
+      emptyText: `\u5148\u6DFB\u52A0 1\u2013${STICKER_MAX_IMAGES} \u5F20\u56FE\u7247\uFF1B\u53D1\u5E03\u987A\u5E8F\u6309\u8FD9\u91CC\u4ECE\u5DE6\u5230\u53F3\u6392\u5217\u3002`,
       focusKey,
       onMove: (fromIndex, toIndex, movedItem) => {
         uiState.order = moveStickerImageItem(
@@ -80304,11 +80402,13 @@ function renderStickerPublishContent(view, {
           toIndex
         );
         focusKey = (movedItem == null ? void 0 : movedItem.key) || "";
+        markPreviewDirty();
         void refreshData();
       },
       onRemove: (item, index) => {
         view.removeStickerImageItem(sourcePath, item, index);
         focusKey = "";
+        markPreviewDirty();
         void refreshData();
       }
     });
@@ -80318,6 +80418,7 @@ function renderStickerPublishContent(view, {
       const undoButton = restoreRow.createEl("button", { text: "\u64A4\u9500\u4E0A\u6B21\u79FB\u9664" });
       undoButton.onclick = () => {
         focusKey = view.restoreLastStickerImage(sourcePath);
+        markPreviewDirty();
         void refreshData();
       };
     }
@@ -80325,13 +80426,22 @@ function renderStickerPublishContent(view, {
       const restoreAllButton = restoreRow.createEl("button", { text: "\u6062\u590D\u5168\u90E8" });
       restoreAllButton.onclick = () => {
         view.restoreAllStickerImages(sourcePath);
+        markPreviewDirty();
         void refreshData();
       };
     }
     statusSection.empty();
+    statusSection.createDiv({ cls: "sticker-publish-status-label", text: "\u53D1\u5E03\u68C0\u67E5" });
     const summary = statusSection.createDiv({ cls: "sticker-publish-summary" });
-    summary.createSpan({ text: `${items.length} \u5F20\u56FE\u7247` });
+    summary.createSpan({ text: `\u56FE\u7247 ${items.length} / ${STICKER_MAX_IMAGES} \u5F20` });
     summary.createSpan({ text: `\u6587\u6848 ${content.length} / ${STICKER_MAX_CONTENT_LENGTH} \u5B57` });
+    const omittedImageCount = Number.isFinite(data == null ? void 0 : data.omittedImageCount) ? Math.max(0, Number(data.omittedImageCount)) : 0;
+    if (omittedImageCount > 0) {
+      statusSection.createDiv({
+        cls: "sticker-publish-account-warning",
+        text: `\u53E6\u6709 ${omittedImageCount} \u5F20\u56FE\u7247\u8D85\u8FC7 ${STICKER_MAX_IMAGES} \u5F20\u4E0A\u9650\uFF0C\u672A\u52A0\u5165\u672C\u6B21\u8D34\u56FE\u3002`
+      });
+    }
     const removed = (Array.isArray(data == null ? void 0 : data.removed) ? data.removed : []).filter((entry) => (entry == null ? void 0 : entry.count) > 0).map((entry) => `${entry.kind} ${entry.count} \u5904`);
     if (removed.length > 0) {
       statusSection.createDiv({
@@ -80345,25 +80455,15 @@ function renderStickerPublishContent(view, {
         text: `\u6709 ${foreignMaterialCount} \u5F20\u516C\u4F17\u53F7\u7D20\u6750\u4E0D\u5C5E\u4E8E\u5F53\u524D\u8D26\u53F7\uFF0C\u8BF7\u79FB\u9664\u6216\u5207\u56DE\u539F\u8D26\u53F7\u3002`
       });
     }
-    let disabledReason = "";
-    if (items.length === 0)
-      disabledReason = "\u5FAE\u4FE1\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247";
-    else if (content.length > STICKER_MAX_CONTENT_LENGTH) {
-      disabledReason = `\u5F53\u524D\u6587\u6848 ${content.length} \u5B57\uFF0C\u8D85\u8FC7 ${STICKER_MAX_CONTENT_LENGTH} \u5B57\u4E0A\u9650`;
-    } else if (foreignMaterialCount > 0) {
-      disabledReason = "\u5F53\u524D\u8D26\u53F7\u4E0D\u80FD\u4F7F\u7528\u5176\u4ED6\u516C\u4F17\u53F7\u7684\u7D20\u6750";
-    }
-    syncButton.disabled = Boolean(disabledReason);
-    (_a6 = syncButton.toggleClass) == null ? void 0 : _a6.call(syncButton, "apple-btn-disabled", Boolean(disabledReason));
-    syncButton.setText(
-      items.length === 0 ? "\u56FE\u7247\u4E0D\u8DB3\uFF0C\u65E0\u6CD5\u540C\u6B65" : content.length > STICKER_MAX_CONTENT_LENGTH ? "\u6587\u5B57\u8D85\u957F\uFF0C\u65E0\u6CD5\u540C\u6B65" : "\u540C\u6B65\u5230\u8D34\u56FE\u8349\u7A3F"
-    );
-    if (disabledReason)
-      syncButton.setAttribute("title", disabledReason);
-    else
-      syncButton.removeAttribute("title");
+    updatePublishState();
   }
+  titleInput.addEventListener("input", updatePublishState);
   localButton.onclick = () => {
+    const remainingSlots = Math.max(0, STICKER_MAX_IMAGES - currentItems.length);
+    if (remainingSlots === 0) {
+      new Notice(`\u8D34\u56FE\u6700\u591A ${STICKER_MAX_IMAGES} \u5F20\uFF0C\u8BF7\u5148\u79FB\u9664\u4E00\u5F20`);
+      return;
+    }
     const activeDocument = getActiveDocumentCompat();
     if (!activeDocument)
       return;
@@ -80374,11 +80474,20 @@ function renderStickerPublishContent(view, {
     input.onchange = () => {
       const files = Array.from(input.files || []);
       const uiState = view.getStickerUiState(sourcePath);
+      let addedCount = 0;
+      let duplicateCount = 0;
+      let overLimitCount = 0;
       for (const file of files) {
         const fingerprint = `${file.name}:${file.size}:${file.lastModified}:${file.type}`;
         const existing = uiState.manualItems.find((item2) => item2.key === `upload:${fingerprint}`);
-        if (existing)
+        if (existing) {
+          duplicateCount += 1;
           continue;
+        }
+        if (addedCount >= remainingSlots) {
+          overLimitCount += 1;
+          continue;
+        }
         const objectUrl = window.URL.createObjectURL(file);
         const item = createUploadStickerImageItem({
           blob: file,
@@ -80393,12 +80502,25 @@ function renderStickerPublishContent(view, {
         uiState.objectUrls.add(objectUrl);
         uiState.manualItems.push(item);
         uiState.order.push(item.key);
+        addedCount += 1;
       }
-      void refreshData();
+      if (addedCount > 0) {
+        markPreviewDirty();
+        void refreshData();
+      }
+      if (overLimitCount > 0) {
+        new Notice(`\u5DF2\u6DFB\u52A0 ${addedCount} \u5F20\uFF1B\u53E6\u6709 ${overLimitCount} \u5F20\u8D85\u8FC7 ${STICKER_MAX_IMAGES} \u5F20\u4E0A\u9650\uFF0C\u672A\u6DFB\u52A0`);
+      } else if (duplicateCount > 0) {
+        new Notice(`\u6709 ${duplicateCount} \u5F20\u672C\u5730\u56FE\u7247\u5DF2\u5728\u5217\u8868\u4E2D\uFF0C\u672A\u91CD\u590D\u6DFB\u52A0`);
+      }
     };
     input.click();
   };
   materialButton.onclick = async () => {
+    if (currentItems.length >= STICKER_MAX_IMAGES) {
+      new Notice(`\u8D34\u56FE\u6700\u591A ${STICKER_MAX_IMAGES} \u5F20\uFF0C\u8BF7\u5148\u79FB\u9664\u4E00\u5F20`);
+      return;
+    }
     const account = getSelectedAccount();
     if (!account) {
       new Notice("\u8BF7\u5148\u9009\u62E9\u516C\u4F17\u53F7\u8D26\u53F7");
@@ -80411,6 +80533,10 @@ function renderStickerPublishContent(view, {
       view.plugin.settings.clientId
     );
     await view.showMaterialPickerModal(api, (material) => {
+      if (currentItems.length >= STICKER_MAX_IMAGES) {
+        new Notice(`\u8D34\u56FE\u6700\u591A ${STICKER_MAX_IMAGES} \u5F20\uFF0C\u8BF7\u5148\u79FB\u9664\u4E00\u5F20`);
+        return;
+      }
       const item = createMaterialStickerImageItem({
         mediaId: material.mediaId,
         accountId: account.id,
@@ -80423,8 +80549,11 @@ function renderStickerPublishContent(view, {
       if (!uiState.manualItems.some((candidate) => candidate.key === item.key)) {
         uiState.manualItems.push(item);
         uiState.order.push(item.key);
+        markPreviewDirty();
+        void refreshData();
+      } else {
+        new Notice("\u8FD9\u5F20\u516C\u4F17\u53F7\u7D20\u6750\u5DF2\u5728\u5217\u8868\u4E2D");
       }
-      void refreshData();
     }, {
       title: "\u4ECE\u516C\u4F17\u53F7\u7D20\u6750\u5E93\u6DFB\u52A0\u56FE\u7247",
       confirmText: "\u6DFB\u52A0\u8FD9\u5F20\u56FE\u7247"
@@ -80440,14 +80569,13 @@ function renderStickerPublishContent(view, {
     }
     view.selectedAccountId = account.id;
     view.sessionStickerSourcePath = sourcePath;
-    view.sessionTitle = titleInput.value.trim() || String(frontmatterMeta.title || (activeFile == null ? void 0 : activeFile.basename) || "\u672A\u547D\u540D\u8D34\u56FE");
+    view.sessionTitle = titleInput.value.trim();
     view.sessionDraftMediaId = "";
     view.sessionDraftIndex = 0;
     modal.close();
     await view.onSyncToWechat();
   };
-  renderCurrent();
-  void refreshData().catch((error) => {
+  const handleRefreshError = (error) => {
     if (view.stickerModalGeneration !== generation)
       return;
     statusSection.empty();
@@ -80456,9 +80584,19 @@ function renderStickerPublishContent(view, {
       text: `\u6682\u65F6\u65E0\u6CD5\u8BFB\u53D6\u8D34\u56FE\u5185\u5BB9\uFF1A${(error == null ? void 0 : error.message) || "\u672A\u77E5\u9519\u8BEF"}`
     });
     syncButton.disabled = true;
-  });
-  if (shouldOpenModal)
-    modal.open();
+    if (shouldOpenModal)
+      modal.open();
+  };
+  if (currentData) {
+    renderCurrent();
+    if (shouldOpenModal)
+      modal.open();
+  } else {
+    void refreshData().then(() => {
+      if (shouldOpenModal && view.stickerModalGeneration === generation)
+        modal.open();
+    }).catch(handleRefreshError);
+  }
 }
 
 // views/publish-modal/wechat-sync-modal.js
@@ -81552,14 +81690,25 @@ var wechatSyncActionMethods = {
       const stickerData = await this.buildStickerData(sourcePath ? { sourcePath } : {});
       const imageItems = Array.isArray(stickerData.imageItems) ? stickerData.imageItems : (Array.isArray(stickerData.images) ? stickerData.images : []).map((src) => createBodyStickerImageItem(src)).filter(Boolean);
       const content = typeof stickerData.content === "string" ? stickerData.content : "";
+      const title = String(this.sessionTitle || stickerData.title || "\u672A\u547D\u540D\u8D34\u56FE").trim();
       if (imageItems.length === 0) {
         notice.hide();
         new Notice("\u26A0\uFE0F \u5FAE\u4FE1\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247\uFF0C\u8BF7\u5148\u5728\u7B14\u8BB0\u6B63\u6587\u4E2D\u63D2\u5165\u56FE\u7247");
         return;
       }
+      if (imageItems.length > STICKER_MAX_IMAGES) {
+        notice.hide();
+        new Notice(`\u26A0\uFE0F \u5FAE\u4FE1\u8D34\u56FE\u6700\u591A\u652F\u6301 ${STICKER_MAX_IMAGES} \u5F20\u56FE\u7247\uFF0C\u8BF7\u5148\u79FB\u9664\u591A\u4F59\u56FE\u7247`);
+        return;
+      }
       if (content.length > STICKER_MAX_CONTENT_LENGTH) {
         notice.hide();
         new Notice(`\u26A0\uFE0F \u8D34\u56FE\u6587\u6848 ${content.length} \u5B57\uFF0C\u8D85\u51FA\u5FAE\u4FE1 ${STICKER_MAX_CONTENT_LENGTH} \u5B57\u4E0A\u9650\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u540C\u6B65`);
+        return;
+      }
+      if (title.length > STICKER_MAX_TITLE_LENGTH) {
+        notice.hide();
+        new Notice(`\u26A0\uFE0F \u8D34\u56FE\u6807\u9898 ${title.length} \u5B57\uFF0C\u8D85\u51FA ${STICKER_MAX_TITLE_LENGTH} \u5B57\u4E0A\u9650\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u540C\u6B65`);
         return;
       }
       const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
@@ -81576,7 +81725,6 @@ var wechatSyncActionMethods = {
         }
       });
       notice.setMessage("\u{1F680} \u6B63\u5728\u521B\u5EFA\u5FAE\u4FE1\u8D34\u56FE\u8349\u7A3F...");
-      const title = (this.sessionTitle || stickerData.title || "\u672A\u547D\u540D\u8D34\u56FE").slice(0, 64);
       const stickerDraftRes = await syncStickerDraft({
         account,
         api,

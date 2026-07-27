@@ -305,6 +305,14 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   background: color-mix(in srgb, var(--apple-accent) 5%, var(--apple-background));
 }
 
+.wechat-modal-cover-btns button:disabled {
+  color: var(--text-faint);
+  border-color: color-mix(in srgb, var(--apple-border) 70%, transparent);
+  background: var(--apple-background);
+  cursor: not-allowed;
+  opacity: 0.66;
+}
+
 .wechat-publish-shell .wechat-modal-digest-input {
   min-height: 78px;
   padding: 9px 10px;
@@ -574,6 +582,19 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   margin-bottom: 16px;
 }
 
+.sticker-publish-field-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sticker-publish-title .wechat-modal-title-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .sticker-publish-section-header {
   display: flex;
   align-items: center;
@@ -605,39 +626,23 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   font-weight: 550;
 }
 
-.sticker-publish-image-actions {
-  display: flex;
-  gap: 7px;
-}
-
-.sticker-publish-image-actions button {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 30px;
-  padding: 5px 9px;
-  border: 1px solid color-mix(in srgb, var(--text-normal) 12%, transparent);
-  border-radius: 7px;
-  color: var(--text-muted);
-  background: var(--background-secondary);
-  font-size: 11.5px;
-}
-
-.sticker-publish-image-actions button:hover {
-  color: var(--text-normal);
-  border-color: color-mix(in srgb, var(--interactive-accent) 42%, transparent);
-  background: color-mix(in srgb, var(--interactive-accent) 7%, var(--background-secondary));
-}
-
-.sticker-publish-image-actions button span:first-child {
-  display: inline-flex;
-  width: 14px;
-  height: 14px;
+.sticker-publish-count-value.is-error,
+.sticker-publish-count.is-error {
+  color: var(--text-error);
 }
 
 .sticker-publish-image-body.wechat-modal-sticker-grid-preview {
   display: block;
-  padding: 0;
+  max-height: min(360px, 42vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 0 4px 0 0;
+}
+
+.sticker-publish-image-body .sticker-image-list {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .sticker-publish-image-body.wechat-modal-sticker-grid-preview img {
@@ -668,6 +673,7 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
 }
 
 .sticker-publish-status {
+  margin-bottom: 16px;
   padding: 11px 12px;
   border: 1px solid color-mix(in srgb, var(--text-normal) 9%, transparent);
   border-radius: 9px;
@@ -675,6 +681,13 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   background: color-mix(in srgb, var(--background-secondary) 74%, transparent);
   font-size: 11.5px;
   line-height: 1.5;
+}
+
+.sticker-publish-status-label {
+  margin-bottom: 5px;
+  color: var(--text-normal);
+  font-size: 12px;
+  font-weight: 650;
 }
 
 .sticker-publish-summary {
@@ -711,10 +724,14 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
     width: 100%;
   }
 
-  .sticker-publish-image-actions button {
-    flex: 1;
-    justify-content: center;
-    min-height: 38px;
+  .sticker-publish-image-body .sticker-image-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 521px) and (max-width: 760px) {
+  .sticker-publish-image-body .sticker-image-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
