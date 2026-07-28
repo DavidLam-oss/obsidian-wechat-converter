@@ -36,6 +36,38 @@ import {
   toReadableError,
 } from '../apple-style-view-shared.js';
 
+const WECHAT_ACCOUNT_SETUP_GUIDE_URL =
+  'https://xiaoweibox.top/obsidian-publisher/guide#wechat-api';
+const CUSTOM_CSS_GUIDE_URL =
+  'https://xiaoweibox.top/obsidian-publisher/guide/custom-css';
+
+/**
+ * @param {Document | null} activeDocument
+ * @param {string} text
+ * @param {string} linkText
+ * @param {string} href
+ * @param {() => void} openLink
+ * @returns {string | DocumentFragment}
+ */
+function createMutedGuideDescription(activeDocument, text, linkText, href, openLink) {
+  if (!activeDocument) return `${text} ${linkText}`;
+
+  const description = activeDocument.createDocumentFragment();
+  description.append(activeDocument.createTextNode(`${text} `));
+  const link = activeDocument.createElement('a');
+  link.textContent = linkText;
+  link.href = href;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.className = 'apple-settings-guide-link';
+  link.addEventListener('click', (event) => {
+    event.preventDefault();
+    openLink();
+  });
+  description.append(link);
+  return description;
+}
+
 /** @type {WechatSettingsMethodsContract & ThisType<AppleStyleSettingTabContract>} */
 const wechatSettingsMethods = {
   /**
@@ -140,7 +172,15 @@ const wechatSettingsMethods = {
 
     new Setting(containerEl)
       .setName('微信公众号账号')
-      .setDesc('请在微信公众号后台 [设置与开发] -> [基本配置] 中获取 AppID 和 AppSecret，并确保已将当前 IP 加入白名单。')
+      .setDesc(createMutedGuideDescription(
+        containerEl.ownerDocument || getActiveDocumentCompat(),
+        '添加用于同步草稿的公众号 AppID 和 AppSecret。首次配置请先完成 IP 白名单设置。',
+        '查看图文指南 →',
+        WECHAT_ACCOUNT_SETUP_GUIDE_URL,
+        () => {
+          this.plugin.openExternalUrl(WECHAT_ACCOUNT_SETUP_GUIDE_URL);
+        }
+      ))
       .setHeading();
 
     // 账号列表
@@ -399,15 +439,15 @@ const wechatSettingsMethods = {
     // 使用指南外链
     new Setting(containerEl)
       .setName('使用指南')
-      .setDesc('自定义 CSS 的作用域原理、可用选择器清单、可直接复制的示例与禁忌坑位，看这篇在线指南。')
-      .addButton(btn => btn
-        .setButtonText('查看使用指南 →')
-        .setCta()
-        .onClick(() => {
-          if (typeof window !== 'undefined' && typeof window.open === 'function') {
-            window.open('https://xiaoweibox.top/obsidian-publisher/guide/custom-css', '_blank', 'noopener');
-          }
-        }));
+      .setDesc(createMutedGuideDescription(
+        containerEl.ownerDocument || getActiveDocumentCompat(),
+        '自定义 CSS 的作用域原理、可用选择器清单、可直接复制的示例与禁忌坑位。',
+        '查看使用指南 →',
+        CUSTOM_CSS_GUIDE_URL,
+        () => {
+          this.plugin.openExternalUrl(CUSTOM_CSS_GUIDE_URL);
+        }
+      ));
 
     // 启用开关
     let customCssEnabled = !!this.plugin.settings.enableCustomCss;

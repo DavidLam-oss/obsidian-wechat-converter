@@ -82464,6 +82464,7 @@ var settingsTabShellMethods = {
   },
   renderSettingsContent() {
     const { containerEl } = this;
+    const previousScrollTop = Number(containerEl.scrollTop) || 0;
     containerEl.empty();
     const stickyHeader = containerEl.createDiv({ cls: "apple-settings-sticky-header" });
     const paneBackground = resolveSettingsPaneBackground(containerEl);
@@ -82516,10 +82517,31 @@ var settingsTabShellMethods = {
     }
     this.renderWechatSettingsTab(wechatContent);
     renderMultiPlatformSettingsTab(this, multiContent, { obsidianApi });
+    containerEl.scrollTop = previousScrollTop;
   }
 };
 
 // views/settings/wechat-tab.js
+var WECHAT_ACCOUNT_SETUP_GUIDE_URL = "https://xiaoweibox.top/obsidian-publisher/guide#wechat-api";
+var CUSTOM_CSS_GUIDE_URL = "https://xiaoweibox.top/obsidian-publisher/guide/custom-css";
+function createMutedGuideDescription(activeDocument, text, linkText, href, openLink) {
+  if (!activeDocument)
+    return `${text} ${linkText}`;
+  const description = activeDocument.createDocumentFragment();
+  description.append(activeDocument.createTextNode(`${text} `));
+  const link = activeDocument.createElement("a");
+  link.textContent = linkText;
+  link.href = href;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.className = "apple-settings-guide-link";
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    openLink();
+  });
+  description.append(link);
+  return description;
+}
 var wechatSettingsMethods = {
   /**
    * @param {ObsidianElementLike} containerEl
@@ -82587,7 +82609,15 @@ var wechatSettingsMethods = {
       this.plugin.settings.avatarUrl = value;
       await this.plugin.saveSettings();
     }));
-    new Setting(containerEl).setName("\u5FAE\u4FE1\u516C\u4F17\u53F7\u8D26\u53F7").setDesc("\u8BF7\u5728\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0 [\u8BBE\u7F6E\u4E0E\u5F00\u53D1] -> [\u57FA\u672C\u914D\u7F6E] \u4E2D\u83B7\u53D6 AppID \u548C AppSecret\uFF0C\u5E76\u786E\u4FDD\u5DF2\u5C06\u5F53\u524D IP \u52A0\u5165\u767D\u540D\u5355\u3002").setHeading();
+    new Setting(containerEl).setName("\u5FAE\u4FE1\u516C\u4F17\u53F7\u8D26\u53F7").setDesc(createMutedGuideDescription(
+      containerEl.ownerDocument || getActiveDocumentCompat(),
+      "\u6DFB\u52A0\u7528\u4E8E\u540C\u6B65\u8349\u7A3F\u7684\u516C\u4F17\u53F7 AppID \u548C AppSecret\u3002\u9996\u6B21\u914D\u7F6E\u8BF7\u5148\u5B8C\u6210 IP \u767D\u540D\u5355\u8BBE\u7F6E\u3002",
+      "\u67E5\u770B\u56FE\u6587\u6307\u5357 \u2192",
+      WECHAT_ACCOUNT_SETUP_GUIDE_URL,
+      () => {
+        this.plugin.openExternalUrl(WECHAT_ACCOUNT_SETUP_GUIDE_URL);
+      }
+    )).setHeading();
     const accounts = this.plugin.settings.wechatAccounts || [];
     const defaultId = this.plugin.settings.defaultAccountId;
     if (accounts.length === 0) {
@@ -82782,11 +82812,15 @@ var wechatSettingsMethods = {
     warningCard.createSpan({
       text: "\uFF1A\u9700\u8981\u60A8\u81EA\u5DF1\u7F16\u5199 CSS\u3002\u63D2\u4EF6\u4F1A\u81EA\u52A8\u628A\u9009\u62E9\u5668\u6837\u5F0F\u5185\u8054\u5230\u5143\u7D20\u4E0A\uFF0C\u4F46\u5FAE\u4FE1\u4ECD\u53EF\u80FD\u6E05\u6D17\u90E8\u5206\u590D\u6742\u6837\u5F0F\uFF1B\u5F53\u6587\u7AE0\u5DF2\u4F7F\u7528 AI \u7F16\u6392\u7ED3\u679C\u65F6\uFF0C\u81EA\u5B9A\u4E49 CSS \u4E0D\u751F\u6548\uFF08\u4E24\u8005\u4E3A\u72EC\u7ACB\u7684\u6837\u5F0F\u7CFB\u7EDF\uFF09\u3002\u542F\u7528\u524D\u5EFA\u8BAE\u5148\u7528\u300C\u590D\u5236\u5230\u516C\u4F17\u53F7\u300D\u5C0F\u8303\u56F4\u6D4B\u8BD5\u3002"
     });
-    new Setting(containerEl).setName("\u4F7F\u7528\u6307\u5357").setDesc("\u81EA\u5B9A\u4E49 CSS \u7684\u4F5C\u7528\u57DF\u539F\u7406\u3001\u53EF\u7528\u9009\u62E9\u5668\u6E05\u5355\u3001\u53EF\u76F4\u63A5\u590D\u5236\u7684\u793A\u4F8B\u4E0E\u7981\u5FCC\u5751\u4F4D\uFF0C\u770B\u8FD9\u7BC7\u5728\u7EBF\u6307\u5357\u3002").addButton((btn) => btn.setButtonText("\u67E5\u770B\u4F7F\u7528\u6307\u5357 \u2192").setCta().onClick(() => {
-      if (typeof window !== "undefined" && typeof window.open === "function") {
-        window.open("https://xiaoweibox.top/obsidian-publisher/guide/custom-css", "_blank", "noopener");
+    new Setting(containerEl).setName("\u4F7F\u7528\u6307\u5357").setDesc(createMutedGuideDescription(
+      containerEl.ownerDocument || getActiveDocumentCompat(),
+      "\u81EA\u5B9A\u4E49 CSS \u7684\u4F5C\u7528\u57DF\u539F\u7406\u3001\u53EF\u7528\u9009\u62E9\u5668\u6E05\u5355\u3001\u53EF\u76F4\u63A5\u590D\u5236\u7684\u793A\u4F8B\u4E0E\u7981\u5FCC\u5751\u4F4D\u3002",
+      "\u67E5\u770B\u4F7F\u7528\u6307\u5357 \u2192",
+      CUSTOM_CSS_GUIDE_URL,
+      () => {
+        this.plugin.openExternalUrl(CUSTOM_CSS_GUIDE_URL);
       }
-    }));
+    ));
     let customCssEnabled = !!this.plugin.settings.enableCustomCss;
     new Setting(containerEl).setName("\u542F\u7528\u81EA\u5B9A\u4E49 CSS").setDesc("\u5F00\u542F\u540E\uFF0C\u4E0B\u65B9\u8F93\u5165\u7684 CSS \u5C06\u8986\u76D6\u5F53\u524D\u4E3B\u9898\u7684\u90E8\u5206\u6837\u5F0F\u3002").addToggle((toggle) => toggle.setValue(customCssEnabled).onChange(async (value) => {
       var _a6, _b2;

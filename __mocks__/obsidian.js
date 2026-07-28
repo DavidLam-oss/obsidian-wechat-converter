@@ -88,7 +88,10 @@ function makeButtonMock() {
       this.warning = true;
       return this;
     },
-    setCta() { return this; },
+    setCta() {
+      this.cta = true;
+      return this;
+    },
     setTooltip() { return this; },
     then: undefined,
   };
@@ -173,7 +176,11 @@ class SettingMock {
     }
     return this;
   }
-  setDesc() { return this; }
+  setDesc(description) {
+    this.description = description;
+    globalThis.__obsidianSettingDescriptionsRegistry?.push(description);
+    return this;
+  }
   setHeading() { return this; }
   setClass() { return this; }
   setTooltip() { return this; }

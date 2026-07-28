@@ -2082,7 +2082,6 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   background: var(--apple-accent);
   /* Blue */
 }
-
 /*
 ## 核心功能
 
@@ -4620,7 +4619,6 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
-
 /*
 ## 核心功能
 
@@ -5448,6 +5446,16 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   box-shadow: 0 8px 18px color-mix(in srgb, var(--text-normal) 18%, transparent);
 }
 
+.apple-settings-guide-link {
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.apple-settings-guide-link:hover {
+  color: var(--text-normal);
+}
+
 .apple-settings-tab-intro {
   margin: -2px 0 16px;
   padding: 0;
@@ -5503,7 +5511,6 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   color: var(--text-accent);
   border-bottom-color: var(--text-accent);
 }
-
 /*
 ## 核心功能
 
