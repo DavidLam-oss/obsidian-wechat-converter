@@ -861,14 +861,28 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   width: 100%;
   cursor: pointer;
   user-select: none;
 }
 
+.apple-sticker-toggle-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .apple-sticker-toggle-label {
   font-size: 12px;
   color: var(--text-normal);
+}
+
+.apple-sticker-toggle-description {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 .apple-settings-info-card {
@@ -886,4 +900,3 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   margin: 0;
   white-space: pre-line;
 }
-

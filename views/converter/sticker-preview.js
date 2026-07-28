@@ -41,18 +41,13 @@ import {
 } from '../../services/sticker-extractor.js';
 import { getStickerImageItemSrc } from '../../services/sticker-image-items.js';
 import {
+  getStickerPublishState,
+  getStickerTransformParts,
+} from '../../services/sticker-publish-state.js';
+import {
   moveStickerImageItem,
   renderStickerImageList,
 } from '../shared/sticker-image-list.js';
-
-const STICKER_TRANSFORM_LABELS = {
-  codeBlocks: '代码块',
-  mermaid: '流程图',
-  pluginBlocks: '查询块',
-  tables: '表格',
-  math: '公式',
-  footnotes: '脚注',
-};
 
 /** @type {StickerPreviewMethodsContract & ThisType<AppleStyleViewContract>} */
 export const stickerPreviewMethods = {
@@ -240,9 +235,7 @@ async renderStickerPreview() {
   const uiState = this.getStickerUiState(stickerData.sourcePath || '');
 
   // 1. 复杂结构转换提醒（说明降级范围，但不暗示作者内容已被删除）
-  const strippedParts = (Array.isArray(stickerData.removed) ? stickerData.removed : [])
-    .filter((entry) => entry?.count > 0)
-    .map((entry) => `${STICKER_TRANSFORM_LABELS[entry.kind] || '内容'} ${entry.count} 处`);
+  const strippedParts = getStickerTransformParts(stickerData.removed);
   if (strippedParts.length > 0) {
     const notice = stickerContainer.createEl('div', { cls: 'apple-sticker-notice-warning' });
     const noticeIcon = notice.createEl('span', { cls: 'apple-sticker-notice-icon' });
@@ -256,45 +249,11 @@ async renderStickerPreview() {
     });
   }
 
-  // 2. 图片卡片墙预览与交互（上限 20 张）
-  const imagesSection = stickerContainer.createEl('div', { cls: 'apple-sticker-images-section' });
-  const sectionHeader = imagesSection.createEl('div', { cls: 'apple-sticker-section-header' });
-  const sectionTitle = sectionHeader.createEl('div', { cls: 'apple-sticker-section-title' });
   const setIcon = getObsidianSetIcon();
-  if (typeof setIcon === 'function') {
-    const iconSpan = sectionTitle.createEl('span', { cls: 'apple-sticker-section-icon-lucide' });
-    setIcon(iconSpan, 'image');
-  }
-  sectionTitle.createEl('span', { text: '贴图图片列表' });
-  sectionHeader.createEl('span', {
-    cls: 'apple-sticker-count-badge',
-    text: `${stickerData.imageItems.length} / ${STICKER_MAX_IMAGES} 张`
-  });
-
-  renderStickerImageList(imagesSection, {
-    items: stickerData.imageItems,
-    getDisplaySrc: (_, index) => stickerData.imageDisplaySources[index] || '',
-    setIcon,
-    emptyText: '正文中还没有图片；可在发布弹窗中添加本地图片或公众号素材。',
-    onMove: (fromIndex, toIndex, movedItem) => {
-      uiState.order = moveStickerImageItem(
-        stickerData.imageItems.map((item) => item.key),
-        fromIndex,
-        toIndex
-      );
-      selfRecord.stickerFocusKey = movedItem?.key || '';
-      void this.renderStickerPreview();
-    },
-    onRemove: (item, index) => {
-      this.removeStickerImageItem(stickerData.sourcePath, item, index);
-      void this.renderStickerPreview();
-    },
-    focusKey: typeof selfRecord.stickerFocusKey === 'string' ? selfRecord.stickerFocusKey : '',
-  });
-  selfRecord.stickerFocusKey = '';
-
-  if (uiState.undoItems.length > 0 || uiState.removedKeys.length > 0) {
-    const restoreRow = imagesSection.createDiv({ cls: 'apple-sticker-restore-row' });
+  /** @param {ObsidianElementLike} parent */
+  const renderRestoreActions = (parent) => {
+    if (uiState.undoItems.length === 0 && uiState.removedKeys.length === 0) return;
+    const restoreRow = parent.createDiv({ cls: 'apple-sticker-restore-row' });
     if (uiState.undoItems.length > 0) {
       const undoButton = restoreRow.createEl('button', {
         cls: 'apple-sticker-restore-btn',
@@ -313,18 +272,66 @@ async renderStickerPreview() {
       this.restoreAllStickerImages(stickerData.sourcePath);
       void this.renderStickerPreview();
     };
-  }
+  };
 
-  // 💡 温馨提示：贴图提取自正文，如需添加请在发布弹窗操作
-  const hintLine = imagesSection.createEl('div', { cls: 'apple-sticker-hint-line' });
-  const hintIcon = hintLine.createSpan({ cls: 'apple-sticker-hint-icon' });
-  if (typeof setIcon === 'function') {
-    setIcon(hintIcon, 'info');
+  // 2. 图片卡片墙预览与交互（上限 20 张）
+  if (stickerData.imageItems.length > 0) {
+    const imagesSection = stickerContainer.createEl('div', { cls: 'apple-sticker-images-section' });
+    const sectionHeader = imagesSection.createEl('div', { cls: 'apple-sticker-section-header' });
+    const sectionTitle = sectionHeader.createEl('div', { cls: 'apple-sticker-section-title' });
+    if (typeof setIcon === 'function') {
+      const iconSpan = sectionTitle.createEl('span', { cls: 'apple-sticker-section-icon-lucide' });
+      setIcon(iconSpan, 'image');
+    }
+    sectionTitle.createEl('span', { text: '贴图图片列表' });
+    const imageCountState = getStickerPublishState({
+      title: stickerData.title || '贴图',
+      content: stickerData.content || '',
+      imageCount: stickerData.imageItems.length,
+    }).counters.images;
+    sectionHeader.createEl('span', {
+      cls: `apple-sticker-count-badge${imageCountState.status === 'warning' ? ' is-warning' : ''}${imageCountState.status === 'error' ? ' is-error' : ''}`,
+      text: `${stickerData.imageItems.length} / ${STICKER_MAX_IMAGES} 张`
+    });
+
+    renderStickerImageList(imagesSection, {
+      items: stickerData.imageItems,
+      getDisplaySrc: (_, index) => stickerData.imageDisplaySources[index] || '',
+      setIcon,
+      onMove: (fromIndex, toIndex, movedItem) => {
+        uiState.order = moveStickerImageItem(
+          stickerData.imageItems.map((item) => item.key),
+          fromIndex,
+          toIndex
+        );
+        selfRecord.stickerFocusKey = movedItem?.key || '';
+        void this.renderStickerPreview();
+      },
+      onRemove: (item, index) => {
+        this.removeStickerImageItem(stickerData.sourcePath, item, index);
+        void this.renderStickerPreview();
+      },
+      focusKey: typeof selfRecord.stickerFocusKey === 'string' ? selfRecord.stickerFocusKey : '',
+    });
+    selfRecord.stickerFocusKey = '';
+    renderRestoreActions(imagesSection);
+
+    const hintLine = imagesSection.createEl('div', { cls: 'apple-sticker-hint-line' });
+    const hintIcon = hintLine.createSpan({ cls: 'apple-sticker-hint-icon' });
+    if (typeof setIcon === 'function') setIcon(hintIcon, 'info');
+    hintLine.createEl('span', {
+      cls: 'apple-sticker-hint-text',
+      text: '顺序即最终发布顺序；添加图片请打开发布弹窗，移除不会改动笔记。'
+    });
+  } else {
+    const readinessNotice = stickerContainer.createDiv({ cls: 'apple-sticker-readiness-notice is-error' });
+    const readinessIcon = readinessNotice.createSpan({ cls: 'apple-sticker-readiness-icon' });
+    if (typeof setIcon === 'function') setIcon(readinessIcon, 'circle-alert');
+    readinessNotice.createSpan({
+      text: '还缺 1 张图片，当前贴图无法同步。请在笔记中插入图片，或在发布弹窗中上传。',
+    });
+    renderRestoreActions(stickerContainer);
   }
-  hintLine.createEl('span', {
-    cls: 'apple-sticker-hint-text',
-    text: '这里确认发布顺序；添加本地图片或公众号素材，请打开发布弹窗。移除不会改动笔记。'
-  });
 
   // 3. 纯文本正文预览
   const textSection = stickerContainer.createEl('div', { cls: 'apple-sticker-text-section' });
@@ -334,13 +341,22 @@ async renderStickerPreview() {
     const iconSpan = textTitle.createEl('span', { cls: 'apple-sticker-section-icon-lucide' });
     setIcon(iconSpan, 'file-text');
   }
-  textTitle.createEl('span', { text: '贴图描述文案' });
+  const textHeading = textTitle.createDiv({ cls: 'apple-sticker-text-heading' });
+  textHeading.createEl('span', { text: '发布文案' });
+  textHeading.createEl('span', {
+    cls: 'apple-sticker-text-subtitle',
+    text: '将以纯文本同步到微信草稿',
+  });
 
   const charCount = stickerData.content ? stickerData.content.length : 0;
-  const isOverLimit = charCount > STICKER_MAX_CONTENT_LENGTH;
+  const contentCountState = getStickerPublishState({
+    title: stickerData.title || '贴图',
+    content: stickerData.content || '',
+    imageCount: Math.max(1, stickerData.imageItems.length),
+  }).counters.content;
   const countBadge = textHeader.createEl('span', { cls: 'apple-sticker-count-badge' });
   countBadge.createEl('span', {
-    cls: `apple-sticker-count-current${isOverLimit ? ' is-error' : ''}`,
+    cls: `apple-sticker-count-current${contentCountState.status === 'warning' ? ' is-warning' : ''}${contentCountState.status === 'error' ? ' is-error' : ''}`,
     text: `${charCount}`
   });
   countBadge.createEl('span', {

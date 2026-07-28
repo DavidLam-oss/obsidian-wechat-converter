@@ -47,6 +47,10 @@ import {
   createUploadStickerImageItem,
 } from '../../services/sticker-image-items.js';
 import {
+  getStickerPublishState,
+  getStickerTransformParts,
+} from '../../services/sticker-publish-state.js';
+import {
   moveStickerImageItem,
   renderStickerImageList,
 } from '../shared/sticker-image-list.js';
@@ -130,8 +134,17 @@ function renderStickerPublishContent(view, {
     placeholder: '默认使用 frontmatter title 或文件名',
   });
   titleInput.value = String(frontmatterMeta.title || activeFile?.basename || '未命名贴图');
+  const titleFeedback = titleSection.createDiv({ cls: 'sticker-publish-field-feedback' });
 
-  const statusSection = modal.contentEl.createDiv({ cls: 'sticker-publish-status' });
+  const contentMetaSection = modal.contentEl.createDiv({ cls: 'sticker-publish-content-meta' });
+  const contentMetaHeader = contentMetaSection.createDiv({ cls: 'sticker-publish-content-meta-header' });
+  contentMetaHeader.createSpan({ text: '发布文案', cls: 'sticker-publish-content-meta-label' });
+  const contentCount = contentMetaHeader.createSpan({ cls: 'sticker-publish-count' });
+  const contentCountValue = contentCount.createSpan({ cls: 'sticker-publish-count-value' });
+  contentCount.createSpan({ text: `/${STICKER_MAX_CONTENT_LENGTH} 字` });
+  const transformSummary = contentMetaSection.createDiv({ cls: 'sticker-publish-cleaning-note' });
+  const contentFeedback = contentMetaSection.createDiv({ cls: 'sticker-publish-field-feedback' });
+
   const imageSection = modal.contentEl.createDiv({ cls: 'wechat-modal-section sticker-publish-images' });
   const imageHeader = imageSection.createDiv({ cls: 'sticker-publish-section-header' });
   const imageTitle = imageHeader.createDiv({ cls: 'sticker-publish-section-title' });
@@ -155,6 +168,7 @@ function renderStickerPublishContent(view, {
 
   const imageBody = imageSection.createDiv({ cls: 'sticker-publish-image-body wechat-modal-sticker-grid-preview' });
   const restoreRow = imageSection.createDiv({ cls: 'sticker-publish-restore-row' });
+  const imageFeedback = imageSection.createDiv({ cls: 'sticker-publish-image-feedback' });
   modal.contentEl.createDiv({ cls: 'wechat-draft-status' });
 
   const buttonRow = modal.contentEl.createDiv({ cls: 'wechat-modal-buttons sticker-publish-footer' });
@@ -189,12 +203,21 @@ function renderStickerPublishContent(view, {
   };
 
   function updatePublishState() {
-    const titleLength = titleInput.value.length;
-    const normalizedTitleLength = titleInput.value.trim().length;
+    const publishState = getStickerPublishState({
+      title: titleInput.value,
+      content: currentContent,
+      imageCount: currentItems.length,
+      foreignMaterialCount: currentForeignMaterialCount,
+    });
     const imageLimitReached = currentItems.length >= STICKER_MAX_IMAGES;
-    titleCountValue.setText(String(titleLength));
-    titleCountValue.toggleClass?.('is-error', titleLength > STICKER_MAX_TITLE_LENGTH);
-    imageCount.toggleClass?.('is-error', currentItems.length > STICKER_MAX_IMAGES);
+    titleCountValue.setText(String(publishState.counters.title.value));
+    titleCountValue.toggleClass?.('is-warning', publishState.counters.title.status === 'warning');
+    titleCountValue.toggleClass?.('is-error', publishState.counters.title.status === 'error');
+    contentCountValue.setText(String(publishState.counters.content.value));
+    contentCountValue.toggleClass?.('is-warning', publishState.counters.content.status === 'warning');
+    contentCountValue.toggleClass?.('is-error', publishState.counters.content.status === 'error');
+    imageCount.toggleClass?.('is-warning', publishState.counters.images.status === 'warning');
+    imageCount.toggleClass?.('is-error', publishState.counters.images.status === 'error');
 
     localButton.disabled = imageLimitReached;
     materialButton.disabled = imageLimitReached || !getSelectedAccount();
@@ -207,33 +230,18 @@ function renderStickerPublishContent(view, {
       materialButton.removeAttribute('title');
     }
 
-    let disabledReason = '';
-    if (currentItems.length === 0) disabledReason = '微信贴图至少需要 1 张图片';
-    else if (currentItems.length > STICKER_MAX_IMAGES) {
-      disabledReason = `当前有 ${currentItems.length} 张图片，超过 ${STICKER_MAX_IMAGES} 张上限`;
-    }
-    else if (normalizedTitleLength === 0) disabledReason = '请输入贴图标题';
-    else if (titleLength > STICKER_MAX_TITLE_LENGTH) {
-      disabledReason = `当前标题 ${titleLength} 字，超过 ${STICKER_MAX_TITLE_LENGTH} 字上限`;
-    } else if (currentContent.length > STICKER_MAX_CONTENT_LENGTH) {
-      disabledReason = `当前文案 ${currentContent.length} 字，超过 ${STICKER_MAX_CONTENT_LENGTH} 字上限`;
-    } else if (currentForeignMaterialCount > 0) {
-      disabledReason = '当前账号不能使用其他公众号的素材';
-    }
-    syncButton.disabled = Boolean(disabledReason);
-    syncButton.toggleClass?.('apple-btn-disabled', Boolean(disabledReason));
-    syncButton.setText(
-      currentItems.length === 0
-        ? '图片不足，无法同步'
-        : (currentItems.length > STICKER_MAX_IMAGES
-          ? '图片超限，无法同步'
-          : (normalizedTitleLength === 0
-            ? '请输入贴图标题'
-            : (titleLength > STICKER_MAX_TITLE_LENGTH
-              ? '标题超长，无法同步'
-              : (currentContent.length > STICKER_MAX_CONTENT_LENGTH ? '文字超长，无法同步' : '同步到贴图草稿'))))
+    titleFeedback.setText(
+      publishState.issueCode === 'title-required' || publishState.issueCode === 'title-exceeded'
+        ? publishState.issueMessage
+        : ''
     );
-    if (disabledReason) syncButton.setAttribute('title', disabledReason);
+    contentFeedback.setText(
+      publishState.issueCode === 'content-exceeded' ? publishState.issueMessage : ''
+    );
+    syncButton.disabled = !publishState.canSync;
+    syncButton.toggleClass?.('apple-btn-disabled', !publishState.canSync);
+    syncButton.setText(publishState.buttonText);
+    if (publishState.issueMessage) syncButton.setAttribute('title', publishState.issueMessage);
     else syncButton.removeAttribute('title');
   }
 
@@ -253,6 +261,12 @@ function renderStickerPublishContent(view, {
     currentForeignMaterialCount = foreignMaterialCount;
 
     imageCount.setText(`${items.length} / ${STICKER_MAX_IMAGES}`);
+    const transformParts = getStickerTransformParts(data?.removed);
+    transformSummary.setText(
+      transformParts.length > 0
+        ? `已转换为纯文本：${transformParts.join('、')}。笔记原文未改动。`
+        : '将以纯文本同步到微信草稿；笔记原文不会改动。'
+    );
     imageBody.empty();
     renderStickerImageList(imageBody, {
       items,
@@ -262,7 +276,7 @@ function renderStickerPublishContent(view, {
           : (item.displaySrc || displaySources[index] || '')
       ),
       setIcon,
-      emptyText: `先添加 1–${STICKER_MAX_IMAGES} 张图片；发布顺序按这里从左到右排列。`,
+      emptyText: '贴图至少需要 1 张图片。可上传本地图片，或从当前公众号素材库选择。',
       focusKey,
       onMove: (fromIndex, toIndex, movedItem) => {
         uiState.order = moveStickerImageItem(
@@ -301,31 +315,18 @@ function renderStickerPublishContent(view, {
       };
     }
 
-    statusSection.empty();
-    statusSection.createDiv({ cls: 'sticker-publish-status-label', text: '发布检查' });
-    const summary = statusSection.createDiv({ cls: 'sticker-publish-summary' });
-    summary.createSpan({ text: `图片 ${items.length} / ${STICKER_MAX_IMAGES} 张` });
-    summary.createSpan({ text: `文案 ${content.length} / ${STICKER_MAX_CONTENT_LENGTH} 字` });
+    imageFeedback.empty();
     const omittedImageCount = Number.isFinite(data?.omittedImageCount)
       ? Math.max(0, Number(data.omittedImageCount))
       : 0;
     if (omittedImageCount > 0) {
-      statusSection.createDiv({
+      imageFeedback.createDiv({
         cls: 'sticker-publish-account-warning',
         text: `另有 ${omittedImageCount} 张图片超过 ${STICKER_MAX_IMAGES} 张上限，未加入本次贴图。`,
       });
     }
-    const removed = (Array.isArray(data?.removed) ? data.removed : [])
-      .filter((entry) => entry?.count > 0)
-      .map((entry) => `${entry.kind} ${entry.count} 处`);
-    if (removed.length > 0) {
-      statusSection.createDiv({
-        cls: 'sticker-publish-cleaning-note',
-        text: `已为贴图清理：${removed.join('、')}。笔记原文未改动。`,
-      });
-    }
     if (foreignMaterialCount > 0) {
-      statusSection.createDiv({
+      imageFeedback.createDiv({
         cls: 'sticker-publish-account-warning',
         text: `有 ${foreignMaterialCount} 张公众号素材不属于当前账号，请移除或切回原账号。`,
       });
@@ -455,11 +456,7 @@ function renderStickerPublishContent(view, {
 
   const handleRefreshError = (error) => {
     if (view.stickerModalGeneration !== generation) return;
-    statusSection.empty();
-    statusSection.createDiv({
-      cls: 'sticker-publish-account-warning',
-      text: `暂时无法读取贴图内容：${error?.message || '未知错误'}`,
-    });
+    contentFeedback.setText(`暂时无法读取贴图内容：${error?.message || '未知错误'}`);
     syncButton.disabled = true;
     if (shouldOpenModal) modal.open();
   };

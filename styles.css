@@ -2096,14 +2096,28 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   width: 100%;
   cursor: pointer;
   user-select: none;
 }
 
+.apple-sticker-toggle-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .apple-sticker-toggle-label {
   font-size: 12px;
   color: var(--text-normal);
+}
+
+.apple-sticker-toggle-description {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 .apple-settings-info-card {
@@ -2121,7 +2135,6 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   margin: 0;
   white-space: pre-line;
 }
-
 /*
 ## 核心功能
 
@@ -2766,6 +2779,17 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   font-weight: 700;
 }
 
+.apple-sticker-count-current.is-warning,
+.apple-sticker-count-badge.is-warning {
+  color: var(--text-warning);
+  font-weight: 700;
+}
+
+.apple-sticker-count-badge.is-error {
+  color: var(--text-error, #e5484d);
+  font-weight: 700;
+}
+
 .apple-sticker-count-total {
   color: var(--text-muted);
 }
@@ -2903,23 +2927,54 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   font-weight: 600;
 }
 
-/* 优雅文案 Card 预览区 */
+/* 贴图就绪状态 */
+.apple-sticker-readiness-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 10px;
+  border-left: 3px solid var(--text-error, #e5484d);
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--text-error, #e5484d) 7%, transparent);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.apple-sticker-readiness-icon {
+  display: inline-flex;
+  width: 15px;
+  height: 15px;
+  margin-top: 1px;
+  flex: 0 0 auto;
+  color: var(--text-error, #e5484d);
+}
+
+/* 阅读型纯文本文案预览 */
 .apple-sticker-text-section {
   display: flex;
   flex-direction: column;
 }
 
+.apple-sticker-text-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.apple-sticker-text-subtitle {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+
 .apple-sticker-text-preview {
-  padding: 16px;
-  background: var(--background-secondary, var(--apple-surface));
-  border: 1px solid color-mix(in srgb, var(--text-normal) 8%, transparent);
-  border-radius: 14px;
+  padding: 14px 2px 0;
+  border-top: 1px solid color-mix(in srgb, var(--text-normal) 10%, transparent);
   font-size: 13.5px;
-  line-height: 1.65;
+  line-height: 1.72;
   color: var(--text-normal);
   white-space: pre-wrap;
   word-break: break-word;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
   font-family: var(--font-text, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
 }
 
@@ -4509,6 +4564,43 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   color: var(--text-error);
 }
 
+.sticker-publish-count-value.is-warning,
+.sticker-publish-count.is-warning {
+  color: var(--text-warning);
+}
+
+.sticker-publish-field-feedback {
+  min-height: 0;
+  margin-top: 5px;
+  color: var(--text-error);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.sticker-publish-field-feedback:empty {
+  display: none;
+}
+
+.sticker-publish-content-meta {
+  margin: -4px 0 16px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.sticker-publish-content-meta-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sticker-publish-content-meta-label {
+  color: var(--text-normal);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .sticker-publish-image-body.wechat-modal-sticker-grid-preview {
   display: block;
   max-height: min(360px, 42vh);
@@ -4566,32 +4658,13 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   color: var(--interactive-accent);
 }
 
-.sticker-publish-status {
-  margin-bottom: 16px;
-  padding: 11px 12px;
-  border: 1px solid color-mix(in srgb, var(--text-normal) 9%, transparent);
-  border-radius: 9px;
-  color: var(--text-muted);
-  background: color-mix(in srgb, var(--background-secondary) 74%, transparent);
-  font-size: 11.5px;
-  line-height: 1.5;
-}
-
-.sticker-publish-status-label {
-  margin-bottom: 5px;
-  color: var(--text-normal);
-  font-size: 12px;
-  font-weight: 650;
-}
-
-.sticker-publish-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-}
-
 .sticker-publish-cleaning-note {
-  margin-top: 5px;
+  margin-top: 3px;
+  color: var(--text-muted);
+}
+
+.sticker-publish-image-feedback:empty {
+  display: none;
 }
 
 .sticker-publish-account-warning {

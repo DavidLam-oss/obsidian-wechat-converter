@@ -76134,9 +76134,17 @@ var settingsPanelMethods = {
         stickerWrapper.createDiv({ cls: "apple-settings-sticker-header" })
       );
       stickerHeader.createEl("span", { text: "\u5FAE\u4FE1\u8D34\u56FE\u8BBE\u7F6E", cls: "title" });
-      const indexSection = this.createSection(stickerWrapper, "\u914D\u56FE\u5E8F\u53F7\u6807\u6CE8", (section) => {
+      const indexSection = this.createSection(stickerWrapper, "\u914D\u56FE\u5E8F\u53F7", (section) => {
         const container2 = section.createEl("div", { cls: "apple-sticker-toggle-row" });
-        container2.createEl("span", { text: "\u6B63\u6587\u63D2\u5165\u914D\u56FE\u5E8F\u53F7", cls: "apple-sticker-toggle-label" });
+        const labelGroup = container2.createDiv({ cls: "apple-sticker-toggle-copy" });
+        labelGroup.createEl("span", {
+          text: "\u5728\u6587\u6848\u4E2D\u63D2\u5165 [\u914D\u56FE N]",
+          cls: "apple-sticker-toggle-label"
+        });
+        labelGroup.createEl("span", {
+          text: "\u4FBF\u4E8E\u8BFB\u8005\u5BF9\u5E94\u4E0B\u65B9\u56FE\u7247\uFF1B\u53EA\u5F71\u54CD\u8D34\u56FE\u6587\u6848\u3002",
+          cls: "apple-sticker-toggle-description"
+        });
         const toggle = container2.createDiv({ cls: "apple-toggle" });
         const checkbox = toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" });
         checkbox.checked = Boolean(this.insertStickerImageIndex);
@@ -76155,10 +76163,10 @@ var settingsPanelMethods = {
         this.stickerIndexToggleState = { checkbox, toggle };
       });
       indexSection.classList.add("apple-settings-inline-toggle");
-      this.createSection(stickerWrapper, "\u6392\u7248\u4F18\u5316\u8BF4\u660E", (section) => {
+      this.createSection(stickerWrapper, "\u7EAF\u6587\u672C\u8F6C\u6362\u89C4\u5219", (section) => {
         const card = section.createDiv({ cls: "apple-settings-info-card" });
         card.createEl("p", {
-          text: "\xB7 \u81EA\u52A8\u5FFD\u7565 Frontmatter YAML \u5934\u4FE1\u606F\n\xB7 \u81EA\u52A8\u5265\u79BB\u4E0D\u652F\u6301\u7684\u4EE3\u7801\u5757\u4E0E\u8868\u683C\u4EE5\u4FDD\u8BC1\u6587\u6848\u7EAF\u51C0\n\xB7 \u652F\u6301\u62D6\u62FD\u66F4\u6539\u8D34\u56FE\u56FE\u7247\u987A\u5E8F",
+          text: "\xB7 \u81EA\u52A8\u5FFD\u7565 Frontmatter \u7B49\u673A\u5668\u4FE1\u606F\n\xB7 \u4EE3\u7801\u5757\u3001\u8868\u683C\u3001\u516C\u5F0F\u548C\u811A\u6CE8\u4F1A\u8F6C\u6362\u4E3A\u53EF\u8BFB\u7EAF\u6587\u672C\n\xB7 \u53EA\u5F71\u54CD\u9884\u89C8\u548C\u8349\u7A3F\uFF0C\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u539F\u6587",
           cls: "apple-settings-info-card-text"
         });
       });
@@ -77098,6 +77106,96 @@ function extractStickerData({
   };
 }
 
+// services/sticker-publish-state.js
+var STICKER_TRANSFORM_LABELS = {
+  codeBlocks: "\u4EE3\u7801\u5757",
+  mermaid: "\u6D41\u7A0B\u56FE",
+  pluginBlocks: "\u67E5\u8BE2\u5757",
+  tables: "\u8868\u683C",
+  math: "\u516C\u5F0F",
+  footnotes: "\u811A\u6CE8"
+};
+var TITLE_WARNING_LENGTH = 18;
+var CONTENT_WARNING_LENGTH = 900;
+function getStickerCounterState(value, max, warningAt, min = 0) {
+  const normalizedValue = Number.isFinite(value) ? Math.max(0, Number(value)) : 0;
+  let status = "normal";
+  if (normalizedValue < min || normalizedValue > max)
+    status = "error";
+  else if (normalizedValue >= warningAt)
+    status = "warning";
+  return { value: normalizedValue, max, status };
+}
+function getStickerPublishState({
+  title = "",
+  content = "",
+  imageCount = 0,
+  foreignMaterialCount = 0
+} = {}) {
+  const titleValue = String(title);
+  const contentValue = String(content);
+  const normalizedImageCount = Number.isFinite(imageCount) ? Math.max(0, Number(imageCount)) : 0;
+  const titleCounter = getStickerCounterState(
+    titleValue.length,
+    STICKER_MAX_TITLE_LENGTH,
+    TITLE_WARNING_LENGTH
+  );
+  if (titleValue.trim().length === 0)
+    titleCounter.status = "error";
+  const counters = {
+    title: titleCounter,
+    content: getStickerCounterState(
+      contentValue.length,
+      STICKER_MAX_CONTENT_LENGTH,
+      CONTENT_WARNING_LENGTH
+    ),
+    images: getStickerCounterState(
+      normalizedImageCount,
+      STICKER_MAX_IMAGES,
+      STICKER_MAX_IMAGES,
+      1
+    )
+  };
+  let issueCode = "";
+  let issueMessage = "";
+  let buttonText = "\u540C\u6B65\u5230\u8D34\u56FE\u8349\u7A3F";
+  if (normalizedImageCount === 0) {
+    issueCode = "images-required";
+    issueMessage = "\u5FAE\u4FE1\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247";
+    buttonText = "\u56FE\u7247\u4E0D\u8DB3\uFF0C\u65E0\u6CD5\u540C\u6B65";
+  } else if (normalizedImageCount > STICKER_MAX_IMAGES) {
+    issueCode = "images-exceeded";
+    issueMessage = `\u5F53\u524D\u6709 ${normalizedImageCount} \u5F20\u56FE\u7247\uFF0C\u8D85\u8FC7 ${STICKER_MAX_IMAGES} \u5F20\u4E0A\u9650`;
+    buttonText = "\u56FE\u7247\u8D85\u9650\uFF0C\u65E0\u6CD5\u540C\u6B65";
+  } else if (titleValue.trim().length === 0) {
+    issueCode = "title-required";
+    issueMessage = "\u8BF7\u8F93\u5165\u8D34\u56FE\u6807\u9898";
+    buttonText = "\u8BF7\u8F93\u5165\u8D34\u56FE\u6807\u9898";
+  } else if (titleValue.length > STICKER_MAX_TITLE_LENGTH) {
+    issueCode = "title-exceeded";
+    issueMessage = `\u5F53\u524D\u6807\u9898 ${titleValue.length} \u5B57\uFF0C\u8D85\u8FC7 ${STICKER_MAX_TITLE_LENGTH} \u5B57\u4E0A\u9650`;
+    buttonText = "\u6807\u9898\u8D85\u957F\uFF0C\u65E0\u6CD5\u540C\u6B65";
+  } else if (contentValue.length > STICKER_MAX_CONTENT_LENGTH) {
+    issueCode = "content-exceeded";
+    issueMessage = `\u5F53\u524D\u6587\u6848 ${contentValue.length} \u5B57\uFF0C\u8D85\u8FC7 ${STICKER_MAX_CONTENT_LENGTH} \u5B57\u4E0A\u9650`;
+    buttonText = "\u6587\u6848\u8D85\u957F\uFF0C\u65E0\u6CD5\u540C\u6B65";
+  } else if (foreignMaterialCount > 0) {
+    issueCode = "foreign-material";
+    issueMessage = "\u5F53\u524D\u8D26\u53F7\u4E0D\u80FD\u4F7F\u7528\u5176\u4ED6\u516C\u4F17\u53F7\u7684\u7D20\u6750";
+    buttonText = "\u7D20\u6750\u8D26\u53F7\u4E0D\u7B26";
+  }
+  return {
+    canSync: !issueCode,
+    issueCode,
+    issueMessage,
+    buttonText,
+    counters
+  };
+}
+function getStickerTransformParts(entries) {
+  return (Array.isArray(entries) ? entries : []).filter((entry) => Number(entry == null ? void 0 : entry.count) > 0).map((entry) => `${STICKER_TRANSFORM_LABELS[entry.kind] || "\u5185\u5BB9"} ${Number(entry.count)} \u5904`);
+}
+
 // views/shared/sticker-image-list.js
 function moveStickerImageItem(items, fromIndex, toIndex) {
   const list = Array.isArray(items) ? [...items] : [];
@@ -77260,14 +77358,6 @@ function renderStickerImageList(container, {
 }
 
 // views/converter/sticker-preview.js
-var STICKER_TRANSFORM_LABELS = {
-  codeBlocks: "\u4EE3\u7801\u5757",
-  mermaid: "\u6D41\u7A0B\u56FE",
-  pluginBlocks: "\u67E5\u8BE2\u5757",
-  tables: "\u8868\u683C",
-  math: "\u516C\u5F0F",
-  footnotes: "\u811A\u6CE8"
-};
 var stickerPreviewMethods = {
   getStickerUiState(filePath) {
     const selfRecord = toRecord11(this);
@@ -77433,7 +77523,7 @@ var stickerPreviewMethods = {
     this.previewContainer.empty();
     const stickerContainer = this.previewContainer.createEl("div", { cls: "apple-sticker-preview-wrapper" });
     const uiState = this.getStickerUiState(stickerData.sourcePath || "");
-    const strippedParts = (Array.isArray(stickerData.removed) ? stickerData.removed : []).filter((entry) => (entry == null ? void 0 : entry.count) > 0).map((entry) => `${STICKER_TRANSFORM_LABELS[entry.kind] || "\u5185\u5BB9"} ${entry.count} \u5904`);
+    const strippedParts = getStickerTransformParts(stickerData.removed);
     if (strippedParts.length > 0) {
       const notice = stickerContainer.createEl("div", { cls: "apple-sticker-notice-warning" });
       const noticeIcon = notice.createEl("span", { cls: "apple-sticker-notice-icon" });
@@ -77447,42 +77537,11 @@ var stickerPreviewMethods = {
         text: "\u5185\u5BB9\u5DF2\u8F6C\u6362\u4E3A\u9002\u5408\u8D34\u56FE\u7684\u7EAF\u6587\u672C\uFF0C\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u539F\u6587\u3002"
       });
     }
-    const imagesSection = stickerContainer.createEl("div", { cls: "apple-sticker-images-section" });
-    const sectionHeader = imagesSection.createEl("div", { cls: "apple-sticker-section-header" });
-    const sectionTitle = sectionHeader.createEl("div", { cls: "apple-sticker-section-title" });
     const setIcon = getObsidianSetIcon();
-    if (typeof setIcon === "function") {
-      const iconSpan = sectionTitle.createEl("span", { cls: "apple-sticker-section-icon-lucide" });
-      setIcon(iconSpan, "image");
-    }
-    sectionTitle.createEl("span", { text: "\u8D34\u56FE\u56FE\u7247\u5217\u8868" });
-    sectionHeader.createEl("span", {
-      cls: "apple-sticker-count-badge",
-      text: `${stickerData.imageItems.length} / ${STICKER_MAX_IMAGES} \u5F20`
-    });
-    renderStickerImageList(imagesSection, {
-      items: stickerData.imageItems,
-      getDisplaySrc: (_, index) => stickerData.imageDisplaySources[index] || "",
-      setIcon,
-      emptyText: "\u6B63\u6587\u4E2D\u8FD8\u6CA1\u6709\u56FE\u7247\uFF1B\u53EF\u5728\u53D1\u5E03\u5F39\u7A97\u4E2D\u6DFB\u52A0\u672C\u5730\u56FE\u7247\u6216\u516C\u4F17\u53F7\u7D20\u6750\u3002",
-      onMove: (fromIndex, toIndex, movedItem) => {
-        uiState.order = moveStickerImageItem(
-          stickerData.imageItems.map((item) => item.key),
-          fromIndex,
-          toIndex
-        );
-        selfRecord.stickerFocusKey = (movedItem == null ? void 0 : movedItem.key) || "";
-        void this.renderStickerPreview();
-      },
-      onRemove: (item, index) => {
-        this.removeStickerImageItem(stickerData.sourcePath, item, index);
-        void this.renderStickerPreview();
-      },
-      focusKey: typeof selfRecord.stickerFocusKey === "string" ? selfRecord.stickerFocusKey : ""
-    });
-    selfRecord.stickerFocusKey = "";
-    if (uiState.undoItems.length > 0 || uiState.removedKeys.length > 0) {
-      const restoreRow = imagesSection.createDiv({ cls: "apple-sticker-restore-row" });
+    const renderRestoreActions = (parent) => {
+      if (uiState.undoItems.length === 0 && uiState.removedKeys.length === 0)
+        return;
+      const restoreRow = parent.createDiv({ cls: "apple-sticker-restore-row" });
       if (uiState.undoItems.length > 0) {
         const undoButton = restoreRow.createEl("button", {
           cls: "apple-sticker-restore-btn",
@@ -77501,16 +77560,64 @@ var stickerPreviewMethods = {
         this.restoreAllStickerImages(stickerData.sourcePath);
         void this.renderStickerPreview();
       };
+    };
+    if (stickerData.imageItems.length > 0) {
+      const imagesSection = stickerContainer.createEl("div", { cls: "apple-sticker-images-section" });
+      const sectionHeader = imagesSection.createEl("div", { cls: "apple-sticker-section-header" });
+      const sectionTitle = sectionHeader.createEl("div", { cls: "apple-sticker-section-title" });
+      if (typeof setIcon === "function") {
+        const iconSpan = sectionTitle.createEl("span", { cls: "apple-sticker-section-icon-lucide" });
+        setIcon(iconSpan, "image");
+      }
+      sectionTitle.createEl("span", { text: "\u8D34\u56FE\u56FE\u7247\u5217\u8868" });
+      const imageCountState = getStickerPublishState({
+        title: stickerData.title || "\u8D34\u56FE",
+        content: stickerData.content || "",
+        imageCount: stickerData.imageItems.length
+      }).counters.images;
+      sectionHeader.createEl("span", {
+        cls: `apple-sticker-count-badge${imageCountState.status === "warning" ? " is-warning" : ""}${imageCountState.status === "error" ? " is-error" : ""}`,
+        text: `${stickerData.imageItems.length} / ${STICKER_MAX_IMAGES} \u5F20`
+      });
+      renderStickerImageList(imagesSection, {
+        items: stickerData.imageItems,
+        getDisplaySrc: (_, index) => stickerData.imageDisplaySources[index] || "",
+        setIcon,
+        onMove: (fromIndex, toIndex, movedItem) => {
+          uiState.order = moveStickerImageItem(
+            stickerData.imageItems.map((item) => item.key),
+            fromIndex,
+            toIndex
+          );
+          selfRecord.stickerFocusKey = (movedItem == null ? void 0 : movedItem.key) || "";
+          void this.renderStickerPreview();
+        },
+        onRemove: (item, index) => {
+          this.removeStickerImageItem(stickerData.sourcePath, item, index);
+          void this.renderStickerPreview();
+        },
+        focusKey: typeof selfRecord.stickerFocusKey === "string" ? selfRecord.stickerFocusKey : ""
+      });
+      selfRecord.stickerFocusKey = "";
+      renderRestoreActions(imagesSection);
+      const hintLine = imagesSection.createEl("div", { cls: "apple-sticker-hint-line" });
+      const hintIcon = hintLine.createSpan({ cls: "apple-sticker-hint-icon" });
+      if (typeof setIcon === "function")
+        setIcon(hintIcon, "info");
+      hintLine.createEl("span", {
+        cls: "apple-sticker-hint-text",
+        text: "\u987A\u5E8F\u5373\u6700\u7EC8\u53D1\u5E03\u987A\u5E8F\uFF1B\u6DFB\u52A0\u56FE\u7247\u8BF7\u6253\u5F00\u53D1\u5E03\u5F39\u7A97\uFF0C\u79FB\u9664\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u3002"
+      });
+    } else {
+      const readinessNotice = stickerContainer.createDiv({ cls: "apple-sticker-readiness-notice is-error" });
+      const readinessIcon = readinessNotice.createSpan({ cls: "apple-sticker-readiness-icon" });
+      if (typeof setIcon === "function")
+        setIcon(readinessIcon, "circle-alert");
+      readinessNotice.createSpan({
+        text: "\u8FD8\u7F3A 1 \u5F20\u56FE\u7247\uFF0C\u5F53\u524D\u8D34\u56FE\u65E0\u6CD5\u540C\u6B65\u3002\u8BF7\u5728\u7B14\u8BB0\u4E2D\u63D2\u5165\u56FE\u7247\uFF0C\u6216\u5728\u53D1\u5E03\u5F39\u7A97\u4E2D\u4E0A\u4F20\u3002"
+      });
+      renderRestoreActions(stickerContainer);
     }
-    const hintLine = imagesSection.createEl("div", { cls: "apple-sticker-hint-line" });
-    const hintIcon = hintLine.createSpan({ cls: "apple-sticker-hint-icon" });
-    if (typeof setIcon === "function") {
-      setIcon(hintIcon, "info");
-    }
-    hintLine.createEl("span", {
-      cls: "apple-sticker-hint-text",
-      text: "\u8FD9\u91CC\u786E\u8BA4\u53D1\u5E03\u987A\u5E8F\uFF1B\u6DFB\u52A0\u672C\u5730\u56FE\u7247\u6216\u516C\u4F17\u53F7\u7D20\u6750\uFF0C\u8BF7\u6253\u5F00\u53D1\u5E03\u5F39\u7A97\u3002\u79FB\u9664\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u3002"
-    });
     const textSection = stickerContainer.createEl("div", { cls: "apple-sticker-text-section" });
     const textHeader = textSection.createEl("div", { cls: "apple-sticker-section-header" });
     const textTitle = textHeader.createEl("div", { cls: "apple-sticker-section-title" });
@@ -77518,12 +77625,21 @@ var stickerPreviewMethods = {
       const iconSpan = textTitle.createEl("span", { cls: "apple-sticker-section-icon-lucide" });
       setIcon(iconSpan, "file-text");
     }
-    textTitle.createEl("span", { text: "\u8D34\u56FE\u63CF\u8FF0\u6587\u6848" });
+    const textHeading = textTitle.createDiv({ cls: "apple-sticker-text-heading" });
+    textHeading.createEl("span", { text: "\u53D1\u5E03\u6587\u6848" });
+    textHeading.createEl("span", {
+      cls: "apple-sticker-text-subtitle",
+      text: "\u5C06\u4EE5\u7EAF\u6587\u672C\u540C\u6B65\u5230\u5FAE\u4FE1\u8349\u7A3F"
+    });
     const charCount = stickerData.content ? stickerData.content.length : 0;
-    const isOverLimit = charCount > STICKER_MAX_CONTENT_LENGTH;
+    const contentCountState = getStickerPublishState({
+      title: stickerData.title || "\u8D34\u56FE",
+      content: stickerData.content || "",
+      imageCount: Math.max(1, stickerData.imageItems.length)
+    }).counters.content;
     const countBadge = textHeader.createEl("span", { cls: "apple-sticker-count-badge" });
     countBadge.createEl("span", {
-      cls: `apple-sticker-count-current${isOverLimit ? " is-error" : ""}`,
+      cls: `apple-sticker-count-current${contentCountState.status === "warning" ? " is-warning" : ""}${contentCountState.status === "error" ? " is-error" : ""}`,
       text: `${charCount}`
     });
     countBadge.createEl("span", {
@@ -80476,7 +80592,15 @@ function renderStickerPublishContent(view, {
     placeholder: "\u9ED8\u8BA4\u4F7F\u7528 frontmatter title \u6216\u6587\u4EF6\u540D"
   });
   titleInput.value = String(frontmatterMeta.title || (activeFile == null ? void 0 : activeFile.basename) || "\u672A\u547D\u540D\u8D34\u56FE");
-  const statusSection = modal.contentEl.createDiv({ cls: "sticker-publish-status" });
+  const titleFeedback = titleSection.createDiv({ cls: "sticker-publish-field-feedback" });
+  const contentMetaSection = modal.contentEl.createDiv({ cls: "sticker-publish-content-meta" });
+  const contentMetaHeader = contentMetaSection.createDiv({ cls: "sticker-publish-content-meta-header" });
+  contentMetaHeader.createSpan({ text: "\u53D1\u5E03\u6587\u6848", cls: "sticker-publish-content-meta-label" });
+  const contentCount = contentMetaHeader.createSpan({ cls: "sticker-publish-count" });
+  const contentCountValue = contentCount.createSpan({ cls: "sticker-publish-count-value" });
+  contentCount.createSpan({ text: `/${STICKER_MAX_CONTENT_LENGTH} \u5B57` });
+  const transformSummary = contentMetaSection.createDiv({ cls: "sticker-publish-cleaning-note" });
+  const contentFeedback = contentMetaSection.createDiv({ cls: "sticker-publish-field-feedback" });
   const imageSection = modal.contentEl.createDiv({ cls: "wechat-modal-section sticker-publish-images" });
   const imageHeader = imageSection.createDiv({ cls: "sticker-publish-section-header" });
   const imageTitle = imageHeader.createDiv({ cls: "sticker-publish-section-title" });
@@ -80499,6 +80623,7 @@ function renderStickerPublishContent(view, {
   });
   const imageBody = imageSection.createDiv({ cls: "sticker-publish-image-body wechat-modal-sticker-grid-preview" });
   const restoreRow = imageSection.createDiv({ cls: "sticker-publish-restore-row" });
+  const imageFeedback = imageSection.createDiv({ cls: "sticker-publish-image-feedback" });
   modal.contentEl.createDiv({ cls: "wechat-draft-status" });
   const buttonRow = modal.contentEl.createDiv({ cls: "wechat-modal-buttons sticker-publish-footer" });
   const cancelButton = buttonRow.createEl("button", { text: "\u53D6\u6D88" });
@@ -80534,13 +80659,22 @@ function renderStickerPublishContent(view, {
     renderCurrent();
   };
   function updatePublishState() {
-    var _a6, _b2, _c;
-    const titleLength = titleInput.value.length;
-    const normalizedTitleLength = titleInput.value.trim().length;
+    var _a6, _b2, _c, _d, _e, _f, _g;
+    const publishState = getStickerPublishState({
+      title: titleInput.value,
+      content: currentContent,
+      imageCount: currentItems.length,
+      foreignMaterialCount: currentForeignMaterialCount
+    });
     const imageLimitReached = currentItems.length >= STICKER_MAX_IMAGES;
-    titleCountValue.setText(String(titleLength));
-    (_a6 = titleCountValue.toggleClass) == null ? void 0 : _a6.call(titleCountValue, "is-error", titleLength > STICKER_MAX_TITLE_LENGTH);
-    (_b2 = imageCount.toggleClass) == null ? void 0 : _b2.call(imageCount, "is-error", currentItems.length > STICKER_MAX_IMAGES);
+    titleCountValue.setText(String(publishState.counters.title.value));
+    (_a6 = titleCountValue.toggleClass) == null ? void 0 : _a6.call(titleCountValue, "is-warning", publishState.counters.title.status === "warning");
+    (_b2 = titleCountValue.toggleClass) == null ? void 0 : _b2.call(titleCountValue, "is-error", publishState.counters.title.status === "error");
+    contentCountValue.setText(String(publishState.counters.content.value));
+    (_c = contentCountValue.toggleClass) == null ? void 0 : _c.call(contentCountValue, "is-warning", publishState.counters.content.status === "warning");
+    (_d = contentCountValue.toggleClass) == null ? void 0 : _d.call(contentCountValue, "is-error", publishState.counters.content.status === "error");
+    (_e = imageCount.toggleClass) == null ? void 0 : _e.call(imageCount, "is-warning", publishState.counters.images.status === "warning");
+    (_f = imageCount.toggleClass) == null ? void 0 : _f.call(imageCount, "is-error", publishState.counters.images.status === "error");
     localButton.disabled = imageLimitReached;
     materialButton.disabled = imageLimitReached || !getSelectedAccount();
     const imageLimitHint = `\u8D34\u56FE\u6700\u591A ${STICKER_MAX_IMAGES} \u5F20\uFF0C\u8BF7\u5148\u79FB\u9664\u4E00\u5F20`;
@@ -80551,27 +80685,17 @@ function renderStickerPublishContent(view, {
       localButton.removeAttribute("title");
       materialButton.removeAttribute("title");
     }
-    let disabledReason = "";
-    if (currentItems.length === 0)
-      disabledReason = "\u5FAE\u4FE1\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247";
-    else if (currentItems.length > STICKER_MAX_IMAGES) {
-      disabledReason = `\u5F53\u524D\u6709 ${currentItems.length} \u5F20\u56FE\u7247\uFF0C\u8D85\u8FC7 ${STICKER_MAX_IMAGES} \u5F20\u4E0A\u9650`;
-    } else if (normalizedTitleLength === 0)
-      disabledReason = "\u8BF7\u8F93\u5165\u8D34\u56FE\u6807\u9898";
-    else if (titleLength > STICKER_MAX_TITLE_LENGTH) {
-      disabledReason = `\u5F53\u524D\u6807\u9898 ${titleLength} \u5B57\uFF0C\u8D85\u8FC7 ${STICKER_MAX_TITLE_LENGTH} \u5B57\u4E0A\u9650`;
-    } else if (currentContent.length > STICKER_MAX_CONTENT_LENGTH) {
-      disabledReason = `\u5F53\u524D\u6587\u6848 ${currentContent.length} \u5B57\uFF0C\u8D85\u8FC7 ${STICKER_MAX_CONTENT_LENGTH} \u5B57\u4E0A\u9650`;
-    } else if (currentForeignMaterialCount > 0) {
-      disabledReason = "\u5F53\u524D\u8D26\u53F7\u4E0D\u80FD\u4F7F\u7528\u5176\u4ED6\u516C\u4F17\u53F7\u7684\u7D20\u6750";
-    }
-    syncButton.disabled = Boolean(disabledReason);
-    (_c = syncButton.toggleClass) == null ? void 0 : _c.call(syncButton, "apple-btn-disabled", Boolean(disabledReason));
-    syncButton.setText(
-      currentItems.length === 0 ? "\u56FE\u7247\u4E0D\u8DB3\uFF0C\u65E0\u6CD5\u540C\u6B65" : currentItems.length > STICKER_MAX_IMAGES ? "\u56FE\u7247\u8D85\u9650\uFF0C\u65E0\u6CD5\u540C\u6B65" : normalizedTitleLength === 0 ? "\u8BF7\u8F93\u5165\u8D34\u56FE\u6807\u9898" : titleLength > STICKER_MAX_TITLE_LENGTH ? "\u6807\u9898\u8D85\u957F\uFF0C\u65E0\u6CD5\u540C\u6B65" : currentContent.length > STICKER_MAX_CONTENT_LENGTH ? "\u6587\u5B57\u8D85\u957F\uFF0C\u65E0\u6CD5\u540C\u6B65" : "\u540C\u6B65\u5230\u8D34\u56FE\u8349\u7A3F"
+    titleFeedback.setText(
+      publishState.issueCode === "title-required" || publishState.issueCode === "title-exceeded" ? publishState.issueMessage : ""
     );
-    if (disabledReason)
-      syncButton.setAttribute("title", disabledReason);
+    contentFeedback.setText(
+      publishState.issueCode === "content-exceeded" ? publishState.issueMessage : ""
+    );
+    syncButton.disabled = !publishState.canSync;
+    (_g = syncButton.toggleClass) == null ? void 0 : _g.call(syncButton, "apple-btn-disabled", !publishState.canSync);
+    syncButton.setText(publishState.buttonText);
+    if (publishState.issueMessage)
+      syncButton.setAttribute("title", publishState.issueMessage);
     else
       syncButton.removeAttribute("title");
   }
@@ -80590,12 +80714,16 @@ function renderStickerPublishContent(view, {
     currentContent = content;
     currentForeignMaterialCount = foreignMaterialCount;
     imageCount.setText(`${items.length} / ${STICKER_MAX_IMAGES}`);
+    const transformParts = getStickerTransformParts(data == null ? void 0 : data.removed);
+    transformSummary.setText(
+      transformParts.length > 0 ? `\u5DF2\u8F6C\u6362\u4E3A\u7EAF\u6587\u672C\uFF1A${transformParts.join("\u3001")}\u3002\u7B14\u8BB0\u539F\u6587\u672A\u6539\u52A8\u3002` : "\u5C06\u4EE5\u7EAF\u6587\u672C\u540C\u6B65\u5230\u5FAE\u4FE1\u8349\u7A3F\uFF1B\u7B14\u8BB0\u539F\u6587\u4E0D\u4F1A\u6539\u52A8\u3002"
+    );
     imageBody.empty();
     renderStickerImageList(imageBody, {
       items,
       getDisplaySrc: (item, index) => item.source === "body" ? displaySources[index] || item.displaySrc || "" : item.displaySrc || displaySources[index] || "",
       setIcon,
-      emptyText: `\u5148\u6DFB\u52A0 1\u2013${STICKER_MAX_IMAGES} \u5F20\u56FE\u7247\uFF1B\u53D1\u5E03\u987A\u5E8F\u6309\u8FD9\u91CC\u4ECE\u5DE6\u5230\u53F3\u6392\u5217\u3002`,
+      emptyText: "\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247\u3002\u53EF\u4E0A\u4F20\u672C\u5730\u56FE\u7247\uFF0C\u6216\u4ECE\u5F53\u524D\u516C\u4F17\u53F7\u7D20\u6750\u5E93\u9009\u62E9\u3002",
       focusKey,
       onMove: (fromIndex, toIndex, movedItem) => {
         uiState.order = moveStickerImageItem(
@@ -80632,27 +80760,16 @@ function renderStickerPublishContent(view, {
         void refreshData();
       };
     }
-    statusSection.empty();
-    statusSection.createDiv({ cls: "sticker-publish-status-label", text: "\u53D1\u5E03\u68C0\u67E5" });
-    const summary = statusSection.createDiv({ cls: "sticker-publish-summary" });
-    summary.createSpan({ text: `\u56FE\u7247 ${items.length} / ${STICKER_MAX_IMAGES} \u5F20` });
-    summary.createSpan({ text: `\u6587\u6848 ${content.length} / ${STICKER_MAX_CONTENT_LENGTH} \u5B57` });
+    imageFeedback.empty();
     const omittedImageCount = Number.isFinite(data == null ? void 0 : data.omittedImageCount) ? Math.max(0, Number(data.omittedImageCount)) : 0;
     if (omittedImageCount > 0) {
-      statusSection.createDiv({
+      imageFeedback.createDiv({
         cls: "sticker-publish-account-warning",
         text: `\u53E6\u6709 ${omittedImageCount} \u5F20\u56FE\u7247\u8D85\u8FC7 ${STICKER_MAX_IMAGES} \u5F20\u4E0A\u9650\uFF0C\u672A\u52A0\u5165\u672C\u6B21\u8D34\u56FE\u3002`
       });
     }
-    const removed = (Array.isArray(data == null ? void 0 : data.removed) ? data.removed : []).filter((entry) => (entry == null ? void 0 : entry.count) > 0).map((entry) => `${entry.kind} ${entry.count} \u5904`);
-    if (removed.length > 0) {
-      statusSection.createDiv({
-        cls: "sticker-publish-cleaning-note",
-        text: `\u5DF2\u4E3A\u8D34\u56FE\u6E05\u7406\uFF1A${removed.join("\u3001")}\u3002\u7B14\u8BB0\u539F\u6587\u672A\u6539\u52A8\u3002`
-      });
-    }
     if (foreignMaterialCount > 0) {
-      statusSection.createDiv({
+      imageFeedback.createDiv({
         cls: "sticker-publish-account-warning",
         text: `\u6709 ${foreignMaterialCount} \u5F20\u516C\u4F17\u53F7\u7D20\u6750\u4E0D\u5C5E\u4E8E\u5F53\u524D\u8D26\u53F7\uFF0C\u8BF7\u79FB\u9664\u6216\u5207\u56DE\u539F\u8D26\u53F7\u3002`
       });
@@ -80780,11 +80897,7 @@ function renderStickerPublishContent(view, {
   const handleRefreshError = (error) => {
     if (view.stickerModalGeneration !== generation)
       return;
-    statusSection.empty();
-    statusSection.createDiv({
-      cls: "sticker-publish-account-warning",
-      text: `\u6682\u65F6\u65E0\u6CD5\u8BFB\u53D6\u8D34\u56FE\u5185\u5BB9\uFF1A${(error == null ? void 0 : error.message) || "\u672A\u77E5\u9519\u8BEF"}`
-    });
+    contentFeedback.setText(`\u6682\u65F6\u65E0\u6CD5\u8BFB\u53D6\u8D34\u56FE\u5185\u5BB9\uFF1A${(error == null ? void 0 : error.message) || "\u672A\u77E5\u9519\u8BEF"}`);
     syncButton.disabled = true;
     if (shouldOpenModal)
       modal.open();

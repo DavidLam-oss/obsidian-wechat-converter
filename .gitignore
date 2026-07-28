@@ -19,6 +19,9 @@ docs/*
 !docs/support.md
 !docs/basic/
 !docs/basic/**
+!docs/plans/
+docs/plans/*
+!docs/plans/2026-07-28-sticker-publishing-ui-refinement.md
 
 # Local skill directories
 .codex/*

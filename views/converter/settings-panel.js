@@ -547,10 +547,18 @@ createSettingsPanel(container) {
     const stickerHeader = /** @type {ObsidianElementLike} */ (stickerWrapper.createDiv({ cls: 'apple-settings-sticker-header' }));
     stickerHeader.createEl('span', { text: '微信贴图设置', cls: 'title' });
 
-    // 3.2 配图序号标注开关
-    const indexSection = this.createSection(stickerWrapper, '配图序号标注', (section) => {
+    // 3.2 配图序号开关
+    const indexSection = this.createSection(stickerWrapper, '配图序号', (section) => {
       const container = section.createEl('div', { cls: 'apple-sticker-toggle-row' });
-      container.createEl('span', { text: '正文插入配图序号', cls: 'apple-sticker-toggle-label' });
+      const labelGroup = container.createDiv({ cls: 'apple-sticker-toggle-copy' });
+      labelGroup.createEl('span', {
+        text: '在文案中插入 [配图 N]',
+        cls: 'apple-sticker-toggle-label',
+      });
+      labelGroup.createEl('span', {
+        text: '便于读者对应下方图片；只影响贴图文案。',
+        cls: 'apple-sticker-toggle-description',
+      });
 
       const toggle = container.createDiv({ cls: 'apple-toggle' });
       const checkbox = toggle.createEl('input', { type: 'checkbox', cls: 'apple-toggle-input' });
@@ -573,11 +581,11 @@ createSettingsPanel(container) {
     });
     indexSection.classList.add('apple-settings-inline-toggle');
 
-    // 3.3 过滤说明
-    this.createSection(stickerWrapper, '排版优化说明', (section) => {
+    // 3.3 纯文本转换说明
+    this.createSection(stickerWrapper, '纯文本转换规则', (section) => {
       const card = section.createDiv({ cls: 'apple-settings-info-card' });
       card.createEl('p', {
-        text: '· 自动忽略 Frontmatter YAML 头信息\n· 自动剥离不支持的代码块与表格以保证文案纯净\n· 支持拖拽更改贴图图片顺序',
+        text: '· 自动忽略 Frontmatter 等机器信息\n· 代码块、表格、公式和脚注会转换为可读纯文本\n· 只影响预览和草稿，不会改动笔记原文',
         cls: 'apple-settings-info-card-text'
       });
     });

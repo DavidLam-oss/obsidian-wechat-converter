@@ -102,4 +102,34 @@ describe('AppleStyleView - Sticker Mode Integration', () => {
     expect(view.previewContainer.querySelector('.apple-sticker-notice-desc')?.textContent)
       .toBe('内容已转换为适合贴图的纯文本，不会改动笔记原文。');
   });
+
+  it('should collapse the image section into a blocking notice when no image exists', async () => {
+    const leaf = { view: null };
+    const plugin = { settings: { wechatAccounts: [] } };
+    const view = new AppleStyleView(leaf, plugin);
+    view.previewMode = 'sticker';
+    view.previewContainer = createObsidianLikeElement();
+    view.buildStickerData = vi.fn().mockResolvedValue({
+      title: '测试',
+      content: '正文',
+      imageItems: [],
+      imageDisplaySources: [],
+      sourcePath: 'test.md',
+      removed: [],
+    });
+    view.getStickerUiState = vi.fn().mockReturnValue({
+      order: [],
+      removedKeys: [],
+      undoItems: [],
+    });
+
+    await view.renderStickerPreview();
+
+    expect(view.previewContainer.querySelector('.apple-sticker-images-section')).toBeNull();
+    expect(view.previewContainer.querySelector('.sticker-image-list')).toBeNull();
+    expect(view.previewContainer.querySelector('.apple-sticker-readiness-notice')?.textContent)
+      .toContain('还缺 1 张图片');
+    expect(view.previewContainer.querySelector('.apple-sticker-text-heading')?.textContent)
+      .toContain('发布文案将以纯文本同步到微信草稿');
+  });
 });

@@ -209,7 +209,7 @@ describe('WeChat sticker publish flow', () => {
       expect(actionButtons.every((button) => button.querySelector('svg') === null)).toBe(true);
     });
 
-    it('should place publish checks before a compact image area and disable adding at 20 images', () => {
+    it('should keep lightweight content metadata before the image area and disable adding at 20 images', () => {
       const images = Array.from({ length: 20 }, (_, index) => `img-${index + 1}.png`);
       view.previewStickerData = createStickerData({
         images,
@@ -221,10 +221,14 @@ describe('WeChat sticker publish flow', () => {
 
       const modal = getLastModal();
       const status = modal.contentEl.querySelector('.sticker-publish-status');
+      const contentMeta = modal.contentEl.querySelector('.sticker-publish-content-meta');
       const imageSection = modal.contentEl.querySelector('.sticker-publish-images');
       const actionButtons = Array.from(modal.contentEl.querySelectorAll('.sticker-publish-image-actions button'));
-      expect(status.nextElementSibling).toBe(imageSection);
-      expect(status.textContent).toContain('图片 20 / 20 张');
+      expect(status).toBeNull();
+      expect(contentMeta.nextElementSibling).toBe(imageSection);
+      expect(contentMeta.textContent).toContain('发布文案');
+      expect(contentMeta.textContent).toContain('4/1000 字');
+      expect(imageSection.textContent).toContain('20 / 20');
       expect(actionButtons).toHaveLength(2);
       expect(actionButtons.every((button) => button.disabled)).toBe(true);
       expect(actionButtons[0].getAttribute('title')).toContain('最多 20 张');
@@ -295,7 +299,7 @@ describe('WeChat sticker publish flow', () => {
       const modal = getLastModal();
       const syncBtn = modal.contentEl.querySelector('.wechat-modal-buttons .mod-cta');
       expect(syncBtn.disabled).toBe(true);
-      expect(syncBtn.textContent).toBe('文字超长，无法同步');
+      expect(syncBtn.textContent).toBe('文案超长，无法同步');
       expect(syncBtn.getAttribute('title')).toContain('1001 字');
     });
 
@@ -307,8 +311,29 @@ describe('WeChat sticker publish flow', () => {
 
       const modal = getLastModal();
       const syncBtn = modal.contentEl.querySelector('.wechat-modal-buttons .mod-cta');
+      const emptyText = modal.contentEl.querySelector('.sticker-image-list__empty-text');
       expect(syncBtn.disabled).toBe(true);
       expect(syncBtn.textContent).toBe('图片不足，无法同步');
+      expect(emptyText.textContent).toContain('贴图至少需要 1 张图片');
+      expect(modal.contentEl.querySelectorAll('.sticker-publish-image-actions button')).toHaveLength(2);
+    });
+
+    it('should describe semantic conversions without exposing internal keys', () => {
+      view.previewStickerData = createStickerData({
+        removed: [
+          { kind: 'codeBlocks', count: 1 },
+          { kind: 'tables', count: 2 },
+        ],
+      });
+      view.buildStickerData = vi.fn(async () => view.previewStickerData);
+
+      view.showSyncModal();
+
+      const modal = getLastModal();
+      const summary = modal.contentEl.querySelector('.sticker-publish-cleaning-note');
+      expect(summary.textContent)
+        .toBe('已转换为纯文本：代码块 1 处、表格 2 处。笔记原文未改动。');
+      expect(summary.textContent).not.toContain('codeBlocks');
     });
 
     it('should not reuse the article draft association and should not require a cover', async () => {
