@@ -134,7 +134,7 @@ describe('WeChat sticker publish flow', () => {
 
     it('should keep publish thumbnails out of nested modal compositor effects', () => {
       const css = readFileSync(
-        resolve(process.cwd(), 'styles/wechat-publish.css'),
+        resolve(process.cwd(), 'styles/sticker-publish.css'),
         'utf8'
       );
 

@@ -12,7 +12,7 @@
 - `project-view-contracts.d.ts`、`project-view-method-contracts.d.ts`、`project-method-groups.d.ts`: 拆分后的视图状态、方法和方法组静态合同，通过接口合并保持模块边界类型一致。
 - `services/`: 渲染管线、动态依赖加载、Obsidian 原生渲染、路径处理、微信/飞书/多平台同步和错误处理。
 - `views/`: 转换器视图、发布弹窗、设置页和共享视图工具。
-- `styles/` 与 `styles.css`: 样式源文件和生成后的插件样式入口。
+- `styles/` 与 `styles.css`: 按职责拆分的样式源文件和生成后的插件样式入口；预览、设置控件、贴图预览、贴图设置与贴图发布均有独立片段。
 - `themes/`: 主题模块，当前核心文件是 `themes/apple-theme.js`。
 - `lib/`: 独立运行时库和单独构建的数学公式 bundle。
 - `scripts/`: 构建、生成、扫描风险、发布校验和性能测量脚本。

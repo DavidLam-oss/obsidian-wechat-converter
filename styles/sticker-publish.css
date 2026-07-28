@@ -1,0 +1,234 @@
+/*
+## 核心功能
+
+微信贴图发布弹窗的字段状态、图片编排和响应式布局样式
+
+## 输入
+
+接收 Obsidian DOM 结构、插件视图类名、发布弹窗状态和主题变量。
+
+## 输出
+
+输出 CSS 选择器、布局规则、颜色变量和响应式表现。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、插件 DOM class 命名和对应 views/ 结构。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+*/
+
+/* 微信贴图发布：方向 1（顺序优先单列） */
+.wechat-sticker-publish-content {
+  gap: 0;
+  padding-bottom: 2px;
+}
+
+.wechat-publish-shell .modal-content.wechat-sticker-publish-content {
+  height: min(86vh, 920px);
+  min-height: min(620px, 86vh);
+}
+
+.wechat-sticker-publish-content .wechat-publish-mode-tabs {
+  margin-bottom: 18px;
+}
+
+.sticker-publish-account,
+.sticker-publish-title,
+.sticker-publish-images {
+  margin-bottom: 16px;
+}
+
+.sticker-publish-field-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sticker-publish-title .wechat-modal-title-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sticker-publish-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.sticker-publish-section-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 7px;
+  color: var(--text-normal);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.sticker-publish-section-icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  color: var(--interactive-accent);
+}
+
+.sticker-publish-count {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 550;
+}
+
+.sticker-publish-count-value.is-error,
+.sticker-publish-count.is-error {
+  color: var(--text-error);
+}
+
+.sticker-publish-count-value.is-warning,
+.sticker-publish-count.is-warning {
+  color: var(--text-warning);
+}
+
+.sticker-publish-field-feedback {
+  min-height: 0;
+  margin-top: 5px;
+  color: var(--text-error);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.sticker-publish-field-feedback:empty {
+  display: none;
+}
+
+.sticker-publish-content-meta {
+  margin: -4px 0 16px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.sticker-publish-content-meta-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sticker-publish-content-meta-label {
+  color: var(--text-normal);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sticker-publish-image-body.wechat-modal-sticker-grid-preview {
+  display: block;
+  max-height: min(360px, 42vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 0 4px 0 0;
+}
+
+.sticker-publish-image-body .sticker-image-list {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sticker-publish-image-body .sticker-image-list__item {
+  /*
+   * Obsidian 的 Modal 入场会对整层做 transform/opacity 动画。
+   * 图片卡片若同时声明 transform transition，Electron 会为每张卡片额外建合成层，
+   * 与下方的 backdrop-filter 叠加后会在弹窗打开时反复重绘，表现为图片区闪烁和抖动。
+   */
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.sticker-publish-image-body .sticker-image-list__order,
+.sticker-publish-image-body .sticker-image-list__source,
+.sticker-publish-image-body .sticker-image-list__remove,
+.sticker-publish-image-body .sticker-image-list__move-controls button {
+  backdrop-filter: none;
+}
+
+.sticker-publish-image-body.wechat-modal-sticker-grid-preview img {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.sticker-publish-restore-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 8px;
+  margin-top: 8px;
+}
+
+.sticker-publish-restore-row button {
+  padding: 2px 4px;
+  border: 0;
+  color: var(--text-muted);
+  background: transparent;
+  font-size: 11px;
+}
+
+.sticker-publish-restore-row button:hover {
+  color: var(--interactive-accent);
+}
+
+.sticker-publish-cleaning-note {
+  margin-top: 3px;
+  color: var(--text-muted);
+}
+
+.sticker-publish-image-feedback:empty {
+  display: none;
+}
+
+.sticker-publish-account-warning {
+  margin-top: 7px;
+  color: var(--text-warning);
+}
+
+.sticker-publish-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin-top: 16px;
+  padding-top: 12px;
+  background: linear-gradient(to bottom, transparent, var(--background-primary) 12px);
+}
+
+@media (max-width: 520px) {
+  .sticker-publish-section-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .sticker-publish-image-actions {
+    width: 100%;
+  }
+
+  .sticker-publish-image-body .sticker-image-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 521px) and (max-width: 760px) {
+  .sticker-publish-image-body .sticker-image-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
