@@ -67,6 +67,34 @@ interface StickerPreviewDataLike {
     sourcePath: string;
 }
 
+interface CompiledCustomCssLike {
+    sourceIdentity: string;
+    sourceHash: string;
+    scopedCss: string;
+    pseudoRules: Array<{
+        baseSelector: string;
+        pseudoType: "before" | "after";
+        properties: Record<string, string>;
+    }>;
+    fallbackRules?: Array<{
+        selector: string;
+        properties: Record<string, string>;
+    }>;
+    counterConfig: {
+        resets: Array<{ selector: string; name: string; value: number }>;
+        increments: Array<{ selector: string; name: string; value: number }>;
+    };
+    matchSelectors: string[];
+    diagnostics: Array<{
+        severity: "fatal" | "blocked" | "warning" | "info";
+        code: string;
+        message: string;
+        line?: number;
+        column?: number;
+    }>;
+    usable: boolean;
+}
+
 interface AppleStyleViewContract extends ItemViewBaseLike {
     /** @type {AppleStylePluginLike} */
     plugin: AppleStylePluginLike;
@@ -150,6 +178,25 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     aiLayoutStaleSuppressTimer: number | null;
     /** @type {string | null} */
     baseRenderedHtml: string | null;
+    _customCssLastValidBySource: Map<string, CompiledCustomCssLike>;
+    customCssRefreshGeneration: number;
+    customCssStatus: {
+        state: string;
+        sourceKind: string;
+        sourcePath: string;
+        sourceIdentity?: string;
+        sourceHash?: string;
+        usingLastValid?: boolean;
+        diagnostics: Array<{
+            severity: "fatal" | "blocked" | "warning" | "info";
+            code: string;
+            message: string;
+            line?: number;
+            column?: number;
+        }>;
+        matchedRuleCount: number;
+        matchedElementCount: number;
+    };
     /** @type {boolean} */
     aiPreviewApplied: boolean;
     aiLayoutBtn: ObsidianElementLike;

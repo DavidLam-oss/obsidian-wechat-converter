@@ -32,6 +32,7 @@ import {
   saveArticleLayoutStateToSettings,
 } from './services/ai-layout-cache.js';
 import { normalizeLoadedSettings } from './services/plugin-settings.js';
+import { normalizeCustomCssNotePath } from './services/custom-css-source.js';
 import {
   createWechatSyncBridgeService,
   stripMarkdownFrontmatter,
@@ -61,8 +62,7 @@ import {
   generateId,
 } from './views/apple-style-view-shared.js';
 
-const CUSTOM_CSS_PREVIEW_NOTICE = '自定义 CSS 已更新，请关闭并重新打开发布助手面板以刷新预览。';
-const CUSTOM_CSS_PREVIEW_NOTICE_DELAY_MS = 300;
+const CUSTOM_CSS_PREVIEW_REFRESH_DELAY_MS = 650;
 
 /**
  * 📝 Obsidian 发布助手主插件
@@ -140,10 +140,22 @@ class AppleStylePlugin extends Plugin {
               });
             }
           }
+          this.handleCustomCssNoteModified({ path: oldPath });
+          this.handleCustomCssNoteModified(file);
         })
       );
       this.registerEvent(
         this.app.vault.on('modify', (file) => {
+          this.handleCustomCssNoteModified(file);
+        })
+      );
+      this.registerEvent(
+        this.app.vault.on('create', (file) => {
+          this.handleCustomCssNoteModified(file);
+        })
+      );
+      this.registerEvent(
+        this.app.vault.on('delete', (file) => {
           this.handleCustomCssNoteModified(file);
         })
       );
@@ -240,9 +252,8 @@ class AppleStylePlugin extends Plugin {
   }
 
   /**
-   * Coalesces repeated custom CSS changes into one notice while a preview is open.
-   * This intentionally does not rebuild or mutate the existing preview.
-   * @returns {boolean} Whether a notice was scheduled
+   * 合并连续 CSS 变化，只重新派生普通预览，不重新解析 Markdown。
+   * @returns {boolean} 是否已安排刷新
    */
   scheduleCustomCssPreviewNotice() {
     if (!this.getConverterView() || typeof window === 'undefined') return false;
@@ -252,10 +263,16 @@ class AppleStylePlugin extends Plugin {
     }
     this._customCssPreviewNoticeTimer = window.setTimeout(() => {
       this._customCssPreviewNoticeTimer = 0;
-      if (this.getConverterView()) {
-        new Notice(CUSTOM_CSS_PREVIEW_NOTICE);
+      const view = /** @type {{ refreshCustomCssPreview?: () => Promise<boolean> } | null} */ (
+        this.getConverterView()
+      );
+      if (typeof view?.refreshCustomCssPreview === 'function') {
+        const refreshPromise = view.refreshCustomCssPreview();
+        refreshPromise.catch((error) => {
+          console.warn('刷新自定义 CSS 预览失败:', error);
+        });
       }
-    }, CUSTOM_CSS_PREVIEW_NOTICE_DELAY_MS);
+    }, CUSTOM_CSS_PREVIEW_REFRESH_DELAY_MS);
     return true;
   }
 
@@ -264,8 +281,12 @@ class AppleStylePlugin extends Plugin {
    * @returns {boolean} Whether the modified file matched the configured CSS note
    */
   handleCustomCssNoteModified(file) {
-    const configuredPath = String(getPluginSettings(this).customCssNote || '').trim();
-    if (!configuredPath || file?.path !== configuredPath) return false;
+    const configuredPath = normalizeCustomCssNotePath(getPluginSettings(this).customCssNote || '');
+    const filePath = normalizeCustomCssNotePath(file?.path || '');
+    const configuredCandidates = configuredPath.toLowerCase().endsWith('.md')
+      ? [configuredPath]
+      : [configuredPath, `${configuredPath}.md`];
+    if (!configuredPath || !configuredCandidates.includes(filePath)) return false;
     this.scheduleCustomCssPreviewNotice();
     return true;
   }

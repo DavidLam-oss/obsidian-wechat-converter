@@ -236,7 +236,9 @@ createAiLayoutPanel(parent) {
   this.aiRegenerateBtn.addEventListener('click', () => this.generateAiLayoutForCurrentArticle({ applyAfterGenerate: true }));
 
   this.aiResetBtn = actionRow.createEl('button', { cls: 'apple-btn-secondary', text: '恢复普通预览' });
-  this.aiResetBtn.addEventListener('click', () => this.restoreBasePreview());
+  this.aiResetBtn.addEventListener('click', async () => {
+    await this.restoreBasePreview();
+  });
 
   this.aiRestoreBlocksBtn = actionRow.createEl('button', { cls: 'apple-btn-secondary', text: '恢复已移除' });
   this.aiRestoreBlocksBtn.addEventListener('click', () => this.restoreRemovedAiLayoutBlocks());

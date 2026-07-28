@@ -78,6 +78,12 @@ async onSyncToWechat() {
   const notice = new Notice(`正在使用 ${account.name} 同步...`, 0);
   const activeFile = this.getPublishContextFile();
   const publishMeta = this.getFrontmatterPublishMeta(activeFile);
+  const exportSource = this.resolveArticleHtmlSource({ target: 'wechat-draft' });
+  if (!exportSource?.html) {
+    notice.hide();
+    new Notice('当前文章还没有可同步的渲染结果');
+    return;
+  }
 
   try {
     const syncService = /** @type {WechatSyncServiceLike} */ (createWechatSyncService({
@@ -86,7 +92,9 @@ async onSyncToWechat() {
       coverUploadCache: this.coverUploadCache,
       processAllImages: (html, api, progressCallback, options) => this.processAllImages(String(html || ''), api, progressCallback, options),
       processMathFormulas: (html, api, progressCallback) => this.processMathFormulas(String(html || ''), api, progressCallback),
-      prepareHtmlForDraft: (html) => this.prepareHtmlForWechatDraft(String(html || '')),
+      prepareHtmlForDraft: (html) => this.prepareHtmlForWechatDraft(String(html || ''), {
+        layoutMode: exportSource.layoutMode,
+      }),
       cleanHtmlForDraft: (html) => this.cleanHtmlForDraft(String(html || '')),
       cleanupConfiguredDirectory: (file) => this.cleanupConfiguredDirectory(isRecord(file) ? /** @type {TFileLike} */ (file) : null),
       getFirstImageFromArticle: () => this.getFirstImageFromArticle(),
@@ -95,7 +103,7 @@ async onSyncToWechat() {
     const result = await syncService.syncToDraft({
       account,
       proxyUrl: this.plugin.settings.proxyUrl,
-      currentHtml: this.getCurrentExportHtml() || '',
+      currentHtml: exportSource.html,
       activeFile,
       publishMeta,
       sessionTitle: this.sessionTitle,

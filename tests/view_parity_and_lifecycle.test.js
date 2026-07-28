@@ -298,9 +298,9 @@ describe('AppleStyleView native render + lifecycle', () => {
     expect(refreshSpy).not.toHaveBeenCalled();
 
     resolveRender();
-    await Promise.resolve();
-
-    expect(refreshSpy).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => {
+      expect(refreshSpy).toHaveBeenCalledTimes(1);
+    });
     vi.clearAllTimers();
   });
 

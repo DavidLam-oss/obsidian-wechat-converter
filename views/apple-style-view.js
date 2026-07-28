@@ -162,6 +162,18 @@ class AppleStyleView extends ItemView {
     this.aiLayoutStaleSuppressTimer = null;
     /** @type {string | null} */
     this.baseRenderedHtml = null;
+    /** @type {Map<string, CompiledCustomCssLike>} */
+    this._customCssLastValidBySource = new Map();
+    /** @type {number} */
+    this.customCssRefreshGeneration = 0;
+    this.customCssStatus = {
+      state: 'disabled',
+      sourceKind: '',
+      sourcePath: '',
+      diagnostics: [],
+      matchedRuleCount: 0,
+      matchedElementCount: 0,
+    };
     /** @type {boolean} */
     this.aiPreviewApplied = false;
     this.aiLayoutBtn = null;

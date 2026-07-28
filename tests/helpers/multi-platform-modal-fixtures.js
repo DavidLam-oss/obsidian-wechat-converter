@@ -85,9 +85,15 @@ function makeView({ selectedPlatforms = ['zhihu'], cachedPlatforms = null, bridg
   view.app = app || { isMobile: false };
   if (view.app.isMobile === undefined) view.app.isMobile = false;
   view.currentHtml = '<p>hello</p>';
+  view.baseRenderedHtml = '<p>hello</p>';
   view.lastResolvedMarkdown = '';
   view.getPublishContextFile = vi.fn(() => ({ path: 'a.md', basename: 'a' }));
   view.getCurrentExportHtml = vi.fn(() => '<p>hello</p>');
+  view.resolveArticleHtmlSource = vi.fn(() => ({
+    html: view.getCurrentExportHtml(),
+    layoutMode: 'native',
+    sourceKind: 'base',
+  }));
   view.getFrontmatterPublishMeta = vi.fn(() => ({ coverSrc: '' }));
   view.getFirstImageFromArticle = vi.fn(() => '');
   view.prepareHtmlForWechatsyncArticle = vi.fn(async (html) => html);

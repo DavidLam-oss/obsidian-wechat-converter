@@ -47,7 +47,9 @@ import {
   AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS,
   isMobileClient,
 } from '../apple-style-view-shared.js';
-import { inlineCustomCss, resolveCustomCssFromSettings } from '../../services/custom-css-inliner.js';
+import { applyCompiledCustomCss } from '../../services/custom-css-inliner.js';
+import { compileCustomCss } from '../../services/custom-css-compiler.js';
+import { resolveCustomCssSource } from '../../services/custom-css-source.js';
 
 /** @type {CoreMethodsContract & ThisType<AppleStyleViewContract>} */
 export const coreMethods = {
@@ -573,27 +575,140 @@ async renderMarkdownForPreview(markdown, sourcePath) {
   if (!pipeline) {
     throw new Error('渲染管线未初始化');
   }
-  const html = await pipeline.renderForPreview(markdown, {
+  return pipeline.renderForPreview(markdown, {
     sourcePath,
     settings: this.plugin.settings,
   });
-
-  return this.applyCustomCss(html);
 }
 ,
 
 /**
- * 应用用户自定义 CSS（仅非 AI 编排模式）。
- * 自定义 CSS 与 AI 编排是两套独立系统：AI 模式下不套用，避免互相干扰。
+ * 从干净基础 HTML 派生普通预览。
  * @param {string} html
  * @returns {Promise<string>}
  */
-async applyCustomCss(html) {
+async deriveNativePreviewHtml(html) {
+  return this.applyCustomCss(html, {
+    target: 'preview',
+    layoutMode: 'native',
+  });
+}
+,
+
+/**
+ * 只从已提交的干净基础 HTML 重新派生普通预览。
+ * @returns {Promise<boolean>}
+ */
+async refreshCustomCssPreview() {
+  const generation = (this.customCssRefreshGeneration || 0) + 1;
+  this.customCssRefreshGeneration = generation;
+  const baseHtml = this.baseRenderedHtml;
+  const articleSourceHash = this.lastResolvedSourceHash;
+
+  if (!baseHtml) return false;
+  if (this.aiPreviewApplied) {
+    await this.applyCustomCss(baseHtml, { target: 'preview', layoutMode: 'ai' });
+    return false;
+  }
+
+  const scrollTop = this.previewContainer?.scrollTop || 0;
+  const html = await this.deriveNativePreviewHtml(baseHtml);
+  if (
+    generation !== this.customCssRefreshGeneration
+    || baseHtml !== this.baseRenderedHtml
+    || articleSourceHash !== this.lastResolvedSourceHash
+    || this.aiPreviewApplied
+  ) {
+    return false;
+  }
+
+  this.currentHtml = html;
+  if (this.previewContainer) {
+    setElementHtml(this.previewContainer, html);
+    this.previewContainer.scrollTop = scrollTop;
+    this.previewContainer.addClass('apple-has-content');
+  }
+  this.syncPreviewPresentationMode();
+  return true;
+}
+,
+
+/**
+ * 按目标和布局模式应用一次自定义 CSS。
+ * @param {string} html
+ * @param {{ target?: 'preview'|'wechat-copy'|'wechat-draft'|'multi-platform', layoutMode?: 'native'|'ai' }} [options]
+ * @returns {Promise<string>}
+ */
+async applyCustomCss(html, options = {}) {
   if (!html) return html;
-  if (this.aiPreviewApplied) return html;
-  const customCss = await resolveCustomCssFromSettings(this.plugin);
-  if (!customCss) return html;
-  return inlineCustomCss(html, customCss);
+  const target = options.target || 'preview';
+  const layoutMode = options.layoutMode || (this.aiPreviewApplied ? 'ai' : 'native');
+  if (!this.plugin?.settings?.enableCustomCss) {
+    this._customCssLastValidBySource.clear();
+  }
+  const shouldApply = layoutMode === 'native'
+    && ['preview', 'wechat-copy', 'wechat-draft'].includes(target);
+  if (!shouldApply) {
+    this.customCssStatus = {
+      state: layoutMode === 'ai' ? 'ai-skipped' : 'target-skipped',
+      sourceKind: '',
+      sourcePath: '',
+      diagnostics: [],
+      matchedRuleCount: 0,
+      matchedElementCount: 0,
+    };
+    return html;
+  }
+
+  const source = await resolveCustomCssSource(this.plugin);
+  if (source.kind === 'disabled') this._customCssLastValidBySource.clear();
+  const lastValid = this._customCssLastValidBySource.get(source.identity);
+  const sourceHasFatal = source.diagnostics.some((item) => item.severity === 'fatal');
+  const compiled = sourceHasFatal
+    ? null
+    : compileCustomCss(source.cssText, { sourceIdentity: source.identity });
+  const effectiveCompiled = compiled?.usable ? compiled : lastValid;
+  const baseDiagnostics = [
+    ...source.diagnostics,
+    ...(compiled?.diagnostics || []),
+  ];
+
+  if (!effectiveCompiled || source.kind === 'disabled' || source.kind === 'empty') {
+    this.customCssStatus = {
+      state: source.kind === 'disabled' ? 'disabled' : (
+        baseDiagnostics.some((item) => item.severity === 'fatal') ? 'invalid' : 'empty'
+      ),
+      sourceKind: source.kind,
+      sourcePath: source.path,
+      diagnostics: baseDiagnostics,
+      matchedRuleCount: 0,
+      matchedElementCount: 0,
+    };
+    return html;
+  }
+
+  const result = applyCompiledCustomCss(html, effectiveCompiled);
+  const runtimeFailed = result.diagnostics.some((item) => item.code === 'custom-css-inline-failed');
+  if (compiled?.usable && !runtimeFailed) {
+    this._customCssLastValidBySource.set(source.identity, compiled);
+  }
+  this.customCssStatus = {
+    state: runtimeFailed ? 'invalid' : (
+      result.applied ? 'applied' : 'unmatched'
+    ),
+    sourceKind: source.kind,
+    sourcePath: source.path,
+    sourceIdentity: source.identity,
+    sourceHash: result.sourceHash,
+    usingLastValid: effectiveCompiled !== compiled,
+    diagnostics: [
+      ...baseDiagnostics,
+      ...result.diagnostics.filter((item) => !baseDiagnostics.includes(item)),
+    ],
+    matchedRuleCount: result.matchedRuleCount,
+    matchedElementCount: result.matchedElementCount,
+  };
+  return result.html;
 }
 ,
 
@@ -776,7 +891,8 @@ async convertCurrent(silent = false, options = {}) {
 
   try {
     if (!silent) new Notice('⚡ 正在转换...');
-    const html = await this.renderMarkdownForPreview(markdown, sourcePath);
+    const baseHtml = await this.renderMarkdownForPreview(markdown, sourcePath);
+    const html = await this.deriveNativePreviewHtml(baseHtml);
 
     if (generation !== this.renderGeneration) return;
 
@@ -787,7 +903,7 @@ async convertCurrent(silent = false, options = {}) {
     this.lastResolvedSourceHash = String(this.simpleHash(markdown));
     this.completeAiLayoutSourceSwitch(sourcePath);
 
-    this.baseRenderedHtml = html;
+    this.baseRenderedHtml = baseHtml;
     this.currentHtml = html;
     this.lastRenderError = '';
     this.lastRenderFailureNoticeKey = '';
@@ -888,6 +1004,8 @@ async onClose() {
     window.clearTimeout(this.aiLayoutStaleSuppressTimer);
     this.aiLayoutStaleSuppressTimer = null;
   }
+  this.customCssRefreshGeneration = (this.customCssRefreshGeneration || 0) + 1;
+  this._customCssLastValidBySource.clear();
   this.setPreviewLoading(false);
 
   // 清理滚动监听 (Critical: Fix memory leak)

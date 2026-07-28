@@ -101,8 +101,16 @@ interface AppleStyleViewContract {
         stateOverride?: AiLayoutStateLike | null;
         allowStale?: boolean;
     }): void;
-    getCurrentExportHtml(): string;
-    restoreBasePreview(): void;
+    resolveArticleHtmlSource(options?: {
+        target?: "wechat-copy" | "wechat-draft" | "multi-platform";
+    }): {
+        html: string;
+        layoutMode: "native" | "ai";
+        sourceKind: "base" | "ai-export";
+    } | null;
+    getCurrentExportHtml(): string | null;
+    restoreBasePreview(): Promise<void>;
+    refreshCustomCssPreview(): Promise<boolean>;
     syncPreviewPresentationMode(): void;
     /**
      * @returns {boolean}
@@ -357,7 +365,11 @@ interface AppleStyleViewContract {
      * @returns {Promise<string>}
      */
     renderMarkdownForPreview(markdown: string, sourcePath: string): Promise<string>;
-    applyCustomCss(html: string): Promise<string>;
+    deriveNativePreviewHtml(html: string): Promise<string>;
+    applyCustomCss(html: string, options?: {
+        target?: "preview" | "wechat-copy" | "wechat-draft" | "multi-platform";
+        layoutMode?: "native" | "ai";
+    }): Promise<string>;
     /**
      * 更新当前文档显示
      */
@@ -411,7 +423,9 @@ interface AppleStyleViewContract {
      * @param {string} html
      * @returns {Promise<string>}
      */
-    prepareHtmlForWechatDraft(html: string): Promise<string>;
+    prepareHtmlForWechatDraft(html: string, options?: {
+        layoutMode?: "native" | "ai";
+    }): Promise<string>;
     /**
      * @param {string} html
      * @returns {Promise<string>}

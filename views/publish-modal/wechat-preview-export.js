@@ -40,42 +40,80 @@ import {
 
 /** @type {WechatPreviewExportMethodsContract & ThisType<AppleStyleViewContract>} */
 const wechatPreviewExportMethods = {
-getCurrentExportHtml() {
-  if (!this.currentHtml) return null;
-  if (!this.aiPreviewApplied) return this.currentHtml;
+/**
+ * @param {{ target?: 'wechat-copy'|'wechat-draft'|'multi-platform' }} [options]
+ */
+resolveArticleHtmlSource(options = {}) {
+  const { target } = options;
+  const resolvedTarget = target || 'wechat-copy';
+  if (!['wechat-copy', 'wechat-draft', 'multi-platform'].includes(resolvedTarget)) {
+    return null;
+  }
+  if (!this.aiPreviewApplied) {
+    if (!this.baseRenderedHtml) return null;
+    return {
+      html: this.baseRenderedHtml,
+      layoutMode: 'native',
+      sourceKind: 'base',
+    };
+  }
 
   const context = this.getCurrentLayoutContext();
   const state = this.getCurrentArticleLayoutState();
   const visibleSnapshot = this.getVisibleAiLayoutSnapshot(state);
   if (!state || !visibleSnapshot.layoutJson?.blocks?.length) {
-    return this.currentHtml;
+    return null;
   }
   if (context.sourceHash && state.sourceHash && context.sourceHash !== state.sourceHash) {
-    return this.currentHtml;
+    return null;
   }
 
-  const imageRefs = extractImageRefsFromHtml(this.baseRenderedHtml || this.currentHtml || '');
-  const renderedSectionFragments = extractRenderedSectionFragments(this.baseRenderedHtml || this.currentHtml || '');
+  const imageRefs = extractImageRefsFromHtml(this.baseRenderedHtml || '');
+  const renderedSectionFragments = extractRenderedSectionFragments(this.baseRenderedHtml || '');
   const renderLayout = this.getAiRenderLayoutJson(visibleSnapshot.layoutJson);
-  return renderArticleLayoutHtml(renderLayout, {
+  const html = renderArticleLayoutHtml(renderLayout, {
     imageRefs,
     mode: 'draft',
     renderedSectionFragments,
     colorPaletteOverride: this.getAiColorPaletteOverride(renderLayout?.resolved?.colorPalette || renderLayout?.stylePack),
   });
+  if (!html) return null;
+  return {
+    html,
+    layoutMode: 'ai',
+    sourceKind: 'ai-export',
+  };
 }
 ,
 
-restoreBasePreview() {
+getCurrentExportHtml() {
+  return this.resolveArticleHtmlSource({ target: 'wechat-copy' })?.html || null;
+}
+,
+
+async restoreBasePreview() {
   if (!this.baseRenderedHtml || !this.previewContainer) return;
   const scrollTop = this.previewContainer.scrollTop;
-  this.currentHtml = this.baseRenderedHtml;
-  this.aiPreviewApplied = false;
-  setElementHtml(this.previewContainer, this.baseRenderedHtml);
-  this.previewContainer.scrollTop = scrollTop;
-  this.previewContainer.addClass('apple-has-content');
-  this.syncPreviewPresentationMode();
-  this.refreshAiLayoutPanel();
+  try {
+    const html = await this.deriveNativePreviewHtml(this.baseRenderedHtml);
+    this.currentHtml = html;
+    this.aiPreviewApplied = false;
+    setElementHtml(this.previewContainer, html);
+    this.previewContainer.scrollTop = scrollTop;
+    this.previewContainer.addClass('apple-has-content');
+    this.syncPreviewPresentationMode();
+    this.refreshAiLayoutPanel();
+  } catch (error) {
+    console.warn('恢复普通预览失败，已回退基础主题:', error);
+    this.currentHtml = this.baseRenderedHtml;
+    this.aiPreviewApplied = false;
+    setElementHtml(this.previewContainer, this.baseRenderedHtml);
+    this.previewContainer.scrollTop = scrollTop;
+    this.previewContainer.addClass('apple-has-content');
+    this.syncPreviewPresentationMode();
+    this.refreshAiLayoutPanel();
+    new Notice('恢复普通预览时未能应用自定义 CSS，已显示基础主题。');
+  }
 }
 ,
 

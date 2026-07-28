@@ -217,6 +217,29 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     expect(tab.containerEl.scrollTop).toBe(480);
   });
 
+  it('shows a quiet custom CSS status row without rebuilding the settings tab', async () => {
+    const plugin = makePlugin({
+      enableCustomCss: true,
+      customCss: 'h2 { color: red; }',
+      customCssNote: '',
+    });
+    plugin.getConverterView = vi.fn(() => ({
+      customCssStatus: {
+        state: 'unmatched',
+        sourceIdentity: 'textarea',
+        diagnostics: [],
+      },
+    }));
+
+    const tab = renderTab(plugin);
+    expect(tab.containerEl.querySelector('.owc-custom-css-status')?.textContent)
+      .toContain('当前状态');
+    await vi.waitFor(() => {
+      expect(tab.containerEl.querySelector('.owc-custom-css-status')?.textContent)
+        .not.toContain('正在检查自定义 CSS');
+    });
+  });
+
   it('exposes a GitHub star shortcut at the top of settings', () => {
     const plugin = makePlugin();
     const tab = renderTab(plugin);

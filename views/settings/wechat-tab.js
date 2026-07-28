@@ -35,6 +35,8 @@ import {
   WechatAPI,
   toReadableError,
 } from '../apple-style-view-shared.js';
+import { resolveCustomCssSource } from '../../services/custom-css-source.js';
+import { compileCustomCss } from '../../services/custom-css-compiler.js';
 
 const WECHAT_ACCOUNT_SETUP_GUIDE_URL =
   'https://xiaoweibox.top/obsidian-publisher/guide#wechat-api';
@@ -66,6 +68,45 @@ function createMutedGuideDescription(activeDocument, text, linkText, href, openL
   });
   description.append(link);
   return description;
+}
+
+/**
+ * @param {AppleStylePluginLike} plugin
+ * @returns {Promise<string>}
+ */
+async function describeCustomCssStatus(plugin) {
+  const source = await resolveCustomCssSource(plugin);
+  const sourceFatal = source.diagnostics.find((item) => item.severity === 'fatal');
+  const compiled = sourceFatal
+    ? null
+    : compileCustomCss(source.cssText, { sourceIdentity: source.identity });
+  const fatal = sourceFatal || compiled?.diagnostics.find((item) => item.severity === 'fatal');
+  const converterView = /** @type {{ customCssStatus?: AppleStyleViewContract['customCssStatus'] } | null} */ (
+    plugin.getConverterView?.() || null
+  );
+  const viewStatus = converterView?.customCssStatus;
+
+  if (fatal) {
+    const location = fatal.line ? `第 ${fatal.line} 行附近` : '当前 CSS';
+    const fallback = viewStatus?.usingLastValid ? '，当前继续使用上一次有效样式' : '，当前继续使用基础主题';
+    return `${location}存在语法问题${fallback}`;
+  }
+
+  const sourceWarning = source.diagnostics.find((item) => item.severity === 'warning');
+  if (sourceWarning) return sourceWarning.message;
+  if (!source.cssText.trim()) return '尚未填写 CSS';
+  if (viewStatus?.state === 'ai-skipped') return '当前为 AI 编排，自定义 CSS 不会应用';
+
+  const sourceLabel = source.kind === 'note'
+    ? `当前使用 ${source.path}`
+    : '当前使用设置中的 CSS';
+  if (viewStatus?.sourceIdentity === source.identity && viewStatus.state === 'unmatched') {
+    return `${sourceLabel}；CSS 有效，但当前文章没有匹配到对应内容`;
+  }
+
+  const blockedCount = compiled?.diagnostics.filter((item) => item.severity === 'blocked').length || 0;
+  if (blockedCount > 0) return `${sourceLabel}；已忽略 ${blockedCount} 项不支持或不安全的规则`;
+  return `${sourceLabel}，预览会自动更新`;
 }
 
 /** @type {WechatSettingsMethodsContract & ThisType<AppleStyleSettingTabContract>} */
@@ -468,12 +509,43 @@ const wechatSettingsMethods = {
       return;
     }
 
+    const statusRow = containerEl.createDiv({ cls: 'owc-custom-css-status' });
+    statusRow.setCssStyles?.({
+      display: 'flex',
+      gap: '8px',
+      alignItems: 'baseline',
+      margin: '-2px 0 12px',
+      padding: '0 2px',
+      fontSize: '12px',
+      lineHeight: '1.5',
+      color: 'var(--text-muted)',
+    });
+    const statusLabel = statusRow.createSpan({ text: '当前状态' });
+    statusLabel.setCssStyles?.({
+      flex: '0 0 auto',
+      color: 'var(--text-normal)',
+      fontWeight: '500',
+    });
+    const statusText = statusRow.createSpan({ text: '正在检查自定义 CSS…' });
+    let statusRefreshGeneration = 0;
+    const refreshCustomCssStatus = async (delayMs = 0) => {
+      const generation = ++statusRefreshGeneration;
+      if (delayMs > 0 && typeof window !== 'undefined') {
+        await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+      }
+      if (generation !== statusRefreshGeneration || !statusRow.parentElement) return;
+      const description = await describeCustomCssStatus(this.plugin);
+      if (generation !== statusRefreshGeneration || !statusRow.parentElement) return;
+      statusText.textContent = description;
+    };
+    refreshCustomCssStatus();
+
     // CSS textarea
     const textareaSetting = new Setting(containerEl)
       .setName('自定义 CSS 内容')
       .setDesc('直接粘贴 CSS，例如 p { color: #333; }。无需写 .owc-article-root 前缀，插件会自动限定作用域。');
 
-    textareaSetting.settingEl.setCssStyles?.({ flexWrap: 'wrap' });
+    textareaSetting.settingEl?.setCssStyles?.({ flexWrap: 'wrap' });
     textareaSetting.addTextArea(text => {
       text
         .setPlaceholder('/* 在此输入你的自定义 CSS */\np { color: #333; }')
@@ -481,7 +553,10 @@ const wechatSettingsMethods = {
         .onChange(async (value) => {
           this.plugin.settings.customCss = value;
           const saved = await this.plugin.saveSettings();
-          if (saved) this.plugin.scheduleCustomCssPreviewNotice?.();
+          if (saved) {
+            this.plugin.scheduleCustomCssPreviewNotice?.();
+            refreshCustomCssStatus(800);
+          }
         });
 
       if (text.inputEl) {
@@ -504,7 +579,10 @@ const wechatSettingsMethods = {
         .onChange(async (value) => {
           this.plugin.settings.customCssNote = value.trim();
           const saved = await this.plugin.saveSettings();
-          if (saved) this.plugin.scheduleCustomCssPreviewNotice?.();
+          if (saved) {
+            this.plugin.scheduleCustomCssPreviewNotice?.();
+            refreshCustomCssStatus(800);
+          }
         }));
   }
 };
