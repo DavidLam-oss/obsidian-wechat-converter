@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`./apple-theme-config.js`、`./apple-theme-headings.js`。
+关键依赖：`./apple-theme-config.js`、`./apple-theme-colors.js`、`./apple-theme-headings.js`、`./apple-theme-pictorial.js`。
 
 ## 维护规则
 
@@ -32,7 +32,7 @@
  */
 
 /**
- * @typedef {'github' | 'wechat' | 'serif' | 'paper' | 'grid' | 'typo' | 'media' | 'colorful'} AppleThemeName
+ * @typedef {'github' | 'wechat' | 'serif' | 'paper' | 'grid' | 'typo' | 'media' | 'colorful' | 'pictorial'} AppleThemeName
  * @typedef {'blue' | 'green' | 'purple' | 'orange' | 'teal' | 'rose' | 'ruby' | 'slate'} AppleThemeColorName
  * @typedef {'sans-serif' | 'serif' | 'monospace'} AppleFontFamilyName
  * @typedef {1 | 2 | 3 | 4 | 5} AppleFontSizeName
@@ -108,6 +108,8 @@ import {
   buildH5Style,
   buildH6Style,
 } from './apple-theme-headings.js';
+import { createPictorialColorRoles } from './apple-theme-colors.js';
+import { getPictorialStyle } from './apple-theme-pictorial.js';
 
 // Use assignment expression to avoid "Identifier has already been declared" errors if re-eval'd
 const APPLE_THEME_GLOBAL = /** @type {Record<string, unknown>} */ (typeof window !== 'undefined' ? window : {});
@@ -251,6 +253,18 @@ class AppleTheme {
   }
 
   /**
+   * 返回图文志及未来动态文章主题可复用的颜色角色。
+   * @returns {import('./apple-theme-colors.js').PictorialColorRoles}
+   */
+  getColorRoles() {
+    return createPictorialColorRoles({
+      accent: this.getThemeColorValue(),
+      headingColor: this.getHeadingColorValue(),
+      coloredHeader: this.coloredHeader,
+    });
+  }
+
+  /**
    * 获取元素样式
    * @param {string} tagName - HTML 标签名
    * @returns {string} - CSS 样式字符串
@@ -276,6 +290,22 @@ class AppleTheme {
     const effectiveLineHeight = this.lineHeight ?? config.lineHeight;
     const effectiveParagraphGap = this.paragraphGap ?? config.paragraphGap;
     const effectiveLetterSpacing = this.letterSpacing ?? 0;
+
+    if (this.themeName === 'pictorial') {
+      const pictorialStyle = getPictorialStyle({
+        tagName,
+        roles: this.getColorRoles(),
+        sizes,
+        font,
+        serifFont: AppleTheme.FONTS.serif,
+        monospaceFont: AppleTheme.FONTS.monospace,
+        lineHeight: effectiveLineHeight,
+        paragraphGap: effectiveParagraphGap,
+        letterSpacing: effectiveLetterSpacing,
+        sidePadding: sectionSidePadding,
+      });
+      if (typeof pictorialStyle === 'string') return pictorialStyle;
+    }
 
     switch (tagName) {
       case 'section':

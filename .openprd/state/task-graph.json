@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "generatedAt": "2026-07-28 00:08:56",
-  "nextReadyNode": "diagram",
+  "generatedAt": "2026-08-01 08:20:36",
+  "nextReadyNode": "freeze",
   "workflow": [
     {
       "id": "brainstorm",
@@ -58,7 +58,7 @@
       "id": "diagram",
       "label": "diagram",
       "kind": "workflow-step",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "synthesize"
       ]
@@ -76,10 +76,9 @@
       "id": "freeze",
       "label": "freeze",
       "kind": "workflow-step",
-      "status": "blocked",
+      "status": "ready",
       "dependsOn": [
-        "validate",
-        "diagram"
+        "validate"
       ]
     },
     {
@@ -275,7 +274,7 @@
       "id": "diagram",
       "label": "diagram",
       "kind": "workflow-step",
-      "status": "ready",
+      "status": "done",
       "dependsOn": [
         "synthesize"
       ]
@@ -293,10 +292,9 @@
       "id": "freeze",
       "label": "freeze",
       "kind": "workflow-step",
-      "status": "blocked",
+      "status": "ready",
       "dependsOn": [
-        "validate",
-        "diagram"
+        "validate"
       ]
     },
     {

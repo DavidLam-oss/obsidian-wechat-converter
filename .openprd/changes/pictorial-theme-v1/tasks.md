@@ -1,0 +1,144 @@
+# 图文志第一阶段任务
+
+- [x] T001.01 校验已确认变更、UI Context 与 Impeccable 合同
+  - type: governance
+  - blocking: false
+  - done: v0002 confirmed 范围、`pictorial-theme-v1` spec、Brownfield 本地调用图、PRODUCT.md、DESIGN.md 与 active design artifacts 已一致；UI Context handoff 为 ready。
+  - verify: openprd change . --validate --change pictorial-theme-v1 && openprd ui-context . --check --json
+  - test-layer: manual
+  - test-size: manual
+  - test-scope: governance
+  - evidence-plan: 保留命令输出与 UI Context handoff 状态；CodeGraph 不可用明确记录为 evidence-gap。
+  - execution-mode: serial
+  - write-scope: .openprd/**, PRODUCT.md, DESIGN.md
+  - owner-role: main-agent
+  - local-verify: openprd change . --validate --change pictorial-theme-v1 && openprd ui-context . --check --json
+  - integration-owner: main-agent
+
+- [x] T001.02 建立可复用动态颜色角色与对比度保护
+  - type: implementation
+  - blocking: true
+  - deps: T001.01
+  - done: 新增颜色角色工具，为任意有效 themeColor/customColor 计算 accent、accent-readable、accent-deep、accent-soft 与中性色；标题深色继续遵守 coloredHeader，亮色文字不会直接落在白色文章表面。
+  - verify: npm test -- --run tests/theme_pictorial.test.js
+  - test-layer: unit
+  - test-size: small
+  - test-scope: isolated
+  - evidence-plan: 覆盖预设色、亮色 customColor、低饱和 customColor、无效色回退和 coloredHeader 开关。
+  - execution-mode: serial
+  - write-scope: themes/apple-theme-colors.js, themes/apple-theme.js, tests/theme_pictorial.test.js
+  - owner-role: main-agent
+  - local-verify: npm test -- --run tests/theme_pictorial.test.js
+  - integration-owner: main-agent
+
+- [x] T001.03 注册图文志并实现标签级内联主题样式
+  - type: implementation
+  - blocking: true
+  - deps: T001.02
+  - done: AppleTheme 主题列表出现“图文志”；主题与颜色仍独立选择；标题、正文、引用、列表、表格、图片、图注、链接和代码都有微信公众号兼容的内联样式，且不含固定第二强调色。
+  - verify: npm test -- --run tests/theme_color.test.js tests/theme_pictorial.test.js
+  - test-layer: unit, integration
+  - test-size: medium
+  - test-scope: module
+  - evidence-plan: 断言主题列表、动态角色、无图文章样式、hero/regular 样式与没有 style/class CSS 依赖的输出合同。
+  - execution-mode: serial
+  - write-scope: themes/apple-theme-config.js, themes/apple-theme.js, themes/apple-theme-pictorial.js, tests/theme_color.test.js, tests/theme_pictorial.test.js
+  - owner-role: main-agent
+  - local-verify: npm test -- --run tests/theme_color.test.js tests/theme_pictorial.test.js
+  - integration-owner: main-agent
+
+- [x] T001.04 实现图文志图片角色解析与安全后处理
+  - type: implementation
+  - blocking: true
+  - deps: T001.03
+  - done: `hero:` 显式标记被消费为 hero 和可选 caption；未标记图片为 regular；无 caption 不生成空节点；只改写普通 figure，跳过 Mermaid、数学、图片轮播、敏感图片、头像水印与已有特殊结构。
+  - verify: npm test -- --run tests/obsidian_triplet_serializer_pictorial.test.js
+  - test-layer: unit, integration
+  - test-size: medium
+  - test-scope: module
+  - evidence-plan: 覆盖 hero、regular、caption、无图、多个 hero、特殊图片保护、未知主题和不按尺寸/文件名推断角色。
+  - execution-mode: serial
+  - write-scope: services/obsidian-triplet-serializer-pictorial.js, services/obsidian-triplet-serializer.js, tests/obsidian_triplet_serializer_pictorial.test.js
+  - owner-role: main-agent
+  - local-verify: npm test -- --run tests/obsidian_triplet_serializer_pictorial.test.js
+  - integration-owner: main-agent
+
+- [x] T001.05 回归实时预览、复制、草稿和自定义 CSS 的输出边界
+  - type: verification
+  - blocking: true
+  - deps: T001.04
+  - done: 图文志沿用现有 settings/core/dependency-loader 链路；同一基础 HTML 供预览、复制与草稿同步使用；自定义 CSS 保持基础主题之后的后置覆盖；不引入平行主题引擎。
+  - verify: npm test -- --run tests/dependency_loader.test.js tests/view_settings_panel.test.js tests/obsidian_triplet_serializer_pictorial.test.js
+  - test-layer: integration
+  - test-size: medium
+  - test-scope: contract
+  - evidence-plan: 保留运行时构建、主题列表和 serializer 输出测试；公众号账号实测单独保留为人工验证。
+  - execution-mode: serial
+  - write-scope: tests/**
+  - owner-role: main-agent
+  - local-verify: npm test -- --run tests/dependency_loader.test.js tests/view_settings_panel.test.js tests/obsidian_triplet_serializer_pictorial.test.js
+  - integration-owner: main-agent
+
+- [x] T001.06 更新文件说明书、目录说明与基础结构文档
+  - type: documentation
+  - blocking: true
+  - deps: T001.05
+  - done: 新模块均有文件说明书；themes/services 文件夹说明、file-structure 和 frontend-guidelines 已描述图文志职责与微信内联限制。
+  - verify: openprd standards . --verify
+  - test-layer: manual
+  - test-size: manual
+  - test-scope: docs
+  - evidence-plan: standards 验证与受影响文档人工审查。
+  - execution-mode: serial
+  - write-scope: themes/**, services/**, docs/basic/**
+  - owner-role: main-agent
+  - local-verify: openprd standards . --verify
+  - integration-owner: main-agent
+
+- [x] T001.07 生成嵌入依赖并完成自动化 guards
+  - type: verification
+  - blocking: true
+  - deps: T001.06
+  - done: 不手改生成物；embedded runtime、目标测试、scan/review guard、构建和 build artifact 检查通过；本轮触达文件通过 structural dev-check。
+  - verify: npm run generate:embedded && npm run check:embedded && npm test -- --run && npm run scan:guard && VITEST_MAX_WORKERS=1 npm run review:guard && npm run build && npm run check:build-artifacts
+  - test-layer: unit, integration, smoke
+  - test-size: large
+  - test-scope: contract
+  - evidence-plan: 保存每项命令的通过输出、生成物差异、文件行数与 dev-check 结果。
+  - execution-mode: serial
+  - write-scope: services/generated-embedded-deps.js, main.js, .openprd/harness/test-reports/**
+  - owner-role: main-agent
+  - local-verify: openprd dev-check . themes/apple-theme-config.js themes/apple-theme.js themes/apple-theme-colors.js themes/apple-theme-pictorial.js services/obsidian-triplet-serializer.js services/obsidian-triplet-serializer-pictorial.js tests/theme_pictorial.test.js tests/obsidian_triplet_serializer_pictorial.test.js --change-scope structural
+  - integration-owner: main-agent
+
+- [x] T001.08 生成视觉证据并登记公众号人工验证边界
+  - type: verification
+  - blocking: true
+  - deps: T001.07
+  - done: 为亮色 customColor、深色预设和低饱和 customColor 生成实际输出截图；完成 reference/actual compare 与 verification-board；真实微信粘贴和草稿同步有账号会话证据，或明确登记为尚待人工验证。
+  - verify: openprd visual-compare . --reference .openprd/harness/visual-reviews/flipped-image-essay-public-page-2026-08-01.png --actual <implemented-screenshot> --locale zh-CN
+  - test-layer: visual, manual
+  - test-size: manual
+  - test-scope: visual-flow
+  - evidence-plan: 保存三组截图、visual-compare、verification-board 和公众号人工验证记录；本地预览不得替代账号侧证据。
+  - execution-mode: serial
+  - write-scope: .openprd/harness/visual-reviews/**, .openprd/harness/test-reports/**
+  - owner-role: main-agent
+  - local-verify: openprd quality . --verify && openprd run . --verify
+  - integration-owner: main-agent
+
+- [x] T001.09 收口 change、任务证据与项目质量状态
+  - type: governance
+  - blocking: true
+  - deps: T001.08
+  - done: 每项任务有匹配证据；change、standards、quality、run 验证完成；最终报告区分任务通过、工作区遗留债务与未完成公众号人工验证。
+  - verify: openprd change . --validate --change pictorial-theme-v1 && openprd standards . --verify && openprd quality . --verify && openprd run . --verify
+  - test-layer: manual
+  - test-size: manual
+  - test-scope: governance
+  - evidence-plan: `.openprd/harness/test-reports/` 中存在任务级 Markdown/HTML 报告，最终状态引用最新质量报告。
+  - execution-mode: serial
+  - write-scope: .openprd/**
+  - owner-role: main-agent
+  - local-verify: openprd change . --validate --change pictorial-theme-v1 && openprd standards . --verify && openprd quality . --verify && openprd run . --verify
+  - integration-owner: main-agent

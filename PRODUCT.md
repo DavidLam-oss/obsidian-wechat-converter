@@ -8,7 +8,7 @@ schema=google-labs-code/design.md@bde692f2bc92ef7fdd0cf277b2704ab074b70efd
 
 ## Product Context
 
-本合同在保留现有发布工作台边界的基础上，合并 2026-07-27 已确认的微信贴图发布体验：用户可以在侧边栏和发布弹窗中检查、补充、移除并排序最多 9 张图片，看到的顺序就是最终发布顺序。内容清洗、图片来源和账号归属必须可预期，不修改源 Markdown，也不扩展到文章模式、飞书或 HTML 转长图。
+本合同在保留现有发布工作台边界的基础上，合并两条已确认体验：用户可以在侧边栏和发布弹窗中检查、补充、移除并排序最多 9 张贴图；用户也可以在文章转换器中选择“图文志”主题，把 Markdown 图片、图注和章节节奏输出为微信公众号可用的图文叙事版式。两条体验共享同一条原则：不修改源 Markdown，输出与用户选择必须可预期。
 
 ## Register
 
@@ -92,6 +92,12 @@ product
 
 移除图片后立即更新网格并提供撤销；本地图片的 Object URL 只有在撤销窗口结束、文件切换、视图关闭或弹窗销毁后才释放。异步素材选择或文件读取如果来自过期弹窗，不得写回当前状态。
 
+### 使用图文志排版文章
+
+入口是现有转换器的主题选择器。用户选择“图文志”后，仍可独立选择八种预设主题色或任意自定义色；设置变化会沿用现有实时预览、复制富 HTML 和草稿同步链路。普通 Markdown 图片默认作为正文图片输出；只有 alt 以 `hero:` 开头的图片会作为显式首图增强，冒号后的文字是可选图注。没有图片时，文章保持稳定、可读的长文排版；没有图注时，不生成空图注节点。
+
+成功条件是：主题只影响文章输出而不改变插件操作 UI 的状态颜色；同一基础 HTML 服务预览、复制和微信草稿同步；亮色或浅色自定义主题色不会被直接用于难以阅读的文字。失败或兼容边界时，图片安全降级为普通正文图片，不会根据尺寸、文件名、位置或主观算法猜测角色。
+
 ## Current UI Topology
 
 - `views/converter/style-panel.js`：侧边栏贴图预览与当前文档状态入口。
@@ -101,6 +107,11 @@ product
 - `services/sticker-extractor.js`：Markdown 图片候选与统一 `imageItems` 数据模型。
 - `services/markdown-cleaner.js`：贴图正文的保守清洗与清理摘要。
 - `views/publish-modal/wechat-sync-action.js`：媒体解析、上传复用与贴图草稿创建。
+- `views/converter/settings-panel.js`：现有主题与主题色选择入口。
+- `views/converter/core.js`：主题切换、颜色切换与实时预览刷新。
+- `services/dependency-loader.js`：把设置编译为 AppleTheme 与 Converter 运行时。
+- `themes/apple-theme.js`：文章主题的最小运行时接线；图文志具体样式与颜色规则位于专用主题模块。
+- `services/obsidian-triplet-serializer.js`：文章输出的固定处理顺序；图文志只在普通 figure 已生成、最终属性清理前执行后处理。
 
 CodeGraph 在本次环境中未安装或未配置；上述拓扑来自 UI Context 扫描、源码调用链与用户确认方案，保留 `evidence-gap: codegraph-unavailable`。
 
@@ -114,16 +125,32 @@ CodeGraph 在本次环境中未安装或未配置；上述拓扑来自 UI Contex
 - 账号切换：永久素材必须属于当前账号；切换后重新校验，不跨账号复用 `media_id`。
 - 文件/弹窗切换：过期异步结果被 generation guard 丢弃，并释放临时 URL。
 - 上传部分成功：保留成功缓存，重试只处理未成功项。
+- 未选择图文志：所有现有主题与图片输出保持原有行为。
+- 图文志无图片：只使用其正文、标题、引用、列表、表格、链接和代码的内联样式，不插入图片结构。
+- 图文志普通图片：输出 `regular` 节奏和可选图注；没有说明时不输出空 `figcaption`。
+- 图文志 hero：只接受 `hero:` 显式标记；标记被消费后不出现在图片 alt 或图注正文中。
+- 特殊图片：Mermaid、数学公式、图片轮播、敏感图片、头像水印及已有非普通 figure 均保持兼容优先，不参与图文志结构改写。
+- 自定义 CSS：仍在基础主题输出之后执行，保留用户的后置覆盖能力。
 
 ## Evidence and Decisions
 
 - 用户于 2026-07-27 确认方向 1“顺序优先的单列编排”。
+- 用户于 2026-08-01 选择 Image Essay 的公开图文叙事原则作为“图文志”母版，并精确确认 OpenPrd v0002（digest `b0ee0e4cb6a95cf7dd9631514aaae48c2e26ef7a2f4b11d048e5c99f3a332406`，work-unit `wu-20260801082036-8c0b7a6d`）。
 - 色板沿用 Obsidian 中性表面和既有系统蓝；九宫格顺序是视觉与交互记忆点。
+- 图文志不迁移外部固定暖纸色、品牌、示例图片、源码或 AGPL CSS；其记忆点是“首图开篇，图片与章节留白交替推进叙事”。
+- 文章主题色和插件操作 UI 语义色继续分离；图文志使用 `accent`、`accent-readable`、`accent-deep`、`accent-soft` 与高可读中性色角色。
 - 参考集：`.openprd/harness/visual-reviews/reference-sets/sticker-publish-direction-1/`。
 - 需求与技术边界：`docs/plans/2026-07-26-sticker-publish-modal-and-content-cleaning-plan.md`。
+
+## Diagnostics and Traceability Boundary
+
+图文志第一阶段只改变本地文章主题渲染和序列化输出，不新增远端服务、账号态写入、中心化日志采集或生产追踪出口。本轮问题定位以 OpenPrd work-unit、change/task 账本、git diff、测试报告和视觉证据作为本地追踪链路。
+
+若后续把主题渲染、复制或微信草稿同步扩展为运行态诊断事件，所有跨前端、后端、Agent 或浏览器助手的记录必须统一携带并脱敏处理以下关联字段：`trace_id`、`span_id`、`request_id`、`task_id`、`user_session_id`、`error_id`。日志和报告不得写入微信 token、素材凭据、用户原文全文、图片私有路径或账号敏感信息；必要内容只保留摘要、哈希、状态码、耗时和可复现的本地证据路径。
 
 ## Conflicts and Open Questions
 
 - 参考稿中的示例照片、空槽占位和高度只作为层级证据，不作为必须逐像素复制的产品内容。
 - CodeGraph 能力缺席，由确定性本地扫描补足；实现阶段若出现动态依赖边，再单独记录。
 - 微信真实草稿效果仍需人工账号实测；自动化测试负责数据模型、状态、上传复用与 DOM 交互契约。
+- 图文志的真实微信粘贴与草稿同步仍需账号会话人工验证；本地 DOM、生成物、构建和视觉证据不能替代该项验证。

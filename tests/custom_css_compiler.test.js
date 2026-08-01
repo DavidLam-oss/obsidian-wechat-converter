@@ -59,6 +59,29 @@ describe('custom-css-compiler', () => {
     expect(result.matchedRuleCount).toBeGreaterThanOrEqual(4);
   });
 
+  it('允许自定义 CSS 在图文志基础内联样式之后覆盖用户指定项', () => {
+    const html = [
+      '<h2 style="font-family:\'Times New Roman\';display:block;color:#004795;text-align:left;margin:40px 0 18px;">章节</h2>',
+      '<figure style="display:block;box-sizing:border-box;margin:28px 0 30px;padding:0;text-align:center;border:0;">',
+      '<img src="demo.jpg" alt="demo" style="display:block;box-sizing:border-box;max-width:100%;height:auto;margin:0 auto;border:0;border-radius:0;">',
+      '<figcaption style="display:block;color:#6b7280;text-align:center;margin:10px auto 0;">说明</figcaption>',
+      '</figure>',
+    ].join('');
+    const compiled = compileCustomCss([
+      'h2 { color: #b42318 !important; text-align: center !important; }',
+      'figure { margin: 44px 0 !important; }',
+      'figcaption { color: #111827 !important; }',
+    ].join('\n'));
+
+    const result = applyCompiledCustomCss(html, compiled);
+
+    expect(result.applied).toBe(true);
+    expect(result.html).toContain('color: #b42318 !important');
+    expect(result.html).toContain('text-align: center !important');
+    expect(result.html).toContain('margin: 44px 0 !important');
+    expect(result.html).toContain('color: #111827 !important');
+  });
+
   it('明确跳过 :has() 并给 warning', () => {
     const compiled = compileCustomCss('section:has(h2) { color: red; } p { color: blue; }');
     expect(compiled.usable).toBe(true);

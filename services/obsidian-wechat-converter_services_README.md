@@ -23,6 +23,12 @@
 
 - `publish-cleanup.js`：负责发布后目录解析、安全校验、删除和失效 `cover` / `cover_dir` 清理；视图层只保留兼容适配。
 
+## 图文志序列化模块
+
+- `obsidian-triplet-serializer.js`：编排原生渲染的固定处理顺序；在通用主题样式之后、最终属性清理之前调用图文志后处理。
+- `obsidian-triplet-serializer-pictorial.js`：只为 `pictorial` 主题消费图片 alt 的 `hero:` 标记，并把普通 figure 写为 hero / regular / caption 的内联样式。
+- 图文志不会猜测图片角色；Mermaid、数学、图片轮播、敏感图、头像水印和复杂 figure 保持原有兼容输出。
+
 ## 定位
 
 位于 services/，是业务服务层；UI 只调用服务，不在视图文件内重复核心规则。
@@ -35,3 +41,4 @@ converter.js、views/、Obsidian API、微信/飞书 API、浏览器扩展桥接
 
 - 每次新增、删除、移动文件或调整目录职责后，必须更新本 README。
 - 目录职责影响项目结构、流程、架构或技术栈时，同步更新 docs/basic/ 对应文档。
+- 图片角色后处理必须继续服务同一基础 HTML，不能为预览、复制或草稿同步建立平行输出链路。

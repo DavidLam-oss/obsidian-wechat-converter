@@ -1,5 +1,5 @@
 {
-  "activeChange": null,
+  "activeChange": "pictorial-theme-v1",
   "taskSharding": {
     "maxItemsPerFile": 25,
     "handoffRequired": true,
@@ -28,7 +28,8 @@
       "write-scope",
       "owner-role",
       "local-verify",
-      "integration-owner"
+      "integration-owner",
+      "blocking"
     ],
     "dependencyOrder": "dependencies must appear before dependents"
   }

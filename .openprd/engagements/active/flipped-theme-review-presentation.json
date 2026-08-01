@@ -1,0 +1,50 @@
+{
+  "diagram": {
+    "type": "flow",
+    "note": "从结构主题与动态主题色两个独立维度进入统一公众号输出链。"
+  },
+  "flowNodes": [
+    { "id": "select", "text": "选择图文志与任意主题色" },
+    { "id": "render", "text": "识别首图、普通图与图注" },
+    { "id": "deliver", "text": "统一预览、复制与草稿输出" }
+  ],
+  "flowEdges": [
+    { "from": "select", "to": "render" },
+    { "from": "render", "to": "deliver" }
+  ],
+  "mapNodes": {
+    "problem": { "title": "问题", "text": "缺少动态色的图片叙事主题" },
+    "goal": { "title": "目标", "text": "有图成篇，无图仍适合长文" },
+    "scope": { "title": "首期范围", "text": "首图、普通图、图注与降级" },
+    "flow": { "title": "输出链", "text": "同一 HTML 服务三个输出面" },
+    "risk": { "title": "主要风险", "text": "亮色对比与微信样式漂移" }
+  },
+  "panels": {
+    "flow": [
+      { "summary": "新增主题", "detail": "用户选择图文志后，主题色仍可独立选择和实时更新。" },
+      { "summary": "明确首图", "detail": "用 hero: 前缀显式增强首图；未标记图片全部安全降级为普通图。" },
+      { "summary": "保留图注", "detail": "hero: 后的文字与普通图片 alt 作为图注；没有说明时不生成空结构。" },
+      { "summary": "统一输出", "detail": "预览、复制与草稿同步继续复用同一基础 HTML。" }
+    ],
+    "function": [
+      { "summary": "动态配色", "detail": "强调、可读强调、标题深色与浅表面均从用户主题色安全派生。" },
+      { "summary": "图片叙事", "detail": "首图建立开篇，普通图片推进阅读，章节留白形成杂志节奏。" },
+      { "summary": "无图降级", "detail": "没有图片时仍以稳定的纸刊长文结构呈现，不留下空图片区。" },
+      { "summary": "复杂内容", "detail": "表格、代码、公式、Mermaid 与 Callout 以兼容为先。" },
+      { "summary": "继续覆盖", "detail": "用户自定义 CSS 保持在主题输出后的既有覆盖位置。" }
+    ],
+    "guardrail": [
+      { "summary": "只做图文志", "detail": "章序、框签、边页和疏文不进入本轮实现。" },
+      { "summary": "不用固定色", "detail": "不保留外部绿黄、红白或橄榄橙配色，也不新增第二强调色。" },
+      { "summary": "原创重设计", "detail": "不复制 Flipped 或 AGPL 仓库的源码、样式串、装饰与素材。" },
+      { "summary": "控制行数", "detail": "新增职责按模块拆分，以 700 行为源码拆分线，不向超大文件堆逻辑。" },
+      { "summary": "按流程生成", "detail": "main.js 与 embedded deps 只由项目脚本生成，不手工修改。" }
+    ],
+    "risk": [
+      { "summary": "内容门槛", "detail": "图片质量和图注会影响效果，但无图与弱图文内容仍有安全降级。" },
+      { "summary": "亮色可读", "detail": "极亮自定义色不能直接承担文字，需安全加深或中性色回退。" },
+      { "summary": "平台漂移", "detail": "本地预览不能替代微信复制与草稿侧的实际兼容证据。" },
+      { "summary": "语法成本", "detail": "首图采用 hero: 前缀显式增强，换取可预测行为和零猜测。" }
+    ]
+  }
+}

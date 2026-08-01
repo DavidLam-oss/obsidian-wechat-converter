@@ -3804,6 +3804,22 @@ var init_apple_theme_config = __esm({
         tableHeaderBg: "#fff8ed",
         figureBorderColor: "#f0e4d4",
         strongBg: true
+      },
+      pictorial: {
+        name: "\u56FE\u6587\u5FD7",
+        lineHeight: 1.9,
+        paragraphGap: 22,
+        headingWeight: 700,
+        headingLetterSpacing: 0,
+        textColor: "#2c2c2c",
+        headingColor: "#3e3e3e",
+        mutedTextColor: "#666666",
+        sectionBg: "#ffffff",
+        linkDecoration: "none",
+        blockquoteBorderWidth: 0,
+        tableHeaderBg: "#ffffff",
+        tableBorderColor: "#dedede",
+        figureBorderColor: "transparent"
       }
     };
     SPACING = {
@@ -4001,6 +4017,199 @@ var init_apple_theme_headings = __esm({
   }
 });
 
+// themes/apple-theme-colors.js
+function normalizeHexColor(value, fallback = DEFAULT_ACCENT) {
+  const raw = String(value || "").trim().replace(/^#/, "");
+  const expanded = /^[0-9a-f]{3}$/i.test(raw) ? raw.split("").map((part) => `${part}${part}`).join("") : raw;
+  if (!/^[0-9a-f]{6}$/i.test(expanded))
+    return fallback.toLowerCase();
+  return `#${expanded.toLowerCase()}`;
+}
+function hexToRgb(value) {
+  const normalized = normalizeHexColor(value, "");
+  if (!normalized)
+    return null;
+  return {
+    r: Number.parseInt(normalized.slice(1, 3), 16),
+    g: Number.parseInt(normalized.slice(3, 5), 16),
+    b: Number.parseInt(normalized.slice(5, 7), 16)
+  };
+}
+function linearizeChannel(channel) {
+  const normalized = Math.max(0, Math.min(255, channel)) / 255;
+  return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+}
+function relativeLuminance(color) {
+  const rgb = hexToRgb(color);
+  if (!rgb)
+    return 0;
+  return 0.2126 * linearizeChannel(rgb.r) + 0.7152 * linearizeChannel(rgb.g) + 0.0722 * linearizeChannel(rgb.b);
+}
+function contrastRatio(foreground, background) {
+  const light = Math.max(relativeLuminance(foreground), relativeLuminance(background));
+  const dark = Math.min(relativeLuminance(foreground), relativeLuminance(background));
+  return (light + 0.05) / (dark + 0.05);
+}
+function mixRgbColors(start, end, amount) {
+  const ratio = Math.max(0, Math.min(1, amount));
+  const blend = (from, to) => Math.round(from + (to - from) * ratio);
+  const toHex = (value) => value.toString(16).padStart(2, "0");
+  return `#${toHex(blend(start.r, end.r))}${toHex(blend(start.g, end.g))}${toHex(blend(start.b, end.b))}`;
+}
+function ensureReadableOnSurface(color, background, minimum = 4.5) {
+  const normalizedColor = normalizeHexColor(color);
+  const normalizedBackground = normalizeHexColor(background, DEFAULT_SURFACE);
+  if (contrastRatio(normalizedColor, normalizedBackground) >= minimum)
+    return normalizedColor;
+  const source = hexToRgb(normalizedColor);
+  const black = hexToRgb("#000000");
+  if (!source || !black)
+    return DEFAULT_HEADING;
+  for (let step = 1; step <= 100; step += 1) {
+    const candidate = mixRgbColors(source, black, step / 100);
+    if (contrastRatio(candidate, normalizedBackground) >= minimum)
+      return candidate;
+  }
+  return DEFAULT_HEADING;
+}
+function colorToRgba(color, alpha) {
+  const rgb = hexToRgb(color);
+  if (!rgb)
+    return "rgba(3, 102, 214, 0.12)";
+  const normalizedAlpha = Math.max(0, Math.min(1, Number(alpha)));
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${normalizedAlpha.toFixed(3)})`;
+}
+function createPictorialColorRoles({
+  accent = DEFAULT_ACCENT,
+  headingColor = DEFAULT_HEADING,
+  coloredHeader = false,
+  surface = DEFAULT_SURFACE
+} = {}) {
+  const normalizedSurface = normalizeHexColor(surface, DEFAULT_SURFACE);
+  const normalizedAccent = normalizeHexColor(accent, DEFAULT_ACCENT);
+  const readableAccent = ensureReadableOnSurface(normalizedAccent, normalizedSurface);
+  const requestedHeading = normalizeHexColor(headingColor, readableAccent);
+  const accentDeep = coloredHeader ? ensureReadableOnSurface(requestedHeading, normalizedSurface) : DEFAULT_HEADING;
+  return {
+    accent: normalizedAccent,
+    accentReadable: readableAccent,
+    accentDeep,
+    accentSoft: colorToRgba(normalizedAccent, 0.12),
+    accentBorder: colorToRgba(readableAccent, 0.34),
+    text: DEFAULT_TEXT,
+    muted: DEFAULT_MUTED,
+    surface: normalizedSurface,
+    border: DEFAULT_BORDER
+  };
+}
+var DEFAULT_ACCENT, DEFAULT_HEADING, DEFAULT_SURFACE, DEFAULT_TEXT, DEFAULT_MUTED, DEFAULT_BORDER;
+var init_apple_theme_colors = __esm({
+  "themes/apple-theme-colors.js"() {
+    DEFAULT_ACCENT = "#0366d6";
+    DEFAULT_HEADING = "#3e3e3e";
+    DEFAULT_SURFACE = "#ffffff";
+    DEFAULT_TEXT = "#2c2c2c";
+    DEFAULT_MUTED = "#666666";
+    DEFAULT_BORDER = "#dedede";
+  }
+});
+
+// themes/apple-theme-pictorial.js
+function getPictorialStyle({
+  tagName,
+  roles,
+  sizes,
+  font,
+  serifFont,
+  monospaceFont,
+  lineHeight,
+  paragraphGap,
+  letterSpacing,
+  sidePadding
+}) {
+  const bodyLetterSpacing = letterSpacing ? `letter-spacing: ${letterSpacing}px;` : "letter-spacing: 0;";
+  const bodyFont = font || serifFont;
+  const safeSidePadding = Number.isFinite(sidePadding) ? sidePadding : 16;
+  const regularFigure = "display:block;box-sizing:border-box;margin:28px 0 30px;padding:0;text-align:center;border:0;";
+  const regularImage = "display:block;box-sizing:border-box;max-width:100%;height:auto;margin:0 auto;border:0;border-radius:0;";
+  const caption = `display:block;font-family:${bodyFont};font-size:${sizes.caption}px;line-height:1.6;color:${roles.muted};margin:10px auto 0;padding:0;text-align:center;${bodyLetterSpacing}`;
+  switch (tagName) {
+    case "section":
+      return `font-family:${bodyFont};font-size:${sizes.base}px;line-height:${lineHeight};color:${roles.text};padding:26px ${safeSidePadding}px 34px;background:${roles.surface};box-sizing:border-box;max-width:100%;word-wrap:break-word;word-break:normal;overflow-wrap:break-word;line-break:strict;text-align:left;`;
+    case "h1":
+      return `font-family:${serifFont};display:block;font-size:${sizes.h1}px;font-weight:700;line-height:1.28;color:${roles.accentDeep};margin:38px 0 20px;padding:0 0 14px;text-align:center;letter-spacing:0.01em;border-bottom:1px solid ${roles.accentBorder};`;
+    case "h2":
+      return `font-family:${serifFont};display:block;font-size:${sizes.h2}px;font-weight:700;line-height:1.34;color:${roles.accentDeep};margin:40px 0 18px;padding:0;text-align:left;letter-spacing:0.01em;`;
+    case "h3":
+      return `font-family:${serifFont};display:block;font-size:${sizes.h3}px;font-weight:700;line-height:1.42;color:${roles.accentDeep};margin:30px 0 13px;padding:0;text-align:left;`;
+    case "h4":
+      return `font-family:${bodyFont};display:block;font-size:${sizes.h4}px;font-weight:700;line-height:1.5;color:${roles.accentDeep};margin:24px 0 10px;padding:0;text-align:left;`;
+    case "h5":
+      return `font-family:${bodyFont};display:block;font-size:${sizes.h5}px;font-weight:700;line-height:1.5;color:${roles.accentDeep};margin:20px 0 8px;padding:0;text-align:left;`;
+    case "h6":
+      return `font-family:${bodyFont};display:block;font-size:${sizes.h6}px;font-weight:700;line-height:1.5;color:${roles.muted};margin:18px 0 8px;padding:0;text-align:left;`;
+    case "p":
+      return `font-family:${bodyFont};font-size:${sizes.base}px;line-height:${lineHeight};color:${roles.text};margin:0 0 ${paragraphGap}px 0;padding:0;text-align:justify;text-align-last:left;${bodyLetterSpacing}word-break:normal;overflow-wrap:break-word;line-break:strict;`;
+    case "blockquote":
+      return `font-family:${serifFont};font-size:${sizes.base}px;line-height:${lineHeight};color:${roles.text};background:${roles.accentSoft};margin:28px 0;padding:17px 18px;text-align:justify;border-top:1px solid ${roles.accentBorder};border-bottom:1px solid ${roles.accentBorder};border-left:0;border-right:0;border-radius:0;`;
+    case "pre":
+      return `background:#f6f7f8;border:1px solid ${roles.border};border-radius:4px;padding:14px 16px;margin:20px 0;overflow-x:auto;font-family:${monospaceFont};font-size:${sizes.code}px;line-height:1.65;color:${roles.text};`;
+    case "code":
+      return `background:${roles.accentSoft};color:${roles.accentReadable};padding:1px 4px;border-radius:2px;font-family:${monospaceFont};font-size:${sizes.code}px;`;
+    case "ul":
+      return `font-family:${bodyFont};font-size:${sizes.base}px;line-height:${lineHeight};color:${roles.text};margin:14px 0 20px;padding-left:22px;list-style-type:disc;`;
+    case "ol":
+      return `font-family:${bodyFont};font-size:${sizes.base}px;line-height:${lineHeight};color:${roles.text};margin:14px 0 20px;padding-left:22px;list-style-type:decimal;`;
+    case "li":
+      return `font-size:${sizes.base}px;line-height:${lineHeight};color:${roles.text};margin:5px 0;${bodyLetterSpacing}`;
+    case "li-task":
+      return `font-size:${sizes.base}px;line-height:${lineHeight};color:${roles.text};margin:5px 0;list-style-type:none;margin-left:-20px;${bodyLetterSpacing}`;
+    case "li p":
+      return `margin:0;padding:0;line-height:${lineHeight};`;
+    case "figure":
+    case "pictorial-regular-figure":
+      return regularFigure;
+    case "pictorial-hero-figure":
+      return "display:block;box-sizing:border-box;margin:36px 0 32px;padding:0;text-align:center;border:0;";
+    case "img":
+    case "pictorial-regular-img":
+      return regularImage;
+    case "pictorial-hero-img":
+      return "display:block;box-sizing:border-box;width:100%;max-width:100%;height:auto;margin:0 auto;border:0;border-radius:0;";
+    case "figcaption":
+    case "pictorial-caption":
+      return caption;
+    case "a":
+      return `color:${roles.accentReadable};text-decoration:none;border-bottom:1px solid ${roles.accentBorder};word-break:break-word;overflow-wrap:anywhere;`;
+    case "table-wrapper":
+      return "display:block;box-sizing:border-box;width:100%;max-width:100%;overflow-x:scroll;overflow-y:hidden;-webkit-overflow-scrolling:touch;margin:20px 0;padding-bottom:10px;";
+    case "table":
+      return `border-collapse:collapse;width:720px;min-width:100%;max-width:none;table-layout:auto;border:1px solid ${roles.border};`;
+    case "thead":
+      return `background:${roles.accentSoft};`;
+    case "th":
+      return `background:${roles.accentSoft};font-weight:700;color:${roles.text};border:1px solid ${roles.border};padding:11px 12px;text-align:left;white-space:nowrap;word-break:keep-all;overflow-wrap:normal;`;
+    case "td":
+      return `border:1px solid ${roles.border};padding:11px 12px;text-align:left;white-space:nowrap;word-break:keep-all;overflow-wrap:normal;`;
+    case "hr":
+      return `border:0;border-top:1px solid ${roles.accentBorder};margin:42px 0;`;
+    case "strong":
+      return `font-weight:700;color:${roles.text};`;
+    case "em":
+      return "font-style:italic;";
+    case "del":
+      return `text-decoration:line-through;color:${roles.muted};`;
+    case "mark":
+      return `background:${roles.accentSoft};color:${roles.text};padding:0 2px;border-radius:2px;`;
+    default:
+      return null;
+  }
+}
+var init_apple_theme_pictorial = __esm({
+  "themes/apple-theme-pictorial.js"() {
+  }
+});
+
 // themes/apple-theme.js
 var apple_theme_exports = {};
 __export(apple_theme_exports, {
@@ -4011,6 +4220,8 @@ var init_apple_theme = __esm({
   "themes/apple-theme.js"() {
     init_apple_theme_config();
     init_apple_theme_headings();
+    init_apple_theme_colors();
+    init_apple_theme_pictorial();
     APPLE_THEME_GLOBAL = /** @type {Record<string, unknown>} */
     typeof window !== "undefined" ? window : {};
     _AppleTheme = class {
@@ -4121,6 +4332,17 @@ var init_apple_theme = __esm({
         return this.quoteCalloutStyleMode === "neutral" ? "neutral" : "theme";
       }
       /**
+       * 返回图文志及未来动态文章主题可复用的颜色角色。
+       * @returns {import('./apple-theme-colors.js').PictorialColorRoles}
+       */
+      getColorRoles() {
+        return createPictorialColorRoles({
+          accent: this.getThemeColorValue(),
+          headingColor: this.getHeadingColorValue(),
+          coloredHeader: this.coloredHeader
+        });
+      }
+      /**
        * 获取元素样式
        * @param {string} tagName - HTML 标签名
        * @returns {string} - CSS 样式字符串
@@ -4141,6 +4363,22 @@ var init_apple_theme = __esm({
         const effectiveLineHeight = (_a5 = this.lineHeight) != null ? _a5 : config.lineHeight;
         const effectiveParagraphGap = (_b = this.paragraphGap) != null ? _b : config.paragraphGap;
         const effectiveLetterSpacing = (_c = this.letterSpacing) != null ? _c : 0;
+        if (this.themeName === "pictorial") {
+          const pictorialStyle = getPictorialStyle({
+            tagName,
+            roles: this.getColorRoles(),
+            sizes,
+            font,
+            serifFont: _AppleTheme.FONTS.serif,
+            monospaceFont: _AppleTheme.FONTS.monospace,
+            lineHeight: effectiveLineHeight,
+            paragraphGap: effectiveParagraphGap,
+            letterSpacing: effectiveLetterSpacing,
+            sidePadding: sectionSidePadding
+          });
+          if (typeof pictorialStyle === "string")
+            return pictorialStyle;
+        }
         switch (tagName) {
           case "section":
             if (config.sectionBgStyle !== "grid") {
@@ -62716,6 +62954,123 @@ function convertStandaloneImages(container, converter) {
   }
 }
 
+// services/obsidian-triplet-serializer-pictorial.js
+var HERO_MARKER = /^\s*hero\s*:\s*/i;
+function isPictorialTheme(converter) {
+  var _a5;
+  return ((_a5 = converter == null ? void 0 : converter.theme) == null ? void 0 : _a5.themeName) === "pictorial";
+}
+function consumeHeroMarker(value) {
+  const text = String(value || "");
+  if (!HERO_MARKER.test(text))
+    return { isHero: false, value: text };
+  return {
+    isHero: true,
+    value: text.replace(HERO_MARKER, "").trim()
+  };
+}
+function getDirectFigureImage(figure) {
+  if (!figure)
+    return null;
+  const images = Array.from(figure.children || []).filter((child) => child.tagName === "IMG");
+  return images.length === 1 ? images[0] : null;
+}
+function getDirectFigureCaption(figure) {
+  if (!figure)
+    return null;
+  const captions = Array.from(figure.children || []).filter((child) => child.tagName === "FIGCAPTION");
+  return captions.length === 1 ? captions[0] : null;
+}
+function hasOnlySimpleFigureChildren(figure) {
+  var _a5;
+  if (!figure)
+    return false;
+  const elements = Array.from(figure.children || []);
+  if (elements.length < 1 || elements.length > 2)
+    return false;
+  if (elements.some((child) => child.tagName !== "IMG" && child.tagName !== "FIGCAPTION"))
+    return false;
+  if (!getDirectFigureImage(figure))
+    return false;
+  const caption = getDirectFigureCaption(figure);
+  if ((_a5 = caption == null ? void 0 : caption.querySelector) == null ? void 0 : _a5.call(caption, "*"))
+    return false;
+  return Array.from(figure.childNodes || []).every(
+    (node) => node.nodeType === 1 || !String(node.textContent || "").trim()
+  );
+}
+function isSpecialPictorialImage(img) {
+  var _a5, _b, _c;
+  if (!img)
+    return true;
+  if (img.getAttribute("data-owc-skip-standalone-image") === "1")
+    return true;
+  if (img.getAttribute("data-owc-skip-style") === "1")
+    return true;
+  if (img.getAttribute("alt") === "logo")
+    return true;
+  if ((_a5 = img.classList) == null ? void 0 : _a5.contains("mermaid-diagram-image"))
+    return true;
+  if ((_b = img.classList) == null ? void 0 : _b.contains("math-formula-image"))
+    return true;
+  if ((_c = img.closest) == null ? void 0 : _c.call(img, "[data-owc-image-swipe]"))
+    return true;
+  return false;
+}
+function isOrdinaryPictorialFigure(figure, img) {
+  if (!hasOnlySimpleFigureChildren(figure))
+    return false;
+  if (figure.getAttribute("class"))
+    return false;
+  if (Array.from(figure.attributes || []).some((attribute) => attribute.name.startsWith("data-owc-")))
+    return false;
+  return !isSpecialPictorialImage(img);
+}
+function setCaptionContent(caption, text, converter) {
+  const cleanText = String(text || "").trim();
+  if (!cleanText) {
+    caption.remove();
+    return;
+  }
+  caption.textContent = cleanText;
+  caption.setAttribute("style", getTagStyle(converter, "pictorial-caption"));
+}
+function normalizePictorialCaption(figure, img, converter, isHero, cleanedAlt) {
+  const existingCaption = getDirectFigureCaption(figure);
+  const existingText = String((existingCaption == null ? void 0 : existingCaption.textContent) || "").trim();
+  const captionFromFigure = isHero ? consumeHeroMarker(existingText).value : existingText;
+  const captionFromAlt = deriveImageCaption(converter, img.getAttribute("src") || "", cleanedAlt).trim();
+  const captionText = (captionFromFigure || captionFromAlt).replace(/^\|\s*\d+(?:x\d+)?\s*$/i, "").trim();
+  if (!captionText || (converter == null ? void 0 : converter.showImageCaption) === false) {
+    existingCaption == null ? void 0 : existingCaption.remove();
+    return;
+  }
+  const activeDocument = getActiveDocument();
+  const caption = existingCaption || (activeDocument == null ? void 0 : activeDocument.createElement("figcaption"));
+  if (!caption)
+    return;
+  setCaptionContent(caption, captionText, converter);
+  if (!existingCaption)
+    figure.appendChild(caption);
+}
+function applyPictorialFigureStyles(container, converter) {
+  if (!container || !isPictorialTheme(converter))
+    return;
+  Array.from(container.querySelectorAll("figure")).forEach((figure) => {
+    const img = getDirectFigureImage(figure);
+    if (!img || !isOrdinaryPictorialFigure(figure, img))
+      return;
+    const originalAlt = img.getAttribute("alt") || "";
+    const hero = consumeHeroMarker(originalAlt);
+    const role = hero.isHero ? "hero" : "regular";
+    if (hero.isHero)
+      img.setAttribute("alt", hero.value);
+    figure.setAttribute("style", getTagStyle(converter, `pictorial-${role}-figure`));
+    img.setAttribute("style", getTagStyle(converter, `pictorial-${role}-img`));
+    normalizePictorialCaption(figure, img, converter, hero.isHero, hero.value);
+  });
+}
+
 // services/obsidian-triplet-serializer-dom.js
 var LEGACY_CALLOUT_ICON_BY_TYPE = {
   note: "\u2139\uFE0F",
@@ -63662,6 +64017,7 @@ function serializeObsidianRenderedHtml({
   convertStandaloneImages(container, converter);
   formatTaskListItems(container, converter);
   applyThemeInlineStyles(container, converter);
+  applyPictorialFigureStyles(container, converter);
   wrapTablesForHorizontalScroll(container, converter);
   pruneObsidianOnlyAttributes(container, { finalStage: true });
   trimLeadingWhitespaceInBlockText(container);
@@ -68253,7 +68609,7 @@ function coerceString(value, fallback = "") {
 }
 
 // services/ai-layout/color.js
-function normalizeHexColor(value, fallback = "#7c3aed") {
+function normalizeHexColor2(value, fallback = "#7c3aed") {
   const raw = String(value || "").trim();
   if (/^#[0-9a-f]{6}$/i.test(raw))
     return raw.toLowerCase();
@@ -68261,8 +68617,8 @@ function normalizeHexColor(value, fallback = "#7c3aed") {
     return `#${raw.toLowerCase()}`;
   return fallback;
 }
-function hexToRgb(hex) {
-  const normalized = normalizeHexColor(hex).slice(1);
+function hexToRgb2(hex) {
+  const normalized = normalizeHexColor2(hex).slice(1);
   return {
     r: parseInt(normalized.slice(0, 2), 16),
     g: parseInt(normalized.slice(2, 4), 16),
@@ -68276,8 +68632,8 @@ function rgbToHex({ r, g, b }) {
   }).join("")}`;
 }
 function mixHexColor(color, target, amount) {
-  const sourceRgb = hexToRgb(color);
-  const targetRgb = hexToRgb(target);
+  const sourceRgb = hexToRgb2(color);
+  const targetRgb = hexToRgb2(target);
   return rgbToHex({
     r: sourceRgb.r + (targetRgb.r - sourceRgb.r) * amount,
     g: sourceRgb.g + (targetRgb.g - sourceRgb.g) * amount,
@@ -68285,7 +68641,7 @@ function mixHexColor(color, target, amount) {
   });
 }
 function createColorPaletteFromAccent(accentColor, { id = "custom", label = "\u81EA\u5B9A\u4E49" } = {}) {
-  const accent = normalizeHexColor(accentColor);
+  const accent = normalizeHexColor2(accentColor);
   return {
     id,
     label,
@@ -68437,7 +68793,7 @@ function getColorPaletteById(id) {
 function resolveColorPaletteForRender(id, override = {}) {
   var _a5;
   const normalizedId = normalizeResolvedColorPalette(id);
-  const customColor = normalizeHexColor(
+  const customColor = normalizeHexColor2(
     (override == null ? void 0 : override.customColor) || (override == null ? void 0 : override.accentColor) || (override == null ? void 0 : override.accent) || "",
     ""
   );
@@ -68914,7 +69270,7 @@ function normalizeAiSettings(raw = {}) {
       AI_LAYOUT_SELECTION_AUTO
     ),
     defaultStylePack: normalizeResolvedColorPalette(source.defaultStylePack, AI_LAYOUT_DEFAULT_COLOR_PALETTE),
-    customColor: normalizeHexColor(source.customColor, defaults.customColor),
+    customColor: normalizeHexColor2(source.customColor, defaults.customColor),
     includeImagesInLayout: source.includeImagesInLayout !== false,
     requestTimeoutMs: clampNumber(source.requestTimeoutMs, defaults.requestTimeoutMs, 5e3, 18e4),
     providers,
@@ -86789,11 +87145,11 @@ var aiLayoutPanelMethods = {
     });
     this.aiCustomColorInput.value = this.getAiCustomColor();
     this.aiCustomColorInput.addEventListener("input", (event) => {
-      const nextColor = normalizeHexColor(getEventTargetValue(event, this.getAiCustomColor()), this.getAiCustomColor());
+      const nextColor = normalizeHexColor2(getEventTargetValue(event, this.getAiCustomColor()), this.getAiCustomColor());
       this.plugin.settings.ai.customColor = nextColor;
     });
     this.aiCustomColorInput.addEventListener("change", async (event) => {
-      const nextColor = normalizeHexColor(getEventTargetValue(event, this.getAiCustomColor()), this.getAiCustomColor());
+      const nextColor = normalizeHexColor2(getEventTargetValue(event, this.getAiCustomColor()), this.getAiCustomColor());
       this.plugin.settings.ai.customColor = nextColor;
       await this.plugin.saveSettings();
       await this.onAiColorPaletteChange("custom", { skipSave: true });
@@ -86871,7 +87227,7 @@ var aiLayoutPanelMethods = {
   },
   getAiCustomColor() {
     var _a5, _b;
-    return normalizeHexColor((_b = (_a5 = this.plugin.settings) == null ? void 0 : _a5.ai) == null ? void 0 : _b.customColor, "#7c3aed");
+    return normalizeHexColor2((_b = (_a5 = this.plugin.settings) == null ? void 0 : _a5.ai) == null ? void 0 : _b.customColor, "#7c3aed");
   },
   getAiColorPaletteOverride(colorPaletteId = "") {
     const targetPalette = colorPaletteId || this.getCurrentAiLayoutSelection().colorPalette;

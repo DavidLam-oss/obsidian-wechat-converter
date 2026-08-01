@@ -167,6 +167,7 @@ describe('AppleTheme Color Logic', () => {
         { value: 'typo', label: 'Typo' },
         { value: 'media', label: '清爽媒体' },
         { value: 'colorful', label: '彩色强调' },
+        { value: 'pictorial', label: '图文志' },
       ]);
     });
 

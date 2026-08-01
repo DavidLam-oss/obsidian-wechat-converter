@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-27T16:09:01.697Z",
+  "updatedAt": "2026-08-01T09:42:52.401Z",
   "summary": {
-    "eventCount": 4,
+    "eventCount": 5,
     "observed": 2,
     "pendingObserved": 0,
     "autoApplied": 1,
@@ -10,7 +10,7 @@
     "reconciledAutoApplied": 0,
     "rejected": 0,
     "skipped": 1,
-    "completionCheckpoints": 2,
+    "completionCheckpoints": 3,
     "skippedReasons": {
       "candidate-applied": 1
     },
@@ -22,6 +22,32 @@
     }
   },
   "recentEvents": [
+    {
+      "version": 1,
+      "at": "2026-08-01T08:57:54.769Z",
+      "action": "checkpoint",
+      "outcome": "quality-verify",
+      "candidateId": null,
+      "candidateType": null,
+      "scope": "project",
+      "autoApplied": false,
+      "applyMode": null,
+      "reason": "pictorial-theme-v1",
+      "changed": [
+        "README.md",
+        "lib/highlight.min.js",
+        "lib/markdown-it.min.js",
+        "lib/math-entry.js",
+        "lib/mathjax-plugin.js",
+        "lib/obsidian-wechat-converter_lib_README.md",
+        "package.json",
+        "scripts/build-ai-layout-runtime.mjs",
+        "scripts/build-styles.mjs",
+        "scripts/check-build-artifacts.mjs",
+        "scripts/check-scan-risk-patterns.mjs",
+        "scripts/check-wechat-style-safety.mjs"
+      ]
+    },
     {
       "version": 1,
       "at": "2026-07-24T00:37:40.271Z",

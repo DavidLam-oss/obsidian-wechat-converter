@@ -1,15 +1,15 @@
 # 交接
 
-- 本次内容: 项目级产品与设计上下文文档
+- 本次内容: 图文志公众号主题第一阶段
 - 产品场景: 面向个人消费者场景
 - 场景模板: 面向个人消费者场景
 - 负责人: 项目维护者
-- 下一步: 完成文档结构与事实一致性检查后，以两份文档为依据继续整理已确认的修复规划。
-- 交接去向: obsidian-wechat-converter 项目根目录文档
+- 下一步: 生成并确认 stable review 后，建立 change/tasks，只实施图文志第一阶段并按任务证据验证。
+- 交接去向: obsidian-wechat-converter 的 AppleTheme 与原生公众号渲染链
 
 ## 变化摘要
 
-- 新增：PRODUCT.md 使用 product register
-- 新增：DESIGN.md 遵循标准 YAML token frontmatter 与 Overview、Colors、Typography、Elevation、Components、Do's and Don'ts 六章节
-- 新增：文档使用自然中文并保持结构清楚、美观、可扫描
-- 优化：维护者或 Agent 在规划产品、交互或视觉改动前读取 PRODUCT.md 与 DESIGN.md
+- 新增：AppleTheme 主题列表新增图文志，主题和颜色仍是两个独立选择维度
+- 新增：提供可复用的动态颜色角色与对比度保护，不为图文志写颜色特例
+- 新增：提供明确且可测试的 hero、regular、caption 语义合同
+- 新增：为标题、正文、引用、列表、表格、图片、图注、链接和代码生成自洽的内联样式

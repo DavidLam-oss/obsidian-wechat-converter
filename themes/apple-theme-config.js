@@ -26,7 +26,7 @@
 */
 
 /**
- * @typedef {'github' | 'wechat' | 'serif' | 'paper' | 'grid' | 'typo' | 'media' | 'colorful'} AppleThemeName
+ * @typedef {'github' | 'wechat' | 'serif' | 'paper' | 'grid' | 'typo' | 'media' | 'colorful' | 'pictorial'} AppleThemeName
  * @typedef {'blue' | 'green' | 'purple' | 'orange' | 'teal' | 'rose' | 'ruby' | 'slate'} AppleThemeColorName
  * @typedef {'sans-serif' | 'serif' | 'monospace'} AppleFontFamilyName
  * @typedef {1 | 2 | 3 | 4 | 5} AppleFontSizeName
@@ -274,6 +274,22 @@ const THEME_CONFIGS = {
     tableHeaderBg: '#fff8ed',
     figureBorderColor: '#f0e4d4',
     strongBg: true,
+  },
+  pictorial: {
+    name: '图文志',
+    lineHeight: 1.9,
+    paragraphGap: 22,
+    headingWeight: 700,
+    headingLetterSpacing: 0,
+    textColor: '#2c2c2c',
+    headingColor: '#3e3e3e',
+    mutedTextColor: '#666666',
+    sectionBg: '#ffffff',
+    linkDecoration: 'none',
+    blockquoteBorderWidth: 0,
+    tableHeaderBg: '#ffffff',
+    tableBorderColor: '#dedede',
+    figureBorderColor: 'transparent',
   },
 };
 

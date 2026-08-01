@@ -1,10 +1,28 @@
 {
   "version": 2,
-  "updatedAt": "2026-07-28 00:09:01",
+  "updatedAt": "2026-08-01 17:42:53",
   "incidents": [],
   "patterns": [],
   "skills": [],
   "candidates": [
+    {
+      "candidateId": "candidate-eval-20260801170548",
+      "status": "pending-review",
+      "path": ".openprd/knowledge/candidates/candidate-eval-20260801170548/candidate.json",
+      "sourceKind": "quality-report",
+      "sourceRef": "candidate-eval-20260801170548",
+      "title": "质量报告 eval-20260801174251",
+      "draftSkillPath": ".openprd/knowledge/drafts/openprd-experience-quality-candidate-eval-20260801170548/SKILL.md"
+    },
+    {
+      "candidateId": "candidate-dev-check-attention-0-warning-0",
+      "status": "pending-review",
+      "path": ".openprd/knowledge/candidates/candidate-dev-check-attention-0-warning-0/candidate.json",
+      "sourceKind": "completion-review",
+      "sourceRef": "candidate-dev-check-attention-0-warning-0",
+      "title": "dev-check attention=0, warning=0",
+      "draftSkillPath": ".openprd/knowledge/drafts/openprd-experience-diagnostic-candidate-dev-check-attention-0-warning-0/SKILL.md"
+    },
     {
       "candidateId": "candidate-eval-20260728000857",
       "status": "pending-review",
@@ -277,6 +295,18 @@
     }
   ],
   "drafts": [
+    {
+      "skillName": "openprd-experience-quality-candidate-eval-20260801170548",
+      "path": ".openprd/knowledge/drafts/openprd-experience-quality-candidate-eval-20260801170548/SKILL.md",
+      "candidateId": "candidate-eval-20260801170548",
+      "status": "pending-review"
+    },
+    {
+      "skillName": "openprd-experience-diagnostic-candidate-dev-check-attention-0-warning-0",
+      "path": ".openprd/knowledge/drafts/openprd-experience-diagnostic-candidate-dev-check-attention-0-warning-0/SKILL.md",
+      "candidateId": "candidate-dev-check-attention-0-warning-0",
+      "status": "pending-review"
+    },
     {
       "skillName": "openprd-experience-quality-candidate-eval-20260728000857",
       "path": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter/.openprd/knowledge/drafts/openprd-experience-quality-candidate-eval-20260728000857/SKILL.md",

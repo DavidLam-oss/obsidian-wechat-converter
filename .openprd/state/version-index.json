@@ -11,5 +11,18 @@
     "digest": "533f38f9e205300464e70ec093f910cf415faf0521f07cb6ae8a2601d32eb3b1",
     "workUnitId": "wu-20260716235027-837ed729",
     "targetRoot": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter"
+  },
+  {
+    "versionNumber": 2,
+    "versionId": "v0002",
+    "createdAt": "2026-08-01 08:20:36",
+    "title": "图文志公众号主题第一阶段",
+    "owner": "项目维护者",
+    "productType": "consumer",
+    "templatePack": "consumer",
+    "status": "synthesized",
+    "digest": "b0ee0e4cb6a95cf7dd9631514aaae48c2e26ef7a2f4b11d048e5c99f3a332406",
+    "workUnitId": "wu-20260801082036-8c0b7a6d",
+    "targetRoot": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter-flipped-editor-theme-research"
   }
 ]

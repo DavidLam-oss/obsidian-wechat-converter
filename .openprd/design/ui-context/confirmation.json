@@ -2,9 +2,9 @@
   "version": 1,
   "direction": "direction-1",
   "source": "user-confirmed",
-  "confirmedAt": "2026-07-27 12:50:54",
+  "confirmedAt": "2026-08-01 10:52:08",
   "mode": "brownfield",
-  "contextFingerprint": "fad01ae7d53601dd6f2e71960aa4592675bcd997a3f7a5fc7744df72077a6014",
+  "contextFingerprint": "3bfee37b61de5aefe0a01dca0eed3be8960e7f7d484c97ba62130723ad5a423d",
   "contractDecision": "merge",
   "contractPolicy": "merge-existing-contracts"
 }

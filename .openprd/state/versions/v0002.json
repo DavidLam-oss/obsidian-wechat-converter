@@ -1,306 +1,15 @@
 {
-  "captureMeta": {
-    "problem.problemStatement": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "problem.whyNow": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "problem.evidence": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "users.primaryUsers": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "users.stakeholders": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "goals.goals": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "goals.successMetrics": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "goals.acceptanceGoals": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "scope.inScope": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "scope.outOfScope": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "scenarios.primaryFlows": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "scenarios.edgeCases": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "scenarios.failureModes": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "requirements.functional": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "requirements.nonFunctional": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "requirements.businessRules": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "constraints.technical": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "constraints.compliance": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "constraints.dependencies": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "risks.assumptions": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "risks.risks": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "risks.openQuestions": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "handoff.owner": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "handoff.nextStep": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "handoff.targetSystem": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "typeSpecific.fields.persona": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "typeSpecific.fields.segment": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "typeSpecific.fields.journey": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "typeSpecific.fields.activationMetric": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "typeSpecific.fields.retentionMetric": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "meta.productType": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "meta.title": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    },
-    "meta.owner": {
-      "source": "user-confirmed",
-      "capturedAt": "2026-08-01 08:20:36"
-    }
-  },
-  "problemStatement": "现有公众号文章主题缺少以图片叙事为核心、同时服从动态主题色和微信内联样式限制的杂志式母版；外部参考主题也不能直接复制或依赖写死色板，需要结合本项目主题系统进行原创重设计。",
-  "whyNow": "用户已经完成 Flipped Editor 与公开 GitHub 主题的调研取舍，并选择 Image Essay 作为第一批母版，希望按规划开始实施。",
-  "evidence": [
-    "Flipped Editor 公开页面展示了 Image Essay 的图文叙事结构",
-    "本项目 AppleTheme 已支持 8 个预设主题色和任意 customColor，并统一服务预览、复制与草稿同步",
-    "外部 GitHub 仓库与上游为 AGPL-3.0-or-later，而本项目为 MIT，因此默认采用 clean-room 原创重设计"
-  ],
-  "primaryUsers": [
-    "在 Obsidian 中写作并发布到微信公众号、希望减少二次排版的内容创作者",
-    "需要图片、图注和章节节奏共同叙事，同时仍要求代码、公式、表格与 Callout 兼容的作者"
-  ],
-  "stakeholders": [
-    "项目维护者",
-    "依赖实时预览、复制与草稿同步一致性的现有用户"
-  ],
-  "goals": [
-    "新增本项目自有名称的 Image Essay 结构主题图文志",
-    "在有图和无图文章中都形成稳定、可预测的长文排版",
-    "让新结构完整服从动态主题色与自定义色，而不是依赖外部固定色板",
-    "保持预览、复制和微信草稿同步的基础 HTML 一致"
-  ],
-  "successMetrics": [
-    "图文志在主题选择器中可选，且不出现 Flipped Editor 或外部仓库原主题名",
-    "无图、单首图、多图和有无图注的样本都不破版",
-    "8 个预设主题色与亮色、暗色、低饱和自定义色下均保持结构和文字可读性",
-    "项目 guard、目标测试、生成物检查和构建通过，真实公众号验证项有明确证据或明确保留为人工联调"
-  ],
-  "acceptanceGoals": [
-    "第一阶段只实现 hero、regular、caption、无图降级、动态主题色和微信内联兼容",
-    "图片角色行为可预测，不按尺寸、文件名或主观算法猜测",
-    "复杂表格、代码、数学、Mermaid 与 Callout 以兼容优先，不强行杂志化",
-    "本轮新增或实质扩展的源码模块保持在 OpenPrd 正常控制线 700 行以内；达到预警即按职责拆分",
-    "不把新职责继续堆进 input.js、converter.js、views/converter/core.js 或其他已有大文件"
-  ],
-  "inScope": [
-    "图文志主题注册与本项目自有命名",
-    "hero、regular、caption 与无图降级的图片叙事结构",
-    "accent、accent-readable、accent-deep、accent-soft 与中性色角色合同",
-    "必要的图片角色解析与原生序列化接入",
-    "主题、颜色、图片角色、序列化和微信兼容的自动化与视觉证据",
-    "按职责拆分源码并遵守 OpenPrd 行数与文件说明书门禁"
-  ],
-  "outOfScope": [
-    "本轮不实现 wide 跨栏图片角色",
-    "本轮不实现章序、框签、边页或疏文",
-    "不把 GitHub 主题融入图文志，也不保留其固定绿黄、红白、橄榄橙色板",
-    "不复制 Flipped Editor 或 AGPL 仓库的源码、精确 CSS、装饰 HTML、品牌、示例文案、图片或素材",
-    "不修改文章模式以外的平台业务边界，不进行生产部署、发布、commit、push 或 PR"
-  ],
-  "primaryFlows": [
-    "用户在插件主题选择器中选择图文志，并继续独立选择预设主题色或自定义色",
-    "普通 Markdown 图片默认按 regular 角色渲染；显式增强的首图按 hero 角色渲染；存在说明时生成 caption",
-    "文章经过原生渲染链得到内联样式 HTML，并用于实时预览、复制和微信草稿同步"
-  ],
-  "edgeCases": [
-    "文章没有图片时降级为稳定的纸刊长文",
-    "图片没有说明时不输出空 caption 结构",
-    "自定义色过亮或过浅时，文字强调角色使用安全加深或中性色回退",
-    "未知主题或历史设置值仍使用现有回退行为",
-    "复杂内容不因杂志主题被裁切、重排或转换成不兼容结构"
-  ],
-  "failureModes": [
-    "通过图片尺寸或文件名猜测首图，导致行为不可预测",
-    "写死第二强调色，导致用户更换主题色后结构失真",
-    "只修改本地预览而复制或同步输出不一致",
-    "依赖 style 标签、class CSS、伪元素、复杂 Grid 或微信会剥离的能力",
-    "把大量新逻辑堆进单个主题文件或既有超大文件，超过 OpenPrd 控制线"
-  ],
-  "functional": [
-    "AppleTheme 主题列表新增图文志，主题和颜色仍是两个独立选择维度",
-    "提供可复用的动态颜色角色与对比度保护，不为图文志写颜色特例",
-    "提供明确且可测试的 hero、regular、caption 语义合同",
-    "为标题、正文、引用、列表、表格、图片、图注、链接和代码生成自洽的内联样式",
-    "自定义 CSS 继续作为现有后置覆盖层"
-  ],
-  "nonFunctional": [
-    "通过 npm run scan:guard 以及风险相称的 review:guard、build 和生成物检查",
-    "本轮新增或实质扩展源码文件以 700 行为拆分线，不以 1500 行警戒线上限作为目标",
-    "新逻辑按颜色工具、主题配置、图片语义、序列化接入和测试职责拆分",
-    "不手改 main.js 或 services/generated-embedded-deps.js，使用项目脚本生成",
-    "公众号兼容与可访问性优先于本地预览中的复杂视觉效果"
-  ],
-  "businessRules": [
-    "Image Essay 线与 GitHub 外部主题线严格分开",
-    "所有用户可见名称与代码标识使用本项目自有命名",
-    "外部固定配色不是可迁移资产；新结构只能使用用户当前动态主题色的安全派生与中性色",
-    "第一批只落地图文志；其他候选需独立视觉评审后另行进入实现",
-    "默认使用 clean-room 原创重设计，除非未来取得单独授权或另行接受许可证影响"
-  ],
-  "technical": [
-    "运行环境是 Obsidian Electron/CommonJS，主题源码会进入 generated-embedded-deps",
-    "微信输出必须以标签级内联样式和必要结构节点为主",
-    "沿用 AppleTheme、原生 renderer/serializer 与现有 settings/core 实时刷新链路，不建立平行主题引擎",
-    "input.js 保持轻量，样式、图片语义与序列化职责分别落在对应模块",
-    "OpenPrd codeFileLines 正常上限为 700 行；触达已有超线文件时只做最小接线并把新职责拆出"
-  ],
-  "compliance": [
-    "当前项目 MIT；外部 GitHub 参考与上游 AGPL-3.0-or-later",
-    "不复制外部精确实现、品牌、示例内容、图片或素材",
-    "不记录凭据、用户内容或生产账号信息"
-  ],
-  "dependencies": [
-    "themes/apple-theme-config.js、themes/apple-theme.js 与 themes/apple-theme-headings.js",
-    "services/obsidian-triplet-serializer.js 与现有 render pipeline",
-    "views/converter/settings-panel.js 与 views/converter/core.js",
-    "npm run generate:embedded、Vitest、scan/review guard、build 与 build-artifact checks"
-  ],
-  "assumptions": [
-    "用户选择 Image Essay 是对结构方向的确认，不代表接受 Flipped Editor 的品牌、颜色或源码实现",
-    "图文志第一阶段可以在不实现 wide 的情况下独立成立",
-    "hero 使用显式增强且未标记时安全降级，具体语法需在 stable review 中明确"
-  ],
-  "risks": [
-    "杂志式结构提高内容图片质量与图注一致性的要求，需要清晰降级而不是强制作者重写文章",
-    "极亮自定义色可能降低白底文字对比度，需要共用颜色工具保护",
-    "本地预览与微信编辑器处理差异可能造成视觉漂移，需要复制和草稿侧证据",
-    "现有主题和渲染文件部分已接近或超过行数控制线，若不提前拆分会增加维护成本"
-  ],
-  "openQuestions": [
-    "图文志 hero 的显式 Markdown 标记语法在 stable review 中冻结；默认不得使用尺寸或文件名推断",
-    "真实公众号账号联调若本轮环境不可用，必须作为未完成验证明确保留，不得以本地截图替代"
-  ],
-  "handoffOwner": "项目维护者",
-  "nextStep": "生成并确认 stable review 后，建立 change/tasks，只实施图文志第一阶段并按任务证据验证。",
-  "targetSystem": "obsidian-wechat-converter 的 AppleTheme 与原生公众号渲染链",
-  "persona": "希望在 Obsidian 写完后，以较少二次排版成本获得具有图片叙事感、又能稳定进入微信公众号的中文内容创作者。",
-  "segment": "重视排版审美、图片与文字节奏，同时要求 Markdown 复杂内容兼容的个人创作者与技术写作者。",
-  "journey": [
-    "在当前笔记中准备图片与可选图注",
-    "在主题选择器中选择图文志并选择任意主题色",
-    "通过实时预览检查有图或无图的叙事节奏",
-    "复制富 HTML 或同步到微信草稿并完成最终平台检查"
-  ],
-  "activationMetric": "用户首次选择图文志后，在不修改原文结构的前提下获得可读预览，并成功完成一次复制或草稿同步。",
-  "retentionMetric": "用户在后续图文文章中继续复用图文志，并减少微信编辑器中的重复排版调整。",
-  "lastCapturedAt": "2026-08-01 08:20:36",
-  "status": "synthesized",
-  "previousLatestVersionId": null,
-  "previousLatestVersionDigest": null,
-  "previousActiveWorkUnitId": null,
-  "laneScope": "session",
-  "laneSessionId": "019f6662-eda4-7c43-a33a-3c8f87bc9292",
-  "productType": "consumer",
+  "versionNumber": 2,
+  "versionId": "v0002",
+  "createdAt": "2026-08-01 08:20:36",
+  "projectRoot": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter-flipped-editor-theme-research",
+  "workspaceRoot": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter-flipped-editor-theme-research/.openprd",
+  "schema": "prd-core",
   "templatePack": "consumer",
-  "classifiedAt": "2026-08-01 08:20:36",
-  "prdVersion": 2,
-  "latestVersionId": "v0002",
-  "latestVersionDigest": "b0ee0e4cb6a95cf7dd9631514aaae48c2e26ef7a2f4b11d048e5c99f3a332406",
-  "activeWorkUnitId": "wu-20260801082036-8c0b7a6d",
-  "targetRoot": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter-flipped-editor-theme-research",
-  "reviewStatus": {
-    "versionId": "v0002",
-    "workUnitId": "wu-20260801082036-8c0b7a6d",
-    "status": "confirmed",
-    "reviewPath": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter-flipped-editor-theme-research/.openprd/reviews/v0002.html",
-    "entryPath": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter-flipped-editor-theme-research/.openprd/engagements/active/review.html",
-    "artifact": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter-flipped-editor-theme-research/.openprd/engagements/active/review.html",
-    "stableArtifact": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter-flipped-editor-theme-research/.openprd/reviews/v0002.html",
-    "updatedAt": "2026-08-01 09:54:54",
-    "notes": "用户于 2026-08-01 精确确认 v0002 stable review，并授权按评审实施图文志第一阶段。",
-    "designDirection": null
-  },
+  "productType": "consumer",
   "title": "图文志公众号主题第一阶段",
   "owner": "项目维护者",
-  "synthesizedAt": "2026-08-01 08:20:36",
-  "versionId": "v0002",
-  "versionNumber": 2,
-  "workUnitId": "wu-20260801082036-8c0b7a6d",
+  "status": "synthesized",
   "sections": {
     "meta": {
       "title": "图文志公众号主题第一阶段",
@@ -503,7 +212,149 @@
       }
     }
   },
+  "reviewPresentation": {
+    "diagram": {
+      "type": "flow",
+      "note": "从结构主题与动态主题色两个独立维度进入统一公众号输出链。"
+    },
+    "flowNodes": [
+      {
+        "id": "select",
+        "text": "选择图文志与任意主题色"
+      },
+      {
+        "id": "render",
+        "text": "识别首图、普通图与图注"
+      },
+      {
+        "id": "deliver",
+        "text": "统一预览、复制与草稿输出"
+      }
+    ],
+    "flowEdges": [
+      {
+        "from": "select",
+        "to": "render"
+      },
+      {
+        "from": "render",
+        "to": "deliver"
+      }
+    ],
+    "mapNodes": {
+      "problem": {
+        "title": "问题",
+        "text": "缺少动态色的图片叙事主题"
+      },
+      "goal": {
+        "title": "目标",
+        "text": "有图成篇，无图仍适合长文"
+      },
+      "scope": {
+        "title": "首期范围",
+        "text": "首图、普通图、图注与降级"
+      },
+      "flow": {
+        "title": "输出链",
+        "text": "同一 HTML 服务三个输出面"
+      },
+      "risk": {
+        "title": "主要风险",
+        "text": "亮色对比与微信样式漂移"
+      }
+    },
+    "panels": {
+      "flow": [
+        {
+          "summary": "新增主题",
+          "detail": "用户选择图文志后，主题色仍可独立选择和实时更新。"
+        },
+        {
+          "summary": "明确首图",
+          "detail": "用 hero: 前缀显式增强首图；未标记图片全部安全降级为普通图。"
+        },
+        {
+          "summary": "保留图注",
+          "detail": "hero: 后的文字与普通图片 alt 作为图注；没有说明时不生成空结构。"
+        },
+        {
+          "summary": "统一输出",
+          "detail": "预览、复制与草稿同步继续复用同一基础 HTML。"
+        }
+      ],
+      "function": [
+        {
+          "summary": "动态配色",
+          "detail": "强调、可读强调、标题深色与浅表面均从用户主题色安全派生。"
+        },
+        {
+          "summary": "图片叙事",
+          "detail": "首图建立开篇，普通图片推进阅读，章节留白形成杂志节奏。"
+        },
+        {
+          "summary": "无图降级",
+          "detail": "没有图片时仍以稳定的纸刊长文结构呈现，不留下空图片区。"
+        },
+        {
+          "summary": "复杂内容",
+          "detail": "表格、代码、公式、Mermaid 与 Callout 以兼容为先。"
+        },
+        {
+          "summary": "继续覆盖",
+          "detail": "用户自定义 CSS 保持在主题输出后的既有覆盖位置。"
+        }
+      ],
+      "guardrail": [
+        {
+          "summary": "只做图文志",
+          "detail": "章序、框签、边页和疏文不进入本轮实现。"
+        },
+        {
+          "summary": "不用固定色",
+          "detail": "不保留外部绿黄、红白或橄榄橙配色，也不新增第二强调色。"
+        },
+        {
+          "summary": "原创重设计",
+          "detail": "不复制 Flipped 或 AGPL 仓库的源码、样式串、装饰与素材。"
+        },
+        {
+          "summary": "控制行数",
+          "detail": "新增职责按模块拆分，以 700 行为源码拆分线，不向超大文件堆逻辑。"
+        },
+        {
+          "summary": "按流程生成",
+          "detail": "main.js 与 embedded deps 只由项目脚本生成，不手工修改。"
+        }
+      ],
+      "risk": [
+        {
+          "summary": "内容门槛",
+          "detail": "图片质量和图注会影响效果，但无图与弱图文内容仍有安全降级。"
+        },
+        {
+          "summary": "亮色可读",
+          "detail": "极亮自定义色不能直接承担文字，需安全加深或中性色回退。"
+        },
+        {
+          "summary": "平台漂移",
+          "detail": "本地预览不能替代微信复制与草稿侧的实际兼容证据。"
+        },
+        {
+          "summary": "语法成本",
+          "detail": "首图采用 hero: 前缀显式增强，换取可预测行为和零猜测。"
+        }
+      ]
+    }
+  },
+  "workUnitId": "wu-20260801082036-8c0b7a6d",
+  "targetRoot": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter-flipped-editor-theme-research",
   "content": "# 图文志公众号主题第一阶段\n> 语言规则：用户可见说明、PRD、spec 和 tasks 跟随用户当前主语言；无法判断时才使用简体中文兜底。PRD、OpenPrd、OpenSpec、API、SDK、CLI、TypeScript、JSON、HTTP、WebSocket、字段 key、命令名、品牌名、产品名和协议名等必要专有名词保留原文。\n- 版本: v0002\n- 负责人: 项目维护者\n- 产品场景: 面向个人消费者场景\n- 场景模板: 面向个人消费者场景\n- 状态: synthesized\n- 生成时间: 2026-08-01 08:20:36\n## 元信息\n\n- 标题: 图文志公众号主题第一阶段\n- 负责人: 项目维护者\n- 状态: classified\n- 版本: v0002\n- 产品场景: 面向个人消费者场景\n- 日期: 2026-08-01\n\n## 问题\n\n- 问题陈述: 现有公众号文章主题缺少以图片叙事为核心、同时服从动态主题色和微信内联样式限制的杂志式母版；外部参考主题也不能直接复制或依赖写死色板，需要结合本项目主题系统进行原创重设计。\n- 为什么是现在: 用户已经完成 Flipped Editor 与公开 GitHub 主题的调研取舍，并选择 Image Essay 作为第一批母版，希望按规划开始实施。\n- 证据:\n  - Flipped Editor 公开页面展示了 Image Essay 的图文叙事结构\n  - 本项目 AppleTheme 已支持 8 个预设主题色和任意 customColor，并统一服务预览、复制与草稿同步\n  - 外部 GitHub 仓库与上游为 AGPL-3.0-or-later，而本项目为 MIT，因此默认采用 clean-room 原创重设计\n\n## 用户与相关方\n\n- 主要用户:\n  - 在 Obsidian 中写作并发布到微信公众号、希望减少二次排版的内容创作者\n  - 需要图片、图注和章节节奏共同叙事，同时仍要求代码、公式、表格与 Callout 兼容的作者\n- 次要用户:\n  - 待补充\n- 相关方:\n  - 项目维护者\n  - 依赖实时预览、复制与草稿同步一致性的现有用户\n\n## 目标与成功标准\n\n- 目标:\n  - 新增本项目自有名称的 Image Essay 结构主题图文志\n  - 在有图和无图文章中都形成稳定、可预测的长文排版\n  - 让新结构完整服从动态主题色与自定义色，而不是依赖外部固定色板\n  - 保持预览、复制和微信草稿同步的基础 HTML 一致\n- 成功指标:\n  - 图文志在主题选择器中可选，且不出现 Flipped Editor 或外部仓库原主题名\n  - 无图、单首图、多图和有无图注的样本都不破版\n  - 8 个预设主题色与亮色、暗色、低饱和自定义色下均保持结构和文字可读性\n  - 项目 guard、目标测试、生成物检查和构建通过，真实公众号验证项有明确证据或明确保留为人工联调\n- 验收目标:\n  - 第一阶段只实现 hero、regular、caption、无图降级、动态主题色和微信内联兼容\n  - 图片角色行为可预测，不按尺寸、文件名或主观算法猜测\n  - 复杂表格、代码、数学、Mermaid 与 Callout 以兼容优先，不强行杂志化\n  - 本轮新增或实质扩展的源码模块保持在 OpenPrd 正常控制线 700 行以内；达到预警即按职责拆分\n  - 不把新职责继续堆进 input.js、converter.js、views/converter/core.js 或其他已有大文件\n\n## 验证与创业闭环\n\n- 可触达社区:\n  - 待补充\n- 第一批种子用户:\n  - 待补充\n- 社区契合与触达依据:\n  - 待补充\n- 当前替代方案: 待补充\n- 痛点与替代证据:\n  - 待补充\n- 手工交付路径:\n  - 待补充\n- 手工作战卡:\n  - 待补充\n- 承诺信号:\n  - 待补充\n- 首个低成本验证: 生成并确认 stable review 后，建立 change/tasks，只实施图文志第一阶段并按任务证据验证。\n- 先活下来方案:\n  - 待补充\n- 付费验证信号:\n  - 待补充\n- 第一版只做一件事: 待补充\n- 周末级验证: 待补充\n- 最小工具桥接:\n  - 待补充\n- 产品化门槛:\n  - 待补充\n- 第一批客户路径:\n  - 待补充\n- 初始收费假设: 待补充\n- 客户 1 盈利路径: 待补充\n- 销售与增长纪律:\n  - 待补充\n- 可逆性判断: 待补充\n- 客户真问题校验: 待补充\n- 价值观一致性: 待补充\n\n## 范围与非目标\n\n- 范围内:\n  - 图文志主题注册与本项目自有命名\n  - hero、regular、caption 与无图降级的图片叙事结构\n  - accent、accent-readable、accent-deep、accent-soft 与中性色角色合同\n  - 必要的图片角色解析与原生序列化接入\n  - 主题、颜色、图片角色、序列化和微信兼容的自动化与视觉证据\n  - 按职责拆分源码并遵守 OpenPrd 行数与文件说明书门禁\n- 范围外:\n  - 本轮不实现 wide 跨栏图片角色\n  - 本轮不实现章序、框签、边页或疏文\n  - 不把 GitHub 主题融入图文志，也不保留其固定绿黄、红白、橄榄橙色板\n  - 不复制 Flipped Editor 或 AGPL 仓库的源码、精确 CSS、装饰 HTML、品牌、示例文案、图片或素材\n  - 不修改文章模式以外的平台业务边界，不进行生产部署、发布、commit、push 或 PR\n\n## 场景与流程\n\n- 主流程:\n  - 用户在插件主题选择器中选择图文志，并继续独立选择预设主题色或自定义色\n  - 普通 Markdown 图片默认按 regular 角色渲染；显式增强的首图按 hero 角色渲染；存在说明时生成 caption\n  - 文章经过原生渲染链得到内联样式 HTML，并用于实时预览、复制和微信草稿同步\n- 边界情况:\n  - 文章没有图片时降级为稳定的纸刊长文\n  - 图片没有说明时不输出空 caption 结构\n  - 自定义色过亮或过浅时，文字强调角色使用安全加深或中性色回退\n  - 未知主题或历史设置值仍使用现有回退行为\n  - 复杂内容不因杂志主题被裁切、重排或转换成不兼容结构\n- 失败模式:\n  - 通过图片尺寸或文件名猜测首图，导致行为不可预测\n  - 写死第二强调色，导致用户更换主题色后结构失真\n  - 只修改本地预览而复制或同步输出不一致\n  - 依赖 style 标签、class CSS、伪元素、复杂 Grid 或微信会剥离的能力\n  - 把大量新逻辑堆进单个主题文件或既有超大文件，超过 OpenPrd 控制线\n\n## 可视化图表\n\n### 产品流程\n\n```mermaid\nflowchart LR\n  entry[\"入口触发<br/>用户在插件主题选择器中选择图文志，并继续独立选择预设主题色或自定义色\"]\n  experience[\"产品内步骤<br/>普通 Markdown 图片默认按 regular 角色渲染；显式增强的首图按 hero 角色渲染；存在说明时生成 capti…\"]\n  decision{\"决策点<br/>文章没有图片时降级为稳定的纸刊长文\"}\n  success([\"成功结果<br/>图文志在主题选择器中可选，且不出现 Flipped Editor 或外部仓库原主题名\"])\n  failure[[\"失败与恢复<br/>通过图片尺寸或文件名猜测首图，导致行为不可预测\"]]\n  entry -->|\"用户在插件主题选择器中选择图文志，并继续独立选择预设主题色或自定义色\"| experience\n  experience -->|\"普通 Markdown 图片默认按 regular 角色渲染；显式增强的首图按 h…\"| decision\n  decision -->|\"新增本项目自有名称的 Image Essay 结构主题图文志\"| success\n  decision -.->|\"通过图片尺寸或文件名猜测首图，导致行为不可预测\"| failure\n```\n\n### 架构\n\n```mermaid\nflowchart LR\n  users[\"主要用户<br/>在 Obsidian 中写作并发布到微信公众号、希望减少二次排版的内容创作者 · 需要图片、图注和章节节奏共同叙事，同时仍要求…\"]\n  subgraph solution[\"方案边界\"]\n    experience[\"个人消费者场景层<br/>用户在插件主题选择器中选择图文志，并继续独立选择预设主题色或自定义色 · 普通 Markdown 图片默认按 regular …\"]\n    core[\"核心产品逻辑<br/>现有公众号文章主题缺少以图片叙事为核心、同时服从动态主题色和微信内联样式限制的杂志式母版；外部参考主题也不能直接复制或依赖写死…\"]\n    integrations[\"依赖与集成<br/>themes/apple-theme-config.js、themes/apple-theme.js 与 themes/app…\"]\n    governance[[\"约束与可靠性<br/>当前项目 MIT；外部 GitHub 参考与上游 AGPL-3.0-or-later · 不复制外部精确实现、品牌、示例内容、…\"]]\n    delivery[\"验证与交接<br/>图文志在主题选择器中可选，且不出现 Flipped Editor 或外部仓库原主题名 · 无图、单首图、多图和有无图注的样本都…\"]\n  end\n  users -->|\"用户在插件主题选择器中选择图文志，并继续独立选择预设主题色或自定义色\"| experience\n  experience -->|\"产品动作与编排\"| core\n  core -->|\"依赖与外部服务\"| integrations\n  core -.->|\"策略、可靠性与合规\"| governance\n  core -->|\"成功标准与交接\"| delivery\n  integrations -->|\"运营就绪\"| delivery\n  governance -.->|\"评审与确认\"| delivery\n```\n\n## 需求\n\n- 功能需求:\n  - AppleTheme 主题列表新增图文志，主题和颜色仍是两个独立选择维度\n  - 提供可复用的动态颜色角色与对比度保护，不为图文志写颜色特例\n  - 提供明确且可测试的 hero、regular、caption 语义合同\n  - 为标题、正文、引用、列表、表格、图片、图注、链接和代码生成自洽的内联样式\n  - 自定义 CSS 继续作为现有后置覆盖层\n- 非功能需求:\n  - 通过 npm run scan:guard 以及风险相称的 review:guard、build 和生成物检查\n  - 本轮新增或实质扩展源码文件以 700 行为拆分线，不以 1500 行警戒线上限作为目标\n  - 新逻辑按颜色工具、主题配置、图片语义、序列化接入和测试职责拆分\n  - 不手改 main.js 或 services/generated-embedded-deps.js，使用项目脚本生成\n  - 公众号兼容与可访问性优先于本地预览中的复杂视觉效果\n- 业务规则:\n  - Image Essay 线与 GitHub 外部主题线严格分开\n  - 所有用户可见名称与代码标识使用本项目自有命名\n  - 外部固定配色不是可迁移资产；新结构只能使用用户当前动态主题色的安全派生与中性色\n  - 第一批只落地图文志；其他候选需独立视觉评审后另行进入实现\n  - 默认使用 clean-room 原创重设计，除非未来取得单独授权或另行接受许可证影响\n\n## 业务护栏\n\n- 成本来源:\n  - 待补充\n- 额度与限制:\n  - 待补充\n- 滥用防护:\n  - 待补充\n- 监控信号:\n  - 待补充\n- 报警阈值:\n  - 待补充\n- 止损动作:\n  - 待补充\n\n## 约束、依赖与风险\n\n- 技术约束:\n  - 运行环境是 Obsidian Electron/CommonJS，主题源码会进入 generated-embedded-deps\n  - 微信输出必须以标签级内联样式和必要结构节点为主\n  - 沿用 AppleTheme、原生 renderer/serializer 与现有 settings/core 实时刷新链路，不建立平行主题引擎\n  - input.js 保持轻量，样式、图片语义与序列化职责分别落在对应模块\n  - OpenPrd codeFileLines 正常上限为 700 行；触达已有超线文件时只做最小接线并把新职责拆出\n- 合规要求:\n  - 当前项目 MIT；外部 GitHub 参考与上游 AGPL-3.0-or-later\n  - 不复制外部精确实现、品牌、示例内容、图片或素材\n  - 不记录凭据、用户内容或生产账号信息\n- 依赖:\n  - themes/apple-theme-config.js、themes/apple-theme.js 与 themes/apple-theme-headings.js\n  - services/obsidian-triplet-serializer.js 与现有 render pipeline\n  - views/converter/settings-panel.js 与 views/converter/core.js\n  - npm run generate:embedded、Vitest、scan/review guard、build 与 build-artifact checks\n- 假设:\n  - 用户选择 Image Essay 是对结构方向的确认，不代表接受 Flipped Editor 的品牌、颜色或源码实现\n  - 图文志第一阶段可以在不实现 wide 的情况下独立成立\n  - hero 使用显式增强且未标记时安全降级，具体语法需在 stable review 中明确\n- 风险:\n  - 杂志式结构提高内容图片质量与图注一致性的要求，需要清晰降级而不是强制作者重写文章\n  - 极亮自定义色可能降低白底文字对比度，需要共用颜色工具保护\n  - 本地预览与微信编辑器处理差异可能造成视觉漂移，需要复制和草稿侧证据\n  - 现有主题和渲染文件部分已接近或超过行数控制线，若不提前拆分会增加维护成本\n- 开放问题:\n  - 图文志 hero 的显式 Markdown 标记语法在 stable review 中冻结；默认不得使用尺寸或文件名推断\n  - 真实公众号账号联调若本轮环境不可用，必须作为未完成验证明确保留，不得以本地截图替代\n\n## 类型专项模块\n\n- 类型: 个人消费者场景专项\n- persona: 希望在 Obsidian 写完后，以较少二次排版成本获得具有图片叙事感、又能稳定进入微信公众号的中文内容创作者。\n- segment: 重视排版审美、图片与文字节奏，同时要求 Markdown 复杂内容兼容的个人创作者与技术写作者。\n- journey:\n  - 在当前笔记中准备图片与可选图注\n  - 在主题选择器中选择图文志并选择任意主题色\n  - 通过实时预览检查有图或无图的叙事节奏\n  - 复制富 HTML 或同步到微信草稿并完成最终平台检查\n- activationMetric: 用户首次选择图文志后，在不修改原文结构的前提下获得可读预览，并成功完成一次复制或草稿同步。\n- retentionMetric: 用户在后续图文文章中继续复用图文志，并减少微信编辑器中的重复排版调整。\n\n## 交接\n\n- 负责人: 项目维护者\n- 下一步: 生成并确认 stable review 后，建立 change/tasks，只实施图文志第一阶段并按任务证据验证。\n- 目标系统: obsidian-wechat-converter 的 AppleTheme 与原生公众号渲染链\n",
   "digest": "b0ee0e4cb6a95cf7dd9631514aaae48c2e26ef7a2f4b11d048e5c99f3a332406",
-  "reviewPresentationMeta": null
+  "reviewPresentationMeta": {
+    "validatedAt": "2026-08-01T00:28:35.193Z",
+    "source": "/Users/davidlin/Documents/Obsidian/MyVault/.obsidian/plugins/obsidian-wechat-converter-flipped-editor-theme-research/.openprd/engagements/active/flipped-theme-review-presentation.json",
+    "presentationHash": "cfb5409e7ae001185449510aae3a794be5ee987ef1d4cc0a7e4a09b420014a99",
+    "violationsHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "validator": "openprd review-presentation"
+  }
 }

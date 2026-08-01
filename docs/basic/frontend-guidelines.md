@@ -12,7 +12,10 @@
 - 样式源文件在 `styles/` 下按职责维护，`styles.css` 作为生成物参与插件打包；`scripts/build-styles.mjs` 中的片段顺序是级联顺序的唯一来源。
 - 文章预览、贴图预览、通用设置面板控件、贴图设置和贴图发布弹窗分别维护在独立样式片段中，避免把模式专属规则堆回通用文件。
 - 删除样式前必须先搜索视图、服务和测试中的类名引用；拆分样式时保持原有选择器顺序，并通过生成物检查与同入口截图确认没有视觉漂移。
-- 主题样式由 `themes/apple-theme.js` 承接，内置 `github`、`wechat`、`serif` 三个 UI 中展示为“简约 / 经典 / 优雅”的预设。
+- 主题样式由 `themes/apple-theme.js` 统一接线；主题登记、动态颜色角色和主题专属样式分别拆在 `apple-theme-config.js`、`apple-theme-colors.js` 和专用主题模块中，避免继续堆入主题主类。
+- “图文志”是文章输出主题，不改变插件操作 UI。它使用用户选择的主题色或 customColor 派生 `accent / accent-readable / accent-deep / accent-soft`，同时保留高可读中性色；亮色自定义色不能直接承担白底文字。
+- 图文志只支持 `hero:` 显式首图增强和默认 regular 图片：`![hero: 图注](image.png)` 的 marker 会在输出中被消费；未标记图片不按尺寸、文件名或位置猜角色；空图注不输出空 `figcaption`。
+- 主题输出必须以标签级内联样式为合同，不依赖 `<style>`、class CSS、伪元素、复杂 Grid、动画或固定第二强调色。预览、复制和草稿同步共享同一基础 HTML；自定义 CSS 保持后置覆盖能力。
 
 ## 交互规范
 

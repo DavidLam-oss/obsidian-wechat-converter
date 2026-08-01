@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`./dom-utils.js`、`./obsidian-triplet-serializer-utils.js`、`./obsidian-triplet-serializer-images.js`。
+关键依赖：`./dom-utils.js`、`./obsidian-triplet-serializer-utils.js`、`./obsidian-triplet-serializer-images.js`、`./obsidian-triplet-serializer-pictorial.js`。
 
 ## 维护规则
 
@@ -36,6 +36,7 @@ import {
   promoteImageEmbedAltHints,
   safeDecodeCaption,
 } from './obsidian-triplet-serializer-images.js';
+import { applyPictorialFigureStyles } from './obsidian-triplet-serializer-pictorial.js';
 import {
   convertObsidianCalloutsToLegacy,
   pruneObsidianOnlyAttributes,
@@ -364,6 +365,7 @@ function serializeObsidianRenderedHtml({
   convertStandaloneImages(container, converter);
   formatTaskListItems(container, converter);
   applyThemeInlineStyles(container, converter);
+  applyPictorialFigureStyles(container, converter);
   wrapTablesForHorizontalScroll(container, converter);
   pruneObsidianOnlyAttributes(container, { finalStage: true });
   trimLeadingWhitespaceInBlockText(container);

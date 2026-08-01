@@ -1,7 +1,7 @@
 {
   "version": 1,
   "action": "ui-context-init",
-  "generatedAt": "2026-07-27 12:50:54",
+  "generatedAt": "2026-08-01 10:52:08",
   "mode": {
     "mode": "brownfield",
     "source": "project-derived",
@@ -14,12 +14,12 @@
     "specUrl": "https://github.com/google-labs-code/design.md/blob/bde692f2bc92ef7fdd0cf277b2704ab074b70efd/docs/spec.md"
   },
   "scan": {
-    "scannedAt": "2026-07-27 12:50:54",
+    "scannedAt": "2026-08-01 10:52:08",
     "truncated": false,
     "counts": {
-      "files": 450,
-      "uiImplementation": 36,
-      "styles": 13,
+      "files": 308,
+      "uiImplementation": 39,
+      "styles": 17,
       "assets": 24
     },
     "uiFiles": [
@@ -31,7 +31,9 @@
       "views/converter/ai-layout-panel.js",
       "views/converter/clipboard.js",
       "views/converter/core.js",
-      "views/converter/style-panel.js",
+      "views/converter/panel-shell.js",
+      "views/converter/settings-panel.js",
+      "views/converter/sticker-preview.js",
       "views/publish-modal/feishu.js",
       "views/publish-modal/material-picker.js",
       "views/publish-modal/multi-platform-cover-assets.js",
@@ -39,6 +41,7 @@
       "views/publish-modal/multi-platform-modal-ui.js",
       "views/publish-modal/multi-platform-policy.js",
       "views/publish-modal/multi-platform.js",
+      "views/publish-modal/publish-context.js",
       "views/publish-modal/sticker-publish-content.js",
       "views/publish-modal/wechat-account-state.js",
       "views/publish-modal/wechat-modal-shell.js",
@@ -69,6 +72,10 @@
       "styles/preview.css",
       "styles/settings-base.css",
       "styles/settings-tabs.css",
+      "styles/sticker-preview.css",
+      "styles/sticker-publish.css",
+      "styles/sticker-settings.css",
+      "styles/style-controls.css",
       "styles/style-panel.css",
       "styles/toolbar.css",
       "styles/wechat-publish.css",
@@ -123,6 +130,9 @@
         "markdown-it",
         "markdown-it-mathjax3",
         "obsidian",
+        "postcss",
+        "postcss-selector-parser",
+        "postcss-value-parser",
         "tslib",
         "typescript",
         "vitest",
@@ -188,5 +198,5 @@
     "inferenceMustNotMasqueradeAsFact": true
   },
   "next": "run-openprd-ui-context-skill-and-generate-three-directions",
-  "contextFingerprint": "fad01ae7d53601dd6f2e71960aa4592675bcd997a3f7a5fc7744df72077a6014"
+  "contextFingerprint": "3bfee37b61de5aefe0a01dca0eed3be8960e7f7d484c97ba62130723ad5a423d"
 }

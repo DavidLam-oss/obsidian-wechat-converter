@@ -13,7 +13,7 @@
 - `services/`: 渲染管线、动态依赖加载、Obsidian 原生渲染、路径处理、微信/飞书/多平台同步和错误处理。
 - `views/`: 转换器视图、发布弹窗、设置页和共享视图工具。
 - `styles/` 与 `styles.css`: 按职责拆分的样式源文件和生成后的插件样式入口；预览、设置控件、贴图预览、贴图设置与贴图发布均有独立片段。
-- `themes/`: 主题模块，当前核心文件是 `themes/apple-theme.js`。
+- `themes/`: 主题模块。`apple-theme-config.js` 登记主题；`apple-theme-colors.js` 计算动态颜色角色与对比度保护；`apple-theme-pictorial.js` 承担图文志的标签级内联样式；`apple-theme.js` 保持运行时接线和既有主题能力。
 - `lib/`: 独立运行时库和单独构建的数学公式 bundle。
 - `scripts/`: 构建、生成、扫描风险、发布校验和性能测量脚本。
 - `tests/`: Vitest 单元测试和测试辅助模块。
@@ -28,6 +28,7 @@
 - 不手写 `main.js`、`services/generated-embedded-deps.js`、`styles.css` 等生成物；源文件变更后通过既有 npm 脚本重新生成。
 - `project-*.d.ts` 和 `project-types.js` 只描述现有 JavaScript 合同，不承载默认值、请求参数或运行时 fallback 逻辑。
 - 渲染、路径、同步、清洗和错误处理逻辑优先放在 `services/` 或 `converter.js`，避免把核心规则堆回 `input.js`。
+- 图片叙事语义属于 serializer 子模块：`services/obsidian-triplet-serializer-pictorial.js` 只在普通 figure 已生成后消费显式 `hero:` 标记；不按尺寸、文件名或位置猜测角色。
 
 ## 维护规则
 
