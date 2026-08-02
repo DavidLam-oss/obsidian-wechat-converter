@@ -85102,11 +85102,6 @@ var settingsPanelMethods = {
         /** @type {ObsidianElementLike} */
         stickerWrapperRaw
       );
-      const stickerHeader = (
-        /** @type {ObsidianElementLike} */
-        stickerWrapper.createDiv({ cls: "apple-settings-sticker-header" })
-      );
-      stickerHeader.createEl("span", { text: "\u5FAE\u4FE1\u8D34\u56FE\u8BBE\u7F6E", cls: "title" });
       const indexSection = this.createSection(stickerWrapper, "\u914D\u56FE\u5E8F\u53F7", (section) => {
         const container2 = section.createEl("div", { cls: "apple-sticker-toggle-row" });
         const labelGroup = container2.createDiv({ cls: "apple-sticker-toggle-copy" });
@@ -85723,13 +85718,11 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
       return "";
     }
     const src = String(wikiSrc || stdSrc || "").trim();
-    const rawAlt = String(wikiSrc ? wikiAlias || "" : altText || "").trim();
-    const readableAlt = /^(?:\d+|\d+x\d+)$/i.test(rawAlt) ? "" : rawAlt;
     if (imageOrder.length > 0) {
       const mappedIndex = findImageOrderIndex(src, imageOrder);
-      return mappedIndex === 0 ? "" : `[\u914D\u56FE ${mappedIndex}${readableAlt ? `\uFF1A${readableAlt}` : ""}]`;
+      return mappedIndex === 0 ? "" : `[\u914D\u56FE ${mappedIndex}]`;
     }
-    return `[\u914D\u56FE ${imageCounter}${readableAlt ? `\uFF1A${readableAlt}` : ""}]`;
+    return `[\u914D\u56FE ${imageCounter}]`;
   });
   text = text.replace(/!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, "");
   text = text.replace(/^\s*>\s*\[![^\]]+\][+-]?\s*/gmi, "");

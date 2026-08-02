@@ -111,6 +111,7 @@ describe('AppleStyleView settings panel + toolbar', () => {
     view.createSettingsPanel(container);
 
     const stickerSettings = container.querySelector('.apple-settings-sticker-wrapper');
+    expect(stickerSettings.querySelector('.apple-settings-sticker-header')).toBeNull();
     expect(stickerSettings.textContent).toContain('在文案中插入 [配图 N]');
     expect(stickerSettings.textContent).toContain('便于读者对应下方图片；只影响贴图文案。');
     expect(stickerSettings.textContent).toContain('纯文本转换规则');

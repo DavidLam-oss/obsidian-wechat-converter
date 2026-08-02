@@ -1341,6 +1341,10 @@ AI layout 面板和生成结果的视觉样式
   padding: 2px 2px 0;
 }
 
+.apple-converter-container.apple-converter-mobile .apple-settings-article-wrapper:not(.hidden) {
+  gap: 12px;
+}
+
 .apple-converter-container.apple-converter-mobile .apple-setting-section {
   gap: 7px;
   padding: 8px 10px 10px;
@@ -1439,6 +1443,13 @@ AI layout 面板和生成结果的视觉样式
   gap: 24px; /* 收紧间距，原32px */
   max-width: 320px; /* 稍微收窄宽度 */
   margin: 0 auto; /* 居中显示 */
+}
+
+/* 文章模式引入中间 wrapper 后，仅在设置可见时恢复原纵向节奏。 */
+.apple-settings-article-wrapper:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .apple-setting-section {
@@ -2109,34 +2120,15 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 - 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
 */
 
-/* 微信贴图模式专属设置样式重塑 */
-.apple-settings-sticker-header {
-  margin: 0 4px 4px 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--apple-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+/* 与文章模式共用同一套分组节奏和标题层级。 */
+.apple-settings-sticker-wrapper:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-.apple-settings-sticker-wrapper .apple-setting-section {
-  gap: 8px;
-  padding: 12px 4px;
-  border-top: 1px solid color-mix(in srgb, var(--background-modifier-border) 82%, transparent);
-}
-
-.apple-settings-sticker-wrapper .apple-setting-section:first-of-type {
-  border-top: none;
-  padding-top: 0;
-}
-
-.apple-settings-sticker-wrapper .apple-setting-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-normal);
-  text-transform: none;
-  letter-spacing: 0.1px;
-  margin-bottom: 0;
+.apple-converter-container.apple-converter-mobile .apple-settings-sticker-wrapper:not(.hidden) {
+  gap: 12px;
 }
 
 .apple-settings-sticker-wrapper .apple-setting-content {

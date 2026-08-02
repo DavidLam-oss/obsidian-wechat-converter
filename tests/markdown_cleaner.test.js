@@ -206,7 +206,8 @@ describe('cleanMarkdownToPlainText', () => {
     // 插入索引
     const resultWithIndex = cleanMarkdownToPlainText(md, { insertImageIndex: true });
     expect(resultWithIndex.imageCount).toBe(2);
-    expect(resultWithIndex.text).toBe('段落一\n[配图 1]\n段落二\n[配图 2：alt]');
+    expect(resultWithIndex.text).toBe('段落一\n[配图 1]\n段落二\n[配图 2]');
+    expect(resultWithIndex.text).not.toContain('alt');
   });
 
   it('should replace plugin query blocks without leaking executable source', () => {

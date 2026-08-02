@@ -106,6 +106,10 @@
   padding: 2px 2px 0;
 }
 
+.apple-converter-container.apple-converter-mobile .apple-settings-article-wrapper:not(.hidden) {
+  gap: 12px;
+}
+
 .apple-converter-container.apple-converter-mobile .apple-setting-section {
   gap: 7px;
   padding: 8px 10px 10px;
@@ -204,6 +208,13 @@
   gap: 24px; /* 收紧间距，原32px */
   max-width: 320px; /* 稍微收窄宽度 */
   margin: 0 auto; /* 居中显示 */
+}
+
+/* 文章模式引入中间 wrapper 后，仅在设置可见时恢复原纵向节奏。 */
+.apple-settings-article-wrapper:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .apple-setting-section {

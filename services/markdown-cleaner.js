@@ -525,18 +525,15 @@ function cleanMarkdownToPlainText(markdown, options = {}) {
       return '';
     }
     const src = String(wikiSrc || stdSrc || '').trim();
-    const rawAlt = String(wikiSrc ? wikiAlias || '' : altText || '').trim();
-    const readableAlt = /^(?:\d+|\d+x\d+)$/i.test(rawAlt) ? '' : rawAlt;
-
     if (imageOrder.length > 0) {
       const mappedIndex = findImageOrderIndex(src, imageOrder);
       // 用户在侧边栏删掉了这张图：正文里不再保留它的序号占位。
       return mappedIndex === 0
         ? ''
-        : `[配图 ${mappedIndex}${readableAlt ? `：${readableAlt}` : ''}]`;
+        : `[配图 ${mappedIndex}]`;
     }
 
-    return `[配图 ${imageCounter}${readableAlt ? `：${readableAlt}` : ''}]`;
+    return `[配图 ${imageCounter}]`;
   });
 
   text = text.replace(/!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, '');

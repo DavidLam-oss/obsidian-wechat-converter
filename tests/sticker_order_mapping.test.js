@@ -147,10 +147,12 @@ describe('[配图 N] renumbering after reorder', () => {
   });
 
   it('should keep markers when the full body paths are present in the grid order', () => {
-    const result = cleanMarkdownToPlainText('![](attachments/a.png)\n\n![](attachments/b.png)', {
+    const result = cleanMarkdownToPlainText('![GeminiGeneratedImage-a.png](attachments/a.png)\n\n![[attachments/b.png|自定义名称]]', {
       insertImageIndex: true,
       imageOrder: ['attachments/b.png', 'attachments/a.png'],
     });
     expect(result.text.split('\n').filter(Boolean)).toEqual(['[配图 2]', '[配图 1]']);
+    expect(result.text).not.toContain('GeminiGeneratedImage');
+    expect(result.text).not.toContain('自定义名称');
   });
 });

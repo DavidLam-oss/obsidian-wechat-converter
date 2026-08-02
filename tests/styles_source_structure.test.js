@@ -73,4 +73,17 @@ describe('stylesheet source structure', () => {
     }
     expect(stickerPreview).toContain('.sticker-image-list__item');
   });
+
+  it('keeps article setting sections spaced after the article/sticker mode wrapper', () => {
+    const stylePanel = readProjectFile('styles/style-panel.css');
+    const stickerSettings = readProjectFile('styles/sticker-settings.css');
+
+    expect(stylePanel).toMatch(/\.apple-settings-article-wrapper:not\(\.hidden\)\s*\{[^}]*display:\s*flex;[^}]*flex-direction:\s*column;[^}]*gap:\s*24px;/s);
+    expect(stylePanel).toMatch(/\.apple-converter-container\.apple-converter-mobile\s+\.apple-settings-article-wrapper:not\(\.hidden\)\s*\{[^}]*gap:\s*12px;/s);
+    expect(stylePanel).not.toMatch(/\.apple-settings-article-wrapper\s*\{[^}]*display:\s*flex;/s);
+    expect(stickerSettings).toMatch(/\.apple-settings-sticker-wrapper:not\(\.hidden\)\s*\{[^}]*display:\s*flex;[^}]*flex-direction:\s*column;[^}]*gap:\s*24px;/s);
+    expect(stickerSettings).toMatch(/\.apple-converter-container\.apple-converter-mobile\s+\.apple-settings-sticker-wrapper:not\(\.hidden\)\s*\{[^}]*gap:\s*12px;/s);
+    expect(stickerSettings).not.toContain('.apple-settings-sticker-header');
+    expect(stickerSettings).not.toMatch(/\.apple-settings-sticker-wrapper\s+\.apple-setting-section/);
+  });
 });

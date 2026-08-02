@@ -544,8 +544,6 @@ createSettingsPanel(container) {
   const stickerWrapperRaw = /** @type {unknown} */ (this.stickerSettingsWrapper);
   if (stickerWrapperRaw && typeof stickerWrapperRaw === 'object' && 'createDiv' in stickerWrapperRaw) {
     const stickerWrapper = /** @type {ObsidianElementLike} */ (stickerWrapperRaw);
-    const stickerHeader = /** @type {ObsidianElementLike} */ (stickerWrapper.createDiv({ cls: 'apple-settings-sticker-header' }));
-    stickerHeader.createEl('span', { text: '微信贴图设置', cls: 'title' });
 
     // 3.2 配图序号开关
     const indexSection = this.createSection(stickerWrapper, '配图序号', (section) => {
