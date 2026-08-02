@@ -28,35 +28,32 @@
 /* ========================================
    贴图微调箭头组与添加卡片样式
    ======================================== */
-/* 💡 微信贴图温馨提示样式 */
+/* 图片列表标题下方的次级操作说明 */
 .apple-sticker-hint-line {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin: 12px 8px 8px 8px;
-  padding: 8px 12px;
-  font-size: 11px;
+  align-items: center;
+  gap: 5px;
+  margin: -2px 0 10px;
+  padding: 0 0 0 20px;
+  font-size: 10.5px;
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--text-normal) 2%, transparent);
-  border-radius: 6px;
-  border: 1px solid color-mix(in srgb, var(--text-normal) 4%, transparent);
+  opacity: 0.72;
 }
 
 .apple-sticker-hint-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   color: var(--text-muted);
   flex-shrink: 0;
-  margin-top: 1px;
 }
 
 .apple-sticker-hint-text {
   flex: 1;
   text-align: left;
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
 /* 贴图中的 Lucide 图标适配 */

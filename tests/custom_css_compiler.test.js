@@ -88,14 +88,17 @@ describe('custom-css-compiler', () => {
   });
 
   it('规范化 CSS escape、percent encoding 与控制字符后再拦截资源', () => {
+    const nul = String.fromCodePoint(0);
+    const unitSeparator = String.fromCodePoint(31);
     const compiled = compileCustomCss([
       String.raw`a { background: url(\68 ttps://example.com/a.png); }`,
       'b { background: url(%68%74%74%70%73%3A%2F%2Fexample.com/b.png); }',
       String.raw`c { background: url(j\61vascript:alert(1)); }`,
+      `d { background: url(java${nul}${unitSeparator}script:alert(1)); }`,
     ].join('\n'));
 
     expect(compiled.scopedCss).toBe('');
-    expect(compiled.diagnostics.filter((item) => item.code === 'custom-css-resource-url-blocked')).toHaveLength(3);
+    expect(compiled.diagnostics.filter((item) => item.code === 'custom-css-resource-url-blocked')).toHaveLength(4);
   });
 
   it('拦截超过单项或总量限制的 data image，且限制参与 cache identity', () => {

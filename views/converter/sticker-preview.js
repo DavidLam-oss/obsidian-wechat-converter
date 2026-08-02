@@ -294,6 +294,14 @@ async renderStickerPreview() {
       text: `${stickerData.imageItems.length} / ${STICKER_MAX_IMAGES} 张`
     });
 
+    const hintLine = imagesSection.createEl('div', { cls: 'apple-sticker-hint-line' });
+    const hintIcon = hintLine.createSpan({ cls: 'apple-sticker-hint-icon' });
+    if (typeof setIcon === 'function') setIcon(hintIcon, 'info');
+    hintLine.createEl('span', {
+      cls: 'apple-sticker-hint-text',
+      text: '顺序即最终发布顺序；添加图片请打开发布弹窗，移除不会改动笔记。'
+    });
+
     renderStickerImageList(imagesSection, {
       items: stickerData.imageItems,
       getDisplaySrc: (_, index) => stickerData.imageDisplaySources[index] || '',
@@ -315,14 +323,6 @@ async renderStickerPreview() {
     });
     selfRecord.stickerFocusKey = '';
     renderRestoreActions(imagesSection);
-
-    const hintLine = imagesSection.createEl('div', { cls: 'apple-sticker-hint-line' });
-    const hintIcon = hintLine.createSpan({ cls: 'apple-sticker-hint-icon' });
-    if (typeof setIcon === 'function') setIcon(hintIcon, 'info');
-    hintLine.createEl('span', {
-      cls: 'apple-sticker-hint-text',
-      text: '顺序即最终发布顺序；添加图片请打开发布弹窗，移除不会改动笔记。'
-    });
   } else {
     const readinessNotice = stickerContainer.createDiv({ cls: 'apple-sticker-readiness-notice is-error' });
     const readinessIcon = readinessNotice.createSpan({ cls: 'apple-sticker-readiness-icon' });

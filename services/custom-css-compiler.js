@@ -94,11 +94,26 @@ function createDiagnostic(node, severity, code, message) {
 }
 
 /**
+ * Remove ASCII control characters without a control-character regular expression,
+ * which is flagged by the Obsidian community plugin scanner.
+ * @param {string} value
+ * @returns {string}
+ */
+function stripAsciiControlCharacters(value) {
+  return Array.from(String(value || ''))
+    .filter((character) => {
+      const codePoint = character.codePointAt(0) || 0;
+      return codePoint > 31 && codePoint !== 127;
+    })
+    .join('');
+}
+
+/**
  * @param {string} value
  * @returns {string}
  */
 function decodeCssEscapes(value) {
-  return String(value || '')
+  const decoded = String(value || '')
     .replace(/\\([0-9a-f]{1,6})\s?/gi, (_match, hex) => {
       const codePoint = Number.parseInt(String(hex), 16);
       try {
@@ -108,8 +123,8 @@ function decodeCssEscapes(value) {
       }
     })
     .replace(/\\(.)/g, '$1')
-    .replace(/[\u0000-\u001F\u007F]/g, '')
     .trim();
+  return stripAsciiControlCharacters(decoded).trim();
 }
 
 /**
@@ -127,7 +142,7 @@ function normalizeUrlValue(value) {
       break;
     }
   }
-  return normalized.replace(/[\u0000-\u001F\u007F]/g, '').trim();
+  return stripAsciiControlCharacters(normalized).trim();
 }
 
 /**

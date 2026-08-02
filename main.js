@@ -82815,15 +82815,22 @@ function createDiagnostic(node, severity, code, message) {
     ...((_d = (_c = source.source) == null ? void 0 : _c.start) == null ? void 0 : _d.column) ? { column: source.source.start.column } : {}
   };
 }
+function stripAsciiControlCharacters(value) {
+  return Array.from(String(value || "")).filter((character) => {
+    const codePoint = character.codePointAt(0) || 0;
+    return codePoint > 31 && codePoint !== 127;
+  }).join("");
+}
 function decodeCssEscapes(value) {
-  return String(value || "").replace(/\\([0-9a-f]{1,6})\s?/gi, (_match, hex) => {
+  const decoded = String(value || "").replace(/\\([0-9a-f]{1,6})\s?/gi, (_match, hex) => {
     const codePoint = Number.parseInt(String(hex), 16);
     try {
       return String.fromCodePoint(codePoint);
     } catch (e) {
       return "";
     }
-  }).replace(/\\(.)/g, "$1").replace(/[\u0000-\u001F\u007F]/g, "").trim();
+  }).replace(/\\(.)/g, "$1").trim();
+  return stripAsciiControlCharacters(decoded).trim();
 }
 function normalizeUrlValue(value) {
   let normalized = decodeCssEscapes(value).replace(/^['"]|['"]$/g, "").trim();
@@ -82837,7 +82844,7 @@ function normalizeUrlValue(value) {
       break;
     }
   }
-  return normalized.replace(/[\u0000-\u001F\u007F]/g, "").trim();
+  return stripAsciiControlCharacters(normalized).trim();
 }
 function inspectDataImage(dataUrl) {
   var _a5;
@@ -86545,6 +86552,14 @@ var stickerPreviewMethods = {
         cls: `apple-sticker-count-badge${imageCountState.status === "warning" ? " is-warning" : ""}${imageCountState.status === "error" ? " is-error" : ""}`,
         text: `${stickerData.imageItems.length} / ${STICKER_MAX_IMAGES} \u5F20`
       });
+      const hintLine = imagesSection.createEl("div", { cls: "apple-sticker-hint-line" });
+      const hintIcon = hintLine.createSpan({ cls: "apple-sticker-hint-icon" });
+      if (typeof setIcon === "function")
+        setIcon(hintIcon, "info");
+      hintLine.createEl("span", {
+        cls: "apple-sticker-hint-text",
+        text: "\u987A\u5E8F\u5373\u6700\u7EC8\u53D1\u5E03\u987A\u5E8F\uFF1B\u6DFB\u52A0\u56FE\u7247\u8BF7\u6253\u5F00\u53D1\u5E03\u5F39\u7A97\uFF0C\u79FB\u9664\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u3002"
+      });
       renderStickerImageList(imagesSection, {
         items: stickerData.imageItems,
         getDisplaySrc: (_, index) => stickerData.imageDisplaySources[index] || "",
@@ -86566,14 +86581,6 @@ var stickerPreviewMethods = {
       });
       selfRecord.stickerFocusKey = "";
       renderRestoreActions(imagesSection);
-      const hintLine = imagesSection.createEl("div", { cls: "apple-sticker-hint-line" });
-      const hintIcon = hintLine.createSpan({ cls: "apple-sticker-hint-icon" });
-      if (typeof setIcon === "function")
-        setIcon(hintIcon, "info");
-      hintLine.createEl("span", {
-        cls: "apple-sticker-hint-text",
-        text: "\u987A\u5E8F\u5373\u6700\u7EC8\u53D1\u5E03\u987A\u5E8F\uFF1B\u6DFB\u52A0\u56FE\u7247\u8BF7\u6253\u5F00\u53D1\u5E03\u5F39\u7A97\uFF0C\u79FB\u9664\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u3002"
-      });
     } else {
       const readinessNotice = stickerContainer.createDiv({ cls: "apple-sticker-readiness-notice is-error" });
       const readinessIcon = readinessNotice.createSpan({ cls: "apple-sticker-readiness-icon" });

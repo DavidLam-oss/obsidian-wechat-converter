@@ -132,4 +132,35 @@ describe('AppleStyleView - Sticker Mode Integration', () => {
     expect(view.previewContainer.querySelector('.apple-sticker-text-heading')?.textContent)
       .toContain('发布文案将以纯文本同步到微信草稿');
   });
+
+  it('should place the image-order hint between the image header and grid', async () => {
+    const leaf = { view: null };
+    const plugin = { settings: { wechatAccounts: [] } };
+    const view = new AppleStyleView(leaf, plugin);
+    view.previewMode = 'sticker';
+    view.previewContainer = createObsidianLikeElement();
+    view.buildStickerData = vi.fn().mockResolvedValue({
+      title: '测试',
+      content: '正文',
+      imageItems: [{ key: 'body:test.png', source: 'body', src: 'test.png', name: 'test.png' }],
+      imageDisplaySources: ['app://local/test.png'],
+      sourcePath: 'test.md',
+      removed: [],
+    });
+    view.getStickerUiState = vi.fn().mockReturnValue({
+      order: ['body:test.png'],
+      removedKeys: [],
+      undoItems: [],
+    });
+
+    await view.renderStickerPreview();
+
+    const imageSection = view.previewContainer.querySelector('.apple-sticker-images-section');
+    const children = Array.from(imageSection.children);
+    const headerIndex = children.indexOf(imageSection.querySelector('.apple-sticker-section-header'));
+    const hintIndex = children.indexOf(imageSection.querySelector('.apple-sticker-hint-line'));
+    const gridIndex = children.indexOf(imageSection.querySelector('.sticker-image-list'));
+    expect(headerIndex).toBeLessThan(hintIndex);
+    expect(hintIndex).toBeLessThan(gridIndex);
+  });
 });
