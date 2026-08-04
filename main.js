@@ -91458,17 +91458,6 @@ function resolveSettingsPaneBackground(el) {
   return "";
 }
 var settingsTabShellMethods = {
-  /** @returns {SettingDefinitionRenderLike[]} */
-  getSettingDefinitions() {
-    return [{
-      name: "Wechat Converter",
-      desc: "\u5FAE\u4FE1\u53D1\u5E03\u52A9\u624B\u8BBE\u7F6E",
-      searchable: false,
-      render: () => {
-        this.renderSettingsContent();
-      }
-    }];
-  },
   /**
    * @param {ObsidianElementLike} containerEl
    */
@@ -92603,14 +92592,18 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
     );
     renderSettingsContent.call(this);
   }
-  /** @returns {SettingDefinitionRenderLike[]} */
+  /**
+   * Keep the existing imperative settings page on Obsidian 1.13+.
+   *
+   * Obsidian does not call display() when this method returns a non-empty
+   * array. The converter settings UI is a custom multi-tab page rather than
+   * a single declarative setting row, so returning an empty array is the
+   * supported fallback that lets the host call display().
+   *
+   * @returns {SettingDefinitionRenderLike[]}
+   */
   getSettingDefinitions() {
-    return [{
-      name: "Wechat Converter",
-      desc: "\u5FAE\u4FE1\u53D1\u5E03\u52A9\u624B\u8BBE\u7F6E",
-      searchable: false,
-      render: () => this.display()
-    }];
+    return [];
   }
 };
 Object.assign(

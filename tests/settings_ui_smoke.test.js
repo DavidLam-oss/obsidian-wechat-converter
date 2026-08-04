@@ -140,15 +140,23 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     expect(globalThis.__obsidianMockLoaded).toBe(true);
   });
 
-  it('exposes a declarative settings render definition for Obsidian 1.13+', () => {
+  it('uses the imperative full-page fallback on Obsidian 1.13+', () => {
     const plugin = makePlugin();
     const tab = new AppleStyleSettingTab(plugin.app, plugin);
     tab.containerEl = createObsidianLikeElement('div');
+
+    // Obsidian 1.13 only calls display() when getSettingDefinitions() is
+    // empty. A non-empty definition would render the custom multi-tab page
+    // inside one setting row and leave only its title/description visible.
     const definitions = tab.getSettingDefinitions();
-    expect(definitions).toHaveLength(1);
-    expect(typeof definitions[0].render).toBe('function');
-    definitions[0].render();
+    expect(definitions).toEqual([]);
+
+    tab.display();
+
     expect(globalThis.__obsidianSettingNamesRegistry.length).toBeGreaterThan(5);
+    expect(tab.containerEl.querySelector('.apple-settings-tabs')).not.toBeNull();
+    expect(tab.containerEl.textContent).toContain('暂无账号，请点击下方按钮添加');
+    expect(tab.containerEl.querySelector('.wechat-btn-add')?.textContent).toBe('+ 添加账号');
   });
 
   it('renders the wechat-tab core sections without throwing', () => {

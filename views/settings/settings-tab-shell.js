@@ -63,18 +63,6 @@ function resolveSettingsPaneBackground(el) {
 
 /** @type {SettingsTabShellMethodsContract & ThisType<AppleStyleSettingTabContract>} */
 const settingsTabShellMethods = {
-  /** @returns {SettingDefinitionRenderLike[]} */
-  getSettingDefinitions() {
-    return [{
-      name: 'Wechat Converter',
-      desc: '微信发布助手设置',
-      searchable: false,
-      render: () => {
-        this.renderSettingsContent();
-      },
-    }];
-  },
-
   /**
    * @param {ObsidianElementLike} containerEl
    */
