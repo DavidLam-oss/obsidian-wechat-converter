@@ -118,6 +118,7 @@ const settingsTabShellMethods = {
 
   renderSettingsContent() {
     const { containerEl } = this;
+    const previousScrollTop = Number(containerEl.scrollTop) || 0;
     containerEl.empty();
 
     // Sticky shell: keep the GitHub banner + tab bar pinned while the
@@ -181,6 +182,7 @@ const settingsTabShellMethods = {
 
     this.renderWechatSettingsTab(wechatContent);
     renderMultiPlatformSettingsTab(this, multiContent, { obsidianApi });
+    containerEl.scrollTop = previousScrollTop;
   },
 };
 

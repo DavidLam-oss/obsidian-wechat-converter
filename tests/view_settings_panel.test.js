@@ -82,6 +82,43 @@ describe('AppleStyleView settings panel + toolbar', () => {
     expect(container.querySelector('.apple-icon-btn[aria-label="复制到公众号"]')).toBeNull();
   });
 
+  it('createSettingsPanel should explain the sticker index and plain-text conversion accurately', () => {
+    const view = new AppleStyleView(null, {
+      settings: {
+        theme: 'github',
+        themeColor: 'blue',
+        customColor: '#0366d6',
+        fontFamily: 'sans-serif',
+        fontSize: 3,
+        coloredHeader: false,
+        macCodeBlock: true,
+        codeLineNumber: true,
+        sidePadding: 16,
+        showImageCaption: true,
+        enableWatermark: false,
+      },
+      saveSettings: vi.fn(),
+    });
+    view.app = { isMobile: false };
+    view.theme = { update: vi.fn() };
+    view.converter = { updateConfig: vi.fn() };
+    global.AppleTheme = {
+      getThemeList: () => [{ value: 'github', label: '简约' }],
+      getColorList: () => [{ value: 'blue', color: '#0366d6' }],
+    };
+
+    const container = createObsidianLikeElement();
+    view.createSettingsPanel(container);
+
+    const stickerSettings = container.querySelector('.apple-settings-sticker-wrapper');
+    expect(stickerSettings.querySelector('.apple-settings-sticker-header')).toBeNull();
+    expect(stickerSettings.textContent).toContain('在文案中插入 [配图 N]');
+    expect(stickerSettings.textContent).toContain('便于读者对应下方图片；只影响贴图文案。');
+    expect(stickerSettings.textContent).toContain('纯文本转换规则');
+    expect(stickerSettings.textContent).toContain('代码块、表格、公式和脚注会转换为可读纯文本');
+    expect(stickerSettings.textContent).not.toContain('自动剥离');
+  });
+
   it('createSettingsPanel should render a collapsed 排版间距 group with 3 spacing sliders', () => {
     const view = new AppleStyleView(null, {
       settings: {

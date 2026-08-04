@@ -32,6 +32,8 @@ import {
 /** @type {WechatModalShellMethodsContract & ThisType<AppleStyleViewContract>} */
 const wechatModalShellMethods = {
 preparePublishModalShell(modal, { mode = 'wechat', mobileSync = false } = {}) {
+  // 每次切换发布页签都会让上一个贴图异步刷新失效，避免旧数据写回新页面。
+  this.stickerModalGeneration = (this.stickerModalGeneration || 0) + 1;
   modal.titleEl.setText('发布与分发');
   modal.titleEl.removeClass?.('wechat-multiplatform-title');
   if (typeof modal.contentEl.empty === 'function') {

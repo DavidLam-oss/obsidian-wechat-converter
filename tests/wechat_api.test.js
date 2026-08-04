@@ -309,4 +309,68 @@ describe('WechatAPI - Upload & MIME Logic', () => {
     const callArg = obsidianMock.requestUrl.mock.calls[0][0];
     expect(callArg.headers).not.toHaveProperty('X-Client-Id');
   });
+
+  it('should createImageDraft with newspic article_type and image_info', async () => {
+    const api = new WechatAPI('appid', 'secret');
+    vi.spyOn(api, 'getAccessToken').mockResolvedValue('fake-token');
+
+    obsidianMock.requestUrl.mockResolvedValue({
+      json: { media_id: 'draft-media-123' },
+      status: 200
+    });
+
+    const result = await api.createImageDraft({
+      title: '贴图标题',
+      content: '贴图纯文本描述',
+      imageMediaIds: ['img-1', 'img-2', 'img-3'],
+      needOpenComment: 1
+    });
+
+    expect(result).toEqual({ media_id: 'draft-media-123' });
+    expect(obsidianMock.requestUrl).toHaveBeenCalledTimes(1);
+
+    const callArg = obsidianMock.requestUrl.mock.calls[0][0];
+    expect(callArg.url).toContain('/cgi-bin/draft/add?access_token=fake-token');
+    
+    const body = JSON.parse(callArg.body);
+    expect(body.articles).toHaveLength(1);
+
+    const article = body.articles[0];
+    expect(article.article_type).toBe('newspic');
+    expect(article.title).toBe('贴图标题');
+    expect(article.content).toBe('贴图纯文本描述');
+    expect(article.need_open_comment).toBe(1);
+    expect(article.image_info.image_list).toEqual([
+      { image_media_id: 'img-1' },
+      { image_media_id: 'img-2' },
+      { image_media_id: 'img-3' }
+    ]);
+  });
+
+  it('should throw error when createImageDraft has no title or empty images', async () => {
+    const api = new WechatAPI('appid', 'secret');
+
+    await expect(api.createImageDraft({ title: '', imageMediaIds: ['img-1'] })).rejects.toThrow('标题 (title) 为必填项');
+    await expect(api.createImageDraft({ title: '有标题', imageMediaIds: [] })).rejects.toThrow('微信贴图要求至少包含 1 张图片素材');
+  });
+
+  it('should accept 20 newspic images and reject the 21st without truncating', async () => {
+    const api = new WechatAPI('appid', 'secret');
+    vi.spyOn(api, 'createDraft').mockResolvedValue({ media_id: 'draft-20' });
+    const twentyIds = Array.from({ length: 20 }, (_, index) => `img-${index + 1}`);
+
+    await api.createImageDraft({ title: '二十张贴图', imageMediaIds: twentyIds });
+
+    expect(api.createDraft).toHaveBeenCalledWith(expect.objectContaining({
+      image_info: {
+        image_list: twentyIds.map((id) => ({ image_media_id: id })),
+      },
+    }));
+
+    await expect(api.createImageDraft({
+      title: '二十一张贴图',
+      imageMediaIds: [...twentyIds, 'img-21'],
+    })).rejects.toThrow('微信贴图最多支持 20 张图片素材');
+    expect(api.createDraft).toHaveBeenCalledTimes(1);
+  });
 });

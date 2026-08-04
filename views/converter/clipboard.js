@@ -292,16 +292,16 @@ async enhanceHtmlForWechatPublishing(root) {
 }
 ,
 
-async prepareHtmlForWechatDraft(html) {
+async prepareHtmlForWechatDraft(html, options = {}) {
   let processedHtml = html || '';
-
-  // 自定义 CSS 与 AI 编排解耦：AI 模式下跳过（见 applyCustomCss）
-  processedHtml = await this.applyCustomCss(processedHtml);
-
   const tempDiv = createHtmlContainer('div', processedHtml);
   if (!tempDiv) return '';
   await this.enhanceHtmlForWechatPublishing(tempDiv);
-  return tempDiv.innerHTML;
+  processedHtml = await this.applyCustomCss(tempDiv.innerHTML, {
+    target: 'wechat-draft',
+    layoutMode: options.layoutMode || (this.aiPreviewApplied ? 'ai' : 'native'),
+  });
+  return processedHtml;
 }
 ,
 
@@ -588,19 +588,27 @@ async copyHTML() {
   }
 
   try {
-    let exportHtml = this.getCurrentExportHtml() || this.currentHtml;
-
-    // 自定义 CSS 与 AI 编排解耦：AI 模式下跳过（见 applyCustomCss）
-    exportHtml = await this.applyCustomCss(exportHtml);
+    const exportSource = this.resolveArticleHtmlSource({ target: 'wechat-copy' });
+    if (!exportSource?.html) {
+      throw new Error('当前文章还没有可复制的渲染结果');
+    }
 
     // 创建临时的 DOM 容器来解析和处理图片
-    const tempDiv = createHtmlContainer('div', exportHtml);
+    let tempDiv = createHtmlContainer('div', exportSource.html);
+    if (!tempDiv) throw new Error('无法准备复制内容');
+
+    await this.enhanceHtmlForWechatPublishing(tempDiv);
+
+    const exportHtml = await this.applyCustomCss(tempDiv.innerHTML, {
+      target: 'wechat-copy',
+      layoutMode: exportSource.layoutMode,
+    });
+    tempDiv = createHtmlContainer('div', exportHtml);
+    if (!tempDiv) throw new Error('无法应用公众号样式');
 
     // 处理本地图片：转换为 JPEG Base64
     // 返回 true 表示有图片被处理了
     await this.processImagesToDataURL(tempDiv);
-
-    await this.enhanceHtmlForWechatPublishing(tempDiv);
 
     // 清理 HTML 以适配微信编辑器（处理嵌套列表等）
     const cleanedHtml = this.cleanHtmlForDraft(tempDiv.innerHTML);

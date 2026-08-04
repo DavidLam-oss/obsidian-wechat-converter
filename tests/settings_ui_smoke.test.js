@@ -130,6 +130,7 @@ function renderTab(plugin) {
 describe('AppleStyleSettingTab settings rendering - smoke test', () => {
   beforeEach(() => {
     globalThis.__obsidianSettingNamesRegistry = [];
+    globalThis.__obsidianSettingDescriptionsRegistry = [];
     globalThis.__obsidianButtonRegistry = [];
     globalThis.__obsidianModalRegistry = [];
     globalThis.__obsidianDisableSetDestructiveForButtons = false;
@@ -154,6 +155,89 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     const plugin = makePlugin();
     expect(() => renderTab(plugin)).not.toThrow();
     expect(globalThis.__obsidianSettingNamesRegistry.length).toBeGreaterThan(5);
+  });
+
+  it('keeps the公众号首次配置指南 inline with the account heading', () => {
+    const plugin = makePlugin();
+    renderTab(plugin);
+
+    expect(globalThis.__obsidianSettingNamesRegistry).not.toContain('公众号首次配置指南');
+    expect(
+      globalThis.__obsidianButtonRegistry.some(
+        (button) => button.text === '查看图文指南 →'
+      )
+    ).toBe(false);
+    expect(
+      globalThis.__obsidianButtonRegistry.some(
+        (button) => button.text === '查看使用指南 →'
+      )
+    ).toBe(false);
+
+    const accountGuideDescription = globalThis.__obsidianSettingDescriptionsRegistry.find(
+      (description) => description?.textContent?.includes('查看图文指南 →')
+    );
+    expect(accountGuideDescription?.textContent).toContain(
+      '首次配置请先完成 IP 白名单设置。 查看图文指南 →'
+    );
+    const accountGuideLink = accountGuideDescription?.querySelector('a');
+    expect(accountGuideLink?.classList.contains('apple-settings-guide-link')).toBe(true);
+    expect(accountGuideLink?.href).toBe(
+      'https://xiaoweibox.top/obsidian-publisher/guide#wechat-api'
+    );
+
+    accountGuideLink.click();
+
+    expect(plugin.openExternalUrl).toHaveBeenCalledWith(
+      'https://xiaoweibox.top/obsidian-publisher/guide#wechat-api'
+    );
+
+    const customCssGuideDescription = globalThis.__obsidianSettingDescriptionsRegistry.find(
+      (description) => description?.textContent?.includes('查看使用指南 →')
+    );
+    const customCssGuideLink = customCssGuideDescription?.querySelector('a');
+    expect(customCssGuideLink?.classList.contains('apple-settings-guide-link')).toBe(true);
+    expect(customCssGuideLink?.href).toBe(
+      'https://xiaoweibox.top/obsidian-publisher/guide/custom-css'
+    );
+
+    customCssGuideLink.click();
+
+    expect(plugin.openExternalUrl).toHaveBeenCalledWith(
+      'https://xiaoweibox.top/obsidian-publisher/guide/custom-css'
+    );
+  });
+
+  it('preserves the settings scroll position across a background refresh', () => {
+    const plugin = makePlugin();
+    const tab = renderTab(plugin);
+    tab.containerEl.scrollTop = 480;
+
+    tab.renderSettingsContent();
+
+    expect(tab.containerEl.scrollTop).toBe(480);
+  });
+
+  it('shows a quiet custom CSS status row without rebuilding the settings tab', async () => {
+    const plugin = makePlugin({
+      enableCustomCss: true,
+      customCss: 'h2 { color: red; }',
+      customCssNote: '',
+    });
+    plugin.getConverterView = vi.fn(() => ({
+      customCssStatus: {
+        state: 'unmatched',
+        sourceIdentity: 'textarea',
+        diagnostics: [],
+      },
+    }));
+
+    const tab = renderTab(plugin);
+    expect(tab.containerEl.querySelector('.owc-custom-css-status')?.textContent)
+      .toContain('当前状态');
+    await vi.waitFor(() => {
+      expect(tab.containerEl.querySelector('.owc-custom-css-status')?.textContent)
+        .not.toContain('正在检查自定义 CSS');
+    });
   });
 
   it('exposes a GitHub star shortcut at the top of settings', () => {

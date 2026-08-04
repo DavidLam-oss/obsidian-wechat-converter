@@ -2,7 +2,7 @@
 
 ## 核心功能
 
-承载视图层共享常量、DOM helper 和状态工具。
+承载视图层共享常量、DOM helper、状态工具和跨入口复用的贴图图片顺序组件。
 
 ## 输入
 
@@ -10,7 +10,7 @@
 
 ## 输出
 
-输出可复用 helper、常量和状态读写工具，供 converter、publish modal 和 settings 使用。
+输出可复用 helper、常量、状态读写工具和可访问的贴图图片网格，供 converter、publish modal 和 settings 使用。
 
 ## 定位
 
@@ -19,6 +19,10 @@
 ## 依赖
 
 views/ 各子模块、Obsidian DOM helper 和项目 UI 状态约定。
+
+## 主要模块
+
+- `sticker-image-list.js`：侧栏与发布弹窗共用的贴图网格，统一拖拽、键盘、触屏排序和移除入口。
 
 ## 维护规则
 

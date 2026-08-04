@@ -38,11 +38,13 @@ import {
   getEventTargetValue,
   isMobileClient,
 } from '../apple-style-view-shared.js';
+import { STICKER_MAX_CONTENT_LENGTH } from '../../services/sticker-extractor.js';
+import { renderStickerPublishContent } from './sticker-publish-content.js';
 
 /** @type {WechatSyncModalMethodsContract & ThisType<AppleStyleViewContract>} */
 const wechatSyncModalMethods = {
 showSyncModal(options = {}) {
-  if (!this.currentHtml) {
+  if (this.previewMode !== 'sticker' && !this.currentHtml) {
     new Notice(this.getMissingRenderNotice());
     return;
   }
@@ -112,6 +114,18 @@ showSyncModal(options = {}) {
   const defaultId = this.plugin.settings.defaultAccountId;
   const hasDefault = accounts.some((account) => account.id === defaultId);
   let selectedAccountId = hasDefault ? defaultId : (accounts[0]?.id || '');
+
+  if (this.previewMode === 'sticker') {
+    renderStickerPublishContent(this, {
+      modal,
+      accounts,
+      activeFile,
+      sourcePath: currentPath || '',
+      frontmatterMeta,
+      shouldOpenModal,
+    });
+    return;
+  }
 
   // 封面逻辑：优先使用缓存 -> frontmatter.cover -> 文章第一张图
   let coverBase64 = cachedState?.coverBase64 || frontmatterMeta.coverSrc || this.getFirstImageFromArticle() || '';
@@ -183,13 +197,16 @@ showSyncModal(options = {}) {
   if (shouldExpandAdvanced) advancedOptions.setAttribute('open', '');
   advancedOptions.createEl('summary', {
     cls: 'wechat-sync-advanced-summary',
-    text: '高级选项（标题、封面与摘要）'
+    text: this.previewMode === 'sticker' ? '贴图发布配置（标题与配图）' : '高级选项（标题、封面与摘要）'
   });
   const advancedBody = advancedOptions.createDiv({ cls: 'wechat-sync-advanced-body' });
 
   // 标题设置
   const titleSection = advancedBody.createDiv({ cls: 'wechat-modal-section' });
-  titleSection.createEl('label', { text: '文章标题', cls: 'wechat-modal-label' });
+  titleSection.createEl('label', {
+    text: this.previewMode === 'sticker' ? '贴图标题' : '文章标题',
+    cls: 'wechat-modal-label'
+  });
 
   // 标题逻辑：优先使用缓存 -> frontmatter.title -> 文件名
   const initialTitle = cachedState?.title !== undefined
@@ -215,14 +232,74 @@ showSyncModal(options = {}) {
 
   // 封面设置
   const coverSection = advancedBody.createDiv({ cls: 'wechat-modal-section' });
-  coverSection.createEl('label', { text: '封面图', cls: 'wechat-modal-label' });
+  coverSection.createEl('label', {
+    text: this.previewMode === 'sticker' ? '贴图配图列表' : '封面图',
+    cls: 'wechat-modal-label'
+  });
 
   const coverContent = coverSection.createDiv({ cls: 'wechat-modal-cover-content' });
   const coverPreview = coverContent.createDiv({ cls: 'wechat-modal-cover-preview' });
+  const stickerStatusEl = coverSection.createDiv({ cls: 'wechat-modal-sticker-status' });
+  if (this.previewMode !== 'sticker') {
+    stickerStatusEl.setCssStyles({ display: 'none' });
+  }
 
   const updatePreview = () => {
     coverPreview.empty();
     coverPreview.removeClass('has-material-cover');
+
+    if (this.previewMode === 'sticker') {
+      const stickerData = this.previewStickerData;
+      const stickerImages = stickerData && Array.isArray(stickerData.images) ? stickerData.images : [];
+      // 缩略图要用能直接显示的地址；vault 内图片的原始写法（如 ![[a.png]]）无法当 img src。
+      const displaySources = stickerData && Array.isArray(stickerData.imageDisplaySources)
+        ? stickerData.imageDisplaySources
+        : [];
+      const stickerContent = stickerData && typeof stickerData.content === 'string' ? stickerData.content : '';
+      const stickerCharCount = stickerContent.length;
+
+      coverPreview.addClass('has-sticker-preview');
+      const stickerGrid = coverPreview.createDiv({ cls: 'wechat-modal-sticker-grid-preview' });
+
+      if (stickerImages.length === 0) {
+        stickerGrid.createEl('div', { text: '未检测到图片素材（贴图要求至少有一张图片）', cls: 'wechat-modal-no-cover' });
+      } else {
+        stickerImages.slice(0, 4).forEach((imgSrc, idx) => {
+          stickerGrid.createEl('img', { attr: { src: displaySources[idx] || imgSrc } });
+        });
+        if (stickerImages.length > 4) {
+          stickerGrid.createEl('div', { cls: 'more-badge', text: `+${stickerImages.length - 4}` });
+        }
+      }
+
+      // 图片数量与文案字数都要过关才允许同步，避免带着必然失败的请求打微信接口。
+      if (stickerImages.length === 0) {
+        syncBtn.disabled = true;
+        syncBtn.setText('图片不足，无法同步');
+        syncBtn.addClass('apple-btn-disabled');
+        syncBtn.setAttribute('title', '微信贴图要求至少包含 1 张图片素材，请先在笔记中插入图片');
+      } else if (stickerCharCount > STICKER_MAX_CONTENT_LENGTH) {
+        syncBtn.disabled = true;
+        syncBtn.setText('文字超长，无法同步');
+        syncBtn.addClass('apple-btn-disabled');
+        syncBtn.setAttribute(
+          'title',
+          `微信贴图限制文案在 ${STICKER_MAX_CONTENT_LENGTH} 字以内，当前为 ${stickerCharCount} 字，请精简后再同步`
+        );
+      } else {
+        syncBtn.disabled = false;
+        syncBtn.setText('同步到贴图草稿');
+        syncBtn.removeClass('apple-btn-disabled');
+        syncBtn.removeAttribute('title');
+      }
+
+      stickerStatusEl.empty();
+      stickerStatusEl.createEl('span', {
+        text: `共 ${stickerImages.length} 张图片 · 文案 ${stickerCharCount} / ${STICKER_MAX_CONTENT_LENGTH} 字`,
+        cls: stickerCharCount > STICKER_MAX_CONTENT_LENGTH ? 'is-error' : '',
+      });
+      return;
+    }
     if (thumbMediaId) {
       coverPreview.addClass('has-material-cover');
       const materialPreview = coverPreview.createDiv({ cls: 'wechat-modal-cover-material-preview' });
@@ -270,9 +347,15 @@ showSyncModal(options = {}) {
     text: '从素材库选择',
     cls: 'wechat-cover-select-material-btn',
   });
+  if (this.previewMode === 'sticker') {
+    coverBtns.setCssStyles({ display: 'none' });
+  }
 
   // 摘要设置
   const digestSection = advancedBody.createDiv({ cls: 'wechat-modal-section' });
+  if (this.previewMode === 'sticker') {
+    digestSection.setCssStyles({ display: 'none' });
+  }
   digestSection.createEl('label', { text: '文章摘要（可选）', cls: 'wechat-modal-label' });
 
   // 自动提取文章前 45 字作为默认摘要
@@ -322,6 +405,9 @@ showSyncModal(options = {}) {
   const updateDraftStatusUI = () => {
     if (!draftStatusEl) return;
     draftStatusEl.empty();
+    // 贴图是独立的图片消息类型，微信不支持在原文章草稿上更新，
+    // 所以贴图模式下不展示、也不复用普通文章的草稿关联。
+    if (this.previewMode === 'sticker') return;
     if (!draftAssociation || forceNewDraft) return;
 
     let confirmUnlink = false;
@@ -362,17 +448,26 @@ showSyncModal(options = {}) {
   updatePreview();
   updateDraftStatusUI();
 
+  // 贴图数据来自侧边栏预览；打开弹窗时再取一次最新结果，避免展示上一次的顺序。
+  if (this.previewMode === 'sticker') {
+    void this.buildStickerData()
+      .then(() => updatePreview())
+      .catch(() => undefined);
+  }
+
   syncBtn.onclick = async () => {
-    if (!coverBase64 && !thumbMediaId) {
-      new Notice('❌ 请先设置封面图');
+    const isStickerMode = this.previewMode === 'sticker';
+    // 贴图发布没有封面概念，图片本身就是内容。
+    if (!isStickerMode && !coverBase64 && !thumbMediaId) {
+      new Notice('请先设置封面图');
       return;
     }
     modal.close();
     this.selectedAccountId = selectedAccountId;
     this.sessionCoverBase64 = coverBase64;
     this.sessionThumbMediaId = thumbMediaId;
-    this.sessionDraftMediaId = (!forceNewDraft && draftAssociation?.mediaId) ? draftAssociation.mediaId : '';
-    this.sessionDraftIndex = (!forceNewDraft && Number.isInteger(draftAssociation?.index)) ? draftAssociation.index : 0;
+    this.sessionDraftMediaId = (!isStickerMode && !forceNewDraft && draftAssociation?.mediaId) ? draftAssociation.mediaId : '';
+    this.sessionDraftIndex = (!isStickerMode && !forceNewDraft && Number.isInteger(draftAssociation?.index)) ? draftAssociation.index : 0;
     // 传递用户输入的标题，或使用 frontmatter 标题或文件名
     this.sessionTitle = titleInput.value.trim() || frontmatterMeta.title || (activeFile ? activeFile.basename : '无标题文章');
     // 传递用户输入的摘要，或使用自动提取的摘要

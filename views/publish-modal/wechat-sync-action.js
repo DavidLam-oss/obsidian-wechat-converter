@@ -35,6 +35,17 @@ import {
   toReadableError,
   isRecord,
 } from '../apple-style-view-shared.js';
+import {
+  STICKER_MAX_CONTENT_LENGTH,
+  STICKER_MAX_IMAGES,
+  STICKER_MAX_TITLE_LENGTH,
+} from '../../services/sticker-extractor.js';
+import { createBodyStickerImageItem } from '../../services/sticker-image-items.js';
+import { resolveStickerMediaIds } from '../../services/sticker-media-resolver.js';
+import { syncStickerDraft } from '../../services/wechat-sync.js';
+
+const WECHAT_SYNC_SUCCESS_NOTICE = '同步成功！请前往微信公众号后台草稿箱查看';
+const WECHAT_UPDATE_SUCCESS_NOTICE = '更新成功！微信草稿已更新';
 
 /** @type {WechatSyncActionMethodsContract & ThisType<AppleStyleViewContract>} */
 const wechatSyncActionMethods = {
@@ -51,14 +62,28 @@ async onSyncToWechat() {
     return;
   }
 
-  if (!this.currentHtml) {
+  const isStickerMode = this.previewMode === 'sticker';
+
+  // 贴图发布不依赖文章 HTML 渲染结果，只有文章模式需要这层拦截。
+  if (!isStickerMode && !this.currentHtml) {
     new Notice(this.getMissingRenderNotice());
     return;
   }
 
-  const notice = new Notice(`🚀 正在使用 ${account.name} 同步...`, 0);
+  if (isStickerMode) {
+    await this.onSyncStickerToWechat(account);
+    return;
+  }
+
+  const notice = new Notice(`正在使用 ${account.name} 同步...`, 0);
   const activeFile = this.getPublishContextFile();
   const publishMeta = this.getFrontmatterPublishMeta(activeFile);
+  const exportSource = this.resolveArticleHtmlSource({ target: 'wechat-draft' });
+  if (!exportSource?.html) {
+    notice.hide();
+    new Notice('当前文章还没有可同步的渲染结果');
+    return;
+  }
 
   try {
     const syncService = /** @type {WechatSyncServiceLike} */ (createWechatSyncService({
@@ -67,7 +92,9 @@ async onSyncToWechat() {
       coverUploadCache: this.coverUploadCache,
       processAllImages: (html, api, progressCallback, options) => this.processAllImages(String(html || ''), api, progressCallback, options),
       processMathFormulas: (html, api, progressCallback) => this.processMathFormulas(String(html || ''), api, progressCallback),
-      prepareHtmlForDraft: (html) => this.prepareHtmlForWechatDraft(String(html || '')),
+      prepareHtmlForDraft: (html) => this.prepareHtmlForWechatDraft(String(html || ''), {
+        layoutMode: exportSource.layoutMode,
+      }),
       cleanHtmlForDraft: (html) => this.cleanHtmlForDraft(String(html || '')),
       cleanupConfiguredDirectory: (file) => this.cleanupConfiguredDirectory(isRecord(file) ? /** @type {TFileLike} */ (file) : null),
       getFirstImageFromArticle: () => this.getFirstImageFromArticle(),
@@ -76,7 +103,7 @@ async onSyncToWechat() {
     const result = await syncService.syncToDraft({
       account,
       proxyUrl: this.plugin.settings.proxyUrl,
-      currentHtml: this.getCurrentExportHtml() || '',
+      currentHtml: exportSource.html,
       activeFile,
       publishMeta,
       sessionTitle: this.sessionTitle,
@@ -113,7 +140,7 @@ async onSyncToWechat() {
     }
 
     notice.hide();
-    new Notice(isUpdate ? '✅ 更新成功！微信草稿已更新' : '✅ 同步成功！请前往微信公众号后台草稿箱查看');
+    new Notice(isUpdate ? WECHAT_UPDATE_SUCCESS_NOTICE : WECHAT_SYNC_SUCCESS_NOTICE);
     const failedImageSources = Array.from(new Set([
       ...(Array.isArray(imageUploadFailures) ? imageUploadFailures.map(item => item?.src).filter(Boolean) : []),
       ...(Array.isArray(placeholderImageSources) ? placeholderImageSources.filter(Boolean) : []),
@@ -121,7 +148,7 @@ async onSyncToWechat() {
     if (failedImageSources.length > 0) {
       const preview = failedImageSources.slice(0, 3).join('、');
       const suffix = failedImageSources.length > 3 ? ` 等 ${failedImageSources.length} 张` : '';
-      new Notice(`⚠️ 草稿已创建，但有 ${failedImageSources.length} 张正文图片未同步：${preview}${suffix}。请在微信后台手动补传。`, 10000);
+      new Notice(`草稿已创建，但有 ${failedImageSources.length} 张正文图片未同步：${preview}${suffix}。请在微信后台手动补传。`, 10000);
     }
     if (Array.isArray(draftWarnings) && draftWarnings.length > 0) {
       const preview = draftWarnings
@@ -129,10 +156,10 @@ async onSyncToWechat() {
         .map((item) => `${item?.message || '正文存在可疑内容'}${item?.value ? `：${item.value}` : ''}`)
         .join('；');
       const suffix = draftWarnings.length > 3 ? `；另有 ${draftWarnings.length - 3} 项` : '';
-      new Notice(`⚠️ 草稿已创建，但正文检查发现 ${draftWarnings.length} 项提醒：${preview}${suffix}`, 10000);
+      new Notice(`草稿已创建，但正文检查发现 ${draftWarnings.length} 项提醒：${preview}${suffix}`, 10000);
     }
     if (cleanupResult?.warning) {
-      new Notice(`⚠️ 资源清理失败：${cleanupResult.warning}`, 7000);
+      new Notice(`资源清理失败：${cleanupResult.warning}`, 7000);
     }
   } catch (error) {
     notice.hide();
@@ -148,6 +175,79 @@ async onSyncToWechat() {
         accountId: account.id || '',
       } : null
     });
+  }
+}
+,
+
+async onSyncStickerToWechat(account) {
+  const notice = new Notice(`正在使用 ${account.name} 同步贴图...`, 0);
+
+  try {
+    // 以侧边栏最新的提取结果为准（含用户拖拽后的顺序与排除项）。
+    const sourcePath = typeof this.sessionStickerSourcePath === 'string'
+      ? this.sessionStickerSourcePath
+      : '';
+    const stickerData = await this.buildStickerData(sourcePath ? { sourcePath } : {});
+    const imageItems = Array.isArray(stickerData.imageItems)
+      ? stickerData.imageItems
+      : (Array.isArray(stickerData.images) ? stickerData.images : [])
+        .map((src) => createBodyStickerImageItem(src))
+        .filter(Boolean);
+    const content = typeof stickerData.content === 'string' ? stickerData.content : '';
+    const title = String(this.sessionTitle || stickerData.title || '未命名贴图').trim();
+
+    if (imageItems.length === 0) {
+      notice.hide();
+      new Notice('微信贴图至少需要 1 张图片，请先在笔记正文中插入图片');
+      return;
+    }
+    if (imageItems.length > STICKER_MAX_IMAGES) {
+      notice.hide();
+      new Notice(`微信贴图最多支持 ${STICKER_MAX_IMAGES} 张图片，请先移除多余图片`);
+      return;
+    }
+
+    if (content.length > STICKER_MAX_CONTENT_LENGTH) {
+      notice.hide();
+      new Notice(`贴图文案 ${content.length} 字，超出微信 ${STICKER_MAX_CONTENT_LENGTH} 字上限，请精简后再同步`);
+      return;
+    }
+
+    if (title.length > STICKER_MAX_TITLE_LENGTH) {
+      notice.hide();
+      new Notice(`贴图标题 ${title.length} 字，超出 ${STICKER_MAX_TITLE_LENGTH} 字上限，请精简后再同步`);
+      return;
+    }
+
+    const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
+    if (!this.stickerUploadCache) this.stickerUploadCache = new Map();
+    const imageMediaIds = await resolveStickerMediaIds({
+      items: imageItems,
+      account,
+      api,
+      srcToBlob: (src) => this.srcToBlob(src),
+      cache: this.stickerUploadCache,
+      onProgress: (current, total) => {
+        notice.setMessage(`正在准备贴图图片 (${current}/${total})...`);
+      },
+    });
+
+    notice.setMessage('正在创建微信贴图草稿...');
+    await syncStickerDraft({
+      account,
+      api,
+      title,
+      content,
+      imageMediaIds,
+    });
+
+    notice.hide();
+    new Notice(WECHAT_SYNC_SUCCESS_NOTICE);
+  } catch (error) {
+    notice.hide();
+    console.error('Wechat Sticker Sync Error:', error);
+    const readableError = toReadableError(error);
+    new Notice(`贴图同步失败：${toSyncFriendlyMessage(readableError.message)}`, 10000);
   }
 }
 };

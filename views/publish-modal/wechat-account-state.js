@@ -74,7 +74,7 @@ showAccountSetupEmptyState() {
 
 showSyncFailureActions(message, options = {}) {
   if (typeof getObsidianModalClass() !== 'function') {
-    new Notice(`❌ 同步失败: ${message}`);
+    new Notice(`同步失败: ${message}`);
     return;
   }
 

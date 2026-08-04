@@ -125,6 +125,16 @@
   box-shadow: 0 8px 18px color-mix(in srgb, var(--text-normal) 18%, transparent);
 }
 
+.apple-settings-guide-link {
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.apple-settings-guide-link:hover {
+  color: var(--text-normal);
+}
+
 .apple-settings-tab-intro {
   margin: -2px 0 16px;
   padding: 0;
@@ -180,4 +190,3 @@
   color: var(--text-accent);
   border-bottom-color: var(--text-accent);
 }
-

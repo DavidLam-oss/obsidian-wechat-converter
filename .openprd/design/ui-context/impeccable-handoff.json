@@ -1,27 +1,21 @@
 {
   "consumer": "impeccable",
-  "status": "blocked",
-  "errors": [
-    "缺少 UI Context context.json。",
-    "缺少 user-confirmed 设计方向确认。",
-    "PRODUCT.md 缺少唯一 OPENPRD:UI-CONTEXT marker。",
-    "DESIGN.md 缺少唯一 OPENPRD:UI-CONTEXT marker。",
-    "PRODUCT.md 缺少必需章节: Product Context",
-    "PRODUCT.md 缺少必需章节: Jobs and Flows",
-    "PRODUCT.md 缺少必需章节: UI Topology",
-    "PRODUCT.md 缺少必需章节: States and Edge Cases",
-    "PRODUCT.md 缺少必需章节: Evidence and Decisions",
-    "PRODUCT.md 缺少必需章节: Conflicts and Open Questions",
-    "DESIGN.md version 必须为 alpha。",
-    "DESIGN.md colors 至少需要 primary。",
-    "DESIGN.md typography.body 缺少 fontFamily/fontSize/fontWeight/lineHeight。",
-    "DESIGN.md typography.label 缺少 fontFamily/fontSize/fontWeight/lineHeight。",
-    "DESIGN.md typography.code 缺少 fontFamily/fontSize/fontWeight/lineHeight。",
-    "DESIGN.md 缺少必需章节: Layout",
-    ".openprd/design/active/facts-sheet.md 仍包含占位文本。",
-    ".openprd/design/active/asset-spec.md 仍包含占位文本。",
-    ".openprd/design/active/image-preflight.md 仍包含占位文本。",
-    ".openprd/design/active/direction-plan.md 仍包含占位文本。",
-    ".openprd/design/active/selected-direction.md 仍包含占位文本。"
-  ]
+  "status": "ready",
+  "read": [
+    "PRODUCT.md",
+    "DESIGN.md"
+  ],
+  "instruction": "Preserve the confirmed product boundary and visual direction; use shape/craft/critique/polish for implementation and refinement.",
+  "contextFingerprint": "fad01ae7d53601dd6f2e71960aa4592675bcd997a3f7a5fc7744df72077a6014",
+  "contractDigests": {
+    "product": "090856a2cc4a9c6fcedeea367ab9fd3b524f194f5d3e30885fa325480c55cf49",
+    "design": "0fe965ad574ca33d655bad76255837ac01d39aa06306808c0e719c507eaa4bc9"
+  },
+  "activeDesignDigests": {
+    "facts-sheet.md": "c9784619fda2ad672e69c6001b669ff6d646bde5ba3fcfd266c1a2b65509857c",
+    "asset-spec.md": "c7bd2a57726743d93e2dccb8bdebd56e7f38e80b5c8c88d6f87f199c3f292582",
+    "image-preflight.md": "3d91011dba83d09e55145ec71b29e81144d1912d875cd35929e4bedb5fbcdc87",
+    "direction-plan.md": "9cf2b34dd7ae7ac9be522faee55070e03854e9e9f5a7ac4cd5037fd540ee4f5d",
+    "selected-direction.md": "cb7ead798a273620ecfa299cd1a2183c44655fe31fb01c8429775c445ffd883b"
+  }
 }

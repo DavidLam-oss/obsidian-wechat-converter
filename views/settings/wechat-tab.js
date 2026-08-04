@@ -35,6 +35,79 @@ import {
   WechatAPI,
   toReadableError,
 } from '../apple-style-view-shared.js';
+import { resolveCustomCssSource } from '../../services/custom-css-source.js';
+import { compileCustomCss } from '../../services/custom-css-compiler.js';
+
+const WECHAT_ACCOUNT_SETUP_GUIDE_URL =
+  'https://xiaoweibox.top/obsidian-publisher/guide#wechat-api';
+const CUSTOM_CSS_GUIDE_URL =
+  'https://xiaoweibox.top/obsidian-publisher/guide/custom-css';
+
+/**
+ * @param {Document | null} activeDocument
+ * @param {string} text
+ * @param {string} linkText
+ * @param {string} href
+ * @param {() => void} openLink
+ * @returns {string | DocumentFragment}
+ */
+function createMutedGuideDescription(activeDocument, text, linkText, href, openLink) {
+  if (!activeDocument) return `${text} ${linkText}`;
+
+  const description = activeDocument.createDocumentFragment();
+  description.append(activeDocument.createTextNode(`${text} `));
+  const link = activeDocument.createElement('a');
+  link.textContent = linkText;
+  link.href = href;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.className = 'apple-settings-guide-link';
+  link.addEventListener('click', (event) => {
+    event.preventDefault();
+    openLink();
+  });
+  description.append(link);
+  return description;
+}
+
+/**
+ * @param {AppleStylePluginLike} plugin
+ * @returns {Promise<string>}
+ */
+async function describeCustomCssStatus(plugin) {
+  const source = await resolveCustomCssSource(plugin);
+  const sourceFatal = source.diagnostics.find((item) => item.severity === 'fatal');
+  const compiled = sourceFatal
+    ? null
+    : compileCustomCss(source.cssText, { sourceIdentity: source.identity });
+  const fatal = sourceFatal || compiled?.diagnostics.find((item) => item.severity === 'fatal');
+  const converterView = /** @type {{ customCssStatus?: AppleStyleViewContract['customCssStatus'] } | null} */ (
+    plugin.getConverterView?.() || null
+  );
+  const viewStatus = converterView?.customCssStatus;
+
+  if (fatal) {
+    const location = fatal.line ? `第 ${fatal.line} 行附近` : '当前 CSS';
+    const fallback = viewStatus?.usingLastValid ? '，当前继续使用上一次有效样式' : '，当前继续使用基础主题';
+    return `${location}存在语法问题${fallback}`;
+  }
+
+  const sourceWarning = source.diagnostics.find((item) => item.severity === 'warning');
+  if (sourceWarning) return sourceWarning.message;
+  if (!source.cssText.trim()) return '尚未填写 CSS';
+  if (viewStatus?.state === 'ai-skipped') return '当前为 AI 编排，自定义 CSS 不会应用';
+
+  const sourceLabel = source.kind === 'note'
+    ? `当前使用 ${source.path}`
+    : '当前使用设置中的 CSS';
+  if (viewStatus?.sourceIdentity === source.identity && viewStatus.state === 'unmatched') {
+    return `${sourceLabel}；CSS 有效，但当前文章没有匹配到对应内容`;
+  }
+
+  const blockedCount = compiled?.diagnostics.filter((item) => item.severity === 'blocked').length || 0;
+  if (blockedCount > 0) return `${sourceLabel}；已忽略 ${blockedCount} 项不支持或不安全的规则`;
+  return `${sourceLabel}，预览会自动更新`;
+}
 
 /** @type {WechatSettingsMethodsContract & ThisType<AppleStyleSettingTabContract>} */
 const wechatSettingsMethods = {
@@ -140,7 +213,15 @@ const wechatSettingsMethods = {
 
     new Setting(containerEl)
       .setName('微信公众号账号')
-      .setDesc('请在微信公众号后台 [设置与开发] -> [基本配置] 中获取 AppID 和 AppSecret，并确保已将当前 IP 加入白名单。')
+      .setDesc(createMutedGuideDescription(
+        containerEl.ownerDocument || getActiveDocumentCompat(),
+        '添加用于同步草稿的公众号 AppID 和 AppSecret。首次配置请先完成 IP 白名单设置。',
+        '查看图文指南 →',
+        WECHAT_ACCOUNT_SETUP_GUIDE_URL,
+        () => {
+          this.plugin.openExternalUrl(WECHAT_ACCOUNT_SETUP_GUIDE_URL);
+        }
+      ))
       .setHeading();
 
     // 账号列表
@@ -399,15 +480,15 @@ const wechatSettingsMethods = {
     // 使用指南外链
     new Setting(containerEl)
       .setName('使用指南')
-      .setDesc('自定义 CSS 的作用域原理、可用选择器清单、可直接复制的示例与禁忌坑位，看这篇在线指南。')
-      .addButton(btn => btn
-        .setButtonText('查看使用指南 →')
-        .setCta()
-        .onClick(() => {
-          if (typeof window !== 'undefined' && typeof window.open === 'function') {
-            window.open('https://xiaoweibox.top/obsidian-publisher/guide/custom-css', '_blank', 'noopener');
-          }
-        }));
+      .setDesc(createMutedGuideDescription(
+        containerEl.ownerDocument || getActiveDocumentCompat(),
+        '自定义 CSS 的作用域原理、可用选择器清单、可直接复制的示例与禁忌坑位。',
+        '查看使用指南 →',
+        CUSTOM_CSS_GUIDE_URL,
+        () => {
+          this.plugin.openExternalUrl(CUSTOM_CSS_GUIDE_URL);
+        }
+      ));
 
     // 启用开关
     let customCssEnabled = !!this.plugin.settings.enableCustomCss;
@@ -428,12 +509,43 @@ const wechatSettingsMethods = {
       return;
     }
 
+    const statusRow = containerEl.createDiv({ cls: 'owc-custom-css-status' });
+    statusRow.setCssStyles?.({
+      display: 'flex',
+      gap: '8px',
+      alignItems: 'baseline',
+      margin: '-2px 0 12px',
+      padding: '0 2px',
+      fontSize: '12px',
+      lineHeight: '1.5',
+      color: 'var(--text-muted)',
+    });
+    const statusLabel = statusRow.createSpan({ text: '当前状态' });
+    statusLabel.setCssStyles?.({
+      flex: '0 0 auto',
+      color: 'var(--text-normal)',
+      fontWeight: '500',
+    });
+    const statusText = statusRow.createSpan({ text: '正在检查自定义 CSS…' });
+    let statusRefreshGeneration = 0;
+    const refreshCustomCssStatus = async (delayMs = 0) => {
+      const generation = ++statusRefreshGeneration;
+      if (delayMs > 0 && typeof window !== 'undefined') {
+        await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+      }
+      if (generation !== statusRefreshGeneration || !statusRow.parentElement) return;
+      const description = await describeCustomCssStatus(this.plugin);
+      if (generation !== statusRefreshGeneration || !statusRow.parentElement) return;
+      statusText.textContent = description;
+    };
+    refreshCustomCssStatus();
+
     // CSS textarea
     const textareaSetting = new Setting(containerEl)
       .setName('自定义 CSS 内容')
       .setDesc('直接粘贴 CSS，例如 p { color: #333; }。无需写 .owc-article-root 前缀，插件会自动限定作用域。');
 
-    textareaSetting.settingEl.setCssStyles?.({ flexWrap: 'wrap' });
+    textareaSetting.settingEl?.setCssStyles?.({ flexWrap: 'wrap' });
     textareaSetting.addTextArea(text => {
       text
         .setPlaceholder('/* 在此输入你的自定义 CSS */\np { color: #333; }')
@@ -441,7 +553,10 @@ const wechatSettingsMethods = {
         .onChange(async (value) => {
           this.plugin.settings.customCss = value;
           const saved = await this.plugin.saveSettings();
-          if (saved) this.plugin.scheduleCustomCssPreviewNotice?.();
+          if (saved) {
+            this.plugin.scheduleCustomCssPreviewNotice?.();
+            refreshCustomCssStatus(800);
+          }
         });
 
       if (text.inputEl) {
@@ -464,7 +579,10 @@ const wechatSettingsMethods = {
         .onChange(async (value) => {
           this.plugin.settings.customCssNote = value.trim();
           const saved = await this.plugin.saveSettings();
-          if (saved) this.plugin.scheduleCustomCssPreviewNotice?.();
+          if (saved) {
+            this.plugin.scheduleCustomCssPreviewNotice?.();
+            refreshCustomCssStatus(800);
+          }
         }));
   }
 };

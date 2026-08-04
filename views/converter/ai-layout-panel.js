@@ -80,6 +80,14 @@ hasCurrentArticleAiLayoutCache() {
 
 updateAiToolbarState() {
   if (!this.aiLayoutBtn) return;
+  if (this.previewMode === 'sticker') {
+    this.aiLayoutBtn.classList.add('hidden');
+    this.aiLayoutBtn.hidden = true;
+    if (this.aiLayoutOverlay) this.aiLayoutOverlay.classList.remove('visible');
+    this.aiLayoutBtn.classList.remove('active');
+    return;
+  }
+  this.aiLayoutBtn.classList.remove('hidden');
   const aiSettings = this.plugin.settings?.ai || createDefaultAiSettings();
   const enabled = aiSettings.enabled === true;
   const hasProvider = !!resolveAiProvider(aiSettings);
@@ -228,7 +236,9 @@ createAiLayoutPanel(parent) {
   this.aiRegenerateBtn.addEventListener('click', () => this.generateAiLayoutForCurrentArticle({ applyAfterGenerate: true }));
 
   this.aiResetBtn = actionRow.createEl('button', { cls: 'apple-btn-secondary', text: '恢复普通预览' });
-  this.aiResetBtn.addEventListener('click', () => this.restoreBasePreview());
+  this.aiResetBtn.addEventListener('click', async () => {
+    await this.restoreBasePreview();
+  });
 
   this.aiRestoreBlocksBtn = actionRow.createEl('button', { cls: 'apple-btn-secondary', text: '恢复已移除' });
   this.aiRestoreBlocksBtn.addEventListener('click', () => this.restoreRemovedAiLayoutBlocks());

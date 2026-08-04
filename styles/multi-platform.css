@@ -25,6 +25,9 @@
 - 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
 */
 
+.wechat-multiplatform-shell .modal-content.wechat-multiplatform-modal:not(.wechat-multiplatform-result-modal) {
+  overflow: hidden;
+}
 .wechat-multiplatform-shell {
   width: min(720px, calc(100vw - 48px));
   max-width: min(720px, calc(100vw - 48px));

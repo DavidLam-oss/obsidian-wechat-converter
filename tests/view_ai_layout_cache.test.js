@@ -1108,9 +1108,10 @@ describe('AppleStyleView AI layout cache + export', () => {
   it('getCurrentExportHtml should leave non-ai preview html unchanged', () => {
     const view = new AppleStyleView(null, { settings: {} });
     view.currentHtml = '<section><h1>普通预览标题</h1><p>正文</p></section>';
+    view.baseRenderedHtml = '<section><h1>普通预览标题</h1><p>正文</p></section>';
     view.aiPreviewApplied = false;
 
-    expect(view.getCurrentExportHtml()).toBe(view.currentHtml);
+    expect(view.getCurrentExportHtml()).toBe(view.baseRenderedHtml);
   });
 
   it('syncPreviewPresentationMode should only mark classic preview chrome when ai preview is applied', () => {

@@ -71,6 +71,10 @@ describe('AppleStyleView - Frontmatter Meta & Configured Directory Cleanup', () 
     };
 
     view = new AppleStyleView(null, plugin);
+    view.resolveArticleHtmlSource = vi.fn(() => ({
+      html: view.currentHtml || '',
+      restore: async () => {},
+    }));
     activeFile = { path: 'published/post.md', basename: 'post' };
     frontmatter = {
       title: '这是 frontmatter 标题',

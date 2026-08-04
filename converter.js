@@ -737,12 +737,12 @@ class AppleStyleConverter {
       background: ${accentColor}0D;
     `.replace(/\s+/g, ' ').trim();
 
-    return `<section style="${containerStyle}">
-      <section style="${headerStyle}">
-        <span style="${iconStyle}">${calloutInfo.icon}</span>
-        <span style="${titleStyle}">${safeTitle}</span>
+    return `<section class="owc-callout" style="${containerStyle}">
+      <section class="owc-callout-title" style="${headerStyle}">
+        <span class="owc-callout-icon" style="${iconStyle}">${calloutInfo.icon}</span>
+        <span class="owc-callout-title-text" style="${titleStyle}">${safeTitle}</span>
       </section>
-      <section style="${contentStyle}">`;
+      <section class="owc-callout-content" style="${contentStyle}">`;
   }
 
   /**
@@ -786,12 +786,12 @@ class AppleStyleConverter {
       background: #f9f9f9;
     `.replace(/\s+/g, ' ').trim();
 
-    return `<section style="${containerStyle}">
-      <section style="${headerStyle}">
-        <span style="${iconStyle}">${calloutInfo.icon}</span>
-        <span style="${titleStyle}">${safeTitle}</span>
+    return `<section class="owc-callout" style="${containerStyle}">
+      <section class="owc-callout-title" style="${headerStyle}">
+        <span class="owc-callout-icon" style="${iconStyle}">${calloutInfo.icon}</span>
+        <span class="owc-callout-title-text" style="${titleStyle}">${safeTitle}</span>
       </section>
-      <section style="${contentStyle}">`;
+      <section class="owc-callout-content" style="${contentStyle}">`;
   }
 
   /**

@@ -1,165 +1,250 @@
 /*
 ## 核心功能
 
-把用户提供的原始 CSS 安全地内联到文章 HTML 中，用于微信公众号发布。
+把已编译的微信公众号自定义 CSS 安全地应用到文章 HTML，并提供兼容的 raw CSS
+入口。生产路径由 source → compiler → inliner 三层组成。
 
 ## 输入
 
-- 已按主题渲染好的文章 HTML（元素级内联 style）。
-- 用户自定义 CSS 文本（来自设置页 textarea 或 vault 笔记）。
+- 干净文章 HTML。
+- compiler 生成的 scopedCss、pseudoRules、counterConfig 与 matchSelectors。
 
 ## 输出
 
-- 内联后的 HTML：用户 CSS 选择器对应的样式已合并到各元素的 `style` 属性中。
-- 如果未启用或 CSS 为空，原样返回输入 HTML。
+- `{ html, applied, diagnostics, sourceHash, matchedRuleCount, matchedElementCount }`。
+- raw CSS 兼容入口 `inlineCustomCss(html, cssText)`。
 
 ## 定位
 
-位于 services/，属于渲染后处理服务；不直接操作设置页 DOM。
+位于 services/，属于渲染后处理服务；不读取 Vault，不判断 AI 或目标平台。
 
 ## 依赖
 
-关键依赖：`juice`（用于把选择器 CSS 内联成元素 inline style）。
+关键依赖：`juice`、`./custom-css-compiler.js`、`./pseudo-element-renderer.js`。
 
 ## 维护规则
 
-- 修改逻辑后同步更新本文件说明书，并检查 services 的文件夹 README 是否仍准确。
-- 保持职责边界清晰：sanitize → scope → inline，步骤独立可单测。
-- 用户 CSS 只做样式覆盖，不引入新的 HTML 结构或脚本。
+- inliner 必须 fail-open：CSS 失败时返回输入 HTML，不得中断预览、复制或同步。
+- 调用方必须传入干净 HTML；伪元素转换不承诺幂等。
+- 修改后同步更新 custom CSS 单元与端到端测试。
 */
 
 import juice from 'juice';
+import { compileCustomCss } from './custom-css-compiler.js';
 import {
-    prerenderPseudoElementsIntoHtml,
-    removePseudoRulesFromCSS,
+  prerenderCompiledPseudoElementsIntoHtml,
 } from './pseudo-element-renderer.js';
+export {
+  extractCustomCssFromMarkdown,
+  normalizeCustomCssNotePath,
+  resolveCustomCssFromSettings,
+  resolveCustomCssSource,
+} from './custom-css-source.js';
 
 const ROOT_SELECTOR = '.owc-article-root';
 
 /**
- * 危险 CSS 特征 denylist。
- * 这些特征在微信环境下本身也会被清洗，但提前拦截可以避免本地执行风险。
- * @type {Array<{name: string, pattern: RegExp}>}
- */
-const FORBIDDEN_CSS_PATTERNS = [
-    { name: 'expression()', pattern: /expression\s*\(/i },
-    { name: 'javascript: url', pattern: /url\s*\(\s*["']?\s*javascript:/i },
-    { name: '@import', pattern: /@import\b/i },
-    { name: 'behavior/-ms-behavior', pattern: /behavior\s*:/i },
-    { name: 'binding', pattern: /binding\s*:/i },
-];
-
-/**
+ * @typedef {{ severity: 'fatal'|'blocked'|'warning'|'info', code: string, message: string, line?: number, column?: number }} CustomCssDiagnostic
+ * @typedef {{
+ *   sourceIdentity: string,
+ *   sourceHash: string,
+ *   scopedCss: string,
+ *   pseudoRules: Array<{ baseSelector: string, pseudoType: 'before'|'after', properties: Record<string, string> }>,
+ *   fallbackRules?: Array<{ selector: string, properties: Record<string, string> }>,
+ *   counterConfig: {
+ *     resets: Array<{selector:string,name:string,value:number}>,
+ *     increments: Array<{selector:string,name:string,value:number}>
+ *   },
+ *   matchSelectors: string[],
+ *   diagnostics: CustomCssDiagnostic[],
+ *   usable: boolean
+ * }} CompiledCustomCssLike
  * @typedef {Object} InlineOptions
- * @property {boolean} [preserveImportant=true] 是否保留 !important
- * @property {boolean} [removeStyleTags=true] 内联后是否移除 style 标签
- * @property {string} [rootSelector='.owc-article-root'] 作用域根选择器
+ * @property {boolean} [preserveImportant=true]
+ * @property {boolean} [removeStyleTags=true]
+ * @property {string} [rootSelector='.owc-article-root']
  */
 
 /**
- * 检查用户 CSS 是否包含明显危险或不应支持的语法。
- * 失败时抛出错误，错误信息包含命中的规则名。
+ * 兼容校验入口。blocked 规则会被移除并作为 diagnostics 返回；
+ * 只有 fatal 结果不可用。
+ *
  * @param {string} cssText
- * @throws {Error}
+ * @returns {{ usable: boolean, diagnostics: CustomCssDiagnostic[] }}
  */
 export function sanitizeCustomCss(cssText) {
-    if (typeof cssText !== 'string') return;
-
-    for (const rule of FORBIDDEN_CSS_PATTERNS) {
-        if (rule.pattern.test(cssText)) {
-            throw new Error(`自定义 CSS 包含被禁止的语法：${rule.name}`);
-        }
-    }
+  const compiled = compileCustomCss(cssText);
+  return {
+    usable: compiled.usable,
+    diagnostics: compiled.diagnostics,
+  };
 }
 
 /**
- * 把用户写的普通选择器 CSS 限定在文章根容器作用域内。
- * 例如 `p { color: red; }` -> `.owc-article-root p { color: red; }`
- *
- * 实现说明：
- * - 按逗号拆分选择器组，每个简单选择器前加 root 前缀。
- * - 保留 @media、@font-face 等 at-rule 原样（内部选择器同样加前缀）。
- * - 保留注释不处理（交给 juice 或后续步骤）。
+ * 兼容作用域入口，内部已改用 AST。
  *
  * @param {string} cssText
- * @param {string} [rootSelector='.owc-article-root']
+ * @param {string} [rootSelector]
  * @returns {string}
  */
 export function scopeCustomCss(cssText, rootSelector = ROOT_SELECTOR) {
-    if (!cssText || !rootSelector) return cssText;
-
-    const rootPrefix = rootSelector.trim();
-    const scopedBlocks = [];
-
-    let i = 0;
-    while (i < cssText.length) {
-        // 跳过空白和注释
-        if (cssText[i].trim() === '') {
-            i += 1;
-            continue;
-        }
-        if (cssText.slice(i, i + 2) === '/*') {
-            const end = cssText.indexOf('*/', i + 2);
-            if (end === -1) break;
-            i = end + 2;
-            continue;
-        }
-
-        // 读取选择器/前缀直到 '{'
-        let selectorEnd = cssText.indexOf('{', i);
-        if (selectorEnd === -1) break;
-
-        const selectors = cssText.slice(i, selectorEnd).trim();
-        // 找到匹配的一对 { }
-        let braceDepth = 0;
-        let bodyEnd = selectorEnd;
-        for (let j = selectorEnd; j < cssText.length; j += 1) {
-            if (cssText[j] === '{') braceDepth += 1;
-            else if (cssText[j] === '}') {
-                braceDepth -= 1;
-                if (braceDepth === 0) {
-                    bodyEnd = j + 1;
-                    break;
-                }
-            }
-        }
-        const body = cssText.slice(selectorEnd, bodyEnd);
-
-        if (selectors.startsWith('@')) {
-            const atRuleName = selectors.toLowerCase();
-            if (atRuleName.startsWith('@media') || atRuleName.startsWith('@supports')) {
-                const inner = body.slice(1, -1); // remove outer { }
-                const innerScoped = scopeCustomCss(inner, rootPrefix);
-                scopedBlocks.push(`${selectors}{${innerScoped}}`);
-            } else {
-                // @font-face, @keyframes 等直接保留
-                scopedBlocks.push(`${selectors}${body}`);
-            }
-        } else {
-            const scopedSelectors = selectors
-                .split(',')
-                .map((s) => `${rootPrefix} ${s.trim()}`)
-                .join(', ');
-            scopedBlocks.push(`${scopedSelectors}${body}`);
-        }
-
-        i = bodyEnd;
-    }
-
-    return scopedBlocks.join('\n');
+  return compileCustomCss(cssText, { rootSelector }).scopedCss;
 }
 
 /**
- * 把用户 CSS 内联到 HTML 中。
+ * @param {string} html
+ * @param {string} rootClass
+ * @returns {string}
+ */
+function unwrapRootContainer(html, rootClass) {
+  const openRe = new RegExp(`^\\s*<div\\s+class=["']${rootClass}["'][^>]*>`, 'i');
+  const closeRe = /<\/div>\s*$/i;
+  if (!openRe.test(html) || !closeRe.test(html)) return html;
+  return html.replace(openRe, '').replace(closeRe, '');
+}
+
+/**
+ * @param {string} wrappedHtml
+ * @param {string[]} selectors
+ * @returns {{ matchedRuleCount: number, matchedElementCount: number }}
+ */
+function countSelectorMatches(wrappedHtml, selectors) {
+  if (typeof DOMParser === 'undefined' || !Array.isArray(selectors) || selectors.length === 0) {
+    return { matchedRuleCount: 0, matchedElementCount: 0 };
+  }
+  const doc = new DOMParser().parseFromString(wrappedHtml, 'text/html');
+  const container = doc.body.firstElementChild;
+  if (!container) return { matchedRuleCount: 0, matchedElementCount: 0 };
+
+  let matchedRuleCount = 0;
+  const matchedElements = new Set();
+  selectors.forEach((selector) => {
+    try {
+      const elements = Array.from(container.querySelectorAll(selector));
+      if (elements.length > 0) matchedRuleCount += 1;
+      elements.forEach((element) => matchedElements.add(element));
+    } catch {
+      // compiler 已负责 selector 诊断；运行环境不支持时只视为未匹配。
+    }
+  });
+  return { matchedRuleCount, matchedElementCount: matchedElements.size };
+}
+
+/**
+ * Juice 的选择器切分器无法匹配属性字符串中含逗号的合法选择器。
+ * 对 compiler 明确标记的这类规则使用 DOM fallback，并保持“普通声明不覆盖既有 inline，
+ * !important 可以覆盖”的既有优先级合同。
  *
- * 流程：
- * 1. sanitize 检查危险语法。
- * 2. 把 HTML 包进根容器 `<div class="owc-article-root">`。
- * 3. 给用户 CSS 加作用域前缀。
- * 4. 伪元素预处理：若用户 CSS 含 `::before`/`::after`，在 juice 之前把它们
- *    转成真实 `<span>`（含 CSS 计数器计算），并从作用域 CSS 中剥离伪元素规则块。
- * 5. 用 juice.inlineContent 做内联。
- * 6. 去掉根容器 wrapper，返回原结构。
+ * @param {string} wrappedHtml
+ * @param {Array<{ selector: string, properties: Record<string, string> }>} rules
+ * @returns {string}
+ */
+function applyFallbackRules(wrappedHtml, rules) {
+  if (typeof DOMParser === 'undefined' || !rules.length) return wrappedHtml;
+  const doc = new DOMParser().parseFromString(wrappedHtml, 'text/html');
+  const container = doc.body.firstElementChild;
+  if (!container) return wrappedHtml;
+
+  rules.forEach((rule) => {
+    const elements = Array.from(container.querySelectorAll(rule.selector));
+    elements.forEach((element) => {
+      const htmlElement = /** @type {HTMLElement} */ (element);
+      Object.entries(rule.properties).forEach(([property, rawValue]) => {
+        const important = /\s*!important\s*$/i.test(rawValue);
+        const value = rawValue.replace(/\s*!important\s*$/i, '').trim();
+        if (htmlElement.style.getPropertyValue(property) && !important) return;
+        htmlElement.style.setProperty(property, value, important ? 'important' : '');
+      });
+    });
+  });
+  return container.outerHTML;
+}
+
+/**
+ * @param {string} html
+ * @param {CompiledCustomCssLike} compiled
+ * @param {InlineOptions} [options]
+ * @returns {{
+ *   html: string,
+ *   applied: boolean,
+ *   diagnostics: CustomCssDiagnostic[],
+ *   sourceHash: string,
+ *   matchedRuleCount: number,
+ *   matchedElementCount: number
+ * }}
+ */
+export function applyCompiledCustomCss(html, compiled, options = {}) {
+  const inputHtml = String(html || '');
+  const diagnostics = Array.isArray(compiled?.diagnostics) ? [...compiled.diagnostics] : [];
+  const sourceHash = String(compiled?.sourceHash || '');
+  if (!inputHtml || !compiled?.usable) {
+    return {
+      html: inputHtml,
+      applied: false,
+      diagnostics,
+      sourceHash,
+      matchedRuleCount: 0,
+      matchedElementCount: 0,
+    };
+  }
+  if (!compiled.scopedCss && (!compiled.pseudoRules || compiled.pseudoRules.length === 0)) {
+    return {
+      html: inputHtml,
+      applied: false,
+      diagnostics,
+      sourceHash,
+      matchedRuleCount: 0,
+      matchedElementCount: 0,
+    };
+  }
+
+  const rootSelector = options.rootSelector || ROOT_SELECTOR;
+  const rootClass = rootSelector.replace(/^\./, '');
+  const wrappedHtml = `<div class="${rootClass}">${inputHtml}</div>`;
+
+  try {
+    const matchSummary = countSelectorMatches(wrappedHtml, compiled.matchSelectors || []);
+    const fallbackHtml = applyFallbackRules(wrappedHtml, compiled.fallbackRules || []);
+    const pseudoResult = prerenderCompiledPseudoElementsIntoHtml(
+      fallbackHtml,
+      compiled.pseudoRules || [],
+      compiled.counterConfig || { resets: [], increments: [] }
+    );
+    const inlined = juice.inlineContent(pseudoResult.html, compiled.scopedCss, {
+      preserveImportant: options.preserveImportant !== false,
+      removeStyleTags: options.removeStyleTags !== false,
+      webResources: { images: false, svgs: false },
+    });
+    return {
+      html: unwrapRootContainer(inlined, rootClass),
+      applied: matchSummary.matchedRuleCount > 0 || pseudoResult.insertedCount > 0,
+      diagnostics,
+      sourceHash,
+      matchedRuleCount: matchSummary.matchedRuleCount + (
+        pseudoResult.insertedCount > 0 ? 1 : 0
+      ),
+      matchedElementCount: matchSummary.matchedElementCount + pseudoResult.insertedCount,
+    };
+  } catch (error) {
+    const errorMessage = String(error || '').replace(/^Error:\s*/i, '');
+    diagnostics.push({
+      severity: 'fatal',
+      code: 'custom-css-inline-failed',
+      message: `自定义 CSS 应用失败，已继续使用基础主题：${errorMessage || '未知错误'}`,
+    });
+    return {
+      html: inputHtml,
+      applied: false,
+      diagnostics,
+      sourceHash,
+      matchedRuleCount: 0,
+      matchedElementCount: 0,
+    };
+  }
+}
+
+/**
+ * raw CSS 兼容入口。新代码优先显式 compile 后调用 applyCompiledCustomCss。
  *
  * @param {string} html
  * @param {string} cssText
@@ -167,70 +252,10 @@ export function scopeCustomCss(cssText, rootSelector = ROOT_SELECTOR) {
  * @returns {string}
  */
 export function inlineCustomCss(html, cssText, options = {}) {
-    if (!cssText || !cssText.trim()) return html;
-
-    const rootSelector = options.rootSelector || ROOT_SELECTOR;
-    const rootClass = rootSelector.replace(/^\./, '');
-
-    sanitizeCustomCss(cssText);
-
-    const scopedCss = scopeCustomCss(cssText, rootSelector);
-    const wrappedHtml = `<div class="${rootClass}">${html}</div>`;
-
-    // 伪元素预处理（juice 之前）：CSS 用未作用域的原始文本匹配，作用域后的 CSS 去掉伪元素块再给 juice。
-    const htmlWithPseudo = prerenderPseudoElementsIntoHtml(wrappedHtml, cssText);
-    const cssForJuice = removePseudoRulesFromCSS(scopedCss);
-
-    const inlined = juice.inlineContent(htmlWithPseudo, cssForJuice, {
-        preserveImportant: options.preserveImportant !== false,
-        removeStyleTags: options.removeStyleTags !== false,
-        webResources: { images: false, svgs: false },
-    });
-
-    // 去掉外层 wrapper，只保留内部内容
-    return unwrapRootContainer(inlined, rootClass);
-}
-
-/**
- * 去掉 juice 内联后外层包裹的根容器 div。
- * @param {string} html
- * @param {string} rootClass
- * @returns {string}
- */
-function unwrapRootContainer(html, rootClass) {
-    const openRe = new RegExp(`^\\s*<div\\s+class=["']${rootClass}["'][^>]*>`, 'i');
-    const closeRe = /<\/div>\s*$/i;
-
-    if (!openRe.test(html) || !closeRe.test(html)) {
-        return html;
-    }
-
-    return html.replace(openRe, '').replace(closeRe, '');
-}
-
-/**
- * 从插件设置中读取自定义 CSS 文本。
- * 优先级：customCssNote（vault 笔记）> customCss（textarea）。
- *
- * @param {{ settings?: { enableCustomCss?: boolean, customCssNote?: string, customCss?: string }, app?: { vault?: VaultLike } }} plugin
- * @returns {Promise<string>}
- */
-export async function resolveCustomCssFromSettings(plugin) {
-    if (!plugin || !plugin.settings || !plugin.settings.enableCustomCss) {
-        return '';
-    }
-
-    const notePath = plugin.settings.customCssNote?.trim();
-    if (notePath && plugin.app && plugin.app.vault) {
-        const file = /** @type {(TFileLike & { extension?: string }) | null} */ (plugin.app.vault.getAbstractFileByPath(notePath));
-        if (file && file.extension === 'md') {
-            try {
-                return await plugin.app.vault.read(file);
-            } catch (err) {
-                console.warn('读取自定义 CSS 笔记失败，回退到 textarea:', err);
-            }
-        }
-    }
-
-    return plugin.settings.customCss || '';
+  if (!cssText || !String(cssText).trim()) return html;
+  const compiled = compileCustomCss(cssText, {
+    sourceIdentity: 'direct',
+    rootSelector: options.rootSelector || ROOT_SELECTOR,
+  });
+  return applyCompiledCustomCss(html, compiled, options).html;
 }

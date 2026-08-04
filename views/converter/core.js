@@ -47,7 +47,9 @@ import {
   AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS,
   isMobileClient,
 } from '../apple-style-view-shared.js';
-import { inlineCustomCss, resolveCustomCssFromSettings } from '../../services/custom-css-inliner.js';
+import { applyCompiledCustomCss } from '../../services/custom-css-inliner.js';
+import { compileCustomCss } from '../../services/custom-css-compiler.js';
+import { resolveCustomCssSource } from '../../services/custom-css-source.js';
 
 /** @type {CoreMethodsContract & ThisType<AppleStyleViewContract>} */
 export const coreMethods = {
@@ -80,6 +82,7 @@ async onOpen() {
 
   // 创建设置面板
   this.createSettingsPanel(container);
+
 
   // 创建预览区 - 根据设置决定是否使用手机框
   const usePhoneFrame = this.plugin.settings.usePhoneFrame && !isMobileClient(this.app);
@@ -572,43 +575,182 @@ async renderMarkdownForPreview(markdown, sourcePath) {
   if (!pipeline) {
     throw new Error('渲染管线未初始化');
   }
-  const html = await pipeline.renderForPreview(markdown, {
+  return pipeline.renderForPreview(markdown, {
     sourcePath,
     settings: this.plugin.settings,
   });
-
-  return this.applyCustomCss(html);
 }
 ,
 
 /**
- * 应用用户自定义 CSS（仅非 AI 编排模式）。
- * 自定义 CSS 与 AI 编排是两套独立系统：AI 模式下不套用，避免互相干扰。
+ * 从干净基础 HTML 派生普通预览。
  * @param {string} html
  * @returns {Promise<string>}
  */
-async applyCustomCss(html) {
+async deriveNativePreviewHtml(html) {
+  return this.applyCustomCss(html, {
+    target: 'preview',
+    layoutMode: 'native',
+  });
+}
+,
+
+/**
+ * 只从已提交的干净基础 HTML 重新派生普通预览。
+ * @returns {Promise<boolean>}
+ */
+async refreshCustomCssPreview() {
+  const generation = (this.customCssRefreshGeneration || 0) + 1;
+  this.customCssRefreshGeneration = generation;
+  const baseHtml = this.baseRenderedHtml;
+  const articleSourceHash = this.lastResolvedSourceHash;
+
+  if (!baseHtml) return false;
+  if (this.aiPreviewApplied) {
+    await this.applyCustomCss(baseHtml, { target: 'preview', layoutMode: 'ai' });
+    return false;
+  }
+
+  const scrollTop = this.previewContainer?.scrollTop || 0;
+  const html = await this.deriveNativePreviewHtml(baseHtml);
+  if (
+    generation !== this.customCssRefreshGeneration
+    || baseHtml !== this.baseRenderedHtml
+    || articleSourceHash !== this.lastResolvedSourceHash
+    || this.aiPreviewApplied
+  ) {
+    return false;
+  }
+
+  this.currentHtml = html;
+  if (this.previewContainer) {
+    setElementHtml(this.previewContainer, html);
+    this.previewContainer.scrollTop = scrollTop;
+    this.previewContainer.addClass('apple-has-content');
+  }
+  this.syncPreviewPresentationMode();
+  return true;
+}
+,
+
+/**
+ * 按目标和布局模式应用一次自定义 CSS。
+ * @param {string} html
+ * @param {{ target?: 'preview'|'wechat-copy'|'wechat-draft'|'multi-platform', layoutMode?: 'native'|'ai' }} [options]
+ * @returns {Promise<string>}
+ */
+async applyCustomCss(html, options = {}) {
   if (!html) return html;
-  if (this.aiPreviewApplied) return html;
-  const customCss = await resolveCustomCssFromSettings(this.plugin);
-  if (!customCss) return html;
-  return inlineCustomCss(html, customCss);
+  const target = options.target || 'preview';
+  const layoutMode = options.layoutMode || (this.aiPreviewApplied ? 'ai' : 'native');
+  if (!this.plugin?.settings?.enableCustomCss) {
+    this._customCssLastValidBySource.clear();
+  }
+  const shouldApply = layoutMode === 'native'
+    && ['preview', 'wechat-copy', 'wechat-draft'].includes(target);
+  if (!shouldApply) {
+    this.customCssStatus = {
+      state: layoutMode === 'ai' ? 'ai-skipped' : 'target-skipped',
+      sourceKind: '',
+      sourcePath: '',
+      diagnostics: [],
+      matchedRuleCount: 0,
+      matchedElementCount: 0,
+    };
+    return html;
+  }
+
+  const source = await resolveCustomCssSource(this.plugin);
+  if (source.kind === 'disabled') this._customCssLastValidBySource.clear();
+  const lastValid = this._customCssLastValidBySource.get(source.identity);
+  const sourceHasFatal = source.diagnostics.some((item) => item.severity === 'fatal');
+  const compiled = sourceHasFatal
+    ? null
+    : compileCustomCss(source.cssText, { sourceIdentity: source.identity });
+  const effectiveCompiled = compiled?.usable ? compiled : lastValid;
+  const baseDiagnostics = [
+    ...source.diagnostics,
+    ...(compiled?.diagnostics || []),
+  ];
+
+  if (!effectiveCompiled || source.kind === 'disabled' || source.kind === 'empty') {
+    this.customCssStatus = {
+      state: source.kind === 'disabled' ? 'disabled' : (
+        baseDiagnostics.some((item) => item.severity === 'fatal') ? 'invalid' : 'empty'
+      ),
+      sourceKind: source.kind,
+      sourcePath: source.path,
+      diagnostics: baseDiagnostics,
+      matchedRuleCount: 0,
+      matchedElementCount: 0,
+    };
+    return html;
+  }
+
+  const result = applyCompiledCustomCss(html, effectiveCompiled);
+  const runtimeFailed = result.diagnostics.some((item) => item.code === 'custom-css-inline-failed');
+  if (compiled?.usable && !runtimeFailed) {
+    this._customCssLastValidBySource.set(source.identity, compiled);
+  }
+  this.customCssStatus = {
+    state: runtimeFailed ? 'invalid' : (
+      result.applied ? 'applied' : 'unmatched'
+    ),
+    sourceKind: source.kind,
+    sourcePath: source.path,
+    sourceIdentity: source.identity,
+    sourceHash: result.sourceHash,
+    usingLastValid: effectiveCompiled !== compiled,
+    diagnostics: [
+      ...baseDiagnostics,
+      ...result.diagnostics.filter((item) => !baseDiagnostics.includes(item)),
+    ],
+    matchedRuleCount: result.matchedRuleCount,
+    matchedElementCount: result.matchedElementCount,
+  };
+  return result.html;
 }
 ,
 
 updateCurrentDoc() {
   const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-  if (activeView && this.docTitleText) {
-    this.docTitleText.setText(activeView.file.basename);
+  const file = activeView ? activeView.file : this.lastActiveFile;
+
+  if (file && this.docTitleText) {
+    this.docTitleText.setText(file.basename);
     this.docTitleText.setCssStyles({ color: 'var(--apple-primary)' }); // 恢复激活色
-  } else if (this.lastActiveFile && this.docTitleText) {
-    this.docTitleText.setText(this.lastActiveFile.basename);
-    this.docTitleText.setCssStyles({ color: 'var(--apple-primary)' });
+    const selfRec = toRecord(this);
+    const bottomRow = /** @type {HTMLElement} */ (selfRec.headerBottomRow);
+    if (bottomRow) {
+      bottomRow.classList.remove('hidden');
+    }
   } else if (this.docTitleText) {
     this.docTitleText.setText('未选择文档');
     this.docTitleText.setCssStyles({ color: 'var(--apple-tertiary)' }); // 灰色提示
+    const selfRec = toRecord(this);
+    const bottomRow = /** @type {HTMLElement} */ (selfRec.headerBottomRow);
+    if (bottomRow) {
+      bottomRow.classList.add('hidden');
+    }
   }
+
+  const headerEl = this.containerEl ? this.containerEl.querySelector('.apple-preview-header') : null;
+  if (headerEl && this.containerEl) {
+    const h = /** @type {HTMLElement} */ (headerEl).offsetHeight || (file ? 80 : 48);
+    this.containerEl.style.setProperty('--apple-header-height', h + 'px');
+  }
+
   this.updateAiToolbarState();
+
+  if (this.previewMode === 'sticker') {
+    if (this.copyBtn && typeof this.copyBtn.classList === 'object') {
+      this.copyBtn.classList.add('hidden');
+    }
+  } else {
+    if (this.copyBtn && typeof this.copyBtn.classList === 'object') {
+      this.copyBtn.classList.remove('hidden');
+    }
+  }
 }
 ,
 
@@ -673,6 +815,10 @@ getMissingRenderNotice() {
 ,
 
 async convertCurrent(silent = false, options = {}) {
+  if (this.previewMode === 'sticker') {
+    this.renderStickerPreview();
+    return;
+  }
   const {
     showLoading = false,
     loadingText = '正在渲染预览...',
@@ -745,7 +891,8 @@ async convertCurrent(silent = false, options = {}) {
 
   try {
     if (!silent) new Notice('⚡ 正在转换...');
-    const html = await this.renderMarkdownForPreview(markdown, sourcePath);
+    const baseHtml = await this.renderMarkdownForPreview(markdown, sourcePath);
+    const html = await this.deriveNativePreviewHtml(baseHtml);
 
     if (generation !== this.renderGeneration) return;
 
@@ -756,7 +903,7 @@ async convertCurrent(silent = false, options = {}) {
     this.lastResolvedSourceHash = String(this.simpleHash(markdown));
     this.completeAiLayoutSourceSwitch(sourcePath);
 
-    this.baseRenderedHtml = html;
+    this.baseRenderedHtml = baseHtml;
     this.currentHtml = html;
     this.lastRenderError = '';
     this.lastRenderFailureNoticeKey = '';
@@ -857,6 +1004,8 @@ async onClose() {
     window.clearTimeout(this.aiLayoutStaleSuppressTimer);
     this.aiLayoutStaleSuppressTimer = null;
   }
+  this.customCssRefreshGeneration = (this.customCssRefreshGeneration || 0) + 1;
+  this._customCssLastValidBySource.clear();
   this.setPreviewLoading(false);
 
   // 清理滚动监听 (Critical: Fix memory leak)
@@ -895,6 +1044,21 @@ async onClose() {
   if (this.mermaidImageCache) {
     this.mermaidImageCache.clear();
   }
+  if (this.stickerUiStates) {
+    for (const state of this.stickerUiStates.values()) {
+      if (!state?.objectUrls) continue;
+      for (const objectUrl of state.objectUrls) {
+        window.URL.revokeObjectURL(objectUrl);
+      }
+      state.objectUrls.clear();
+    }
+    this.stickerUiStates.clear();
+  }
+  if (this.stickerUploadCache) {
+    this.stickerUploadCache.clear();
+  }
+  this.stickerModalGeneration = (this.stickerModalGeneration || 0) + 1;
+  this.sessionStickerSourcePath = '';
 
   console.debug('🍎 发布助手面板已关闭');
 }

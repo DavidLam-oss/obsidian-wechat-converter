@@ -1,19 +1,19 @@
 /*
 ## 核心功能
 
-实现转换器主面板的 style panel 交互能力。
+实现转换器顶部工具栏和文章/贴图设置表单的构建能力。
 
 ## 输入
 
-接收 AppleStyleView 实例状态、活动笔记、渲染结果、用户点击和面板控件事件。
+接收 AppleStyleView 实例状态、活动笔记、渲染结果和用户交互事件。
 
 ## 输出
 
-输出 `stylePanelMethods`，驱动预览刷新、样式选择、剪贴板或 AI layout 面板行为。
+输出 `settingsPanelMethods`，由 AppleStyleView 统一组装。
 
 ## 定位
 
-位于 views/converter/，只处理转换器视图交互；底层转换和同步逻辑调用 services/。
+位于 views/converter/，负责创建设置控件；面板开关和模式切换由 panel-shell.js 负责。
 
 ## 依赖
 
@@ -21,16 +21,12 @@
 
 ## 维护规则
 
-- 修改逻辑后同步更新本文件说明书，并检查 views/converter 的文件夹 README 是否仍准确。
-- 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+- 修改逻辑后同步更新本文件说明书，并检查所属目录 README 是否仍准确。
+- 保持现有 AppleStyleView 方法签名与 this 语义，业务规则优先委托 services/。
 */
 
 import {
-  normalizeVaultPath,
-  createHtmlContainer,
-  toReadableError,
   toRecord,
-  removeElementClass,
   APPLE_STYLE_VIEW_TITLE,
   getObsidianSetIcon,
   getAppleThemeApi,
@@ -39,24 +35,55 @@ import {
   isMobileClient,
 } from '../apple-style-view-shared.js';
 
-/** @type {StylePanelMethodsContract & ThisType<AppleStyleViewContract>} */
-export const stylePanelMethods = {
+/** @type {SettingsPanelMethodsContract & ThisType<AppleStyleViewContract>} */
+export const settingsPanelMethods = {
 createSettingsPanel(container) {
 
-  // 1. 创建顶部工具栏
-  const toolbar = container.createEl('div', { cls: 'apple-top-toolbar' });
+  // 1. 创建顶部双行 Header 容器
+  const header = container.createEl('div', { cls: 'apple-preview-header' });
 
-  // 1.1 左侧：双层信息（插件名 + 文档名）
-  this.currentDocLabel = toolbar.createEl('div', { cls: 'apple-toolbar-title' });
+  // 1.1 第一行：Title Row
+  const topRow = header.createEl('div', { cls: 'apple-preview-header-top apple-top-toolbar' });
+  this.currentDocLabel = topRow.createEl('div', { cls: 'apple-toolbar-title' });
   if (!isMobileClient(this.app)) {
     const pluginLine = this.currentDocLabel.createDiv({ cls: 'apple-toolbar-plugin-line' });
     pluginLine.createEl('span', { text: APPLE_STYLE_VIEW_TITLE, cls: 'apple-toolbar-plugin-name' });
-    pluginLine.createEl('span', { text: '公众号预览', cls: 'apple-toolbar-preview-badge' });
   }
   this.docTitleText = this.currentDocLabel.createDiv({ text: '未选择文档', cls: 'apple-toolbar-doc-name' });
 
-  // 1.2 右侧：操作按钮组
-  const actions = toolbar.createEl('div', { cls: 'apple-toolbar-actions' });
+  // 1.2 第二行：Action Row (初始隐藏，由 updateCurrentDoc 根据是否有选定文档展现)
+  const bottomRow = header.createEl('div', { cls: 'apple-preview-header-bottom hidden' });
+  this.headerBottomRow = bottomRow;
+
+  // 1.2.1 第二行左侧：微型 Icon 分段模式切换胶囊
+  const segment = bottomRow.createEl('div', { cls: 'apple-preview-mode-segment' });
+  const setIcon = getObsidianSetIcon();
+
+  const selfRec = toRecord(this);
+
+  selfRec.btnArticleMode = segment.createEl('button', {
+    cls: 'apple-mode-btn active',
+    attr: { 'aria-label': '文章排版模式', 'title': '文章排版模式' }
+  });
+  const btnArt = /** @type {HTMLElement} */ (selfRec.btnArticleMode);
+  if (typeof setIcon === 'function') {
+    setIcon(btnArt, 'align-left');
+  }
+
+  selfRec.btnStickerMode = segment.createEl('button', {
+    cls: 'apple-mode-btn',
+    attr: { 'aria-label': '微信贴图模式', 'title': '微信贴图模式' }
+  });
+  const btnStk = /** @type {HTMLElement} */ (selfRec.btnStickerMode);
+  if (typeof setIcon === 'function') {
+    setIcon(btnStk, 'layout-grid');
+  }
+
+  btnArt.addEventListener('click', () => this.switchPreviewMode('article'));
+  btnStk.addEventListener('click', () => this.switchPreviewMode('sticker'));
+
+  // 1.2.2 第二行右侧：操作按钮组
+  const actions = bottomRow.createEl('div', { cls: 'apple-toolbar-actions' });
 
   // 按钮工厂函数
   /**
@@ -68,9 +95,8 @@ createSettingsPanel(container) {
   const createIconBtn = (icon, title, onClick) => {
     const btn = actions.createEl('div', {
       cls: 'apple-icon-btn',
-      attr: { 'aria-label': title } // Tooltip
+      attr: { 'aria-label': title, 'title': title } // Tooltip
     });
-    const setIcon = getObsidianSetIcon();
     if (typeof setIcon === 'function') {
       setIcon(btn, icon);
     }
@@ -79,11 +105,9 @@ createSettingsPanel(container) {
   };
 
   // [设置] 按钮
-  const settingsButton = createIconBtn('sliders-horizontal', '样式设置', () => {
-    this.togglePanel(this.settingsOverlay, settingsButton, () => this.resetSettingsPanelViewState());
+  const settingsButton = createIconBtn('sliders-horizontal', '公众号排版样式设置', () => {
+    this.toggleSettingsPanel();
   });
-  settingsButton.setAttribute('aria-label', '公众号排版样式设置');
-  settingsButton.setAttribute('title', '公众号排版样式设置');
   this.settingsBtn = settingsButton;
 
   this.aiLayoutBtn = createIconBtn('sparkles', 'AI 编排', () => this.onAiLayoutButtonClick());
@@ -103,8 +127,16 @@ createSettingsPanel(container) {
   const settingsArea = this.settingsOverlay.createEl('div', { cls: 'apple-settings-area' });
   this.settingsArea = settingsArea;
 
+  const articleSettingsWrapper = /** @type {ObsidianElementLike} */ (settingsArea.createEl('div', { cls: 'apple-settings-article-wrapper' }));
+  this.articleSettingsWrapper = articleSettingsWrapper;
+
+  const stickerSettingsWrapper = /** @type {ObsidianElementLike} */ (settingsArea.createEl('div', { cls: 'apple-settings-sticker-wrapper hidden' }));
+  this.stickerSettingsWrapper = stickerSettingsWrapper;
+
+  const targetArea = articleSettingsWrapper;
+
   // === 主题选择 ===
-  this.createSection(settingsArea, '主题', (section) => {
+  this.createSection(targetArea, '主题', (section) => {
     const grid = section.createEl('div', { cls: 'apple-btn-grid' });
     const themes = getAppleThemeApi().getThemeList();
     themes.forEach(t => {
@@ -119,7 +151,7 @@ createSettingsPanel(container) {
   });
 
   // === 字体选择 ===
-  this.createSection(settingsArea, '字体', (section) => {
+  this.createSection(targetArea, '字体', (section) => {
     const select = /** @type {ObsidianInputLike} */ (section.createEl('select', { cls: 'apple-select' }));
     [
       { value: 'sans-serif', label: '无衬线' },
@@ -133,7 +165,7 @@ createSettingsPanel(container) {
   });
 
   // === 字号选择 ===
-  this.createSection(settingsArea, '字号', (section) => {
+  this.createSection(targetArea, '字号', (section) => {
     const grid = section.createEl('div', { cls: 'apple-btn-row' });
     const sizeOpts = [
       { value: 1, label: '小' },
@@ -154,7 +186,7 @@ createSettingsPanel(container) {
   });
 
   // === 主题色 (移到标题样式上方) ===
-  this.createSection(settingsArea, '主题色', (section) => {
+  this.createSection(targetArea, '主题色', (section) => {
     const grid = section.createEl('div', { cls: 'apple-color-grid' });
     const colors = getAppleThemeApi().getColorList();
 
@@ -212,7 +244,7 @@ createSettingsPanel(container) {
   });
 
   // === 页面两侧留白 ===
-  this.createSection(settingsArea, '页面两侧留白', (section) => {
+  this.createSection(targetArea, '页面两侧留白', (section) => {
     const mobile = isMobileClient(this.app);
     const container = section.createEl('div', {
       cls: 'apple-slider-container',
@@ -261,7 +293,7 @@ createSettingsPanel(container) {
   });
 
   // === 排版间距（折叠：呼吸感微调，默认收起） ===
-  const spacingGroup = settingsArea.createEl('details', { cls: 'apple-settings-details' });
+  const spacingGroup = targetArea.createEl('details', { cls: 'apple-settings-details' });
   this.settingsSpacingGroup = spacingGroup;
   const spacingSummary = spacingGroup.createEl('summary', { cls: 'apple-settings-summary' });
   spacingSummary.createEl('span', { text: '排版间距' });
@@ -344,7 +376,7 @@ createSettingsPanel(container) {
   buildSpacingSlider('段间距', 8, 40, 1, () => this.getEffectiveParagraphGap(), 'paragraphGap', 'paragraphGap');
   buildSpacingSlider('字间距', 0, 2, 0.5, () => this.getEffectiveLetterSpacing(), 'letterSpacing', 'letterSpacing');
 
-  const advancedOptions = settingsArea.createEl('details', { cls: 'apple-settings-details' });
+  const advancedOptions = targetArea.createEl('details', { cls: 'apple-settings-details' });
   this.settingsAdvancedOptions = advancedOptions;
   advancedOptions.createEl('summary', {
     cls: 'apple-settings-summary',
@@ -508,369 +540,60 @@ createSettingsPanel(container) {
     }
   }
 
+  // === 3. 渲染贴图模式专属设置 ===
+  const stickerWrapperRaw = /** @type {unknown} */ (this.stickerSettingsWrapper);
+  if (stickerWrapperRaw && typeof stickerWrapperRaw === 'object' && 'createDiv' in stickerWrapperRaw) {
+    const stickerWrapper = /** @type {ObsidianElementLike} */ (stickerWrapperRaw);
+
+    // 3.2 配图序号开关
+    const indexSection = this.createSection(stickerWrapper, '配图序号', (section) => {
+      const container = section.createEl('div', { cls: 'apple-sticker-toggle-row' });
+      const labelGroup = container.createDiv({ cls: 'apple-sticker-toggle-copy' });
+      labelGroup.createEl('span', {
+        text: '在文案中插入 [配图 N]',
+        cls: 'apple-sticker-toggle-label',
+      });
+      labelGroup.createEl('span', {
+        text: '便于读者对应下方图片；只影响贴图文案。',
+        cls: 'apple-sticker-toggle-description',
+      });
+
+      const toggle = container.createDiv({ cls: 'apple-toggle' });
+      const checkbox = toggle.createEl('input', { type: 'checkbox', cls: 'apple-toggle-input' });
+      checkbox.checked = Boolean(this.insertStickerImageIndex);
+      toggle.createEl('span', { cls: 'apple-toggle-slider' });
+
+      container.addEventListener('click', (e) => {
+        if (e.target !== checkbox) {
+          e.preventDefault();
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event('change'));
+        }
+      });
+
+      checkbox.addEventListener('change', () => {
+        this.insertStickerImageIndex = checkbox.checked;
+        this.renderStickerPreview();
+      });
+      this.stickerIndexToggleState = { checkbox, toggle };
+    });
+    indexSection.classList.add('apple-settings-inline-toggle');
+
+    // 3.3 纯文本转换说明
+    this.createSection(stickerWrapper, '纯文本转换规则', (section) => {
+      const card = section.createDiv({ cls: 'apple-settings-info-card' });
+      card.createEl('p', {
+        text: '· 自动忽略 Frontmatter 等机器信息\n· 代码块、表格、公式和脚注会转换为可读纯文本\n· 只影响预览和草稿，不会改动笔记原文',
+        cls: 'apple-settings-info-card-text'
+      });
+    });
+  }
+
   this.aiLayoutOverlay = container.createEl('div', { cls: 'apple-ai-layout-overlay' });
   this.createAiLayoutPanel(this.aiLayoutOverlay);
   this.updateAiToolbarState();
 }
 ,
-
-createAccountSelector(parent) {
-  /** @type {WechatAccountLike[]} */
-  const accounts = this.plugin.settings.wechatAccounts || [];
-  if (accounts.length === 0) return;
-
-  const section = parent.createEl('div', { cls: 'apple-setting-section wechat-account-selector' });
-  section.createEl('label', { cls: 'apple-setting-label', text: '同步账号' });
-
-  const select = /** @type {ObsidianInputLike} */ (section.createEl('select', { cls: 'wechat-account-select' }));
-
-  const defaultId = this.plugin.settings.defaultAccountId;
-
-  for (const account of accounts) {
-    const option = /** @type {ObsidianInputLike} */ (select.createEl('option', {
-      value: account.id,
-      text: account.id === defaultId ? `${account.name} (默认)` : account.name
-    }));
-    if (account.id === defaultId) {
-      option.selected = true;
-    }
-  }
-
-  // 保存选中的账号 ID 到实例属性
-  this.selectedAccountId = defaultId;
-  select.addEventListener('change', (event) => {
-    this.selectedAccountId = getEventTargetValue(event, defaultId);
-  });
-}
-,
-
-getFirstImageFromArticle() {
-  if (!this.currentHtml) return null;
-  const tempDiv = createHtmlContainer('div', this.currentHtml);
-  const imgs = Array.from(tempDiv.querySelectorAll('img'));
-
-  // 遍历所有图片，跳过头像（alt="logo"）
-  for (const img of imgs) {
-    if (img.alt === 'logo') continue;
-    const src = String(img.getAttribute('src') || img.src || '').trim();
-    if (src) return src;
-  }
-  return null;
-}
-,
-
-getPublishContextFile() {
-  const activeFile = this.app?.workspace?.getActiveFile?.();
-  if (activeFile) return activeFile;
-  if (this.lastActiveFile) return this.lastActiveFile;
-  return null;
-}
-,
-
-getFrontmatterPublishMeta(activeFile) {
-  if (!activeFile) {
-    return { excerpt: '', cover: '', cover_dir: '', coverSrc: null, title: '' };
-  }
-
-  const frontmatter = this.app?.metadataCache?.getFileCache?.(activeFile)?.frontmatter;
-  const excerpt = this.getFrontmatterString(frontmatter, ['excerpt']);
-  const cover = this.getFrontmatterString(frontmatter, ['cover']);
-  const cover_dir = this.getFrontmatterString(frontmatter, ['cover_dir', 'coverDir', 'cover-dir', 'coverdir', 'CoverDIR']);
-  const title = this.getFrontmatterString(frontmatter, ['title']);
-
-  // 解析失败时静默回退：返回 null，不中断流程
-  const coverSrc = cover ? this.resolveVaultPathToResourceSrc(cover) : null;
-
-  return { excerpt, cover, cover_dir, coverSrc, title };
-}
-,
-
-getFrontmatterString(frontmatter, keys) {
-  const frontmatterRecord = toRecord(frontmatter);
-  if (!frontmatterRecord) return '';
-  if (!Array.isArray(keys) || keys.length === 0) return '';
-
-  const normalizedTargets = new Set(keys.map(key => this.normalizeFrontmatterKey(key)));
-  for (const key of keys) {
-    const value = frontmatterRecord[key];
-    if (typeof value === 'string' && value.trim()) return value.trim();
-  }
-
-  for (const [key, value] of Object.entries(frontmatterRecord)) {
-    if (!normalizedTargets.has(this.normalizeFrontmatterKey(key))) continue;
-    if (typeof value === 'string' && value.trim()) return value.trim();
-  }
-
-  return '';
-}
-,
-
-normalizeFrontmatterKey(key) {
-  return String(key || '').toLowerCase().replace(/[_-]/g, '');
-}
-,
-
-getFrontmatterKeyMap(frontmatter, keys) {
-  /** @type {Record<string, string>} */
-  const result = {};
-  const frontmatterRecord = toRecord(frontmatter);
-  if (!frontmatterRecord) return result;
-  if (!Array.isArray(keys) || keys.length === 0) return result;
-
-  const normalizedTargets = new Set(keys.map(key => this.normalizeFrontmatterKey(key)));
-  for (const [key, value] of Object.entries(frontmatterRecord)) {
-    if (!normalizedTargets.has(this.normalizeFrontmatterKey(key))) continue;
-    if (typeof value !== 'string') continue;
-    const normalizedValue = this.normalizeVaultPath(value);
-    if (!normalizedValue) continue;
-    result[key] = normalizedValue;
-  }
-  return result;
-}
-,
-
-/** @param {string} filePath @param {string} dirPath @returns {boolean} */
-isPathInsideDirectory(filePath, dirPath) {
-  const file = this.normalizeVaultPath(filePath);
-  const dir = this.normalizeVaultPath(dirPath);
-  if (!file || !dir) return false;
-  if (file === dir) return true;
-  return file.startsWith(`${dir}/`);
-}
-,
-
-/** @param {string} filePath @param {string} dirPath @returns {boolean} */
-isPathInsideDirectoryByTail(filePath, dirPath) {
-  const file = this.normalizeVaultPath(filePath);
-  const dir = this.normalizeVaultPath(dirPath);
-  if (!file || !dir) return false;
-
-  const dirSegments = dir.split('/').filter(Boolean);
-  if (dirSegments.length < 2) return false;
-
-  // 允许清理目录与 frontmatter 路径存在“根前缀差异”
-  // 例如 cleanedDir: Wechat/published/img
-  //      cover:     published/img/post-cover.jpg
-  for (let i = 1; i <= dirSegments.length - 2; i++) {
-    const tailDir = dirSegments.slice(i).join('/');
-    if (this.isPathInsideDirectory(file, tailDir)) {
-      return true;
-    }
-  }
-  return false;
-}
-,
-
-/** @param {string} pathValue @param {string} cleanedDir @returns {boolean} */
-shouldClearFrontmatterPathAfterCleanup(pathValue, cleanedDir) {
-  const normalized = this.normalizeVaultPath(pathValue);
-  if (!normalized) return false;
-  if (this.isPathInsideDirectory(normalized, cleanedDir)) return true;
-  return this.isPathInsideDirectoryByTail(normalized, cleanedDir);
-}
-,
-
-clearInvalidPublishMetaInFrontmatter(frontmatter, cleanedDir) {
-  const frontmatterRecord = toRecord(frontmatter);
-  if (!frontmatterRecord) return false;
-
-  let changed = false;
-  const coverMap = this.getFrontmatterKeyMap(frontmatter, ['cover']);
-  const coverDirMap = this.getFrontmatterKeyMap(frontmatter, ['cover_dir', 'coverDir', 'cover-dir', 'coverdir', 'CoverDIR']);
-
-  for (const [key, value] of Object.entries(coverMap)) {
-    if (this.shouldClearFrontmatterPathAfterCleanup(value, cleanedDir)) {
-      frontmatterRecord[key] = '';
-      changed = true;
-    }
-  }
-
-  for (const [key, value] of Object.entries(coverDirMap)) {
-    if (this.shouldClearFrontmatterPathAfterCleanup(value, cleanedDir)) {
-      frontmatterRecord[key] = '';
-      changed = true;
-    }
-  }
-
-  return changed;
-}
-,
-
-/** @param {TFileLike} activeFile @param {string} cleanedDir @returns {Promise<boolean>} */
-async clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir) {
-  const vault = this.app?.vault;
-  if (!vault || typeof vault.read !== 'function' || typeof vault.modify !== 'function') {
-    return false;
-  }
-
-  const source = await vault.read(activeFile);
-  if (typeof source !== 'string' || !source.startsWith('---')) return false;
-
-  const match = source.match(/^(---[ \t]*\r?\n)([\s\S]*?)(\r?\n(?:---|\.\.\.)[ \t]*(?:\r?\n|$))/);
-  if (!match) return false;
-
-  let changed = false;
-  const body = match[2].replace(/^([ \t]*)(cover|cover_dir|coverDir|cover-dir|coverdir|CoverDIR)([ \t]*:[ \t]*)(.*)$/gmi, (line, indent, key, separator, rawValue) => {
-    const value = String(rawValue || '').trim().replace(/^['"]|['"]$/g, '');
-    if (!this.shouldClearFrontmatterPathAfterCleanup(value, cleanedDir)) {
-      return line;
-    }
-    changed = true;
-    return `${indent}${key}${separator}''`;
-  });
-
-  if (!changed) return false;
-  await vault.modify(activeFile, `${match[1]}${body}${match[3]}${source.slice(match[0].length)}`);
-  return true;
-}
-,
-
-/** @param {TFileLike | null | undefined} activeFile @param {string} cleanedDirPath @returns {Promise<string | null>} */
-async clearInvalidPublishMetaAfterCleanup(activeFile, cleanedDirPath) {
-  if (!activeFile || !cleanedDirPath) return null;
-
-  const cleanedDir = this.normalizeVaultPath(cleanedDirPath);
-  if (!cleanedDir) return null;
-
-  try {
-    const processFrontMatter = this.app?.fileManager?.['processFrontMatter'];
-    if (typeof processFrontMatter === 'function') {
-      await processFrontMatter.call(this.app.fileManager, activeFile, (frontmatter) => {
-        this.clearInvalidPublishMetaInFrontmatter(toRecord(frontmatter), cleanedDir);
-      });
-    } else {
-      await this.clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir);
-    }
-  } catch (error) {
-    return `资源已删除，但清理 frontmatter 中失效的 cover/cover_dir 失败: ${toReadableError(error).message}`;
-  }
-
-  return null;
-}
-,
-
-/** @param {unknown} vaultPath @returns {string | null} */
-resolveVaultPathToResourceSrc(vaultPath) {
-  if (typeof vaultPath !== 'string') return null;
-  const normalized = vaultPath.trim().replace(/\\/g, '/').replace(/^\/+/, '');
-  if (!normalized) return null;
-
-  try {
-    const file = this.app.vault.getAbstractFileByPath(normalized);
-    if (!file) return null;
-    if (typeof file.extension !== 'string') return null; // 仅接受文件，不接受目录
-    return this.app.vault.getResourcePath(file);
-  } catch {
-    // frontmatter 路径失效或不是文件时，静默回退
-    return null;
-  }
-}
-,
-
-/** @param {unknown} vaultPath @returns {string} */
-normalizeVaultPath(vaultPath) {
-  return normalizeVaultPath(vaultPath);
-}
-,
-
-/** @returns {string} */
-getVaultConfigDir() {
-  const configDir = this.app?.vault?.configDir;
-  return typeof configDir === 'string' ? this.normalizeVaultPath(configDir) : '';
-}
-,
-
-/** @returns {string} */
-getCleanupDirTemplate() {
-  const raw = typeof this.plugin?.settings?.cleanupDirTemplate === 'string'
-    ? this.plugin.settings.cleanupDirTemplate
-    : '';
-  return this.normalizeVaultPath(raw);
-}
-,
-
-/** @param {TFileLike | null | undefined} activeFile @returns {{ path: string, warning?: string }} */
-resolveCleanupDirPath(activeFile) {
-  const template = this.getCleanupDirTemplate();
-  if (!template) {
-    return { path: '', warning: '未配置清理目录，请在插件设置中先填写目录后再启用自动清理' };
-  }
-
-  const hasNotePlaceholder = /\{\{\s*note\s*\}\}/i.test(template);
-  if (hasNotePlaceholder && !activeFile) {
-    return { path: '', warning: '当前没有活动文档，无法解析清理目录中的 {{note}}' };
-  }
-
-  const noteName = typeof activeFile?.basename === 'string' ? activeFile.basename.trim() : '';
-  const resolved = template.replace(/\{\{\s*note\s*\}\}/gi, noteName);
-  const normalized = this.normalizeVaultPath(resolved);
-  if (!normalized) {
-    return { path: '', warning: '清理目录为空，请检查设置值' };
-  }
-
-  return { path: normalized };
-}
-,
-
-/** @param {string} vaultPath @returns {boolean} */
-isSafeCleanupDirPath(vaultPath) {
-  const normalized = this.normalizeVaultPath(vaultPath);
-  if (!normalized) return false;
-  if (normalized === '.') return false;
-  if (normalized.includes('..')) return false;
-  const configDir = this.getVaultConfigDir();
-  if (configDir && (normalized === configDir || normalized.startsWith(`${configDir}/`))) return false;
-  return true;
-}
-,
-
-async cleanupConfiguredDirectory(activeFile) {
-  if (!this.plugin.settings.cleanupAfterSync) {
-    return { attempted: false };
-  }
-
-  const useSystemTrash = this.plugin.settings.cleanupUseSystemTrash !== false;
-  const resolved = this.resolveCleanupDirPath(activeFile);
-  if (!resolved.path) {
-    return { attempted: true, success: false, warning: resolved.warning || '未解析到清理目录' };
-  }
-
-  const normalized = resolved.path;
-  if (!this.isSafeCleanupDirPath(normalized)) {
-    return { attempted: true, success: false, warning: `清理目录不安全，已跳过: ${normalized}` };
-  }
-
-  const abstractFile = this.app.vault.getAbstractFileByPath(normalized);
-  if (!abstractFile) {
-    return { attempted: true, success: false, warning: `清理目录不存在: ${normalized}` };
-  }
-
-  const isFile = typeof abstractFile.extension === 'string';
-  if (isFile) {
-    return { attempted: true, success: false, warning: `清理路径不是目录，已跳过: ${normalized}` };
-  }
-
-  try {
-    if (typeof this.app.vault.trash === 'function') {
-      await this.app.vault.trash(abstractFile, useSystemTrash);
-    } else if (typeof this.app.vault.delete === 'function') {
-      await this.app.vault.delete(abstractFile, true);
-    } else {
-      throw new Error('当前 Obsidian 版本不支持删除接口');
-    }
-  } catch (error) {
-    return { attempted: true, success: false, warning: `删除失败 (${normalized}): ${toReadableError(error).message}` };
-  }
-
-  const frontmatterWarning = await this.clearInvalidPublishMetaAfterCleanup(activeFile, normalized);
-  if (frontmatterWarning) {
-    return { attempted: true, success: true, cleanedPath: normalized, warning: frontmatterWarning };
-  }
-
-  return { attempted: true, success: true, cleanedPath: normalized };
-}
-,
-
 createSection(parent, label, builder) {
   const section = parent.createEl('div', { cls: 'apple-setting-section' });
   section.createEl('label', { cls: 'apple-setting-label', text: label });
@@ -944,120 +667,6 @@ refreshSpacingSliders() {
     valueLabel.setText(this.formatSpacingValue(v));
   });
   this.updateSpacingSummary();
-}
-,
-
-resetSettingsPanelViewState() {
-  const advancedOptions = this.settingsAdvancedOptions || this.settingsOverlay?.querySelector('.apple-settings-details');
-  if (advancedOptions) advancedOptions.open = false;
-  if (this.settingsSpacingGroup) this.settingsSpacingGroup.open = false;
-
-  const scrollTargets = [
-    this.settingsOverlay,
-    this.settingsArea,
-    this.settingsAdvancedArea,
-  ].filter(Boolean);
-
-  const resetScroll = () => {
-    scrollTargets.forEach((target) => {
-      target.scrollTop = 0;
-    });
-  };
-
-  resetScroll();
-  if (typeof requestAnimationFrame === 'function') {
-    window.requestAnimationFrame(resetScroll);
-  }
-}
-,
-
-resetAiLayoutPanelViewState() {
-  this.aiAdvancedOpen = false;
-  this.aiLayoutDebugMode = '';
-  this.aiLayoutPendingAnchor = null;
-
-  const scrollTargets = [
-    this.aiLayoutOverlay,
-    this.aiLayoutArea,
-    this.aiAdvancedBody,
-    this.aiDebugPanelBody,
-  ].filter(Boolean);
-
-  const resetScroll = () => {
-    scrollTargets.forEach((target) => {
-      target.scrollTop = 0;
-    });
-  };
-
-  resetScroll();
-  if (typeof requestAnimationFrame === 'function') {
-    window.requestAnimationFrame(resetScroll);
-  }
-}
-,
-
-togglePanel(overlay, button, onOpen) {
-  if (!overlay || !button) return;
-  const willOpen = !overlay.classList.contains('visible');
-  this.closeTransientPanels();
-  if (willOpen) {
-    overlay.classList.add('visible');
-    button.classList.add('active');
-    if (typeof onOpen === 'function') onOpen();
-  }
-}
-,
-
-canScrollElementInDirection(element, deltaY) {
-  if (!element) return false;
-  const maxScroll = Math.max(0, (element.scrollHeight || 0) - (element.clientHeight || 0));
-  if (maxScroll <= 0) return false;
-  if (deltaY < 0) return (element.scrollTop || 0) > 0;
-  if (deltaY > 0) return (element.scrollTop || 0) < maxScroll - 1;
-  return true;
-}
-,
-
-attachOverlayScrollGuard(overlay, nestedSelectors = []) {
-  if (!overlay || overlay.__appleScrollGuardAttached) return;
-  const normalizedSelectors = Array.isArray(nestedSelectors)
-    ? nestedSelectors.filter(Boolean)
-    : [];
-
-  /** @param {WheelEvent} event */
-  const handleWheel = (event) => {
-    if (!overlay.classList.contains('visible')) return;
-    const target = event.target instanceof HTMLElement ? event.target : null;
-    const nestedScrollable = /** @type {Element | null} */ (target
-      ? normalizedSelectors
-        .map((selector) => target.closest(selector))
-        .find(Boolean)
-      : null);
-    const activeScrollable = nestedScrollable || overlay;
-
-    if (!this.canScrollElementInDirection(activeScrollable, event.deltaY)) {
-      event.preventDefault();
-    }
-    event.stopPropagation();
-  };
-
-  /** @param {TouchEvent} event */
-  const handleTouchMove = (event) => {
-    if (!overlay.classList.contains('visible')) return;
-    event.stopPropagation();
-  };
-
-  overlay.addEventListener('wheel', handleWheel, { passive: false });
-  overlay.addEventListener('touchmove', handleTouchMove, { passive: false });
-  overlay.__appleScrollGuardAttached = true;
-}
-,
-
-closeTransientPanels() {
-  removeElementClass(this.settingsOverlay, 'visible');
-  removeElementClass(this.aiLayoutOverlay, 'visible');
-  removeElementClass(this.settingsBtn, 'active');
-  removeElementClass(this.aiLayoutBtn, 'active');
 }
 ,
 };

@@ -47,6 +47,12 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
   beforeEach(() => {
     view = new AppleStyleView(null, null);
     view.currentHtml = '<ol><li><strong>清理时机</strong>：<br>正文</li></ol>';
+    view.baseRenderedHtml = view.currentHtml;
+    view.resolveArticleHtmlSource = vi.fn(() => ({
+      html: view.currentHtml,
+      layoutMode: 'native',
+      sourceKind: 'base',
+    }));
     view.processImagesToDataURL = vi.fn().mockResolvedValue(false);
     view.cleanHtmlForDraft = vi.fn(() => '<ol><li>清理时机： 正文</li></ol>');
 
@@ -110,8 +116,9 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
     }));
 
     const copyPromise = view.copyHTML();
-    await Promise.resolve();
-    await Promise.resolve();
+    await vi.waitFor(() => {
+      expect(resolveImages).toBeTypeOf('function');
+    });
 
     expect(copyBtn.classList.contains('is-copying')).toBe(true);
     expect(copyBtn.classList.contains('active')).toBe(false);

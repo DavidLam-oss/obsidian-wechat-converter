@@ -30,7 +30,8 @@
    ======================================== */
 .apple-settings-overlay {
   position: absolute;
-  top: 48px; /* 紧贴工具栏下方 */
+  /* 顶栏高度由 JS 按实际行数写入 --apple-header-height（单行/双行不同） */
+  top: var(--apple-header-height, 98px);
   left: 0;
   right: 0;
   /* 调整透明度：0.85 -> 0.72，增加通透感 */
@@ -84,10 +85,10 @@
 }
 
 .apple-converter-container.apple-converter-mobile .apple-settings-overlay {
-  top: 56px;
+  top: var(--apple-header-height, 106px);
   left: clamp(10px, 3.2vw, 16px);
   right: clamp(10px, 3.2vw, 16px);
-  max-height: calc(100% - 56px - max(8px, env(safe-area-inset-bottom)));
+  max-height: calc(100% - var(--apple-header-height, 106px) - max(8px, env(safe-area-inset-bottom)));
   border-radius: 14px;
   border: 1px solid var(--apple-border);
   box-shadow:
@@ -103,6 +104,10 @@
   margin: 0 auto;
   gap: 12px;
   padding: 2px 2px 0;
+}
+
+.apple-converter-container.apple-converter-mobile .apple-settings-article-wrapper:not(.hidden) {
+  gap: 12px;
 }
 
 .apple-converter-container.apple-converter-mobile .apple-setting-section {
@@ -203,6 +208,13 @@
   gap: 24px; /* 收紧间距，原32px */
   max-width: 320px; /* 稍微收窄宽度 */
   margin: 0 auto; /* 居中显示 */
+}
+
+/* 文章模式引入中间 wrapper 后，仅在设置可见时恢复原纵向节奏。 */
+.apple-settings-article-wrapper:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .apple-setting-section {
@@ -589,7 +601,6 @@
 }
 
 /* === 下拉选择器 === */
-/* === 下拉选择器 === */
 .apple-select {
   width: auto;
   min-width: 80px;
@@ -633,192 +644,3 @@
   border-color: var(--apple-accent);
   box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.1);
 }
-
-/* === 开关切换 === */
-.apple-toggle {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  width: 40px;
-  height: 22px;
-  cursor: pointer;
-}
-
-.apple-toggle-input {
-  position: absolute;
-  opacity: 0;
-  width: 40px;
-  height: 22px;
-  top: 0;
-  left: 0;
-  cursor: pointer;
-  z-index: 10;
-  margin: 0;
-  padding: 0;
-}
-
-.apple-toggle-slider {
-  position: absolute;
-  pointer-events: none;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--apple-border);
-  transition: 0.2s;
-  border-radius: 22px;
-}
-
-body.theme-dark .apple-toggle-slider,
-.theme-dark .apple-toggle-slider {
-  background-color: #2e2e2e;
-  border: 1px solid #555;
-}
-
-body.theme-dark .apple-toggle-input:checked+.apple-toggle-slider,
-.theme-dark .apple-toggle-input:checked+.apple-toggle-slider {
-  background-color: var(--apple-accent);
-  border-color: var(--apple-accent);
-}
-
-.apple-toggle-slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 2px;
-  bottom: 2px;
-  background-color: white;
-  transition: 0.2s;
-  border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.apple-toggle-input:checked+.apple-toggle-slider {
-  background-color: var(--apple-accent);
-}
-
-.apple-toggle-input:checked+.apple-toggle-slider:before {
-  transform: translateX(18px);
-}
-
-/* === 滑块 (Slider) - 回归原生样式 === */
-/* 仅保留容器布局，移除所有自定义的 range input 样式，让浏览器/Obsidian 默认样式接管 */
-.apple-slider-container {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 4px 0;
-}
-
-/* 仅微调颜色以匹配主题，不修改尺寸和布局 */
-input[type="range"].apple-slider {
-  accent-color: var(--apple-accent); /* 现代浏览器支持的强调色属性 */
-  cursor: pointer;
-  flex: 1;
-}
-
-.apple-converter-container.apple-converter-mobile input[type="range"].apple-slider {
-  min-height: 26px;
-  touch-action: pan-y;
-  -webkit-appearance: none;
-  appearance: none;
-  height: 26px;
-  background: transparent;
-}
-
-.apple-converter-container.apple-converter-mobile input[type="range"].apple-slider::-webkit-slider-runnable-track {
-  height: 2px;
-  border-radius: 999px;
-  background: rgba(120, 120, 128, 0.36);
-}
-
-.apple-converter-container.apple-converter-mobile input[type="range"].apple-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 30px;
-  height: 18px;
-  margin-top: 0px;
-  border-radius: 999px;
-  background: #f8f8f8;
-  border: 1px solid rgba(0, 0, 0, 0.16);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
-}
-
-.apple-converter-container.apple-converter-mobile input[type="range"].apple-slider:active::-webkit-slider-thumb {
-  background: var(--apple-accent);
-  border-color: var(--apple-accent);
-}
-
-.theme-dark .apple-converter-container.apple-converter-mobile input[type="range"].apple-slider::-webkit-slider-runnable-track {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.theme-dark .apple-converter-container.apple-converter-mobile input[type="range"].apple-slider::-webkit-slider-thumb {
-  background: #ececef;
-  border-color: rgba(255, 255, 255, 0.25);
-}
-
-.apple-converter-container.apple-converter-mobile input[type="range"].apple-slider::-webkit-slider-thumb:hover {
-  transform: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
-}
-
-/* 深色模式适配 */
-.theme-dark input[type="range"].apple-slider::-webkit-slider-runnable-track {
-  background: #424244;
-}
-
-/* 交互状态 */
-input[type="range"].apple-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-input[type="range"].apple-slider:active::-webkit-slider-thumb {
-  background: var(--apple-accent);
-}
-
-/* === 操作按钮区 === */
-.apple-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: var(--apple-spacing-md);
-  padding-top: var(--apple-spacing-md);
-  border-top: 1px dashed var(--apple-border);
-  /* Dashed separator */
-}
-
-/* Unified Button Style */
-.apple-btn-primary,
-.apple-btn-secondary {
-  flex: 1;
-  padding: 10px 16px;
-  border: none;
-  border-radius: var(--apple-radius-sm);
-  background: var(--apple-accent);
-  /* Default blue */
-  color: white;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.apple-btn-primary:hover,
-.apple-btn-secondary:hover {
-  opacity: 0.9;
-}
-
-/* Full Width Variant */
-.apple-btn-full {
-  width: 100%;
-  justify-content: center;
-  display: flex;
-  align-items: center;
-  height: 38px;
-  background: var(--apple-accent);
-  /* Blue */
-}
-

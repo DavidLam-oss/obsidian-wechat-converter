@@ -101,8 +101,16 @@ interface AppleStyleViewContract {
         stateOverride?: AiLayoutStateLike | null;
         allowStale?: boolean;
     }): void;
-    getCurrentExportHtml(): string;
-    restoreBasePreview(): void;
+    resolveArticleHtmlSource(options?: {
+        target?: "wechat-copy" | "wechat-draft" | "multi-platform";
+    }): {
+        html: string;
+        layoutMode: "native" | "ai";
+        sourceKind: "base" | "ai-export";
+    } | null;
+    getCurrentExportHtml(): string | null;
+    restoreBasePreview(): Promise<void>;
+    refreshCustomCssPreview(): Promise<boolean>;
     syncPreviewPresentationMode(): void;
     /**
      * @returns {boolean}
@@ -175,8 +183,13 @@ interface AppleStyleViewContract {
     /**
      * @param {WechatAPI} api
      * @param {(material: WechatMaterialSelectionLike) => unknown} onSelect
+     * @param {{ title?: string, confirmText?: string }} [options]
      */
-    showMaterialPickerModal(api: WechatApiContract, onSelect: (material: WechatMaterialSelectionLike) => unknown): Promise<void>;
+    showMaterialPickerModal(
+        api: WechatApiContract,
+        onSelect: (material: WechatMaterialSelectionLike) => unknown,
+        options?: { title?: string; confirmText?: string }
+    ): Promise<void>;
     /**
      * @param {unknown} syncId
      * @returns {Promise<boolean>}
@@ -229,6 +242,11 @@ interface AppleStyleViewContract {
      * 处理同步到微信逻辑
      */
     onSyncToWechat(): Promise<void>;
+    /**
+     * 处理微信贴图（newspic）草稿发布逻辑
+     * @param {WechatAccountLike} account
+     */
+    onSyncStickerToWechat(account: WechatAccountLike): Promise<void>;
     /**
      * @param {string} src
      * @returns {unknown}
@@ -347,7 +365,11 @@ interface AppleStyleViewContract {
      * @returns {Promise<string>}
      */
     renderMarkdownForPreview(markdown: string, sourcePath: string): Promise<string>;
-    applyCustomCss(html: string): Promise<string>;
+    deriveNativePreviewHtml(html: string): Promise<string>;
+    applyCustomCss(html: string, options?: {
+        target?: "preview" | "wechat-copy" | "wechat-draft" | "multi-platform";
+        layoutMode?: "native" | "ai";
+    }): Promise<string>;
     /**
      * 更新当前文档显示
      */
@@ -401,7 +423,9 @@ interface AppleStyleViewContract {
      * @param {string} html
      * @returns {Promise<string>}
      */
-    prepareHtmlForWechatDraft(html: string): Promise<string>;
+    prepareHtmlForWechatDraft(html: string, options?: {
+        layoutMode?: "native" | "ai";
+    }): Promise<string>;
     /**
      * @param {string} html
      * @returns {Promise<string>}

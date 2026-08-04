@@ -4457,7 +4457,7 @@ var require_converter = __commonJS({
     function isRecord17(value) {
       return !!value && typeof value === "object" && !Array.isArray(value);
     }
-    function toRecord14(value) {
+    function toRecord15(value) {
       return isRecord17(value) ? value : {};
     }
     function toText7(value) {
@@ -4577,7 +4577,7 @@ var require_converter = __commonJS({
       typeof window !== "undefined" ? window : {}
     );
     function getRuntimeDependency(name) {
-      const runtimeWindow = typeof window !== "undefined" ? toRecord14(window) : {};
+      const runtimeWindow = typeof window !== "undefined" ? toRecord15(window) : {};
       if (typeof runtimeWindow[name] !== "undefined") {
         return runtimeWindow[name];
       }
@@ -5017,12 +5017,12 @@ var require_converter = __commonJS({
       color: #595959;
       background: ${accentColor}0D;
     `.replace(/\s+/g, " ").trim();
-        return `<section style="${containerStyle}">
-      <section style="${headerStyle}">
-        <span style="${iconStyle}">${calloutInfo.icon}</span>
-        <span style="${titleStyle}">${safeTitle}</span>
+        return `<section class="owc-callout" style="${containerStyle}">
+      <section class="owc-callout-title" style="${headerStyle}">
+        <span class="owc-callout-icon" style="${iconStyle}">${calloutInfo.icon}</span>
+        <span class="owc-callout-title-text" style="${titleStyle}">${safeTitle}</span>
       </section>
-      <section style="${contentStyle}">`;
+      <section class="owc-callout-content" style="${contentStyle}">`;
       }
       /**
        * @param {CalloutInfoLike} calloutInfo
@@ -5062,12 +5062,12 @@ var require_converter = __commonJS({
       color: #595959;
       background: #f9f9f9;
     `.replace(/\s+/g, " ").trim();
-        return `<section style="${containerStyle}">
-      <section style="${headerStyle}">
-        <span style="${iconStyle}">${calloutInfo.icon}</span>
-        <span style="${titleStyle}">${safeTitle}</span>
+        return `<section class="owc-callout" style="${containerStyle}">
+      <section class="owc-callout-title" style="${headerStyle}">
+        <span class="owc-callout-icon" style="${iconStyle}">${calloutInfo.icon}</span>
+        <span class="owc-callout-title-text" style="${titleStyle}">${safeTitle}</span>
       </section>
-      <section style="${contentStyle}">`;
+      <section class="owc-callout-content" style="${contentStyle}">`;
       }
       /**
        * @param {string} code
@@ -5636,17 +5636,17 @@ var require_node = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.cloneNode = exports.hasChildren = exports.isDocument = exports.isDirective = exports.isComment = exports.isText = exports.isCDATA = exports.isTag = exports.Element = exports.Document = exports.CDATA = exports.NodeWithChildren = exports.ProcessingInstruction = exports.Comment = exports.Text = exports.DataNode = exports.Node = void 0;
     var domelementtype_1 = require_lib();
-    var Node2 = (
+    var Node3 = (
       /** @class */
       function() {
-        function Node3() {
+        function Node4() {
           this.parent = null;
           this.prev = null;
           this.next = null;
           this.startIndex = null;
           this.endIndex = null;
         }
-        Object.defineProperty(Node3.prototype, "parentNode", {
+        Object.defineProperty(Node4.prototype, "parentNode", {
           // Read-write aliases for properties
           /**
            * Same as {@link parent}.
@@ -5661,7 +5661,7 @@ var require_node = __commonJS({
           enumerable: false,
           configurable: true
         });
-        Object.defineProperty(Node3.prototype, "previousSibling", {
+        Object.defineProperty(Node4.prototype, "previousSibling", {
           /**
            * Same as {@link prev}.
            * [DOM spec](https://dom.spec.whatwg.org)-compatible alias.
@@ -5675,7 +5675,7 @@ var require_node = __commonJS({
           enumerable: false,
           configurable: true
         });
-        Object.defineProperty(Node3.prototype, "nextSibling", {
+        Object.defineProperty(Node4.prototype, "nextSibling", {
           /**
            * Same as {@link next}.
            * [DOM spec](https://dom.spec.whatwg.org)-compatible alias.
@@ -5689,16 +5689,16 @@ var require_node = __commonJS({
           enumerable: false,
           configurable: true
         });
-        Node3.prototype.cloneNode = function(recursive) {
+        Node4.prototype.cloneNode = function(recursive) {
           if (recursive === void 0) {
             recursive = false;
           }
           return cloneNode(this, recursive);
         };
-        return Node3;
+        return Node4;
       }()
     );
-    exports.Node = Node2;
+    exports.Node = Node3;
     var DataNode = (
       /** @class */
       function(_super) {
@@ -5723,7 +5723,7 @@ var require_node = __commonJS({
           configurable: true
         });
         return DataNode2;
-      }(Node2)
+      }(Node3)
     );
     exports.DataNode = DataNode;
     var Text2 = (
@@ -5746,26 +5746,26 @@ var require_node = __commonJS({
       }(DataNode)
     );
     exports.Text = Text2;
-    var Comment = (
+    var Comment2 = (
       /** @class */
       function(_super) {
-        __extends(Comment2, _super);
-        function Comment2() {
+        __extends(Comment3, _super);
+        function Comment3() {
           var _this = _super !== null && _super.apply(this, arguments) || this;
           _this.type = domelementtype_1.ElementType.Comment;
           return _this;
         }
-        Object.defineProperty(Comment2.prototype, "nodeType", {
+        Object.defineProperty(Comment3.prototype, "nodeType", {
           get: function() {
             return 8;
           },
           enumerable: false,
           configurable: true
         });
-        return Comment2;
+        return Comment3;
       }(DataNode)
     );
-    exports.Comment = Comment;
+    exports.Comment = Comment2;
     var ProcessingInstruction = (
       /** @class */
       function(_super) {
@@ -5829,7 +5829,7 @@ var require_node = __commonJS({
           configurable: true
         });
         return NodeWithChildren2;
-      }(Node2)
+      }(Node3)
     );
     exports.NodeWithChildren = NodeWithChildren;
     var CDATA = (
@@ -5852,26 +5852,26 @@ var require_node = __commonJS({
       }(NodeWithChildren)
     );
     exports.CDATA = CDATA;
-    var Document = (
+    var Document2 = (
       /** @class */
       function(_super) {
-        __extends(Document2, _super);
-        function Document2() {
+        __extends(Document3, _super);
+        function Document3() {
           var _this = _super !== null && _super.apply(this, arguments) || this;
           _this.type = domelementtype_1.ElementType.Root;
           return _this;
         }
-        Object.defineProperty(Document2.prototype, "nodeType", {
+        Object.defineProperty(Document3.prototype, "nodeType", {
           get: function() {
             return 9;
           },
           enumerable: false,
           configurable: true
         });
-        return Document2;
+        return Document3;
       }(NodeWithChildren)
     );
-    exports.Document = Document;
+    exports.Document = Document2;
     var Element2 = (
       /** @class */
       function(_super) {
@@ -5967,7 +5967,7 @@ var require_node = __commonJS({
       if (isText(node)) {
         result = new Text2(node.data);
       } else if (isComment(node)) {
-        result = new Comment(node.data);
+        result = new Comment2(node.data);
       } else if (isTag(node)) {
         var children = recursive ? cloneChildren(node.children) : [];
         var clone_1 = new Element2(node.name, __assign({}, node.attribs), children);
@@ -5993,7 +5993,7 @@ var require_node = __commonJS({
         result = clone_2;
       } else if (isDocument(node)) {
         var children = recursive ? cloneChildren(node.children) : [];
-        var clone_3 = new Document(children);
+        var clone_3 = new Document2(children);
         children.forEach(function(child) {
           return child.parent = clone_3;
         });
@@ -8066,10 +8066,10 @@ var require_static = __commonJS({
       return parsed.root()[0].children.slice();
     }
     exports.parseHTML = parseHTML;
-    function root() {
+    function root2() {
       return this(this._root);
     }
-    exports.root = root;
+    exports.root = root2;
     function contains(container, contained) {
       if (contained === container) {
         return false;
@@ -8150,9 +8150,9 @@ var require_utils = __commonJS({
       var clone2 = "length" in dom ? Array.prototype.map.call(dom, function(el) {
         return (0, domhandler_1.cloneNode)(el, true);
       }) : [(0, domhandler_1.cloneNode)(dom, true)];
-      var root = new domhandler_1.Document(clone2);
+      var root2 = new domhandler_1.Document(clone2);
       clone2.forEach(function(node) {
-        node.parent = root;
+        node.parent = root2;
       });
       return clone2;
     }
@@ -8678,7 +8678,7 @@ var require_parse = __commonJS({
     function isWhitespace(c) {
       return c === 32 || c === 9 || c === 10 || c === 12 || c === 13;
     }
-    function parse(selector) {
+    function parse2(selector) {
       var subselects = [];
       var endIndex = parseSelector(subselects, "".concat(selector), 0);
       if (endIndex < selector.length) {
@@ -8686,7 +8686,7 @@ var require_parse = __commonJS({
       }
       return subselects;
     }
-    exports.parse = parse;
+    exports.parse = parse2;
     function parseSelector(subselects, selector, selectorIndex) {
       var tokens = [];
       function getName(offset) {
@@ -9013,12 +9013,12 @@ var require_stringify2 = __commonJS({
     ], false).map(function(c) {
       return c.charCodeAt(0);
     }));
-    function stringify(selector) {
+    function stringify2(selector) {
       return selector.map(function(token) {
         return token.map(stringifyToken).join("");
       }).join(", ");
     }
-    exports.stringify = stringify;
+    exports.stringify = stringify2;
     function stringifyToken(token, index, arr) {
       switch (token.type) {
         case types_1.SelectorType.Child:
@@ -9040,7 +9040,7 @@ var require_stringify2 = __commonJS({
         case types_1.SelectorType.PseudoElement:
           return "::".concat(escapeName(token.name, charsToEscapeInName)).concat(token.data === null ? "" : "(".concat(escapeName(token.data, charsToEscapeInPseudoValue), ")"));
         case types_1.SelectorType.Pseudo:
-          return ":".concat(escapeName(token.name, charsToEscapeInName)).concat(token.data === null ? "" : "(".concat(typeof token.data === "string" ? escapeName(token.data, charsToEscapeInPseudoValue) : stringify(token.data), ")"));
+          return ":".concat(escapeName(token.name, charsToEscapeInName)).concat(token.data === null ? "" : "(".concat(typeof token.data === "string" ? escapeName(token.data, charsToEscapeInPseudoValue) : stringify2(token.data), ")"));
         case types_1.SelectorType.Attribute: {
           if (token.name === "id" && token.action === types_1.AttributeAction.Equals && token.ignoreCase === "quirks" && !token.namespace) {
             return "#".concat(escapeName(token.value, charsToEscapeInName));
@@ -9431,7 +9431,7 @@ var require_parse2 = __commonJS({
     var whitespace = /* @__PURE__ */ new Set([9, 10, 12, 13, 32]);
     var ZERO = "0".charCodeAt(0);
     var NINE = "9".charCodeAt(0);
-    function parse(formula) {
+    function parse2(formula) {
       formula = formula.trim().toLowerCase();
       if (formula === "even") {
         return [2, 0];
@@ -9483,7 +9483,7 @@ var require_parse2 = __commonJS({
         }
       }
     }
-    exports.parse = parse;
+    exports.parse = parse2;
   }
 });
 
@@ -9618,9 +9618,9 @@ var require_filters = __commonJS({
         };
       },
       // Location specific methods
-      "nth-child": function(next, rule, _a5) {
+      "nth-child": function(next, rule2, _a5) {
         var adapter = _a5.adapter, equals = _a5.equals;
-        var func = (0, nth_check_1.default)(rule);
+        var func = (0, nth_check_1.default)(rule2);
         if (func === boolbase_1.default.falseFunc)
           return boolbase_1.default.falseFunc;
         if (func === boolbase_1.default.trueFunc)
@@ -9638,9 +9638,9 @@ var require_filters = __commonJS({
           return func(pos) && next(elem);
         };
       },
-      "nth-last-child": function(next, rule, _a5) {
+      "nth-last-child": function(next, rule2, _a5) {
         var adapter = _a5.adapter, equals = _a5.equals;
-        var func = (0, nth_check_1.default)(rule);
+        var func = (0, nth_check_1.default)(rule2);
         if (func === boolbase_1.default.falseFunc)
           return boolbase_1.default.falseFunc;
         if (func === boolbase_1.default.trueFunc)
@@ -9658,9 +9658,9 @@ var require_filters = __commonJS({
           return func(pos) && next(elem);
         };
       },
-      "nth-of-type": function(next, rule, _a5) {
+      "nth-of-type": function(next, rule2, _a5) {
         var adapter = _a5.adapter, equals = _a5.equals;
-        var func = (0, nth_check_1.default)(rule);
+        var func = (0, nth_check_1.default)(rule2);
         if (func === boolbase_1.default.falseFunc)
           return boolbase_1.default.falseFunc;
         if (func === boolbase_1.default.trueFunc)
@@ -9679,9 +9679,9 @@ var require_filters = __commonJS({
           return func(pos) && next(elem);
         };
       },
-      "nth-last-of-type": function(next, rule, _a5) {
+      "nth-last-of-type": function(next, rule2, _a5) {
         var adapter = _a5.adapter, equals = _a5.equals;
-        var func = (0, nth_check_1.default)(rule);
+        var func = (0, nth_check_1.default)(rule2);
         if (func === boolbase_1.default.falseFunc)
           return boolbase_1.default.falseFunc;
         if (func === boolbase_1.default.trueFunc)
@@ -9708,10 +9708,10 @@ var require_filters = __commonJS({
           return (parent == null || !adapter.isTag(parent)) && next(elem);
         };
       },
-      scope: function(next, rule, options, context) {
+      scope: function(next, rule2, options, context) {
         var equals = options.equals;
         if (!context || context.length === 0) {
-          return exports.filters["root"](next, rule, options);
+          return exports.filters["root"](next, rule2, options);
         }
         if (context.length === 1) {
           return function(elem) {
@@ -10295,8 +10295,8 @@ var require_compile2 = __commonJS({
     exports.compileToken = compileToken;
     function compileRules(rules, options, context) {
       var _a5;
-      return rules.reduce(function(previous, rule) {
-        return previous === boolbase_1.default.falseFunc ? boolbase_1.default.falseFunc : (0, general_js_1.compileGeneralSelector)(previous, rule, options, context, compileToken);
+      return rules.reduce(function(previous, rule2) {
+        return previous === boolbase_1.default.falseFunc ? boolbase_1.default.falseFunc : (0, general_js_1.compileGeneralSelector)(previous, rule2, options, context, compileToken);
       }, (_a5 = options.rootFunc) !== null && _a5 !== void 0 ? _a5 : boolbase_1.default.trueFunc);
     }
     function reduceRules(a, b) {
@@ -10705,14 +10705,14 @@ var require_lib8 = __commonJS({
     function filterBySelector(selector, elements, options) {
       var _a5;
       if (selector.some(css_what_1.isTraversal)) {
-        var root = (_a5 = options.root) !== null && _a5 !== void 0 ? _a5 : (0, helpers_js_1.getDocumentRoot)(elements[0]);
+        var root2 = (_a5 = options.root) !== null && _a5 !== void 0 ? _a5 : (0, helpers_js_1.getDocumentRoot)(elements[0]);
         var opts = __assign(__assign({}, options), { context: elements, relativeSelector: false });
         selector.push(SCOPE_PSEUDO);
-        return findFilterElements(root, selector, opts, true, elements.length);
+        return findFilterElements(root2, selector, opts, true, elements.length);
       }
       return findFilterElements(elements, selector, options, false, elements.length);
     }
-    function select(selector, root, options, limit) {
+    function select(selector, root2, options, limit) {
       if (options === void 0) {
         options = {};
       }
@@ -10720,14 +10720,14 @@ var require_lib8 = __commonJS({
         limit = Infinity;
       }
       if (typeof selector === "function") {
-        return find(root, selector);
+        return find(root2, selector);
       }
       var _a5 = (0, helpers_js_1.groupSelectors)((0, css_what_1.parse)(selector)), plain = _a5[0], filtered = _a5[1];
       var results = filtered.map(function(sel) {
-        return findFilterElements(root, sel, options, true, limit);
+        return findFilterElements(root2, sel, options, true, limit);
       });
       if (plain.length) {
-        results.push(findElements(root, plain, options, limit));
+        results.push(findElements(root2, plain, options, limit));
       }
       if (results.length === 0) {
         return [];
@@ -10740,7 +10740,7 @@ var require_lib8 = __commonJS({
       }));
     }
     exports.select = select;
-    function findFilterElements(root, selector, options, queryForSelector, totalLimit) {
+    function findFilterElements(root2, selector, options, queryForSelector, totalLimit) {
       var filterIndex = selector.findIndex(positionals_js_1.isFilter);
       var sub = selector.slice(0, filterIndex);
       var filter2 = selector[filterIndex];
@@ -10748,7 +10748,7 @@ var require_lib8 = __commonJS({
       var limit = (0, positionals_js_1.getLimit)(filter2.name, filter2.data, partLimit);
       if (limit === 0)
         return [];
-      var elemsNoLimit = sub.length === 0 && !Array.isArray(root) ? DomUtils.getChildren(root).filter(DomUtils.isTag) : sub.length === 0 ? (Array.isArray(root) ? root : [root]).filter(DomUtils.isTag) : queryForSelector || sub.some(css_what_1.isTraversal) ? findElements(root, [sub], options, limit) : filterElements2(root, [sub], options);
+      var elemsNoLimit = sub.length === 0 && !Array.isArray(root2) ? DomUtils.getChildren(root2).filter(DomUtils.isTag) : sub.length === 0 ? (Array.isArray(root2) ? root2 : [root2]).filter(DomUtils.isTag) : queryForSelector || sub.some(css_what_1.isTraversal) ? findElements(root2, [sub], options, limit) : filterElements2(root2, [sub], options);
       var elems = elemsNoLimit.slice(0, limit);
       var result = filterByPosition(filter2.name, elems, filter2.data, options);
       if (result.length === 0 || selector.length === filterIndex + 1) {
@@ -10786,15 +10786,15 @@ var require_lib8 = __commonJS({
         filterElements2(result, [remainingSelector], options)
       );
     }
-    function findElements(root, sel, options, limit) {
-      var query = (0, css_select_1._compileToken)(sel, options, root);
-      return find(root, query, limit);
+    function findElements(root2, sel, options, limit) {
+      var query = (0, css_select_1._compileToken)(sel, options, root2);
+      return find(root2, query, limit);
     }
-    function find(root, query, limit) {
+    function find(root2, query, limit) {
       if (limit === void 0) {
         limit = Infinity;
       }
-      var elems = (0, css_select_1.prepareContext)(root, DomUtils, query.shouldTestNextSiblings);
+      var elems = (0, css_select_1.prepareContext)(root2, DomUtils, query.shouldTestNextSiblings);
       return DomUtils.find(function(node) {
         return DomUtils.isTag(node) && query(node);
       }, elems, true, limit);
@@ -11094,8 +11094,8 @@ var require_traversing = __commonJS({
       return this._make(filterArray(this.toArray(), match, this.options.xmlMode, (_a5 = this._root) === null || _a5 === void 0 ? void 0 : _a5[0]));
     }
     exports.filter = filter;
-    function filterArray(nodes, match, xmlMode, root) {
-      return typeof match === "string" ? select.filter(match, nodes, { xmlMode, root }) : nodes.filter(getFilterFn(match));
+    function filterArray(nodes, match, xmlMode, root2) {
+      return typeof match === "string" ? select.filter(match, nodes, { xmlMode, root: root2 }) : nodes.filter(getFilterFn(match));
     }
     exports.filterArray = filterArray;
     function is(selector) {
@@ -11205,7 +11205,7 @@ var require_parse3 = __commonJS({
     var domutils_1 = require_lib5();
     var domhandler_1 = require_lib2();
     function getParse(parser) {
-      return function parse(content, options, isDocument, context) {
+      return function parse2(content, options, isDocument, context) {
         if (typeof Buffer !== "undefined" && Buffer.isBuffer(content)) {
           content = content.toString();
         }
@@ -11216,9 +11216,9 @@ var require_parse3 = __commonJS({
         if (!Array.isArray(doc) && (0, domhandler_1.isDocument)(doc)) {
           return doc;
         }
-        var root = new domhandler_1.Document([]);
-        update(doc, root);
-        return root;
+        var root2 = new domhandler_1.Document([]);
+        update(doc, root2);
+        return root2;
       };
     }
     exports.getParse = getParse;
@@ -11646,7 +11646,7 @@ var require_css = __commonJS({
         } else if (val != null) {
           styles[prop] = val;
         }
-        el.attribs["style"] = stringify(styles);
+        el.attribs["style"] = stringify2(styles);
       } else if (typeof prop === "object") {
         Object.keys(prop).forEach(function(k, i) {
           setCss(el, k, prop[k], i);
@@ -11656,7 +11656,7 @@ var require_css = __commonJS({
     function getCss(el, prop) {
       if (!el || !(0, utils_js_1.isTag)(el))
         return;
-      var styles = parse(el.attribs["style"]);
+      var styles = parse2(el.attribs["style"]);
       if (typeof prop === "string") {
         return styles[prop];
       }
@@ -11671,12 +11671,12 @@ var require_css = __commonJS({
       }
       return styles;
     }
-    function stringify(obj) {
+    function stringify2(obj) {
       return Object.keys(obj).reduce(function(str, prop) {
         return "".concat(str).concat(str ? " " : "").concat(prop, ": ").concat(obj[prop], ";");
       }, "");
     }
-    function parse(styles) {
+    function parse2(styles) {
       styles = (styles || "").trim();
       if (!styles)
         return {};
@@ -11793,10 +11793,10 @@ var require_cheerio = __commonJS({
     var Cheerio = (
       /** @class */
       function() {
-        function Cheerio2(elements, root, options) {
+        function Cheerio2(elements, root2, options) {
           this.length = 0;
           this.options = options;
-          this._root = root;
+          this._root = root2;
           if (elements) {
             for (var idx = 0; idx < elements.length; idx++) {
               this[idx] = elements[idx];
@@ -11890,7 +11890,7 @@ var require_load = __commonJS({
     var staticMethods = __importStar(require_static());
     var cheerio_js_1 = require_cheerio();
     var utils_js_1 = require_utils();
-    function getLoad(parse, render) {
+    function getLoad(parse2, render) {
       return function load(content, options, isDocument) {
         if (isDocument === void 0) {
           isDocument = true;
@@ -11899,7 +11899,7 @@ var require_load = __commonJS({
           throw new Error("cheerio.load() expects a string");
         }
         var internalOpts = __assign(__assign({}, options_js_1.default), (0, options_js_1.flatten)(options));
-        var initialRoot = parse(content, internalOpts, isDocument, null);
+        var initialRoot = parse2(content, internalOpts, isDocument, null);
         var LoadedCheerio = (
           /** @class */
           function(_super) {
@@ -11913,7 +11913,7 @@ var require_load = __commonJS({
               return cheerio;
             };
             LoadedCheerio2.prototype._parse = function(content2, options2, isDocument2, context) {
-              return parse(content2, options2, isDocument2, context);
+              return parse2(content2, options2, isDocument2, context);
             };
             LoadedCheerio2.prototype._render = function(dom) {
               return render(dom, this.options);
@@ -11921,14 +11921,14 @@ var require_load = __commonJS({
             return LoadedCheerio2;
           }(cheerio_js_1.Cheerio)
         );
-        function initialize(selector, context, root, opts) {
-          if (root === void 0) {
-            root = initialRoot;
+        function initialize(selector, context, root2, opts) {
+          if (root2 === void 0) {
+            root2 = initialRoot;
           }
           if (selector && (0, utils_js_1.isCheerio)(selector))
             return selector;
           var options2 = __assign(__assign({}, internalOpts), (0, options_js_1.flatten)(opts));
-          var r = typeof root === "string" ? [parse(root, options2, false, null)] : "length" in root ? root : [root];
+          var r = typeof root2 === "string" ? [parse2(root2, options2, false, null)] : "length" in root2 ? root2 : [root2];
           var rootInstance = (0, utils_js_1.isCheerio)(r) ? r : new LoadedCheerio(r, null, options2);
           rootInstance._root = rootInstance;
           if (!selector) {
@@ -11936,7 +11936,7 @@ var require_load = __commonJS({
           }
           var elements = typeof selector === "string" && (0, utils_js_1.isHtml)(selector) ? (
             // $(<html>)
-            parse(selector, options2, false, null).children
+            parse2(selector, options2, false, null).children
           ) : isNode(selector) ? (
             // $(dom)
             [selector]
@@ -11957,7 +11957,7 @@ var require_load = __commonJS({
             rootInstance
           ) : typeof context === "string" ? (0, utils_js_1.isHtml)(context) ? (
             // $('li', '<ul>...</ul>')
-            new LoadedCheerio([parse(context, options2, false, null)], rootInstance, options2)
+            new LoadedCheerio([parse2(context, options2, false, null)], rootInstance, options2)
           ) : (
             // $('li', 'ul')
             (search = "".concat(context, " ").concat(search), rootInstance)
@@ -16070,7 +16070,7 @@ var require_open_element_stack = __commonJS({
       get currentTmplContentOrNode() {
         return this._isInTemplate() ? this.treeAdapter.getTemplateContent(this.current) : this.current;
       }
-      constructor(document2, treeAdapter, handler) {
+      constructor(document3, treeAdapter, handler) {
         this.treeAdapter = treeAdapter;
         this.handler = handler;
         this.items = [];
@@ -16078,7 +16078,7 @@ var require_open_element_stack = __commonJS({
         this.stackTop = -1;
         this.tmplCount = 0;
         this.currentTagId = html_js_1.TAG_ID.UNKNOWN;
-        this.current = document2;
+        this.current = document3;
       }
       //Index of element
       _indexOf(element) {
@@ -16529,8 +16529,8 @@ var require_default = __commonJS({
       getTemplateContent(templateElement) {
         return templateElement.content;
       },
-      setDocumentType(document2, name, publicId, systemId) {
-        const doctypeNode = document2.childNodes.find((node) => node.nodeName === "#documentType");
+      setDocumentType(document3, name, publicId, systemId) {
+        const doctypeNode = document3.childNodes.find((node) => node.nodeName === "#documentType");
         if (doctypeNode) {
           doctypeNode.name = name;
           doctypeNode.publicId = publicId;
@@ -16543,14 +16543,14 @@ var require_default = __commonJS({
             systemId,
             parentNode: null
           };
-          exports.defaultTreeAdapter.appendChild(document2, node);
+          exports.defaultTreeAdapter.appendChild(document3, node);
         }
       },
-      setDocumentMode(document2, mode) {
-        document2.mode = mode;
+      setDocumentMode(document3, mode) {
+        document3.mode = mode;
       },
-      getDocumentMode(document2) {
-        return document2.mode;
+      getDocumentMode(document3) {
+        return document3.mode;
       },
       detachNode(node) {
         if (node.parentNode) {
@@ -17060,7 +17060,7 @@ var require_parser = __commonJS({
       onParseError: null
     };
     var Parser = class {
-      constructor(options, document2, fragmentContext = null, scriptHandler = null) {
+      constructor(options, document3, fragmentContext = null, scriptHandler = null) {
         this.fragmentContext = fragmentContext;
         this.scriptHandler = scriptHandler;
         this.currentToken = null;
@@ -17082,7 +17082,7 @@ var require_parser = __commonJS({
         if (this.onParseError) {
           this.options.sourceCodeLocationInfo = true;
         }
-        this.document = document2 !== null && document2 !== void 0 ? document2 : this.treeAdapter.createDocument();
+        this.document = document3 !== null && document3 !== void 0 ? document3 : this.treeAdapter.createDocument();
         this.tokenizer = new index_js_1.Tokenizer(this.options, this);
         this.activeFormattingElements = new formatting_element_list_js_1.FormattingElementList(this.treeAdapter);
         this.fragmentContextID = fragmentContext ? (0, html_js_1.getTagID)(this.treeAdapter.getTagName(fragmentContext)) : html_js_1.TAG_ID.UNKNOWN;
@@ -20229,7 +20229,7 @@ var require_cjs = __commonJS({
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.TokenizerMode = exports.Tokenizer = exports.Token = exports.html = exports.foreignContent = exports.ErrorCodes = exports.serializeOuter = exports.serialize = exports.Parser = exports.defaultTreeAdapter = void 0;
-    exports.parse = parse;
+    exports.parse = parse2;
     exports.parseFragment = parseFragment;
     var index_js_1 = require_parser();
     var default_js_1 = require_default();
@@ -20261,7 +20261,7 @@ var require_cjs = __commonJS({
     Object.defineProperty(exports, "TokenizerMode", { enumerable: true, get: function() {
       return index_js_4.TokenizerMode;
     } });
-    function parse(html, options) {
+    function parse2(html, options) {
       return index_js_1.Parser.parse(html, options);
     }
     function parseFragment(fragmentContext, html, options) {
@@ -20369,24 +20369,24 @@ var require_cjs2 = __commonJS({
       getTemplateContent(templateElement) {
         return templateElement.children[0];
       },
-      setDocumentType(document2, name, publicId, systemId) {
+      setDocumentType(document3, name, publicId, systemId) {
         const data = serializeDoctypeContent(name, publicId, systemId);
-        let doctypeNode = document2.children.find((node) => (0, domhandler_1.isDirective)(node) && node.name === "!doctype");
+        let doctypeNode = document3.children.find((node) => (0, domhandler_1.isDirective)(node) && node.name === "!doctype");
         if (doctypeNode) {
           doctypeNode.data = data !== null && data !== void 0 ? data : null;
         } else {
           doctypeNode = new domhandler_1.ProcessingInstruction("!doctype", data);
-          exports.adapter.appendChild(document2, doctypeNode);
+          exports.adapter.appendChild(document3, doctypeNode);
         }
         doctypeNode["x-name"] = name;
         doctypeNode["x-publicId"] = publicId;
         doctypeNode["x-systemId"] = systemId;
       },
-      setDocumentMode(document2, mode) {
-        document2["x-mode"] = mode;
+      setDocumentMode(document3, mode) {
+        document3["x-mode"] = mode;
       },
-      getDocumentMode(document2) {
-        return document2["x-mode"];
+      getDocumentMode(document3) {
+        return document3["x-mode"];
       },
       detachNode(node) {
         if (node.parent) {
@@ -21895,10 +21895,10 @@ var require_lib10 = __commonJS({
     var parse5_adapter_js_1 = require_parse5_adapter();
     var dom_serializer_1 = __importDefault(require_lib4());
     var htmlparser2_1 = require_lib9();
-    var parse = (0, parse_js_1.getParse)(function(content, options, isDocument, context) {
+    var parse2 = (0, parse_js_1.getParse)(function(content, options, isDocument, context) {
       return options.xmlMode || options._useHtmlParser2 ? (0, htmlparser2_1.parseDocument)(content, options) : (0, parse5_adapter_js_1.parseWithParse5)(content, options, isDocument, context);
     });
-    exports.load = (0, load_js_1.getLoad)(parse, function(dom, options) {
+    exports.load = (0, load_js_1.getLoad)(parse2, function(dom, options) {
       return options.xmlMode || options._useHtmlParser2 ? (0, dom_serializer_1.default)(dom, options) : (0, parse5_adapter_js_1.renderWithParse5)(dom);
     });
     exports.default = (0, exports.load)([]);
@@ -22329,22 +22329,22 @@ var require_lexer = __commonJS({
               default:
                 var tokenized = false;
                 var name;
-                var rule;
+                var rule2;
                 for (var j = 0, len = atRules.length; !tokenized && j < len; ++j) {
-                  rule = atRules[j];
-                  name = rule.name || rule;
+                  rule2 = atRules[j];
+                  name = rule2.name || rule2;
                   if (!isNextString(name)) {
                     continue;
                   }
                   tokenized = true;
                   initializeToken(name);
-                  pushState(rule.state || "at-group");
+                  pushState(rule2.state || "at-group");
                   skip(name.length);
-                  if (rule.prefix) {
-                    token.prefix = rule.prefix;
+                  if (rule2.prefix) {
+                    token.prefix = rule2.prefix;
                   }
-                  if (rule.type) {
-                    token.type = rule.type;
+                  if (rule2.type) {
+                    token.type = rule2.type;
                   }
                 }
                 if (!tokenized) {
@@ -22409,25 +22409,25 @@ var require_parser2 = __commonJS({
     var TIMER = false;
     var debug = require_debug()("parse");
     var lex = require_lexer();
-    exports = module2.exports = parse;
+    exports = module2.exports = parse2;
     var _comments;
     var _depth;
     var _position;
     var _tokens;
-    function parse(css, options) {
+    function parse2(css, options) {
       var start;
       options || (options = {});
       _comments = !!options.comments;
       _position = !!options.position;
       _depth = 0;
       _tokens = Array.isArray(css) ? css.slice() : lex(css);
-      var rule;
+      var rule2;
       var rules = [];
       var token;
       TIMER && (start = Date.now());
       while (token = next()) {
-        rule = parseToken(token);
-        rule && rules.push(rule);
+        rule2 = parseToken(token);
+        rule2 && rules.push(rule2);
       }
       TIMER && debug("ran in", Date.now() - start + "ms");
       return {
@@ -22582,8 +22582,8 @@ var require_stringify3 = __commonJS({
     var _level;
     var _n;
     var _s;
-    exports = module2.exports = stringify;
-    function stringify(ast, options) {
+    exports = module2.exports = stringify2;
+    function stringify2(ast, options) {
       var start;
       options || (options = {});
       _indentation = options.indentation || "";
@@ -22724,7 +22724,7 @@ var require_parser3 = __commonJS({
     var escape = function(string) {
       return (string + "").replace(escapeRe, "\\$1");
     };
-    var unescape = function(string) {
+    var unescape2 = function(string) {
       return (string + "").replace(unescapeRe, "");
     };
     var slickRe = RegExp(
@@ -22816,11 +22816,11 @@ var require_parser3 = __commonJS({
       if (!current)
         current = expression[expression.length - 1];
       if (tagName) {
-        current.tag = unescape(tagName);
+        current.tag = unescape2(tagName);
       } else if (id) {
-        current.id = unescape(id);
+        current.id = unescape2(id);
       } else if (className) {
-        var unescaped = unescape(className);
+        var unescaped = unescape2(className);
         var classes = current.classes || (current.classes = {});
         if (!classes[unescaped]) {
           classes[unescaped] = escape(className);
@@ -22832,18 +22832,18 @@ var require_parser3 = __commonJS({
         pseudoClassValue = pseudoClassValue || pseudoClassQuotedValue;
         (current.pseudos || (current.pseudos = [])).push({
           type: pseudoMarker.length == 1 ? "class" : "element",
-          name: unescape(pseudoClass),
+          name: unescape2(pseudoClass),
           escapedName: escape(pseudoClass),
-          value: pseudoClassValue ? unescape(pseudoClassValue) : null,
+          value: pseudoClassValue ? unescape2(pseudoClassValue) : null,
           escapedValue: pseudoClassValue ? escape(pseudoClassValue) : null
         });
       } else if (attributeKey) {
         attributeValue = attributeValue ? escape(attributeValue) : null;
         (current.attributes || (current.attributes = [])).push({
           operator: attributeOperator,
-          name: unescape(attributeKey),
+          name: unescape2(attributeKey),
           escapedName: escape(attributeKey),
-          value: attributeValue ? unescape(attributeValue) : null,
+          value: attributeValue ? unescape2(attributeValue) : null,
           escapedValue: attributeValue ? escape(attributeValue) : null
         });
       }
@@ -22872,13 +22872,13 @@ var require_parser3 = __commonJS({
       return this.raw;
     };
     var cache = {};
-    var parse = function(expression) {
+    var parse2 = function(expression) {
       if (expression == null)
         return null;
       expression = ("" + expression).replace(/^\s+|\s+$/g, "");
       return cache[expression] || (cache[expression] = new Expressions(expression));
     };
-    module2.exports = parse;
+    module2.exports = parse2;
   }
 });
 
@@ -22895,7 +22895,7 @@ var require_selector = __commonJS({
     }
     Selector.prototype.parsed = function() {
       if (!this.tokens) {
-        this.tokens = parse(this.text);
+        this.tokens = parse2(this.text);
       }
       return this.tokens;
     };
@@ -22906,7 +22906,7 @@ var require_selector = __commonJS({
       }
       return this.spec;
       function specificity(text, parsed) {
-        var expressions = parsed || parse(text);
+        var expressions = parsed || parse2(text);
         var spec = [styleAttribute ? 1 : 0, 0, 0, 0];
         var nots = [];
         for (var i = 0; i < expressions.length; i++) {
@@ -22943,7 +22943,7 @@ var require_selector = __commonJS({
         return spec;
       }
     };
-    function parse(text) {
+    function parse2(text) {
       try {
         return parser(text)[0];
       } catch (e) {
@@ -23035,10 +23035,10 @@ var require_utils2 = __commonJS({
       var ret = [];
       for (var i = 0, l = rules.length; i < l; i++) {
         if (rules[i].type == "rule") {
-          var rule = rules[i];
-          var selectors = rule.selectors;
+          var rule2 = rules[i];
+          var selectors = rule2.selectors;
           for (var ii = 0, ll = selectors.length; ii < ll; ii++) {
-            ret.push([selectors[ii], rule.declarations]);
+            ret.push([selectors[ii], rule2.declarations]);
           }
         }
       }
@@ -23344,9 +23344,9 @@ var require_inline = __commonJS({
             $appendTo.first().append("<style>" + preservedText + "</style>");
           }
         }
-        function handleRule(rule) {
-          var sel = rule[0];
-          var style = rule[1];
+        function handleRule(rule2) {
+          var sel = rule2[0];
+          var style = rule2[1];
           var selector = new utils.Selector(sel);
           var parsedSelector = selector.parsed();
           if (!parsedSelector) {
@@ -23712,6 +23712,8405 @@ var require_client = __commonJS({
     };
     juiceClient.codeBlocks = cheerio.codeBlocks;
     module2.exports = juiceClient;
+  }
+});
+
+// node_modules/picocolors/picocolors.browser.js
+var require_picocolors_browser = __commonJS({
+  "node_modules/picocolors/picocolors.browser.js"(exports, module2) {
+    var x = String;
+    var create = function() {
+      return { isColorSupported: false, reset: x, bold: x, dim: x, italic: x, underline: x, inverse: x, hidden: x, strikethrough: x, black: x, red: x, green: x, yellow: x, blue: x, magenta: x, cyan: x, white: x, gray: x, bgBlack: x, bgRed: x, bgGreen: x, bgYellow: x, bgBlue: x, bgMagenta: x, bgCyan: x, bgWhite: x, blackBright: x, redBright: x, greenBright: x, yellowBright: x, blueBright: x, magentaBright: x, cyanBright: x, whiteBright: x, bgBlackBright: x, bgRedBright: x, bgGreenBright: x, bgYellowBright: x, bgBlueBright: x, bgMagentaBright: x, bgCyanBright: x, bgWhiteBright: x };
+    };
+    module2.exports = create();
+    module2.exports.createColors = create;
+  }
+});
+
+// (disabled):node_modules/postcss/lib/terminal-highlight
+var require_terminal_highlight = __commonJS({
+  "(disabled):node_modules/postcss/lib/terminal-highlight"() {
+  }
+});
+
+// node_modules/postcss/lib/css-syntax-error.js
+var require_css_syntax_error = __commonJS({
+  "node_modules/postcss/lib/css-syntax-error.js"(exports, module2) {
+    "use strict";
+    var pico = require_picocolors_browser();
+    var terminalHighlight = require_terminal_highlight();
+    var CssSyntaxError2 = class extends Error {
+      constructor(message, line, column, source, file, plugin2) {
+        super(message);
+        this.name = "CssSyntaxError";
+        this.reason = message;
+        if (file) {
+          this.file = file;
+        }
+        if (source) {
+          this.source = source;
+        }
+        if (plugin2) {
+          this.plugin = plugin2;
+        }
+        if (typeof line !== "undefined" && typeof column !== "undefined") {
+          if (typeof line === "number") {
+            this.line = line;
+            this.column = column;
+          } else {
+            this.line = line.line;
+            this.column = line.column;
+            this.endLine = column.line;
+            this.endColumn = column.column;
+          }
+        }
+        this.setMessage();
+        if (Error.captureStackTrace) {
+          Error.captureStackTrace(this, CssSyntaxError2);
+        }
+      }
+      setMessage() {
+        this.message = this.plugin ? this.plugin + ": " : "";
+        this.message += this.file ? this.file : "<css input>";
+        if (typeof this.line !== "undefined") {
+          this.message += ":" + this.line + ":" + this.column;
+        }
+        this.message += ": " + this.reason;
+      }
+      showSourceCode(color) {
+        if (!this.source)
+          return "";
+        let css = this.source;
+        if (color == null)
+          color = pico.isColorSupported;
+        let aside = (text) => text;
+        let mark = (text) => text;
+        let highlight = (text) => text;
+        if (color) {
+          let { bold, gray, red } = pico.createColors(true);
+          mark = (text) => bold(red(text));
+          aside = (text) => gray(text);
+          if (terminalHighlight) {
+            highlight = (text) => terminalHighlight(text);
+          }
+        }
+        let lines = css.split(/\r?\n/);
+        let start = Math.max(this.line - 3, 0);
+        let end = Math.min(this.line + 2, lines.length);
+        let maxWidth = String(end).length;
+        return lines.slice(start, end).map((line, index) => {
+          let number = start + 1 + index;
+          let gutter = " " + (" " + number).slice(-maxWidth) + " | ";
+          if (number === this.line) {
+            if (line.length > 160) {
+              let padding = 20;
+              let subLineStart = Math.max(0, this.column - padding);
+              let subLineEnd = Math.max(
+                this.column + padding,
+                this.endColumn + padding
+              );
+              let subLine = line.slice(subLineStart, subLineEnd);
+              let spacing2 = aside(gutter.replace(/\d/g, " ")) + line.slice(0, Math.min(this.column - 1, padding - 1)).replace(/[^\t]/g, " ");
+              return mark(">") + aside(gutter) + highlight(subLine) + "\n " + spacing2 + mark("^");
+            }
+            let spacing = aside(gutter.replace(/\d/g, " ")) + line.slice(0, this.column - 1).replace(/[^\t]/g, " ");
+            return mark(">") + aside(gutter) + highlight(line) + "\n " + spacing + mark("^");
+          }
+          return " " + aside(gutter) + highlight(line);
+        }).join("\n");
+      }
+      toString() {
+        let code = this.showSourceCode();
+        if (code) {
+          code = "\n\n" + code + "\n";
+        }
+        return this.name + ": " + this.message + code;
+      }
+    };
+    module2.exports = CssSyntaxError2;
+    CssSyntaxError2.default = CssSyntaxError2;
+  }
+});
+
+// node_modules/postcss/lib/stringifier.js
+var require_stringifier = __commonJS({
+  "node_modules/postcss/lib/stringifier.js"(exports, module2) {
+    "use strict";
+    var STYLE_TAG = /(<)(\/?style\b)/gi;
+    var COMMENT_OPEN = /(<)(!--)/g;
+    var AT_NAME_END = /[\t\n\f\r "#'()/;[\\\]{}]/;
+    function escapeHTMLInCSS(str) {
+      if (typeof str !== "string")
+        return str;
+      if (!str.includes("<"))
+        return str;
+      return str.replace(STYLE_TAG, "\\3c $2").replace(COMMENT_OPEN, "\\3c $2");
+    }
+    var DEFAULT_RAW = {
+      after: "\n",
+      beforeClose: "\n",
+      beforeComment: "\n",
+      beforeDecl: "\n",
+      beforeOpen: " ",
+      beforeRule: "\n",
+      colon: ": ",
+      commentLeft: " ",
+      commentRight: " ",
+      emptyBody: "",
+      indent: "    ",
+      semicolon: false
+    };
+    function capitalize(str) {
+      return str[0].toUpperCase() + str.slice(1);
+    }
+    function atruleStart(str, node) {
+      let name = "@" + node.name;
+      let params = node.params ? str.rawValue(node, "params") : "";
+      let afterName = node.raws.afterName;
+      if (typeof afterName === "undefined") {
+        afterName = params ? " " : "";
+      } else if (afterName === "" && params && !AT_NAME_END.test(params[0])) {
+        afterName = " ";
+      }
+      return name + afterName + params;
+    }
+    function pushBody(str, stack, node) {
+      let nodes = node.nodes;
+      let last = nodes.length - 1;
+      while (last > 0) {
+        if (nodes[last].type !== "comment")
+          break;
+        last -= 1;
+      }
+      let semicolon = str.raw(node, "semicolon");
+      let isDocument = node.type === "document";
+      for (let i = nodes.length - 1; i >= 0; i--) {
+        let child = nodes[i];
+        let childSemicolon = last !== i || semicolon;
+        if (!childSemicolon && i < nodes.length - 1 && (child.type === "atrule" && !child.nodes || child.type === "decl" && child.prop.startsWith("--"))) {
+          childSemicolon = true;
+        }
+        stack.push({
+          document: isDocument,
+          node: child,
+          semicolon: childSemicolon
+        });
+      }
+    }
+    function pushBlock(str, stack, node, start) {
+      let between = str.raw(node, "between", "beforeOpen");
+      str.builder(escapeHTMLInCSS(start + between) + "{", node, "start");
+      let hasNodes = node.nodes && node.nodes.length;
+      let close = () => {
+        let after = hasNodes ? str.raw(node, "after") : str.raw(node, "after", "emptyBody");
+        if (after)
+          str.builder(escapeHTMLInCSS(after));
+        str.builder("}", node, "end");
+        if (node.type === "rule" && node.raws.ownSemicolon) {
+          str.builder(escapeHTMLInCSS(node.raws.ownSemicolon), node, "end");
+        }
+      };
+      if (hasNodes) {
+        stack.push(close);
+        pushBody(str, stack, node);
+      } else {
+        close();
+      }
+    }
+    var Stringifier = class {
+      constructor(builder) {
+        this.builder = builder;
+      }
+      atrule(node, semicolon) {
+        let start = atruleStart(this, node);
+        if (node.nodes) {
+          this.block(node, start);
+        } else {
+          let end = (node.raws.between || "") + (semicolon ? ";" : "");
+          this.builder(escapeHTMLInCSS(start + end), node);
+        }
+      }
+      beforeAfter(node, detect) {
+        let value;
+        if (node.type === "decl") {
+          value = this.raw(node, null, "beforeDecl");
+        } else if (node.type === "comment") {
+          value = this.raw(node, null, "beforeComment");
+        } else if (detect === "before") {
+          value = this.raw(node, null, "beforeRule");
+        } else {
+          value = this.raw(node, null, "beforeClose");
+        }
+        let buf = node.parent;
+        let depth = 0;
+        while (buf && buf.type !== "root") {
+          depth += 1;
+          buf = buf.parent;
+        }
+        if (value.includes("\n")) {
+          let indent = this.raw(node, null, "indent");
+          if (indent.length) {
+            for (let step = 0; step < depth; step++)
+              value += indent;
+          }
+        }
+        return value;
+      }
+      block(node, start) {
+        let between = this.raw(node, "between", "beforeOpen");
+        this.builder(escapeHTMLInCSS(start + between) + "{", node, "start");
+        let after;
+        if (node.nodes && node.nodes.length) {
+          this.body(node);
+          after = this.raw(node, "after");
+        } else {
+          after = this.raw(node, "after", "emptyBody");
+        }
+        if (after)
+          this.builder(escapeHTMLInCSS(after));
+        this.builder("}", node, "end");
+      }
+      body(node) {
+        let proto = Stringifier.prototype;
+        let expandable = ["atrule", "block", "body", "rule", "stringify"].every(
+          (method) => this[method] === proto[method]
+        );
+        let stack = [];
+        pushBody(this, stack, node);
+        while (stack.length > 0) {
+          let entry = stack.pop();
+          if (typeof entry === "function") {
+            entry();
+            continue;
+          }
+          let child = entry.node;
+          let before = this.raw(child, "before");
+          if (before) {
+            this.builder(entry.document ? before : escapeHTMLInCSS(before));
+          }
+          if (expandable && child.type === "rule") {
+            pushBlock(this, stack, child, this.rawValue(child, "selector"));
+          } else if (expandable && child.type === "atrule" && child.nodes) {
+            pushBlock(this, stack, child, atruleStart(this, child));
+          } else {
+            this.stringify(child, entry.semicolon);
+          }
+        }
+      }
+      comment(node) {
+        let left = this.raw(node, "left", "commentLeft");
+        let right = this.raw(node, "right", "commentRight");
+        this.builder(escapeHTMLInCSS("/*" + left + node.text + right + "*/"), node);
+      }
+      decl(node, semicolon) {
+        let raws = node.raws;
+        let between = this.raw(node, "between", "colon");
+        let string = node.prop + between + this.rawValue(node, "value");
+        if (node.important) {
+          string += raws.important || " !important";
+        }
+        if (semicolon)
+          string += ";";
+        this.builder(escapeHTMLInCSS(string), node);
+      }
+      document(node) {
+        this.body(node);
+      }
+      raw(node, own, detect) {
+        let value;
+        if (!detect)
+          detect = own;
+        if (own) {
+          value = node.raws[own];
+          if (typeof value !== "undefined")
+            return value;
+        }
+        let parent = node.parent;
+        if (detect === "before") {
+          if (!parent || parent.type === "root" && parent.first === node) {
+            return "";
+          }
+          if (parent && parent.type === "document") {
+            return "";
+          }
+        }
+        if (!parent)
+          return DEFAULT_RAW[detect];
+        let root2 = node.root();
+        let cache = root2.rawCache || (root2.rawCache = {});
+        if (typeof cache[detect] !== "undefined") {
+          return cache[detect];
+        }
+        if (detect === "before" || detect === "after") {
+          return this.beforeAfter(node, detect);
+        } else {
+          let method = "raw" + capitalize(detect);
+          if (this[method]) {
+            value = this[method](root2, node);
+          } else {
+            root2.walk((i) => {
+              value = i.raws[own];
+              if (typeof value !== "undefined")
+                return false;
+            });
+          }
+        }
+        if (typeof value === "undefined")
+          value = DEFAULT_RAW[detect];
+        cache[detect] = value;
+        return value;
+      }
+      rawBeforeClose(root2) {
+        let value;
+        root2.walk((i) => {
+          if (i.nodes && i.nodes.length > 0) {
+            if (typeof i.raws.after !== "undefined") {
+              value = i.raws.after;
+              if (value.includes("\n")) {
+                value = value.replace(/[^\n]+$/, "");
+              }
+              return false;
+            }
+          }
+        });
+        if (value)
+          value = value.replace(/\S/g, "");
+        return value;
+      }
+      rawBeforeComment(root2, node) {
+        let value;
+        root2.walkComments((i) => {
+          if (typeof i.raws.before !== "undefined") {
+            value = i.raws.before;
+            if (value.includes("\n")) {
+              value = value.replace(/[^\n]+$/, "");
+            }
+            return false;
+          }
+        });
+        if (typeof value === "undefined") {
+          value = this.raw(node, null, "beforeDecl");
+        } else if (value) {
+          value = value.replace(/\S/g, "");
+        }
+        return value;
+      }
+      rawBeforeDecl(root2, node) {
+        let value;
+        root2.walkDecls((i) => {
+          if (typeof i.raws.before !== "undefined") {
+            value = i.raws.before;
+            if (value.includes("\n")) {
+              value = value.replace(/[^\n]+$/, "");
+            }
+            return false;
+          }
+        });
+        if (typeof value === "undefined") {
+          value = this.raw(node, null, "beforeRule");
+        } else if (value) {
+          value = value.replace(/\S/g, "");
+        }
+        return value;
+      }
+      rawBeforeOpen(root2) {
+        let value;
+        root2.walk((i) => {
+          if (i.type !== "decl") {
+            value = i.raws.between;
+            if (typeof value !== "undefined")
+              return false;
+          }
+        });
+        return value;
+      }
+      rawBeforeRule(root2) {
+        let value;
+        root2.walk((i) => {
+          if (i.nodes && (i.parent !== root2 || root2.first !== i)) {
+            if (typeof i.raws.before !== "undefined") {
+              value = i.raws.before;
+              if (value.includes("\n")) {
+                value = value.replace(/[^\n]+$/, "");
+              }
+              return false;
+            }
+          }
+        });
+        if (value)
+          value = value.replace(/\S/g, "");
+        return value;
+      }
+      rawColon(root2) {
+        let value;
+        root2.walkDecls((i) => {
+          if (typeof i.raws.between !== "undefined") {
+            value = i.raws.between.replace(/[^\s:]/g, "");
+            return false;
+          }
+        });
+        return value;
+      }
+      rawEmptyBody(root2) {
+        let value;
+        root2.walk((i) => {
+          if (i.nodes && i.nodes.length === 0) {
+            value = i.raws.after;
+            if (typeof value !== "undefined")
+              return false;
+          }
+        });
+        return value;
+      }
+      rawIndent(root2) {
+        if (root2.raws.indent)
+          return root2.raws.indent;
+        let value;
+        root2.walk((i) => {
+          let p = i.parent;
+          if (p && p !== root2 && p.parent && p.parent === root2) {
+            if (typeof i.raws.before !== "undefined") {
+              let parts = i.raws.before.split("\n");
+              value = parts[parts.length - 1];
+              value = value.replace(/\S/g, "");
+              return false;
+            }
+          }
+        });
+        return value;
+      }
+      rawSemicolon(root2) {
+        let value;
+        root2.walk((i) => {
+          if (i.nodes && i.nodes.length && i.last.type === "decl") {
+            value = i.raws.semicolon;
+            if (typeof value !== "undefined")
+              return false;
+          }
+        });
+        return value;
+      }
+      rawValue(node, prop) {
+        let value = node[prop];
+        let raw = node.raws[prop];
+        if (raw && raw.value === value) {
+          return raw.raw;
+        }
+        return value;
+      }
+      root(node) {
+        this.body(node);
+        if (node.raws.after) {
+          let after = node.raws.after;
+          let isDocument = node.parent && node.parent.type === "document";
+          this.builder(isDocument ? after : escapeHTMLInCSS(after));
+        }
+      }
+      rule(node) {
+        this.block(node, this.rawValue(node, "selector"));
+        if (node.raws.ownSemicolon) {
+          this.builder(escapeHTMLInCSS(node.raws.ownSemicolon), node, "end");
+        }
+      }
+      stringify(node, semicolon) {
+        if (!this[node.type]) {
+          throw new Error(
+            "Unknown AST node type " + node.type + ". Maybe you need to change PostCSS stringifier."
+          );
+        }
+        this[node.type](node, semicolon);
+      }
+    };
+    module2.exports = Stringifier;
+    Stringifier.default = Stringifier;
+  }
+});
+
+// node_modules/postcss/lib/stringify.js
+var require_stringify4 = __commonJS({
+  "node_modules/postcss/lib/stringify.js"(exports, module2) {
+    "use strict";
+    var Stringifier = require_stringifier();
+    function stringify2(node, builder) {
+      let str = new Stringifier(builder);
+      str.stringify(node);
+    }
+    module2.exports = stringify2;
+    stringify2.default = stringify2;
+  }
+});
+
+// node_modules/postcss/lib/symbols.js
+var require_symbols = __commonJS({
+  "node_modules/postcss/lib/symbols.js"(exports, module2) {
+    "use strict";
+    module2.exports.isClean = Symbol("isClean");
+    module2.exports.my = Symbol("my");
+  }
+});
+
+// node_modules/postcss/lib/node.js
+var require_node2 = __commonJS({
+  "node_modules/postcss/lib/node.js"(exports, module2) {
+    "use strict";
+    var CssSyntaxError2 = require_css_syntax_error();
+    var Stringifier = require_stringifier();
+    var stringify2 = require_stringify4();
+    var { isClean, my } = require_symbols();
+    function cloneNode(obj, parent) {
+      let cloned = new obj.constructor();
+      let stack = [[obj, cloned, parent]];
+      while (stack.length > 0) {
+        let [source, target, targetParent] = stack.pop();
+        for (let i in source) {
+          if (!Object.prototype.hasOwnProperty.call(source, i)) {
+            continue;
+          }
+          if (i === "proxyCache")
+            continue;
+          let value = source[i];
+          let type = typeof value;
+          if (i === "parent" && type === "object") {
+            if (targetParent)
+              target[i] = targetParent;
+          } else if (i === "source") {
+            target[i] = value;
+          } else if (Array.isArray(value)) {
+            let children = [];
+            target[i] = children;
+            for (let j of value) {
+              let childClone = new j.constructor();
+              children.push(childClone);
+              stack.push([j, childClone, target]);
+            }
+          } else {
+            if (type === "object" && value !== null) {
+              let valueClone = new value.constructor();
+              stack.push([value, valueClone, void 0]);
+              value = valueClone;
+            }
+            target[i] = value;
+          }
+        }
+      }
+      return cloned;
+    }
+    function sourceOffset(inputCSS, position) {
+      if (position && typeof position.offset !== "undefined") {
+        return position.offset;
+      }
+      let column = 1;
+      let line = 1;
+      let offset = 0;
+      for (let i = 0; i < inputCSS.length; i++) {
+        if (line === position.line && column === position.column) {
+          offset = i;
+          break;
+        }
+        if (inputCSS[i] === "\n") {
+          column = 1;
+          line += 1;
+        } else {
+          column += 1;
+        }
+      }
+      return offset;
+    }
+    var Node3 = class {
+      get proxyOf() {
+        return this;
+      }
+      constructor(defaults = {}) {
+        this.raws = {};
+        this[isClean] = false;
+        this[my] = true;
+        for (let name of Object.keys(defaults)) {
+          if (name === "__proto__")
+            continue;
+          if (name === "nodes") {
+            this.nodes = [];
+            for (let node of defaults[name]) {
+              if (typeof node.clone === "function" && node.parent) {
+                this.append(node.clone());
+              } else {
+                this.append(node);
+              }
+            }
+          } else {
+            this[name] = defaults[name];
+          }
+        }
+      }
+      addToError(error) {
+        error.postcssNode = this;
+        if (error.stack && this.source && /\n\s{4}at /.test(error.stack)) {
+          let s = this.source;
+          error.stack = error.stack.replace(
+            /\n\s{4}at /,
+            `$&${s.input.from}:${s.start.line}:${s.start.column}$&`
+          );
+        }
+        return error;
+      }
+      after(add) {
+        this.parent.insertAfter(this, add);
+        return this;
+      }
+      assign(overrides = {}) {
+        for (let name in overrides) {
+          this[name] = overrides[name];
+        }
+        return this;
+      }
+      before(add) {
+        this.parent.insertBefore(this, add);
+        return this;
+      }
+      cleanRaws(keepBetween) {
+        delete this.raws.before;
+        delete this.raws.after;
+        if (!keepBetween)
+          delete this.raws.between;
+      }
+      clone(overrides = {}) {
+        let cloned = cloneNode(this);
+        for (let name in overrides) {
+          cloned[name] = overrides[name];
+        }
+        return cloned;
+      }
+      cloneAfter(overrides = {}) {
+        let cloned = this.clone(overrides);
+        this.parent.insertAfter(this, cloned);
+        return cloned;
+      }
+      cloneBefore(overrides = {}) {
+        let cloned = this.clone(overrides);
+        this.parent.insertBefore(this, cloned);
+        return cloned;
+      }
+      error(message, opts = {}) {
+        if (this.source) {
+          let { end, start } = this.rangeBy(opts);
+          return this.source.input.error(
+            message,
+            { column: start.column, line: start.line },
+            { column: end.column, line: end.line },
+            opts
+          );
+        }
+        return new CssSyntaxError2(message);
+      }
+      getProxyProcessor() {
+        return {
+          get(node, prop) {
+            if (prop === "proxyOf") {
+              return node;
+            } else if (prop === "root") {
+              return () => node.root().toProxy();
+            } else {
+              return node[prop];
+            }
+          },
+          set(node, prop, value) {
+            if (node[prop] === value)
+              return true;
+            node[prop] = value;
+            if (prop === "prop" || prop === "value" || prop === "name" || prop === "params" || prop === "important" || /* c8 ignore next */
+            prop === "text") {
+              node.markDirty();
+            }
+            return true;
+          }
+        };
+      }
+      /* c8 ignore next 3 */
+      markClean() {
+        this[isClean] = true;
+      }
+      markDirty() {
+        if (this[isClean]) {
+          this[isClean] = false;
+          let next = this;
+          while (next = next.parent) {
+            next[isClean] = false;
+          }
+        }
+      }
+      next() {
+        if (!this.parent)
+          return void 0;
+        let index = this.parent.index(this);
+        return this.parent.nodes[index + 1];
+      }
+      positionBy(opts = {}) {
+        let inputString = "document" in this.source.input ? this.source.input.document : this.source.input.css;
+        let pos = {
+          column: this.source.start.column,
+          line: this.source.start.line,
+          offset: sourceOffset(inputString, this.source.start)
+        };
+        if (opts.index) {
+          pos = this.positionInside(opts.index);
+        } else if (opts.word) {
+          let stringRepresentation = inputString.slice(
+            sourceOffset(inputString, this.source.start),
+            sourceOffset(inputString, this.source.end)
+          );
+          let index = stringRepresentation.indexOf(opts.word);
+          if (index !== -1)
+            pos = this.positionInside(index);
+        }
+        return pos;
+      }
+      positionInside(index) {
+        let column = this.source.start.column;
+        let line = this.source.start.line;
+        let inputString = "document" in this.source.input ? this.source.input.document : this.source.input.css;
+        let offset = sourceOffset(inputString, this.source.start);
+        let end = offset + index;
+        for (let i = offset; i < end; i++) {
+          if (inputString[i] === "\n") {
+            column = 1;
+            line += 1;
+          } else {
+            column += 1;
+          }
+        }
+        return { column, line, offset: end };
+      }
+      prev() {
+        if (!this.parent)
+          return void 0;
+        let index = this.parent.index(this);
+        return this.parent.nodes[index - 1];
+      }
+      rangeBy(opts = {}) {
+        let inputString = "document" in this.source.input ? this.source.input.document : this.source.input.css;
+        let start = {
+          column: this.source.start.column,
+          line: this.source.start.line,
+          offset: sourceOffset(inputString, this.source.start)
+        };
+        let end = this.source.end ? {
+          column: this.source.end.column + 1,
+          line: this.source.end.line,
+          offset: typeof this.source.end.offset === "number" ? (
+            // `source.end.offset` is exclusive, so we don't need to add 1
+            this.source.end.offset
+          ) : (
+            // Since line/column in this.source.end is inclusive,
+            // the `sourceOffset(... , this.source.end)` returns an inclusive offset.
+            // So, we add 1 to convert it to exclusive.
+            sourceOffset(inputString, this.source.end) + 1
+          )
+        } : {
+          column: start.column + 1,
+          line: start.line,
+          offset: start.offset + 1
+        };
+        if (opts.word) {
+          let stringRepresentation = inputString.slice(
+            sourceOffset(inputString, this.source.start),
+            sourceOffset(inputString, this.source.end)
+          );
+          let index = stringRepresentation.indexOf(opts.word);
+          if (index !== -1) {
+            start = this.positionInside(index);
+            end = this.positionInside(index + opts.word.length);
+          }
+        } else {
+          if (opts.start) {
+            start = {
+              column: opts.start.column,
+              line: opts.start.line,
+              offset: sourceOffset(inputString, opts.start)
+            };
+          } else if (typeof opts.index === "number") {
+            start = this.positionInside(opts.index);
+          }
+          if (opts.end) {
+            end = {
+              column: opts.end.column,
+              line: opts.end.line,
+              offset: sourceOffset(inputString, opts.end)
+            };
+          } else if (typeof opts.endIndex === "number") {
+            end = this.positionInside(opts.endIndex);
+          } else if (typeof opts.index === "number") {
+            end = this.positionInside(opts.index + 1);
+          }
+        }
+        if (end.line < start.line || end.line === start.line && end.column <= start.column) {
+          end = {
+            column: start.column + 1,
+            line: start.line,
+            offset: start.offset + 1
+          };
+        }
+        return { end, start };
+      }
+      raw(prop, defaultType) {
+        let str = new Stringifier();
+        return str.raw(this, prop, defaultType);
+      }
+      remove() {
+        if (this.parent) {
+          this.parent.removeChild(this);
+        }
+        this.parent = void 0;
+        return this;
+      }
+      replaceWith(...nodes) {
+        if (this.parent) {
+          let bookmark = this;
+          let foundSelf = false;
+          for (let node of nodes) {
+            if (node === this) {
+              foundSelf = true;
+            } else if (foundSelf) {
+              this.parent.insertAfter(bookmark, node);
+              bookmark = node;
+            } else {
+              this.parent.insertBefore(bookmark, node);
+            }
+          }
+          if (!foundSelf) {
+            this.remove();
+          }
+        }
+        return this;
+      }
+      root() {
+        let result = this;
+        while (result.parent && result.parent.type !== "document") {
+          result = result.parent;
+        }
+        return result;
+      }
+      toJSON(_, inputs) {
+        let emitInputs = inputs == null;
+        inputs = inputs || /* @__PURE__ */ new Map();
+        let holderOfRoot = [];
+        let queue = [[this, holderOfRoot, 0]];
+        for (let step = 0; step < queue.length; step++) {
+          let [node, holder, key] = queue[step];
+          let fixed2 = {};
+          holder[key] = fixed2;
+          for (let name in node) {
+            if (!Object.prototype.hasOwnProperty.call(node, name)) {
+              continue;
+            }
+            if (name === "parent" || name === "proxyCache")
+              continue;
+            let value = node[name];
+            if (Array.isArray(value)) {
+              let fixedArray = [];
+              fixed2[name] = fixedArray;
+              for (let i = 0; i < value.length; i++) {
+                let item = value[i];
+                if (typeof item === "object" && item.toJSON) {
+                  if (item.toJSON === Node3.prototype.toJSON) {
+                    queue.push([item, fixedArray, i]);
+                  } else {
+                    fixedArray[i] = item.toJSON(null, inputs);
+                  }
+                } else {
+                  fixedArray[i] = item;
+                }
+              }
+            } else if (typeof value === "object" && value.toJSON) {
+              if (value.toJSON === Node3.prototype.toJSON) {
+                queue.push([value, fixed2, name]);
+              } else {
+                fixed2[name] = value.toJSON(null, inputs);
+              }
+            } else if (name === "source") {
+              if (value == null)
+                continue;
+              let inputId = inputs.get(value.input);
+              if (inputId == null) {
+                inputId = inputs.size;
+                inputs.set(value.input, inputId);
+              }
+              fixed2[name] = {
+                end: value.end,
+                inputId,
+                start: value.start
+              };
+            } else {
+              fixed2[name] = value;
+            }
+          }
+        }
+        let fixed = holderOfRoot[0];
+        if (emitInputs) {
+          fixed.inputs = [...inputs.keys()].map((input) => input.toJSON());
+        }
+        return fixed;
+      }
+      toProxy() {
+        if (!this.proxyCache) {
+          this.proxyCache = new Proxy(this, this.getProxyProcessor());
+        }
+        return this.proxyCache;
+      }
+      toString(stringifier = stringify2) {
+        if (stringifier.stringify)
+          stringifier = stringifier.stringify;
+        let result = "";
+        stringifier(this, (i) => {
+          result += i;
+        });
+        return result;
+      }
+      warn(result, text, opts = {}) {
+        let data = { node: this };
+        for (let i in opts)
+          data[i] = opts[i];
+        return result.warn(text, data);
+      }
+    };
+    module2.exports = Node3;
+    Node3.default = Node3;
+  }
+});
+
+// node_modules/postcss/lib/comment.js
+var require_comment = __commonJS({
+  "node_modules/postcss/lib/comment.js"(exports, module2) {
+    "use strict";
+    var Node3 = require_node2();
+    var Comment2 = class extends Node3 {
+      constructor(defaults) {
+        super(defaults);
+        this.type = "comment";
+      }
+    };
+    module2.exports = Comment2;
+    Comment2.default = Comment2;
+  }
+});
+
+// node_modules/postcss/lib/declaration.js
+var require_declaration = __commonJS({
+  "node_modules/postcss/lib/declaration.js"(exports, module2) {
+    "use strict";
+    var Node3 = require_node2();
+    var Declaration2 = class extends Node3 {
+      get variable() {
+        return this.prop.startsWith("--") || this.prop[0] === "$";
+      }
+      constructor(defaults) {
+        if (defaults && typeof defaults.value !== "undefined" && typeof defaults.value !== "string") {
+          defaults = { ...defaults, value: String(defaults.value) };
+        }
+        super(defaults);
+        this.type = "decl";
+      }
+    };
+    module2.exports = Declaration2;
+    Declaration2.default = Declaration2;
+  }
+});
+
+// node_modules/postcss/lib/container.js
+var require_container = __commonJS({
+  "node_modules/postcss/lib/container.js"(exports, module2) {
+    "use strict";
+    var Comment2 = require_comment();
+    var Declaration2 = require_declaration();
+    var Node3 = require_node2();
+    var { isClean, my } = require_symbols();
+    var AtRule2;
+    var parse2;
+    var Root2;
+    var Rule2;
+    function cleanSource(nodes) {
+      let stack = nodes.slice();
+      while (stack.length > 0) {
+        let node = stack.pop();
+        delete node.source;
+        if (node.nodes) {
+          node.nodes = node.nodes.slice();
+          for (let i of node.nodes)
+            stack.push(i);
+        }
+      }
+      return nodes.slice();
+    }
+    function markTreeDirty(node) {
+      let stack = [node];
+      while (stack.length > 0) {
+        let next = stack.pop();
+        next[isClean] = false;
+        if (next.proxyOf.nodes) {
+          for (let i of next.proxyOf.nodes)
+            stack.push(i);
+        }
+      }
+    }
+    var Container2 = class extends Node3 {
+      get first() {
+        if (!this.proxyOf.nodes)
+          return void 0;
+        return this.proxyOf.nodes[0];
+      }
+      get last() {
+        if (!this.proxyOf.nodes)
+          return void 0;
+        return this.proxyOf.nodes[this.proxyOf.nodes.length - 1];
+      }
+      append(...children) {
+        for (let child of children) {
+          let nodes = this.normalize(child, this.last);
+          for (let node of nodes)
+            this.proxyOf.nodes.push(node);
+        }
+        this.markDirty();
+        return this;
+      }
+      cleanRaws(keepBetween) {
+        let stack = [this];
+        while (stack.length > 0) {
+          let node = stack.pop();
+          if (node !== this && node.cleanRaws !== Container2.prototype.cleanRaws) {
+            node.cleanRaws(keepBetween);
+            continue;
+          }
+          Node3.prototype.cleanRaws.call(node, keepBetween);
+          if (node.nodes) {
+            for (let child of node.nodes)
+              stack.push(child);
+          }
+        }
+      }
+      each(callback) {
+        if (!this.proxyOf.nodes)
+          return void 0;
+        let iterator = this.getIterator();
+        let index, result;
+        while (this.indexes[iterator] < this.proxyOf.nodes.length) {
+          index = this.indexes[iterator];
+          result = callback(this.proxyOf.nodes[index], index);
+          if (result === false)
+            break;
+          this.indexes[iterator] += 1;
+        }
+        delete this.indexes[iterator];
+        return result;
+      }
+      every(condition) {
+        return this.nodes.every(condition);
+      }
+      getIterator() {
+        if (!this.lastEach)
+          this.lastEach = 0;
+        if (!this.indexes)
+          this.indexes = {};
+        this.lastEach += 1;
+        let iterator = this.lastEach;
+        this.indexes[iterator] = 0;
+        return iterator;
+      }
+      getProxyProcessor() {
+        return {
+          get(node, prop) {
+            if (prop === "proxyOf") {
+              return node;
+            } else if (!node[prop]) {
+              return node[prop];
+            } else if (prop === "each" || typeof prop === "string" && prop.startsWith("walk")) {
+              return (...args) => {
+                return node[prop](
+                  ...args.map((i) => {
+                    if (typeof i === "function") {
+                      return (child, index) => i(child.toProxy(), index);
+                    } else {
+                      return i;
+                    }
+                  })
+                );
+              };
+            } else if (prop === "every" || prop === "some") {
+              return (cb) => {
+                return node[prop](
+                  (child, ...other) => cb(child.toProxy(), ...other)
+                );
+              };
+            } else if (prop === "root") {
+              return () => node.root().toProxy();
+            } else if (prop === "nodes") {
+              return node.nodes.map((i) => i.toProxy());
+            } else if (prop === "first" || prop === "last") {
+              return node[prop].toProxy();
+            } else {
+              return node[prop];
+            }
+          },
+          set(node, prop, value) {
+            if (node[prop] === value)
+              return true;
+            node[prop] = value;
+            if (prop === "name" || prop === "params" || prop === "selector") {
+              node.markDirty();
+            }
+            return true;
+          }
+        };
+      }
+      index(child) {
+        if (typeof child === "number")
+          return child;
+        if (child.proxyOf)
+          child = child.proxyOf;
+        return this.proxyOf.nodes.indexOf(child);
+      }
+      insertAfter(exist, add) {
+        let existIndex = this.index(exist);
+        let nodes = this.normalize(add, this.proxyOf.nodes[existIndex]).reverse();
+        existIndex = this.index(exist);
+        for (let node of nodes)
+          this.proxyOf.nodes.splice(existIndex + 1, 0, node);
+        let index;
+        for (let id in this.indexes) {
+          index = this.indexes[id];
+          if (existIndex < index) {
+            this.indexes[id] = index + nodes.length;
+          }
+        }
+        this.markDirty();
+        return this;
+      }
+      insertBefore(exist, add) {
+        let existIndex = this.index(exist);
+        let type = existIndex === 0 ? "prepend" : false;
+        let nodes = this.normalize(
+          add,
+          this.proxyOf.nodes[existIndex],
+          type
+        ).reverse();
+        existIndex = this.index(exist);
+        for (let node of nodes)
+          this.proxyOf.nodes.splice(existIndex, 0, node);
+        let index;
+        for (let id in this.indexes) {
+          index = this.indexes[id];
+          if (existIndex <= index) {
+            this.indexes[id] = index + nodes.length;
+          }
+        }
+        this.markDirty();
+        return this;
+      }
+      normalize(nodes, sample) {
+        if (typeof nodes === "string") {
+          nodes = cleanSource(parse2(nodes).nodes);
+        } else if (typeof nodes === "undefined") {
+          nodes = [];
+        } else if (Array.isArray(nodes)) {
+          nodes = nodes.slice(0);
+          for (let i of nodes) {
+            if (i.parent)
+              i.parent.removeChild(i, "ignore");
+          }
+        } else if (nodes.type === "root" && this.type !== "document") {
+          nodes = nodes.nodes.slice(0);
+          for (let i of nodes) {
+            if (i.parent)
+              i.parent.removeChild(i, "ignore");
+          }
+        } else if (nodes.type) {
+          nodes = [nodes];
+        } else if (nodes.prop) {
+          if (typeof nodes.value === "undefined") {
+            throw new Error("Value field is missed in node creation");
+          } else if (typeof nodes.value !== "string") {
+            nodes.value = String(nodes.value);
+          }
+          nodes = [new Declaration2(nodes)];
+        } else if (nodes.selector || nodes.selectors) {
+          nodes = [new Rule2(nodes)];
+        } else if (nodes.name) {
+          nodes = [new AtRule2(nodes)];
+        } else if (nodes.text) {
+          nodes = [new Comment2(nodes)];
+        } else {
+          throw new Error("Unknown node type in node creation");
+        }
+        let processed = nodes.map((i) => {
+          if (!i[my])
+            Container2.rebuild(i);
+          i = i.proxyOf;
+          if (i.parent)
+            i.parent.removeChild(i);
+          if (i[isClean])
+            markTreeDirty(i);
+          if (!i.raws)
+            i.raws = {};
+          if (typeof i.raws.before === "undefined") {
+            if (sample && typeof sample.raws.before !== "undefined") {
+              i.raws.before = sample.raws.before.replace(/\S/g, "");
+            }
+          }
+          i.parent = this.proxyOf;
+          return i;
+        });
+        return processed;
+      }
+      prepend(...children) {
+        children = children.reverse();
+        for (let child of children) {
+          let nodes = this.normalize(child, this.first, "prepend").reverse();
+          for (let node of nodes)
+            this.proxyOf.nodes.unshift(node);
+          for (let id in this.indexes) {
+            this.indexes[id] = this.indexes[id] + nodes.length;
+          }
+        }
+        this.markDirty();
+        return this;
+      }
+      push(child) {
+        child.parent = this;
+        this.proxyOf.nodes.push(child);
+        return this;
+      }
+      removeAll() {
+        for (let node of this.proxyOf.nodes)
+          node.parent = void 0;
+        this.proxyOf.nodes = [];
+        this.markDirty();
+        return this;
+      }
+      removeChild(child) {
+        child = this.index(child);
+        this.proxyOf.nodes[child].parent = void 0;
+        this.proxyOf.nodes.splice(child, 1);
+        let index;
+        for (let id in this.indexes) {
+          index = this.indexes[id];
+          if (index >= child) {
+            this.indexes[id] = index - 1;
+          }
+        }
+        this.markDirty();
+        return this;
+      }
+      replaceValues(pattern, opts, callback) {
+        if (!callback) {
+          callback = opts;
+          opts = {};
+        }
+        this.walkDecls((decl2) => {
+          if (opts.props && !opts.props.includes(decl2.prop))
+            return;
+          if (opts.fast && !decl2.value.includes(opts.fast))
+            return;
+          decl2.value = decl2.value.replace(pattern, callback);
+        });
+        this.markDirty();
+        return this;
+      }
+      some(condition) {
+        return this.nodes.some(condition);
+      }
+      walk(callback) {
+        if (!this.proxyOf.nodes)
+          return void 0;
+        let stack = [{ iterator: this.getIterator(), node: this.proxyOf }];
+        while (stack.length > 0) {
+          let { iterator, node } = stack[stack.length - 1];
+          let index = node.indexes[iterator];
+          if (index >= node.proxyOf.nodes.length) {
+            delete node.indexes[iterator];
+            stack.pop();
+            let parent = stack[stack.length - 1];
+            if (parent)
+              parent.node.indexes[parent.iterator] += 1;
+            continue;
+          }
+          let child = node.proxyOf.nodes[index];
+          let result;
+          try {
+            result = callback(child, index);
+          } catch (e) {
+            throw child.addToError(e);
+          }
+          if (result === false) {
+            for (let opened of stack) {
+              delete opened.node.indexes[opened.iterator];
+            }
+            return false;
+          }
+          if (child.walk && child.proxyOf.nodes) {
+            stack.push({ iterator: child.getIterator(), node: child });
+          } else {
+            node.indexes[iterator] += 1;
+          }
+        }
+        return void 0;
+      }
+      walkAtRules(name, callback) {
+        if (!callback) {
+          callback = name;
+          return this.walk((child, i) => {
+            if (child.type === "atrule") {
+              return callback(child, i);
+            }
+          });
+        }
+        if (name instanceof RegExp) {
+          return this.walk((child, i) => {
+            if (child.type === "atrule" && name.test(child.name)) {
+              return callback(child, i);
+            }
+          });
+        }
+        return this.walk((child, i) => {
+          if (child.type === "atrule" && child.name === name) {
+            return callback(child, i);
+          }
+        });
+      }
+      walkComments(callback) {
+        return this.walk((child, i) => {
+          if (child.type === "comment") {
+            return callback(child, i);
+          }
+        });
+      }
+      walkDecls(prop, callback) {
+        if (!callback) {
+          callback = prop;
+          return this.walk((child, i) => {
+            if (child.type === "decl") {
+              return callback(child, i);
+            }
+          });
+        }
+        if (prop instanceof RegExp) {
+          return this.walk((child, i) => {
+            if (child.type === "decl" && prop.test(child.prop)) {
+              return callback(child, i);
+            }
+          });
+        }
+        return this.walk((child, i) => {
+          if (child.type === "decl" && child.prop === prop) {
+            return callback(child, i);
+          }
+        });
+      }
+      walkRules(selector, callback) {
+        if (!callback) {
+          callback = selector;
+          return this.walk((child, i) => {
+            if (child.type === "rule") {
+              return callback(child, i);
+            }
+          });
+        }
+        if (selector instanceof RegExp) {
+          return this.walk((child, i) => {
+            if (child.type === "rule" && selector.test(child.selector)) {
+              return callback(child, i);
+            }
+          });
+        }
+        return this.walk((child, i) => {
+          if (child.type === "rule" && child.selector === selector) {
+            return callback(child, i);
+          }
+        });
+      }
+    };
+    Container2.registerParse = (dependant) => {
+      parse2 = dependant;
+    };
+    Container2.registerRule = (dependant) => {
+      Rule2 = dependant;
+    };
+    Container2.registerAtRule = (dependant) => {
+      AtRule2 = dependant;
+    };
+    Container2.registerRoot = (dependant) => {
+      Root2 = dependant;
+    };
+    module2.exports = Container2;
+    Container2.default = Container2;
+    Container2.rebuild = (node) => {
+      let stack = [node];
+      while (stack.length > 0) {
+        let next = stack.pop();
+        if (next.type === "atrule") {
+          Object.setPrototypeOf(next, AtRule2.prototype);
+        } else if (next.type === "rule") {
+          Object.setPrototypeOf(next, Rule2.prototype);
+        } else if (next.type === "decl") {
+          Object.setPrototypeOf(next, Declaration2.prototype);
+        } else if (next.type === "comment") {
+          Object.setPrototypeOf(next, Comment2.prototype);
+        } else if (next.type === "root") {
+          Object.setPrototypeOf(next, Root2.prototype);
+        }
+        next[my] = true;
+        if (next.nodes) {
+          for (let child of next.nodes)
+            stack.push(child);
+        }
+      }
+    };
+  }
+});
+
+// node_modules/postcss/lib/at-rule.js
+var require_at_rule = __commonJS({
+  "node_modules/postcss/lib/at-rule.js"(exports, module2) {
+    "use strict";
+    var Container2 = require_container();
+    var AtRule2 = class extends Container2 {
+      constructor(defaults) {
+        super(defaults);
+        this.type = "atrule";
+      }
+      append(...children) {
+        if (!this.proxyOf.nodes)
+          this.nodes = [];
+        return super.append(...children);
+      }
+      prepend(...children) {
+        if (!this.proxyOf.nodes)
+          this.nodes = [];
+        return super.prepend(...children);
+      }
+    };
+    module2.exports = AtRule2;
+    AtRule2.default = AtRule2;
+    Container2.registerAtRule(AtRule2);
+  }
+});
+
+// node_modules/postcss/lib/document.js
+var require_document = __commonJS({
+  "node_modules/postcss/lib/document.js"(exports, module2) {
+    "use strict";
+    var Container2 = require_container();
+    var LazyResult;
+    var Processor2;
+    var Document2 = class extends Container2 {
+      constructor(defaults) {
+        super({ type: "document", ...defaults });
+        if (!this.nodes) {
+          this.nodes = [];
+        }
+      }
+      toResult(opts = {}) {
+        let lazy = new LazyResult(new Processor2(), this, opts);
+        return lazy.stringify();
+      }
+    };
+    Document2.registerLazyResult = (dependant) => {
+      LazyResult = dependant;
+    };
+    Document2.registerProcessor = (dependant) => {
+      Processor2 = dependant;
+    };
+    module2.exports = Document2;
+    Document2.default = Document2;
+  }
+});
+
+// node_modules/nanoid/non-secure/index.cjs
+var require_non_secure = __commonJS({
+  "node_modules/nanoid/non-secure/index.cjs"(exports, module2) {
+    var urlAlphabet = "useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict";
+    var customAlphabet = (alphabet, defaultSize = 21) => {
+      return (size = defaultSize) => {
+        let id = "";
+        let i = size | 0;
+        while (i-- > 0) {
+          id += alphabet[Math.random() * alphabet.length | 0];
+        }
+        return id;
+      };
+    };
+    var nanoid = (size = 21) => {
+      let id = "";
+      let i = size | 0;
+      while (i-- > 0) {
+        id += urlAlphabet[Math.random() * 64 | 0];
+      }
+      return id;
+    };
+    module2.exports = { nanoid, customAlphabet };
+  }
+});
+
+// (disabled):node_modules/source-map-js/source-map.js
+var require_source_map = __commonJS({
+  "(disabled):node_modules/source-map-js/source-map.js"() {
+  }
+});
+
+// node_modules/postcss/lib/previous-map.js
+var require_previous_map = __commonJS({
+  "node_modules/postcss/lib/previous-map.js"(exports, module2) {
+    "use strict";
+    var { existsSync, readFileSync } = require("fs");
+    var { dirname, isAbsolute, join, relative, sep } = require("path");
+    var { SourceMapConsumer, SourceMapGenerator } = require_source_map();
+    function fromBase64(str) {
+      if (Buffer) {
+        return Buffer.from(str, "base64").toString();
+      } else {
+        return window.atob(str);
+      }
+    }
+    var PreviousMap = class {
+      constructor(css, opts) {
+        if (opts.map === false)
+          return;
+        if (opts.unsafeMap)
+          this.unsafeMap = true;
+        this.loadAnnotation(css);
+        this.inline = this.startWith(this.annotation, "data:");
+        let prev = opts.map ? opts.map.prev : void 0;
+        let text = this.loadMap(opts.from, prev);
+        if (!this.mapFile && opts.from) {
+          this.mapFile = opts.from;
+        }
+        if (this.mapFile)
+          this.root = dirname(this.mapFile);
+        if (text)
+          this.text = text;
+      }
+      consumer() {
+        if (!this.consumerCache) {
+          this.consumerCache = new SourceMapConsumer(this.json || this.text);
+        }
+        return this.consumerCache;
+      }
+      decodeInline(text) {
+        let baseCharsetUri = /^data:application\/json;charset=utf-?8;base64,/;
+        let baseUri = /^data:application\/json;base64,/;
+        let charsetUri = /^data:application\/json;charset=utf-?8,/;
+        let uri = /^data:application\/json,/;
+        let uriMatch = text.match(charsetUri) || text.match(uri);
+        if (uriMatch) {
+          return decodeURIComponent(text.substr(uriMatch[0].length));
+        }
+        let baseUriMatch = text.match(baseCharsetUri) || text.match(baseUri);
+        if (baseUriMatch) {
+          return fromBase64(text.substr(baseUriMatch[0].length));
+        }
+        let encoding = text.slice("data:application/json;".length);
+        encoding = encoding.slice(0, encoding.indexOf(","));
+        throw new Error("Unsupported source map encoding " + encoding);
+      }
+      getAnnotationURL(sourceMapString) {
+        return sourceMapString.replace(/^\/\*\s*# sourceMappingURL=/, "").trim();
+      }
+      isMap(map) {
+        if (typeof map !== "object")
+          return false;
+        return typeof map.mappings === "string" || typeof map._mappings === "string" || Array.isArray(map.sections);
+      }
+      loadAnnotation(css) {
+        let comments = css.match(/\/\*\s*# sourceMappingURL=/g);
+        if (!comments)
+          return;
+        let start = css.lastIndexOf(comments.pop());
+        let end = css.indexOf("*/", start);
+        if (start > -1 && end > -1) {
+          this.annotation = this.getAnnotationURL(css.substring(start, end));
+        }
+      }
+      loadFile(path, cssFile, trusted) {
+        if (!trusted && !this.unsafeMap) {
+          if (!/\.map$/i.test(path))
+            return void 0;
+          if (!cssFile)
+            return void 0;
+          let rel = relative(dirname(cssFile), path);
+          if (rel === ".." || rel.startsWith(".." + sep) || isAbsolute(rel)) {
+            return void 0;
+          }
+        }
+        this.root = dirname(path);
+        if (existsSync(path)) {
+          this.mapFile = path;
+          return readFileSync(path, "utf-8").toString().trim();
+        }
+      }
+      loadMap(file, prev) {
+        if (prev === false)
+          return false;
+        if (prev) {
+          if (typeof prev === "string") {
+            return prev;
+          } else if (typeof prev === "function") {
+            let prevPath = prev(file);
+            if (prevPath) {
+              let map = this.loadFile(prevPath, file, true);
+              if (!map) {
+                throw new Error(
+                  "Unable to load previous source map: " + prevPath.toString()
+                );
+              }
+              return map;
+            }
+          } else if (prev instanceof SourceMapConsumer) {
+            return SourceMapGenerator.fromSourceMap(prev).toString();
+          } else if (prev instanceof SourceMapGenerator) {
+            return prev.toString();
+          } else if (this.isMap(prev)) {
+            return JSON.stringify(prev);
+          } else {
+            throw new Error(
+              "Unsupported previous source map format: " + prev.toString()
+            );
+          }
+        } else if (this.inline) {
+          return this.decodeInline(this.annotation);
+        } else if (this.annotation) {
+          let map = this.annotation;
+          if (file)
+            map = join(dirname(file), map);
+          let unknown = this.loadFile(map, file, false);
+          if (unknown) {
+            try {
+              this.json = JSON.parse(unknown.replace(/^\)]}'[^\n]*\n/, ""));
+            } catch (e) {
+              return void 0;
+            }
+          }
+          return unknown;
+        }
+      }
+      startWith(string, start) {
+        if (!string)
+          return false;
+        return string.substr(0, start.length) === start;
+      }
+      withContent() {
+        return !!(this.consumer().sourcesContent && this.consumer().sourcesContent.length > 0);
+      }
+    };
+    module2.exports = PreviousMap;
+    PreviousMap.default = PreviousMap;
+  }
+});
+
+// node_modules/postcss/lib/input.js
+var require_input = __commonJS({
+  "node_modules/postcss/lib/input.js"(exports, module2) {
+    "use strict";
+    var { nanoid } = require_non_secure();
+    var { isAbsolute, resolve } = require("path");
+    var { SourceMapConsumer, SourceMapGenerator } = require_source_map();
+    var { fileURLToPath, pathToFileURL } = require("url");
+    var CssSyntaxError2 = require_css_syntax_error();
+    var PreviousMap = require_previous_map();
+    var terminalHighlight = require_terminal_highlight();
+    var lineToIndexCache = Symbol("lineToIndexCache");
+    var sourceMapAvailable = Boolean(SourceMapConsumer && SourceMapGenerator);
+    var pathAvailable = Boolean(resolve && isAbsolute);
+    function getLineToIndex(input) {
+      if (input[lineToIndexCache])
+        return input[lineToIndexCache];
+      let lines = input.css.split("\n");
+      let lineToIndex = new Array(lines.length);
+      let prevIndex = 0;
+      for (let i = 0, l = lines.length; i < l; i++) {
+        lineToIndex[i] = prevIndex;
+        prevIndex += lines[i].length + 1;
+      }
+      input[lineToIndexCache] = lineToIndex;
+      return lineToIndex;
+    }
+    var Input2 = class {
+      get from() {
+        return this.file || this.id;
+      }
+      constructor(css, opts = {}) {
+        if (css === null || typeof css === "undefined" || typeof css === "object" && !css.toString) {
+          throw new Error(`PostCSS received ${css} instead of CSS string`);
+        }
+        this.css = css.toString();
+        if (this.css[0] === "\uFEFF" || this.css[0] === "\uFFFE") {
+          this.hasBOM = true;
+          this.css = this.css.slice(1);
+        } else {
+          this.hasBOM = false;
+        }
+        this.document = this.css;
+        if (opts.document)
+          this.document = opts.document.toString();
+        if (opts.from) {
+          if (!pathAvailable || /^\w+:\/\//.test(opts.from) || isAbsolute(opts.from)) {
+            this.file = opts.from;
+          } else {
+            this.file = resolve(opts.from);
+          }
+        }
+        if (pathAvailable && sourceMapAvailable) {
+          let map = new PreviousMap(this.css, opts);
+          if (map.text) {
+            this.map = map;
+            let file = map.consumer().file;
+            if (!this.file && file)
+              this.file = this.mapResolve(file);
+          }
+        }
+        if (!this.file) {
+          this.id = "<input css " + nanoid(6) + ">";
+        }
+        if (this.map)
+          this.map.file = this.from;
+      }
+      error(message, line, column, opts = {}) {
+        let endColumn, endLine, endOffset, offset, result;
+        if (line && typeof line === "object") {
+          let start = line;
+          let end = column;
+          if (typeof start.offset === "number") {
+            offset = start.offset;
+            let pos = this.fromOffset(offset);
+            line = pos.line;
+            column = pos.col;
+          } else {
+            line = start.line;
+            column = start.column;
+            offset = this.fromLineAndColumn(line, column);
+          }
+          if (typeof end.offset === "number") {
+            endOffset = end.offset;
+            let pos = this.fromOffset(endOffset);
+            endLine = pos.line;
+            endColumn = pos.col;
+          } else {
+            endLine = end.line;
+            endColumn = end.column;
+            endOffset = this.fromLineAndColumn(end.line, end.column);
+          }
+        } else if (!column) {
+          offset = line;
+          let pos = this.fromOffset(offset);
+          line = pos.line;
+          column = pos.col;
+        } else {
+          offset = this.fromLineAndColumn(line, column);
+        }
+        let origin = this.origin(line, column, endLine, endColumn);
+        if (origin) {
+          result = new CssSyntaxError2(
+            message,
+            origin.endLine === void 0 ? origin.line : { column: origin.column, line: origin.line },
+            origin.endLine === void 0 ? origin.column : { column: origin.endColumn, line: origin.endLine },
+            origin.source,
+            origin.file,
+            opts.plugin
+          );
+        } else {
+          result = new CssSyntaxError2(
+            message,
+            endLine === void 0 ? line : { column, line },
+            endLine === void 0 ? column : { column: endColumn, line: endLine },
+            this.css,
+            this.file,
+            opts.plugin
+          );
+        }
+        result.input = {
+          column,
+          endColumn,
+          endLine,
+          endOffset,
+          line,
+          offset,
+          source: this.css
+        };
+        if (this.file) {
+          if (pathToFileURL) {
+            result.input.url = pathToFileURL(this.file).toString();
+          }
+          result.input.file = this.file;
+        }
+        return result;
+      }
+      fromLineAndColumn(line, column) {
+        let lineToIndex = getLineToIndex(this);
+        let index = lineToIndex[line - 1];
+        return index + column - 1;
+      }
+      fromOffset(offset) {
+        let lineToIndex = getLineToIndex(this);
+        let lastLine = lineToIndex[lineToIndex.length - 1];
+        let min = 0;
+        if (offset >= lastLine) {
+          min = lineToIndex.length - 1;
+        } else {
+          let max = lineToIndex.length - 2;
+          let mid;
+          while (min < max) {
+            mid = min + (max - min >> 1);
+            if (offset < lineToIndex[mid]) {
+              max = mid - 1;
+            } else if (offset >= lineToIndex[mid + 1]) {
+              min = mid + 1;
+            } else {
+              min = mid;
+              break;
+            }
+          }
+        }
+        return {
+          col: offset - lineToIndex[min] + 1,
+          line: min + 1
+        };
+      }
+      mapResolve(file) {
+        if (/^\w+:\/\//.test(file)) {
+          return file;
+        }
+        return resolve(this.map.consumer().sourceRoot || this.map.root || ".", file);
+      }
+      origin(line, column, endLine, endColumn) {
+        if (!this.map)
+          return false;
+        let consumer = this.map.consumer();
+        let from = consumer.originalPositionFor({ column: column - 1, line });
+        if (!from.source)
+          return false;
+        let to;
+        if (typeof endLine === "number") {
+          let toPosition = consumer.originalPositionFor({
+            column: endColumn - 1,
+            line: endLine
+          });
+          if (toPosition.source)
+            to = toPosition;
+        }
+        let fromUrl;
+        if (isAbsolute(from.source)) {
+          fromUrl = pathToFileURL(from.source);
+        } else {
+          fromUrl = new URL(
+            from.source,
+            this.map.consumer().sourceRoot || pathToFileURL(this.map.mapFile)
+          );
+        }
+        let result = {
+          column: from.column + 1,
+          endColumn: to && to.column + 1,
+          endLine: to && to.line,
+          line: from.line,
+          url: fromUrl.toString()
+        };
+        if (fromUrl.protocol === "file:") {
+          if (fileURLToPath) {
+            result.file = fileURLToPath(fromUrl);
+          } else {
+            throw new Error(`file: protocol is not available in this PostCSS build`);
+          }
+        }
+        let source = consumer.sourceContentFor(from.source);
+        if (source)
+          result.source = source;
+        return result;
+      }
+      toJSON() {
+        let json = {};
+        for (let name of ["hasBOM", "css", "file", "id"]) {
+          if (this[name] != null) {
+            json[name] = this[name];
+          }
+        }
+        if (this.map) {
+          json.map = { ...this.map };
+          if (json.map.consumerCache) {
+            json.map.consumerCache = void 0;
+          }
+        }
+        return json;
+      }
+    };
+    module2.exports = Input2;
+    Input2.default = Input2;
+    if (terminalHighlight && terminalHighlight.registerInput) {
+      terminalHighlight.registerInput(Input2);
+    }
+  }
+});
+
+// node_modules/postcss/lib/root.js
+var require_root = __commonJS({
+  "node_modules/postcss/lib/root.js"(exports, module2) {
+    "use strict";
+    var Container2 = require_container();
+    var LazyResult;
+    var Processor2;
+    var Root2 = class extends Container2 {
+      constructor(defaults) {
+        super(defaults);
+        this.type = "root";
+        if (!this.nodes)
+          this.nodes = [];
+      }
+      normalize(child, sample, type) {
+        let keepBefore = /* @__PURE__ */ new Set();
+        for (let node of Array.isArray(child) ? child : [child]) {
+          if (node && typeof node === "object" && !node.parent && node.raws && typeof node.raws.before !== "undefined") {
+            keepBefore.add(node.raws);
+          }
+        }
+        let nodes = super.normalize(child);
+        if (sample) {
+          if (type === "prepend") {
+            if (this.nodes.length > 1) {
+              sample.raws.before = this.nodes[1].raws.before;
+            } else {
+              delete sample.raws.before;
+            }
+          } else if (this.first !== sample) {
+            for (let node of nodes) {
+              if (!keepBefore.has(node.raws)) {
+                node.raws.before = sample.raws.before;
+              }
+            }
+          }
+        }
+        return nodes;
+      }
+      removeChild(child, ignore) {
+        let index = this.index(child);
+        if (!ignore && index === 0 && this.nodes.length > 1) {
+          this.nodes[1].raws.before = this.nodes[index].raws.before;
+        }
+        return super.removeChild(child);
+      }
+      toResult(opts = {}) {
+        let lazy = new LazyResult(new Processor2(), this, opts);
+        return lazy.stringify();
+      }
+    };
+    Root2.registerLazyResult = (dependant) => {
+      LazyResult = dependant;
+    };
+    Root2.registerProcessor = (dependant) => {
+      Processor2 = dependant;
+    };
+    module2.exports = Root2;
+    Root2.default = Root2;
+    Container2.registerRoot(Root2);
+  }
+});
+
+// node_modules/postcss/lib/list.js
+var require_list = __commonJS({
+  "node_modules/postcss/lib/list.js"(exports, module2) {
+    "use strict";
+    var list2 = {
+      comma(string) {
+        return list2.split(string, [","], true);
+      },
+      space(string) {
+        let spaces = [" ", "\n", "	"];
+        return list2.split(string, spaces);
+      },
+      split(string, separators, last) {
+        let array = [];
+        let current = "";
+        let split = false;
+        let func = 0;
+        let inQuote = false;
+        let prevQuote = "";
+        let escape = false;
+        for (let letter of string) {
+          if (escape) {
+            escape = false;
+          } else if (letter === "\\") {
+            escape = true;
+          } else if (inQuote) {
+            if (letter === prevQuote) {
+              inQuote = false;
+            }
+          } else if (letter === '"' || letter === "'") {
+            inQuote = true;
+            prevQuote = letter;
+          } else if (letter === "(") {
+            func += 1;
+          } else if (letter === ")") {
+            if (func > 0)
+              func -= 1;
+          } else if (func === 0) {
+            if (separators.includes(letter))
+              split = true;
+          }
+          if (split) {
+            if (current !== "")
+              array.push(current.trim());
+            current = "";
+            split = false;
+          } else {
+            current += letter;
+          }
+        }
+        if (last || current !== "")
+          array.push(current.trim());
+        return array;
+      }
+    };
+    module2.exports = list2;
+    list2.default = list2;
+  }
+});
+
+// node_modules/postcss/lib/rule.js
+var require_rule = __commonJS({
+  "node_modules/postcss/lib/rule.js"(exports, module2) {
+    "use strict";
+    var Container2 = require_container();
+    var list2 = require_list();
+    var Rule2 = class extends Container2 {
+      get selectors() {
+        return list2.comma(this.selector);
+      }
+      set selectors(values) {
+        let match = this.selector ? this.selector.match(/,\s*/) : null;
+        let sep = match ? match[0] : "," + this.raw("between", "beforeOpen");
+        this.selector = values.join(sep);
+      }
+      constructor(defaults) {
+        super(defaults);
+        this.type = "rule";
+        if (!this.nodes)
+          this.nodes = [];
+      }
+    };
+    module2.exports = Rule2;
+    Rule2.default = Rule2;
+    Container2.registerRule(Rule2);
+  }
+});
+
+// node_modules/postcss/lib/fromJSON.js
+var require_fromJSON = __commonJS({
+  "node_modules/postcss/lib/fromJSON.js"(exports, module2) {
+    "use strict";
+    var AtRule2 = require_at_rule();
+    var Comment2 = require_comment();
+    var Declaration2 = require_declaration();
+    var Input2 = require_input();
+    var PreviousMap = require_previous_map();
+    var Root2 = require_root();
+    var Rule2 = require_rule();
+    function hydrateInputs(json, inputs) {
+      if (!json.inputs)
+        return inputs;
+      return json.inputs.map((input) => {
+        let inputHydrated = { ...input, __proto__: Input2.prototype };
+        if (inputHydrated.map) {
+          inputHydrated.map = {
+            ...inputHydrated.map,
+            __proto__: PreviousMap.prototype
+          };
+        }
+        return inputHydrated;
+      });
+    }
+    function constructNode(json, inputs, children) {
+      let defaults = { ...json };
+      delete defaults.inputs;
+      delete defaults.nodes;
+      if (defaults.source) {
+        let { inputId, ...source } = defaults.source;
+        defaults.source = source;
+        if (inputId != null) {
+          defaults.source.input = inputs[inputId];
+        }
+      }
+      let node;
+      if (defaults.type === "root") {
+        node = new Root2(defaults);
+      } else if (defaults.type === "decl") {
+        node = new Declaration2(defaults);
+      } else if (defaults.type === "rule") {
+        node = new Rule2(defaults);
+      } else if (defaults.type === "comment") {
+        node = new Comment2(defaults);
+      } else if (defaults.type === "atrule") {
+        node = new AtRule2(defaults);
+      } else {
+        throw new Error("Unknown node type: " + json.type);
+      }
+      if (children) {
+        node.nodes = children;
+        for (let child of children)
+          child.parent = node;
+      }
+      return node;
+    }
+    function fromJSON2(json, inputs) {
+      if (Array.isArray(json))
+        return json.map((n) => fromJSON2(n));
+      let result;
+      let stack = [
+        { childIndex: 0, children: [], inputs: hydrateInputs(json, inputs), json }
+      ];
+      while (stack.length > 0) {
+        let frame = stack[stack.length - 1];
+        let jsonNodes = frame.json.nodes;
+        if (jsonNodes && frame.childIndex < jsonNodes.length) {
+          let childJson = jsonNodes[frame.childIndex];
+          frame.childIndex += 1;
+          stack.push({
+            childIndex: 0,
+            children: [],
+            inputs: hydrateInputs(childJson, frame.inputs),
+            json: childJson
+          });
+          continue;
+        }
+        stack.pop();
+        let node = constructNode(
+          frame.json,
+          frame.inputs,
+          jsonNodes ? frame.children : void 0
+        );
+        if (stack.length > 0) {
+          stack[stack.length - 1].children.push(node);
+        } else {
+          result = node;
+        }
+      }
+      return result;
+    }
+    module2.exports = fromJSON2;
+    fromJSON2.default = fromJSON2;
+  }
+});
+
+// node_modules/postcss/lib/map-generator.js
+var require_map_generator = __commonJS({
+  "node_modules/postcss/lib/map-generator.js"(exports, module2) {
+    "use strict";
+    var { dirname, relative, resolve, sep } = require("path");
+    var { SourceMapConsumer, SourceMapGenerator } = require_source_map();
+    var { pathToFileURL } = require("url");
+    var Input2 = require_input();
+    var sourceMapAvailable = Boolean(SourceMapConsumer && SourceMapGenerator);
+    var pathAvailable = Boolean(dirname && resolve && relative && sep);
+    var MapGenerator = class {
+      constructor(stringify2, root2, opts, cssString) {
+        this.stringify = stringify2;
+        this.mapOpts = opts.map || {};
+        this.root = root2;
+        this.opts = opts;
+        this.css = cssString;
+        this.originalCSS = cssString;
+        this.usesFileUrls = !this.mapOpts.from && this.mapOpts.absolute;
+        this.memoizedFileURLs = /* @__PURE__ */ new Map();
+        this.memoizedPaths = /* @__PURE__ */ new Map();
+        this.memoizedURLs = /* @__PURE__ */ new Map();
+      }
+      addAnnotation() {
+        let content;
+        if (this.isInline()) {
+          content = "data:application/json;base64," + this.toBase64(this.map.toString());
+        } else if (typeof this.mapOpts.annotation === "string") {
+          content = this.mapOpts.annotation;
+        } else if (typeof this.mapOpts.annotation === "function") {
+          content = this.mapOpts.annotation(this.opts.to, this.root);
+        } else {
+          content = this.outputFile() + ".map";
+        }
+        let eol = "\n";
+        if (this.css.includes("\r\n"))
+          eol = "\r\n";
+        this.css += eol + "/*# sourceMappingURL=" + content + " */";
+      }
+      applyPrevMaps() {
+        for (let prev of this.previous()) {
+          let from = this.toUrl(this.path(prev.file));
+          let root2 = prev.root || dirname(prev.file);
+          let map;
+          if (this.mapOpts.sourcesContent === false) {
+            map = new SourceMapConsumer(prev.text);
+            if (map.sourcesContent) {
+              map.sourcesContent = null;
+            }
+          } else {
+            map = prev.consumer();
+          }
+          this.map.applySourceMap(map, from, this.toUrl(this.path(root2)));
+        }
+      }
+      clearAnnotation() {
+        if (this.mapOpts.annotation === false)
+          return;
+        if (this.root) {
+          let node;
+          for (let i = this.root.nodes.length - 1; i >= 0; i--) {
+            node = this.root.nodes[i];
+            if (node.type !== "comment")
+              continue;
+            if (node.text.startsWith("# sourceMappingURL=")) {
+              this.root.removeChild(i);
+            }
+          }
+        } else if (this.css) {
+          let startIndex;
+          while ((startIndex = this.css.lastIndexOf("/*#")) !== -1) {
+            let endIndex = this.css.indexOf("*/", startIndex + 3);
+            if (endIndex === -1)
+              break;
+            while (startIndex > 0 && this.css[startIndex - 1] === "\n") {
+              startIndex--;
+            }
+            this.css = this.css.slice(0, startIndex) + this.css.slice(endIndex + 2);
+          }
+        }
+      }
+      generate() {
+        this.clearAnnotation();
+        if (pathAvailable && sourceMapAvailable && this.isMap()) {
+          return this.generateMap();
+        } else {
+          let result = "";
+          this.stringify(this.root, (i) => {
+            result += i;
+          });
+          return [result];
+        }
+      }
+      generateMap() {
+        if (this.root) {
+          this.generateString();
+        } else if (this.previous().length === 1) {
+          let prev = this.previous()[0].consumer();
+          prev.file = this.outputFile();
+          this.map = SourceMapGenerator.fromSourceMap(prev, {
+            ignoreInvalidMapping: true
+          });
+        } else {
+          this.map = new SourceMapGenerator({
+            file: this.outputFile(),
+            ignoreInvalidMapping: true
+          });
+          this.map.addMapping({
+            generated: { column: 0, line: 1 },
+            original: { column: 0, line: 1 },
+            source: this.opts.from ? this.toUrl(this.path(this.opts.from)) : "<no source>"
+          });
+        }
+        if (this.isSourcesContent())
+          this.setSourcesContent();
+        if (this.root && this.previous().length > 0)
+          this.applyPrevMaps();
+        if (this.isAnnotation())
+          this.addAnnotation();
+        if (this.isInline()) {
+          return [this.css];
+        } else {
+          return [this.css, this.map];
+        }
+      }
+      generateString() {
+        this.css = "";
+        this.map = new SourceMapGenerator({
+          file: this.outputFile(),
+          ignoreInvalidMapping: true
+        });
+        let line = 1;
+        let column = 1;
+        let noSource = "<no source>";
+        let mapping = {
+          generated: { column: 0, line: 0 },
+          original: { column: 0, line: 0 },
+          source: ""
+        };
+        let last, lines;
+        this.stringify(this.root, (str, node, type) => {
+          this.css += str;
+          if (node && type !== "end") {
+            mapping.generated.line = line;
+            mapping.generated.column = column - 1;
+            if (node.source && node.source.start) {
+              mapping.source = this.sourcePath(node);
+              mapping.original.line = node.source.start.line;
+              mapping.original.column = node.source.start.column - 1;
+              this.map.addMapping(mapping);
+            } else {
+              mapping.source = noSource;
+              mapping.original.line = 1;
+              mapping.original.column = 0;
+              this.map.addMapping(mapping);
+            }
+          }
+          lines = str.match(/\n/g);
+          if (lines) {
+            line += lines.length;
+            last = str.lastIndexOf("\n");
+            column = str.length - last;
+          } else {
+            column += str.length;
+          }
+          if (node && type !== "start") {
+            let p = node.parent || { raws: {} };
+            let childless = node.type === "decl" || node.type === "atrule" && !node.nodes;
+            if (!childless || node !== p.last || p.raws.semicolon) {
+              if (node.source && node.source.end) {
+                mapping.source = this.sourcePath(node);
+                mapping.original.line = node.source.end.line;
+                mapping.original.column = node.source.end.column - 1;
+                mapping.generated.line = line;
+                mapping.generated.column = column - 2;
+                this.map.addMapping(mapping);
+              } else {
+                mapping.source = noSource;
+                mapping.original.line = 1;
+                mapping.original.column = 0;
+                mapping.generated.line = line;
+                mapping.generated.column = column - 1;
+                this.map.addMapping(mapping);
+              }
+            }
+          }
+        });
+      }
+      isAnnotation() {
+        if (this.isInline()) {
+          return true;
+        }
+        if (typeof this.mapOpts.annotation !== "undefined") {
+          return this.mapOpts.annotation;
+        }
+        if (this.previous().length) {
+          return this.previous().some((i) => i.annotation);
+        }
+        return true;
+      }
+      isInline() {
+        if (typeof this.mapOpts.inline !== "undefined") {
+          return this.mapOpts.inline;
+        }
+        let annotation = this.mapOpts.annotation;
+        if (typeof annotation !== "undefined" && annotation !== true) {
+          return false;
+        }
+        if (this.previous().length) {
+          return this.previous().some((i) => i.inline);
+        }
+        return true;
+      }
+      isMap() {
+        if (typeof this.opts.map !== "undefined") {
+          return !!this.opts.map;
+        }
+        return this.previous().length > 0;
+      }
+      isSourcesContent() {
+        if (typeof this.mapOpts.sourcesContent !== "undefined") {
+          return this.mapOpts.sourcesContent;
+        }
+        if (this.previous().length) {
+          return this.previous().some((i) => i.withContent());
+        }
+        return true;
+      }
+      outputFile() {
+        if (this.opts.to) {
+          return this.path(this.opts.to);
+        } else if (this.opts.from) {
+          return this.path(this.opts.from);
+        } else {
+          return "to.css";
+        }
+      }
+      path(file) {
+        if (this.mapOpts.absolute)
+          return file;
+        if (file.charCodeAt(0) === 60)
+          return file;
+        if (/^\w+:\/\//.test(file))
+          return file;
+        let cached = this.memoizedPaths.get(file);
+        if (cached)
+          return cached;
+        let from = this.opts.to ? dirname(this.opts.to) : ".";
+        if (typeof this.mapOpts.annotation === "string") {
+          from = dirname(resolve(from, this.mapOpts.annotation));
+        }
+        let path = relative(from, file);
+        this.memoizedPaths.set(file, path);
+        return path;
+      }
+      previous() {
+        if (!this.previousMaps) {
+          this.previousMaps = [];
+          if (this.root) {
+            this.root.walk((node) => {
+              if (node.source && node.source.input.map) {
+                let map = node.source.input.map;
+                if (!this.previousMaps.includes(map)) {
+                  this.previousMaps.push(map);
+                }
+              }
+            });
+          } else {
+            let input = new Input2(this.originalCSS, this.opts);
+            if (input.map)
+              this.previousMaps.push(input.map);
+          }
+        }
+        return this.previousMaps;
+      }
+      setSourcesContent() {
+        let already = {};
+        if (this.root) {
+          this.root.walk((node) => {
+            if (node.source) {
+              let from = node.source.input.from;
+              if (from && !already[from]) {
+                already[from] = true;
+                let fromUrl = this.usesFileUrls ? this.toFileUrl(from) : this.toUrl(this.path(from));
+                this.map.setSourceContent(fromUrl, node.source.input.css);
+              }
+            }
+          });
+        } else if (this.css) {
+          let from = this.opts.from ? this.toUrl(this.path(this.opts.from)) : "<no source>";
+          this.map.setSourceContent(from, this.css);
+        }
+      }
+      sourcePath(node) {
+        if (this.mapOpts.from) {
+          return this.toUrl(this.mapOpts.from);
+        } else if (this.usesFileUrls) {
+          return this.toFileUrl(node.source.input.from);
+        } else {
+          return this.toUrl(this.path(node.source.input.from));
+        }
+      }
+      toBase64(str) {
+        if (Buffer) {
+          return Buffer.from(str).toString("base64");
+        } else {
+          return window.btoa(unescape(encodeURIComponent(str)));
+        }
+      }
+      toFileUrl(path) {
+        let cached = this.memoizedFileURLs.get(path);
+        if (cached)
+          return cached;
+        if (pathToFileURL) {
+          let fileURL = pathToFileURL(path).toString();
+          this.memoizedFileURLs.set(path, fileURL);
+          return fileURL;
+        } else {
+          throw new Error(
+            "`map.absolute` option is not available in this PostCSS build"
+          );
+        }
+      }
+      toUrl(path) {
+        let cached = this.memoizedURLs.get(path);
+        if (cached)
+          return cached;
+        if (sep === "\\") {
+          path = path.replace(/\\/g, "/");
+        }
+        let url = encodeURI(path).replace(/[#?]/g, encodeURIComponent);
+        this.memoizedURLs.set(path, url);
+        return url;
+      }
+    };
+    module2.exports = MapGenerator;
+  }
+});
+
+// node_modules/postcss/lib/tokenize.js
+var require_tokenize = __commonJS({
+  "node_modules/postcss/lib/tokenize.js"(exports, module2) {
+    "use strict";
+    var SINGLE_QUOTE = "'".charCodeAt(0);
+    var DOUBLE_QUOTE = '"'.charCodeAt(0);
+    var BACKSLASH = "\\".charCodeAt(0);
+    var SLASH = "/".charCodeAt(0);
+    var NEWLINE = "\n".charCodeAt(0);
+    var SPACE = " ".charCodeAt(0);
+    var FEED = "\f".charCodeAt(0);
+    var TAB = "	".charCodeAt(0);
+    var CR = "\r".charCodeAt(0);
+    var OPEN_SQUARE = "[".charCodeAt(0);
+    var CLOSE_SQUARE = "]".charCodeAt(0);
+    var OPEN_PARENTHESES = "(".charCodeAt(0);
+    var CLOSE_PARENTHESES = ")".charCodeAt(0);
+    var OPEN_CURLY = "{".charCodeAt(0);
+    var CLOSE_CURLY = "}".charCodeAt(0);
+    var SEMICOLON = ";".charCodeAt(0);
+    var ASTERISK = "*".charCodeAt(0);
+    var COLON = ":".charCodeAt(0);
+    var AT = "@".charCodeAt(0);
+    var RE_AT_END = /[\t\n\f\r "#'()/;[\\\]{}]/g;
+    var RE_WORD_END = /[\t\n\f\r !"#'():;@[\\\]{}]|\/(?=\*)/g;
+    var RE_BAD_BRACKET = /.[\r\n"'(/\\]/;
+    var RE_HEX_ESCAPE = /[\da-f]/i;
+    module2.exports = function tokenizer(input, options = {}) {
+      let css = input.css.valueOf();
+      let ignore = options.ignoreErrors;
+      let code, content, escape, next, quote;
+      let currentToken, escaped, escapePos, n, prev;
+      let length = css.length;
+      let pos = 0;
+      let buffer = [];
+      let returned = [];
+      let lastBadParen = -1;
+      function position() {
+        return pos;
+      }
+      function unclosed(what) {
+        throw input.error("Unclosed " + what, pos);
+      }
+      function endOfFile() {
+        return returned.length === 0 && pos >= length;
+      }
+      function nextToken(opts) {
+        if (returned.length)
+          return returned.pop();
+        if (pos >= length)
+          return;
+        let ignoreUnclosed = opts ? opts.ignoreUnclosed : false;
+        code = css.charCodeAt(pos);
+        switch (code) {
+          case NEWLINE:
+          case SPACE:
+          case TAB:
+          case CR:
+          case FEED: {
+            next = pos;
+            do {
+              next += 1;
+              code = css.charCodeAt(next);
+            } while (code === SPACE || code === NEWLINE || code === TAB || code === CR || code === FEED);
+            currentToken = ["space", css.slice(pos, next)];
+            pos = next - 1;
+            break;
+          }
+          case OPEN_SQUARE:
+          case CLOSE_SQUARE:
+          case OPEN_CURLY:
+          case CLOSE_CURLY:
+          case COLON:
+          case SEMICOLON:
+          case CLOSE_PARENTHESES: {
+            let controlChar = String.fromCharCode(code);
+            currentToken = [controlChar, controlChar, pos];
+            break;
+          }
+          case OPEN_PARENTHESES: {
+            prev = buffer.length ? buffer.pop()[1] : "";
+            n = css.charCodeAt(pos + 1);
+            if (prev === "url" && n !== SINGLE_QUOTE && n !== DOUBLE_QUOTE && n !== SPACE && n !== NEWLINE && n !== TAB && n !== FEED && n !== CR) {
+              next = pos;
+              do {
+                escaped = false;
+                next = css.indexOf(")", next + 1);
+                if (next === -1) {
+                  if (ignore || ignoreUnclosed) {
+                    next = pos;
+                    break;
+                  } else {
+                    unclosed("bracket");
+                  }
+                }
+                escapePos = next;
+                while (css.charCodeAt(escapePos - 1) === BACKSLASH) {
+                  escapePos -= 1;
+                  escaped = !escaped;
+                }
+              } while (escaped);
+              currentToken = ["brackets", css.slice(pos, next + 1), pos, next];
+              pos = next;
+            } else if (pos <= lastBadParen) {
+              currentToken = ["(", "(", pos];
+            } else {
+              next = css.indexOf(")", pos + 1);
+              content = css.slice(pos, next + 1);
+              if (next === -1 || RE_BAD_BRACKET.test(content)) {
+                lastBadParen = next === -1 ? length : next;
+                currentToken = ["(", "(", pos];
+              } else {
+                currentToken = ["brackets", content, pos, next];
+                pos = next;
+              }
+            }
+            break;
+          }
+          case SINGLE_QUOTE:
+          case DOUBLE_QUOTE: {
+            quote = code === SINGLE_QUOTE ? "'" : '"';
+            next = pos;
+            do {
+              escaped = false;
+              next = css.indexOf(quote, next + 1);
+              if (next === -1) {
+                if (ignore || ignoreUnclosed) {
+                  next = pos + 1;
+                  break;
+                } else {
+                  unclosed("string");
+                }
+              }
+              escapePos = next;
+              while (css.charCodeAt(escapePos - 1) === BACKSLASH) {
+                escapePos -= 1;
+                escaped = !escaped;
+              }
+            } while (escaped);
+            currentToken = ["string", css.slice(pos, next + 1), pos, next];
+            pos = next;
+            break;
+          }
+          case AT: {
+            RE_AT_END.lastIndex = pos + 1;
+            RE_AT_END.test(css);
+            if (RE_AT_END.lastIndex === 0) {
+              next = css.length - 1;
+            } else {
+              next = RE_AT_END.lastIndex - 2;
+            }
+            currentToken = ["at-word", css.slice(pos, next + 1), pos, next];
+            pos = next;
+            break;
+          }
+          case BACKSLASH: {
+            next = pos;
+            escape = true;
+            while (css.charCodeAt(next + 1) === BACKSLASH) {
+              next += 1;
+              escape = !escape;
+            }
+            code = css.charCodeAt(next + 1);
+            if (escape && code !== SLASH && code !== SPACE && code !== NEWLINE && code !== TAB && code !== CR && code !== FEED) {
+              next += 1;
+              if (RE_HEX_ESCAPE.test(css.charAt(next))) {
+                while (RE_HEX_ESCAPE.test(css.charAt(next + 1))) {
+                  next += 1;
+                }
+                if (css.charCodeAt(next + 1) === SPACE) {
+                  next += 1;
+                }
+              }
+            }
+            currentToken = ["word", css.slice(pos, next + 1), pos, next];
+            pos = next;
+            break;
+          }
+          default: {
+            if (code === SLASH && css.charCodeAt(pos + 1) === ASTERISK) {
+              next = css.indexOf("*/", pos + 2) + 1;
+              if (next === 0) {
+                if (ignore || ignoreUnclosed) {
+                  next = css.length;
+                } else {
+                  unclosed("comment");
+                }
+              }
+              currentToken = ["comment", css.slice(pos, next + 1), pos, next];
+              pos = next;
+            } else {
+              RE_WORD_END.lastIndex = pos + 1;
+              RE_WORD_END.test(css);
+              if (RE_WORD_END.lastIndex === 0) {
+                next = css.length - 1;
+              } else {
+                next = RE_WORD_END.lastIndex - 2;
+              }
+              currentToken = ["word", css.slice(pos, next + 1), pos, next];
+              buffer.push(currentToken);
+              pos = next;
+            }
+            break;
+          }
+        }
+        pos++;
+        return currentToken;
+      }
+      function back(token) {
+        returned.push(token);
+      }
+      return {
+        back,
+        endOfFile,
+        nextToken,
+        position
+      };
+    };
+  }
+});
+
+// node_modules/postcss/lib/parser.js
+var require_parser4 = __commonJS({
+  "node_modules/postcss/lib/parser.js"(exports, module2) {
+    "use strict";
+    var AtRule2 = require_at_rule();
+    var Comment2 = require_comment();
+    var Declaration2 = require_declaration();
+    var Root2 = require_root();
+    var Rule2 = require_rule();
+    var tokenizer = require_tokenize();
+    var SAFE_COMMENT_NEIGHBOR = {
+      empty: true,
+      space: true
+    };
+    function findLastWithPosition(tokens) {
+      for (let i = tokens.length - 1; i >= 0; i--) {
+        let token = tokens[i];
+        let pos = token[3] || token[2];
+        if (pos)
+          return pos;
+      }
+    }
+    function tokensToString(tokens, from, to) {
+      let result = "";
+      for (let i = from; i < to; i++)
+        result += tokens[i][1];
+      return result;
+    }
+    var Parser = class {
+      constructor(input) {
+        this.input = input;
+        this.root = new Root2();
+        this.current = this.root;
+        this.spaces = "";
+        this.semicolon = false;
+        this.createTokenizer();
+        this.root.source = { input, start: { column: 1, line: 1, offset: 0 } };
+      }
+      atrule(token) {
+        let node = new AtRule2();
+        node.name = token[1].slice(1);
+        if (node.name === "") {
+          this.unnamedAtrule(node, token);
+        }
+        this.init(node, token[2]);
+        let type;
+        let prev;
+        let shift;
+        let last = false;
+        let open = false;
+        let params = [];
+        let brackets = [];
+        while (!this.tokenizer.endOfFile()) {
+          token = this.tokenizer.nextToken();
+          type = token[0];
+          if (type === "(" || type === "[") {
+            brackets.push(type === "(" ? ")" : "]");
+          } else if (type === "{" && brackets.length > 0) {
+            brackets.push("}");
+          } else if (type === brackets[brackets.length - 1]) {
+            brackets.pop();
+          }
+          if (brackets.length === 0) {
+            if (type === ";") {
+              node.source.end = this.getPosition(token[2]);
+              node.source.end.offset++;
+              this.semicolon = true;
+              break;
+            } else if (type === "{") {
+              open = true;
+              break;
+            } else if (type === "}") {
+              if (params.length > 0) {
+                shift = params.length - 1;
+                prev = params[shift];
+                while (prev && prev[0] === "space") {
+                  prev = params[--shift];
+                }
+                if (prev) {
+                  node.source.end = this.getPosition(prev[3] || prev[2]);
+                  node.source.end.offset++;
+                }
+              }
+              this.end(token);
+              break;
+            } else {
+              params.push(token);
+            }
+          } else {
+            params.push(token);
+          }
+          if (this.tokenizer.endOfFile()) {
+            last = true;
+            break;
+          }
+        }
+        node.raws.between = this.spacesAndCommentsFromEnd(params);
+        if (params.length) {
+          node.raws.afterName = this.spacesAndCommentsFromStart(params);
+          this.raw(node, "params", params);
+          if (last) {
+            token = params[params.length - 1];
+            node.source.end = this.getPosition(token[3] || token[2]);
+            node.source.end.offset++;
+            this.spaces = node.raws.between;
+            node.raws.between = "";
+          }
+        } else {
+          node.raws.afterName = "";
+          node.params = "";
+        }
+        if (open) {
+          node.nodes = [];
+          this.current = node;
+        }
+      }
+      checkMissedSemicolon(tokens) {
+        let colon = this.colon(tokens);
+        if (colon === false)
+          return;
+        let founded = 0;
+        let token;
+        for (let j = colon - 1; j >= 0; j--) {
+          token = tokens[j];
+          if (token[0] !== "space") {
+            founded += 1;
+            if (founded === 2)
+              break;
+          }
+        }
+        throw this.input.error(
+          "Missed semicolon",
+          token[0] === "word" ? token[3] + 1 : token[2]
+        );
+      }
+      colon(tokens) {
+        let brackets = 0;
+        let prev, token, type;
+        for (let [i, element] of tokens.entries()) {
+          token = element;
+          type = token[0];
+          if (type === "(") {
+            brackets += 1;
+          }
+          if (type === ")") {
+            brackets -= 1;
+          }
+          if (brackets === 0 && type === ":") {
+            if (!prev) {
+              this.doubleColon(token);
+            } else if (prev[0] === "word" && prev[1] === "progid") {
+              continue;
+            } else {
+              return i;
+            }
+          }
+          prev = token;
+        }
+        return false;
+      }
+      comment(token) {
+        let node = new Comment2();
+        this.init(node, token[2]);
+        node.source.end = this.getPosition(token[3] || token[2]);
+        node.source.end.offset++;
+        let text = token[1].slice(2, -2);
+        if (!text.trim()) {
+          node.text = "";
+          node.raws.left = text;
+          node.raws.right = "";
+        } else {
+          let match = text.match(/^(\s*)([^]*\S)(\s*)$/);
+          node.text = match[2];
+          node.raws.left = match[1];
+          node.raws.right = match[3];
+        }
+      }
+      createTokenizer() {
+        this.tokenizer = tokenizer(this.input);
+      }
+      decl(tokens, customProperty) {
+        let node = new Declaration2();
+        this.init(node, tokens[0][2]);
+        let last = tokens[tokens.length - 1];
+        if (last[0] === ";") {
+          this.semicolon = true;
+          tokens.pop();
+        }
+        node.source.end = this.getPosition(
+          last[3] || last[2] || findLastWithPosition(tokens)
+        );
+        node.source.end.offset++;
+        let start = 0;
+        while (tokens[start][0] !== "word") {
+          if (start === tokens.length - 1)
+            this.unknownWord([tokens[start]]);
+          start++;
+        }
+        node.raws.before += tokensToString(tokens, 0, start);
+        node.source.start = this.getPosition(tokens[start][2]);
+        let propStart = start;
+        while (start < tokens.length) {
+          let type = tokens[start][0];
+          if (type === ":" || type === "space" || type === "comment") {
+            break;
+          }
+          start++;
+        }
+        node.prop = tokensToString(tokens, propStart, start);
+        let betweenStart = start;
+        let token;
+        while (start < tokens.length) {
+          token = tokens[start];
+          start++;
+          if (token[0] === ":")
+            break;
+          if (token[0] === "word" && /\w/.test(token[1])) {
+            this.unknownWord([token]);
+          }
+        }
+        node.raws.between = tokensToString(tokens, betweenStart, start);
+        if (node.prop[0] === "_" || node.prop[0] === "*") {
+          node.raws.before += node.prop[0];
+          node.prop = node.prop.slice(1);
+        }
+        let firstSpacesStart = start;
+        while (start < tokens.length) {
+          let next = tokens[start][0];
+          if (next !== "space" && next !== "comment")
+            break;
+          start++;
+        }
+        let firstSpaces = tokens.slice(firstSpacesStart, start);
+        tokens = tokens.slice(start);
+        this.precheckMissedSemicolon(tokens);
+        for (let i = tokens.length - 1; i >= 0; i--) {
+          token = tokens[i];
+          if (token[1].toLowerCase() === "!important") {
+            node.important = true;
+            let string = this.stringFrom(tokens, i);
+            string = this.spacesFromEnd(tokens) + string;
+            if (string !== " !important")
+              node.raws.important = string;
+            break;
+          } else if (token[1].toLowerCase() === "important") {
+            let cache = tokens.slice(0);
+            let str = "";
+            for (let j = i; j > 0; j--) {
+              let type = cache[j][0];
+              if (str.trim().startsWith("!") && type !== "space") {
+                break;
+              }
+              str = cache.pop()[1] + str;
+            }
+            if (str.trim().startsWith("!")) {
+              node.important = true;
+              node.raws.important = str;
+              tokens = cache;
+            }
+          }
+          if (token[0] !== "space" && token[0] !== "comment") {
+            break;
+          }
+        }
+        let hasWord = tokens.some((i) => i[0] !== "space" && i[0] !== "comment");
+        if (hasWord) {
+          node.raws.between += firstSpaces.map((i) => i[1]).join("");
+          firstSpaces = [];
+        }
+        this.raw(node, "value", firstSpaces.concat(tokens), customProperty);
+        if (node.value.includes(":") && !customProperty) {
+          this.checkMissedSemicolon(tokens);
+        }
+      }
+      doubleColon(token) {
+        throw this.input.error(
+          "Double colon",
+          { offset: token[2] },
+          { offset: token[2] + token[1].length }
+        );
+      }
+      emptyRule(token) {
+        let node = new Rule2();
+        this.init(node, token[2]);
+        node.selector = "";
+        node.raws.between = "";
+        this.current = node;
+      }
+      end(token) {
+        if (this.current.nodes && this.current.nodes.length) {
+          this.current.raws.semicolon = this.semicolon;
+        }
+        this.semicolon = false;
+        this.current.raws.after = (this.current.raws.after || "") + this.spaces;
+        this.spaces = "";
+        if (this.current.parent) {
+          this.current.source.end = this.getPosition(token[2]);
+          this.current.source.end.offset++;
+          this.current = this.current.parent;
+        } else {
+          this.unexpectedClose(token);
+        }
+      }
+      endFile() {
+        if (this.current.parent)
+          this.unclosedBlock();
+        if (this.current.nodes && this.current.nodes.length) {
+          this.current.raws.semicolon = this.semicolon;
+        }
+        this.current.raws.after = (this.current.raws.after || "") + this.spaces;
+        this.root.source.end = this.getPosition(this.tokenizer.position());
+      }
+      freeSemicolon(token) {
+        this.spaces += token[1];
+        if (this.current.nodes) {
+          let prev = this.current.nodes[this.current.nodes.length - 1];
+          if (prev && prev.type === "rule" && !prev.raws.ownSemicolon) {
+            prev.raws.ownSemicolon = this.spaces;
+            this.spaces = "";
+            prev.source.end = this.getPosition(token[2]);
+            prev.source.end.offset += prev.raws.ownSemicolon.length;
+          }
+        }
+      }
+      // Helpers
+      getPosition(offset) {
+        let pos = this.input.fromOffset(offset);
+        return {
+          column: pos.col,
+          line: pos.line,
+          offset
+        };
+      }
+      init(node, offset) {
+        this.current.push(node);
+        node.source = {
+          input: this.input,
+          start: this.getPosition(offset)
+        };
+        node.raws.before = this.spaces;
+        this.spaces = "";
+        if (node.type !== "comment")
+          this.semicolon = false;
+      }
+      other(start) {
+        let end = false;
+        let type = null;
+        let colon = false;
+        let bracket = null;
+        let brackets = [];
+        let customProperty = start[1].startsWith("--");
+        let tokens = [];
+        let token = start;
+        while (token) {
+          type = token[0];
+          tokens.push(token);
+          if (type === "(" || type === "[") {
+            if (!bracket)
+              bracket = token;
+            brackets.push(type === "(" ? ")" : "]");
+          } else if (customProperty && colon && type === "{") {
+            if (!bracket)
+              bracket = token;
+            brackets.push("}");
+          } else if (brackets.length === 0) {
+            if (type === ";") {
+              if (colon) {
+                this.decl(tokens, customProperty);
+                return;
+              } else {
+                break;
+              }
+            } else if (type === "{") {
+              this.rule(tokens);
+              return;
+            } else if (type === "}") {
+              this.tokenizer.back(tokens.pop());
+              end = true;
+              break;
+            } else if (type === ":") {
+              colon = true;
+            }
+          } else if (type === brackets[brackets.length - 1]) {
+            brackets.pop();
+            if (brackets.length === 0)
+              bracket = null;
+          }
+          token = this.tokenizer.nextToken();
+        }
+        if (this.tokenizer.endOfFile())
+          end = true;
+        if (brackets.length > 0)
+          this.unclosedBracket(bracket);
+        if (end && colon) {
+          if (!customProperty) {
+            while (tokens.length) {
+              token = tokens[tokens.length - 1][0];
+              if (token !== "space" && token !== "comment")
+                break;
+              this.tokenizer.back(tokens.pop());
+            }
+          }
+          this.decl(tokens, customProperty);
+        } else {
+          this.unknownWord(tokens);
+        }
+      }
+      parse() {
+        let token;
+        while (!this.tokenizer.endOfFile()) {
+          token = this.tokenizer.nextToken();
+          switch (token[0]) {
+            case "space":
+              this.spaces += token[1];
+              break;
+            case ";":
+              this.freeSemicolon(token);
+              break;
+            case "}":
+              this.end(token);
+              break;
+            case "comment":
+              this.comment(token);
+              break;
+            case "at-word":
+              this.atrule(token);
+              break;
+            case "{":
+              this.emptyRule(token);
+              break;
+            default:
+              this.other(token);
+              break;
+          }
+        }
+        this.endFile();
+      }
+      precheckMissedSemicolon() {
+      }
+      raw(node, prop, tokens, customProperty) {
+        let token, type;
+        let length = tokens.length;
+        let value = "";
+        let clean2 = true;
+        let next, prev;
+        for (let i = 0; i < length; i += 1) {
+          token = tokens[i];
+          type = token[0];
+          if (type === "space" && i === length - 1 && !customProperty) {
+            clean2 = false;
+          } else if (type === "comment") {
+            prev = tokens[i - 1] ? tokens[i - 1][0] : "empty";
+            next = tokens[i + 1] ? tokens[i + 1][0] : "empty";
+            if (!SAFE_COMMENT_NEIGHBOR[prev] && !SAFE_COMMENT_NEIGHBOR[next]) {
+              if (value.slice(-1) === ",") {
+                clean2 = false;
+              } else {
+                value += token[1];
+              }
+            } else {
+              clean2 = false;
+            }
+          } else {
+            value += token[1];
+          }
+        }
+        if (!clean2) {
+          let raw = tokens.reduce((all, i) => all + i[1], "");
+          node.raws[prop] = { raw, value };
+        }
+        node[prop] = value;
+      }
+      rule(tokens) {
+        tokens.pop();
+        let node = new Rule2();
+        this.init(node, tokens[0][2]);
+        node.raws.between = this.spacesAndCommentsFromEnd(tokens);
+        this.raw(node, "selector", tokens);
+        this.current = node;
+      }
+      spacesAndCommentsFromEnd(tokens) {
+        let lastTokenType;
+        let spaces = "";
+        while (tokens.length) {
+          lastTokenType = tokens[tokens.length - 1][0];
+          if (lastTokenType !== "space" && lastTokenType !== "comment")
+            break;
+          spaces = tokens.pop()[1] + spaces;
+        }
+        return spaces;
+      }
+      // Errors
+      spacesAndCommentsFromStart(tokens) {
+        let next;
+        let spaces = "";
+        while (tokens.length) {
+          next = tokens[0][0];
+          if (next !== "space" && next !== "comment")
+            break;
+          spaces += tokens.shift()[1];
+        }
+        return spaces;
+      }
+      spacesFromEnd(tokens) {
+        let lastTokenType;
+        let spaces = "";
+        while (tokens.length) {
+          lastTokenType = tokens[tokens.length - 1][0];
+          if (lastTokenType !== "space")
+            break;
+          spaces = tokens.pop()[1] + spaces;
+        }
+        return spaces;
+      }
+      stringFrom(tokens, from) {
+        let result = "";
+        for (let i = from; i < tokens.length; i++) {
+          result += tokens[i][1];
+        }
+        tokens.splice(from, tokens.length - from);
+        return result;
+      }
+      unclosedBlock() {
+        let pos = this.current.source.start;
+        throw this.input.error("Unclosed block", pos.line, pos.column);
+      }
+      unclosedBracket(bracket) {
+        throw this.input.error(
+          "Unclosed bracket",
+          { offset: bracket[2] },
+          { offset: bracket[2] + 1 }
+        );
+      }
+      unexpectedClose(token) {
+        throw this.input.error(
+          "Unexpected }",
+          { offset: token[2] },
+          { offset: token[2] + 1 }
+        );
+      }
+      unknownWord(tokens) {
+        throw this.input.error(
+          "Unknown word " + tokens[0][1],
+          { offset: tokens[0][2] },
+          { offset: tokens[0][2] + tokens[0][1].length }
+        );
+      }
+      unnamedAtrule(node, token) {
+        throw this.input.error(
+          "At-rule without name",
+          { offset: token[2] },
+          { offset: token[2] + token[1].length }
+        );
+      }
+    };
+    module2.exports = Parser;
+  }
+});
+
+// node_modules/postcss/lib/parse.js
+var require_parse4 = __commonJS({
+  "node_modules/postcss/lib/parse.js"(exports, module2) {
+    "use strict";
+    var Container2 = require_container();
+    var Input2 = require_input();
+    var Parser = require_parser4();
+    function parse2(css, opts) {
+      let input = new Input2(css, opts);
+      let parser = new Parser(input);
+      try {
+        parser.parse();
+      } catch (e) {
+        if (true) {
+          if (e.name === "CssSyntaxError" && opts && opts.from) {
+            if (/\.scss$/i.test(opts.from)) {
+              e.message += "\nYou tried to parse SCSS with the standard CSS parser; try again with the postcss-scss parser";
+            } else if (/\.sass/i.test(opts.from)) {
+              e.message += "\nYou tried to parse Sass with the standard CSS parser; try again with the postcss-sass parser";
+            } else if (/\.less$/i.test(opts.from)) {
+              e.message += "\nYou tried to parse Less with the standard CSS parser; try again with the postcss-less parser";
+            }
+          }
+        }
+        throw e;
+      }
+      return parser.root;
+    }
+    module2.exports = parse2;
+    parse2.default = parse2;
+    Container2.registerParse(parse2);
+  }
+});
+
+// node_modules/postcss/lib/warning.js
+var require_warning = __commonJS({
+  "node_modules/postcss/lib/warning.js"(exports, module2) {
+    "use strict";
+    var Container2 = require_container();
+    var { my } = require_symbols();
+    var Warning2 = class {
+      constructor(text, opts = {}) {
+        this.type = "warning";
+        this.text = text;
+        if (opts.node && opts.node.source) {
+          if (!opts.node[my]) {
+            Container2.rebuild(opts.node);
+          }
+          let range = opts.node.rangeBy(opts);
+          this.line = range.start.line;
+          this.column = range.start.column;
+          this.endLine = range.end.line;
+          this.endColumn = range.end.column;
+        }
+        for (let opt in opts)
+          this[opt] = opts[opt];
+      }
+      toString() {
+        if (this.node) {
+          return this.node.error(this.text, {
+            index: this.index,
+            plugin: this.plugin,
+            word: this.word
+          }).message;
+        }
+        if (this.plugin) {
+          return this.plugin + ": " + this.text;
+        }
+        return this.text;
+      }
+    };
+    module2.exports = Warning2;
+    Warning2.default = Warning2;
+  }
+});
+
+// node_modules/postcss/lib/result.js
+var require_result = __commonJS({
+  "node_modules/postcss/lib/result.js"(exports, module2) {
+    "use strict";
+    var Warning2 = require_warning();
+    var Result2 = class {
+      get content() {
+        return this.css;
+      }
+      constructor(processor, root2, opts) {
+        this.processor = processor;
+        this.messages = [];
+        this.root = root2;
+        this.opts = opts;
+        this.css = "";
+        this.map = void 0;
+      }
+      toString() {
+        return this.css;
+      }
+      warn(text, opts = {}) {
+        if (!opts.plugin) {
+          if (this.lastPlugin && this.lastPlugin.postcssPlugin) {
+            opts.plugin = this.lastPlugin.postcssPlugin;
+          }
+        }
+        let warning = new Warning2(text, opts);
+        this.messages.push(warning);
+        return warning;
+      }
+      warnings() {
+        return this.messages.filter((i) => i.type === "warning");
+      }
+    };
+    module2.exports = Result2;
+    Result2.default = Result2;
+  }
+});
+
+// node_modules/postcss/lib/warn-once.js
+var require_warn_once = __commonJS({
+  "node_modules/postcss/lib/warn-once.js"(exports, module2) {
+    "use strict";
+    var printed = {};
+    module2.exports = function warnOnce(message) {
+      if (printed[message])
+        return;
+      printed[message] = true;
+      if (typeof console !== "undefined" && console.warn) {
+        console.warn(message);
+      }
+    };
+  }
+});
+
+// node_modules/postcss/lib/lazy-result.js
+var require_lazy_result = __commonJS({
+  "node_modules/postcss/lib/lazy-result.js"(exports, module2) {
+    "use strict";
+    var Container2 = require_container();
+    var Document2 = require_document();
+    var MapGenerator = require_map_generator();
+    var parse2 = require_parse4();
+    var Result2 = require_result();
+    var Root2 = require_root();
+    var stringify2 = require_stringify4();
+    var { isClean, my } = require_symbols();
+    var warnOnce = require_warn_once();
+    var TYPE_TO_CLASS_NAME = {
+      atrule: "AtRule",
+      comment: "Comment",
+      decl: "Declaration",
+      document: "Document",
+      root: "Root",
+      rule: "Rule"
+    };
+    var PLUGIN_PROPS = {
+      AtRule: true,
+      AtRuleExit: true,
+      Comment: true,
+      CommentExit: true,
+      Declaration: true,
+      DeclarationExit: true,
+      Document: true,
+      DocumentExit: true,
+      Once: true,
+      OnceExit: true,
+      postcssPlugin: true,
+      prepare: true,
+      Root: true,
+      RootExit: true,
+      Rule: true,
+      RuleExit: true
+    };
+    var NOT_VISITORS = {
+      Once: true,
+      postcssPlugin: true,
+      prepare: true
+    };
+    var CHILDREN = 0;
+    function isPromise(obj) {
+      return typeof obj === "object" && typeof obj.then === "function";
+    }
+    function getEvents(node) {
+      let key = false;
+      let type = TYPE_TO_CLASS_NAME[node.type];
+      if (node.type === "decl") {
+        key = node.prop.toLowerCase();
+      } else if (node.type === "atrule") {
+        key = node.name.toLowerCase();
+      }
+      if (key && node.append) {
+        return [
+          type,
+          type + "-" + key,
+          CHILDREN,
+          type + "Exit",
+          type + "Exit-" + key
+        ];
+      } else if (key) {
+        return [type, type + "-" + key, type + "Exit", type + "Exit-" + key];
+      } else if (node.append) {
+        return [type, CHILDREN, type + "Exit"];
+      } else {
+        return [type, type + "Exit"];
+      }
+    }
+    function toStack(node) {
+      let events;
+      if (node.type === "document") {
+        events = ["Document", CHILDREN, "DocumentExit"];
+      } else if (node.type === "root") {
+        events = ["Root", CHILDREN, "RootExit"];
+      } else {
+        events = getEvents(node);
+      }
+      return {
+        eventIndex: 0,
+        events,
+        iterator: 0,
+        node,
+        visitorIndex: 0,
+        visitors: []
+      };
+    }
+    function cleanMarks(node) {
+      let stack = [node];
+      while (stack.length > 0) {
+        let next = stack.pop();
+        next[isClean] = false;
+        if (next.nodes) {
+          for (let i of next.nodes)
+            stack.push(i);
+        }
+      }
+      return node;
+    }
+    var postcss2 = {};
+    var LazyResult = class {
+      get content() {
+        return this.stringify().content;
+      }
+      get css() {
+        return this.stringify().css;
+      }
+      get map() {
+        return this.stringify().map;
+      }
+      get messages() {
+        return this.sync().messages;
+      }
+      get opts() {
+        return this.result.opts;
+      }
+      get processor() {
+        return this.result.processor;
+      }
+      get root() {
+        return this.sync().root;
+      }
+      get [Symbol.toStringTag]() {
+        return "LazyResult";
+      }
+      constructor(processor, css, opts) {
+        this.stringified = false;
+        this.processed = false;
+        let root2;
+        if (typeof css === "object" && css !== null && (css.type === "root" || css.type === "document")) {
+          root2 = cleanMarks(css);
+        } else if (css instanceof LazyResult || css instanceof Result2) {
+          root2 = cleanMarks(css.root);
+          if (css.map) {
+            if (typeof opts.map === "undefined")
+              opts.map = {};
+            if (!opts.map.inline)
+              opts.map.inline = false;
+            opts.map.prev = css.map;
+          }
+        } else {
+          let parser = parse2;
+          if (opts.syntax)
+            parser = opts.syntax.parse;
+          if (opts.parser)
+            parser = opts.parser;
+          if (parser.parse)
+            parser = parser.parse;
+          try {
+            root2 = parser(css, opts);
+          } catch (error) {
+            this.processed = true;
+            this.error = error;
+          }
+          if (root2 && !root2[my]) {
+            Container2.rebuild(root2);
+          }
+        }
+        this.result = new Result2(processor, root2, opts);
+        this.helpers = { ...postcss2, postcss: postcss2, result: this.result };
+        this.plugins = this.processor.plugins.map((plugin2) => {
+          if (typeof plugin2 === "object" && plugin2.prepare) {
+            return { ...plugin2, ...plugin2.prepare(this.result) };
+          } else {
+            return plugin2;
+          }
+        });
+      }
+      async() {
+        if (this.error)
+          return Promise.reject(this.error);
+        if (this.processed)
+          return Promise.resolve(this.result);
+        if (!this.processing) {
+          this.processing = this.runAsync();
+        }
+        return this.processing;
+      }
+      catch(onRejected) {
+        return this.async().catch(onRejected);
+      }
+      finally(onFinally) {
+        return this.async().then(onFinally, onFinally);
+      }
+      getAsyncError() {
+        throw new Error("Use process(css).then(cb) to work with async plugins");
+      }
+      handleError(error, node) {
+        let plugin2 = this.result.lastPlugin;
+        try {
+          if (node)
+            node.addToError(error);
+          this.error = error;
+          if (error.name === "CssSyntaxError" && !error.plugin) {
+            error.plugin = plugin2.postcssPlugin;
+            error.setMessage();
+          } else if (plugin2.postcssVersion) {
+            if (true) {
+              let pluginName = plugin2.postcssPlugin;
+              let pluginVer = plugin2.postcssVersion;
+              let runtimeVer = this.result.processor.version;
+              let a = pluginVer.split(".");
+              let b = runtimeVer.split(".");
+              if (a[0] !== b[0] || parseInt(a[1]) > parseInt(b[1])) {
+                console.error(
+                  "Unknown error from PostCSS plugin. Your current PostCSS version is " + runtimeVer + ", but " + pluginName + " uses " + pluginVer + ". Perhaps this is the source of the error below."
+                );
+              }
+            }
+          }
+        } catch (err) {
+          if (console && console.error)
+            console.error(err);
+        }
+        return error;
+      }
+      prepareVisitors() {
+        this.listeners = {};
+        let add = (plugin2, type, cb) => {
+          if (!this.listeners[type])
+            this.listeners[type] = [];
+          this.listeners[type].push([plugin2, cb]);
+        };
+        for (let plugin2 of this.plugins) {
+          if (typeof plugin2 === "object") {
+            for (let event in plugin2) {
+              if (!PLUGIN_PROPS[event] && /^[A-Z]/.test(event)) {
+                throw new Error(
+                  `Unknown event ${event} in ${plugin2.postcssPlugin}. Try to update PostCSS (${this.processor.version} now).`
+                );
+              }
+              if (!NOT_VISITORS[event]) {
+                if (typeof plugin2[event] === "object") {
+                  for (let filter in plugin2[event]) {
+                    if (filter === "*") {
+                      add(plugin2, event, plugin2[event][filter]);
+                    } else {
+                      add(
+                        plugin2,
+                        event + "-" + filter.toLowerCase(),
+                        plugin2[event][filter]
+                      );
+                    }
+                  }
+                } else if (typeof plugin2[event] === "function") {
+                  add(plugin2, event, plugin2[event]);
+                }
+              }
+            }
+          }
+        }
+        this.hasListener = Object.keys(this.listeners).length > 0;
+      }
+      async runAsync() {
+        this.plugin = 0;
+        for (let i = 0; i < this.plugins.length; i++) {
+          let plugin2 = this.plugins[i];
+          let promise = this.runOnRoot(plugin2);
+          if (isPromise(promise)) {
+            try {
+              await promise;
+            } catch (error) {
+              throw this.handleError(error);
+            }
+          }
+        }
+        this.prepareVisitors();
+        if (this.hasListener) {
+          let root2 = this.result.root;
+          while (!root2[isClean]) {
+            root2[isClean] = true;
+            let stack = [toStack(root2)];
+            while (stack.length > 0) {
+              let promise = this.visitTick(stack);
+              if (isPromise(promise)) {
+                try {
+                  await promise;
+                } catch (e) {
+                  let node = stack[stack.length - 1].node;
+                  throw this.handleError(e, node);
+                }
+              }
+            }
+          }
+          if (this.listeners.OnceExit) {
+            for (let [plugin2, visitor] of this.listeners.OnceExit) {
+              this.result.lastPlugin = plugin2;
+              try {
+                if (root2.type === "document") {
+                  let roots = root2.nodes.map(
+                    (subRoot) => visitor(subRoot, this.helpers)
+                  );
+                  await Promise.all(roots);
+                } else {
+                  await visitor(root2, this.helpers);
+                }
+              } catch (e) {
+                throw this.handleError(e);
+              }
+            }
+          }
+        }
+        this.processed = true;
+        return this.stringify();
+      }
+      runOnRoot(plugin2) {
+        this.result.lastPlugin = plugin2;
+        try {
+          if (typeof plugin2 === "object" && plugin2.Once) {
+            if (this.result.root.type === "document") {
+              let roots = this.result.root.nodes.map(
+                (root2) => plugin2.Once(root2, this.helpers)
+              );
+              if (isPromise(roots[0])) {
+                return Promise.all(roots);
+              }
+              return roots;
+            }
+            return plugin2.Once(this.result.root, this.helpers);
+          } else if (typeof plugin2 === "function") {
+            return plugin2(this.result.root, this.result);
+          }
+        } catch (error) {
+          throw this.handleError(error);
+        }
+      }
+      stringify() {
+        if (this.error)
+          throw this.error;
+        if (this.stringified)
+          return this.result;
+        this.stringified = true;
+        this.sync();
+        let opts = this.result.opts;
+        let str = stringify2;
+        if (opts.syntax)
+          str = opts.syntax.stringify;
+        if (opts.stringifier)
+          str = opts.stringifier;
+        if (str.stringify)
+          str = str.stringify;
+        let rootSource = this.result.root.source;
+        if (opts.map === void 0 && !(rootSource && rootSource.input && rootSource.input.map)) {
+          let result = "";
+          str(this.result.root, (i) => {
+            result += i;
+          });
+          this.result.css = result;
+          return this.result;
+        }
+        let map = new MapGenerator(str, this.result.root, this.result.opts);
+        let data = map.generate();
+        this.result.css = data[0];
+        this.result.map = data[1];
+        return this.result;
+      }
+      sync() {
+        if (this.error)
+          throw this.error;
+        if (this.processed)
+          return this.result;
+        this.processed = true;
+        if (this.processing) {
+          throw this.getAsyncError();
+        }
+        for (let plugin2 of this.plugins) {
+          let promise = this.runOnRoot(plugin2);
+          if (isPromise(promise)) {
+            throw this.getAsyncError();
+          }
+        }
+        this.prepareVisitors();
+        if (this.hasListener) {
+          let root2 = this.result.root;
+          while (!root2[isClean]) {
+            root2[isClean] = true;
+            this.walkSync(root2);
+          }
+          if (this.listeners.OnceExit) {
+            if (root2.type === "document") {
+              for (let subRoot of root2.nodes) {
+                this.visitSync(this.listeners.OnceExit, subRoot);
+              }
+            } else {
+              this.visitSync(this.listeners.OnceExit, root2);
+            }
+          }
+        }
+        return this.result;
+      }
+      then(onFulfilled, onRejected) {
+        if (true) {
+          if (!("from" in this.opts)) {
+            warnOnce(
+              "Without `from` option PostCSS could generate wrong source map and will not find Browserslist config. Set it to CSS file path or to `undefined` to prevent this warning."
+            );
+          }
+        }
+        return this.async().then(onFulfilled, onRejected);
+      }
+      toString() {
+        return this.css;
+      }
+      visitSync(visitors, node) {
+        for (let [plugin2, visitor] of visitors) {
+          this.result.lastPlugin = plugin2;
+          let promise;
+          try {
+            promise = visitor(node, this.helpers);
+          } catch (e) {
+            throw this.handleError(e, node.proxyOf);
+          }
+          if (node.type !== "root" && node.type !== "document" && !node.parent) {
+            return true;
+          }
+          if (isPromise(promise)) {
+            throw this.getAsyncError();
+          }
+        }
+      }
+      visitTick(stack) {
+        let visit = stack[stack.length - 1];
+        let { node, visitors } = visit;
+        if (node.type !== "root" && node.type !== "document" && !node.parent) {
+          stack.pop();
+          return;
+        }
+        if (visitors.length > 0 && visit.visitorIndex < visitors.length) {
+          let [plugin2, visitor] = visitors[visit.visitorIndex];
+          visit.visitorIndex += 1;
+          if (visit.visitorIndex === visitors.length) {
+            visit.visitors = [];
+            visit.visitorIndex = 0;
+          }
+          this.result.lastPlugin = plugin2;
+          try {
+            return visitor(node.toProxy(), this.helpers);
+          } catch (e) {
+            throw this.handleError(e, node);
+          }
+        }
+        if (visit.iterator !== 0) {
+          let iterator = visit.iterator;
+          let child;
+          while (child = node.nodes[node.indexes[iterator]]) {
+            node.indexes[iterator] += 1;
+            if (!child[isClean]) {
+              child[isClean] = true;
+              stack.push(toStack(child));
+              return;
+            }
+          }
+          visit.iterator = 0;
+          delete node.indexes[iterator];
+        }
+        let events = visit.events;
+        while (visit.eventIndex < events.length) {
+          let event = events[visit.eventIndex];
+          visit.eventIndex += 1;
+          if (event === CHILDREN) {
+            if (node.nodes && node.nodes.length) {
+              node[isClean] = true;
+              visit.iterator = node.getIterator();
+            }
+            return;
+          } else if (this.listeners[event]) {
+            visit.visitors = this.listeners[event];
+            return;
+          }
+        }
+        stack.pop();
+      }
+      walkSync(node) {
+        node[isClean] = true;
+        let stack = [{ eventIndex: 0, events: getEvents(node), iterator: 0, node }];
+        while (stack.length > 0) {
+          let visit = stack[stack.length - 1];
+          let visitNode = visit.node;
+          if (visit.iterator !== 0) {
+            let iterator = visit.iterator;
+            let child;
+            let descended = false;
+            while (child = visitNode.nodes[visitNode.indexes[iterator]]) {
+              visitNode.indexes[iterator] += 1;
+              if (!child[isClean]) {
+                child[isClean] = true;
+                stack.push({
+                  eventIndex: 0,
+                  events: getEvents(child),
+                  iterator: 0,
+                  node: child
+                });
+                descended = true;
+                break;
+              }
+            }
+            if (descended)
+              continue;
+            visit.iterator = 0;
+            delete visitNode.indexes[iterator];
+          }
+          if (visit.eventIndex < visit.events.length) {
+            let event = visit.events[visit.eventIndex];
+            visit.eventIndex += 1;
+            if (event === CHILDREN) {
+              if (visitNode.nodes && visitNode.nodes.length) {
+                visit.iterator = visitNode.getIterator();
+              }
+            } else {
+              let visitors = this.listeners[event];
+              if (visitors) {
+                if (this.visitSync(visitors, visitNode.toProxy()))
+                  stack.pop();
+              }
+            }
+            continue;
+          }
+          stack.pop();
+        }
+      }
+      warnings() {
+        return this.sync().warnings();
+      }
+    };
+    LazyResult.registerPostcss = (dependant) => {
+      postcss2 = dependant;
+    };
+    module2.exports = LazyResult;
+    LazyResult.default = LazyResult;
+    Root2.registerLazyResult(LazyResult);
+    Document2.registerLazyResult(LazyResult);
+  }
+});
+
+// node_modules/postcss/lib/no-work-result.js
+var require_no_work_result = __commonJS({
+  "node_modules/postcss/lib/no-work-result.js"(exports, module2) {
+    "use strict";
+    var MapGenerator = require_map_generator();
+    var parse2 = require_parse4();
+    var Result2 = require_result();
+    var stringify2 = require_stringify4();
+    var warnOnce = require_warn_once();
+    var NoWorkResult = class {
+      get content() {
+        return this.result.css;
+      }
+      get css() {
+        return this.result.css;
+      }
+      get map() {
+        return this.result.map;
+      }
+      get messages() {
+        return [];
+      }
+      get opts() {
+        return this.result.opts;
+      }
+      get processor() {
+        return this.result.processor;
+      }
+      get root() {
+        if (this._root) {
+          return this._root;
+        }
+        let root2;
+        let parser = parse2;
+        try {
+          root2 = parser(this._css, this._opts);
+        } catch (error) {
+          this.error = error;
+        }
+        if (this.error) {
+          throw this.error;
+        } else {
+          this._root = root2;
+          return root2;
+        }
+      }
+      get [Symbol.toStringTag]() {
+        return "NoWorkResult";
+      }
+      constructor(processor, css, opts) {
+        css = css.toString();
+        this.stringified = false;
+        this._processor = processor;
+        this._css = css;
+        this._opts = opts;
+        this._map = void 0;
+        let str = stringify2;
+        this.result = new Result2(this._processor, void 0, this._opts);
+        this.result.css = css;
+        let self2 = this;
+        Object.defineProperty(this.result, "root", {
+          get() {
+            return self2.root;
+          }
+        });
+        let map = new MapGenerator(str, void 0, this._opts, css);
+        if (map.isMap()) {
+          let [generatedCSS, generatedMap] = map.generate();
+          if (generatedCSS) {
+            this.result.css = generatedCSS;
+          }
+          if (generatedMap) {
+            this.result.map = generatedMap;
+          }
+        } else {
+          map.clearAnnotation();
+          this.result.css = map.css;
+        }
+      }
+      async() {
+        if (this.error)
+          return Promise.reject(this.error);
+        return Promise.resolve(this.result);
+      }
+      catch(onRejected) {
+        return this.async().catch(onRejected);
+      }
+      finally(onFinally) {
+        return this.async().then(onFinally, onFinally);
+      }
+      sync() {
+        if (this.error)
+          throw this.error;
+        return this.result;
+      }
+      then(onFulfilled, onRejected) {
+        if (true) {
+          if (!("from" in this._opts)) {
+            warnOnce(
+              "Without `from` option PostCSS could generate wrong source map and will not find Browserslist config. Set it to CSS file path or to `undefined` to prevent this warning."
+            );
+          }
+        }
+        return this.async().then(onFulfilled, onRejected);
+      }
+      toString() {
+        return this._css;
+      }
+      warnings() {
+        return [];
+      }
+    };
+    module2.exports = NoWorkResult;
+    NoWorkResult.default = NoWorkResult;
+  }
+});
+
+// node_modules/postcss/lib/processor.js
+var require_processor = __commonJS({
+  "node_modules/postcss/lib/processor.js"(exports, module2) {
+    "use strict";
+    var Document2 = require_document();
+    var LazyResult = require_lazy_result();
+    var NoWorkResult = require_no_work_result();
+    var Root2 = require_root();
+    var Processor2 = class {
+      constructor(plugins = []) {
+        this.version = "8.5.23";
+        this.plugins = this.normalize(plugins);
+      }
+      normalize(plugins) {
+        let normalized = [];
+        for (let i of plugins) {
+          if (i.postcss === true) {
+            i = i();
+          } else if (i.postcss) {
+            i = i.postcss;
+          }
+          if (typeof i === "object" && Array.isArray(i.plugins)) {
+            normalized = normalized.concat(i.plugins);
+          } else if (typeof i === "object" && i.postcssPlugin) {
+            normalized.push(i);
+          } else if (typeof i === "function") {
+            normalized.push(i);
+          } else if (typeof i === "object" && (i.parse || i.stringify)) {
+            if (true) {
+              throw new Error(
+                "PostCSS syntaxes cannot be used as plugins. Instead, please use one of the syntax/parser/stringifier options as outlined in your PostCSS runner documentation."
+              );
+            }
+          } else {
+            throw new Error(i + " is not a PostCSS plugin");
+          }
+        }
+        return normalized;
+      }
+      process(css, opts = {}) {
+        if (!this.plugins.length && !opts.parser && !opts.stringifier && !opts.syntax) {
+          return new NoWorkResult(this, css, opts);
+        } else {
+          return new LazyResult(this, css, opts);
+        }
+      }
+      use(plugin2) {
+        this.plugins = this.plugins.concat(this.normalize([plugin2]));
+        return this;
+      }
+    };
+    module2.exports = Processor2;
+    Processor2.default = Processor2;
+    Root2.registerProcessor(Processor2);
+    Document2.registerProcessor(Processor2);
+  }
+});
+
+// node_modules/postcss/lib/postcss.js
+var require_postcss = __commonJS({
+  "node_modules/postcss/lib/postcss.js"(exports, module2) {
+    "use strict";
+    var AtRule2 = require_at_rule();
+    var Comment2 = require_comment();
+    var Container2 = require_container();
+    var CssSyntaxError2 = require_css_syntax_error();
+    var Declaration2 = require_declaration();
+    var Document2 = require_document();
+    var fromJSON2 = require_fromJSON();
+    var Input2 = require_input();
+    var LazyResult = require_lazy_result();
+    var list2 = require_list();
+    var Node3 = require_node2();
+    var parse2 = require_parse4();
+    var Processor2 = require_processor();
+    var Result2 = require_result();
+    var Root2 = require_root();
+    var Rule2 = require_rule();
+    var stringify2 = require_stringify4();
+    var Warning2 = require_warning();
+    function postcss2(...plugins) {
+      if (plugins.length === 1 && Array.isArray(plugins[0])) {
+        plugins = plugins[0];
+      }
+      return new Processor2(plugins);
+    }
+    postcss2.plugin = function plugin2(name, initializer) {
+      let warningPrinted = false;
+      function creator(...args) {
+        if (console && console.warn && !warningPrinted) {
+          warningPrinted = true;
+          console.warn(
+            name + ": postcss.plugin was deprecated. Migration guide:\nhttps://evilmartians.com/chronicles/postcss-8-plugin-migration"
+          );
+          if (process.env.LANG && process.env.LANG.startsWith("cn")) {
+            console.warn(
+              name + ": \u91CC\u9762 postcss.plugin \u88AB\u5F03\u7528. \u8FC1\u79FB\u6307\u5357:\nhttps://www.w3ctech.com/topic/2226"
+            );
+          }
+        }
+        let transformer = initializer(...args);
+        transformer.postcssPlugin = name;
+        transformer.postcssVersion = new Processor2().version;
+        return transformer;
+      }
+      let cache;
+      Object.defineProperty(creator, "postcss", {
+        get() {
+          if (!cache)
+            cache = creator();
+          return cache;
+        }
+      });
+      creator.process = function(css, processOpts, pluginOpts) {
+        return postcss2([creator(pluginOpts)]).process(css, processOpts);
+      };
+      return creator;
+    };
+    postcss2.stringify = stringify2;
+    postcss2.parse = parse2;
+    postcss2.fromJSON = fromJSON2;
+    postcss2.list = list2;
+    postcss2.comment = (defaults) => new Comment2(defaults);
+    postcss2.atRule = (defaults) => new AtRule2(defaults);
+    postcss2.decl = (defaults) => new Declaration2(defaults);
+    postcss2.rule = (defaults) => new Rule2(defaults);
+    postcss2.root = (defaults) => new Root2(defaults);
+    postcss2.document = (defaults) => new Document2(defaults);
+    postcss2.CssSyntaxError = CssSyntaxError2;
+    postcss2.Declaration = Declaration2;
+    postcss2.Container = Container2;
+    postcss2.Processor = Processor2;
+    postcss2.Document = Document2;
+    postcss2.Comment = Comment2;
+    postcss2.Warning = Warning2;
+    postcss2.AtRule = AtRule2;
+    postcss2.Result = Result2;
+    postcss2.Input = Input2;
+    postcss2.Rule = Rule2;
+    postcss2.Root = Root2;
+    postcss2.Node = Node3;
+    LazyResult.registerPostcss(postcss2);
+    module2.exports = postcss2;
+    postcss2.default = postcss2;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/util/unesc.js
+var require_unesc = __commonJS({
+  "node_modules/postcss-selector-parser/dist/util/unesc.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = unesc;
+    function gobbleHex(str) {
+      var lower = str.toLowerCase();
+      var hex = "";
+      var spaceTerminated = false;
+      for (var i = 0; i < 6 && lower[i] !== void 0; i++) {
+        var code = lower.charCodeAt(i);
+        var valid = code >= 97 && code <= 102 || code >= 48 && code <= 57;
+        spaceTerminated = code === 32;
+        if (!valid) {
+          break;
+        }
+        hex += lower[i];
+      }
+      if (hex.length === 0) {
+        return void 0;
+      }
+      var codePoint = parseInt(hex, 16);
+      var isSurrogate = codePoint >= 55296 && codePoint <= 57343;
+      if (isSurrogate || codePoint === 0 || codePoint > 1114111) {
+        return ["\uFFFD", hex.length + (spaceTerminated ? 1 : 0)];
+      }
+      return [String.fromCodePoint(codePoint), hex.length + (spaceTerminated ? 1 : 0)];
+    }
+    var CONTAINS_ESCAPE = /\\/;
+    function unesc(str) {
+      var needToProcess = CONTAINS_ESCAPE.test(str);
+      if (!needToProcess) {
+        return str;
+      }
+      var ret = "";
+      for (var i = 0; i < str.length; i++) {
+        if (str[i] === "\\") {
+          var gobbled = gobbleHex(str.slice(i + 1, i + 7));
+          if (gobbled !== void 0) {
+            ret += gobbled[0];
+            i += gobbled[1];
+            continue;
+          }
+          if (str[i + 1] === "\\") {
+            ret += "\\";
+            i++;
+            continue;
+          }
+          if (str.length === i + 1) {
+            ret += str[i];
+          }
+          continue;
+        }
+        ret += str[i];
+      }
+      return ret;
+    }
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/util/getProp.js
+var require_getProp = __commonJS({
+  "node_modules/postcss-selector-parser/dist/util/getProp.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = getProp;
+    function getProp(obj) {
+      var props = [];
+      for (var _i = 1; _i < arguments.length; _i++) {
+        props[_i - 1] = arguments[_i];
+      }
+      while (props.length > 0) {
+        var prop = props.shift();
+        if (!obj[prop]) {
+          return void 0;
+        }
+        obj = obj[prop];
+      }
+      return obj;
+    }
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/util/ensureObject.js
+var require_ensureObject = __commonJS({
+  "node_modules/postcss-selector-parser/dist/util/ensureObject.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = ensureObject;
+    function ensureObject(obj) {
+      var props = [];
+      for (var _i = 1; _i < arguments.length; _i++) {
+        props[_i - 1] = arguments[_i];
+      }
+      while (props.length > 0) {
+        var prop = props.shift();
+        if (!obj[prop]) {
+          obj[prop] = {};
+        }
+        obj = obj[prop];
+      }
+    }
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/util/stripComments.js
+var require_stripComments = __commonJS({
+  "node_modules/postcss-selector-parser/dist/util/stripComments.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = stripComments;
+    function stripComments(str) {
+      var s = "";
+      var commentStart = str.indexOf("/*");
+      var lastEnd = 0;
+      while (commentStart >= 0) {
+        s = s + str.slice(lastEnd, commentStart);
+        var commentEnd = str.indexOf("*/", commentStart + 2);
+        if (commentEnd < 0) {
+          return s;
+        }
+        lastEnd = commentEnd + 2;
+        commentStart = str.indexOf("/*", lastEnd);
+      }
+      s = s + str.slice(lastEnd);
+      return s;
+    }
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/util/maxNestingDepth.js
+var require_maxNestingDepth = __commonJS({
+  "node_modules/postcss-selector-parser/dist/util/maxNestingDepth.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.MAX_NESTING_DEPTH = void 0;
+    exports.default = resolveMaxNestingDepth;
+    exports.MAX_NESTING_DEPTH = 256;
+    function resolveMaxNestingDepth(value) {
+      return Number.isSafeInteger(value) && value >= 0 ? value : exports.MAX_NESTING_DEPTH;
+    }
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/util/index.js
+var require_util = __commonJS({
+  "node_modules/postcss-selector-parser/dist/util/index.js"(exports) {
+    "use strict";
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.MAX_NESTING_DEPTH = exports.resolveMaxNestingDepth = exports.stripComments = exports.ensureObject = exports.getProp = exports.unesc = void 0;
+    var unesc_1 = require_unesc();
+    Object.defineProperty(exports, "unesc", { enumerable: true, get: function() {
+      return __importDefault(unesc_1).default;
+    } });
+    var getProp_1 = require_getProp();
+    Object.defineProperty(exports, "getProp", { enumerable: true, get: function() {
+      return __importDefault(getProp_1).default;
+    } });
+    var ensureObject_1 = require_ensureObject();
+    Object.defineProperty(exports, "ensureObject", { enumerable: true, get: function() {
+      return __importDefault(ensureObject_1).default;
+    } });
+    var stripComments_1 = require_stripComments();
+    Object.defineProperty(exports, "stripComments", { enumerable: true, get: function() {
+      return __importDefault(stripComments_1).default;
+    } });
+    var maxNestingDepth_1 = require_maxNestingDepth();
+    Object.defineProperty(exports, "resolveMaxNestingDepth", { enumerable: true, get: function() {
+      return __importDefault(maxNestingDepth_1).default;
+    } });
+    Object.defineProperty(exports, "MAX_NESTING_DEPTH", { enumerable: true, get: function() {
+      return maxNestingDepth_1.MAX_NESTING_DEPTH;
+    } });
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/node.js
+var require_node3 = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/node.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var util_1 = require_util();
+    var cloneNode = function(obj, parent, depth) {
+      if (depth === void 0) {
+        depth = 0;
+      }
+      if (depth > util_1.MAX_NESTING_DEPTH) {
+        throw new Error("Cannot clone selector: nesting depth exceeds the maximum of ".concat(util_1.MAX_NESTING_DEPTH, "."));
+      }
+      if (typeof obj !== "object" || obj === null) {
+        return obj;
+      }
+      var cloned = new obj.constructor();
+      for (var i in obj) {
+        if (!obj.hasOwnProperty(i)) {
+          continue;
+        }
+        var value = obj[i];
+        var type = typeof value;
+        if (i === "parent" && type === "object") {
+          if (parent) {
+            cloned[i] = parent;
+          }
+        } else if (value instanceof Array) {
+          cloned[i] = value.map(function(j) {
+            return cloneNode(j, cloned, depth + 1);
+          });
+        } else {
+          cloned[i] = cloneNode(value, cloned, depth + 1);
+        }
+      }
+      return cloned;
+    };
+    var Node3 = (
+      /** @class */
+      function() {
+        function Node4(opts) {
+          if (opts === void 0) {
+            opts = {};
+          }
+          Object.assign(this, opts);
+          this.spaces = this.spaces || {};
+          this.spaces.before = this.spaces.before || "";
+          this.spaces.after = this.spaces.after || "";
+        }
+        Node4.prototype.remove = function() {
+          if (this.parent) {
+            this.parent.removeChild(this);
+          }
+          this.parent = void 0;
+          return this;
+        };
+        Node4.prototype.replaceWith = function() {
+          if (this.parent) {
+            for (var index in arguments) {
+              this.parent.insertBefore(this, arguments[index]);
+            }
+            this.remove();
+          }
+          return this;
+        };
+        Node4.prototype.next = function() {
+          return this.parent.at(this.parent.index(this) + 1);
+        };
+        Node4.prototype.prev = function() {
+          return this.parent.at(this.parent.index(this) - 1);
+        };
+        Node4.prototype.clone = function(overrides) {
+          if (overrides === void 0) {
+            overrides = {};
+          }
+          var cloned = cloneNode(this);
+          for (var name in overrides) {
+            cloned[name] = overrides[name];
+          }
+          return cloned;
+        };
+        Node4.prototype.appendToPropertyAndEscape = function(name, value, valueEscaped) {
+          if (!this.raws) {
+            this.raws = {};
+          }
+          var originalValue = this[name];
+          var originalEscaped = this.raws[name];
+          this[name] = originalValue + value;
+          if (originalEscaped || valueEscaped !== value) {
+            this.raws[name] = (originalEscaped || originalValue) + valueEscaped;
+          } else {
+            delete this.raws[name];
+          }
+        };
+        Node4.prototype.setPropertyAndEscape = function(name, value, valueEscaped) {
+          if (!this.raws) {
+            this.raws = {};
+          }
+          this[name] = value;
+          this.raws[name] = valueEscaped;
+        };
+        Node4.prototype.setPropertyWithoutEscape = function(name, value) {
+          this[name] = value;
+          if (this.raws) {
+            delete this.raws[name];
+          }
+        };
+        Node4.prototype.isAtPosition = function(line, column) {
+          if (this.source && this.source.start && this.source.end) {
+            if (this.source.start.line > line) {
+              return false;
+            }
+            if (this.source.end.line < line) {
+              return false;
+            }
+            if (this.source.start.line === line && this.source.start.column > column) {
+              return false;
+            }
+            if (this.source.end.line === line && this.source.end.column < column) {
+              return false;
+            }
+            return true;
+          }
+          return void 0;
+        };
+        Node4.prototype.stringifyProperty = function(name) {
+          return this.raws && this.raws[name] || this[name];
+        };
+        Object.defineProperty(Node4.prototype, "rawSpaceBefore", {
+          get: function() {
+            var rawSpace = this.raws && this.raws.spaces && this.raws.spaces.before;
+            if (rawSpace === void 0) {
+              rawSpace = this.spaces && this.spaces.before;
+            }
+            return rawSpace || "";
+          },
+          set: function(raw) {
+            (0, util_1.ensureObject)(this, "raws", "spaces");
+            this.raws.spaces.before = raw;
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Object.defineProperty(Node4.prototype, "rawSpaceAfter", {
+          get: function() {
+            var rawSpace = this.raws && this.raws.spaces && this.raws.spaces.after;
+            if (rawSpace === void 0) {
+              rawSpace = this.spaces.after;
+            }
+            return rawSpace || "";
+          },
+          set: function(raw) {
+            (0, util_1.ensureObject)(this, "raws", "spaces");
+            this.raws.spaces.after = raw;
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Node4.prototype.valueToString = function() {
+          return String(this.stringifyProperty("value"));
+        };
+        Node4.prototype.toString = function() {
+          return [this.rawSpaceBefore, this.valueToString(), this.rawSpaceAfter].join("");
+        };
+        Node4.prototype._stringify = function() {
+          return this.toString();
+        };
+        return Node4;
+      }()
+    );
+    exports.default = Node3;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/types.js
+var require_types3 = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/types.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.UNIVERSAL = exports.ATTRIBUTE = exports.CLASS = exports.COMBINATOR = exports.COMMENT = exports.ID = exports.NESTING = exports.PSEUDO = exports.ROOT = exports.SELECTOR = exports.STRING = exports.TAG = void 0;
+    exports.TAG = "tag";
+    exports.STRING = "string";
+    exports.SELECTOR = "selector";
+    exports.ROOT = "root";
+    exports.PSEUDO = "pseudo";
+    exports.NESTING = "nesting";
+    exports.ID = "id";
+    exports.COMMENT = "comment";
+    exports.COMBINATOR = "combinator";
+    exports.CLASS = "class";
+    exports.ATTRIBUTE = "attribute";
+    exports.UNIVERSAL = "universal";
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/container.js
+var require_container2 = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/container.js"(exports) {
+    "use strict";
+    var __extends = exports && exports.__extends || function() {
+      var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+          d2.__proto__ = b2;
+        } || function(d2, b2) {
+          for (var p in b2)
+            if (Object.prototype.hasOwnProperty.call(b2, p))
+              d2[p] = b2[p];
+        };
+        return extendStatics(d, b);
+      };
+      return function(d, b) {
+        if (typeof b !== "function" && b !== null)
+          throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() {
+          this.constructor = d;
+        }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+      };
+    }();
+    var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+      if (k2 === void 0)
+        k2 = k;
+      var desc = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+        desc = { enumerable: true, get: function() {
+          return m[k];
+        } };
+      }
+      Object.defineProperty(o, k2, desc);
+    } : function(o, m, k, k2) {
+      if (k2 === void 0)
+        k2 = k;
+      o[k2] = m[k];
+    });
+    var __setModuleDefault = exports && exports.__setModuleDefault || (Object.create ? function(o, v) {
+      Object.defineProperty(o, "default", { enumerable: true, value: v });
+    } : function(o, v) {
+      o["default"] = v;
+    });
+    var __importStar = exports && exports.__importStar || function() {
+      var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function(o2) {
+          var ar = [];
+          for (var k in o2)
+            if (Object.prototype.hasOwnProperty.call(o2, k))
+              ar[ar.length] = k;
+          return ar;
+        };
+        return ownKeys(o);
+      };
+      return function(mod) {
+        if (mod && mod.__esModule)
+          return mod;
+        var result = {};
+        if (mod != null) {
+          for (var k = ownKeys(mod), i = 0; i < k.length; i++)
+            if (k[i] !== "default")
+              __createBinding(result, mod, k[i]);
+        }
+        __setModuleDefault(result, mod);
+        return result;
+      };
+    }();
+    var __values = exports && exports.__values || function(o) {
+      var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+      if (m)
+        return m.call(o);
+      if (o && typeof o.length === "number")
+        return {
+          next: function() {
+            if (o && i >= o.length)
+              o = void 0;
+            return { value: o && o[i++], done: !o };
+          }
+        };
+      throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+    };
+    var __read = exports && exports.__read || function(o, n) {
+      var m = typeof Symbol === "function" && o[Symbol.iterator];
+      if (!m)
+        return o;
+      var i = m.call(o), r, ar = [], e;
+      try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done)
+          ar.push(r.value);
+      } catch (error) {
+        e = { error };
+      } finally {
+        try {
+          if (r && !r.done && (m = i["return"]))
+            m.call(i);
+        } finally {
+          if (e)
+            throw e.error;
+        }
+      }
+      return ar;
+    };
+    var __spreadArray = exports && exports.__spreadArray || function(to, from, pack) {
+      if (pack || arguments.length === 2)
+        for (var i = 0, l = from.length, ar; i < l; i++) {
+          if (ar || !(i in from)) {
+            if (!ar)
+              ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+          }
+        }
+      return to.concat(ar || Array.prototype.slice.call(from));
+    };
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var util_1 = require_util();
+    var node_1 = __importDefault(require_node3());
+    var types = __importStar(require_types3());
+    var Container2 = (
+      /** @class */
+      function(_super) {
+        __extends(Container3, _super);
+        function Container3(opts) {
+          var _this = _super.call(this, opts) || this;
+          if (!_this.nodes) {
+            _this.nodes = [];
+          }
+          return _this;
+        }
+        Container3.prototype.append = function(selector) {
+          selector.parent = this;
+          this.nodes.push(selector);
+          return this;
+        };
+        Container3.prototype.prepend = function(selector) {
+          selector.parent = this;
+          this.nodes.unshift(selector);
+          for (var id in this.indexes) {
+            this.indexes[id]++;
+          }
+          return this;
+        };
+        Container3.prototype.at = function(index) {
+          return this.nodes[index];
+        };
+        Container3.prototype.index = function(child) {
+          if (typeof child === "number") {
+            return child;
+          }
+          return this.nodes.indexOf(child);
+        };
+        Object.defineProperty(Container3.prototype, "first", {
+          get: function() {
+            return this.at(0);
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Object.defineProperty(Container3.prototype, "last", {
+          get: function() {
+            return this.at(this.length - 1);
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Object.defineProperty(Container3.prototype, "length", {
+          get: function() {
+            return this.nodes.length;
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Container3.prototype.removeChild = function(child) {
+          child = this.index(child);
+          this.at(child).parent = void 0;
+          this.nodes.splice(child, 1);
+          var index;
+          for (var id in this.indexes) {
+            index = this.indexes[id];
+            if (index >= child) {
+              this.indexes[id] = index - 1;
+            }
+          }
+          return this;
+        };
+        Container3.prototype.removeAll = function() {
+          var e_1, _a5;
+          try {
+            for (var _b = __values(this.nodes), _c = _b.next(); !_c.done; _c = _b.next()) {
+              var node = _c.value;
+              node.parent = void 0;
+            }
+          } catch (e_1_1) {
+            e_1 = { error: e_1_1 };
+          } finally {
+            try {
+              if (_c && !_c.done && (_a5 = _b.return))
+                _a5.call(_b);
+            } finally {
+              if (e_1)
+                throw e_1.error;
+            }
+          }
+          this.nodes = [];
+          return this;
+        };
+        Container3.prototype.empty = function() {
+          return this.removeAll();
+        };
+        Container3.prototype.insertAfter = function(oldNode, newNode) {
+          var _a5;
+          newNode.parent = this;
+          var oldIndex = this.index(oldNode);
+          var resetNode = [];
+          for (var i = 2; i < arguments.length; i++) {
+            resetNode.push(arguments[i]);
+          }
+          (_a5 = this.nodes).splice.apply(_a5, __spreadArray([oldIndex + 1, 0, newNode], __read(resetNode), false));
+          newNode.parent = this;
+          var index;
+          for (var id in this.indexes) {
+            index = this.indexes[id];
+            if (oldIndex < index) {
+              this.indexes[id] = index + arguments.length - 1;
+            }
+          }
+          return this;
+        };
+        Container3.prototype.insertBefore = function(oldNode, newNode) {
+          var _a5;
+          newNode.parent = this;
+          var oldIndex = this.index(oldNode);
+          var resetNode = [];
+          for (var i = 2; i < arguments.length; i++) {
+            resetNode.push(arguments[i]);
+          }
+          (_a5 = this.nodes).splice.apply(_a5, __spreadArray([oldIndex, 0, newNode], __read(resetNode), false));
+          newNode.parent = this;
+          var index;
+          for (var id in this.indexes) {
+            index = this.indexes[id];
+            if (index >= oldIndex) {
+              this.indexes[id] = index + arguments.length - 1;
+            }
+          }
+          return this;
+        };
+        Container3.prototype._findChildAtPosition = function(line, col) {
+          var found = void 0;
+          this.each(function(node) {
+            if (node.atPosition) {
+              var foundChild = node.atPosition(line, col);
+              if (foundChild) {
+                found = foundChild;
+                return false;
+              }
+            } else if (node.isAtPosition(line, col)) {
+              found = node;
+              return false;
+            }
+          });
+          return found;
+        };
+        Container3.prototype.atPosition = function(line, col) {
+          if (this.isAtPosition(line, col)) {
+            return this._findChildAtPosition(line, col) || this;
+          } else {
+            return void 0;
+          }
+        };
+        Container3.prototype._inferEndPosition = function() {
+          if (this.last && this.last.source && this.last.source.end) {
+            this.source = this.source || {};
+            this.source.end = this.source.end || {};
+            Object.assign(this.source.end, this.last.source.end);
+          }
+        };
+        Container3.prototype.each = function(callback) {
+          if (!this.lastEach) {
+            this.lastEach = 0;
+          }
+          if (!this.indexes) {
+            this.indexes = {};
+          }
+          this.lastEach++;
+          var id = this.lastEach;
+          this.indexes[id] = 0;
+          if (!this.length) {
+            return void 0;
+          }
+          var index, result;
+          while (this.indexes[id] < this.length) {
+            index = this.indexes[id];
+            result = callback(this.at(index), index);
+            if (result === false) {
+              break;
+            }
+            this.indexes[id] += 1;
+          }
+          delete this.indexes[id];
+          if (result === false) {
+            return false;
+          }
+        };
+        Container3.prototype.walk = function(callback, depth) {
+          if (depth === void 0) {
+            depth = 0;
+          }
+          if (depth > util_1.MAX_NESTING_DEPTH) {
+            throw new Error("Cannot walk selector: nesting depth exceeds the maximum of ".concat(util_1.MAX_NESTING_DEPTH, "."));
+          }
+          return this.each(function(node, i) {
+            var result = callback(node, i);
+            if (result !== false && node.length) {
+              result = node.walk(callback, depth + 1);
+            }
+            if (result === false) {
+              return false;
+            }
+          });
+        };
+        Container3.prototype.walkAttributes = function(callback) {
+          var _this = this;
+          return this.walk(function(selector) {
+            if (selector.type === types.ATTRIBUTE) {
+              return callback.call(_this, selector);
+            }
+          });
+        };
+        Container3.prototype.walkClasses = function(callback) {
+          var _this = this;
+          return this.walk(function(selector) {
+            if (selector.type === types.CLASS) {
+              return callback.call(_this, selector);
+            }
+          });
+        };
+        Container3.prototype.walkCombinators = function(callback) {
+          var _this = this;
+          return this.walk(function(selector) {
+            if (selector.type === types.COMBINATOR) {
+              return callback.call(_this, selector);
+            }
+          });
+        };
+        Container3.prototype.walkComments = function(callback) {
+          var _this = this;
+          return this.walk(function(selector) {
+            if (selector.type === types.COMMENT) {
+              return callback.call(_this, selector);
+            }
+          });
+        };
+        Container3.prototype.walkIds = function(callback) {
+          var _this = this;
+          return this.walk(function(selector) {
+            if (selector.type === types.ID) {
+              return callback.call(_this, selector);
+            }
+          });
+        };
+        Container3.prototype.walkNesting = function(callback) {
+          var _this = this;
+          return this.walk(function(selector) {
+            if (selector.type === types.NESTING) {
+              return callback.call(_this, selector);
+            }
+          });
+        };
+        Container3.prototype.walkPseudos = function(callback) {
+          var _this = this;
+          return this.walk(function(selector) {
+            if (selector.type === types.PSEUDO) {
+              return callback.call(_this, selector);
+            }
+          });
+        };
+        Container3.prototype.walkTags = function(callback) {
+          var _this = this;
+          return this.walk(function(selector) {
+            if (selector.type === types.TAG) {
+              return callback.call(_this, selector);
+            }
+          });
+        };
+        Container3.prototype.walkUniversals = function(callback) {
+          var _this = this;
+          return this.walk(function(selector) {
+            if (selector.type === types.UNIVERSAL) {
+              return callback.call(_this, selector);
+            }
+          });
+        };
+        Container3.prototype.split = function(callback) {
+          var _this = this;
+          var current = [];
+          return this.reduce(function(memo, node, index) {
+            var split = callback.call(_this, node);
+            current.push(node);
+            if (split) {
+              memo.push(current);
+              current = [];
+            } else if (index === _this.length - 1) {
+              memo.push(current);
+            }
+            return memo;
+          }, []);
+        };
+        Container3.prototype.map = function(callback) {
+          return this.nodes.map(callback);
+        };
+        Container3.prototype.reduce = function(callback, memo) {
+          return this.nodes.reduce(callback, memo);
+        };
+        Container3.prototype.every = function(callback) {
+          return this.nodes.every(callback);
+        };
+        Container3.prototype.some = function(callback) {
+          return this.nodes.some(callback);
+        };
+        Container3.prototype.filter = function(callback) {
+          return this.nodes.filter(callback);
+        };
+        Container3.prototype.sort = function(callback) {
+          return this.nodes.sort(callback);
+        };
+        Container3.prototype.toString = function(options) {
+          if (options === void 0) {
+            options = {};
+          }
+          return this._stringify(options, 0, (0, util_1.resolveMaxNestingDepth)(options.maxNestingDepth));
+        };
+        Container3.prototype._stringify = function(options, depth, max) {
+          var _this = this;
+          return this.map(function(child) {
+            return _this._stringifyChild(child, options, depth, max);
+          }).join("");
+        };
+        Container3.prototype._stringifyChild = function(child, options, depth, max) {
+          return typeof child._stringify === "function" ? child._stringify(options, depth, max) : String(child);
+        };
+        return Container3;
+      }(node_1.default)
+    );
+    exports.default = Container2;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/root.js
+var require_root2 = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/root.js"(exports) {
+    "use strict";
+    var __extends = exports && exports.__extends || function() {
+      var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+          d2.__proto__ = b2;
+        } || function(d2, b2) {
+          for (var p in b2)
+            if (Object.prototype.hasOwnProperty.call(b2, p))
+              d2[p] = b2[p];
+        };
+        return extendStatics(d, b);
+      };
+      return function(d, b) {
+        if (typeof b !== "function" && b !== null)
+          throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() {
+          this.constructor = d;
+        }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+      };
+    }();
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var container_1 = __importDefault(require_container2());
+    var types_1 = require_types3();
+    var Root2 = (
+      /** @class */
+      function(_super) {
+        __extends(Root3, _super);
+        function Root3(opts) {
+          var _this = _super.call(this, opts) || this;
+          _this.type = types_1.ROOT;
+          return _this;
+        }
+        Root3.prototype._stringify = function(options, depth, max) {
+          var _this = this;
+          var str = this.reduce(function(memo, selector) {
+            memo.push(_this._stringifyChild(selector, options, depth, max));
+            return memo;
+          }, []).join(",");
+          return this.trailingComma ? str + "," : str;
+        };
+        Root3.prototype.error = function(message, options) {
+          if (this._error) {
+            return this._error(message, options);
+          } else {
+            return new Error(message);
+          }
+        };
+        Object.defineProperty(Root3.prototype, "errorGenerator", {
+          set: function(handler) {
+            this._error = handler;
+          },
+          enumerable: false,
+          configurable: true
+        });
+        return Root3;
+      }(container_1.default)
+    );
+    exports.default = Root2;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/selector.js
+var require_selector2 = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/selector.js"(exports) {
+    "use strict";
+    var __extends = exports && exports.__extends || function() {
+      var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+          d2.__proto__ = b2;
+        } || function(d2, b2) {
+          for (var p in b2)
+            if (Object.prototype.hasOwnProperty.call(b2, p))
+              d2[p] = b2[p];
+        };
+        return extendStatics(d, b);
+      };
+      return function(d, b) {
+        if (typeof b !== "function" && b !== null)
+          throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() {
+          this.constructor = d;
+        }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+      };
+    }();
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var container_1 = __importDefault(require_container2());
+    var types_1 = require_types3();
+    var Selector = (
+      /** @class */
+      function(_super) {
+        __extends(Selector2, _super);
+        function Selector2(opts) {
+          var _this = _super.call(this, opts) || this;
+          _this.type = types_1.SELECTOR;
+          return _this;
+        }
+        return Selector2;
+      }(container_1.default)
+    );
+    exports.default = Selector;
+  }
+});
+
+// node_modules/cssesc/cssesc.js
+var require_cssesc = __commonJS({
+  "node_modules/cssesc/cssesc.js"(exports, module2) {
+    "use strict";
+    var object = {};
+    var hasOwnProperty = object.hasOwnProperty;
+    var merge = function merge2(options, defaults) {
+      if (!options) {
+        return defaults;
+      }
+      var result = {};
+      for (var key in defaults) {
+        result[key] = hasOwnProperty.call(options, key) ? options[key] : defaults[key];
+      }
+      return result;
+    };
+    var regexAnySingleEscape = /[ -,\.\/:-@\[-\^`\{-~]/;
+    var regexSingleEscape = /[ -,\.\/:-@\[\]\^`\{-~]/;
+    var regexExcessiveSpaces = /(^|\\+)?(\\[A-F0-9]{1,6})\x20(?![a-fA-F0-9\x20])/g;
+    var cssesc = function cssesc2(string, options) {
+      options = merge(options, cssesc2.options);
+      if (options.quotes != "single" && options.quotes != "double") {
+        options.quotes = "single";
+      }
+      var quote = options.quotes == "double" ? '"' : "'";
+      var isIdentifier = options.isIdentifier;
+      var firstChar = string.charAt(0);
+      var output = "";
+      var counter = 0;
+      var length = string.length;
+      while (counter < length) {
+        var character = string.charAt(counter++);
+        var codePoint = character.charCodeAt();
+        var value = void 0;
+        if (codePoint < 32 || codePoint > 126) {
+          if (codePoint >= 55296 && codePoint <= 56319 && counter < length) {
+            var extra = string.charCodeAt(counter++);
+            if ((extra & 64512) == 56320) {
+              codePoint = ((codePoint & 1023) << 10) + (extra & 1023) + 65536;
+            } else {
+              counter--;
+            }
+          }
+          value = "\\" + codePoint.toString(16).toUpperCase() + " ";
+        } else {
+          if (options.escapeEverything) {
+            if (regexAnySingleEscape.test(character)) {
+              value = "\\" + character;
+            } else {
+              value = "\\" + codePoint.toString(16).toUpperCase() + " ";
+            }
+          } else if (/[\t\n\f\r\x0B]/.test(character)) {
+            value = "\\" + codePoint.toString(16).toUpperCase() + " ";
+          } else if (character == "\\" || !isIdentifier && (character == '"' && quote == character || character == "'" && quote == character) || isIdentifier && regexSingleEscape.test(character)) {
+            value = "\\" + character;
+          } else {
+            value = character;
+          }
+        }
+        output += value;
+      }
+      if (isIdentifier) {
+        if (/^-[-\d]/.test(output)) {
+          output = "\\-" + output.slice(1);
+        } else if (/\d/.test(firstChar)) {
+          output = "\\3" + firstChar + " " + output.slice(1);
+        }
+      }
+      output = output.replace(regexExcessiveSpaces, function($0, $1, $2) {
+        if ($1 && $1.length % 2) {
+          return $0;
+        }
+        return ($1 || "") + $2;
+      });
+      if (!isIdentifier && options.wrap) {
+        return quote + output + quote;
+      }
+      return output;
+    };
+    cssesc.options = {
+      "escapeEverything": false,
+      "isIdentifier": false,
+      "quotes": "single",
+      "wrap": false
+    };
+    cssesc.version = "3.0.0";
+    module2.exports = cssesc;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/className.js
+var require_className = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/className.js"(exports) {
+    "use strict";
+    var __extends = exports && exports.__extends || function() {
+      var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+          d2.__proto__ = b2;
+        } || function(d2, b2) {
+          for (var p in b2)
+            if (Object.prototype.hasOwnProperty.call(b2, p))
+              d2[p] = b2[p];
+        };
+        return extendStatics(d, b);
+      };
+      return function(d, b) {
+        if (typeof b !== "function" && b !== null)
+          throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() {
+          this.constructor = d;
+        }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+      };
+    }();
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var cssesc_1 = __importDefault(require_cssesc());
+    var util_1 = require_util();
+    var node_1 = __importDefault(require_node3());
+    var types_1 = require_types3();
+    var ClassName = (
+      /** @class */
+      function(_super) {
+        __extends(ClassName2, _super);
+        function ClassName2(opts) {
+          var _this = _super.call(this, opts) || this;
+          _this.type = types_1.CLASS;
+          _this._constructed = true;
+          return _this;
+        }
+        Object.defineProperty(ClassName2.prototype, "value", {
+          get: function() {
+            return this._value;
+          },
+          set: function(v) {
+            if (this._constructed) {
+              var escaped = (0, cssesc_1.default)(v, { isIdentifier: true });
+              if (escaped !== v) {
+                (0, util_1.ensureObject)(this, "raws");
+                this.raws.value = escaped;
+              } else if (this.raws) {
+                delete this.raws.value;
+              }
+            }
+            this._value = v;
+          },
+          enumerable: false,
+          configurable: true
+        });
+        ClassName2.prototype.valueToString = function() {
+          return "." + _super.prototype.valueToString.call(this);
+        };
+        return ClassName2;
+      }(node_1.default)
+    );
+    exports.default = ClassName;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/comment.js
+var require_comment2 = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/comment.js"(exports) {
+    "use strict";
+    var __extends = exports && exports.__extends || function() {
+      var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+          d2.__proto__ = b2;
+        } || function(d2, b2) {
+          for (var p in b2)
+            if (Object.prototype.hasOwnProperty.call(b2, p))
+              d2[p] = b2[p];
+        };
+        return extendStatics(d, b);
+      };
+      return function(d, b) {
+        if (typeof b !== "function" && b !== null)
+          throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() {
+          this.constructor = d;
+        }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+      };
+    }();
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var node_1 = __importDefault(require_node3());
+    var types_1 = require_types3();
+    var Comment2 = (
+      /** @class */
+      function(_super) {
+        __extends(Comment3, _super);
+        function Comment3(opts) {
+          var _this = _super.call(this, opts) || this;
+          _this.type = types_1.COMMENT;
+          return _this;
+        }
+        return Comment3;
+      }(node_1.default)
+    );
+    exports.default = Comment2;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/id.js
+var require_id = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/id.js"(exports) {
+    "use strict";
+    var __extends = exports && exports.__extends || function() {
+      var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+          d2.__proto__ = b2;
+        } || function(d2, b2) {
+          for (var p in b2)
+            if (Object.prototype.hasOwnProperty.call(b2, p))
+              d2[p] = b2[p];
+        };
+        return extendStatics(d, b);
+      };
+      return function(d, b) {
+        if (typeof b !== "function" && b !== null)
+          throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() {
+          this.constructor = d;
+        }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+      };
+    }();
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var node_1 = __importDefault(require_node3());
+    var types_1 = require_types3();
+    var ID = (
+      /** @class */
+      function(_super) {
+        __extends(ID2, _super);
+        function ID2(opts) {
+          var _this = _super.call(this, opts) || this;
+          _this.type = types_1.ID;
+          return _this;
+        }
+        ID2.prototype.valueToString = function() {
+          return "#" + _super.prototype.valueToString.call(this);
+        };
+        return ID2;
+      }(node_1.default)
+    );
+    exports.default = ID;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/namespace.js
+var require_namespace = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/namespace.js"(exports) {
+    "use strict";
+    var __extends = exports && exports.__extends || function() {
+      var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+          d2.__proto__ = b2;
+        } || function(d2, b2) {
+          for (var p in b2)
+            if (Object.prototype.hasOwnProperty.call(b2, p))
+              d2[p] = b2[p];
+        };
+        return extendStatics(d, b);
+      };
+      return function(d, b) {
+        if (typeof b !== "function" && b !== null)
+          throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() {
+          this.constructor = d;
+        }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+      };
+    }();
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var cssesc_1 = __importDefault(require_cssesc());
+    var util_1 = require_util();
+    var node_1 = __importDefault(require_node3());
+    var Namespace = (
+      /** @class */
+      function(_super) {
+        __extends(Namespace2, _super);
+        function Namespace2() {
+          return _super !== null && _super.apply(this, arguments) || this;
+        }
+        Object.defineProperty(Namespace2.prototype, "namespace", {
+          get: function() {
+            return this._namespace;
+          },
+          set: function(namespace) {
+            if (namespace === true || namespace === "*" || namespace === "&") {
+              this._namespace = namespace;
+              if (this.raws) {
+                delete this.raws.namespace;
+              }
+              return;
+            }
+            var escaped = (0, cssesc_1.default)(namespace, { isIdentifier: true });
+            this._namespace = namespace;
+            if (escaped !== namespace) {
+              (0, util_1.ensureObject)(this, "raws");
+              this.raws.namespace = escaped;
+            } else if (this.raws) {
+              delete this.raws.namespace;
+            }
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Object.defineProperty(Namespace2.prototype, "ns", {
+          get: function() {
+            return this._namespace;
+          },
+          set: function(namespace) {
+            this.namespace = namespace;
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Object.defineProperty(Namespace2.prototype, "namespaceString", {
+          get: function() {
+            if (this.namespace) {
+              var ns = this.stringifyProperty("namespace");
+              if (ns === true) {
+                return "";
+              } else {
+                return ns;
+              }
+            } else {
+              return "";
+            }
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Namespace2.prototype.qualifiedName = function(value) {
+          if (this.namespace) {
+            return "".concat(this.namespaceString, "|").concat(value);
+          } else {
+            return value;
+          }
+        };
+        Namespace2.prototype.valueToString = function() {
+          return this.qualifiedName(_super.prototype.valueToString.call(this));
+        };
+        return Namespace2;
+      }(node_1.default)
+    );
+    exports.default = Namespace;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/tag.js
+var require_tag = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/tag.js"(exports) {
+    "use strict";
+    var __extends = exports && exports.__extends || function() {
+      var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+          d2.__proto__ = b2;
+        } || function(d2, b2) {
+          for (var p in b2)
+            if (Object.prototype.hasOwnProperty.call(b2, p))
+              d2[p] = b2[p];
+        };
+        return extendStatics(d, b);
+      };
+      return function(d, b) {
+        if (typeof b !== "function" && b !== null)
+          throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() {
+          this.constructor = d;
+        }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+      };
+    }();
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var namespace_1 = __importDefault(require_namespace());
+    var types_1 = require_types3();
+    var Tag = (
+      /** @class */
+      function(_super) {
+        __extends(Tag2, _super);
+        function Tag2(opts) {
+          var _this = _super.call(this, opts) || this;
+          _this.type = types_1.TAG;
+          return _this;
+        }
+        return Tag2;
+      }(namespace_1.default)
+    );
+    exports.default = Tag;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/string.js
+var require_string = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/string.js"(exports) {
+    "use strict";
+    var __extends = exports && exports.__extends || function() {
+      var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+          d2.__proto__ = b2;
+        } || function(d2, b2) {
+          for (var p in b2)
+            if (Object.prototype.hasOwnProperty.call(b2, p))
+              d2[p] = b2[p];
+        };
+        return extendStatics(d, b);
+      };
+      return function(d, b) {
+        if (typeof b !== "function" && b !== null)
+          throw new TypeError("Class extends value " + String2(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() {
+          this.constructor = d;
+        }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+      };
+    }();
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var node_1 = __importDefault(require_node3());
+    var types_1 = require_types3();
+    var String2 = (
+      /** @class */
+      function(_super) {
+        __extends(String3, _super);
+        function String3(opts) {
+          var _this = _super.call(this, opts) || this;
+          _this.type = types_1.STRING;
+          return _this;
+        }
+        return String3;
+      }(node_1.default)
+    );
+    exports.default = String2;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/pseudo.js
+var require_pseudo = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/pseudo.js"(exports) {
+    "use strict";
+    var __extends = exports && exports.__extends || function() {
+      var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+          d2.__proto__ = b2;
+        } || function(d2, b2) {
+          for (var p in b2)
+            if (Object.prototype.hasOwnProperty.call(b2, p))
+              d2[p] = b2[p];
+        };
+        return extendStatics(d, b);
+      };
+      return function(d, b) {
+        if (typeof b !== "function" && b !== null)
+          throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() {
+          this.constructor = d;
+        }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+      };
+    }();
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var container_1 = __importDefault(require_container2());
+    var types_1 = require_types3();
+    var Pseudo = (
+      /** @class */
+      function(_super) {
+        __extends(Pseudo2, _super);
+        function Pseudo2(opts) {
+          var _this = _super.call(this, opts) || this;
+          _this.type = types_1.PSEUDO;
+          return _this;
+        }
+        Pseudo2.prototype._stringify = function(options, depth, max) {
+          var _this = this;
+          if (depth >= max) {
+            throw new Error("Cannot serialize selector: nesting depth exceeds the maximum of ".concat(max, "."));
+          }
+          var params = this.length ? "(" + this.map(function(child) {
+            return _this._stringifyChild(child, options, depth + 1, max);
+          }).join(",") + ")" : "";
+          return [this.rawSpaceBefore, this.stringifyProperty("value"), params, this.rawSpaceAfter].join("");
+        };
+        return Pseudo2;
+      }(container_1.default)
+    );
+    exports.default = Pseudo;
+  }
+});
+
+// node_modules/util-deprecate/browser.js
+var require_browser = __commonJS({
+  "node_modules/util-deprecate/browser.js"(exports, module2) {
+    module2.exports = deprecate;
+    function deprecate(fn, msg) {
+      if (config("noDeprecation")) {
+        return fn;
+      }
+      var warned = false;
+      function deprecated() {
+        if (!warned) {
+          if (config("throwDeprecation")) {
+            throw new Error(msg);
+          } else if (config("traceDeprecation")) {
+            console.trace(msg);
+          } else {
+            console.warn(msg);
+          }
+          warned = true;
+        }
+        return fn.apply(this, arguments);
+      }
+      return deprecated;
+    }
+    function config(name) {
+      try {
+        if (!global.localStorage)
+          return false;
+      } catch (_) {
+        return false;
+      }
+      var val = global.localStorage[name];
+      if (null == val)
+        return false;
+      return String(val).toLowerCase() === "true";
+    }
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/attribute.js
+var require_attribute = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/attribute.js"(exports) {
+    "use strict";
+    var __extends = exports && exports.__extends || function() {
+      var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+          d2.__proto__ = b2;
+        } || function(d2, b2) {
+          for (var p in b2)
+            if (Object.prototype.hasOwnProperty.call(b2, p))
+              d2[p] = b2[p];
+        };
+        return extendStatics(d, b);
+      };
+      return function(d, b) {
+        if (typeof b !== "function" && b !== null)
+          throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() {
+          this.constructor = d;
+        }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+      };
+    }();
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    var _a5;
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.unescapeValue = unescapeValue;
+    var cssesc_1 = __importDefault(require_cssesc());
+    var unesc_1 = __importDefault(require_unesc());
+    var namespace_1 = __importDefault(require_namespace());
+    var types_1 = require_types3();
+    var deprecate = require_browser();
+    var WRAPPED_IN_QUOTES = /^('|")([^]*)\1$/;
+    var warnOfDeprecatedValueAssignment = deprecate(function() {
+    }, "Assigning an attribute a value containing characters that might need to be escaped is deprecated. Call attribute.setValue() instead.");
+    var warnOfDeprecatedQuotedAssignment = deprecate(function() {
+    }, "Assigning attr.quoted is deprecated and has no effect. Assign to attr.quoteMark instead.");
+    var warnOfDeprecatedConstructor = deprecate(function() {
+    }, "Constructing an Attribute selector with a value without specifying quoteMark is deprecated. Note: The value should be unescaped now.");
+    function unescapeValue(value) {
+      var deprecatedUsage = false;
+      var quoteMark = null;
+      var unescaped = value;
+      var m = unescaped.match(WRAPPED_IN_QUOTES);
+      if (m) {
+        quoteMark = m[1];
+        unescaped = m[2];
+      }
+      unescaped = (0, unesc_1.default)(unescaped);
+      if (unescaped !== value) {
+        deprecatedUsage = true;
+      }
+      return {
+        deprecatedUsage,
+        unescaped,
+        quoteMark
+      };
+    }
+    function handleDeprecatedContructorOpts(opts) {
+      if (opts.quoteMark !== void 0) {
+        return opts;
+      }
+      if (opts.value === void 0) {
+        return opts;
+      }
+      warnOfDeprecatedConstructor();
+      var _a6 = unescapeValue(opts.value), quoteMark = _a6.quoteMark, unescaped = _a6.unescaped;
+      if (!opts.raws) {
+        opts.raws = {};
+      }
+      if (opts.raws.value === void 0) {
+        opts.raws.value = opts.value;
+      }
+      opts.value = unescaped;
+      opts.quoteMark = quoteMark;
+      return opts;
+    }
+    var Attribute = (
+      /** @class */
+      function(_super) {
+        __extends(Attribute2, _super);
+        function Attribute2(opts) {
+          if (opts === void 0) {
+            opts = {};
+          }
+          var _this = _super.call(this, handleDeprecatedContructorOpts(opts)) || this;
+          _this.type = types_1.ATTRIBUTE;
+          _this.raws = _this.raws || {};
+          Object.defineProperty(_this.raws, "unquoted", {
+            get: deprecate(function() {
+              return _this.value;
+            }, "attr.raws.unquoted is deprecated. Call attr.value instead."),
+            set: deprecate(function() {
+              return _this.value;
+            }, "Setting attr.raws.unquoted is deprecated and has no effect. attr.value is unescaped by default now.")
+          });
+          _this._constructed = true;
+          return _this;
+        }
+        Attribute2.prototype.getQuotedValue = function(options) {
+          if (options === void 0) {
+            options = {};
+          }
+          var quoteMark = this._determineQuoteMark(options);
+          var cssescopts = CSSESC_QUOTE_OPTIONS[quoteMark];
+          var escaped = (0, cssesc_1.default)(this._value, cssescopts);
+          return escaped;
+        };
+        Attribute2.prototype._determineQuoteMark = function(options) {
+          return options.smart ? this.smartQuoteMark(options) : this.preferredQuoteMark(options);
+        };
+        Attribute2.prototype.setValue = function(value, options) {
+          if (options === void 0) {
+            options = {};
+          }
+          this._value = value;
+          this._quoteMark = this._determineQuoteMark(options);
+          this._syncRawValue();
+        };
+        Attribute2.prototype.smartQuoteMark = function(options) {
+          var v = this.value;
+          var numSingleQuotes = v.replace(/[^']/g, "").length;
+          var numDoubleQuotes = v.replace(/[^"]/g, "").length;
+          if (numSingleQuotes + numDoubleQuotes === 0) {
+            var escaped = (0, cssesc_1.default)(v, { isIdentifier: true });
+            if (escaped === v) {
+              return Attribute2.NO_QUOTE;
+            } else {
+              var pref = this.preferredQuoteMark(options);
+              if (pref === Attribute2.NO_QUOTE) {
+                var quote = this.quoteMark || options.quoteMark || Attribute2.DOUBLE_QUOTE;
+                var opts = CSSESC_QUOTE_OPTIONS[quote];
+                var quoteValue = (0, cssesc_1.default)(v, opts);
+                if (quoteValue.length < escaped.length) {
+                  return quote;
+                }
+              }
+              return pref;
+            }
+          } else if (numDoubleQuotes === numSingleQuotes) {
+            return this.preferredQuoteMark(options);
+          } else if (numDoubleQuotes < numSingleQuotes) {
+            return Attribute2.DOUBLE_QUOTE;
+          } else {
+            return Attribute2.SINGLE_QUOTE;
+          }
+        };
+        Attribute2.prototype.preferredQuoteMark = function(options) {
+          var quoteMark = options.preferCurrentQuoteMark ? this.quoteMark : options.quoteMark;
+          if (quoteMark === void 0) {
+            quoteMark = options.preferCurrentQuoteMark ? options.quoteMark : this.quoteMark;
+          }
+          if (quoteMark === void 0) {
+            quoteMark = Attribute2.DOUBLE_QUOTE;
+          }
+          return quoteMark;
+        };
+        Object.defineProperty(Attribute2.prototype, "quoted", {
+          get: function() {
+            var qm = this.quoteMark;
+            return qm === "'" || qm === '"';
+          },
+          set: function(value) {
+            warnOfDeprecatedQuotedAssignment();
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Object.defineProperty(Attribute2.prototype, "quoteMark", {
+          /**
+           * returns a single (`'`) or double (`"`) quote character if the value is quoted.
+           * returns `null` if the value is not quoted.
+           * returns `undefined` if the quotation state is unknown (this can happen when
+           * the attribute is constructed without specifying a quote mark.)
+           */
+          get: function() {
+            return this._quoteMark;
+          },
+          /**
+           * Set the quote mark to be used by this attribute's value.
+           * If the quote mark changes, the raw (escaped) value at `attr.raws.value` of the attribute
+           * value is updated accordingly.
+           *
+           * @param {"'" | '"' | null} quoteMark The quote mark or `null` if the value should be unquoted.
+           */
+          set: function(quoteMark) {
+            if (!this._constructed) {
+              this._quoteMark = quoteMark;
+              return;
+            }
+            if (this._quoteMark !== quoteMark) {
+              this._quoteMark = quoteMark;
+              this._syncRawValue();
+            }
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Attribute2.prototype._syncRawValue = function() {
+          var rawValue = (0, cssesc_1.default)(this._value, CSSESC_QUOTE_OPTIONS[this.quoteMark]);
+          if (rawValue === this._value) {
+            if (this.raws) {
+              delete this.raws.value;
+            }
+          } else {
+            this.raws.value = rawValue;
+          }
+        };
+        Object.defineProperty(Attribute2.prototype, "qualifiedAttribute", {
+          get: function() {
+            return this.qualifiedName(this.raws.attribute || this.attribute);
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Object.defineProperty(Attribute2.prototype, "insensitiveFlag", {
+          get: function() {
+            return this.insensitive ? "i" : "";
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Object.defineProperty(Attribute2.prototype, "value", {
+          get: function() {
+            return this._value;
+          },
+          /**
+           * Before 3.0, the value had to be set to an escaped value including any wrapped
+           * quote marks. In 3.0, the semantics of `Attribute.value` changed so that the value
+           * is unescaped during parsing and any quote marks are removed.
+           *
+           * Because the ambiguity of this semantic change, if you set `attr.value = newValue`,
+           * a deprecation warning is raised when the new value contains any characters that would
+           * require escaping (including if it contains wrapped quotes).
+           *
+           * Instead, you should call `attr.setValue(newValue, opts)` and pass options that describe
+           * how the new value is quoted.
+           */
+          set: function(v) {
+            if (this._constructed) {
+              var _a6 = unescapeValue(v), deprecatedUsage = _a6.deprecatedUsage, unescaped = _a6.unescaped, quoteMark = _a6.quoteMark;
+              if (deprecatedUsage) {
+                warnOfDeprecatedValueAssignment();
+              }
+              if (unescaped === this._value && quoteMark === this._quoteMark) {
+                return;
+              }
+              this._value = unescaped;
+              this._quoteMark = quoteMark;
+              this._syncRawValue();
+            } else {
+              this._value = v;
+            }
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Object.defineProperty(Attribute2.prototype, "insensitive", {
+          get: function() {
+            return this._insensitive;
+          },
+          /**
+           * Set the case insensitive flag.
+           * If the case insensitive flag changes, the raw (escaped) value at `attr.raws.insensitiveFlag`
+           * of the attribute is updated accordingly.
+           *
+           * @param {true | false} insensitive true if the attribute should match case-insensitively.
+           */
+          set: function(insensitive) {
+            if (!insensitive) {
+              this._insensitive = false;
+              if (this.raws && (this.raws.insensitiveFlag === "I" || this.raws.insensitiveFlag === "i")) {
+                this.raws.insensitiveFlag = void 0;
+              }
+            }
+            this._insensitive = insensitive;
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Object.defineProperty(Attribute2.prototype, "attribute", {
+          get: function() {
+            return this._attribute;
+          },
+          set: function(name) {
+            this._handleEscapes("attribute", name);
+            this._attribute = name;
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Attribute2.prototype._handleEscapes = function(prop, value) {
+          if (this._constructed) {
+            var escaped = (0, cssesc_1.default)(value, { isIdentifier: true });
+            if (escaped !== value) {
+              this.raws[prop] = escaped;
+            } else {
+              delete this.raws[prop];
+            }
+          }
+        };
+        Attribute2.prototype._spacesFor = function(name) {
+          var attrSpaces = { before: "", after: "" };
+          var spaces = this.spaces[name] || {};
+          var rawSpaces = this.raws.spaces && this.raws.spaces[name] || {};
+          return Object.assign(attrSpaces, spaces, rawSpaces);
+        };
+        Attribute2.prototype._stringFor = function(name, spaceName, concat) {
+          if (spaceName === void 0) {
+            spaceName = name;
+          }
+          if (concat === void 0) {
+            concat = defaultAttrConcat;
+          }
+          var attrSpaces = this._spacesFor(spaceName);
+          return concat(this.stringifyProperty(name), attrSpaces);
+        };
+        Attribute2.prototype.offsetOf = function(name) {
+          var count = 1;
+          var attributeSpaces = this._spacesFor("attribute");
+          count += attributeSpaces.before.length;
+          if (name === "namespace" || name === "ns") {
+            return this.namespace ? count : -1;
+          }
+          if (name === "attributeNS") {
+            return count;
+          }
+          count += this.namespaceString.length;
+          if (this.namespace) {
+            count += 1;
+          }
+          if (name === "attribute") {
+            return count;
+          }
+          count += this.stringifyProperty("attribute").length;
+          count += attributeSpaces.after.length;
+          var operatorSpaces = this._spacesFor("operator");
+          count += operatorSpaces.before.length;
+          var operator = this.stringifyProperty("operator");
+          if (name === "operator") {
+            return operator ? count : -1;
+          }
+          count += operator.length;
+          count += operatorSpaces.after.length;
+          var valueSpaces = this._spacesFor("value");
+          count += valueSpaces.before.length;
+          var value = this.stringifyProperty("value");
+          if (name === "value") {
+            return value ? count : -1;
+          }
+          count += value.length;
+          count += valueSpaces.after.length;
+          var insensitiveSpaces = this._spacesFor("insensitive");
+          count += insensitiveSpaces.before.length;
+          if (name === "insensitive") {
+            return this.insensitive ? count : -1;
+          }
+          return -1;
+        };
+        Attribute2.prototype.toString = function() {
+          var _this = this;
+          var selector = [this.rawSpaceBefore, "["];
+          selector.push(this._stringFor("qualifiedAttribute", "attribute"));
+          if (this.operator && (this.value || this.value === "")) {
+            selector.push(this._stringFor("operator"));
+            selector.push(this._stringFor("value"));
+            selector.push(this._stringFor("insensitiveFlag", "insensitive", function(attrValue, attrSpaces) {
+              if (attrValue.length > 0 && !_this.quoted && attrSpaces.before.length === 0 && !(_this.spaces.value && _this.spaces.value.after)) {
+                attrSpaces.before = " ";
+              }
+              return defaultAttrConcat(attrValue, attrSpaces);
+            }));
+          }
+          selector.push("]");
+          selector.push(this.rawSpaceAfter);
+          return selector.join("");
+        };
+        Attribute2.NO_QUOTE = null;
+        Attribute2.SINGLE_QUOTE = "'";
+        Attribute2.DOUBLE_QUOTE = '"';
+        return Attribute2;
+      }(namespace_1.default)
+    );
+    exports.default = Attribute;
+    var CSSESC_QUOTE_OPTIONS = (_a5 = {
+      "'": { quotes: "single", wrap: true },
+      '"': { quotes: "double", wrap: true }
+    }, _a5[null] = { isIdentifier: true }, _a5);
+    function defaultAttrConcat(attrValue, attrSpaces) {
+      return "".concat(attrSpaces.before).concat(attrValue).concat(attrSpaces.after);
+    }
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/universal.js
+var require_universal = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/universal.js"(exports) {
+    "use strict";
+    var __extends = exports && exports.__extends || function() {
+      var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+          d2.__proto__ = b2;
+        } || function(d2, b2) {
+          for (var p in b2)
+            if (Object.prototype.hasOwnProperty.call(b2, p))
+              d2[p] = b2[p];
+        };
+        return extendStatics(d, b);
+      };
+      return function(d, b) {
+        if (typeof b !== "function" && b !== null)
+          throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() {
+          this.constructor = d;
+        }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+      };
+    }();
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var namespace_1 = __importDefault(require_namespace());
+    var types_1 = require_types3();
+    var Universal = (
+      /** @class */
+      function(_super) {
+        __extends(Universal2, _super);
+        function Universal2(opts) {
+          var _this = _super.call(this, opts) || this;
+          _this.type = types_1.UNIVERSAL;
+          _this.value = "*";
+          return _this;
+        }
+        return Universal2;
+      }(namespace_1.default)
+    );
+    exports.default = Universal;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/combinator.js
+var require_combinator = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/combinator.js"(exports) {
+    "use strict";
+    var __extends = exports && exports.__extends || function() {
+      var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+          d2.__proto__ = b2;
+        } || function(d2, b2) {
+          for (var p in b2)
+            if (Object.prototype.hasOwnProperty.call(b2, p))
+              d2[p] = b2[p];
+        };
+        return extendStatics(d, b);
+      };
+      return function(d, b) {
+        if (typeof b !== "function" && b !== null)
+          throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() {
+          this.constructor = d;
+        }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+      };
+    }();
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var node_1 = __importDefault(require_node3());
+    var types_1 = require_types3();
+    var Combinator = (
+      /** @class */
+      function(_super) {
+        __extends(Combinator2, _super);
+        function Combinator2(opts) {
+          var _this = _super.call(this, opts) || this;
+          _this.type = types_1.COMBINATOR;
+          return _this;
+        }
+        return Combinator2;
+      }(node_1.default)
+    );
+    exports.default = Combinator;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/nesting.js
+var require_nesting = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/nesting.js"(exports) {
+    "use strict";
+    var __extends = exports && exports.__extends || function() {
+      var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+          d2.__proto__ = b2;
+        } || function(d2, b2) {
+          for (var p in b2)
+            if (Object.prototype.hasOwnProperty.call(b2, p))
+              d2[p] = b2[p];
+        };
+        return extendStatics(d, b);
+      };
+      return function(d, b) {
+        if (typeof b !== "function" && b !== null)
+          throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() {
+          this.constructor = d;
+        }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+      };
+    }();
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var node_1 = __importDefault(require_node3());
+    var types_1 = require_types3();
+    var Nesting = (
+      /** @class */
+      function(_super) {
+        __extends(Nesting2, _super);
+        function Nesting2(opts) {
+          var _this = _super.call(this, opts) || this;
+          _this.type = types_1.NESTING;
+          _this.value = "&";
+          return _this;
+        }
+        return Nesting2;
+      }(node_1.default)
+    );
+    exports.default = Nesting;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/sortAscending.js
+var require_sortAscending = __commonJS({
+  "node_modules/postcss-selector-parser/dist/sortAscending.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = sortAscending;
+    function sortAscending(list2) {
+      return list2.sort(function(a, b) {
+        return a - b;
+      });
+    }
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/tokenTypes.js
+var require_tokenTypes = __commonJS({
+  "node_modules/postcss-selector-parser/dist/tokenTypes.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.combinator = exports.word = exports.comment = exports.str = exports.tab = exports.newline = exports.feed = exports.cr = exports.backslash = exports.bang = exports.slash = exports.doubleQuote = exports.singleQuote = exports.space = exports.greaterThan = exports.pipe = exports.equals = exports.plus = exports.caret = exports.tilde = exports.dollar = exports.closeSquare = exports.openSquare = exports.closeParenthesis = exports.openParenthesis = exports.semicolon = exports.colon = exports.comma = exports.at = exports.asterisk = exports.ampersand = void 0;
+    exports.ampersand = 38;
+    exports.asterisk = 42;
+    exports.at = 64;
+    exports.comma = 44;
+    exports.colon = 58;
+    exports.semicolon = 59;
+    exports.openParenthesis = 40;
+    exports.closeParenthesis = 41;
+    exports.openSquare = 91;
+    exports.closeSquare = 93;
+    exports.dollar = 36;
+    exports.tilde = 126;
+    exports.caret = 94;
+    exports.plus = 43;
+    exports.equals = 61;
+    exports.pipe = 124;
+    exports.greaterThan = 62;
+    exports.space = 32;
+    exports.singleQuote = 39;
+    exports.doubleQuote = 34;
+    exports.slash = 47;
+    exports.bang = 33;
+    exports.backslash = 92;
+    exports.cr = 13;
+    exports.feed = 12;
+    exports.newline = 10;
+    exports.tab = 9;
+    exports.str = exports.singleQuote;
+    exports.comment = -1;
+    exports.word = -2;
+    exports.combinator = -3;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/tokenize.js
+var require_tokenize2 = __commonJS({
+  "node_modules/postcss-selector-parser/dist/tokenize.js"(exports) {
+    "use strict";
+    var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+      if (k2 === void 0)
+        k2 = k;
+      var desc = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+        desc = { enumerable: true, get: function() {
+          return m[k];
+        } };
+      }
+      Object.defineProperty(o, k2, desc);
+    } : function(o, m, k, k2) {
+      if (k2 === void 0)
+        k2 = k;
+      o[k2] = m[k];
+    });
+    var __setModuleDefault = exports && exports.__setModuleDefault || (Object.create ? function(o, v) {
+      Object.defineProperty(o, "default", { enumerable: true, value: v });
+    } : function(o, v) {
+      o["default"] = v;
+    });
+    var __importStar = exports && exports.__importStar || function() {
+      var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function(o2) {
+          var ar = [];
+          for (var k in o2)
+            if (Object.prototype.hasOwnProperty.call(o2, k))
+              ar[ar.length] = k;
+          return ar;
+        };
+        return ownKeys(o);
+      };
+      return function(mod) {
+        if (mod && mod.__esModule)
+          return mod;
+        var result = {};
+        if (mod != null) {
+          for (var k = ownKeys(mod), i2 = 0; i2 < k.length; i2++)
+            if (k[i2] !== "default")
+              __createBinding(result, mod, k[i2]);
+        }
+        __setModuleDefault(result, mod);
+        return result;
+      };
+    }();
+    var _a5;
+    var _b;
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.FIELDS = void 0;
+    exports.default = tokenize;
+    var t = __importStar(require_tokenTypes());
+    var unescapable = (_a5 = {}, _a5[t.tab] = true, _a5[t.newline] = true, _a5[t.cr] = true, _a5[t.feed] = true, _a5);
+    var wordDelimiters = (_b = {}, _b[t.space] = true, _b[t.tab] = true, _b[t.newline] = true, _b[t.cr] = true, _b[t.feed] = true, _b[t.ampersand] = true, _b[t.asterisk] = true, _b[t.bang] = true, _b[t.comma] = true, _b[t.colon] = true, _b[t.semicolon] = true, _b[t.openParenthesis] = true, _b[t.closeParenthesis] = true, _b[t.openSquare] = true, _b[t.closeSquare] = true, _b[t.singleQuote] = true, _b[t.doubleQuote] = true, _b[t.plus] = true, _b[t.pipe] = true, _b[t.tilde] = true, _b[t.greaterThan] = true, _b[t.equals] = true, _b[t.dollar] = true, _b[t.caret] = true, _b[t.slash] = true, _b);
+    var hex = {};
+    var hexChars = "0123456789abcdefABCDEF";
+    for (i = 0; i < hexChars.length; i++) {
+      hex[hexChars.charCodeAt(i)] = true;
+    }
+    var i;
+    function consumeWord(css, start) {
+      var next = start;
+      var code;
+      do {
+        code = css.charCodeAt(next);
+        if (wordDelimiters[code]) {
+          return next - 1;
+        } else if (code === t.backslash) {
+          next = consumeEscape(css, next) + 1;
+        } else {
+          next++;
+        }
+      } while (next < css.length);
+      return next - 1;
+    }
+    function consumeEscape(css, start) {
+      var next = start;
+      var code = css.charCodeAt(next + 1);
+      if (unescapable[code]) {
+      } else if (hex[code]) {
+        var hexDigits = 0;
+        do {
+          next++;
+          hexDigits++;
+          code = css.charCodeAt(next + 1);
+        } while (hex[code] && hexDigits < 6);
+        if (hexDigits < 6 && code === t.space) {
+          next++;
+        }
+      } else {
+        next++;
+      }
+      return next;
+    }
+    exports.FIELDS = {
+      TYPE: 0,
+      START_LINE: 1,
+      START_COL: 2,
+      END_LINE: 3,
+      END_COL: 4,
+      START_POS: 5,
+      END_POS: 6
+    };
+    function tokenize(input) {
+      var tokens = [];
+      var css = input.css.valueOf();
+      var length = css.length;
+      var offset = -1;
+      var line = 1;
+      var start = 0;
+      var end = 0;
+      var code, content, endColumn, endLine, escaped, escapePos, last, lines, next, nextLine, nextOffset, quote, tokenType;
+      function unclosed(what, fix) {
+        if (input.safe) {
+          css += fix;
+          next = css.length - 1;
+        } else {
+          throw input.error("Unclosed " + what, line, start - offset, start);
+        }
+      }
+      while (start < length) {
+        code = css.charCodeAt(start);
+        if (code === t.newline) {
+          offset = start;
+          line += 1;
+        }
+        switch (code) {
+          case t.space:
+          case t.tab:
+          case t.newline:
+          case t.cr:
+          case t.feed:
+            next = start;
+            do {
+              next += 1;
+              code = css.charCodeAt(next);
+              if (code === t.newline) {
+                offset = next;
+                line += 1;
+              }
+            } while (code === t.space || code === t.newline || code === t.tab || code === t.cr || code === t.feed);
+            tokenType = t.space;
+            endLine = line;
+            endColumn = next - offset - 1;
+            end = next;
+            break;
+          case t.plus:
+          case t.greaterThan:
+          case t.tilde:
+          case t.pipe:
+            next = start;
+            do {
+              next += 1;
+              code = css.charCodeAt(next);
+            } while (code === t.plus || code === t.greaterThan || code === t.tilde || code === t.pipe);
+            tokenType = t.combinator;
+            endLine = line;
+            endColumn = start - offset;
+            end = next;
+            break;
+          case t.asterisk:
+          case t.ampersand:
+          case t.bang:
+          case t.comma:
+          case t.equals:
+          case t.dollar:
+          case t.caret:
+          case t.openSquare:
+          case t.closeSquare:
+          case t.colon:
+          case t.semicolon:
+          case t.openParenthesis:
+          case t.closeParenthesis:
+            next = start;
+            tokenType = code;
+            endLine = line;
+            endColumn = start - offset;
+            end = next + 1;
+            break;
+          case t.singleQuote:
+          case t.doubleQuote:
+            quote = code === t.singleQuote ? "'" : '"';
+            next = start;
+            do {
+              escaped = false;
+              next = css.indexOf(quote, next + 1);
+              if (next === -1) {
+                unclosed("quote", quote);
+              }
+              escapePos = next;
+              while (css.charCodeAt(escapePos - 1) === t.backslash) {
+                escapePos -= 1;
+                escaped = !escaped;
+              }
+            } while (escaped);
+            tokenType = t.str;
+            endLine = line;
+            endColumn = start - offset;
+            end = next + 1;
+            break;
+          default:
+            if (code === t.slash && css.charCodeAt(start + 1) === t.asterisk) {
+              next = css.indexOf("*/", start + 2) + 1;
+              if (next === 0) {
+                unclosed("comment", "*/");
+              }
+              content = css.slice(start, next + 1);
+              lines = content.split("\n");
+              last = lines.length - 1;
+              if (last > 0) {
+                nextLine = line + last;
+                nextOffset = next - lines[last].length;
+              } else {
+                nextLine = line;
+                nextOffset = offset;
+              }
+              tokenType = t.comment;
+              line = nextLine;
+              endLine = nextLine;
+              endColumn = next - nextOffset;
+            } else if (code === t.slash) {
+              next = start;
+              tokenType = code;
+              endLine = line;
+              endColumn = start - offset;
+              end = next + 1;
+            } else {
+              next = consumeWord(css, start);
+              tokenType = t.word;
+              endLine = line;
+              endColumn = next - offset;
+            }
+            end = next + 1;
+            break;
+        }
+        tokens.push([
+          tokenType,
+          // [0] Token type
+          line,
+          // [1] Starting line
+          start - offset,
+          // [2] Starting column
+          endLine,
+          // [3] Ending line
+          endColumn,
+          // [4] Ending column
+          start,
+          // [5] Start position / Source index
+          end
+          // [6] End position
+        ]);
+        if (nextOffset) {
+          offset = nextOffset;
+          nextOffset = null;
+        }
+        start = end;
+      }
+      return tokens;
+    }
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/parser.js
+var require_parser5 = __commonJS({
+  "node_modules/postcss-selector-parser/dist/parser.js"(exports) {
+    "use strict";
+    var __assign = exports && exports.__assign || function() {
+      __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+          s = arguments[i];
+          for (var p in s)
+            if (Object.prototype.hasOwnProperty.call(s, p))
+              t[p] = s[p];
+        }
+        return t;
+      };
+      return __assign.apply(this, arguments);
+    };
+    var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+      if (k2 === void 0)
+        k2 = k;
+      var desc = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+        desc = { enumerable: true, get: function() {
+          return m[k];
+        } };
+      }
+      Object.defineProperty(o, k2, desc);
+    } : function(o, m, k, k2) {
+      if (k2 === void 0)
+        k2 = k;
+      o[k2] = m[k];
+    });
+    var __setModuleDefault = exports && exports.__setModuleDefault || (Object.create ? function(o, v) {
+      Object.defineProperty(o, "default", { enumerable: true, value: v });
+    } : function(o, v) {
+      o["default"] = v;
+    });
+    var __importStar = exports && exports.__importStar || function() {
+      var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function(o2) {
+          var ar = [];
+          for (var k in o2)
+            if (Object.prototype.hasOwnProperty.call(o2, k))
+              ar[ar.length] = k;
+          return ar;
+        };
+        return ownKeys(o);
+      };
+      return function(mod) {
+        if (mod && mod.__esModule)
+          return mod;
+        var result = {};
+        if (mod != null) {
+          for (var k = ownKeys(mod), i = 0; i < k.length; i++)
+            if (k[i] !== "default")
+              __createBinding(result, mod, k[i]);
+        }
+        __setModuleDefault(result, mod);
+        return result;
+      };
+    }();
+    var __read = exports && exports.__read || function(o, n) {
+      var m = typeof Symbol === "function" && o[Symbol.iterator];
+      if (!m)
+        return o;
+      var i = m.call(o), r, ar = [], e;
+      try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done)
+          ar.push(r.value);
+      } catch (error) {
+        e = { error };
+      } finally {
+        try {
+          if (r && !r.done && (m = i["return"]))
+            m.call(i);
+        } finally {
+          if (e)
+            throw e.error;
+        }
+      }
+      return ar;
+    };
+    var __spreadArray = exports && exports.__spreadArray || function(to, from, pack) {
+      if (pack || arguments.length === 2)
+        for (var i = 0, l = from.length, ar; i < l; i++) {
+          if (ar || !(i in from)) {
+            if (!ar)
+              ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+          }
+        }
+      return to.concat(ar || Array.prototype.slice.call(from));
+    };
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    var _a5;
+    var _b;
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var root_1 = __importDefault(require_root2());
+    var selector_1 = __importDefault(require_selector2());
+    var className_1 = __importDefault(require_className());
+    var comment_1 = __importDefault(require_comment2());
+    var id_1 = __importDefault(require_id());
+    var tag_1 = __importDefault(require_tag());
+    var string_1 = __importDefault(require_string());
+    var pseudo_1 = __importDefault(require_pseudo());
+    var attribute_1 = __importStar(require_attribute());
+    var universal_1 = __importDefault(require_universal());
+    var combinator_1 = __importDefault(require_combinator());
+    var nesting_1 = __importDefault(require_nesting());
+    var sortAscending_1 = __importDefault(require_sortAscending());
+    var tokenize_1 = __importStar(require_tokenize2());
+    var tokens = __importStar(require_tokenTypes());
+    var types = __importStar(require_types3());
+    var util_1 = require_util();
+    var WHITESPACE_TOKENS = (_a5 = {}, _a5[tokens.space] = true, _a5[tokens.cr] = true, _a5[tokens.feed] = true, _a5[tokens.newline] = true, _a5[tokens.tab] = true, _a5);
+    var WHITESPACE_EQUIV_TOKENS = __assign(__assign({}, WHITESPACE_TOKENS), (_b = {}, _b[tokens.comment] = true, _b));
+    function tokenStart(token) {
+      return {
+        line: token[tokenize_1.FIELDS.START_LINE],
+        column: token[tokenize_1.FIELDS.START_COL]
+      };
+    }
+    function tokenEnd(token) {
+      return {
+        line: token[tokenize_1.FIELDS.END_LINE],
+        column: token[tokenize_1.FIELDS.END_COL]
+      };
+    }
+    function getSource(startLine, startColumn, endLine, endColumn) {
+      return {
+        start: {
+          line: startLine,
+          column: startColumn
+        },
+        end: {
+          line: endLine,
+          column: endColumn
+        }
+      };
+    }
+    function getTokenSource(token) {
+      return getSource(token[tokenize_1.FIELDS.START_LINE], token[tokenize_1.FIELDS.START_COL], token[tokenize_1.FIELDS.END_LINE], token[tokenize_1.FIELDS.END_COL]);
+    }
+    function getTokenSourceSpan(startToken, endToken) {
+      if (!startToken) {
+        return void 0;
+      }
+      return getSource(startToken[tokenize_1.FIELDS.START_LINE], startToken[tokenize_1.FIELDS.START_COL], endToken[tokenize_1.FIELDS.END_LINE], endToken[tokenize_1.FIELDS.END_COL]);
+    }
+    function unescapeProp(node, prop) {
+      var value = node[prop];
+      if (typeof value !== "string") {
+        return;
+      }
+      if (value.indexOf("\\") !== -1) {
+        (0, util_1.ensureObject)(node, "raws");
+        node[prop] = (0, util_1.unesc)(value);
+        if (node.raws[prop] === void 0) {
+          node.raws[prop] = value;
+        }
+      }
+      return node;
+    }
+    function indexesOf(array, item) {
+      var i = -1;
+      var indexes = [];
+      while ((i = array.indexOf(item, i + 1)) !== -1) {
+        indexes.push(i);
+      }
+      return indexes;
+    }
+    function uniqs() {
+      var list2 = Array.prototype.concat.apply([], arguments);
+      return list2.filter(function(item, i) {
+        return i === list2.indexOf(item);
+      });
+    }
+    var Parser = (
+      /** @class */
+      function() {
+        function Parser2(rule2, options) {
+          if (options === void 0) {
+            options = {};
+          }
+          this.rule = rule2;
+          this.options = Object.assign({ lossy: false, safe: false }, options);
+          this.position = 0;
+          this.nestingDepth = 0;
+          this.maxNestingDepth = (0, util_1.resolveMaxNestingDepth)(this.options.maxNestingDepth);
+          this.css = typeof this.rule === "string" ? this.rule : this.rule.selector;
+          this.tokens = (0, tokenize_1.default)({
+            css: this.css,
+            error: this._errorGenerator(),
+            safe: this.options.safe
+          });
+          var rootSource = getTokenSourceSpan(this.tokens[0], this.tokens[this.tokens.length - 1]);
+          this.root = new root_1.default({ source: rootSource });
+          this.root.errorGenerator = this._errorGenerator();
+          var selector = new selector_1.default({
+            source: { start: { line: 1, column: 1 } },
+            sourceIndex: 0
+          });
+          this.root.append(selector);
+          this.current = selector;
+          this.loop();
+        }
+        Parser2.prototype._errorGenerator = function() {
+          var _this = this;
+          return function(message, errorOptions) {
+            if (typeof _this.rule === "string") {
+              return new Error(message);
+            }
+            return _this.rule.error(message, errorOptions);
+          };
+        };
+        Parser2.prototype.attribute = function() {
+          var attr = [];
+          var startingToken = this.currToken;
+          this.position++;
+          while (this.position < this.tokens.length && this.currToken[tokenize_1.FIELDS.TYPE] !== tokens.closeSquare) {
+            attr.push(this.currToken);
+            this.position++;
+          }
+          if (this.currToken[tokenize_1.FIELDS.TYPE] !== tokens.closeSquare) {
+            return this.expected("closing square bracket", this.currToken[tokenize_1.FIELDS.START_POS]);
+          }
+          var len = attr.length;
+          var node = {
+            source: getSource(startingToken[1], startingToken[2], this.currToken[3], this.currToken[4]),
+            sourceIndex: startingToken[tokenize_1.FIELDS.START_POS]
+          };
+          if (len === 1 && !~[tokens.word].indexOf(attr[0][tokenize_1.FIELDS.TYPE])) {
+            return this.expected("attribute", attr[0][tokenize_1.FIELDS.START_POS]);
+          }
+          var pos = 0;
+          var spaceBefore = "";
+          var commentBefore = "";
+          var lastAdded = null;
+          var spaceAfterMeaningfulToken = false;
+          while (pos < len) {
+            var token = attr[pos];
+            var content = this.content(token);
+            var next = attr[pos + 1];
+            switch (token[tokenize_1.FIELDS.TYPE]) {
+              case tokens.space:
+                spaceAfterMeaningfulToken = true;
+                if (this.options.lossy) {
+                  break;
+                }
+                if (lastAdded) {
+                  (0, util_1.ensureObject)(node, "spaces", lastAdded);
+                  var prevContent = node.spaces[lastAdded].after || "";
+                  node.spaces[lastAdded].after = prevContent + content;
+                  var existingComment = (0, util_1.getProp)(node, "raws", "spaces", lastAdded, "after") || null;
+                  if (existingComment) {
+                    node.raws.spaces[lastAdded].after = existingComment + content;
+                  }
+                } else {
+                  spaceBefore = spaceBefore + content;
+                  commentBefore = commentBefore + content;
+                }
+                break;
+              case tokens.asterisk:
+                if (next[tokenize_1.FIELDS.TYPE] === tokens.equals) {
+                  node.operator = content;
+                  lastAdded = "operator";
+                } else if ((!node.namespace || lastAdded === "namespace" && !spaceAfterMeaningfulToken) && next) {
+                  if (spaceBefore) {
+                    (0, util_1.ensureObject)(node, "spaces", "attribute");
+                    node.spaces.attribute.before = spaceBefore;
+                    spaceBefore = "";
+                  }
+                  if (commentBefore) {
+                    (0, util_1.ensureObject)(node, "raws", "spaces", "attribute");
+                    node.raws.spaces.attribute.before = spaceBefore;
+                    commentBefore = "";
+                  }
+                  node.namespace = (node.namespace || "") + content;
+                  var rawValue = (0, util_1.getProp)(node, "raws", "namespace") || null;
+                  if (rawValue) {
+                    node.raws.namespace += content;
+                  }
+                  lastAdded = "namespace";
+                }
+                spaceAfterMeaningfulToken = false;
+                break;
+              case tokens.dollar:
+                if (lastAdded === "value") {
+                  var oldRawValue = (0, util_1.getProp)(node, "raws", "value");
+                  node.value += "$";
+                  if (oldRawValue) {
+                    node.raws.value = oldRawValue + "$";
+                  }
+                  break;
+                }
+              case tokens.caret:
+                if (next[tokenize_1.FIELDS.TYPE] === tokens.equals) {
+                  node.operator = content;
+                  lastAdded = "operator";
+                }
+                spaceAfterMeaningfulToken = false;
+                break;
+              case tokens.combinator:
+                if (content === "~" && next[tokenize_1.FIELDS.TYPE] === tokens.equals) {
+                  node.operator = content;
+                  lastAdded = "operator";
+                }
+                if (content !== "|") {
+                  spaceAfterMeaningfulToken = false;
+                  break;
+                }
+                if (next[tokenize_1.FIELDS.TYPE] === tokens.equals) {
+                  node.operator = content;
+                  lastAdded = "operator";
+                } else if (!node.namespace && !node.attribute) {
+                  node.namespace = true;
+                }
+                spaceAfterMeaningfulToken = false;
+                break;
+              case tokens.word:
+                if (next && this.content(next) === "|" && attr[pos + 2] && attr[pos + 2][tokenize_1.FIELDS.TYPE] !== tokens.equals && // this look-ahead probably fails with comment nodes involved.
+                !node.operator && !node.namespace) {
+                  node.namespace = content;
+                  lastAdded = "namespace";
+                } else if (!node.attribute || lastAdded === "attribute" && !spaceAfterMeaningfulToken) {
+                  if (spaceBefore) {
+                    (0, util_1.ensureObject)(node, "spaces", "attribute");
+                    node.spaces.attribute.before = spaceBefore;
+                    spaceBefore = "";
+                  }
+                  if (commentBefore) {
+                    (0, util_1.ensureObject)(node, "raws", "spaces", "attribute");
+                    node.raws.spaces.attribute.before = commentBefore;
+                    commentBefore = "";
+                  }
+                  node.attribute = (node.attribute || "") + content;
+                  var rawValue = (0, util_1.getProp)(node, "raws", "attribute") || null;
+                  if (rawValue) {
+                    node.raws.attribute += content;
+                  }
+                  lastAdded = "attribute";
+                } else if (!node.value && node.value !== "" || lastAdded === "value" && !(spaceAfterMeaningfulToken || node.quoteMark)) {
+                  var unescaped_1 = (0, util_1.unesc)(content);
+                  var oldRawValue = (0, util_1.getProp)(node, "raws", "value") || "";
+                  var oldValue = node.value || "";
+                  node.value = oldValue + unescaped_1;
+                  node.quoteMark = null;
+                  if (unescaped_1 !== content || oldRawValue) {
+                    (0, util_1.ensureObject)(node, "raws");
+                    node.raws.value = (oldRawValue || oldValue) + content;
+                  }
+                  lastAdded = "value";
+                } else {
+                  var insensitive = content === "i" || content === "I";
+                  if ((node.value || node.value === "") && (node.quoteMark || spaceAfterMeaningfulToken)) {
+                    node.insensitive = insensitive;
+                    if (!insensitive || content === "I") {
+                      (0, util_1.ensureObject)(node, "raws");
+                      node.raws.insensitiveFlag = content;
+                    }
+                    lastAdded = "insensitive";
+                    if (spaceBefore) {
+                      (0, util_1.ensureObject)(node, "spaces", "insensitive");
+                      node.spaces.insensitive.before = spaceBefore;
+                      spaceBefore = "";
+                    }
+                    if (commentBefore) {
+                      (0, util_1.ensureObject)(node, "raws", "spaces", "insensitive");
+                      node.raws.spaces.insensitive.before = commentBefore;
+                      commentBefore = "";
+                    }
+                  } else if (node.value || node.value === "") {
+                    lastAdded = "value";
+                    node.value += content;
+                    if (node.raws.value) {
+                      node.raws.value += content;
+                    }
+                  }
+                }
+                spaceAfterMeaningfulToken = false;
+                break;
+              case tokens.str:
+                if (!node.attribute || !node.operator) {
+                  return this.error("Expected an attribute followed by an operator preceding the string.", {
+                    index: token[tokenize_1.FIELDS.START_POS]
+                  });
+                }
+                var _a6 = (0, attribute_1.unescapeValue)(content), unescaped = _a6.unescaped, quoteMark = _a6.quoteMark;
+                node.value = unescaped;
+                node.quoteMark = quoteMark;
+                lastAdded = "value";
+                (0, util_1.ensureObject)(node, "raws");
+                node.raws.value = content;
+                spaceAfterMeaningfulToken = false;
+                break;
+              case tokens.equals:
+                if (!node.attribute) {
+                  return this.expected("attribute", token[tokenize_1.FIELDS.START_POS], content);
+                }
+                if (node.value) {
+                  return this.error('Unexpected "=" found; an operator was already defined.', {
+                    index: token[tokenize_1.FIELDS.START_POS]
+                  });
+                }
+                node.operator = node.operator ? node.operator + content : content;
+                lastAdded = "operator";
+                spaceAfterMeaningfulToken = false;
+                break;
+              case tokens.comment:
+                if (lastAdded) {
+                  if (spaceAfterMeaningfulToken || next && next[tokenize_1.FIELDS.TYPE] === tokens.space || lastAdded === "insensitive") {
+                    var lastComment = (0, util_1.getProp)(node, "spaces", lastAdded, "after") || "";
+                    var rawLastComment = (0, util_1.getProp)(node, "raws", "spaces", lastAdded, "after") || lastComment;
+                    (0, util_1.ensureObject)(node, "raws", "spaces", lastAdded);
+                    node.raws.spaces[lastAdded].after = rawLastComment + content;
+                  } else {
+                    var lastValue = node[lastAdded] || "";
+                    var rawLastValue = (0, util_1.getProp)(node, "raws", lastAdded) || lastValue;
+                    (0, util_1.ensureObject)(node, "raws");
+                    node.raws[lastAdded] = rawLastValue + content;
+                  }
+                } else {
+                  commentBefore = commentBefore + content;
+                }
+                break;
+              default:
+                return this.error('Unexpected "'.concat(content, '" found.'), { index: token[tokenize_1.FIELDS.START_POS] });
+            }
+            pos++;
+          }
+          unescapeProp(node, "attribute");
+          unescapeProp(node, "namespace");
+          this.newNode(new attribute_1.default(node));
+          this.position++;
+        };
+        Parser2.prototype.parseWhitespaceEquivalentTokens = function(stopPosition) {
+          if (stopPosition < 0) {
+            stopPosition = this.tokens.length;
+          }
+          var startPosition = this.position;
+          var nodes = [];
+          var space = "";
+          var lastComment = void 0;
+          do {
+            if (WHITESPACE_TOKENS[this.currToken[tokenize_1.FIELDS.TYPE]]) {
+              if (!this.options.lossy) {
+                space += this.content();
+              }
+            } else if (this.currToken[tokenize_1.FIELDS.TYPE] === tokens.comment) {
+              var spaces = {};
+              if (space) {
+                spaces.before = space;
+                space = "";
+              }
+              lastComment = new comment_1.default({
+                value: this.content(),
+                source: getTokenSource(this.currToken),
+                sourceIndex: this.currToken[tokenize_1.FIELDS.START_POS],
+                spaces
+              });
+              nodes.push(lastComment);
+            }
+          } while (++this.position < stopPosition);
+          if (space) {
+            if (lastComment) {
+              lastComment.spaces.after = space;
+            } else if (!this.options.lossy) {
+              var firstToken = this.tokens[startPosition];
+              var lastToken = this.tokens[this.position - 1];
+              nodes.push(new string_1.default({
+                value: "",
+                source: getSource(firstToken[tokenize_1.FIELDS.START_LINE], firstToken[tokenize_1.FIELDS.START_COL], lastToken[tokenize_1.FIELDS.END_LINE], lastToken[tokenize_1.FIELDS.END_COL]),
+                sourceIndex: firstToken[tokenize_1.FIELDS.START_POS],
+                spaces: { before: space, after: "" }
+              }));
+            }
+          }
+          return nodes;
+        };
+        Parser2.prototype.convertWhitespaceNodesToSpace = function(nodes, requiredSpace) {
+          var _this = this;
+          if (requiredSpace === void 0) {
+            requiredSpace = false;
+          }
+          var space = "";
+          var rawSpace = "";
+          nodes.forEach(function(n) {
+            var spaceBefore = _this.lossySpace(n.spaces.before, requiredSpace);
+            var rawSpaceBefore = _this.lossySpace(n.rawSpaceBefore, requiredSpace);
+            space += spaceBefore + _this.lossySpace(n.spaces.after, requiredSpace && spaceBefore.length === 0);
+            rawSpace += spaceBefore + n.value + _this.lossySpace(n.rawSpaceAfter, requiredSpace && rawSpaceBefore.length === 0);
+          });
+          if (rawSpace === space) {
+            rawSpace = void 0;
+          }
+          var result = { space, rawSpace };
+          return result;
+        };
+        Parser2.prototype.isNamedCombinator = function(position) {
+          if (position === void 0) {
+            position = this.position;
+          }
+          return this.tokens[position + 0] && this.tokens[position + 0][tokenize_1.FIELDS.TYPE] === tokens.slash && this.tokens[position + 1] && this.tokens[position + 1][tokenize_1.FIELDS.TYPE] === tokens.word && this.tokens[position + 2] && this.tokens[position + 2][tokenize_1.FIELDS.TYPE] === tokens.slash;
+        };
+        Parser2.prototype.namedCombinator = function() {
+          if (this.isNamedCombinator()) {
+            var nameRaw = this.content(this.tokens[this.position + 1]);
+            var name = (0, util_1.unesc)(nameRaw).toLowerCase();
+            var raws = {};
+            if (name !== nameRaw) {
+              raws.value = "/".concat(nameRaw, "/");
+            }
+            var node = new combinator_1.default({
+              value: "/".concat(name, "/"),
+              source: getSource(this.currToken[tokenize_1.FIELDS.START_LINE], this.currToken[tokenize_1.FIELDS.START_COL], this.tokens[this.position + 2][tokenize_1.FIELDS.END_LINE], this.tokens[this.position + 2][tokenize_1.FIELDS.END_COL]),
+              sourceIndex: this.currToken[tokenize_1.FIELDS.START_POS],
+              raws
+            });
+            this.position = this.position + 3;
+            return node;
+          } else {
+            this.unexpected();
+          }
+        };
+        Parser2.prototype.combinator = function() {
+          var _this = this;
+          if (this.content() === "|") {
+            return this.namespace();
+          }
+          var nextSigTokenPos = this.locateNextMeaningfulToken(this.position);
+          if (nextSigTokenPos < 0 || this.tokens[nextSigTokenPos][tokenize_1.FIELDS.TYPE] === tokens.comma || this.tokens[nextSigTokenPos][tokenize_1.FIELDS.TYPE] === tokens.closeParenthesis) {
+            var nodes = this.parseWhitespaceEquivalentTokens(nextSigTokenPos);
+            if (nodes.length > 0) {
+              var last = this.current.last;
+              if (last) {
+                var _a6 = this.convertWhitespaceNodesToSpace(nodes), space = _a6.space, rawSpace = _a6.rawSpace;
+                if (rawSpace !== void 0) {
+                  last.rawSpaceAfter += rawSpace;
+                }
+                last.spaces.after += space;
+              } else {
+                nodes.forEach(function(n) {
+                  return _this.newNode(n);
+                });
+              }
+            }
+            return;
+          }
+          var firstToken = this.currToken;
+          var spaceOrDescendantSelectorNodes = void 0;
+          if (nextSigTokenPos > this.position) {
+            spaceOrDescendantSelectorNodes = this.parseWhitespaceEquivalentTokens(nextSigTokenPos);
+          }
+          var node;
+          if (this.isNamedCombinator()) {
+            node = this.namedCombinator();
+          } else if (this.currToken[tokenize_1.FIELDS.TYPE] === tokens.combinator) {
+            node = new combinator_1.default({
+              value: this.content(),
+              source: getTokenSource(this.currToken),
+              sourceIndex: this.currToken[tokenize_1.FIELDS.START_POS]
+            });
+            this.position++;
+          } else if (WHITESPACE_TOKENS[this.currToken[tokenize_1.FIELDS.TYPE]]) {
+          } else if (!spaceOrDescendantSelectorNodes) {
+            this.unexpected();
+          }
+          if (node) {
+            if (spaceOrDescendantSelectorNodes) {
+              var _b2 = this.convertWhitespaceNodesToSpace(spaceOrDescendantSelectorNodes), space = _b2.space, rawSpace = _b2.rawSpace;
+              node.spaces.before = space;
+              node.rawSpaceBefore = rawSpace;
+            }
+          } else {
+            var _c = this.convertWhitespaceNodesToSpace(spaceOrDescendantSelectorNodes, true), space = _c.space, rawSpace = _c.rawSpace;
+            if (!rawSpace) {
+              rawSpace = space;
+            }
+            var spaces = {};
+            var raws = { spaces: {} };
+            if (space.endsWith(" ") && rawSpace.endsWith(" ")) {
+              spaces.before = space.slice(0, space.length - 1);
+              raws.spaces.before = rawSpace.slice(0, rawSpace.length - 1);
+            } else if (space[0] === " " && rawSpace[0] === " ") {
+              spaces.after = space.slice(1);
+              raws.spaces.after = rawSpace.slice(1);
+            } else {
+              raws.value = rawSpace;
+            }
+            node = new combinator_1.default({
+              value: " ",
+              source: getTokenSourceSpan(firstToken, this.tokens[this.position - 1]),
+              sourceIndex: firstToken[tokenize_1.FIELDS.START_POS],
+              spaces,
+              raws
+            });
+          }
+          if (this.currToken && this.currToken[tokenize_1.FIELDS.TYPE] === tokens.space) {
+            node.spaces.after = this.optionalSpace(this.content());
+            this.position++;
+          }
+          return this.newNode(node);
+        };
+        Parser2.prototype.comma = function() {
+          if (this.position === this.tokens.length - 1) {
+            this.root.trailingComma = true;
+            this.position++;
+            return;
+          }
+          this.current._inferEndPosition();
+          var selector = new selector_1.default({
+            source: {
+              start: tokenStart(this.tokens[this.position + 1])
+            },
+            sourceIndex: this.tokens[this.position + 1][tokenize_1.FIELDS.START_POS]
+          });
+          this.current.parent.append(selector);
+          this.current = selector;
+          this.position++;
+        };
+        Parser2.prototype.comment = function() {
+          var current = this.currToken;
+          this.newNode(new comment_1.default({
+            value: this.content(),
+            source: getTokenSource(current),
+            sourceIndex: current[tokenize_1.FIELDS.START_POS]
+          }));
+          this.position++;
+        };
+        Parser2.prototype.error = function(message, opts) {
+          throw this.root.error(message, opts);
+        };
+        Parser2.prototype.missingBackslash = function() {
+          return this.error("Expected a backslash preceding the semicolon.", {
+            index: this.currToken[tokenize_1.FIELDS.START_POS]
+          });
+        };
+        Parser2.prototype.missingParenthesis = function() {
+          return this.expected("opening parenthesis", this.currToken[tokenize_1.FIELDS.START_POS]);
+        };
+        Parser2.prototype.missingSquareBracket = function() {
+          return this.expected("opening square bracket", this.currToken[tokenize_1.FIELDS.START_POS]);
+        };
+        Parser2.prototype.unexpected = function() {
+          return this.error("Unexpected '".concat(this.content(), "'. Escaping special characters with \\ may help."), this.currToken[tokenize_1.FIELDS.START_POS]);
+        };
+        Parser2.prototype.unexpectedPipe = function() {
+          return this.error("Unexpected '|'.", this.currToken[tokenize_1.FIELDS.START_POS]);
+        };
+        Parser2.prototype.namespace = function() {
+          var before = this.prevToken && this.content(this.prevToken) || true;
+          if (this.nextToken[tokenize_1.FIELDS.TYPE] === tokens.word) {
+            this.position++;
+            return this.word(before);
+          } else if (this.nextToken[tokenize_1.FIELDS.TYPE] === tokens.asterisk) {
+            this.position++;
+            return this.universal(before);
+          }
+          this.unexpectedPipe();
+        };
+        Parser2.prototype.nesting = function() {
+          if (this.nextToken) {
+            var nextContent = this.content(this.nextToken);
+            if (nextContent === "|") {
+              this.position++;
+              return;
+            }
+          }
+          var current = this.currToken;
+          this.newNode(new nesting_1.default({
+            value: this.content(),
+            source: getTokenSource(current),
+            sourceIndex: current[tokenize_1.FIELDS.START_POS]
+          }));
+          this.position++;
+        };
+        Parser2.prototype.parentheses = function() {
+          var last = this.current.last;
+          var unbalanced = 1;
+          this.position++;
+          if (last && last.type === types.PSEUDO) {
+            var selector = new selector_1.default({
+              source: { start: tokenStart(this.tokens[this.position]) },
+              sourceIndex: this.tokens[this.position][tokenize_1.FIELDS.START_POS]
+            });
+            var cache = this.current;
+            last.append(selector);
+            this.current = selector;
+            this.nestingDepth++;
+            try {
+              if (this.nestingDepth > this.maxNestingDepth) {
+                this.error("Cannot parse selector: nesting depth exceeds the maximum of ".concat(this.maxNestingDepth, "."), { index: this.currToken[tokenize_1.FIELDS.START_POS] });
+              }
+              while (this.position < this.tokens.length && unbalanced) {
+                if (this.currToken[tokenize_1.FIELDS.TYPE] === tokens.openParenthesis) {
+                  unbalanced++;
+                }
+                if (this.currToken[tokenize_1.FIELDS.TYPE] === tokens.closeParenthesis) {
+                  unbalanced--;
+                }
+                if (unbalanced) {
+                  this.parse();
+                } else {
+                  this.current.source.end = tokenEnd(this.currToken);
+                  this.current.parent.source.end = tokenEnd(this.currToken);
+                  this.position++;
+                }
+              }
+            } finally {
+              this.nestingDepth--;
+            }
+            this.current = cache;
+          } else {
+            var parenStart = this.currToken;
+            var parenValue = "(";
+            var parenEnd = void 0;
+            while (this.position < this.tokens.length && unbalanced) {
+              if (this.currToken[tokenize_1.FIELDS.TYPE] === tokens.openParenthesis) {
+                unbalanced++;
+              }
+              if (this.currToken[tokenize_1.FIELDS.TYPE] === tokens.closeParenthesis) {
+                unbalanced--;
+              }
+              parenEnd = this.currToken;
+              parenValue += this.parseParenthesisToken(this.currToken);
+              this.position++;
+            }
+            if (last) {
+              last.appendToPropertyAndEscape("value", parenValue, parenValue);
+            } else {
+              this.newNode(new string_1.default({
+                value: parenValue,
+                source: getSource(parenStart[tokenize_1.FIELDS.START_LINE], parenStart[tokenize_1.FIELDS.START_COL], parenEnd[tokenize_1.FIELDS.END_LINE], parenEnd[tokenize_1.FIELDS.END_COL]),
+                sourceIndex: parenStart[tokenize_1.FIELDS.START_POS]
+              }));
+            }
+          }
+          if (unbalanced) {
+            return this.expected("closing parenthesis", this.currToken[tokenize_1.FIELDS.START_POS]);
+          }
+        };
+        Parser2.prototype.pseudo = function() {
+          var _this = this;
+          var pseudoStr = "";
+          var startingToken = this.currToken;
+          while (this.currToken && this.currToken[tokenize_1.FIELDS.TYPE] === tokens.colon) {
+            pseudoStr += this.content();
+            this.position++;
+          }
+          if (!this.currToken) {
+            return this.expected(["pseudo-class", "pseudo-element"], this.position - 1);
+          }
+          if (this.currToken[tokenize_1.FIELDS.TYPE] === tokens.word) {
+            this.splitWord(false, function(first, length) {
+              pseudoStr += first;
+              _this.newNode(new pseudo_1.default({
+                value: pseudoStr,
+                source: getTokenSourceSpan(startingToken, _this.currToken),
+                sourceIndex: startingToken[tokenize_1.FIELDS.START_POS]
+              }));
+              if (length > 1 && _this.nextToken && _this.nextToken[tokenize_1.FIELDS.TYPE] === tokens.openParenthesis) {
+                _this.error("Misplaced parenthesis.", {
+                  index: _this.nextToken[tokenize_1.FIELDS.START_POS]
+                });
+              }
+            });
+          } else {
+            return this.expected(["pseudo-class", "pseudo-element"], this.currToken[tokenize_1.FIELDS.START_POS]);
+          }
+        };
+        Parser2.prototype.space = function() {
+          var content = this.content();
+          if (this.position === 0 || this.prevToken[tokenize_1.FIELDS.TYPE] === tokens.comma || this.prevToken[tokenize_1.FIELDS.TYPE] === tokens.openParenthesis || this.current.nodes.every(function(node) {
+            return node.type === "comment";
+          })) {
+            this.spaces = this.optionalSpace(content);
+            this.position++;
+          } else if (this.position === this.tokens.length - 1 || this.nextToken[tokenize_1.FIELDS.TYPE] === tokens.comma || this.nextToken[tokenize_1.FIELDS.TYPE] === tokens.closeParenthesis) {
+            this.current.last.spaces.after = this.optionalSpace(content);
+            this.position++;
+          } else {
+            this.combinator();
+          }
+        };
+        Parser2.prototype.string = function() {
+          var current = this.currToken;
+          this.newNode(new string_1.default({
+            value: this.content(),
+            source: getTokenSource(current),
+            sourceIndex: current[tokenize_1.FIELDS.START_POS]
+          }));
+          this.position++;
+        };
+        Parser2.prototype.universal = function(namespace) {
+          var nextToken = this.nextToken;
+          if (nextToken && this.content(nextToken) === "|") {
+            this.position++;
+            return this.namespace();
+          }
+          var current = this.currToken;
+          this.newNode(new universal_1.default({
+            value: this.content(),
+            source: getTokenSource(current),
+            sourceIndex: current[tokenize_1.FIELDS.START_POS]
+          }), namespace);
+          this.position++;
+        };
+        Parser2.prototype.splitWord = function(namespace, firstCallback) {
+          var _this = this;
+          var nextToken = this.nextToken;
+          var word = this.content();
+          while (nextToken && ~[tokens.dollar, tokens.caret, tokens.equals, tokens.word].indexOf(nextToken[tokenize_1.FIELDS.TYPE])) {
+            this.position++;
+            var current = this.content();
+            word += current;
+            if (current.lastIndexOf("\\") === current.length - 1) {
+              var next = this.nextToken;
+              if (next && next[tokenize_1.FIELDS.TYPE] === tokens.space) {
+                word += this.requiredSpace(this.content(next));
+                this.position++;
+              }
+            }
+            nextToken = this.nextToken;
+          }
+          var hasClass = indexesOf(word, ".").filter(function(i) {
+            var escapedDot = word[i - 1] === "\\";
+            var isKeyframesPercent = /^\d+\.\d+%$/.test(word);
+            return !escapedDot && !isKeyframesPercent;
+          });
+          var hasId = indexesOf(word, "#").filter(function(i) {
+            return word[i - 1] !== "\\";
+          });
+          var interpolations = indexesOf(word, "#{");
+          if (interpolations.length) {
+            hasId = hasId.filter(function(hashIndex) {
+              return !~interpolations.indexOf(hashIndex);
+            });
+          }
+          var indices = (0, sortAscending_1.default)(uniqs(__spreadArray(__spreadArray([0], __read(hasClass), false), __read(hasId), false)));
+          indices.forEach(function(ind, i) {
+            var index = indices[i + 1] || word.length;
+            var value = word.slice(ind, index);
+            if (i === 0 && firstCallback) {
+              return firstCallback.call(_this, value, indices.length);
+            }
+            var node;
+            var current2 = _this.currToken;
+            var sourceIndex = current2[tokenize_1.FIELDS.START_POS] + indices[i];
+            var source = getSource(current2[1], current2[2] + ind, current2[3], current2[2] + (index - 1));
+            if (~hasClass.indexOf(ind)) {
+              var classNameOpts = {
+                value: value.slice(1),
+                source,
+                sourceIndex
+              };
+              node = new className_1.default(unescapeProp(classNameOpts, "value"));
+            } else if (~hasId.indexOf(ind)) {
+              var idOpts = {
+                value: value.slice(1),
+                source,
+                sourceIndex
+              };
+              node = new id_1.default(unescapeProp(idOpts, "value"));
+            } else {
+              var tagOpts = {
+                value,
+                source,
+                sourceIndex
+              };
+              unescapeProp(tagOpts, "value");
+              node = new tag_1.default(tagOpts);
+            }
+            _this.newNode(node, namespace);
+            namespace = null;
+          });
+          this.position++;
+        };
+        Parser2.prototype.word = function(namespace) {
+          var nextToken = this.nextToken;
+          if (nextToken && this.content(nextToken) === "|") {
+            this.position++;
+            return this.namespace();
+          }
+          return this.splitWord(namespace);
+        };
+        Parser2.prototype.loop = function() {
+          while (this.position < this.tokens.length) {
+            this.parse(true);
+          }
+          this.current._inferEndPosition();
+          return this.root;
+        };
+        Parser2.prototype.parse = function(throwOnParenthesis) {
+          switch (this.currToken[tokenize_1.FIELDS.TYPE]) {
+            case tokens.space:
+              this.space();
+              break;
+            case tokens.comment:
+              this.comment();
+              break;
+            case tokens.openParenthesis:
+              this.parentheses();
+              break;
+            case tokens.closeParenthesis:
+              if (throwOnParenthesis) {
+                this.missingParenthesis();
+              }
+              break;
+            case tokens.openSquare:
+              this.attribute();
+              break;
+            case tokens.dollar:
+            case tokens.caret:
+            case tokens.equals:
+            case tokens.word:
+              this.word();
+              break;
+            case tokens.colon:
+              this.pseudo();
+              break;
+            case tokens.comma:
+              this.comma();
+              break;
+            case tokens.asterisk:
+              this.universal();
+              break;
+            case tokens.ampersand:
+              this.nesting();
+              break;
+            case tokens.slash:
+            case tokens.combinator:
+              this.combinator();
+              break;
+            case tokens.str:
+              this.string();
+              break;
+            case tokens.closeSquare:
+              this.missingSquareBracket();
+            case tokens.semicolon:
+              this.missingBackslash();
+            default:
+              this.unexpected();
+          }
+        };
+        Parser2.prototype.expected = function(description, index, found) {
+          if (Array.isArray(description)) {
+            var last = description.pop();
+            description = "".concat(description.join(", "), " or ").concat(last);
+          }
+          var an = /^[aeiou]/.test(description[0]) ? "an" : "a";
+          if (!found) {
+            return this.error("Expected ".concat(an, " ").concat(description, "."), { index });
+          }
+          return this.error("Expected ".concat(an, " ").concat(description, ', found "').concat(found, '" instead.'), { index });
+        };
+        Parser2.prototype.requiredSpace = function(space) {
+          return this.options.lossy ? " " : space;
+        };
+        Parser2.prototype.optionalSpace = function(space) {
+          return this.options.lossy ? "" : space;
+        };
+        Parser2.prototype.lossySpace = function(space, required) {
+          if (this.options.lossy) {
+            return required ? " " : "";
+          } else {
+            return space;
+          }
+        };
+        Parser2.prototype.parseParenthesisToken = function(token) {
+          var content = this.content(token);
+          if (token[tokenize_1.FIELDS.TYPE] === tokens.space) {
+            return this.requiredSpace(content);
+          } else {
+            return content;
+          }
+        };
+        Parser2.prototype.newNode = function(node, namespace) {
+          if (namespace) {
+            if (/^ +$/.test(namespace)) {
+              if (!this.options.lossy) {
+                this.spaces = (this.spaces || "") + namespace;
+              }
+              namespace = true;
+            }
+            node.namespace = namespace;
+            unescapeProp(node, "namespace");
+          }
+          if (this.spaces) {
+            node.spaces.before = this.spaces;
+            this.spaces = "";
+          }
+          return this.current.append(node);
+        };
+        Parser2.prototype.content = function(token) {
+          if (token === void 0) {
+            token = this.currToken;
+          }
+          return this.css.slice(token[tokenize_1.FIELDS.START_POS], token[tokenize_1.FIELDS.END_POS]);
+        };
+        Object.defineProperty(Parser2.prototype, "currToken", {
+          get: function() {
+            return this.tokens[this.position];
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Object.defineProperty(Parser2.prototype, "nextToken", {
+          get: function() {
+            return this.tokens[this.position + 1];
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Object.defineProperty(Parser2.prototype, "prevToken", {
+          get: function() {
+            return this.tokens[this.position - 1];
+          },
+          enumerable: false,
+          configurable: true
+        });
+        Parser2.prototype.locateNextMeaningfulToken = function(startPosition) {
+          if (startPosition === void 0) {
+            startPosition = this.position + 1;
+          }
+          var searchPosition = startPosition;
+          while (searchPosition < this.tokens.length) {
+            if (WHITESPACE_EQUIV_TOKENS[this.tokens[searchPosition][tokenize_1.FIELDS.TYPE]]) {
+              searchPosition++;
+              continue;
+            } else {
+              return searchPosition;
+            }
+          }
+          return -1;
+        };
+        return Parser2;
+      }()
+    );
+    exports.default = Parser;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/processor.js
+var require_processor2 = __commonJS({
+  "node_modules/postcss-selector-parser/dist/processor.js"(exports) {
+    "use strict";
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var parser_1 = __importDefault(require_parser5());
+    var Processor2 = (
+      /** @class */
+      function() {
+        function Processor3(func, options) {
+          this.func = func || function noop() {
+          };
+          this.funcRes = null;
+          this.options = options;
+        }
+        Processor3.prototype._shouldUpdateSelector = function(rule2, options) {
+          if (options === void 0) {
+            options = {};
+          }
+          var merged = Object.assign({}, this.options, options);
+          if (merged.updateSelector === false) {
+            return false;
+          } else {
+            return typeof rule2 !== "string";
+          }
+        };
+        Processor3.prototype._isLossy = function(options) {
+          if (options === void 0) {
+            options = {};
+          }
+          var merged = Object.assign({}, this.options, options);
+          if (merged.lossless === false) {
+            return true;
+          } else {
+            return false;
+          }
+        };
+        Processor3.prototype._root = function(rule2, options) {
+          if (options === void 0) {
+            options = {};
+          }
+          var parser = new parser_1.default(rule2, this._parseOptions(options));
+          return parser.root;
+        };
+        Processor3.prototype._parseOptions = function(options) {
+          var merged = Object.assign({}, this.options, options);
+          return {
+            lossy: this._isLossy(merged),
+            maxNestingDepth: merged.maxNestingDepth
+          };
+        };
+        Processor3.prototype._stringifyOptions = function(options) {
+          var merged = Object.assign({}, this.options, options);
+          return {
+            maxNestingDepth: merged.maxNestingDepth
+          };
+        };
+        Processor3.prototype._run = function(rule2, options) {
+          var _this = this;
+          if (options === void 0) {
+            options = {};
+          }
+          return new Promise(function(resolve, reject) {
+            try {
+              var root_1 = _this._root(rule2, options);
+              Promise.resolve(_this.func(root_1)).then(function(transform) {
+                var string = void 0;
+                if (_this._shouldUpdateSelector(rule2, options)) {
+                  string = root_1.toString(_this._stringifyOptions(options));
+                  rule2.selector = string;
+                }
+                return { transform, root: root_1, string };
+              }).then(resolve, reject);
+            } catch (e) {
+              reject(e);
+              return;
+            }
+          });
+        };
+        Processor3.prototype._runSync = function(rule2, options) {
+          if (options === void 0) {
+            options = {};
+          }
+          var root2 = this._root(rule2, options);
+          var transform = this.func(root2);
+          if (transform && typeof transform.then === "function") {
+            throw new Error("Selector processor returned a promise to a synchronous call.");
+          }
+          var string = void 0;
+          if (options.updateSelector && typeof rule2 !== "string") {
+            string = root2.toString(this._stringifyOptions(options));
+            rule2.selector = string;
+          }
+          return { transform, root: root2, string };
+        };
+        Processor3.prototype.ast = function(rule2, options) {
+          return this._run(rule2, options).then(function(result) {
+            return result.root;
+          });
+        };
+        Processor3.prototype.astSync = function(rule2, options) {
+          return this._runSync(rule2, options).root;
+        };
+        Processor3.prototype.transform = function(rule2, options) {
+          return this._run(rule2, options).then(function(result) {
+            return result.transform;
+          });
+        };
+        Processor3.prototype.transformSync = function(rule2, options) {
+          return this._runSync(rule2, options).transform;
+        };
+        Processor3.prototype.process = function(rule2, options) {
+          var _this = this;
+          return this._run(rule2, options).then(function(result) {
+            return result.string || result.root.toString(_this._stringifyOptions(options));
+          });
+        };
+        Processor3.prototype.processSync = function(rule2, options) {
+          var result = this._runSync(rule2, options);
+          return result.string || result.root.toString(this._stringifyOptions(options));
+        };
+        return Processor3;
+      }()
+    );
+    exports.default = Processor2;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/constructors.js
+var require_constructors = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/constructors.js"(exports) {
+    "use strict";
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.universal = exports.tag = exports.string = exports.selector = exports.root = exports.pseudo = exports.nesting = exports.id = exports.comment = exports.combinator = exports.className = exports.attribute = void 0;
+    var attribute_1 = __importDefault(require_attribute());
+    var className_1 = __importDefault(require_className());
+    var combinator_1 = __importDefault(require_combinator());
+    var comment_1 = __importDefault(require_comment2());
+    var id_1 = __importDefault(require_id());
+    var nesting_1 = __importDefault(require_nesting());
+    var pseudo_1 = __importDefault(require_pseudo());
+    var root_1 = __importDefault(require_root2());
+    var selector_1 = __importDefault(require_selector2());
+    var string_1 = __importDefault(require_string());
+    var tag_1 = __importDefault(require_tag());
+    var universal_1 = __importDefault(require_universal());
+    var attribute = function(opts) {
+      return new attribute_1.default(opts);
+    };
+    exports.attribute = attribute;
+    var className = function(opts) {
+      return new className_1.default(opts);
+    };
+    exports.className = className;
+    var combinator = function(opts) {
+      return new combinator_1.default(opts);
+    };
+    exports.combinator = combinator;
+    var comment2 = function(opts) {
+      return new comment_1.default(opts);
+    };
+    exports.comment = comment2;
+    var id = function(opts) {
+      return new id_1.default(opts);
+    };
+    exports.id = id;
+    var nesting = function(opts) {
+      return new nesting_1.default(opts);
+    };
+    exports.nesting = nesting;
+    var pseudo = function(opts) {
+      return new pseudo_1.default(opts);
+    };
+    exports.pseudo = pseudo;
+    var root2 = function(opts) {
+      return new root_1.default(opts);
+    };
+    exports.root = root2;
+    var selector = function(opts) {
+      return new selector_1.default(opts);
+    };
+    exports.selector = selector;
+    var string = function(opts) {
+      return new string_1.default(opts);
+    };
+    exports.string = string;
+    var tag = function(opts) {
+      return new tag_1.default(opts);
+    };
+    exports.tag = tag;
+    var universal = function(opts) {
+      return new universal_1.default(opts);
+    };
+    exports.universal = universal;
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/guards.js
+var require_guards = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/guards.js"(exports) {
+    "use strict";
+    var _a5;
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.isUniversal = exports.isTag = exports.isString = exports.isSelector = exports.isRoot = exports.isPseudo = exports.isNesting = exports.isIdentifier = exports.isComment = exports.isCombinator = exports.isClassName = exports.isAttribute = void 0;
+    exports.isNode = isNode;
+    exports.isPseudoElement = isPseudoElement;
+    exports.isPseudoClass = isPseudoClass;
+    exports.isContainer = isContainer;
+    exports.isNamespace = isNamespace;
+    var types_1 = require_types3();
+    var IS_TYPE = (_a5 = {}, _a5[types_1.ATTRIBUTE] = true, _a5[types_1.CLASS] = true, _a5[types_1.COMBINATOR] = true, _a5[types_1.COMMENT] = true, _a5[types_1.ID] = true, _a5[types_1.NESTING] = true, _a5[types_1.PSEUDO] = true, _a5[types_1.ROOT] = true, _a5[types_1.SELECTOR] = true, _a5[types_1.STRING] = true, _a5[types_1.TAG] = true, _a5[types_1.UNIVERSAL] = true, _a5);
+    function isNode(node) {
+      return typeof node === "object" && IS_TYPE[node.type];
+    }
+    function isNodeType(type, node) {
+      return isNode(node) && node.type === type;
+    }
+    exports.isAttribute = isNodeType.bind(null, types_1.ATTRIBUTE);
+    exports.isClassName = isNodeType.bind(null, types_1.CLASS);
+    exports.isCombinator = isNodeType.bind(null, types_1.COMBINATOR);
+    exports.isComment = isNodeType.bind(null, types_1.COMMENT);
+    exports.isIdentifier = isNodeType.bind(null, types_1.ID);
+    exports.isNesting = isNodeType.bind(null, types_1.NESTING);
+    exports.isPseudo = isNodeType.bind(null, types_1.PSEUDO);
+    exports.isRoot = isNodeType.bind(null, types_1.ROOT);
+    exports.isSelector = isNodeType.bind(null, types_1.SELECTOR);
+    exports.isString = isNodeType.bind(null, types_1.STRING);
+    exports.isTag = isNodeType.bind(null, types_1.TAG);
+    exports.isUniversal = isNodeType.bind(null, types_1.UNIVERSAL);
+    function isPseudoElement(node) {
+      return (0, exports.isPseudo)(node) && node.value && (node.value.startsWith("::") || node.value.toLowerCase() === ":before" || node.value.toLowerCase() === ":after" || node.value.toLowerCase() === ":first-letter" || node.value.toLowerCase() === ":first-line");
+    }
+    function isPseudoClass(node) {
+      return (0, exports.isPseudo)(node) && !isPseudoElement(node);
+    }
+    function isContainer(node) {
+      return !!(isNode(node) && node.walk);
+    }
+    function isNamespace(node) {
+      return (0, exports.isAttribute)(node) || (0, exports.isTag)(node);
+    }
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/selectors/index.js
+var require_selectors = __commonJS({
+  "node_modules/postcss-selector-parser/dist/selectors/index.js"(exports) {
+    "use strict";
+    var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+      if (k2 === void 0)
+        k2 = k;
+      var desc = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+        desc = { enumerable: true, get: function() {
+          return m[k];
+        } };
+      }
+      Object.defineProperty(o, k2, desc);
+    } : function(o, m, k, k2) {
+      if (k2 === void 0)
+        k2 = k;
+      o[k2] = m[k];
+    });
+    var __exportStar = exports && exports.__exportStar || function(m, exports2) {
+      for (var p in m)
+        if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p))
+          __createBinding(exports2, m, p);
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    __exportStar(require_types3(), exports);
+    __exportStar(require_constructors(), exports);
+    __exportStar(require_guards(), exports);
+  }
+});
+
+// node_modules/postcss-selector-parser/dist/index.js
+var require_dist = __commonJS({
+  "node_modules/postcss-selector-parser/dist/index.js"(exports, module2) {
+    "use strict";
+    var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+      if (k2 === void 0)
+        k2 = k;
+      var desc = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+        desc = { enumerable: true, get: function() {
+          return m[k];
+        } };
+      }
+      Object.defineProperty(o, k2, desc);
+    } : function(o, m, k, k2) {
+      if (k2 === void 0)
+        k2 = k;
+      o[k2] = m[k];
+    });
+    var __setModuleDefault = exports && exports.__setModuleDefault || (Object.create ? function(o, v) {
+      Object.defineProperty(o, "default", { enumerable: true, value: v });
+    } : function(o, v) {
+      o["default"] = v;
+    });
+    var __importStar = exports && exports.__importStar || function() {
+      var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function(o2) {
+          var ar = [];
+          for (var k in o2)
+            if (Object.prototype.hasOwnProperty.call(o2, k))
+              ar[ar.length] = k;
+          return ar;
+        };
+        return ownKeys(o);
+      };
+      return function(mod) {
+        if (mod && mod.__esModule)
+          return mod;
+        var result = {};
+        if (mod != null) {
+          for (var k = ownKeys(mod), i = 0; i < k.length; i++)
+            if (k[i] !== "default")
+              __createBinding(result, mod, k[i]);
+        }
+        __setModuleDefault(result, mod);
+        return result;
+      };
+    }();
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    var processor_1 = __importDefault(require_processor2());
+    var selectors = __importStar(require_selectors());
+    var parser = function(processor) {
+      return new processor_1.default(processor);
+    };
+    Object.assign(parser, selectors);
+    delete parser.__esModule;
+    module2.exports = parser;
+  }
+});
+
+// node_modules/postcss-value-parser/lib/parse.js
+var require_parse5 = __commonJS({
+  "node_modules/postcss-value-parser/lib/parse.js"(exports, module2) {
+    var openParentheses = "(".charCodeAt(0);
+    var closeParentheses = ")".charCodeAt(0);
+    var singleQuote = "'".charCodeAt(0);
+    var doubleQuote = '"'.charCodeAt(0);
+    var backslash = "\\".charCodeAt(0);
+    var slash = "/".charCodeAt(0);
+    var comma = ",".charCodeAt(0);
+    var colon = ":".charCodeAt(0);
+    var star = "*".charCodeAt(0);
+    var uLower = "u".charCodeAt(0);
+    var uUpper = "U".charCodeAt(0);
+    var plus = "+".charCodeAt(0);
+    var isUnicodeRange = /^[a-f0-9?-]+$/i;
+    module2.exports = function(input) {
+      var tokens = [];
+      var value = input;
+      var next, quote, prev, token, escape, escapePos, whitespacePos, parenthesesOpenPos;
+      var pos = 0;
+      var code = value.charCodeAt(pos);
+      var max = value.length;
+      var stack = [{ nodes: tokens }];
+      var balanced = 0;
+      var parent;
+      var name = "";
+      var before = "";
+      var after = "";
+      while (pos < max) {
+        if (code <= 32) {
+          next = pos;
+          do {
+            next += 1;
+            code = value.charCodeAt(next);
+          } while (code <= 32);
+          token = value.slice(pos, next);
+          prev = tokens[tokens.length - 1];
+          if (code === closeParentheses && balanced) {
+            after = token;
+          } else if (prev && prev.type === "div") {
+            prev.after = token;
+            prev.sourceEndIndex += token.length;
+          } else if (code === comma || code === colon || code === slash && value.charCodeAt(next + 1) !== star && (!parent || parent && parent.type === "function" && parent.value !== "calc")) {
+            before = token;
+          } else {
+            tokens.push({
+              type: "space",
+              sourceIndex: pos,
+              sourceEndIndex: next,
+              value: token
+            });
+          }
+          pos = next;
+        } else if (code === singleQuote || code === doubleQuote) {
+          next = pos;
+          quote = code === singleQuote ? "'" : '"';
+          token = {
+            type: "string",
+            sourceIndex: pos,
+            quote
+          };
+          do {
+            escape = false;
+            next = value.indexOf(quote, next + 1);
+            if (~next) {
+              escapePos = next;
+              while (value.charCodeAt(escapePos - 1) === backslash) {
+                escapePos -= 1;
+                escape = !escape;
+              }
+            } else {
+              value += quote;
+              next = value.length - 1;
+              token.unclosed = true;
+            }
+          } while (escape);
+          token.value = value.slice(pos + 1, next);
+          token.sourceEndIndex = token.unclosed ? next : next + 1;
+          tokens.push(token);
+          pos = next + 1;
+          code = value.charCodeAt(pos);
+        } else if (code === slash && value.charCodeAt(pos + 1) === star) {
+          next = value.indexOf("*/", pos);
+          token = {
+            type: "comment",
+            sourceIndex: pos,
+            sourceEndIndex: next + 2
+          };
+          if (next === -1) {
+            token.unclosed = true;
+            next = value.length;
+            token.sourceEndIndex = next;
+          }
+          token.value = value.slice(pos + 2, next);
+          tokens.push(token);
+          pos = next + 2;
+          code = value.charCodeAt(pos);
+        } else if ((code === slash || code === star) && parent && parent.type === "function" && parent.value === "calc") {
+          token = value[pos];
+          tokens.push({
+            type: "word",
+            sourceIndex: pos - before.length,
+            sourceEndIndex: pos + token.length,
+            value: token
+          });
+          pos += 1;
+          code = value.charCodeAt(pos);
+        } else if (code === slash || code === comma || code === colon) {
+          token = value[pos];
+          tokens.push({
+            type: "div",
+            sourceIndex: pos - before.length,
+            sourceEndIndex: pos + token.length,
+            value: token,
+            before,
+            after: ""
+          });
+          before = "";
+          pos += 1;
+          code = value.charCodeAt(pos);
+        } else if (openParentheses === code) {
+          next = pos;
+          do {
+            next += 1;
+            code = value.charCodeAt(next);
+          } while (code <= 32);
+          parenthesesOpenPos = pos;
+          token = {
+            type: "function",
+            sourceIndex: pos - name.length,
+            value: name,
+            before: value.slice(parenthesesOpenPos + 1, next)
+          };
+          pos = next;
+          if (name === "url" && code !== singleQuote && code !== doubleQuote) {
+            next -= 1;
+            do {
+              escape = false;
+              next = value.indexOf(")", next + 1);
+              if (~next) {
+                escapePos = next;
+                while (value.charCodeAt(escapePos - 1) === backslash) {
+                  escapePos -= 1;
+                  escape = !escape;
+                }
+              } else {
+                value += ")";
+                next = value.length - 1;
+                token.unclosed = true;
+              }
+            } while (escape);
+            whitespacePos = next;
+            do {
+              whitespacePos -= 1;
+              code = value.charCodeAt(whitespacePos);
+            } while (code <= 32);
+            if (parenthesesOpenPos < whitespacePos) {
+              if (pos !== whitespacePos + 1) {
+                token.nodes = [
+                  {
+                    type: "word",
+                    sourceIndex: pos,
+                    sourceEndIndex: whitespacePos + 1,
+                    value: value.slice(pos, whitespacePos + 1)
+                  }
+                ];
+              } else {
+                token.nodes = [];
+              }
+              if (token.unclosed && whitespacePos + 1 !== next) {
+                token.after = "";
+                token.nodes.push({
+                  type: "space",
+                  sourceIndex: whitespacePos + 1,
+                  sourceEndIndex: next,
+                  value: value.slice(whitespacePos + 1, next)
+                });
+              } else {
+                token.after = value.slice(whitespacePos + 1, next);
+                token.sourceEndIndex = next;
+              }
+            } else {
+              token.after = "";
+              token.nodes = [];
+            }
+            pos = next + 1;
+            token.sourceEndIndex = token.unclosed ? next : pos;
+            code = value.charCodeAt(pos);
+            tokens.push(token);
+          } else {
+            balanced += 1;
+            token.after = "";
+            token.sourceEndIndex = pos + 1;
+            tokens.push(token);
+            stack.push(token);
+            tokens = token.nodes = [];
+            parent = token;
+          }
+          name = "";
+        } else if (closeParentheses === code && balanced) {
+          pos += 1;
+          code = value.charCodeAt(pos);
+          parent.after = after;
+          parent.sourceEndIndex += after.length;
+          after = "";
+          balanced -= 1;
+          stack[stack.length - 1].sourceEndIndex = pos;
+          stack.pop();
+          parent = stack[balanced];
+          tokens = parent.nodes;
+        } else {
+          next = pos;
+          do {
+            if (code === backslash) {
+              next += 1;
+            }
+            next += 1;
+            code = value.charCodeAt(next);
+          } while (next < max && !(code <= 32 || code === singleQuote || code === doubleQuote || code === comma || code === colon || code === slash || code === openParentheses || code === star && parent && parent.type === "function" && parent.value === "calc" || code === slash && parent.type === "function" && parent.value === "calc" || code === closeParentheses && balanced));
+          token = value.slice(pos, next);
+          if (openParentheses === code) {
+            name = token;
+          } else if ((uLower === token.charCodeAt(0) || uUpper === token.charCodeAt(0)) && plus === token.charCodeAt(1) && isUnicodeRange.test(token.slice(2))) {
+            tokens.push({
+              type: "unicode-range",
+              sourceIndex: pos,
+              sourceEndIndex: next,
+              value: token
+            });
+          } else {
+            tokens.push({
+              type: "word",
+              sourceIndex: pos,
+              sourceEndIndex: next,
+              value: token
+            });
+          }
+          pos = next;
+        }
+      }
+      for (pos = stack.length - 1; pos; pos -= 1) {
+        stack[pos].unclosed = true;
+        stack[pos].sourceEndIndex = value.length;
+      }
+      return stack[0].nodes;
+    };
+  }
+});
+
+// node_modules/postcss-value-parser/lib/walk.js
+var require_walk = __commonJS({
+  "node_modules/postcss-value-parser/lib/walk.js"(exports, module2) {
+    module2.exports = function walk(nodes, cb, bubble) {
+      var i, max, node, result;
+      for (i = 0, max = nodes.length; i < max; i += 1) {
+        node = nodes[i];
+        if (!bubble) {
+          result = cb(node, i, nodes);
+        }
+        if (result !== false && node.type === "function" && Array.isArray(node.nodes)) {
+          walk(node.nodes, cb, bubble);
+        }
+        if (bubble) {
+          cb(node, i, nodes);
+        }
+      }
+    };
+  }
+});
+
+// node_modules/postcss-value-parser/lib/stringify.js
+var require_stringify5 = __commonJS({
+  "node_modules/postcss-value-parser/lib/stringify.js"(exports, module2) {
+    function stringifyNode(node, custom) {
+      var type = node.type;
+      var value = node.value;
+      var buf;
+      var customResult;
+      if (custom && (customResult = custom(node)) !== void 0) {
+        return customResult;
+      } else if (type === "word" || type === "space") {
+        return value;
+      } else if (type === "string") {
+        buf = node.quote || "";
+        return buf + value + (node.unclosed ? "" : buf);
+      } else if (type === "comment") {
+        return "/*" + value + (node.unclosed ? "" : "*/");
+      } else if (type === "div") {
+        return (node.before || "") + value + (node.after || "");
+      } else if (Array.isArray(node.nodes)) {
+        buf = stringify2(node.nodes, custom);
+        if (type !== "function") {
+          return buf;
+        }
+        return value + "(" + (node.before || "") + buf + (node.after || "") + (node.unclosed ? "" : ")");
+      }
+      return value;
+    }
+    function stringify2(nodes, custom) {
+      var result, i;
+      if (Array.isArray(nodes)) {
+        result = "";
+        for (i = nodes.length - 1; ~i; i -= 1) {
+          result = stringifyNode(nodes[i], custom) + result;
+        }
+        return result;
+      }
+      return stringifyNode(nodes, custom);
+    }
+    module2.exports = stringify2;
+  }
+});
+
+// node_modules/postcss-value-parser/lib/unit.js
+var require_unit = __commonJS({
+  "node_modules/postcss-value-parser/lib/unit.js"(exports, module2) {
+    var minus = "-".charCodeAt(0);
+    var plus = "+".charCodeAt(0);
+    var dot = ".".charCodeAt(0);
+    var exp = "e".charCodeAt(0);
+    var EXP = "E".charCodeAt(0);
+    function likeNumber(value) {
+      var code = value.charCodeAt(0);
+      var nextCode;
+      if (code === plus || code === minus) {
+        nextCode = value.charCodeAt(1);
+        if (nextCode >= 48 && nextCode <= 57) {
+          return true;
+        }
+        var nextNextCode = value.charCodeAt(2);
+        if (nextCode === dot && nextNextCode >= 48 && nextNextCode <= 57) {
+          return true;
+        }
+        return false;
+      }
+      if (code === dot) {
+        nextCode = value.charCodeAt(1);
+        if (nextCode >= 48 && nextCode <= 57) {
+          return true;
+        }
+        return false;
+      }
+      if (code >= 48 && code <= 57) {
+        return true;
+      }
+      return false;
+    }
+    module2.exports = function(value) {
+      var pos = 0;
+      var length = value.length;
+      var code;
+      var nextCode;
+      var nextNextCode;
+      if (length === 0 || !likeNumber(value)) {
+        return false;
+      }
+      code = value.charCodeAt(pos);
+      if (code === plus || code === minus) {
+        pos++;
+      }
+      while (pos < length) {
+        code = value.charCodeAt(pos);
+        if (code < 48 || code > 57) {
+          break;
+        }
+        pos += 1;
+      }
+      code = value.charCodeAt(pos);
+      nextCode = value.charCodeAt(pos + 1);
+      if (code === dot && nextCode >= 48 && nextCode <= 57) {
+        pos += 2;
+        while (pos < length) {
+          code = value.charCodeAt(pos);
+          if (code < 48 || code > 57) {
+            break;
+          }
+          pos += 1;
+        }
+      }
+      code = value.charCodeAt(pos);
+      nextCode = value.charCodeAt(pos + 1);
+      nextNextCode = value.charCodeAt(pos + 2);
+      if ((code === exp || code === EXP) && (nextCode >= 48 && nextCode <= 57 || (nextCode === plus || nextCode === minus) && nextNextCode >= 48 && nextNextCode <= 57)) {
+        pos += nextCode === plus || nextCode === minus ? 3 : 2;
+        while (pos < length) {
+          code = value.charCodeAt(pos);
+          if (code < 48 || code > 57) {
+            break;
+          }
+          pos += 1;
+        }
+      }
+      return {
+        number: value.slice(0, pos),
+        unit: value.slice(pos)
+      };
+    };
+  }
+});
+
+// node_modules/postcss-value-parser/lib/index.js
+var require_lib11 = __commonJS({
+  "node_modules/postcss-value-parser/lib/index.js"(exports, module2) {
+    var parse2 = require_parse5();
+    var walk = require_walk();
+    var stringify2 = require_stringify5();
+    function ValueParser(value) {
+      if (this instanceof ValueParser) {
+        this.nodes = parse2(value);
+        return this;
+      }
+      return new ValueParser(value);
+    }
+    ValueParser.prototype.toString = function() {
+      return Array.isArray(this.nodes) ? stringify2(this.nodes) : "";
+    };
+    ValueParser.prototype.walk = function(cb, bubble) {
+      walk(this.nodes, cb, bubble);
+      return this;
+    };
+    ValueParser.unit = require_unit();
+    ValueParser.walk = walk;
+    ValueParser.stringify = stringify2;
+    module2.exports = ValueParser;
   }
 });
 
@@ -53631,25 +62030,25 @@ function getActiveWindowValue(name) {
     activeWindow[name]
   );
 }
-function findAllElements(root, selector) {
-  if (!root || !selector)
+function findAllElements(root2, selector) {
+  if (!root2 || !selector)
     return [];
   const activeWindow = getActiveWindow();
   const ElementCtor = getElementConstructor(activeWindow);
   const nodeFilter = getNodeFilter(activeWindow);
   const findAll = (
     /** @type {FindAllRootLike} */
-    root.findAll
+    root2.findAll
   );
   if (typeof findAll === "function") {
-    const result = callFindAll(findAll, root, selector);
+    const result = callFindAll(findAll, root2, selector);
     if (Array.isArray(result) && ElementCtor) {
       const elements = filterElements(result, ElementCtor);
       if (elements.length > 0)
         return elements;
     }
   }
-  const ownerDocument = ElementCtor && root instanceof ElementCtor ? root.ownerDocument : getActiveDocument();
+  const ownerDocument = ElementCtor && root2 instanceof ElementCtor ? root2.ownerDocument : getActiveDocument();
   if (!ownerDocument || !nodeFilter || typeof ownerDocument.createTreeWalker !== "function")
     return [];
   const matches = (node) => ElementCtor && node instanceof ElementCtor && matchesSelectorSubset(
@@ -53658,7 +62057,7 @@ function findAllElements(root, selector) {
     selector
   );
   const results = [];
-  const walker = ownerDocument.createTreeWalker(root, nodeFilter.SHOW_ELEMENT);
+  const walker = ownerDocument.createTreeWalker(root2, nodeFilter.SHOW_ELEMENT);
   let current = walker.nextNode();
   while (current) {
     if (matches(current))
@@ -53680,8 +62079,8 @@ function getNodeFilter(activeWindow) {
     return null;
   return candidate;
 }
-function callFindAll(findAll, root, selector) {
-  return findAll.call(root, selector);
+function callFindAll(findAll, root2, selector) {
+  return findAll.call(root2, selector);
 }
 function getWindowConstructorValue(activeWindow, name) {
   if (!activeWindow)
@@ -55230,7 +63629,7 @@ function wrapTablesForHorizontalScroll(container, converter) {
   });
 }
 function serializeObsidianRenderedHtml({
-  root,
+  root: root2,
   converter,
   preRenderedMath = [],
   preserveSvgStyleTags = false
@@ -55240,8 +63639,8 @@ function serializeObsidianRenderedHtml({
     throw new Error("Triplet serializer requires DOM environment");
   }
   const container = activeDocument.createElement("div");
-  if (root) {
-    Array.from(root.childNodes || []).forEach((node) => {
+  if (root2) {
+    Array.from(root2.childNodes || []).forEach((node) => {
       container.appendChild(node.cloneNode(true));
     });
   }
@@ -55586,16 +63985,16 @@ function shouldSkipTextNode(node) {
   }
   return false;
 }
-function normalizeRenderedDomPunctuation(root, options = {}) {
+function normalizeRenderedDomPunctuation(root2, options = {}) {
   var _a5;
-  if (!root || options.enabled !== true)
+  if (!root2 || options.enabled !== true)
     return;
-  const documentRef = root.ownerDocument;
+  const documentRef = root2.ownerDocument;
   const nodeFilter = (_a5 = documentRef == null ? void 0 : documentRef.defaultView) == null ? void 0 : _a5.NodeFilter;
   if (!documentRef || !nodeFilter)
     return;
   const walker = documentRef.createTreeWalker(
-    root,
+    root2,
     nodeFilter.SHOW_TEXT,
     {
       acceptNode(node) {
@@ -55653,8 +64052,8 @@ function splitMarkdownCodeSegments(markdown, converter) {
   }
   let blockRanges = [];
   const markdownIt = converter == null ? void 0 : converter.md;
-  const parse = markdownIt == null ? void 0 : markdownIt.parse;
-  if (typeof parse === "function") {
+  const parse2 = markdownIt == null ? void 0 : markdownIt.parse;
+  if (typeof parse2 === "function") {
     try {
       const tokens = markdownIt.parse(source, {});
       blockRanges = (Array.isArray(tokens) ? tokens : []).filter((token) => (token == null ? void 0 : token.type) === "fence" || (token == null ? void 0 : token.type) === "code_block").map((token) => {
@@ -57018,10 +65417,10 @@ function preprocessMarkdownForTriplet(markdown, converter) {
   output = injectHardBreaksForLegacyParity(output);
   return { markdown: output, mathFormulas };
 }
-function countUnresolvedImageEmbeds(root) {
-  if (!root)
+function countUnresolvedImageEmbeds(root2) {
+  if (!root2)
     return 0;
-  const embeds = findAllElements(root, "span.internal-embed,span.image-embed,div.internal-embed,div.image-embed");
+  const embeds = findAllElements(root2, "span.internal-embed,span.image-embed,div.internal-embed,div.image-embed");
   let unresolved = 0;
   for (const embed of embeds) {
     const isImageEmbed = embed.classList.contains("image-embed");
@@ -57053,10 +65452,10 @@ function shouldObserveMermaidRenderWindow(markdown) {
   }
   return false;
 }
-function collectMermaidHostElements(root) {
-  if (!root)
+function collectMermaidHostElements(root2) {
+  if (!root2)
     return [];
-  const elements = findAllElements(root, "*").filter((el) => {
+  const elements = findAllElements(root2, "*").filter((el) => {
     var _a5, _b, _c, _d, _e;
     const values = [
       (_a5 = el.getAttribute) == null ? void 0 : _a5.call(el, "class"),
@@ -57077,21 +65476,21 @@ function collectMermaidHostElements(root) {
     return true;
   });
 }
-function countRenderedMermaidDiagrams(root) {
-  if (!root)
+function countRenderedMermaidDiagrams(root2) {
+  if (!root2)
     return 0;
-  const svgCount = findAllElements(root, "svg").filter((svg) => {
+  const svgCount = findAllElements(root2, "svg").filter((svg) => {
     var _a5, _b;
     if ((_a5 = svg.closest) == null ? void 0 : _a5.call(svg, "mjx-container,mjx-math,.MathJax"))
       return false;
     return !!((_b = svg.closest) == null ? void 0 : _b.call(svg, '.mermaid,[data-obsidian-wechat-mermaid="true"]'));
   }).length;
-  const imageCount = findAllElements(root, "img.mermaid-diagram-image").length;
+  const imageCount = findAllElements(root2, "img.mermaid-diagram-image").length;
   return svgCount + imageCount;
 }
-function countPendingMermaidHosts(root) {
+function countPendingMermaidHosts(root2) {
   var _a5, _b, _c, _d;
-  const hosts = collectMermaidHostElements(root);
+  const hosts = collectMermaidHostElements(root2);
   let pending = 0;
   for (const host of hosts) {
     if (((_b = (_a5 = host.tagName) == null ? void 0 : _a5.toLowerCase) == null ? void 0 : _b.call(_a5)) === "svg")
@@ -57184,8 +65583,8 @@ function shouldObserveAsyncEmbedWindow(markdown) {
   }
   return false;
 }
-async function waitForTripletDomToSettle(root, options = {}) {
-  if (!root)
+async function waitForTripletDomToSettle(root2, options = {}) {
+  if (!root2)
     return;
   const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : 500;
   const intervalMs = Number.isFinite(options.intervalMs) ? options.intervalMs : 16;
@@ -57193,9 +65592,9 @@ async function waitForTripletDomToSettle(root, options = {}) {
   const minObserveMs = Number.isFinite(options.minObserveMs) ? Math.max(0, Math.floor(options.minObserveMs)) : Math.min(48, timeoutMs);
   const mermaidObserveMs = observeMermaid ? Number.isFinite(options.mermaidObserveMs) ? Math.max(0, Math.floor(options.mermaidObserveMs)) : Math.min(180, timeoutMs) : 0;
   const start = Date.now();
-  let unresolved = countUnresolvedImageEmbeds(root);
-  let renderedMermaid = observeMermaid ? countRenderedMermaidDiagrams(root) : 0;
-  let pendingMermaid = observeMermaid ? countPendingMermaidHosts(root) : 0;
+  let unresolved = countUnresolvedImageEmbeds(root2);
+  let renderedMermaid = observeMermaid ? countRenderedMermaidDiagrams(root2) : 0;
+  let pendingMermaid = observeMermaid ? countPendingMermaidHosts(root2) : 0;
   const initialObserveMs = Math.max(minObserveMs, mermaidObserveMs);
   if (unresolved === 0 && renderedMermaid === 0 && pendingMermaid === 0 && initialObserveMs <= 0) {
     return;
@@ -57203,9 +65602,9 @@ async function waitForTripletDomToSettle(root, options = {}) {
   if (unresolved === 0 && renderedMermaid === 0 && pendingMermaid === 0 && initialObserveMs > 0) {
     while (Date.now() - start < initialObserveMs) {
       await new Promise((resolve) => window.setTimeout(resolve, intervalMs));
-      unresolved = countUnresolvedImageEmbeds(root);
-      renderedMermaid = observeMermaid ? countRenderedMermaidDiagrams(root) : 0;
-      pendingMermaid = observeMermaid ? countPendingMermaidHosts(root) : 0;
+      unresolved = countUnresolvedImageEmbeds(root2);
+      renderedMermaid = observeMermaid ? countRenderedMermaidDiagrams(root2) : 0;
+      pendingMermaid = observeMermaid ? countPendingMermaidHosts(root2) : 0;
       if (unresolved > 0 || renderedMermaid > 0 || pendingMermaid > 0)
         break;
     }
@@ -57214,9 +65613,9 @@ async function waitForTripletDomToSettle(root, options = {}) {
   }
   let stableCount = 0;
   while (Date.now() - start < timeoutMs) {
-    unresolved = countUnresolvedImageEmbeds(root);
-    renderedMermaid = observeMermaid ? countRenderedMermaidDiagrams(root) : 0;
-    pendingMermaid = observeMermaid ? countPendingMermaidHosts(root) : 0;
+    unresolved = countUnresolvedImageEmbeds(root2);
+    renderedMermaid = observeMermaid ? countRenderedMermaidDiagrams(root2) : 0;
+    pendingMermaid = observeMermaid ? countPendingMermaidHosts(root2) : 0;
     const mermaidReady = !observeMermaid || (pendingMermaid === 0 && renderedMermaid > 0 || pendingMermaid === 0 && renderedMermaid === 0 && Date.now() - start >= mermaidObserveMs);
     if (unresolved === 0 && mermaidReady) {
       stableCount += 1;
@@ -57789,14 +66188,14 @@ function flattenMermaidForeignObjectLabels(svg) {
   }
   return flattened;
 }
-function normalizeRenderedMermaidDiagrams(root) {
+function normalizeRenderedMermaidDiagrams(root2) {
   var _a5, _b;
-  if (!root)
+  if (!root2)
     return 0;
   let normalizedCount = 0;
   const svgs = (
     /** @type {SVGElement[]} */
-    findAllElements(root, "svg").filter(looksLikeMermaidSvg)
+    findAllElements(root2, "svg").filter(looksLikeMermaidSvg)
   );
   for (const svg of svgs) {
     inlineMermaidSvgStyles(svg);
@@ -57809,7 +66208,7 @@ function normalizeRenderedMermaidDiagrams(root) {
   }
   const images = (
     /** @type {HTMLImageElement[]} */
-    findAllElements(root, "img.mermaid-diagram-image")
+    findAllElements(root2, "img.mermaid-diagram-image")
   );
   for (const img of images) {
     const host = (_b = img.closest) == null ? void 0 : _b.call(img, '.mermaid,[data-obsidian-wechat-mermaid="true"]');
@@ -57841,9 +66240,9 @@ function getSerializedMermaidCacheKey(svg, scale, simpleHash) {
   const payload = `${svgMarkup}::scale:${scale}`;
   return typeof simpleHash === "function" ? simpleHash(payload) : payload;
 }
-async function convertRenderedMermaidDiagramsToImages(root, options = {}) {
+async function convertRenderedMermaidDiagramsToImages(root2, options = {}) {
   var _a5;
-  if (!root)
+  if (!root2)
     return 0;
   const {
     rasterizeSvg: rasterizeSvg2 = rasterizeSvgToPngDataUrl,
@@ -57851,10 +66250,10 @@ async function convertRenderedMermaidDiagramsToImages(root, options = {}) {
     simpleHash = null,
     mermaidImageCache = null
   } = options;
-  normalizeRenderedMermaidDiagrams(root);
+  normalizeRenderedMermaidDiagrams(root2);
   const svgs = (
     /** @type {SVGElement[]} */
-    findAllElements(root, "svg").filter(looksLikeMermaidSvg)
+    findAllElements(root2, "svg").filter(looksLikeMermaidSvg)
   );
   let convertedCount = 0;
   for (const svg of svgs) {
@@ -57890,7 +66289,7 @@ async function convertRenderedMermaidDiagramsToImages(root, options = {}) {
         img.setAttribute("height", String(Math.round(result.height)));
       img.setAttribute("style", buildMermaidImageStyle(result.width, result.height));
       const host = (_a5 = svg.closest) == null ? void 0 : _a5.call(svg, '.mermaid,[data-obsidian-wechat-mermaid="true"]');
-      if (host && host !== root) {
+      if (host && host !== root2) {
         normalizeMermaidPreviewHost(host);
         host.replaceChildren(img);
       } else {
@@ -57962,15 +66361,15 @@ function resolveMermaidApi(options = {}) {
   return null;
 }
 var mermaidRenderNonce = 0;
-async function renderMermaidCodeBlocks(root, options = {}) {
-  if (!root)
+async function renderMermaidCodeBlocks(root2, options = {}) {
+  if (!root2)
     return 0;
   const mermaidApi = resolveMermaidApi(options);
   if (!mermaidApi)
     return 0;
   const codeBlocks = (
     /** @type {HTMLElement[]} */
-    findAllElements(root, "pre > code").filter(isMermaidCodeBlock)
+    findAllElements(root2, "pre > code").filter(isMermaidCodeBlock)
   );
   let renderedCount = 0;
   for (const codeEl of codeBlocks) {
@@ -59982,9 +68381,9 @@ function getArticleLayoutSelectionKey(selection = {}) {
   return `${normalized.layoutFamily || AI_LAYOUT_SELECTION_AUTO}::${normalized.colorPalette || AI_LAYOUT_SELECTION_AUTO}`;
 }
 function getLayoutFamilyList({ includeAuto = true, includeReserved = false } = {}) {
-  const list = [];
+  const list2 = [];
   if (includeAuto) {
-    list.push({
+    list2.push({
       value: AI_LAYOUT_SELECTION_AUTO,
       label: "\u81EA\u52A8\u63A8\u8350",
       description: "\u7531 AI \u6839\u636E\u6587\u7AE0\u5185\u5BB9\u81EA\u52A8\u63A8\u8350\u5E03\u5C40\u3002"
@@ -59993,13 +68392,13 @@ function getLayoutFamilyList({ includeAuto = true, includeReserved = false } = {
   Object.values(AI_LAYOUT_FAMILY_DEFS).forEach((family) => {
     if (!includeReserved && !AI_LAYOUT_IMPLEMENTED_FAMILIES.has(family.id))
       return;
-    list.push({
+    list2.push({
       value: family.id,
       label: family.label,
       description: family.description
     });
   });
-  return list;
+  return list2;
 }
 function getLayoutFamilyById(id) {
   const normalizedId = normalizeResolvedLayoutFamily(id, AI_LAYOUT_DEFAULT_FAMILY);
@@ -60015,22 +68414,22 @@ function getWechatSafeRenderProfile(layoutFamilyId) {
   return toRecord(profiles[normalizedId] || profiles[AI_LAYOUT_DEFAULT_FAMILY] || {});
 }
 function getColorPaletteList({ includeAuto = true } = {}) {
-  const list = [];
+  const list2 = [];
   if (includeAuto) {
-    list.push({
+    list2.push({
       value: AI_LAYOUT_SELECTION_AUTO,
       label: "\u81EA\u52A8\u63A8\u8350",
       description: "\u7531 AI \u6839\u636E\u6587\u7AE0\u5185\u5BB9\u81EA\u52A8\u63A8\u8350\u989C\u8272\u3002"
     });
   }
   Object.values(AI_COLOR_PALETTES).forEach((pack) => {
-    list.push({
+    list2.push({
       value: pack.id,
       label: pack.label,
       description: pack.description
     });
   });
-  return list;
+  return list2;
 }
 function getColorPaletteById(id) {
   return AI_COLOR_PALETTES[normalizeResolvedColorPalette(id)] || AI_COLOR_PALETTES[AI_LAYOUT_DEFAULT_COLOR_PALETTE];
@@ -60984,8 +69383,8 @@ function extractRenderedSectionFragments(html = "") {
   const container = createHtmlContainer("div", String(html || ""));
   if (!container)
     return { sections: [] };
-  const root = container.children.length === 1 ? container.firstElementChild : container;
-  const childNodes = Array.from((root == null ? void 0 : root.childNodes) || []).filter((node) => node.nodeType !== 3 || /\S/.test(node.textContent || ""));
+  const root2 = container.children.length === 1 ? container.firstElementChild : container;
+  const childNodes = Array.from((root2 == null ? void 0 : root2.childNodes) || []).filter((node) => node.nodeType !== 3 || /\S/.test(node.textContent || ""));
   const sections = [];
   let currentSection = null;
   let currentSubsection = null;
@@ -62998,6 +71397,11 @@ function renderArticleLayoutHtml(layout, { imageRefs = [], mode = "preview", ren
   return `<section style="${wrapperStyle}">${blocksHtml}</section>`;
 }
 
+// services/sticker-constants.js
+var STICKER_MAX_IMAGES = 20;
+var STICKER_MAX_TITLE_LENGTH = 20;
+var STICKER_MAX_CONTENT_LENGTH = 1e3;
+
 // services/wechat-sync.js
 function createDraftContentIssue(code, message, value = "") {
   return {
@@ -63118,13 +71522,13 @@ function inspectWechatDraftContent(html) {
   return { blockingIssues, warnings };
 }
 function formatDraftContentIssues(issues) {
-  const list = Array.isArray(issues) ? issues : [];
-  const preview = list.slice(0, 3).map((issue) => {
+  const list2 = Array.isArray(issues) ? issues : [];
+  const preview = list2.slice(0, 3).map((issue) => {
     const value = issue.value ? `\uFF1A${issue.value}` : "";
     return `${issue.message}${value}`;
   }).join("\uFF1B");
-  const suffix = list.length > 3 ? `\uFF1B\u53E6\u6709 ${list.length - 3} \u9879` : "";
-  return `\u5FAE\u4FE1\u8349\u7A3F\u5185\u5BB9\u68C0\u67E5\u672A\u901A\u8FC7\uFF0C\u5171 ${list.length} \u9879\u95EE\u9898\u3002${preview}${suffix}`;
+  const suffix = list2.length > 3 ? `\uFF1B\u53E6\u6709 ${list2.length - 3} \u9879` : "";
+  return `\u5FAE\u4FE1\u8349\u7A3F\u5185\u5BB9\u68C0\u67E5\u672A\u901A\u8FC7\uFF0C\u5171 ${list2.length} \u9879\u95EE\u9898\u3002${preview}${suffix}`;
 }
 function replaceUnuploadedDraftImagesWithPlaceholders(html) {
   const activeDocument = getActiveDocument();
@@ -63197,7 +71601,7 @@ function createWechatSyncService(deps) {
     processMathFormulas: processMathFormulas2,
     prepareHtmlForDraft = async (html) => html,
     cleanHtmlForDraft: cleanHtmlForDraft2,
-    cleanupConfiguredDirectory,
+    cleanupConfiguredDirectory: cleanupConfiguredDirectory2,
     getFirstImageFromArticle
   } = deps;
   return {
@@ -63305,7 +71709,7 @@ function createWechatSyncService(deps) {
         const draftRes = await api.createDraft(article);
         mediaId = (draftRes == null ? void 0 : draftRes.media_id) || "";
       }
-      const cleanupResult = await cleanupConfiguredDirectory(activeFile);
+      const cleanupResult = await cleanupConfiguredDirectory2(activeFile);
       return {
         article,
         mediaId,
@@ -63317,6 +71721,39 @@ function createWechatSyncService(deps) {
         draftWarnings: draftInspection.warnings
       };
     }
+  };
+}
+async function syncStickerDraft({ account, api, title, content = "", imageMediaIds }) {
+  const stickerApi = (
+    /** @type {StickerApiLike} */
+    api
+  );
+  if (!stickerApi || typeof stickerApi.createImageDraft !== "function") {
+    throw new Error("\u5F53\u524D\u5FAE\u4FE1 API \u5B9E\u4F8B\u672A\u652F\u6301 createImageDraft \u65B9\u6CD5");
+  }
+  const normalizedTitle = String(title || "").trim();
+  if (normalizedTitle.length === 0) {
+    throw new Error("\u5FAE\u4FE1\u8D34\u56FE\u6807\u9898\u4E0D\u80FD\u4E3A\u7A7A");
+  }
+  if (normalizedTitle.length > STICKER_MAX_TITLE_LENGTH) {
+    throw new Error(`\u5FAE\u4FE1\u8D34\u56FE\u6807\u9898\u4E0D\u80FD\u8D85\u8FC7 ${STICKER_MAX_TITLE_LENGTH} \u5B57`);
+  }
+  if (!Array.isArray(imageMediaIds) || imageMediaIds.length === 0) {
+    throw new Error("\u5FAE\u4FE1\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247");
+  }
+  if (imageMediaIds.length > STICKER_MAX_IMAGES) {
+    throw new Error(`\u5FAE\u4FE1\u8D34\u56FE\u6700\u591A\u652F\u6301 ${STICKER_MAX_IMAGES} \u5F20\u56FE\u7247`);
+  }
+  const res = await stickerApi.createImageDraft({
+    title: normalizedTitle,
+    content,
+    imageMediaIds,
+    needOpenComment: account.openComment ? 1 : 0,
+    onlyFansCanComment: account.onlyFansCanComment ? 1 : 0
+  });
+  const mediaId = res && typeof res.media_id === "string" ? res.media_id : "";
+  return {
+    mediaId
   };
 }
 
@@ -65530,23 +73967,23 @@ function updateCachedPlatformsAfterSync(cachedPlatforms = [], results = []) {
 
 // services/sync-context.js
 function resolveSyncAccount({ accounts, selectedAccountId, defaultAccountId }) {
-  const list = Array.isArray(accounts) ? (
+  const list2 = Array.isArray(accounts) ? (
     /** @type {SyncAccountLike[]} */
     accounts.filter((account) => !!account && typeof account === "object" && !Array.isArray(account))
   ) : [];
-  if (list.length === 0)
+  if (list2.length === 0)
     return null;
   if (selectedAccountId) {
-    const selected = list.find((account) => account.id === selectedAccountId);
+    const selected = list2.find((account) => account.id === selectedAccountId);
     if (selected)
       return selected;
   }
   if (defaultAccountId) {
-    const byDefault = list.find((account) => account.id === defaultAccountId);
+    const byDefault = list2.find((account) => account.id === defaultAccountId);
     if (byDefault)
       return byDefault;
   }
-  return list[0];
+  return list2[0];
 }
 function toSyncFriendlyMessage(errorMessage = "") {
   const message = String(errorMessage || "");
@@ -66000,10 +74437,10 @@ function cleanHtmlForDraft(html) {
       return false;
     return normalizedText === fragment || normalizedText === decodeFragment(fragment);
   };
-  const unwrapTagLikeFragmentLinks = (root) => {
-    if (!root)
+  const unwrapTagLikeFragmentLinks = (root2) => {
+    if (!root2)
       return;
-    root.querySelectorAll("a[href]").forEach((anchor) => {
+    root2.querySelectorAll("a[href]").forEach((anchor) => {
       if (!isTagLikeFragmentLink(anchor))
         return;
       const fragment = activeDocument.createDocumentFragment();
@@ -66405,9 +74842,9 @@ function cleanHtmlForDraft(html) {
     meaningfulNodes.forEach((node) => wrapper.appendChild(node));
     li.insertBefore(wrapper, firstList);
   });
-  const getListDepth = (list) => {
+  const getListDepth = (list2) => {
     let depth = 0;
-    let current = list.parentElement;
+    let current = list2.parentElement;
     while (current) {
       if (current.tagName === "UL" || current.tagName === "OL")
         depth += 1;
@@ -66415,11 +74852,11 @@ function cleanHtmlForDraft(html) {
     }
     return depth;
   };
-  const buildPseudoItems = (list, depth) => {
+  const buildPseudoItems = (list2, depth) => {
     const fragment = activeDocument.createDocumentFragment();
-    const isOrdered = list.tagName === "OL";
+    const isOrdered = list2.tagName === "OL";
     let index = 1;
-    Array.from(list.children).forEach((li) => {
+    Array.from(list2.children).forEach((li) => {
       if (li.tagName !== "LI")
         return;
       const nestedLists = Array.from(li.children).filter(
@@ -66486,17 +74923,17 @@ function cleanHtmlForDraft(html) {
     });
     return fragment;
   };
-  Array.from(div.querySelectorAll("ul, ol")).forEach((list) => {
-    if (!div.contains(list))
+  Array.from(div.querySelectorAll("ul, ol")).forEach((list2) => {
+    if (!div.contains(list2))
       return;
-    const depth = getListDepth(list);
+    const depth = getListDepth(list2);
     if (depth < 2)
       return;
-    const fragment = buildPseudoItems(list, depth);
-    if (list.parentNode) {
-      list.parentNode.insertBefore(fragment, list);
+    const fragment = buildPseudoItems(list2, depth);
+    if (list2.parentNode) {
+      list2.parentNode.insertBefore(fragment, list2);
     }
-    list.remove();
+    list2.remove();
   });
   div.querySelectorAll("li > ul, li > ol").forEach((nestedList) => {
     let style = nestedList.getAttribute("style") || "";
@@ -66509,8 +74946,8 @@ function cleanHtmlForDraft(html) {
       li.remove();
     }
   });
-  div.querySelectorAll("ul, ol").forEach((list) => {
-    Array.from(list.childNodes).forEach((node) => {
+  div.querySelectorAll("ul, ol").forEach((list2) => {
+    Array.from(list2.childNodes).forEach((node) => {
       if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) {
         node.remove();
       }
@@ -67696,8 +76133,8 @@ function parseWechatsyncPlatformIds(value = []) {
 }
 function mergeWechatsyncPlatformLists(...lists) {
   const byId = /* @__PURE__ */ new Map();
-  for (const list of lists) {
-    for (const platform of Array.isArray(list) ? list : []) {
+  for (const list2 of lists) {
+    for (const platform of Array.isArray(list2) ? list2 : []) {
       const normalized = normalizePlatformCandidate(platform);
       if (!normalized)
         continue;
@@ -68117,10 +76554,10 @@ function formatProLicenseObservedAgo(observedAt, now = Date.now()) {
 function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   var _a5, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p;
   const { Setting: Setting2, Notice: Notice2 } = getObsidianApi(tab, options);
-  const { plugin } = tab;
-  const pluginSettings = toSettingsRecord(plugin.settings);
+  const { plugin: plugin2 } = tab;
+  const pluginSettings = toSettingsRecord(plugin2.settings);
   const multiPlatformSettings = normalizeMultiPlatformSyncSettings(pluginSettings.multiPlatformSync);
-  plugin.settings.multiPlatformSync = multiPlatformSettings;
+  plugin2.settings.multiPlatformSync = multiPlatformSettings;
   const proLicense = resolveWechatSyncProLicense(multiPlatformSettings);
   const isProLicensed = proLicense.pro;
   const isProCached = proLicense.source === "cached";
@@ -68161,15 +76598,15 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   proGuideBtn.onclick = () => openExternalUrl(tab, OBSIDIAN_PUBLISHER_PRO_URL);
   new Setting2(containerEl).setName("\u542F\u7528\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03").setDesc("\u5F00\u542F\u540E\uFF0CObsidian \u4F1A\u628A\u6587\u7AE0\u53D1\u9001\u7ED9\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u7531\u63D2\u4EF6\u4F7F\u7528\u6D4F\u89C8\u5668\u767B\u5F55\u6001\u4FDD\u5B58\u5230\u5404\u5E73\u53F0\u8349\u7A3F\u7BB1\u3002\u5728\u4E0B\u65B9\u586B\u5165\u300C\u8FDE\u63A5\u4EE4\u724C\u300D\u5373\u53EF\u5B8C\u6210\u914D\u5BF9\u3002").addToggle((toggle) => toggle.setValue(multiPlatformSettings.enabled).onChange(async (value) => {
     var _a6;
-    plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
-      ...toRecord3(plugin.settings.multiPlatformSync),
+    plugin2.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
+      ...toRecord3(plugin2.settings.multiPlatformSync),
       enabled: value
     });
-    await plugin.saveSettings();
+    await plugin2.saveSettings();
     if (value) {
-      plugin.startWechatSyncBridgeInBackground("settings-enabled");
-    } else if ((_a6 = plugin._wechatSyncBridgeService) == null ? void 0 : _a6.stop) {
-      await plugin._wechatSyncBridgeService.stop().catch((error) => {
+      plugin2.startWechatSyncBridgeInBackground("settings-enabled");
+    } else if ((_a6 = plugin2._wechatSyncBridgeService) == null ? void 0 : _a6.stop) {
+      await plugin2._wechatSyncBridgeService.stop().catch((error) => {
         console.warn("\u505C\u6B62\u6D4F\u89C8\u5668\u63D2\u4EF6\u8FDE\u63A5\u5931\u8D25:", error);
       });
     }
@@ -68180,22 +76617,22 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   }
   new Setting2(containerEl).setName("\u672C\u5730\u670D\u52A1\u7AEF\u53E3").setDesc("\u9ED8\u8BA4 9527\u3002\u53EA\u6709\u5F53\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u7684\u672C\u5730\u670D\u52A1\u5730\u5740\u4F7F\u7528\u4E86\u5176\u4ED6\u7AEF\u53E3\u65F6\u624D\u9700\u8981\u4FEE\u6539\u3002").addText((text) => text.setPlaceholder(String(DEFAULT_WECHATSYNC_PORT)).setValue(String(multiPlatformSettings.port)).onChange(async (value) => {
     const nextPort = Number(value);
-    plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
-      ...toRecord3(plugin.settings.multiPlatformSync),
+    plugin2.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
+      ...toRecord3(plugin2.settings.multiPlatformSync),
       port: Number.isInteger(nextPort) ? nextPort : DEFAULT_WECHATSYNC_PORT,
       connection: { status: "untested" }
     });
-    await plugin.saveSettings();
-    plugin.startWechatSyncBridgeInBackground("settings-port-change");
+    await plugin2.saveSettings();
+    plugin2.startWechatSyncBridgeInBackground("settings-port-change");
   }));
   new Setting2(containerEl).setName("\u8FDE\u63A5\u4EE4\u724C").setDesc("\u586B\u5165\u6D4F\u89C8\u5668\u63D2\u4EF6\u672C\u5730\u670D\u52A1\u4E2D\u663E\u793A\u7684\u8FDE\u63A5\u4EE4\u724C\uFF0C\u7528\u4E8E\u786E\u8BA4 Obsidian \u4E0E\u63D2\u4EF6\u5C5E\u4E8E\u540C\u4E00\u7EC4\u8FDE\u63A5\u3002").addText((text) => text.setPlaceholder("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx").setValue(toText(multiPlatformSettings.token)).onChange(async (value) => {
-    plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
-      ...toRecord3(plugin.settings.multiPlatformSync),
+    plugin2.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
+      ...toRecord3(plugin2.settings.multiPlatformSync),
       token: value,
       connection: { status: "untested" }
     });
-    await plugin.saveSettings();
-    plugin.startWechatSyncBridgeInBackground("settings-token-change");
+    await plugin2.saveSettings();
+    plugin2.startWechatSyncBridgeInBackground("settings-token-change");
   }));
   {
     let renderBrowserIcon = function(parentEl, name) {
@@ -68303,7 +76740,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         const approve = row.createEl("button", { text: "\u6279\u51C6\u914D\u5BF9", cls: "mod-cta" });
         approve.onclick = async () => {
           var _a6;
-          const bridge = plugin.getWechatSyncBridgeService();
+          const bridge = plugin2.getWechatSyncBridgeService();
           const paired = (_a6 = bridge.pairClient) == null ? void 0 : _a6.call(bridge, String(pending.extensionInstanceId));
           if (!paired) {
             new Notice2("\u8BE5\u5F85\u914D\u5BF9\u8BF7\u6C42\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u52A0\u8F7D\u6D4F\u89C8\u5668\u63D2\u4EF6\u540E\u518D\u8BD5\u3002", 6e3);
@@ -68325,7 +76762,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         const remove = row.createEl("button", { text: "\u79FB\u9664" });
         remove.onclick = () => {
           var _a6;
-          const bridge = plugin.getWechatSyncBridgeService();
+          const bridge = plugin2.getWechatSyncBridgeService();
           if ((_a6 = bridge.unpairClient) == null ? void 0 : _a6.call(bridge, String(paired.extensionInstanceId))) {
             new Notice2("\u5DF2\u79FB\u9664\u6B64\u6D4F\u89C8\u5668\u914D\u5BF9\u3002", 5e3);
             refreshSettingTab(tab);
@@ -68374,12 +76811,12 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   updatePlatformSummary();
   const platformGrid = platformPicker.createDiv({ cls: "wechat-platform-grid" });
   const saveSelectedPlatforms = async () => {
-    const current = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
-    plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
+    const current = normalizeMultiPlatformSyncSettings(plugin2.settings.multiPlatformSync);
+    plugin2.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
       ...current,
       selectedPlatforms: Array.from(selectedPlatformSet)
     });
-    await plugin.saveSettings();
+    await plugin2.saveSettings();
   };
   for (const platform of availablePlatforms) {
     const authBadge = getPlatformAuthBadge(platform);
@@ -68444,14 +76881,14 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     let bridgeStartStatus = null;
     let shouldRedisplay = false;
     try {
-      const currentBeforeTest = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
-      const debugSettings = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
+      const currentBeforeTest = normalizeMultiPlatformSyncSettings(plugin2.settings.multiPlatformSync);
+      const debugSettings = normalizeMultiPlatformSyncSettings(plugin2.settings.multiPlatformSync);
       console.debug("[Wechatsync] test connection started", {
         port: debugSettings.port,
         hasToken: !!debugSettings.token,
         forceRefresh: false
       });
-      bridge = plugin.getWechatSyncBridgeService();
+      bridge = plugin2.getWechatSyncBridgeService();
       bridgeStartStatus = await bridge.start();
       console.debug("[Wechatsync] bridge started", bridgeStartStatus);
       await bridge.waitForConnection(15e3);
@@ -68506,10 +76943,10 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         }
       }
       const selectedPlatformIds = parseWechatsyncPlatformIds(currentBeforeTest.selectedPlatforms || []);
-      const current = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
+      const current = normalizeMultiPlatformSyncSettings(plugin2.settings.multiPlatformSync);
       const currentConnection = toRecord3(current.connection);
       const nextPlatforms = toRecordList(normalizeWechatsyncPlatformList(currentConnection.platforms || [])).filter((platform) => selectedPlatformIds.includes(getPlatformId(platform)));
-      plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
+      plugin2.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
         ...current,
         supportedPlatforms: supportedPlatforms.length ? supportedPlatforms : current.supportedPlatforms,
         connection: {
@@ -68521,7 +76958,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
           message: health ? "\u5DF2\u8FDE\u63A5\uFF0C\u8FDE\u63A5\u4EE4\u724C\u5DF2\u901A\u8FC7\u63D2\u4EF6\u6821\u9A8C\u3002\u672A\u8BFB\u53D6\u5E73\u53F0\u767B\u5F55\u72B6\u6001\u3002" : "\u5DF2\u8FDE\u63A5\u3002\u5F53\u524D\u63D2\u4EF6\u7248\u672C\u672A\u63D0\u4F9B\u5065\u5EB7\u6821\u9A8C\uFF0C\u5E73\u53F0\u767B\u5F55\u72B6\u6001\u672A\u81EA\u52A8\u68C0\u6D4B\u3002"
         }
       });
-      await plugin.saveSettings();
+      await plugin2.saveSettings();
       shouldRedisplay = true;
       new Notice2(health ? "\u2705 \u5DF2\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6\uFF0C\u8FDE\u63A5\u4EE4\u724C\u6821\u9A8C\u901A\u8FC7" : "\u2705 \u5DF2\u8FDE\u63A5\u6D4F\u89C8\u5668\u63D2\u4EF6");
     } catch (error) {
@@ -68574,8 +77011,8 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         diagnostics,
         detailedMessage
       });
-      plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
-        ...toRecord3(plugin.settings.multiPlatformSync),
+      plugin2.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
+        ...toRecord3(plugin2.settings.multiPlatformSync),
         connection: {
           status: "failed",
           checkedAt: Date.now(),
@@ -68584,7 +77021,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
           message: detailedMessage
         }
       });
-      await plugin.saveSettings();
+      await plugin2.saveSettings();
       new Notice2(`\u274C ${detailedMessage}${hint ? ` ${hint}` : ""}`, 12e3);
       shouldRedisplay = true;
     } finally {
@@ -68596,7 +77033,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   }));
   new Setting2(containerEl).setName("\u8BFB\u53D6\u5DF2\u9009\u5E73\u53F0\u72B6\u6001").setDesc("\u8BFB\u53D6\u6D4F\u89C8\u5668\u63D2\u4EF6\u7F13\u5B58\u7684\u4E0A\u6B21\u72B6\u6001\uFF0C\u4E0D\u4F1A\u5B9E\u65F6\u68C0\u6D4B\u767B\u5F55\uFF1B\u53D1\u5E03\u65F6\u4ECD\u4EE5\u6D4F\u89C8\u5668\u63D2\u4EF6\u5B9E\u9645\u6267\u884C\u4E3A\u51C6\u3002").addButton((button) => button.setButtonText("\u8BFB\u53D6").onClick(async () => {
     var _a6, _b2;
-    const current = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
+    const current = normalizeMultiPlatformSyncSettings(plugin2.settings.multiPlatformSync);
     const platformById = new Map(
       toPlatformList(getAvailableWechatsyncPlatforms(current)).map((platform) => [platform.id, platform])
     );
@@ -68609,7 +77046,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     (_a6 = button.setDisabled) == null ? void 0 : _a6.call(button, true);
     const startedAt = Date.now();
     try {
-      const bridge = plugin.getWechatSyncBridgeService();
+      const bridge = plugin2.getWechatSyncBridgeService();
       await bridge.start();
       await bridge.waitForConnection(15e3);
       const platformFallbacks = toRecordList(mergeWechatsyncPlatformLists(
@@ -68628,7 +77065,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         checkedAt: authSnapshot.checkedAt,
         ...summarizeWechatsyncPlatformResponse(cachedPlatforms)
       });
-      plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
+      plugin2.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
         ...current,
         connection: {
           ...toRecord3(current.connection),
@@ -68642,7 +77079,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
           message: "\u5DF2\u8BFB\u53D6\u6240\u9009\u5E73\u53F0\u7684\u4E0A\u6B21\u767B\u5F55\u72B6\u6001\u3002"
         }
       });
-      await plugin.saveSettings();
+      await plugin2.saveSettings();
       const authenticatedCount = cachedPlatforms.filter((platform) => platform.authenticated === true).length;
       new Notice2(`\u2705 \u5DF2\u8BFB\u53D6 ${cachedPlatforms.length} \u4E2A\u5DF2\u9009\u5E73\u53F0\uFF0C${authenticatedCount} \u4E2A\u4E0A\u6B21\u53EF\u7528`);
       refreshSettingTab(tab);
@@ -68816,10 +77253,10 @@ function hasCachedForceGate(payload) {
   const record = toRecord4(payload);
   return record.forceUpgradeExtension === true || record.forceUpgradeObsidianPlugin === true;
 }
-function readPolicyCache(plugin, publicKey = FALLBACK_LICENSE_PUBLIC_KEY) {
+function readPolicyCache(plugin2, publicKey = FALLBACK_LICENSE_PUBLIC_KEY) {
   const settings = normalizeMultiPlatformSyncSettings(toRecord4(
     /** @type {PluginWithSettingsLike} */
-    plugin == null ? void 0 : plugin.settings
+    plugin2 == null ? void 0 : plugin2.settings
   ).multiPlatformSync);
   const cache = normalizePolicyCache(settings.policyCache);
   if (!cache)
@@ -68830,8 +77267,8 @@ function readPolicyCache(plugin, publicKey = FALLBACK_LICENSE_PUBLIC_KEY) {
     return null;
   return cache;
 }
-async function writePolicyCache(plugin, payload, signature) {
-  const pluginRecord = toRecord4(plugin);
+async function writePolicyCache(plugin2, payload, signature) {
+  const pluginRecord = toRecord4(plugin2);
   const settings = toRecord4(pluginRecord.settings);
   const cache = {
     payload: { ...toRecord4(payload) },
@@ -68953,12 +77390,12 @@ async function fetchAndVerifyPolicy(options = {}) {
   }
   return lastNonNetworkOutcome || lastNetworkOutcome || { kind: "network_error", message: "unknown policy error" };
 }
-function getObsidianPluginVersion(plugin) {
-  return toText2(toRecord4(toRecord4(plugin).manifest).version) || "0.0.0";
+function getObsidianPluginVersion(plugin2) {
+  return toText2(toRecord4(toRecord4(plugin2).manifest).version) || "0.0.0";
 }
-async function getEffectiveObsidianPublisherPolicy(plugin, options = {}) {
+async function getEffectiveObsidianPublisherPolicy(plugin2, options = {}) {
   const publicKey = options.publicKey || FALLBACK_LICENSE_PUBLIC_KEY;
-  const cache = readPolicyCache(plugin, publicKey);
+  const cache = readPolicyCache(plugin2, publicKey);
   if (cache && !isPolicyExpired(cache.payload)) {
     return {
       payload: cache.payload,
@@ -68970,11 +77407,11 @@ async function getEffectiveObsidianPublisherPolicy(plugin, options = {}) {
   const fetched = await fetchAndVerifyPolicy({
     ...options,
     publicKey,
-    clientVersion: options.clientVersion || getObsidianPluginVersion(plugin),
-    installId: options.installId || toText2(toRecord4(toRecord4(plugin).settings).clientId)
+    clientVersion: options.clientVersion || getObsidianPluginVersion(plugin2),
+    installId: options.installId || toText2(toRecord4(toRecord4(plugin2).settings).clientId)
   });
   if (fetched.kind === "success") {
-    const cached = await writePolicyCache(plugin, fetched.response.payload, fetched.response.signature);
+    const cached = await writePolicyCache(plugin2, fetched.response.payload, fetched.response.signature);
     return {
       payload: fetched.response.payload,
       signature: fetched.response.signature,
@@ -69886,7 +78323,12 @@ async function showMultiPlatformPublishModal(view, options = {}) {
     const cachedState = currentPath ? view.articleStates.get(currentPath) : null;
     const title = (cachedState == null ? void 0 : cachedState.title) || (publishMeta == null ? void 0 : publishMeta.title) || (activeFile == null ? void 0 : activeFile.basename) || "\u65E0\u6807\u9898\u6587\u7AE0";
     const rawMarkdown = stripMarkdownFrontmatter(view.lastResolvedMarkdown || "");
-    const exportHtml = view.getCurrentExportHtml() || view.currentHtml || "";
+    const exportSource = view.resolveArticleHtmlSource({ target: "multi-platform" });
+    const exportHtml = (exportSource == null ? void 0 : exportSource.html) || "";
+    if (!exportHtml) {
+      new Notice2("\u5F53\u524D\u6587\u7AE0\u8FD8\u6CA1\u6709\u53EF\u53D1\u9001\u7684\u6E32\u67D3\u7ED3\u679C");
+      return;
+    }
     const selectedWechatMaterialCover = !!view.sessionThumbMediaId;
     const rawCover = getBridgeSafeSessionCover(view.sessionCoverBase64) || publishMeta.cover || "";
     const notice = new Notice2("\u6B63\u5728\u51C6\u5907\u5E76\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6...", 0);
@@ -71196,7 +79638,7 @@ function formatFeishuUsagePercent(count, limit) {
     return "0%";
   return `${Math.min(100, Math.round(count / limit * 100))}%`;
 }
-function renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, Notice2) {
+function renderFeishuUsageStats(containerEl, tab, plugin2, settings, obsidian, Notice2) {
   const usage = settings.apiUsage;
   const used = Math.max(0, Number(usage.count) || 0);
   const limit = FEISHU_FREE_MONTHLY_API_LIMIT;
@@ -71237,7 +79679,7 @@ function renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, No
   resetBtn.addClass("mod-warning");
   resetBtn.onclick = async () => {
     resetFeishuApiUsage(settings);
-    await plugin.saveSettings();
+    await plugin2.saveSettings();
     if (Notice2)
       new Notice2("\u2705 \u98DE\u4E66 API \u8C03\u7528\u8BA1\u6570\u5DF2\u91CD\u7F6E");
     renderFeishuSettingsTab(tab, containerEl, { obsidianApi: obsidian });
@@ -71266,8 +79708,8 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   const obsidian = options.obsidianApi || tab.plugin.obsidianApi || getActiveWindowValue("obsidian") || {};
   const Setting2 = obsidian.Setting;
   const Notice2 = obsidian.Notice;
-  const { plugin } = tab;
-  const rawFeishuSettings = plugin.settings.feishuSync || {};
+  const { plugin: plugin2 } = tab;
+  const rawFeishuSettings = plugin2.settings.feishuSync || {};
   const settings = normalizeFeishuSyncSettings(rawFeishuSettings);
   if ((rawFeishuSettings == null ? void 0 : rawFeishuSettings.apiUsage) && typeof rawFeishuSettings.apiUsage === "object") {
     settings.apiUsage = {
@@ -71275,7 +79717,7 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
       ...rawFeishuSettings.apiUsage
     };
   }
-  plugin.settings.feishuSync = settings;
+  plugin2.settings.feishuSync = settings;
   containerEl.empty();
   if (typeof tab.renderSettingsTabIntro === "function") {
     tab.renderSettingsTabIntro(
@@ -71291,36 +79733,36 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   new Setting2(containerEl).setName("\u542F\u7528\u98DE\u4E66\u540C\u6B65\u529F\u80FD").setDesc("\u5F00\u542F\u540E\uFF0C\u53D1\u5E03\u5F39\u7A97\u4E2D\u4F1A\u51FA\u73B0\u300C\u98DE\u4E66\u300D\u9009\u9879\u5361\uFF0C\u652F\u6301\u5C06\u7B14\u8BB0\u53D1\u5E03\u81F3\u98DE\u4E66\u4E91\u76D8\u3002").addToggle(
     (toggle) => toggle.setValue(settings.enabled).onChange(async (value) => {
       settings.enabled = value;
-      await plugin.saveSettings();
+      await plugin2.saveSettings();
       tab.display();
     })
   );
   if (!settings.enabled)
     return;
-  renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, Notice2);
+  renderFeishuUsageStats(containerEl, tab, plugin2, settings, obsidian, Notice2);
   new Setting2(containerEl).setName("\u98DE\u4E66\u81EA\u5EFA\u5E94\u7528 App ID").setDesc("\u5728\u98DE\u4E66\u5F00\u653E\u5E73\u53F0\uFF08open.feishu.cn\uFF09\u4E2D\uFF0C\u60A8\u521B\u5EFA\u7684\u4F01\u4E1A\u81EA\u5EFA\u5E94\u7528\u7684 App ID").addText(
     (text) => text.setPlaceholder("cli_a248xxxxxxxxxxxx").setValue(settings.appId).onChange(async (value) => {
       settings.appId = value.trim();
-      await plugin.saveSettings();
+      await plugin2.saveSettings();
     })
   );
   new Setting2(containerEl).setName("\u98DE\u4E66\u81EA\u5EFA\u5E94\u7528 App Secret").setDesc("\u81EA\u5EFA\u5E94\u7528\u7684 App Secret \u51ED\u8BC1").addText((text) => {
     text.inputEl.type = "password";
     text.setPlaceholder("xxxxxxxxxxxxxxxxxxxx").setValue(settings.appSecret).onChange(async (value) => {
       settings.appSecret = value.trim();
-      await plugin.saveSettings();
+      await plugin2.saveSettings();
     });
   });
   new Setting2(containerEl).setName("\u540C\u6B65\u76EE\u6807\u6587\u4EF6\u5939 Token").setDesc("\u98DE\u4E66\u6587\u4EF6\u5939\u94FE\u63A5\u4E2D\u7684\u6700\u540E\u4E00\u4E32\u5B57\u7B26\u3002\u4F8B\u5982\uFF1Ahttps://feishu.cn/drive/folder/fldcnXXXXXXXXX \u7684 Token \u662F fldcnXXXXXXXXX").addText(
     (text) => text.setPlaceholder("fldcnxxxxxxxxxxxxxxxxxx").setValue(settings.folderToken).onChange(async (value) => {
       settings.folderToken = value.trim();
-      await plugin.saveSettings();
+      await plugin2.saveSettings();
     })
   );
   new Setting2(containerEl).setName("\u98DE\u4E66\u7528\u6237 ID (User ID)").setDesc("\u7528\u4E8E\u5728\u540C\u6B65\u6210\u529F\u540E\uFF0C\u628A\u6587\u6863\u7684\u6240\u6709\u6743\u7531\u673A\u5668\u4EBA\u81EA\u52A8\u8F6C\u79FB\u7ED9\u60A8\u672C\u4EBA\uFF08\u60A8\u7684\u98DE\u4E66\u4E91\u76D8\u4E2D\uFF09\u3002\u5EFA\u8BAE\u4F7F\u7528 user_id \u683C\u5F0F\uFF0C\u5982 abc1234\u3002").addText(
     (text) => text.setPlaceholder("abc1234").setValue(settings.userId).onChange(async (value) => {
       settings.userId = value.trim();
-      await plugin.saveSettings();
+      await plugin2.saveSettings();
     })
   );
   new Setting2(containerEl).setName("\u6D4B\u8BD5\u8FDE\u63A5").setDesc("\u9A8C\u8BC1\u81EA\u5EFA\u5E94\u7528\u6388\u6743\u548C\u76EE\u6807\u6587\u4EF6\u5939\u8BFB\u53D6\u6743\u9650\u3002\u5B8C\u6574\u4E0A\u4F20/\u5BFC\u5165\u6743\u9650\u4F1A\u5728\u5B9E\u9645\u540C\u6B65\u65F6\u9A8C\u8BC1\u3002").addButton(
@@ -71346,11 +79788,11 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
         await client.listFolderItems(settings.folderToken);
         notice.hide();
         if (apiUsageChanged)
-          await plugin.saveSettings();
+          await plugin2.saveSettings();
         new Notice2("\u2705 \u98DE\u4E66\u8FDE\u63A5\u6210\u529F\uFF0C\u4E14\u76EE\u6807\u6587\u4EF6\u5939\u8BBF\u95EE\u6B63\u5E38\uFF01");
       } catch (err) {
         notice.hide();
-        await plugin.saveSettings();
+        await plugin2.saveSettings();
         console.error("[\u98DE\u4E66\u8FDE\u63A5\u6D4B\u8BD5\u5931\u8D25]:", err);
         new Notice2(`\u274C \u98DE\u4E66\u8FDE\u63A5\u6D4B\u8BD5\u5931\u8D25: ${err.message || String(err)}`, 7e3);
       }
@@ -71392,8 +79834,8 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   });
   detailedLink.onclick = (e) => {
     e.preventDefault();
-    if (plugin && typeof plugin.openExternalUrl === "function") {
-      plugin.openExternalUrl("https://xiaoweibox.top/chats/feishu-sync");
+    if (plugin2 && typeof plugin2.openExternalUrl === "function") {
+      plugin2.openExternalUrl("https://xiaoweibox.top/chats/feishu-sync");
     } else {
       window.open("https://xiaoweibox.top/chats/feishu-sync", "_blank", "noopener");
     }
@@ -71454,8 +79896,8 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
     const link = body.createEl("a", { text: "\u98DE\u4E66\u5F00\u653E\u5E73\u53F0", href: "https://open.feishu.cn/" });
     link.onclick = (e) => {
       e.preventDefault();
-      if (plugin && typeof plugin.openExternalUrl === "function") {
-        plugin.openExternalUrl("https://open.feishu.cn/");
+      if (plugin2 && typeof plugin2.openExternalUrl === "function") {
+        plugin2.openExternalUrl("https://open.feishu.cn/");
       } else {
         window.open("https://open.feishu.cn/", "_blank", "noopener");
       }
@@ -72870,8 +81312,8 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
   const Notice2 = obsidian.Notice;
   const setIcon = obsidian.setIcon;
   const requestFrame = options.requestAnimationFrame || (typeof window.requestAnimationFrame === "function" ? (callback) => window.requestAnimationFrame(callback) : void 0);
-  const { plugin } = view;
-  const settings = plugin.settings.feishuSync;
+  const { plugin: plugin2 } = view;
+  const settings = plugin2.settings.feishuSync;
   containerEl.empty();
   containerEl.addClass("wechat-feishu-modal-content");
   const tabsWrapper = containerEl.createDiv({ cls: "wechat-publish-mode-tabs" });
@@ -73043,7 +81485,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
       showFeishuNotice(Notice2, "\u274C \u7ED1\u5B9A\u5931\u8D25");
       return;
     }
-    await plugin.saveSettings();
+    await plugin2.saveSettings();
     showFeishuNotice(Notice2, "\u2705 \u5DF2\u91CD\u65B0\u7ED1\u5B9A\u5F53\u524D\u7B14\u8BB0\u7684\u98DE\u4E66\u6587\u6863");
     renderFeishuPublishTab(view, modal, containerEl, options);
   };
@@ -73090,7 +81532,7 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
         mermaidRenderMode: currentMermaidCount > 0 ? mermaidRenderMode : "source",
         mermaidRenderProvider: "kroki"
       });
-      await plugin.saveSettings();
+      await plugin2.saveSettings();
       hideFeishuNotice(progressNotice);
       resultCard.empty();
       const warnings = getFeishuResultWarnings(result);
@@ -73572,6 +82014,40 @@ var WechatAPI = class {
     });
   }
   /**
+   * 创建微信贴图草稿 (newspic 模式)
+   *
+   * @param {object} options
+   * @param {string} options.title - 贴图标题 (必填)
+   * @param {string} [options.content=''] - 贴图纯文本描述
+   * @param {string[]} options.imageMediaIds - 图片素材 media_id 数组 (最少 1 张，最多 20 张)
+   * @param {number|boolean} [options.needOpenComment=0] - 是否开启留言
+   * @param {number|boolean} [options.onlyFansCanComment=0] - 是否仅粉丝可留言
+   * @returns {Promise<Record<string, unknown>>}
+   */
+  async createImageDraft({ title, content = "", imageMediaIds, needOpenComment = 0, onlyFansCanComment = 0 }) {
+    if (!title || typeof title !== "string" || !title.trim()) {
+      throw new Error("\u521B\u5EFA\u8D34\u56FE\u8349\u7A3F\u5931\u8D25: \u6807\u9898 (title) \u4E3A\u5FC5\u586B\u9879");
+    }
+    if (!Array.isArray(imageMediaIds) || imageMediaIds.length === 0) {
+      throw new Error("\u521B\u5EFA\u8D34\u56FE\u8349\u7A3F\u5931\u8D25: \u5FAE\u4FE1\u8D34\u56FE\u8981\u6C42\u81F3\u5C11\u5305\u542B 1 \u5F20\u56FE\u7247\u7D20\u6750");
+    }
+    if (imageMediaIds.length > STICKER_MAX_IMAGES) {
+      throw new Error(`\u521B\u5EFA\u8D34\u56FE\u8349\u7A3F\u5931\u8D25: \u5FAE\u4FE1\u8D34\u56FE\u6700\u591A\u652F\u6301 ${STICKER_MAX_IMAGES} \u5F20\u56FE\u7247\u7D20\u6750`);
+    }
+    const imageList = imageMediaIds.map((id) => ({ image_media_id: id }));
+    const article = {
+      article_type: "newspic",
+      title: title.trim(),
+      content: content || "",
+      need_open_comment: needOpenComment ? 1 : 0,
+      only_fans_can_comment: onlyFansCanComment ? 1 : 0,
+      image_info: {
+        image_list: imageList
+      }
+    };
+    return this.createDraft(article);
+  }
+  /**
    * @returns {Promise<Record<string, unknown>>}
    */
   async getDraftCount() {
@@ -73757,15 +82233,15 @@ function revealLeafCompat(workspace, leaf) {
   }
   return Promise.resolve();
 }
-function getPluginSettings(plugin) {
-  if (!plugin || typeof plugin !== "object")
+function getPluginSettings(plugin2) {
+  if (!plugin2 || typeof plugin2 !== "object")
     return {};
-  return plugin.settings || {};
+  return plugin2.settings || {};
 }
-function setPluginSettings(plugin, settings) {
-  if (!plugin || typeof plugin !== "object")
+function setPluginSettings(plugin2, settings) {
+  if (!plugin2 || typeof plugin2 !== "object")
     return settings;
-  plugin.settings = settings;
+  plugin2.settings = settings;
   return settings;
 }
 function setDestructiveButtonCompat(button) {
@@ -74279,160 +82755,441 @@ function isMobileClient3(app) {
 // services/custom-css-inliner.js
 var import_juice = __toESM(require_client());
 
-// services/pseudo-element-renderer.js
-function splitCSSBlocks(css) {
-  const blocks = [];
-  let depth = 0;
-  let current = "";
-  let inString = false;
-  let stringChar = "";
-  for (const ch of css) {
-    if (inString) {
-      current += ch;
-      if (ch === stringChar)
-        inString = false;
-    } else if (ch === '"' || ch === "'") {
-      inString = true;
-      stringChar = ch;
-      current += ch;
-    } else if (ch === "{") {
-      depth++;
-      current += ch;
-    } else if (ch === "}") {
-      depth--;
-      current += ch;
-      if (depth === 0) {
-        blocks.push(current);
-        current = "";
-      }
-    } else {
-      current += ch;
-    }
+// node_modules/postcss/lib/postcss.mjs
+var import_postcss = __toESM(require_postcss(), 1);
+var postcss_default = import_postcss.default;
+var stringify = import_postcss.default.stringify;
+var fromJSON = import_postcss.default.fromJSON;
+var plugin = import_postcss.default.plugin;
+var parse = import_postcss.default.parse;
+var list = import_postcss.default.list;
+var document2 = import_postcss.default.document;
+var comment = import_postcss.default.comment;
+var atRule = import_postcss.default.atRule;
+var rule = import_postcss.default.rule;
+var decl = import_postcss.default.decl;
+var root = import_postcss.default.root;
+var CssSyntaxError = import_postcss.default.CssSyntaxError;
+var Declaration = import_postcss.default.Declaration;
+var Container = import_postcss.default.Container;
+var Processor = import_postcss.default.Processor;
+var Document = import_postcss.default.Document;
+var Comment = import_postcss.default.Comment;
+var Warning = import_postcss.default.Warning;
+var AtRule = import_postcss.default.AtRule;
+var Result = import_postcss.default.Result;
+var Input = import_postcss.default.Input;
+var Rule = import_postcss.default.Rule;
+var Root = import_postcss.default.Root;
+var Node2 = import_postcss.default.Node;
+
+// services/custom-css-compiler.js
+var import_postcss_selector_parser = __toESM(require_dist());
+var import_postcss_value_parser = __toESM(require_lib11());
+var DEFAULT_ROOT_SELECTOR = ".owc-article-root";
+var DEFAULT_MAX_DATA_IMAGE_BYTES = 256 * 1024;
+var DEFAULT_MAX_TOTAL_DATA_IMAGE_BYTES = 512 * 1024;
+var SAFE_DATA_IMAGE_MIMES = /* @__PURE__ */ new Set(["image/png", "image/jpeg", "image/webp"]);
+var COMPILE_CACHE_LIMIT = 32;
+var compileCache = /* @__PURE__ */ new Map();
+function hashCustomCss(value) {
+  let hash = 2166136261;
+  const source = String(value || "");
+  for (let index = 0; index < source.length; index += 1) {
+    hash ^= source.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
   }
-  if (current.trim())
-    blocks.push(current);
-  return blocks;
+  return (hash >>> 0).toString(16).padStart(8, "0");
 }
-function splitSelectors(selectorStr) {
-  const result = [];
-  let depth = 0;
-  let current = "";
-  for (const ch of selectorStr) {
-    if (ch === "(") {
-      depth++;
-      current += ch;
-    } else if (ch === ")") {
-      depth--;
-      current += ch;
-    } else if (ch === "," && depth === 0) {
-      result.push(current);
-      current = "";
-    } else {
-      current += ch;
+function createDiagnostic(node, severity, code, message) {
+  var _a5, _b, _c, _d;
+  const source = (
+    /** @type {{ source?: { start?: { line?: number, column?: number } } }} */
+    node || {}
+  );
+  return {
+    severity,
+    code,
+    message,
+    ...((_b = (_a5 = source.source) == null ? void 0 : _a5.start) == null ? void 0 : _b.line) ? { line: source.source.start.line } : {},
+    ...((_d = (_c = source.source) == null ? void 0 : _c.start) == null ? void 0 : _d.column) ? { column: source.source.start.column } : {}
+  };
+}
+function stripAsciiControlCharacters(value) {
+  return Array.from(String(value || "")).filter((character) => {
+    const codePoint = character.codePointAt(0) || 0;
+    return codePoint > 31 && codePoint !== 127;
+  }).join("");
+}
+function decodeCssEscapes(value) {
+  const decoded = String(value || "").replace(/\\([0-9a-f]{1,6})\s?/gi, (_match, hex) => {
+    const codePoint = Number.parseInt(String(hex), 16);
+    try {
+      return String.fromCodePoint(codePoint);
+    } catch (e) {
+      return "";
+    }
+  }).replace(/\\(.)/g, "$1").trim();
+  return stripAsciiControlCharacters(decoded).trim();
+}
+function normalizeUrlValue(value) {
+  let normalized = decodeCssEscapes(value).replace(/^['"]|['"]$/g, "").trim();
+  for (let index = 0; index < 2; index += 1) {
+    try {
+      const decoded = decodeURIComponent(normalized);
+      if (decoded === normalized)
+        break;
+      normalized = decoded;
+    } catch (e) {
+      break;
     }
   }
-  if (current.trim())
-    result.push(current);
+  return stripAsciiControlCharacters(normalized).trim();
+}
+function inspectDataImage(dataUrl) {
+  var _a5;
+  const match = dataUrl.match(/^data:([^;,]+);base64,([a-z0-9+/=\s]+)$/i);
+  if (!match)
+    return { ok: false, bytes: 0, reason: "\u53EA\u5141\u8BB8 base64 \u7F16\u7801\u7684\u56FE\u7247 data URL\u3002" };
+  const mime = match[1].toLowerCase();
+  if (!SAFE_DATA_IMAGE_MIMES.has(mime)) {
+    return { ok: false, bytes: 0, reason: `\u4E0D\u652F\u6301 ${mime} \u7C7B\u578B\u7684 data URL\u3002` };
+  }
+  const payload = match[2].replace(/\s+/g, "");
+  const padding = ((_a5 = payload.match(/=*$/)) == null ? void 0 : _a5[0].length) || 0;
+  return {
+    ok: true,
+    bytes: Math.max(0, Math.floor(payload.length * 3 / 4) - padding)
+  };
+}
+function sanitizeDeclaration(declaration, diagnostics, resourceState) {
+  const property = declaration.prop.trim().toLowerCase();
+  if (["behavior", "-ms-behavior", "binding"].includes(property)) {
+    diagnostics.push(createDiagnostic(
+      declaration,
+      "blocked",
+      "custom-css-dangerous-property",
+      `\u5DF2\u79FB\u9664\u4E0D\u5B89\u5168\u5C5E\u6027 ${declaration.prop}\u3002`
+    ));
+    declaration.remove();
+    return false;
+  }
+  if (/expression\s*\(/i.test(declaration.value)) {
+    diagnostics.push(createDiagnostic(
+      declaration,
+      "blocked",
+      "custom-css-expression-blocked",
+      `\u5DF2\u79FB\u9664\u5305\u542B expression() \u7684 ${declaration.prop}\u3002`
+    ));
+    declaration.remove();
+    return false;
+  }
+  let blockedReason = "";
+  const parsedValue = (0, import_postcss_value_parser.default)(declaration.value);
+  parsedValue.walk((node) => {
+    if (blockedReason || node.type !== "function" || node.value.toLowerCase() !== "url")
+      return;
+    const normalized = normalizeUrlValue(import_postcss_value_parser.default.stringify(node.nodes));
+    const lower = normalized.toLowerCase();
+    if (lower.startsWith("data:")) {
+      const inspection = inspectDataImage(normalized);
+      if (!inspection.ok) {
+        blockedReason = inspection.reason || "\u4E0D\u652F\u6301\u8BE5 data URL\u3002";
+        return;
+      }
+      if (inspection.bytes > resourceState.maxDataImageBytes) {
+        blockedReason = "\u5355\u4E2A data image \u8D85\u51FA\u5927\u5C0F\u9650\u5236\u3002";
+        return;
+      }
+      if (resourceState.dataImageBytes + inspection.bytes > resourceState.maxTotalDataImageBytes) {
+        blockedReason = "CSS \u4E2D\u7684 data image \u603B\u91CF\u8D85\u51FA\u5927\u5C0F\u9650\u5236\u3002";
+        return;
+      }
+      resourceState.dataImageBytes += inspection.bytes;
+      return;
+    }
+    if (lower.startsWith("#"))
+      return;
+    blockedReason = "\u5916\u90E8\u6216\u76F8\u5BF9 URL \u53EF\u80FD\u89E6\u53D1\u7F51\u7EDC\u8BF7\u6C42\u3002";
+  });
+  if (blockedReason) {
+    diagnostics.push(createDiagnostic(
+      declaration,
+      "blocked",
+      "custom-css-resource-url-blocked",
+      `\u5DF2\u79FB\u9664 ${declaration.prop}\uFF1A${blockedReason}`
+    ));
+    declaration.remove();
+    return false;
+  }
+  return true;
+}
+function expandSelectorNode(selector) {
+  let pseudoIndex = -1;
+  let optionSelectors = null;
+  let seen = 0;
+  selector.walkPseudos((pseudo) => {
+    if (optionSelectors || ![":is", ":where"].includes(pseudo.value.toLowerCase())) {
+      seen += 1;
+      return;
+    }
+    pseudoIndex = seen;
+    optionSelectors = pseudo.nodes;
+    seen += 1;
+  });
+  if (!optionSelectors || pseudoIndex < 0)
+    return [selector];
+  const expanded = [];
+  for (const option of optionSelectors) {
+    const clone2 = selector.clone();
+    let cloneIndex = 0;
+    let targetPseudo = null;
+    clone2.walkPseudos((pseudo) => {
+      if (cloneIndex === pseudoIndex)
+        targetPseudo = pseudo;
+      cloneIndex += 1;
+    });
+    if (!targetPseudo)
+      continue;
+    targetPseudo.replaceWith(...option.nodes.map((node) => node.clone()));
+    expanded.push(...expandSelectorNode(clone2));
+  }
+  return expanded;
+}
+function expandSelectors(selectorText) {
+  const diagnostics = [];
+  const processor = (0, import_postcss_selector_parser.default)();
+  const root2 = processor.astSync(selectorText);
+  const selectors = [];
+  root2.each((selector) => {
+    const expanded = expandSelectorNode(selector);
+    expanded.forEach((item) => {
+      let unsupported = false;
+      item.walkPseudos((pseudo) => {
+        if (pseudo.value.toLowerCase() === ":has")
+          unsupported = true;
+      });
+      if (unsupported) {
+        diagnostics.push({
+          severity: "warning",
+          code: "custom-css-selector-not-inlineable",
+          message: `\u9009\u62E9\u5668\u201C${item.toString()}\u201D\u5305\u542B\u6682\u4E0D\u652F\u6301\u7684 :has()\uFF0C\u5DF2\u8DF3\u8FC7\u3002`
+        });
+        return;
+      }
+      selectors.push(item.toString().trim());
+    });
+  });
+  return { selectors, diagnostics };
+}
+function parsePseudoSelector(selector) {
+  const match = selector.match(/::(before|after)\s*$/i);
+  if (!match)
+    return null;
+  return {
+    baseSelector: selector.slice(0, match.index).trim(),
+    pseudoType: (
+      /** @type {'before'|'after'} */
+      match[1].toLowerCase()
+    )
+  };
+}
+function declarationsToRecord(rule2) {
+  var _a5;
+  const properties = {};
+  (_a5 = rule2.nodes) == null ? void 0 : _a5.forEach((node) => {
+    if (node.type !== "decl")
+      return;
+    properties[node.prop] = `${node.value}${node.important ? " !important" : ""}`;
+  });
+  return properties;
+}
+function parseCounterValue(value, fallback) {
+  const parts = String(value || "").trim().split(/\s+/);
+  const name = parts[0] || "";
+  if (!name || ["none", "inherit", "initial", "unset"].includes(name.toLowerCase()))
+    return null;
+  const parsed = parts.length > 1 ? Number.parseInt(parts[1], 10) : fallback;
+  if (!Number.isFinite(parsed))
+    return null;
+  return { name, value: parsed };
+}
+function compileCustomCss(cssText, options = {}) {
+  const css = String(cssText || "");
+  const sourceIdentity = String(options.sourceIdentity || "textarea");
+  const rootSelector = String(options.rootSelector || DEFAULT_ROOT_SELECTOR).trim();
+  const sourceHash = hashCustomCss(`${sourceIdentity}\0${rootSelector}\0${css}`);
+  const maxDataImageBytes = options.maxDataImageBytes || DEFAULT_MAX_DATA_IMAGE_BYTES;
+  const maxTotalDataImageBytes = options.maxTotalDataImageBytes || DEFAULT_MAX_TOTAL_DATA_IMAGE_BYTES;
+  const cacheKey = `${sourceHash}:${maxDataImageBytes}:${maxTotalDataImageBytes}`;
+  const cached = compileCache.get(cacheKey);
+  if (cached)
+    return cached;
+  const diagnostics = [];
+  if (!css.trim()) {
+    return {
+      sourceIdentity,
+      sourceHash,
+      scopedCss: "",
+      pseudoRules: [],
+      fallbackRules: [],
+      counterConfig: { resets: [], increments: [] },
+      matchSelectors: [],
+      diagnostics,
+      usable: true,
+      capability: { parseable: true, scopeable: true }
+    };
+  }
+  let root2;
+  try {
+    root2 = /** @type {import('postcss').Root} */
+    postcss_default.parse(css, { from: void 0 });
+  } catch (error) {
+    const parseError = error && typeof error === "object" ? (
+      /** @type {{ reason?: string, line?: number, column?: number }} */
+      error
+    ) : {};
+    return {
+      sourceIdentity,
+      sourceHash,
+      scopedCss: "",
+      pseudoRules: [],
+      fallbackRules: [],
+      counterConfig: { resets: [], increments: [] },
+      matchSelectors: [],
+      diagnostics: [{
+        severity: "fatal",
+        code: "custom-css-parse-failed",
+        message: parseError.reason || "CSS \u8BED\u6CD5\u65E0\u6CD5\u89E3\u6790\u3002",
+        ...parseError.line ? { line: parseError.line } : {},
+        ...parseError.column ? { column: parseError.column } : {}
+      }],
+      usable: false,
+      capability: { parseable: false, scopeable: false }
+    };
+  }
+  root2.walkAtRules((atRule2) => {
+    const name = atRule2.name.toLowerCase();
+    if (name === "import" || name === "font-face") {
+      diagnostics.push(createDiagnostic(
+        atRule2,
+        "blocked",
+        `custom-css-${name}-blocked`,
+        `\u5DF2\u79FB\u9664\u4E0D\u652F\u6301\u7684 @${name} \u89C4\u5219\u3002`
+      ));
+      atRule2.remove();
+      return;
+    }
+    if (name.includes("keyframes")) {
+      diagnostics.push(createDiagnostic(
+        atRule2,
+        "warning",
+        "custom-css-animation-unsupported",
+        "\u5FAE\u4FE1\u6587\u7AE0\u4E0D\u652F\u6301\u5173\u952E\u5E27\u52A8\u753B\uFF0C\u8BE5\u89C4\u5219\u5DF2\u79FB\u9664\u3002"
+      ));
+      atRule2.remove();
+    }
+  });
+  const resourceState = {
+    dataImageBytes: 0,
+    maxDataImageBytes,
+    maxTotalDataImageBytes
+  };
+  root2.walkDecls((declaration) => {
+    sanitizeDeclaration(declaration, diagnostics, resourceState);
+  });
+  const pseudoRules = [];
+  const fallbackRules = [];
+  const counterConfig = { resets: [], increments: [] };
+  const matchSelectors = [];
+  let scopeable = true;
+  root2.walkRules((rule2) => {
+    var _a5;
+    if (!rule2.parent)
+      return;
+    let expanded;
+    try {
+      expanded = expandSelectors(rule2.selector);
+      diagnostics.push(...expanded.diagnostics.map((item) => {
+        var _a6, _b, _c, _d;
+        return {
+          ...item,
+          ...((_b = (_a6 = rule2.source) == null ? void 0 : _a6.start) == null ? void 0 : _b.line) ? { line: rule2.source.start.line } : {},
+          ...((_d = (_c = rule2.source) == null ? void 0 : _c.start) == null ? void 0 : _d.column) ? { column: rule2.source.start.column } : {}
+        };
+      }));
+    } catch (error) {
+      scopeable = false;
+      const selectorError = String(error || "").replace(/^Error:\s*/i, "");
+      diagnostics.push(createDiagnostic(
+        rule2,
+        "fatal",
+        "custom-css-selector-parse-failed",
+        `\u9009\u62E9\u5668\u65E0\u6CD5\u89E3\u6790\uFF1A${selectorError || rule2.selector}`
+      ));
+      return;
+    }
+    const properties = declarationsToRecord(rule2);
+    const regularSelectors = [];
+    expanded.selectors.forEach((selector) => {
+      const pseudo = parsePseudoSelector(selector);
+      if (pseudo) {
+        if (pseudo.baseSelector) {
+          pseudoRules.push({
+            baseSelector: pseudo.baseSelector,
+            pseudoType: pseudo.pseudoType,
+            properties: { ...properties }
+          });
+        }
+        return;
+      }
+      regularSelectors.push(selector);
+      matchSelectors.push(selector);
+      if (/\[[^\]]*["'][^"']*,[^"']*["'][^\]]*\]/.test(selector)) {
+        fallbackRules.push({ selector, properties: { ...properties } });
+        regularSelectors.pop();
+      }
+      const reset = parseCounterValue(properties["counter-reset"], 0);
+      const increment = parseCounterValue(properties["counter-increment"], 1);
+      if (reset)
+        counterConfig.resets.push({ selector, name: reset.name, value: reset.value });
+      if (increment)
+        counterConfig.increments.push({ selector, name: increment.name, value: increment.value });
+    });
+    if (regularSelectors.length === 0 || !((_a5 = rule2.nodes) == null ? void 0 : _a5.some((node) => node.type === "decl"))) {
+      rule2.remove();
+      return;
+    }
+    rule2.selector = regularSelectors.map((selector) => `${rootSelector} ${selector}`).join(", ");
+  });
+  root2.walkRules((rule2) => {
+    var _a5;
+    if (!((_a5 = rule2.nodes) == null ? void 0 : _a5.some((node) => node.type === "decl")))
+      rule2.remove();
+  });
+  const usable = scopeable && !diagnostics.some((item) => item.severity === "fatal");
+  const result = {
+    sourceIdentity,
+    sourceHash,
+    scopedCss: usable ? root2.toString() : "",
+    pseudoRules: usable ? pseudoRules : [],
+    fallbackRules: usable ? fallbackRules : [],
+    counterConfig: usable ? counterConfig : { resets: [], increments: [] },
+    matchSelectors: usable ? Array.from(new Set(matchSelectors)) : [],
+    diagnostics,
+    usable,
+    capability: { parseable: true, scopeable }
+  };
+  compileCache.set(cacheKey, result);
+  if (compileCache.size > COMPILE_CACHE_LIMIT) {
+    const firstKey = String(compileCache.keys().next().value || "");
+    if (firstKey)
+      compileCache.delete(firstKey);
+  }
   return result;
 }
-function parseProperties(body) {
-  const props = {};
-  for (const decl of body.split(";")) {
-    const colonIndex = decl.indexOf(":");
-    if (colonIndex === -1)
-      continue;
-    const prop = decl.substring(0, colonIndex).trim();
-    const value = decl.substring(colonIndex + 1).trim();
-    if (prop && value)
-      props[prop] = value;
-  }
-  return props;
-}
-function stripTrailingBrace(bodyPart) {
-  const t = bodyPart.trim();
-  return t.endsWith("}") ? t.slice(0, -1).trim() : t;
-}
-function parsePseudoRules(css) {
-  const rules = [];
-  const cssWithoutComments = css.replace(/\/\*[\s\S]*?\*\//g, "");
-  const blocks = splitCSSBlocks(cssWithoutComments);
-  for (const block of blocks) {
-    const braceIndex = block.indexOf("{");
-    if (braceIndex === -1)
-      continue;
-    const selectorPart = block.substring(0, braceIndex).trim();
-    const bodyPart = block.substring(braceIndex + 1).trim();
-    if (!selectorPart || !bodyPart)
-      continue;
-    const selectors = splitSelectors(selectorPart);
-    for (const sel of selectors) {
-      const trimmed = sel.trim();
-      if (!trimmed)
-        continue;
-      const pseudoMatch = trimmed.match(/::(before|after)\s*$/);
-      if (!pseudoMatch)
-        continue;
-      const pseudoType = pseudoMatch[1];
-      const baseSelector = trimmed.replace(/::before/g, "").replace(/::after/g, "").trim();
-      if (!baseSelector)
-        continue;
-      rules.push({
-        baseSelector,
-        pseudoType,
-        properties: parseProperties(stripTrailingBrace(bodyPart))
-      });
-    }
-  }
-  return rules;
-}
-var CSS_WIDE_KEYWORDS = /* @__PURE__ */ new Set(["none", "inherit", "initial", "unset"]);
-function parseCounterConfig(css) {
-  const cssWithoutComments = css.replace(/\/\*[\s\S]*?\*\//g, "");
-  const blocks = splitCSSBlocks(cssWithoutComments);
-  const resets = [];
-  const increments = [];
-  for (const block of blocks) {
-    const braceIndex = block.indexOf("{");
-    if (braceIndex === -1)
-      continue;
-    const selectorPart = block.substring(0, braceIndex).trim();
-    const bodyPart = block.substring(braceIndex + 1).trim();
-    if (!selectorPart || !bodyPart)
-      continue;
-    if (selectorPart.includes("::before") || selectorPart.includes("::after"))
-      continue;
-    const properties = parseProperties(stripTrailingBrace(bodyPart));
-    if (properties["counter-reset"]) {
-      const parts = properties["counter-reset"].trim().split(/\s+/);
-      if (!CSS_WIDE_KEYWORDS.has(parts[0].toLowerCase())) {
-        const name = parts[0];
-        const value = parts.length > 1 ? parseInt(parts[1], 10) : 0;
-        if (name && !isNaN(value)) {
-          for (const sel of splitSelectors(selectorPart)) {
-            if (!sel.includes("::before") && !sel.includes("::after")) {
-              resets.push({ selector: sel.trim(), name, value });
-            }
-          }
-        }
-      }
-    }
-    if (properties["counter-increment"]) {
-      const parts = properties["counter-increment"].trim().split(/\s+/);
-      if (!CSS_WIDE_KEYWORDS.has(parts[0].toLowerCase())) {
-        const name = parts[0];
-        const value = parts.length > 1 ? parseInt(parts[1], 10) : 1;
-        if (name && !isNaN(value)) {
-          for (const sel of splitSelectors(selectorPart)) {
-            if (!sel.includes("::before") && !sel.includes("::after")) {
-              increments.push({ selector: sel.trim(), name, value });
-            }
-          }
-        }
-      }
-    }
-  }
-  return { resets, increments };
-}
+
+// services/pseudo-element-renderer.js
 function formatCounterValue(value, style) {
   switch (style) {
     case "decimal-leading-zero":
@@ -74630,23 +83387,23 @@ function computeCounters(container, config) {
   }
   return result;
 }
-function renderPseudoForElement(el, rule, counterMap) {
-  const cssContent = rule.properties["content"] || "";
+function renderPseudoForElement(el, rule2, counterMap) {
+  const cssContent = rule2.properties["content"] || "";
   let textContent = null;
   let isEmptyVisual = false;
-  if (isVisualOnly(rule.properties)) {
+  if (isVisualOnly(rule2.properties)) {
     isEmptyVisual = true;
     textContent = "\xA0";
   } else {
     textContent = resolveContent(cssContent, counterMap);
     if (!textContent && textContent !== "")
-      return;
+      return false;
   }
   const doc = el.ownerDocument;
   const span = doc.createElement("span");
-  span.className = generateSpanClass(el.tagName, rule.pseudoType, el);
+  span.className = generateSpanClass(el.tagName, rule2.pseudoType, el);
   const styleParts = [];
-  for (const [prop, value] of Object.entries(rule.properties)) {
+  for (const [prop, value] of Object.entries(rule2.properties)) {
     if (prop === "content" || prop.startsWith("counter-"))
       continue;
     styleParts.push(`${prop}: ${String(value)}`);
@@ -74658,163 +83415,361 @@ function renderPseudoForElement(el, rule, counterMap) {
     span.textContent = isEmptyVisual ? "\xA0" : textContent;
   }
   try {
-    if (rule.pseudoType === "before") {
+    if (rule2.pseudoType === "before") {
       el.insertBefore(span, el.firstChild);
     } else {
       el.appendChild(span);
     }
+    return true;
   } catch (e) {
+    return false;
   }
 }
-function removePseudoRulesFromCSS(css) {
-  const blocks = splitCSSBlocks(css);
-  const filtered = blocks.filter((block) => {
-    const braceIndex = block.indexOf("{");
-    const selectorPart = braceIndex >= 0 ? block.substring(0, braceIndex) : block;
-    return !selectorPart.includes("::before") && !selectorPart.includes("::after");
-  });
-  return filtered.join("");
+function prerenderCompiledPseudoElementsIntoHtml(wrappedHtml, pseudoRules, counterConfig = { resets: [], increments: [] }) {
+  if (typeof DOMParser === "undefined" || !Array.isArray(pseudoRules) || pseudoRules.length === 0) {
+    return { html: wrappedHtml, insertedCount: 0 };
+  }
+  const doc = new DOMParser().parseFromString(wrappedHtml, "text/html");
+  const container = doc.body.firstElementChild;
+  if (!container)
+    return { html: wrappedHtml, insertedCount: 0 };
+  const counterMap = computeCounters(container, counterConfig);
+  let insertedCount = 0;
+  for (const rule2 of pseudoRules) {
+    const elements = safeQuerySelectorAll(container, rule2.baseSelector);
+    for (const el of elements) {
+      const elCounters = counterMap.get(el);
+      if (renderPseudoForElement(el, rule2, elCounters))
+        insertedCount += 1;
+    }
+  }
+  return { html: container.outerHTML, insertedCount };
 }
-function prerenderPseudoElementsIntoHtml(wrappedHtml, cssText) {
-  if (typeof DOMParser === "undefined")
-    return wrappedHtml;
-  if (!cssText || !cssText.includes("::"))
-    return wrappedHtml;
-  const pseudoRules = parsePseudoRules(cssText);
-  if (pseudoRules.length === 0)
+
+// services/custom-css-source.js
+function normalizeCustomCssNotePath(value) {
+  return String(value || "").trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/{2,}/g, "/");
+}
+function stripFrontmatter(markdown) {
+  var _a5;
+  const source = String(markdown || "").replace(/^\uFEFF/, "");
+  const lines = source.split(/\r?\n/);
+  if (((_a5 = lines[0]) == null ? void 0 : _a5.trim()) !== "---") {
+    return { body: source, diagnostics: [] };
+  }
+  const closingIndex = lines.findIndex((line, index) => index > 0 && line.trim() === "---");
+  if (closingIndex === -1) {
+    return {
+      body: "",
+      diagnostics: [{
+        severity: "fatal",
+        code: "custom-css-frontmatter-unclosed",
+        message: "CSS \u7B14\u8BB0\u7684 YAML frontmatter \u6CA1\u6709\u7ED3\u675F\u6807\u8BB0\u3002",
+        line: 1,
+        column: 1
+      }]
+    };
+  }
+  return {
+    body: lines.slice(closingIndex + 1).join("\n"),
+    diagnostics: []
+  };
+}
+function extractCustomCssFromMarkdown(markdown) {
+  const frontmatterResult = stripFrontmatter(markdown);
+  if (frontmatterResult.diagnostics.some((item) => item.severity === "fatal")) {
+    return { cssText: "", diagnostics: frontmatterResult.diagnostics };
+  }
+  const lines = frontmatterResult.body.split(/\r?\n/);
+  const cssBlocks = [];
+  let currentBlock = null;
+  let fenceChar = "";
+  let fenceLength = 0;
+  let fenceStartLine = 0;
+  lines.forEach((line, index) => {
+    if (!currentBlock) {
+      const opening = line.match(/^\s*(`{3,}|~{3,})\s*css(?:\s+.*)?\s*$/i);
+      if (!opening)
+        return;
+      currentBlock = [];
+      fenceChar = opening[1][0];
+      fenceLength = opening[1].length;
+      fenceStartLine = index + 1;
+      return;
+    }
+    const closingPattern = new RegExp(`^\\s*${fenceChar}{${fenceLength},}\\s*$`);
+    if (closingPattern.test(line)) {
+      cssBlocks.push(currentBlock);
+      currentBlock = null;
+      fenceChar = "";
+      fenceLength = 0;
+      fenceStartLine = 0;
+      return;
+    }
+    currentBlock.push(line);
+  });
+  if (currentBlock) {
+    return {
+      cssText: "",
+      diagnostics: [{
+        severity: "fatal",
+        code: "custom-css-fence-unclosed",
+        message: "CSS \u4EE3\u7801\u5757\u6CA1\u6709\u7ED3\u675F\u6807\u8BB0\u3002",
+        line: fenceStartLine,
+        column: 1
+      }]
+    };
+  }
+  if (cssBlocks.length > 0) {
+    return {
+      cssText: cssBlocks.map((block) => block.join("\n").trim()).filter(Boolean).join("\n\n"),
+      diagnostics: frontmatterResult.diagnostics
+    };
+  }
+  return {
+    cssText: frontmatterResult.body.trim(),
+    diagnostics: frontmatterResult.diagnostics
+  };
+}
+function isMarkdownFile(file) {
+  if (!file || typeof file !== "object")
+    return false;
+  const record = (
+    /** @type {{ extension?: unknown }} */
+    file
+  );
+  return String(record.extension || "").toLowerCase() === "md";
+}
+function resolveNoteFile(vault, configuredPath) {
+  if (!vault || typeof vault !== "object")
+    return { file: null, resolvedPath: configuredPath };
+  const getFile = (
+    /** @type {{ getAbstractFileByPath?: unknown }} */
+    vault.getAbstractFileByPath
+  );
+  if (typeof getFile !== "function")
+    return { file: null, resolvedPath: configuredPath };
+  const candidates = configuredPath.toLowerCase().endsWith(".md") ? [configuredPath] : [configuredPath, `${configuredPath}.md`];
+  for (const candidate of candidates) {
+    const file = (
+      /** @type {unknown} */
+      getFile.call(vault, candidate)
+    );
+    if (isMarkdownFile(file)) {
+      return {
+        file,
+        resolvedPath: normalizeCustomCssNotePath(
+          /** @type {{ path?: unknown }} */
+          file.path || candidate
+        )
+      };
+    }
+  }
+  return { file: null, resolvedPath: configuredPath };
+}
+async function resolveCustomCssSource(plugin2) {
+  var _a5, _b;
+  if (!((_a5 = plugin2 == null ? void 0 : plugin2.settings) == null ? void 0 : _a5.enableCustomCss)) {
+    return {
+      kind: "disabled",
+      identity: "disabled",
+      path: "",
+      cssText: "",
+      diagnostics: []
+    };
+  }
+  const textareaCss = String(plugin2.settings.customCss || "");
+  const configuredPath = normalizeCustomCssNotePath(plugin2.settings.customCssNote || "");
+  const vault = (_b = plugin2.app) == null ? void 0 : _b.vault;
+  if (configuredPath && vault) {
+    const { file, resolvedPath } = resolveNoteFile(vault, configuredPath);
+    if (file) {
+      try {
+        const markdown = await vault.read(file);
+        const extracted = extractCustomCssFromMarkdown(markdown);
+        return {
+          kind: "note",
+          identity: `note:${resolvedPath}`,
+          path: resolvedPath,
+          cssText: extracted.cssText,
+          diagnostics: extracted.diagnostics
+        };
+      } catch (e) {
+        return {
+          kind: textareaCss.trim() ? "textarea" : "empty",
+          identity: textareaCss.trim() ? "textarea" : "empty",
+          path: "",
+          cssText: textareaCss,
+          diagnostics: [{
+            severity: "warning",
+            code: "custom-css-note-read-failed",
+            message: `\u672A\u80FD\u8BFB\u53D6 CSS \u7B14\u8BB0\u201C${configuredPath}\u201D\uFF0C\u5F53\u524D\u4F7F\u7528\u8BBE\u7F6E\u4E2D\u7684 CSS\u3002`
+          }]
+        };
+      }
+    }
+    return {
+      kind: textareaCss.trim() ? "textarea" : "empty",
+      identity: textareaCss.trim() ? "textarea" : "empty",
+      path: "",
+      cssText: textareaCss,
+      diagnostics: [{
+        severity: "warning",
+        code: "custom-css-note-not-found",
+        message: `\u672A\u627E\u5230 CSS \u7B14\u8BB0\u201C${configuredPath}\u201D\uFF0C\u5F53\u524D\u4F7F\u7528\u8BBE\u7F6E\u4E2D\u7684 CSS\u3002`
+      }]
+    };
+  }
+  if (configuredPath && !vault) {
+    return {
+      kind: textareaCss.trim() ? "textarea" : "empty",
+      identity: textareaCss.trim() ? "textarea" : "empty",
+      path: "",
+      cssText: textareaCss,
+      diagnostics: [{
+        severity: "warning",
+        code: "custom-css-vault-unavailable",
+        message: `\u6682\u65F6\u65E0\u6CD5\u8BFB\u53D6 CSS \u7B14\u8BB0\u201C${configuredPath}\u201D\uFF0C\u5F53\u524D\u4F7F\u7528\u8BBE\u7F6E\u4E2D\u7684 CSS\u3002`
+      }]
+    };
+  }
+  if (!textareaCss.trim()) {
+    return {
+      kind: "empty",
+      identity: "empty",
+      path: "",
+      cssText: "",
+      diagnostics: []
+    };
+  }
+  return {
+    kind: "textarea",
+    identity: "textarea",
+    path: "",
+    cssText: textareaCss,
+    diagnostics: []
+  };
+}
+
+// services/custom-css-inliner.js
+var ROOT_SELECTOR = ".owc-article-root";
+function unwrapRootContainer(html, rootClass) {
+  const openRe = new RegExp(`^\\s*<div\\s+class=["']${rootClass}["'][^>]*>`, "i");
+  const closeRe = /<\/div>\s*$/i;
+  if (!openRe.test(html) || !closeRe.test(html))
+    return html;
+  return html.replace(openRe, "").replace(closeRe, "");
+}
+function countSelectorMatches(wrappedHtml, selectors) {
+  if (typeof DOMParser === "undefined" || !Array.isArray(selectors) || selectors.length === 0) {
+    return { matchedRuleCount: 0, matchedElementCount: 0 };
+  }
+  const doc = new DOMParser().parseFromString(wrappedHtml, "text/html");
+  const container = doc.body.firstElementChild;
+  if (!container)
+    return { matchedRuleCount: 0, matchedElementCount: 0 };
+  let matchedRuleCount = 0;
+  const matchedElements = /* @__PURE__ */ new Set();
+  selectors.forEach((selector) => {
+    try {
+      const elements = Array.from(container.querySelectorAll(selector));
+      if (elements.length > 0)
+        matchedRuleCount += 1;
+      elements.forEach((element) => matchedElements.add(element));
+    } catch (e) {
+    }
+  });
+  return { matchedRuleCount, matchedElementCount: matchedElements.size };
+}
+function applyFallbackRules(wrappedHtml, rules) {
+  if (typeof DOMParser === "undefined" || !rules.length)
     return wrappedHtml;
   const doc = new DOMParser().parseFromString(wrappedHtml, "text/html");
   const container = doc.body.firstElementChild;
   if (!container)
     return wrappedHtml;
-  const counterConfig = parseCounterConfig(cssText);
-  const counterMap = computeCounters(container, counterConfig);
-  for (const rule of pseudoRules) {
-    const elements = safeQuerySelectorAll(container, rule.baseSelector);
-    for (const el of elements) {
-      const elCounters = counterMap.get(el);
-      renderPseudoForElement(el, rule, elCounters);
-    }
-  }
+  rules.forEach((rule2) => {
+    const elements = Array.from(container.querySelectorAll(rule2.selector));
+    elements.forEach((element) => {
+      const htmlElement = (
+        /** @type {HTMLElement} */
+        element
+      );
+      Object.entries(rule2.properties).forEach(([property, rawValue]) => {
+        const important = /\s*!important\s*$/i.test(rawValue);
+        const value = rawValue.replace(/\s*!important\s*$/i, "").trim();
+        if (htmlElement.style.getPropertyValue(property) && !important)
+          return;
+        htmlElement.style.setProperty(property, value, important ? "important" : "");
+      });
+    });
+  });
   return container.outerHTML;
 }
-
-// services/custom-css-inliner.js
-var ROOT_SELECTOR = ".owc-article-root";
-var FORBIDDEN_CSS_PATTERNS = [
-  { name: "expression()", pattern: /expression\s*\(/i },
-  { name: "javascript: url", pattern: /url\s*\(\s*["']?\s*javascript:/i },
-  { name: "@import", pattern: /@import\b/i },
-  { name: "behavior/-ms-behavior", pattern: /behavior\s*:/i },
-  { name: "binding", pattern: /binding\s*:/i }
-];
-function sanitizeCustomCss(cssText) {
-  if (typeof cssText !== "string")
-    return;
-  for (const rule of FORBIDDEN_CSS_PATTERNS) {
-    if (rule.pattern.test(cssText)) {
-      throw new Error(`\u81EA\u5B9A\u4E49 CSS \u5305\u542B\u88AB\u7981\u6B62\u7684\u8BED\u6CD5\uFF1A${rule.name}`);
-    }
+function applyCompiledCustomCss(html, compiled, options = {}) {
+  const inputHtml = String(html || "");
+  const diagnostics = Array.isArray(compiled == null ? void 0 : compiled.diagnostics) ? [...compiled.diagnostics] : [];
+  const sourceHash = String((compiled == null ? void 0 : compiled.sourceHash) || "");
+  if (!inputHtml || !(compiled == null ? void 0 : compiled.usable)) {
+    return {
+      html: inputHtml,
+      applied: false,
+      diagnostics,
+      sourceHash,
+      matchedRuleCount: 0,
+      matchedElementCount: 0
+    };
   }
-}
-function scopeCustomCss(cssText, rootSelector = ROOT_SELECTOR) {
-  if (!cssText || !rootSelector)
-    return cssText;
-  const rootPrefix = rootSelector.trim();
-  const scopedBlocks = [];
-  let i = 0;
-  while (i < cssText.length) {
-    if (cssText[i].trim() === "") {
-      i += 1;
-      continue;
-    }
-    if (cssText.slice(i, i + 2) === "/*") {
-      const end = cssText.indexOf("*/", i + 2);
-      if (end === -1)
-        break;
-      i = end + 2;
-      continue;
-    }
-    let selectorEnd = cssText.indexOf("{", i);
-    if (selectorEnd === -1)
-      break;
-    const selectors = cssText.slice(i, selectorEnd).trim();
-    let braceDepth = 0;
-    let bodyEnd = selectorEnd;
-    for (let j = selectorEnd; j < cssText.length; j += 1) {
-      if (cssText[j] === "{")
-        braceDepth += 1;
-      else if (cssText[j] === "}") {
-        braceDepth -= 1;
-        if (braceDepth === 0) {
-          bodyEnd = j + 1;
-          break;
-        }
-      }
-    }
-    const body = cssText.slice(selectorEnd, bodyEnd);
-    if (selectors.startsWith("@")) {
-      const atRuleName = selectors.toLowerCase();
-      if (atRuleName.startsWith("@media") || atRuleName.startsWith("@supports")) {
-        const inner = body.slice(1, -1);
-        const innerScoped = scopeCustomCss(inner, rootPrefix);
-        scopedBlocks.push(`${selectors}{${innerScoped}}`);
-      } else {
-        scopedBlocks.push(`${selectors}${body}`);
-      }
-    } else {
-      const scopedSelectors = selectors.split(",").map((s) => `${rootPrefix} ${s.trim()}`).join(", ");
-      scopedBlocks.push(`${scopedSelectors}${body}`);
-    }
-    i = bodyEnd;
+  if (!compiled.scopedCss && (!compiled.pseudoRules || compiled.pseudoRules.length === 0)) {
+    return {
+      html: inputHtml,
+      applied: false,
+      diagnostics,
+      sourceHash,
+      matchedRuleCount: 0,
+      matchedElementCount: 0
+    };
   }
-  return scopedBlocks.join("\n");
-}
-function inlineCustomCss(html, cssText, options = {}) {
-  if (!cssText || !cssText.trim())
-    return html;
   const rootSelector = options.rootSelector || ROOT_SELECTOR;
   const rootClass = rootSelector.replace(/^\./, "");
-  sanitizeCustomCss(cssText);
-  const scopedCss = scopeCustomCss(cssText, rootSelector);
-  const wrappedHtml = `<div class="${rootClass}">${html}</div>`;
-  const htmlWithPseudo = prerenderPseudoElementsIntoHtml(wrappedHtml, cssText);
-  const cssForJuice = removePseudoRulesFromCSS(scopedCss);
-  const inlined = import_juice.default.inlineContent(htmlWithPseudo, cssForJuice, {
-    preserveImportant: options.preserveImportant !== false,
-    removeStyleTags: options.removeStyleTags !== false,
-    webResources: { images: false, svgs: false }
-  });
-  return unwrapRootContainer(inlined, rootClass);
-}
-function unwrapRootContainer(html, rootClass) {
-  const openRe = new RegExp(`^\\s*<div\\s+class=["']${rootClass}["'][^>]*>`, "i");
-  const closeRe = /<\/div>\s*$/i;
-  if (!openRe.test(html) || !closeRe.test(html)) {
-    return html;
-  }
-  return html.replace(openRe, "").replace(closeRe, "");
-}
-async function resolveCustomCssFromSettings(plugin) {
-  var _a5;
-  if (!plugin || !plugin.settings || !plugin.settings.enableCustomCss) {
-    return "";
-  }
-  const notePath = (_a5 = plugin.settings.customCssNote) == null ? void 0 : _a5.trim();
-  if (notePath && plugin.app && plugin.app.vault) {
-    const file = (
-      /** @type {(TFileLike & { extension?: string }) | null} */
-      plugin.app.vault.getAbstractFileByPath(notePath)
+  const wrappedHtml = `<div class="${rootClass}">${inputHtml}</div>`;
+  try {
+    const matchSummary = countSelectorMatches(wrappedHtml, compiled.matchSelectors || []);
+    const fallbackHtml = applyFallbackRules(wrappedHtml, compiled.fallbackRules || []);
+    const pseudoResult = prerenderCompiledPseudoElementsIntoHtml(
+      fallbackHtml,
+      compiled.pseudoRules || [],
+      compiled.counterConfig || { resets: [], increments: [] }
     );
-    if (file && file.extension === "md") {
-      try {
-        return await plugin.app.vault.read(file);
-      } catch (err) {
-        console.warn("\u8BFB\u53D6\u81EA\u5B9A\u4E49 CSS \u7B14\u8BB0\u5931\u8D25\uFF0C\u56DE\u9000\u5230 textarea:", err);
-      }
-    }
+    const inlined = import_juice.default.inlineContent(pseudoResult.html, compiled.scopedCss, {
+      preserveImportant: options.preserveImportant !== false,
+      removeStyleTags: options.removeStyleTags !== false,
+      webResources: { images: false, svgs: false }
+    });
+    return {
+      html: unwrapRootContainer(inlined, rootClass),
+      applied: matchSummary.matchedRuleCount > 0 || pseudoResult.insertedCount > 0,
+      diagnostics,
+      sourceHash,
+      matchedRuleCount: matchSummary.matchedRuleCount + (pseudoResult.insertedCount > 0 ? 1 : 0),
+      matchedElementCount: matchSummary.matchedElementCount + pseudoResult.insertedCount
+    };
+  } catch (error) {
+    const errorMessage = String(error || "").replace(/^Error:\s*/i, "");
+    diagnostics.push({
+      severity: "fatal",
+      code: "custom-css-inline-failed",
+      message: `\u81EA\u5B9A\u4E49 CSS \u5E94\u7528\u5931\u8D25\uFF0C\u5DF2\u7EE7\u7EED\u4F7F\u7528\u57FA\u7840\u4E3B\u9898\uFF1A${errorMessage || "\u672A\u77E5\u9519\u8BEF"}`
+    });
+    return {
+      html: inputHtml,
+      applied: false,
+      diagnostics,
+      sourceHash,
+      matchedRuleCount: 0,
+      matchedElementCount: 0
+    };
   }
-  return plugin.settings.customCss || "";
 }
 
 // views/converter/core.js
@@ -75255,41 +84210,166 @@ var coreMethods = {
     if (!pipeline) {
       throw new Error("\u6E32\u67D3\u7BA1\u7EBF\u672A\u521D\u59CB\u5316");
     }
-    const html = await pipeline.renderForPreview(markdown, {
+    return pipeline.renderForPreview(markdown, {
       sourcePath,
       settings: this.plugin.settings
     });
-    return this.applyCustomCss(html);
   },
   /**
-   * 应用用户自定义 CSS（仅非 AI 编排模式）。
-   * 自定义 CSS 与 AI 编排是两套独立系统：AI 模式下不套用，避免互相干扰。
+   * 从干净基础 HTML 派生普通预览。
    * @param {string} html
    * @returns {Promise<string>}
    */
-  async applyCustomCss(html) {
+  async deriveNativePreviewHtml(html) {
+    return this.applyCustomCss(html, {
+      target: "preview",
+      layoutMode: "native"
+    });
+  },
+  /**
+   * 只从已提交的干净基础 HTML 重新派生普通预览。
+   * @returns {Promise<boolean>}
+   */
+  async refreshCustomCssPreview() {
+    var _a5;
+    const generation = (this.customCssRefreshGeneration || 0) + 1;
+    this.customCssRefreshGeneration = generation;
+    const baseHtml = this.baseRenderedHtml;
+    const articleSourceHash = this.lastResolvedSourceHash;
+    if (!baseHtml)
+      return false;
+    if (this.aiPreviewApplied) {
+      await this.applyCustomCss(baseHtml, { target: "preview", layoutMode: "ai" });
+      return false;
+    }
+    const scrollTop = ((_a5 = this.previewContainer) == null ? void 0 : _a5.scrollTop) || 0;
+    const html = await this.deriveNativePreviewHtml(baseHtml);
+    if (generation !== this.customCssRefreshGeneration || baseHtml !== this.baseRenderedHtml || articleSourceHash !== this.lastResolvedSourceHash || this.aiPreviewApplied) {
+      return false;
+    }
+    this.currentHtml = html;
+    if (this.previewContainer) {
+      setElementHtml(this.previewContainer, html);
+      this.previewContainer.scrollTop = scrollTop;
+      this.previewContainer.addClass("apple-has-content");
+    }
+    this.syncPreviewPresentationMode();
+    return true;
+  },
+  /**
+   * 按目标和布局模式应用一次自定义 CSS。
+   * @param {string} html
+   * @param {{ target?: 'preview'|'wechat-copy'|'wechat-draft'|'multi-platform', layoutMode?: 'native'|'ai' }} [options]
+   * @returns {Promise<string>}
+   */
+  async applyCustomCss(html, options = {}) {
+    var _a5, _b;
     if (!html)
       return html;
-    if (this.aiPreviewApplied)
+    const target = options.target || "preview";
+    const layoutMode = options.layoutMode || (this.aiPreviewApplied ? "ai" : "native");
+    if (!((_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.enableCustomCss)) {
+      this._customCssLastValidBySource.clear();
+    }
+    const shouldApply = layoutMode === "native" && ["preview", "wechat-copy", "wechat-draft"].includes(target);
+    if (!shouldApply) {
+      this.customCssStatus = {
+        state: layoutMode === "ai" ? "ai-skipped" : "target-skipped",
+        sourceKind: "",
+        sourcePath: "",
+        diagnostics: [],
+        matchedRuleCount: 0,
+        matchedElementCount: 0
+      };
       return html;
-    const customCss = await resolveCustomCssFromSettings(this.plugin);
-    if (!customCss)
+    }
+    const source = await resolveCustomCssSource(this.plugin);
+    if (source.kind === "disabled")
+      this._customCssLastValidBySource.clear();
+    const lastValid = this._customCssLastValidBySource.get(source.identity);
+    const sourceHasFatal = source.diagnostics.some((item) => item.severity === "fatal");
+    const compiled = sourceHasFatal ? null : compileCustomCss(source.cssText, { sourceIdentity: source.identity });
+    const effectiveCompiled = (compiled == null ? void 0 : compiled.usable) ? compiled : lastValid;
+    const baseDiagnostics = [
+      ...source.diagnostics,
+      ...(compiled == null ? void 0 : compiled.diagnostics) || []
+    ];
+    if (!effectiveCompiled || source.kind === "disabled" || source.kind === "empty") {
+      this.customCssStatus = {
+        state: source.kind === "disabled" ? "disabled" : baseDiagnostics.some((item) => item.severity === "fatal") ? "invalid" : "empty",
+        sourceKind: source.kind,
+        sourcePath: source.path,
+        diagnostics: baseDiagnostics,
+        matchedRuleCount: 0,
+        matchedElementCount: 0
+      };
       return html;
-    return inlineCustomCss(html, customCss);
+    }
+    const result = applyCompiledCustomCss(html, effectiveCompiled);
+    const runtimeFailed = result.diagnostics.some((item) => item.code === "custom-css-inline-failed");
+    if ((compiled == null ? void 0 : compiled.usable) && !runtimeFailed) {
+      this._customCssLastValidBySource.set(source.identity, compiled);
+    }
+    this.customCssStatus = {
+      state: runtimeFailed ? "invalid" : result.applied ? "applied" : "unmatched",
+      sourceKind: source.kind,
+      sourcePath: source.path,
+      sourceIdentity: source.identity,
+      sourceHash: result.sourceHash,
+      usingLastValid: effectiveCompiled !== compiled,
+      diagnostics: [
+        ...baseDiagnostics,
+        ...result.diagnostics.filter((item) => !baseDiagnostics.includes(item))
+      ],
+      matchedRuleCount: result.matchedRuleCount,
+      matchedElementCount: result.matchedElementCount
+    };
+    return result.html;
   },
   updateCurrentDoc() {
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (activeView && this.docTitleText) {
-      this.docTitleText.setText(activeView.file.basename);
+    const file = activeView ? activeView.file : this.lastActiveFile;
+    if (file && this.docTitleText) {
+      this.docTitleText.setText(file.basename);
       this.docTitleText.setCssStyles({ color: "var(--apple-primary)" });
-    } else if (this.lastActiveFile && this.docTitleText) {
-      this.docTitleText.setText(this.lastActiveFile.basename);
-      this.docTitleText.setCssStyles({ color: "var(--apple-primary)" });
+      const selfRec = toRecord11(this);
+      const bottomRow = (
+        /** @type {HTMLElement} */
+        selfRec.headerBottomRow
+      );
+      if (bottomRow) {
+        bottomRow.classList.remove("hidden");
+      }
     } else if (this.docTitleText) {
       this.docTitleText.setText("\u672A\u9009\u62E9\u6587\u6863");
       this.docTitleText.setCssStyles({ color: "var(--apple-tertiary)" });
+      const selfRec = toRecord11(this);
+      const bottomRow = (
+        /** @type {HTMLElement} */
+        selfRec.headerBottomRow
+      );
+      if (bottomRow) {
+        bottomRow.classList.add("hidden");
+      }
+    }
+    const headerEl = this.containerEl ? this.containerEl.querySelector(".apple-preview-header") : null;
+    if (headerEl && this.containerEl) {
+      const h = (
+        /** @type {HTMLElement} */
+        headerEl.offsetHeight || (file ? 80 : 48)
+      );
+      this.containerEl.style.setProperty("--apple-header-height", h + "px");
     }
     this.updateAiToolbarState();
+    if (this.previewMode === "sticker") {
+      if (this.copyBtn && typeof this.copyBtn.classList === "object") {
+        this.copyBtn.classList.add("hidden");
+      }
+    } else {
+      if (this.copyBtn && typeof this.copyBtn.classList === "object") {
+        this.copyBtn.classList.remove("hidden");
+      }
+    }
   },
   setPlaceholder() {
     this.previewContainer.empty();
@@ -75348,6 +84428,10 @@ var coreMethods = {
   },
   async convertCurrent(silent = false, options = {}) {
     var _a5, _b, _c;
+    if (this.previewMode === "sticker") {
+      this.renderStickerPreview();
+      return;
+    }
     const {
       showLoading = false,
       loadingText = "\u6B63\u5728\u6E32\u67D3\u9884\u89C8...",
@@ -75420,14 +84504,15 @@ var coreMethods = {
     try {
       if (!silent)
         new Notice("\u26A1 \u6B63\u5728\u8F6C\u6362...");
-      const html = await this.renderMarkdownForPreview(markdown, sourcePath);
+      const baseHtml = await this.renderMarkdownForPreview(markdown, sourcePath);
+      const html = await this.deriveNativePreviewHtml(baseHtml);
       if (generation !== this.renderGeneration)
         return;
       this.lastResolvedMarkdown = markdown;
       this.lastResolvedSourcePath = sourcePath;
       this.lastResolvedSourceHash = String(this.simpleHash(markdown));
       this.completeAiLayoutSourceSwitch(sourcePath);
-      this.baseRenderedHtml = html;
+      this.baseRenderedHtml = baseHtml;
       this.currentHtml = html;
       this.lastRenderError = "";
       this.lastRenderFailureNoticeKey = "";
@@ -75512,6 +84597,8 @@ var coreMethods = {
       window.clearTimeout(this.aiLayoutStaleSuppressTimer);
       this.aiLayoutStaleSuppressTimer = null;
     }
+    this.customCssRefreshGeneration = (this.customCssRefreshGeneration || 0) + 1;
+    this._customCssLastValidBySource.clear();
     this.setPreviewLoading(false);
     if (this.activeEditorScroller && this.editorScrollListener) {
       this.activeEditorScroller.removeEventListener("scroll", this.editorScrollListener);
@@ -75546,6 +84633,22 @@ var coreMethods = {
     if (this.mermaidImageCache) {
       this.mermaidImageCache.clear();
     }
+    if (this.stickerUiStates) {
+      for (const state of this.stickerUiStates.values()) {
+        if (!(state == null ? void 0 : state.objectUrls))
+          continue;
+        for (const objectUrl of state.objectUrls) {
+          window.URL.revokeObjectURL(objectUrl);
+        }
+        state.objectUrls.clear();
+      }
+      this.stickerUiStates.clear();
+    }
+    if (this.stickerUploadCache) {
+      this.stickerUploadCache.clear();
+    }
+    this.stickerModalGeneration = (this.stickerModalGeneration || 0) + 1;
+    this.sessionStickerSourcePath = "";
     console.debug("\u{1F34E} \u53D1\u5E03\u52A9\u624B\u9762\u677F\u5DF2\u5173\u95ED");
   },
   simpleHash(str) {
@@ -75557,36 +84660,62 @@ var coreMethods = {
   }
 };
 
-// views/converter/style-panel.js
-var stylePanelMethods = {
+// views/converter/settings-panel.js
+var settingsPanelMethods = {
   createSettingsPanel(container) {
-    const toolbar = container.createEl("div", { cls: "apple-top-toolbar" });
-    this.currentDocLabel = toolbar.createEl("div", { cls: "apple-toolbar-title" });
+    const header = container.createEl("div", { cls: "apple-preview-header" });
+    const topRow = header.createEl("div", { cls: "apple-preview-header-top apple-top-toolbar" });
+    this.currentDocLabel = topRow.createEl("div", { cls: "apple-toolbar-title" });
     if (!isMobileClient3(this.app)) {
       const pluginLine = this.currentDocLabel.createDiv({ cls: "apple-toolbar-plugin-line" });
       pluginLine.createEl("span", { text: APPLE_STYLE_VIEW_TITLE, cls: "apple-toolbar-plugin-name" });
-      pluginLine.createEl("span", { text: "\u516C\u4F17\u53F7\u9884\u89C8", cls: "apple-toolbar-preview-badge" });
     }
     this.docTitleText = this.currentDocLabel.createDiv({ text: "\u672A\u9009\u62E9\u6587\u6863", cls: "apple-toolbar-doc-name" });
-    const actions = toolbar.createEl("div", { cls: "apple-toolbar-actions" });
+    const bottomRow = header.createEl("div", { cls: "apple-preview-header-bottom hidden" });
+    this.headerBottomRow = bottomRow;
+    const segment = bottomRow.createEl("div", { cls: "apple-preview-mode-segment" });
+    const setIcon = getObsidianSetIcon();
+    const selfRec = toRecord11(this);
+    selfRec.btnArticleMode = segment.createEl("button", {
+      cls: "apple-mode-btn active",
+      attr: { "aria-label": "\u6587\u7AE0\u6392\u7248\u6A21\u5F0F", "title": "\u6587\u7AE0\u6392\u7248\u6A21\u5F0F" }
+    });
+    const btnArt = (
+      /** @type {HTMLElement} */
+      selfRec.btnArticleMode
+    );
+    if (typeof setIcon === "function") {
+      setIcon(btnArt, "align-left");
+    }
+    selfRec.btnStickerMode = segment.createEl("button", {
+      cls: "apple-mode-btn",
+      attr: { "aria-label": "\u5FAE\u4FE1\u8D34\u56FE\u6A21\u5F0F", "title": "\u5FAE\u4FE1\u8D34\u56FE\u6A21\u5F0F" }
+    });
+    const btnStk = (
+      /** @type {HTMLElement} */
+      selfRec.btnStickerMode
+    );
+    if (typeof setIcon === "function") {
+      setIcon(btnStk, "layout-grid");
+    }
+    btnArt.addEventListener("click", () => this.switchPreviewMode("article"));
+    btnStk.addEventListener("click", () => this.switchPreviewMode("sticker"));
+    const actions = bottomRow.createEl("div", { cls: "apple-toolbar-actions" });
     const createIconBtn = (icon, title, onClick) => {
       const btn = actions.createEl("div", {
         cls: "apple-icon-btn",
-        attr: { "aria-label": title }
+        attr: { "aria-label": title, "title": title }
         // Tooltip
       });
-      const setIcon = getObsidianSetIcon();
       if (typeof setIcon === "function") {
         setIcon(btn, icon);
       }
       btn.addEventListener("click", onClick);
       return btn;
     };
-    const settingsButton = createIconBtn("sliders-horizontal", "\u6837\u5F0F\u8BBE\u7F6E", () => {
-      this.togglePanel(this.settingsOverlay, settingsButton, () => this.resetSettingsPanelViewState());
+    const settingsButton = createIconBtn("sliders-horizontal", "\u516C\u4F17\u53F7\u6392\u7248\u6837\u5F0F\u8BBE\u7F6E", () => {
+      this.toggleSettingsPanel();
     });
-    settingsButton.setAttribute("aria-label", "\u516C\u4F17\u53F7\u6392\u7248\u6837\u5F0F\u8BBE\u7F6E");
-    settingsButton.setAttribute("title", "\u516C\u4F17\u53F7\u6392\u7248\u6837\u5F0F\u8BBE\u7F6E");
     this.settingsBtn = settingsButton;
     this.aiLayoutBtn = createIconBtn("sparkles", "AI \u7F16\u6392", () => this.onAiLayoutButtonClick());
     if (!isMobileClient3(this.app)) {
@@ -75598,7 +84727,18 @@ var stylePanelMethods = {
     this.settingsOverlay = container.createEl("div", { cls: "apple-settings-overlay" });
     const settingsArea = this.settingsOverlay.createEl("div", { cls: "apple-settings-area" });
     this.settingsArea = settingsArea;
-    this.createSection(settingsArea, "\u4E3B\u9898", (section) => {
+    const articleSettingsWrapper = (
+      /** @type {ObsidianElementLike} */
+      settingsArea.createEl("div", { cls: "apple-settings-article-wrapper" })
+    );
+    this.articleSettingsWrapper = articleSettingsWrapper;
+    const stickerSettingsWrapper = (
+      /** @type {ObsidianElementLike} */
+      settingsArea.createEl("div", { cls: "apple-settings-sticker-wrapper hidden" })
+    );
+    this.stickerSettingsWrapper = stickerSettingsWrapper;
+    const targetArea = articleSettingsWrapper;
+    this.createSection(targetArea, "\u4E3B\u9898", (section) => {
       const grid = section.createEl("div", { cls: "apple-btn-grid" });
       const themes = getAppleThemeApi().getThemeList();
       themes.forEach((t) => {
@@ -75611,7 +84751,7 @@ var stylePanelMethods = {
         btn.addEventListener("click", () => this.onThemeChange(t.value, grid));
       });
     });
-    this.createSection(settingsArea, "\u5B57\u4F53", (section) => {
+    this.createSection(targetArea, "\u5B57\u4F53", (section) => {
       const select = (
         /** @type {ObsidianInputLike} */
         section.createEl("select", { cls: "apple-select" })
@@ -75630,7 +84770,7 @@ var stylePanelMethods = {
       });
       select.addEventListener("change", (e) => this.onFontFamilyChange(getEventTargetValue(e, this.plugin.settings.fontFamily)));
     });
-    this.createSection(settingsArea, "\u5B57\u53F7", (section) => {
+    this.createSection(targetArea, "\u5B57\u53F7", (section) => {
       const grid = section.createEl("div", { cls: "apple-btn-row" });
       const sizeOpts = [
         { value: 1, label: "\u5C0F" },
@@ -75648,7 +84788,7 @@ var stylePanelMethods = {
         btn.addEventListener("click", () => this.onFontSizeChange(s.value, grid));
       });
     });
-    this.createSection(settingsArea, "\u4E3B\u9898\u8272", (section) => {
+    this.createSection(targetArea, "\u4E3B\u9898\u8272", (section) => {
       const grid = section.createEl("div", { cls: "apple-color-grid" });
       const colors = getAppleThemeApi().getColorList();
       colors.forEach((c) => {
@@ -75693,7 +84833,7 @@ var stylePanelMethods = {
         await this.onColorChange("custom", grid);
       });
     });
-    this.createSection(settingsArea, "\u9875\u9762\u4E24\u4FA7\u7559\u767D", (section) => {
+    this.createSection(targetArea, "\u9875\u9762\u4E24\u4FA7\u7559\u767D", (section) => {
       const mobile = isMobileClient3(this.app);
       const container2 = section.createEl("div", {
         cls: "apple-slider-container",
@@ -75738,7 +84878,7 @@ var stylePanelMethods = {
         await this.convertCurrent(true);
       });
     });
-    const spacingGroup = settingsArea.createEl("details", { cls: "apple-settings-details" });
+    const spacingGroup = targetArea.createEl("details", { cls: "apple-settings-details" });
     this.settingsSpacingGroup = spacingGroup;
     const spacingSummary = spacingGroup.createEl("summary", { cls: "apple-settings-summary" });
     spacingSummary.createEl("span", { text: "\u6392\u7248\u95F4\u8DDD" });
@@ -75804,7 +84944,7 @@ var stylePanelMethods = {
     buildSpacingSlider("\u884C\u95F4\u8DDD", 1.4, 2.2, 0.05, () => this.getEffectiveLineHeight(), "lineHeight", "lineHeight");
     buildSpacingSlider("\u6BB5\u95F4\u8DDD", 8, 40, 1, () => this.getEffectiveParagraphGap(), "paragraphGap", "paragraphGap");
     buildSpacingSlider("\u5B57\u95F4\u8DDD", 0, 2, 0.5, () => this.getEffectiveLetterSpacing(), "letterSpacing", "letterSpacing");
-    const advancedOptions = settingsArea.createEl("details", { cls: "apple-settings-details" });
+    const advancedOptions = targetArea.createEl("details", { cls: "apple-settings-details" });
     this.settingsAdvancedOptions = advancedOptions;
     advancedOptions.createEl("summary", {
       cls: "apple-settings-summary",
@@ -75960,326 +85100,55 @@ var stylePanelMethods = {
         });
       }
     }
+    const stickerWrapperRaw = (
+      /** @type {unknown} */
+      this.stickerSettingsWrapper
+    );
+    if (stickerWrapperRaw && typeof stickerWrapperRaw === "object" && "createDiv" in stickerWrapperRaw) {
+      const stickerWrapper = (
+        /** @type {ObsidianElementLike} */
+        stickerWrapperRaw
+      );
+      const indexSection = this.createSection(stickerWrapper, "\u914D\u56FE\u5E8F\u53F7", (section) => {
+        const container2 = section.createEl("div", { cls: "apple-sticker-toggle-row" });
+        const labelGroup = container2.createDiv({ cls: "apple-sticker-toggle-copy" });
+        labelGroup.createEl("span", {
+          text: "\u5728\u6587\u6848\u4E2D\u63D2\u5165 [\u914D\u56FE N]",
+          cls: "apple-sticker-toggle-label"
+        });
+        labelGroup.createEl("span", {
+          text: "\u4FBF\u4E8E\u8BFB\u8005\u5BF9\u5E94\u4E0B\u65B9\u56FE\u7247\uFF1B\u53EA\u5F71\u54CD\u8D34\u56FE\u6587\u6848\u3002",
+          cls: "apple-sticker-toggle-description"
+        });
+        const toggle = container2.createDiv({ cls: "apple-toggle" });
+        const checkbox = toggle.createEl("input", { type: "checkbox", cls: "apple-toggle-input" });
+        checkbox.checked = Boolean(this.insertStickerImageIndex);
+        toggle.createEl("span", { cls: "apple-toggle-slider" });
+        container2.addEventListener("click", (e) => {
+          if (e.target !== checkbox) {
+            e.preventDefault();
+            checkbox.checked = !checkbox.checked;
+            checkbox.dispatchEvent(new Event("change"));
+          }
+        });
+        checkbox.addEventListener("change", () => {
+          this.insertStickerImageIndex = checkbox.checked;
+          this.renderStickerPreview();
+        });
+        this.stickerIndexToggleState = { checkbox, toggle };
+      });
+      indexSection.classList.add("apple-settings-inline-toggle");
+      this.createSection(stickerWrapper, "\u7EAF\u6587\u672C\u8F6C\u6362\u89C4\u5219", (section) => {
+        const card = section.createDiv({ cls: "apple-settings-info-card" });
+        card.createEl("p", {
+          text: "\xB7 \u81EA\u52A8\u5FFD\u7565 Frontmatter \u7B49\u673A\u5668\u4FE1\u606F\n\xB7 \u4EE3\u7801\u5757\u3001\u8868\u683C\u3001\u516C\u5F0F\u548C\u811A\u6CE8\u4F1A\u8F6C\u6362\u4E3A\u53EF\u8BFB\u7EAF\u6587\u672C\n\xB7 \u53EA\u5F71\u54CD\u9884\u89C8\u548C\u8349\u7A3F\uFF0C\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u539F\u6587",
+          cls: "apple-settings-info-card-text"
+        });
+      });
+    }
     this.aiLayoutOverlay = container.createEl("div", { cls: "apple-ai-layout-overlay" });
     this.createAiLayoutPanel(this.aiLayoutOverlay);
     this.updateAiToolbarState();
-  },
-  createAccountSelector(parent) {
-    const accounts = this.plugin.settings.wechatAccounts || [];
-    if (accounts.length === 0)
-      return;
-    const section = parent.createEl("div", { cls: "apple-setting-section wechat-account-selector" });
-    section.createEl("label", { cls: "apple-setting-label", text: "\u540C\u6B65\u8D26\u53F7" });
-    const select = (
-      /** @type {ObsidianInputLike} */
-      section.createEl("select", { cls: "wechat-account-select" })
-    );
-    const defaultId = this.plugin.settings.defaultAccountId;
-    for (const account of accounts) {
-      const option = (
-        /** @type {ObsidianInputLike} */
-        select.createEl("option", {
-          value: account.id,
-          text: account.id === defaultId ? `${account.name} (\u9ED8\u8BA4)` : account.name
-        })
-      );
-      if (account.id === defaultId) {
-        option.selected = true;
-      }
-    }
-    this.selectedAccountId = defaultId;
-    select.addEventListener("change", (event) => {
-      this.selectedAccountId = getEventTargetValue(event, defaultId);
-    });
-  },
-  getFirstImageFromArticle() {
-    if (!this.currentHtml)
-      return null;
-    const tempDiv = createHtmlContainer("div", this.currentHtml);
-    const imgs = Array.from(tempDiv.querySelectorAll("img"));
-    for (const img of imgs) {
-      if (img.alt === "logo")
-        continue;
-      const src = String(img.getAttribute("src") || img.src || "").trim();
-      if (src)
-        return src;
-    }
-    return null;
-  },
-  getPublishContextFile() {
-    var _a5, _b, _c;
-    const activeFile = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.workspace) == null ? void 0 : _b.getActiveFile) == null ? void 0 : _c.call(_b);
-    if (activeFile)
-      return activeFile;
-    if (this.lastActiveFile)
-      return this.lastActiveFile;
-    return null;
-  },
-  getFrontmatterPublishMeta(activeFile) {
-    var _a5, _b, _c, _d;
-    if (!activeFile) {
-      return { excerpt: "", cover: "", cover_dir: "", coverSrc: null, title: "" };
-    }
-    const frontmatter = (_d = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.metadataCache) == null ? void 0 : _b.getFileCache) == null ? void 0 : _c.call(_b, activeFile)) == null ? void 0 : _d.frontmatter;
-    const excerpt = this.getFrontmatterString(frontmatter, ["excerpt"]);
-    const cover = this.getFrontmatterString(frontmatter, ["cover"]);
-    const cover_dir = this.getFrontmatterString(frontmatter, ["cover_dir", "coverDir", "cover-dir", "coverdir", "CoverDIR"]);
-    const title = this.getFrontmatterString(frontmatter, ["title"]);
-    const coverSrc = cover ? this.resolveVaultPathToResourceSrc(cover) : null;
-    return { excerpt, cover, cover_dir, coverSrc, title };
-  },
-  getFrontmatterString(frontmatter, keys) {
-    const frontmatterRecord = toRecord11(frontmatter);
-    if (!frontmatterRecord)
-      return "";
-    if (!Array.isArray(keys) || keys.length === 0)
-      return "";
-    const normalizedTargets = new Set(keys.map((key) => this.normalizeFrontmatterKey(key)));
-    for (const key of keys) {
-      const value = frontmatterRecord[key];
-      if (typeof value === "string" && value.trim())
-        return value.trim();
-    }
-    for (const [key, value] of Object.entries(frontmatterRecord)) {
-      if (!normalizedTargets.has(this.normalizeFrontmatterKey(key)))
-        continue;
-      if (typeof value === "string" && value.trim())
-        return value.trim();
-    }
-    return "";
-  },
-  normalizeFrontmatterKey(key) {
-    return String(key || "").toLowerCase().replace(/[_-]/g, "");
-  },
-  getFrontmatterKeyMap(frontmatter, keys) {
-    const result = {};
-    const frontmatterRecord = toRecord11(frontmatter);
-    if (!frontmatterRecord)
-      return result;
-    if (!Array.isArray(keys) || keys.length === 0)
-      return result;
-    const normalizedTargets = new Set(keys.map((key) => this.normalizeFrontmatterKey(key)));
-    for (const [key, value] of Object.entries(frontmatterRecord)) {
-      if (!normalizedTargets.has(this.normalizeFrontmatterKey(key)))
-        continue;
-      if (typeof value !== "string")
-        continue;
-      const normalizedValue = this.normalizeVaultPath(value);
-      if (!normalizedValue)
-        continue;
-      result[key] = normalizedValue;
-    }
-    return result;
-  },
-  /** @param {string} filePath @param {string} dirPath @returns {boolean} */
-  isPathInsideDirectory(filePath, dirPath) {
-    const file = this.normalizeVaultPath(filePath);
-    const dir = this.normalizeVaultPath(dirPath);
-    if (!file || !dir)
-      return false;
-    if (file === dir)
-      return true;
-    return file.startsWith(`${dir}/`);
-  },
-  /** @param {string} filePath @param {string} dirPath @returns {boolean} */
-  isPathInsideDirectoryByTail(filePath, dirPath) {
-    const file = this.normalizeVaultPath(filePath);
-    const dir = this.normalizeVaultPath(dirPath);
-    if (!file || !dir)
-      return false;
-    const dirSegments = dir.split("/").filter(Boolean);
-    if (dirSegments.length < 2)
-      return false;
-    for (let i = 1; i <= dirSegments.length - 2; i++) {
-      const tailDir = dirSegments.slice(i).join("/");
-      if (this.isPathInsideDirectory(file, tailDir)) {
-        return true;
-      }
-    }
-    return false;
-  },
-  /** @param {string} pathValue @param {string} cleanedDir @returns {boolean} */
-  shouldClearFrontmatterPathAfterCleanup(pathValue, cleanedDir) {
-    const normalized = this.normalizeVaultPath(pathValue);
-    if (!normalized)
-      return false;
-    if (this.isPathInsideDirectory(normalized, cleanedDir))
-      return true;
-    return this.isPathInsideDirectoryByTail(normalized, cleanedDir);
-  },
-  clearInvalidPublishMetaInFrontmatter(frontmatter, cleanedDir) {
-    const frontmatterRecord = toRecord11(frontmatter);
-    if (!frontmatterRecord)
-      return false;
-    let changed = false;
-    const coverMap = this.getFrontmatterKeyMap(frontmatter, ["cover"]);
-    const coverDirMap = this.getFrontmatterKeyMap(frontmatter, ["cover_dir", "coverDir", "cover-dir", "coverdir", "CoverDIR"]);
-    for (const [key, value] of Object.entries(coverMap)) {
-      if (this.shouldClearFrontmatterPathAfterCleanup(value, cleanedDir)) {
-        frontmatterRecord[key] = "";
-        changed = true;
-      }
-    }
-    for (const [key, value] of Object.entries(coverDirMap)) {
-      if (this.shouldClearFrontmatterPathAfterCleanup(value, cleanedDir)) {
-        frontmatterRecord[key] = "";
-        changed = true;
-      }
-    }
-    return changed;
-  },
-  /** @param {TFileLike} activeFile @param {string} cleanedDir @returns {Promise<boolean>} */
-  async clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir) {
-    var _a5;
-    const vault = (_a5 = this.app) == null ? void 0 : _a5.vault;
-    if (!vault || typeof vault.read !== "function" || typeof vault.modify !== "function") {
-      return false;
-    }
-    const source = await vault.read(activeFile);
-    if (typeof source !== "string" || !source.startsWith("---"))
-      return false;
-    const match = source.match(/^(---[ \t]*\r?\n)([\s\S]*?)(\r?\n(?:---|\.\.\.)[ \t]*(?:\r?\n|$))/);
-    if (!match)
-      return false;
-    let changed = false;
-    const body = match[2].replace(/^([ \t]*)(cover|cover_dir|coverDir|cover-dir|coverdir|CoverDIR)([ \t]*:[ \t]*)(.*)$/gmi, (line, indent, key, separator, rawValue) => {
-      const value = String(rawValue || "").trim().replace(/^['"]|['"]$/g, "");
-      if (!this.shouldClearFrontmatterPathAfterCleanup(value, cleanedDir)) {
-        return line;
-      }
-      changed = true;
-      return `${indent}${key}${separator}''`;
-    });
-    if (!changed)
-      return false;
-    await vault.modify(activeFile, `${match[1]}${body}${match[3]}${source.slice(match[0].length)}`);
-    return true;
-  },
-  /** @param {TFileLike | null | undefined} activeFile @param {string} cleanedDirPath @returns {Promise<string | null>} */
-  async clearInvalidPublishMetaAfterCleanup(activeFile, cleanedDirPath) {
-    var _a5, _b;
-    if (!activeFile || !cleanedDirPath)
-      return null;
-    const cleanedDir = this.normalizeVaultPath(cleanedDirPath);
-    if (!cleanedDir)
-      return null;
-    try {
-      const processFrontMatter = (_b = (_a5 = this.app) == null ? void 0 : _a5.fileManager) == null ? void 0 : _b["processFrontMatter"];
-      if (typeof processFrontMatter === "function") {
-        await processFrontMatter.call(this.app.fileManager, activeFile, (frontmatter) => {
-          this.clearInvalidPublishMetaInFrontmatter(toRecord11(frontmatter), cleanedDir);
-        });
-      } else {
-        await this.clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir);
-      }
-    } catch (error) {
-      return `\u8D44\u6E90\u5DF2\u5220\u9664\uFF0C\u4F46\u6E05\u7406 frontmatter \u4E2D\u5931\u6548\u7684 cover/cover_dir \u5931\u8D25: ${toReadableError5(error).message}`;
-    }
-    return null;
-  },
-  /** @param {unknown} vaultPath @returns {string | null} */
-  resolveVaultPathToResourceSrc(vaultPath) {
-    if (typeof vaultPath !== "string")
-      return null;
-    const normalized = vaultPath.trim().replace(/\\/g, "/").replace(/^\/+/, "");
-    if (!normalized)
-      return null;
-    try {
-      const file = this.app.vault.getAbstractFileByPath(normalized);
-      if (!file)
-        return null;
-      if (typeof file.extension !== "string")
-        return null;
-      return this.app.vault.getResourcePath(file);
-    } catch (e) {
-      return null;
-    }
-  },
-  /** @param {unknown} vaultPath @returns {string} */
-  normalizeVaultPath(vaultPath) {
-    return normalizeVaultPath(vaultPath);
-  },
-  /** @returns {string} */
-  getVaultConfigDir() {
-    var _a5, _b;
-    const configDir = (_b = (_a5 = this.app) == null ? void 0 : _a5.vault) == null ? void 0 : _b.configDir;
-    return typeof configDir === "string" ? this.normalizeVaultPath(configDir) : "";
-  },
-  /** @returns {string} */
-  getCleanupDirTemplate() {
-    var _a5, _b;
-    const raw = typeof ((_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.cleanupDirTemplate) === "string" ? this.plugin.settings.cleanupDirTemplate : "";
-    return this.normalizeVaultPath(raw);
-  },
-  /** @param {TFileLike | null | undefined} activeFile @returns {{ path: string, warning?: string }} */
-  resolveCleanupDirPath(activeFile) {
-    const template = this.getCleanupDirTemplate();
-    if (!template) {
-      return { path: "", warning: "\u672A\u914D\u7F6E\u6E05\u7406\u76EE\u5F55\uFF0C\u8BF7\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u5148\u586B\u5199\u76EE\u5F55\u540E\u518D\u542F\u7528\u81EA\u52A8\u6E05\u7406" };
-    }
-    const hasNotePlaceholder = /\{\{\s*note\s*\}\}/i.test(template);
-    if (hasNotePlaceholder && !activeFile) {
-      return { path: "", warning: "\u5F53\u524D\u6CA1\u6709\u6D3B\u52A8\u6587\u6863\uFF0C\u65E0\u6CD5\u89E3\u6790\u6E05\u7406\u76EE\u5F55\u4E2D\u7684 {{note}}" };
-    }
-    const noteName = typeof (activeFile == null ? void 0 : activeFile.basename) === "string" ? activeFile.basename.trim() : "";
-    const resolved = template.replace(/\{\{\s*note\s*\}\}/gi, noteName);
-    const normalized = this.normalizeVaultPath(resolved);
-    if (!normalized) {
-      return { path: "", warning: "\u6E05\u7406\u76EE\u5F55\u4E3A\u7A7A\uFF0C\u8BF7\u68C0\u67E5\u8BBE\u7F6E\u503C" };
-    }
-    return { path: normalized };
-  },
-  /** @param {string} vaultPath @returns {boolean} */
-  isSafeCleanupDirPath(vaultPath) {
-    const normalized = this.normalizeVaultPath(vaultPath);
-    if (!normalized)
-      return false;
-    if (normalized === ".")
-      return false;
-    if (normalized.includes(".."))
-      return false;
-    const configDir = this.getVaultConfigDir();
-    if (configDir && (normalized === configDir || normalized.startsWith(`${configDir}/`)))
-      return false;
-    return true;
-  },
-  async cleanupConfiguredDirectory(activeFile) {
-    if (!this.plugin.settings.cleanupAfterSync) {
-      return { attempted: false };
-    }
-    const useSystemTrash = this.plugin.settings.cleanupUseSystemTrash !== false;
-    const resolved = this.resolveCleanupDirPath(activeFile);
-    if (!resolved.path) {
-      return { attempted: true, success: false, warning: resolved.warning || "\u672A\u89E3\u6790\u5230\u6E05\u7406\u76EE\u5F55" };
-    }
-    const normalized = resolved.path;
-    if (!this.isSafeCleanupDirPath(normalized)) {
-      return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u5F55\u4E0D\u5B89\u5168\uFF0C\u5DF2\u8DF3\u8FC7: ${normalized}` };
-    }
-    const abstractFile = this.app.vault.getAbstractFileByPath(normalized);
-    if (!abstractFile) {
-      return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u5F55\u4E0D\u5B58\u5728: ${normalized}` };
-    }
-    const isFile = typeof abstractFile.extension === "string";
-    if (isFile) {
-      return { attempted: true, success: false, warning: `\u6E05\u7406\u8DEF\u5F84\u4E0D\u662F\u76EE\u5F55\uFF0C\u5DF2\u8DF3\u8FC7: ${normalized}` };
-    }
-    try {
-      if (typeof this.app.vault.trash === "function") {
-        await this.app.vault.trash(abstractFile, useSystemTrash);
-      } else if (typeof this.app.vault.delete === "function") {
-        await this.app.vault.delete(abstractFile, true);
-      } else {
-        throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301\u5220\u9664\u63A5\u53E3");
-      }
-    } catch (error) {
-      return { attempted: true, success: false, warning: `\u5220\u9664\u5931\u8D25 (${normalized}): ${toReadableError5(error).message}` };
-    }
-    const frontmatterWarning = await this.clearInvalidPublishMetaAfterCleanup(activeFile, normalized);
-    if (frontmatterWarning) {
-      return { attempted: true, success: true, cleanedPath: normalized, warning: frontmatterWarning };
-    }
-    return { attempted: true, success: true, cleanedPath: normalized };
   },
   createSection(parent, label, builder) {
     const section = parent.createEl("div", { cls: "apple-setting-section" });
@@ -76345,7 +85214,11 @@ var stylePanelMethods = {
       valueLabel.setText(this.formatSpacingValue(v));
     });
     this.updateSpacingSummary();
-  },
+  }
+};
+
+// views/converter/panel-shell.js
+var panelShellMethods = {
   resetSettingsPanelViewState() {
     var _a5;
     const advancedOptions = this.settingsAdvancedOptions || ((_a5 = this.settingsOverlay) == null ? void 0 : _a5.querySelector(".apple-settings-details"));
@@ -76444,6 +85317,1313 @@ var stylePanelMethods = {
     removeElementClass(this.aiLayoutOverlay, "visible");
     removeElementClass(this.settingsBtn, "active");
     removeElementClass(this.aiLayoutBtn, "active");
+  },
+  toggleSettingsPanel() {
+    const artWrapper = (
+      /** @type {unknown} */
+      this.articleSettingsWrapper
+    );
+    const stkWrapper = (
+      /** @type {unknown} */
+      this.stickerSettingsWrapper
+    );
+    if (this.previewMode === "sticker") {
+      if (artWrapper && typeof artWrapper === "object" && "classList" in artWrapper) {
+        artWrapper.classList.add("hidden");
+      }
+      if (stkWrapper && typeof stkWrapper === "object" && "classList" in stkWrapper) {
+        stkWrapper.classList.remove("hidden");
+      }
+      const toggleState = toRecord11(this.stickerIndexToggleState);
+      const checkbox = toggleState ? toRecord11(toggleState.checkbox) : null;
+      if (checkbox && typeof checkbox.checked === "boolean") {
+        checkbox.checked = Boolean(this.insertStickerImageIndex);
+      }
+    } else {
+      if (stkWrapper && typeof stkWrapper === "object" && "classList" in stkWrapper) {
+        stkWrapper.classList.add("hidden");
+      }
+      if (artWrapper && typeof artWrapper === "object" && "classList" in artWrapper) {
+        artWrapper.classList.remove("hidden");
+      }
+    }
+    this.togglePanel(this.settingsOverlay, this.settingsBtn, () => this.resetSettingsPanelViewState());
+  },
+  switchPreviewMode(mode) {
+    if (this.previewMode === mode)
+      return;
+    this.previewMode = mode;
+    const articleBtn = (
+      /** @type {unknown} */
+      this.btnArticleMode
+    );
+    const stickerBtn = (
+      /** @type {unknown} */
+      this.btnStickerMode
+    );
+    if (articleBtn && stickerBtn) {
+      const aEl = (
+        /** @type {Element} */
+        articleBtn
+      );
+      const sEl = (
+        /** @type {Element} */
+        stickerBtn
+      );
+      if (mode === "article") {
+        aEl.classList.add("active");
+        sEl.classList.remove("active");
+      } else {
+        sEl.classList.add("active");
+        aEl.classList.remove("active");
+      }
+    }
+    this.closeTransientPanels();
+    if (mode === "sticker") {
+      if (this.aiLayoutBtn && typeof this.aiLayoutBtn.classList === "object")
+        this.aiLayoutBtn.classList.add("hidden");
+      if (this.copyBtn && typeof this.copyBtn.classList === "object")
+        this.copyBtn.classList.add("hidden");
+      this.renderStickerPreview();
+    } else {
+      if (this.aiLayoutBtn && typeof this.aiLayoutBtn.classList === "object")
+        this.aiLayoutBtn.classList.remove("hidden");
+      if (this.copyBtn && typeof this.copyBtn.classList === "object")
+        this.copyBtn.classList.remove("hidden");
+      this.convertCurrent(true);
+    }
+    const headerEl = this.containerEl ? this.containerEl.querySelector(".apple-preview-header") : null;
+    if (headerEl && this.containerEl) {
+      const h = (
+        /** @type {HTMLElement} */
+        headerEl.offsetHeight || 80
+      );
+      this.containerEl.style.setProperty("--apple-header-height", h + "px");
+    }
+  }
+};
+
+// services/markdown-cleaner.js
+function normalizeImageKey(src) {
+  if (typeof src !== "string")
+    return "";
+  let value = src.trim();
+  if (!value)
+    return "";
+  value = value.split("#")[0].split("?")[0].trim();
+  if (value.startsWith("<") && value.endsWith(">")) {
+    value = value.slice(1, -1).trim();
+  }
+  try {
+    value = decodeURIComponent(value);
+  } catch (e) {
+  }
+  return value.replace(/\\/g, "/").replace(/\/+/g, "/").replace(/^\.\//, "").trim().toLowerCase();
+}
+var PLAIN_TEXT_HORIZONTAL_RULE = "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500";
+function isImageEmbedTarget(src) {
+  const value = String(src || "").split("#")[0].split("?")[0].trim().toLowerCase();
+  return /\.(?:png|jpe?g|gif|webp|bmp|svg|avif|heic|heif)$/.test(value);
+}
+function findImageOrderIndex(src, imageOrder) {
+  if (!Array.isArray(imageOrder) || imageOrder.length === 0)
+    return 0;
+  const exactIndex = imageOrder.findIndex((item) => item === src);
+  if (exactIndex !== -1)
+    return exactIndex + 1;
+  const key = normalizeImageKey(src);
+  if (!key)
+    return 0;
+  const keyIndex = imageOrder.findIndex((item) => {
+    var _a5;
+    if (typeof item === "string") {
+      return normalizeImageKey(item.replace(/^body:/, "")) === key;
+    }
+    if (!item || typeof item !== "object")
+      return false;
+    const itemSrc = typeof item.displaySrc === "string" ? item.displaySrc : ((_a5 = item.uploadRef) == null ? void 0 : _a5.kind) === "src" && typeof item.uploadRef.src === "string" ? item.uploadRef.src : "";
+    return normalizeImageKey(itemSrc) === key;
+  });
+  return keyIndex === -1 ? 0 : keyIndex + 1;
+}
+var NON_TEXT_FENCE_LANGUAGES = /* @__PURE__ */ new Set([
+  "dataview",
+  "dataviewjs",
+  "tasks",
+  "query",
+  "templater",
+  "meta-bind",
+  "button"
+]);
+function convertFencedBlocks(value, protectBlock) {
+  const lines = value.split("\n");
+  const output = [];
+  let codeBlocks = 0;
+  let mermaid = 0;
+  let pluginBlocks = 0;
+  for (let index = 0; index < lines.length; ) {
+    const opening = lines[index].match(/^\s*(`{3,}|~{3,})\s*([A-Za-z0-9_-]*)/);
+    if (!opening) {
+      output.push(lines[index]);
+      index += 1;
+      continue;
+    }
+    const marker = opening[1];
+    const language = String(opening[2] || "").toLowerCase();
+    index += 1;
+    const closeRegex = new RegExp(`^\\s*${marker[0]}{${marker.length},}\\s*$`);
+    const contentLines = [];
+    while (index < lines.length && !closeRegex.test(lines[index])) {
+      contentLines.push(lines[index]);
+      index += 1;
+    }
+    if (index < lines.length)
+      index += 1;
+    if (language === "mermaid") {
+      mermaid += 1;
+      output.push("[\u6D41\u7A0B\u56FE]");
+      continue;
+    }
+    if (NON_TEXT_FENCE_LANGUAGES.has(language)) {
+      pluginBlocks += 1;
+      output.push("[\u67E5\u8BE2\u5185\u5BB9\u672A\u5C55\u5F00]");
+      continue;
+    }
+    codeBlocks += 1;
+    const content = contentLines.join("\n").replace(/^\n+|\n+$/g, "");
+    output.push(protectBlock(content ? `\u3010\u4EE3\u7801\u3011
+${content}` : "\u3010\u4EE3\u7801\u3011"));
+  }
+  return { text: output.join("\n"), codeBlocks, mermaid, pluginBlocks };
+}
+function splitMarkdownTableRow(line) {
+  return line.trim().replace(/^\||\|$/g, "").split(/(?<!\\)\|/).map((cell) => cell.trim().replace(/\\\|/g, "|"));
+}
+function convertMarkdownTables(value) {
+  const lines = value.split("\n");
+  const replacements = /* @__PURE__ */ new Map();
+  let count = 0;
+  const isTableRow = (line) => line.includes("|") && line.trim().replace(/^\||\|$/g, "").includes("|");
+  const isDelimiter = (line) => {
+    if (!isTableRow(line))
+      return false;
+    const cells = splitMarkdownTableRow(line);
+    return cells.length >= 2 && cells.every((cell) => /^\s*:?-{3,}:?\s*$/.test(cell));
+  };
+  for (let index = 1; index < lines.length; index++) {
+    if (!isDelimiter(lines[index]) || !isTableRow(lines[index - 1]) || replacements.has(index))
+      continue;
+    count += 1;
+    replacements.set(index - 1, splitMarkdownTableRow(lines[index - 1]).join(" \uFF5C "));
+    replacements.set(index, null);
+    let cursor = index + 1;
+    while (cursor < lines.length && isTableRow(lines[cursor]) && lines[cursor].trim()) {
+      replacements.set(cursor, splitMarkdownTableRow(lines[cursor]).join(" \uFF5C "));
+      cursor += 1;
+    }
+  }
+  return {
+    text: lines.flatMap((line, index) => {
+      if (!replacements.has(index))
+        return [line];
+      const replacement = replacements.get(index);
+      return replacement === null ? [] : [replacement];
+    }).join("\n"),
+    count
+  };
+}
+function formatMathFallback(content, isBlock = false) {
+  const normalized = String(content || "").trim().replace(/\s+/g, " ");
+  if (!isBlock && normalized && normalized.length <= 80 && !/[\\{}^_]/.test(normalized)) {
+    return normalized;
+  }
+  return "[\u516C\u5F0F]";
+}
+function convertInlineMath(value) {
+  let output = "";
+  let count = 0;
+  for (let index = 0; index < value.length; ) {
+    const char = value[index];
+    if (char !== "$" || value[index - 1] === "\\" || /\d/.test(value[index + 1] || "")) {
+      output += char;
+      index += 1;
+      continue;
+    }
+    let closing = index + 1;
+    while (closing < value.length) {
+      if (value[closing] === "\n")
+        break;
+      if (value[closing] === "$" && value[closing - 1] !== "\\")
+        break;
+      closing += 1;
+    }
+    const content = value.slice(index + 1, closing);
+    if (closing < value.length && value[closing] === "$" && content.trim() && !/^\s|\s$/.test(content)) {
+      count += 1;
+      output += formatMathFallback(content);
+      index = closing + 1;
+      continue;
+    }
+    output += char;
+    index += 1;
+  }
+  return { text: output, count };
+}
+function convertFootnotes(value) {
+  const lines = value.split("\n");
+  const definitions = /* @__PURE__ */ new Map();
+  const bodyLines = [];
+  for (let index = 0; index < lines.length; ) {
+    const definition = lines[index].match(/^\[\^([^\]]+)\]:\s*(.*)$/);
+    if (!definition) {
+      bodyLines.push(lines[index]);
+      index += 1;
+      continue;
+    }
+    const label = definition[1];
+    const content = [definition[2]];
+    index += 1;
+    while (index < lines.length && /^(?: {2,}|\t)/.test(lines[index])) {
+      content.push(lines[index].trim());
+      index += 1;
+    }
+    definitions.set(label, content.filter(Boolean).join(" "));
+  }
+  const numbers = /* @__PURE__ */ new Map();
+  const ensureNumber = (label) => {
+    if (!numbers.has(label))
+      numbers.set(label, numbers.size + 1);
+    return numbers.get(label);
+  };
+  let text = bodyLines.join("\n");
+  text = text.replace(/\[\^([^\]]+)\]/g, (_match, label) => `[${ensureNumber(label)}]`);
+  text = text.replace(/\^\[([^\]]+)\]/g, (_match, content) => {
+    const label = `inline-${numbers.size + definitions.size + 1}`;
+    definitions.set(label, String(content).trim());
+    return `[${ensureNumber(label)}]`;
+  });
+  for (const label of definitions.keys())
+    ensureNumber(label);
+  if (definitions.size > 0) {
+    const notes = Array.from(definitions.entries()).map(([label, content]) => `\u6CE8${ensureNumber(label)}\uFF1A${content}`).join("\n");
+    text = `${text.trimEnd()}
+
+${notes}`;
+  }
+  return { text, count: definitions.size };
+}
+function removeDuplicateLeadingHeading(value, title) {
+  const normalizedTitle = String(title || "").trim();
+  if (!normalizedTitle)
+    return value;
+  const match = value.match(/^(\s*)#\s+([^\n]+)\r?\n?/);
+  if (!match)
+    return value;
+  const headingText = match[2].replace(/(\*\*|__|~~|==|`)/g, "").trim();
+  return headingText === normalizedTitle ? value.slice(match[0].length) : value;
+}
+function convertHtmlToPlainText(value) {
+  let output = value.replace(/<!--[\s\S]*?-->/g, "").replace(/<(script|style|iframe|object|embed|form)[^>]*>[\s\S]*?<\/\1>/gi, "").replace(/<br\s*\/?>/gi, "\n").replace(/<li\b[^>]*>/gi, "\u2022 ").replace(/<\/(?:p|div|section|article|aside|blockquote|li|h[1-6]|tr|table|ul|ol|pre)>/gi, "\n").replace(/<\/(?:td|th)>/gi, " \uFF5C ").replace(/<[^>]+>/g, "");
+  const entities = {
+    amp: "&",
+    lt: "<",
+    gt: ">",
+    quot: '"',
+    apos: "'",
+    nbsp: " "
+  };
+  output = output.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos|nbsp);/gi, (_match, entity) => {
+    const key = String(entity).toLowerCase();
+    if (key.startsWith("#x"))
+      return String.fromCodePoint(Number.parseInt(key.slice(2), 16));
+    if (key.startsWith("#"))
+      return String.fromCodePoint(Number.parseInt(key.slice(1), 10));
+    return entities[key] || "";
+  });
+  return output;
+}
+function formatNonImageEmbed(target, alias) {
+  const rawTarget = String(target || "").trim();
+  const label = String(alias || "").trim() || rawTarget.split("/").pop() || rawTarget;
+  const path = rawTarget.split("#")[0].split("?")[0];
+  const hasFileExtension = /\.[A-Za-z0-9]{1,8}$/.test(path);
+  return hasFileExtension ? `\u3010\u9644\u4EF6\uFF1A${label}\u3011` : `\u3010\u5F15\u7528\uFF1A${label}\u3011`;
+}
+function replaceProtected(value, regex, replacer) {
+  return value.replace(regex, (...args) => replacer(args[0], ...args.slice(1, -2)));
+}
+function cleanMarkdownToPlainText(markdown, options = {}) {
+  if (typeof markdown !== "string") {
+    return {
+      text: "",
+      hasCodeBlocks: false,
+      hasTables: false,
+      hasMath: false,
+      hasFootnotes: false,
+      imageCount: 0,
+      removed: []
+    };
+  }
+  const insertImageIndex = Boolean(options.insertImageIndex);
+  const imageOrder = Array.isArray(options.imageOrder) ? options.imageOrder.filter((item) => typeof item === "string" || item && typeof item === "object") : [];
+  const counts = {
+    codeBlocks: 0,
+    mermaid: 0,
+    pluginBlocks: 0,
+    tables: 0,
+    math: 0,
+    footnotes: 0
+  };
+  let text = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "");
+  text = removeDuplicateLeadingHeading(text, String(options.title || ""));
+  const protectedBlocks = [];
+  const protectBlock = (value) => {
+    const token = `\uE000B${protectedBlocks.length}X\uE001`;
+    protectedBlocks.push(value);
+    return token;
+  };
+  const fenced = convertFencedBlocks(text, protectBlock);
+  text = fenced.text;
+  counts.codeBlocks = fenced.codeBlocks;
+  counts.mermaid = fenced.mermaid;
+  counts.pluginBlocks = fenced.pluginBlocks;
+  text = text.replace(/%%[\s\S]*?%%/g, "");
+  text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_match, content) => {
+    counts.math += 1;
+    return formatMathFallback(content, true);
+  });
+  text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_match, content) => {
+    counts.math += 1;
+    return formatMathFallback(content, true);
+  });
+  text = text.replace(/\\\(([^)\n]*?)\\\)/g, (_match, content) => {
+    counts.math += 1;
+    return formatMathFallback(content);
+  });
+  const inlineMath = convertInlineMath(text);
+  text = inlineMath.text;
+  counts.math += inlineMath.count;
+  const tables = convertMarkdownTables(text);
+  text = tables.text;
+  counts.tables = tables.count;
+  const footnotes = convertFootnotes(text);
+  text = footnotes.text;
+  counts.footnotes = footnotes.count;
+  text = text.replace(
+    /^\s{0,3}(?:(?:-\s*){3,}|(?:\*\s*){3,}|(?:_\s*){3,})$/gm,
+    PLAIN_TEXT_HORIZONTAL_RULE
+  );
+  text = text.replace(/~~([\s\S]*?)~~/g, "$1");
+  let imageCounter = 0;
+  const imageTagRegex = /!\[\[([^\]|]+)(?:\|([^\]]+))?\]\]|!\[([^\]]*)\]\(([^)]+)\)/g;
+  text = text.replace(imageTagRegex, (match, wikiSrc, wikiAlias, altText, stdSrc) => {
+    if (wikiSrc && !isImageEmbedTarget(wikiSrc)) {
+      return formatNonImageEmbed(wikiSrc, wikiAlias);
+    }
+    imageCounter++;
+    if (!insertImageIndex) {
+      return "";
+    }
+    const src = String(wikiSrc || stdSrc || "").trim();
+    if (imageOrder.length > 0) {
+      const mappedIndex = findImageOrderIndex(src, imageOrder);
+      return mappedIndex === 0 ? "" : `[\u914D\u56FE ${mappedIndex}]`;
+    }
+    return `[\u914D\u56FE ${imageCounter}]`;
+  });
+  text = text.replace(/!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, "");
+  text = text.replace(/^\s*>\s*\[![^\]]+\][+-]?\s*/gmi, "");
+  text = convertHtmlToPlainText(text);
+  text = text.replace(/^#{1,6}\s+(.+)$/gm, "$1");
+  text = text.replace(/==([\s\S]*?)==/g, "$1");
+  const protectedValues = [];
+  const protect = (value) => {
+    const token = `\uE000P${protectedValues.length}X\uE001`;
+    protectedValues.push(value);
+    return token;
+  };
+  text = replaceProtected(text, /(`+)([^`\n]*?)\1/g, (_match, _ticks, content) => protect(content));
+  text = replaceProtected(
+    text,
+    /\[([^\]]+)\]\((<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\)/g,
+    (_match, label, destination) => {
+      const href = String(destination || "").replace(/^<|>$/g, "");
+      const readable = /^(?:https?:\/\/|mailto:|tel:)/i.test(href) && href !== label ? `${label}\uFF1A${href}` : label;
+      return protect(readable);
+    }
+  );
+  text = replaceProtected(text, /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_match, target, alias) => protect(String(alias || target)));
+  text = text.replace(/(\*\*|__)(.*?)\1/g, "$2");
+  text = text.replace(/(\*|_)(.*?)\1/g, "$2");
+  text = text.replace(/\uE000P(\d+)X\uE001/g, (_, index) => protectedValues[Number(index)] || "");
+  text = text.replace(
+    /^(\s*)[-*+]\s+\[([ xX])\]\s+/gm,
+    (_match, indent, state) => `${indent}${String(state).toLowerCase() === "x" ? "\u2611" : "\u2610"} `
+  );
+  text = text.replace(/^>\s?/gm, "");
+  text = text.replace(/^[\s]*[-*+]\s+/gm, "\u2022 ");
+  const cleanedLines = text.split("\n").map((line) => line.trim()).filter((line, idx, arr) => {
+    if (line === "" && idx > 0 && arr[idx - 1] === "") {
+      return false;
+    }
+    return true;
+  });
+  const removed = Object.entries(counts).filter(([, count]) => count > 0).map(([kind, count]) => ({ kind, count }));
+  const cleanedText = cleanedLines.join("\n").trim().replace(/\uE000B(\d+)X\uE001/g, (_, index) => protectedBlocks[Number(index)] || "");
+  return {
+    text: cleanedText,
+    hasCodeBlocks: counts.codeBlocks + counts.mermaid + counts.pluginBlocks > 0,
+    hasTables: counts.tables > 0,
+    hasMath: counts.math > 0,
+    hasFootnotes: counts.footnotes > 0,
+    imageCount: imageCounter,
+    removed
+  };
+}
+
+// services/sticker-image-items.js
+var STICKER_IMAGE_SOURCES = /* @__PURE__ */ new Set(["body", "upload", "material", "render"]);
+function getStickerImageItemSrc(item) {
+  var _a5;
+  if (!item || typeof item !== "object")
+    return "";
+  if (typeof item.displaySrc === "string" && item.displaySrc.trim()) {
+    return item.displaySrc.trim();
+  }
+  if (((_a5 = item.uploadRef) == null ? void 0 : _a5.kind) === "src" && typeof item.uploadRef.src === "string") {
+    return item.uploadRef.src.trim();
+  }
+  return "";
+}
+function isStickerImageItem(item) {
+  if (!item || typeof item !== "object")
+    return false;
+  if (!STICKER_IMAGE_SOURCES.has(item.source))
+    return false;
+  if (typeof item.key !== "string" || !item.key.trim())
+    return false;
+  const ref = item.uploadRef;
+  if (!ref || typeof ref !== "object")
+    return false;
+  if (ref.kind === "src")
+    return typeof ref.src === "string" && Boolean(ref.src.trim());
+  if (ref.kind === "blob")
+    return Boolean(ref.blob);
+  if (ref.kind === "media") {
+    return typeof ref.mediaId === "string" && Boolean(ref.mediaId.trim()) && typeof ref.accountId === "string" && Boolean(ref.accountId.trim());
+  }
+  return false;
+}
+function normalizeStickerImageItem(item) {
+  if (!isStickerImageItem(item))
+    return null;
+  const normalized = {
+    source: item.source,
+    key: item.key.trim(),
+    uploadRef: item.uploadRef
+  };
+  if (typeof item.displaySrc === "string" && item.displaySrc.trim()) {
+    normalized.displaySrc = item.displaySrc.trim();
+  }
+  if (typeof item.name === "string" && item.name.trim()) {
+    normalized.name = item.name.trim();
+  }
+  if (typeof item.fingerprint === "string" && item.fingerprint.trim()) {
+    normalized.fingerprint = item.fingerprint.trim();
+  }
+  return normalized;
+}
+function createBodyStickerImageItem(src, resolveIdentity) {
+  if (typeof src !== "string" || !src.trim())
+    return null;
+  const value = src.trim();
+  const resolved = typeof resolveIdentity === "function" ? resolveIdentity(value) : "";
+  const identity = normalizeImageKey(resolved || value);
+  if (!identity)
+    return null;
+  return {
+    source: "body",
+    key: `body:${identity}`,
+    displaySrc: value,
+    uploadRef: { kind: "src", src: value },
+    name: value.split(/[\\/]/).pop() || value
+  };
+}
+function createUploadStickerImageItem({ blob, fingerprint, displaySrc, name = "" }) {
+  if (!blob || typeof fingerprint !== "string" || !fingerprint.trim())
+    return null;
+  return {
+    source: "upload",
+    key: `upload:${fingerprint.trim()}`,
+    displaySrc: typeof displaySrc === "string" ? displaySrc.trim() : "",
+    uploadRef: { kind: "blob", blob },
+    name: typeof name === "string" ? name.trim() : "",
+    fingerprint: fingerprint.trim()
+  };
+}
+function createMaterialStickerImageItem({ mediaId, accountId, displaySrc = "", name = "" }) {
+  if (typeof mediaId !== "string" || !mediaId.trim())
+    return null;
+  if (typeof accountId !== "string" || !accountId.trim())
+    return null;
+  return {
+    source: "material",
+    key: `material:${accountId.trim()}:${mediaId.trim()}`,
+    displaySrc: typeof displaySrc === "string" ? displaySrc.trim() : "",
+    uploadRef: {
+      kind: "media",
+      mediaId: mediaId.trim(),
+      accountId: accountId.trim()
+    },
+    name: typeof name === "string" ? name.trim() : ""
+  };
+}
+function resolveStickerOrderKey(value, available) {
+  if (value && typeof value === "object" && typeof value.key === "string") {
+    return value.key.trim();
+  }
+  if (typeof value !== "string" || !value.trim())
+    return "";
+  const raw = value.trim();
+  const exactKey = available.find((item) => item.key === raw);
+  if (exactKey)
+    return exactKey.key;
+  const exactSrc = available.find((item) => getStickerImageItemSrc(item) === raw);
+  if (exactSrc)
+    return exactSrc.key;
+  const normalized = normalizeImageKey(raw);
+  const normalizedMatches = available.filter((item) => {
+    if (item.source !== "body")
+      return false;
+    return normalizeImageKey(getStickerImageItemSrc(item)) === normalized;
+  });
+  return normalizedMatches.length === 1 ? normalizedMatches[0].key : raw;
+}
+function reconcileStickerImageItems({
+  defaultItems = [],
+  manualItems = [],
+  order = [],
+  removedKeys = [],
+  limit = 20
+}) {
+  const candidates = [];
+  const candidateKeys = /* @__PURE__ */ new Set();
+  for (const candidate of [...defaultItems, ...manualItems]) {
+    const item = normalizeStickerImageItem(candidate);
+    if (!item || candidateKeys.has(item.key))
+      continue;
+    candidateKeys.add(item.key);
+    candidates.push(item);
+  }
+  const removed = new Set(
+    (Array.isArray(removedKeys) ? removedKeys : []).map((value) => resolveStickerOrderKey(value, candidates)).filter(Boolean)
+  );
+  const byKey = new Map(candidates.map((item) => [item.key, item]));
+  const result = [];
+  const used = /* @__PURE__ */ new Set();
+  for (const value of Array.isArray(order) ? order : []) {
+    const key = resolveStickerOrderKey(value, candidates);
+    const item = byKey.get(key);
+    if (!item || used.has(key) || removed.has(key))
+      continue;
+    used.add(key);
+    result.push(item);
+  }
+  for (const item of candidates) {
+    if (used.has(item.key) || removed.has(item.key))
+      continue;
+    used.add(item.key);
+    result.push(item);
+  }
+  const safeLimit = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : 20;
+  while (result.length > safeLimit) {
+    let removeIndex = -1;
+    for (let index = result.length - 1; index >= 0; index--) {
+      if (result[index].source === "body") {
+        removeIndex = index;
+        break;
+      }
+    }
+    result.splice(removeIndex === -1 ? result.length - 1 : removeIndex, 1);
+  }
+  return result;
+}
+
+// services/sticker-extractor.js
+function stripNonBodyImageRegions(markdown) {
+  const withoutFrontmatter = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "");
+  const lines = withoutFrontmatter.split("\n");
+  const kept = [];
+  let fenceChar = "";
+  let fenceLength = 0;
+  for (const line of lines) {
+    if (fenceChar) {
+      const close = line.match(/^\s*(`{3,}|~{3,})\s*$/);
+      if (close && close[1][0] === fenceChar && close[1].length >= fenceLength) {
+        fenceChar = "";
+        fenceLength = 0;
+      }
+      continue;
+    }
+    const open = line.match(/^\s*(`{3,}|~{3,})/);
+    if (open) {
+      fenceChar = open[1][0];
+      fenceLength = open[1].length;
+      continue;
+    }
+    kept.push(line);
+  }
+  return kept.join("\n").replace(/%%[\s\S]*?%%/g, "");
+}
+function extractMarkdownImageItems(markdown, options = {}) {
+  if (typeof markdown !== "string")
+    return [];
+  const source = stripNonBodyImageRegions(markdown);
+  const items = [];
+  const seenKeys = /* @__PURE__ */ new Set();
+  const push = (raw) => {
+    const src = raw.trim();
+    if (!src)
+      return;
+    const item = createBodyStickerImageItem(src, options.resolveBodyImageIdentity);
+    if (!item || seenKeys.has(item.key))
+      return;
+    seenKeys.add(item.key);
+    items.push(item);
+  };
+  const wikiRegex = /!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+  let match;
+  while ((match = wikiRegex.exec(source)) !== null) {
+    if (!isImageEmbedTarget(match[1]))
+      continue;
+    push(match[1]);
+  }
+  const stdRegex = /!\[[^\]]*\]\(([^)]+)\)/g;
+  while ((match = stdRegex.exec(source)) !== null) {
+    push(match[1]);
+  }
+  return items;
+}
+function extractStickerData({
+  markdown = "",
+  frontmatter = {},
+  fallbackTitle = "\u672A\u547D\u540D\u8D34\u56FE",
+  insertImageIndex = false,
+  imageOrder = [],
+  removedImageKeys = [],
+  manualImageItems = [],
+  resolveBodyImageIdentity
+}) {
+  const fm = frontmatter && typeof frontmatter === "object" ? frontmatter : {};
+  const rawTitle = typeof fm.title === "string" && fm.title.trim() ? fm.title.trim() : fallbackTitle;
+  const title = rawTitle || "\u672A\u547D\u540D\u8D34\u56FE";
+  const frontmatterItems = [];
+  const frontmatterKeys = /* @__PURE__ */ new Set();
+  const pushFrontmatterImage = (value) => {
+    if (typeof value !== "string")
+      return;
+    const trimmed = value.trim();
+    if (!trimmed)
+      return;
+    const item = createBodyStickerImageItem(trimmed, resolveBodyImageIdentity);
+    if (!item || frontmatterKeys.has(item.key))
+      return;
+    frontmatterKeys.add(item.key);
+    frontmatterItems.push(item);
+  };
+  pushFrontmatterImage(fm.cover);
+  if (Array.isArray(fm.images)) {
+    for (const img of fm.images) {
+      pushFrontmatterImage(img);
+    }
+  }
+  const bodyItems = extractMarkdownImageItems(markdown, { resolveBodyImageIdentity });
+  const defaultItems = [...frontmatterItems];
+  for (const item of bodyItems) {
+    if (frontmatterKeys.has(item.key))
+      continue;
+    frontmatterKeys.add(item.key);
+    defaultItems.push(item);
+  }
+  const allAvailableImageItems = reconcileStickerImageItems({
+    defaultItems,
+    manualItems: Array.isArray(manualImageItems) ? manualImageItems : [],
+    order: imageOrder,
+    removedKeys: removedImageKeys,
+    limit: Number.MAX_SAFE_INTEGER
+  });
+  const finalImageItems = reconcileStickerImageItems({
+    defaultItems,
+    manualItems: Array.isArray(manualImageItems) ? manualImageItems : [],
+    order: imageOrder,
+    removedKeys: removedImageKeys,
+    limit: STICKER_MAX_IMAGES
+  });
+  const finalImages = finalImageItems.map((item) => getStickerImageItemSrc(item)).filter(Boolean);
+  const cleaned = cleanMarkdownToPlainText(markdown, {
+    insertImageIndex,
+    imageOrder: finalImageItems,
+    title: String(title).trim()
+  });
+  return {
+    title: String(title).trim(),
+    content: cleaned.text,
+    images: finalImages,
+    imageItems: finalImageItems,
+    omittedImageCount: Math.max(0, allAvailableImageItems.length - finalImageItems.length),
+    hasCodeBlocks: cleaned.hasCodeBlocks,
+    hasTables: cleaned.hasTables,
+    hasMath: cleaned.hasMath,
+    hasFootnotes: cleaned.hasFootnotes,
+    removed: cleaned.removed
+  };
+}
+
+// services/sticker-publish-state.js
+var STICKER_TRANSFORM_LABELS = {
+  codeBlocks: "\u4EE3\u7801\u5757",
+  mermaid: "\u6D41\u7A0B\u56FE",
+  pluginBlocks: "\u67E5\u8BE2\u5757",
+  tables: "\u8868\u683C",
+  math: "\u516C\u5F0F",
+  footnotes: "\u811A\u6CE8"
+};
+var TITLE_WARNING_LENGTH = 18;
+var CONTENT_WARNING_LENGTH = 900;
+function getStickerCounterState(value, max, warningAt, min = 0) {
+  const normalizedValue = Number.isFinite(value) ? Math.max(0, Number(value)) : 0;
+  let status = "normal";
+  if (normalizedValue < min || normalizedValue > max)
+    status = "error";
+  else if (normalizedValue >= warningAt)
+    status = "warning";
+  return { value: normalizedValue, max, status };
+}
+function getStickerPublishState({
+  title = "",
+  content = "",
+  imageCount = 0,
+  foreignMaterialCount = 0
+} = {}) {
+  const titleValue = String(title);
+  const contentValue = String(content);
+  const normalizedImageCount = Number.isFinite(imageCount) ? Math.max(0, Number(imageCount)) : 0;
+  const titleCounter = getStickerCounterState(
+    titleValue.length,
+    STICKER_MAX_TITLE_LENGTH,
+    TITLE_WARNING_LENGTH
+  );
+  if (titleValue.trim().length === 0)
+    titleCounter.status = "error";
+  const counters = {
+    title: titleCounter,
+    content: getStickerCounterState(
+      contentValue.length,
+      STICKER_MAX_CONTENT_LENGTH,
+      CONTENT_WARNING_LENGTH
+    ),
+    images: getStickerCounterState(
+      normalizedImageCount,
+      STICKER_MAX_IMAGES,
+      STICKER_MAX_IMAGES,
+      1
+    )
+  };
+  let issueCode = "";
+  let issueMessage = "";
+  let buttonText = "\u540C\u6B65\u5230\u8D34\u56FE\u8349\u7A3F";
+  if (normalizedImageCount === 0) {
+    issueCode = "images-required";
+    issueMessage = "\u5FAE\u4FE1\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247";
+    buttonText = "\u56FE\u7247\u4E0D\u8DB3\uFF0C\u65E0\u6CD5\u540C\u6B65";
+  } else if (normalizedImageCount > STICKER_MAX_IMAGES) {
+    issueCode = "images-exceeded";
+    issueMessage = `\u5F53\u524D\u6709 ${normalizedImageCount} \u5F20\u56FE\u7247\uFF0C\u8D85\u8FC7 ${STICKER_MAX_IMAGES} \u5F20\u4E0A\u9650`;
+    buttonText = "\u56FE\u7247\u8D85\u9650\uFF0C\u65E0\u6CD5\u540C\u6B65";
+  } else if (titleValue.trim().length === 0) {
+    issueCode = "title-required";
+    issueMessage = "\u8BF7\u8F93\u5165\u8D34\u56FE\u6807\u9898";
+    buttonText = "\u8BF7\u8F93\u5165\u8D34\u56FE\u6807\u9898";
+  } else if (titleValue.length > STICKER_MAX_TITLE_LENGTH) {
+    issueCode = "title-exceeded";
+    issueMessage = `\u5F53\u524D\u6807\u9898 ${titleValue.length} \u5B57\uFF0C\u8D85\u8FC7 ${STICKER_MAX_TITLE_LENGTH} \u5B57\u4E0A\u9650`;
+    buttonText = "\u6807\u9898\u8D85\u957F\uFF0C\u65E0\u6CD5\u540C\u6B65";
+  } else if (contentValue.length > STICKER_MAX_CONTENT_LENGTH) {
+    issueCode = "content-exceeded";
+    issueMessage = `\u5F53\u524D\u6587\u6848 ${contentValue.length} \u5B57\uFF0C\u8D85\u8FC7 ${STICKER_MAX_CONTENT_LENGTH} \u5B57\u4E0A\u9650`;
+    buttonText = "\u6587\u6848\u8D85\u957F\uFF0C\u65E0\u6CD5\u540C\u6B65";
+  } else if (foreignMaterialCount > 0) {
+    issueCode = "foreign-material";
+    issueMessage = "\u5F53\u524D\u8D26\u53F7\u4E0D\u80FD\u4F7F\u7528\u5176\u4ED6\u516C\u4F17\u53F7\u7684\u7D20\u6750";
+    buttonText = "\u7D20\u6750\u8D26\u53F7\u4E0D\u7B26";
+  }
+  return {
+    canSync: !issueCode,
+    issueCode,
+    issueMessage,
+    buttonText,
+    counters
+  };
+}
+function getStickerTransformParts(entries) {
+  return (Array.isArray(entries) ? entries : []).filter((entry) => Number(entry == null ? void 0 : entry.count) > 0).map((entry) => `${STICKER_TRANSFORM_LABELS[entry.kind] || "\u5185\u5BB9"} ${Number(entry.count)} \u5904`);
+}
+
+// views/shared/sticker-image-list.js
+function moveStickerImageItem(items, fromIndex, toIndex) {
+  const list2 = Array.isArray(items) ? [...items] : [];
+  if (!Number.isInteger(fromIndex) || !Number.isInteger(toIndex) || fromIndex < 0 || toIndex < 0 || fromIndex >= list2.length || toIndex >= list2.length || fromIndex === toIndex) {
+    return list2;
+  }
+  const [moved] = list2.splice(fromIndex, 1);
+  list2.splice(toIndex, 0, moved);
+  return list2;
+}
+function renderStickerImageList(container, {
+  items = [],
+  getDisplaySrc = (item) => item.displaySrc || "",
+  onMove,
+  onRemove,
+  setIcon,
+  emptyText = "\u8FD8\u6CA1\u6709\u53EF\u53D1\u5E03\u7684\u56FE\u7247\u3002",
+  focusKey = ""
+} = {}) {
+  const grid = container.createDiv({ cls: "sticker-image-list" });
+  grid.setAttribute("role", "list");
+  grid.setAttribute("aria-label", "\u8D34\u56FE\u56FE\u7247\u987A\u5E8F");
+  if (!items.length) {
+    grid.addClass("is-empty");
+    const emptyIcon = grid.createDiv({ cls: "sticker-image-list__empty-icon" });
+    if (typeof setIcon === "function")
+      setIcon(emptyIcon, "image");
+    grid.createDiv({ cls: "sticker-image-list__empty-text", text: emptyText });
+    return grid;
+  }
+  const sourceLabels = {
+    body: "\u6B63\u6587",
+    upload: "\u672C\u5730",
+    material: "\u7D20\u6750\u5E93",
+    render: "\u6E32\u67D3"
+  };
+  items.forEach((item, index) => {
+    const cell = grid.createDiv({ cls: "sticker-image-list__item" });
+    cell.setAttribute("role", "listitem");
+    cell.setAttribute("tabindex", "0");
+    cell.setAttribute("draggable", "true");
+    cell.dataset.stickerKey = item.key;
+    cell.setAttribute("aria-label", `\u7B2C ${index + 1} \u5F20\u56FE\u7247\uFF0C${sourceLabels[item.source] || "\u56FE\u7247"}`);
+    const src = getDisplaySrc(item, index);
+    if (src) {
+      const image = cell.createEl("img", {
+        cls: "sticker-image-list__thumb",
+        attr: {
+          src,
+          alt: item.name || `\u7B2C ${index + 1} \u5F20\u8D34\u56FE`,
+          draggable: "false",
+          decoding: "async"
+        }
+      });
+      image.onerror = () => cell.addClass("has-image-error");
+    } else {
+      cell.addClass("has-image-error");
+    }
+    cell.createDiv({ cls: "sticker-image-list__order", text: String(index + 1) });
+    cell.createDiv({
+      cls: "sticker-image-list__source",
+      text: sourceLabels[item.source] || "\u56FE\u7247"
+    });
+    const removeButton = cell.createEl("button", {
+      cls: "sticker-image-list__remove",
+      attr: {
+        type: "button",
+        title: "\u4E0D\u53D1\u5E03\u8FD9\u5F20\u56FE\u7247",
+        "aria-label": `\u79FB\u9664\u7B2C ${index + 1} \u5F20\u56FE\u7247`
+      }
+    });
+    if (typeof setIcon === "function")
+      setIcon(removeButton, "x");
+    else
+      removeButton.setText("\u79FB\u9664");
+    removeButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onRemove == null ? void 0 : onRemove(item, index);
+    });
+    const moveControls = cell.createDiv({ cls: "sticker-image-list__move-controls" });
+    const previousButton = moveControls.createEl("button", {
+      attr: {
+        type: "button",
+        title: "\u5411\u524D\u79FB\u52A8",
+        "aria-label": `\u5C06\u7B2C ${index + 1} \u5F20\u56FE\u7247\u5411\u524D\u79FB\u52A8`
+      }
+    });
+    const nextButton = moveControls.createEl("button", {
+      attr: {
+        type: "button",
+        title: "\u5411\u540E\u79FB\u52A8",
+        "aria-label": `\u5C06\u7B2C ${index + 1} \u5F20\u56FE\u7247\u5411\u540E\u79FB\u52A8`
+      }
+    });
+    if (typeof setIcon === "function") {
+      setIcon(previousButton, "chevron-left");
+      setIcon(nextButton, "chevron-right");
+    } else {
+      previousButton.setText("\u524D");
+      nextButton.setText("\u540E");
+    }
+    previousButton.disabled = index === 0;
+    nextButton.disabled = index === items.length - 1;
+    previousButton.onclick = (event) => {
+      event.stopPropagation();
+      if (index > 0)
+        onMove == null ? void 0 : onMove(index, index - 1, item);
+    };
+    nextButton.onclick = (event) => {
+      event.stopPropagation();
+      if (index < items.length - 1)
+        onMove == null ? void 0 : onMove(index, index + 1, item);
+    };
+    cell.addEventListener("keydown", (event) => {
+      let targetIndex = index;
+      if (event.key === "ArrowLeft")
+        targetIndex = Math.max(0, index - 1);
+      if (event.key === "ArrowRight")
+        targetIndex = Math.min(items.length - 1, index + 1);
+      if (event.key === "ArrowUp")
+        targetIndex = Math.max(0, index - 3);
+      if (event.key === "ArrowDown")
+        targetIndex = Math.min(items.length - 1, index + 3);
+      if (event.key === "Home")
+        targetIndex = 0;
+      if (event.key === "End")
+        targetIndex = items.length - 1;
+      if (targetIndex === index)
+        return;
+      event.preventDefault();
+      onMove == null ? void 0 : onMove(index, targetIndex, item);
+    });
+    cell.addEventListener("dragstart", (event) => {
+      if (!event.dataTransfer)
+        return;
+      event.dataTransfer.setData("text/plain", String(index));
+      event.dataTransfer.effectAllowed = "move";
+      cell.addClass("is-dragging");
+    });
+    cell.addEventListener("dragend", () => cell.removeClass("is-dragging"));
+    cell.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      if (event.dataTransfer)
+        event.dataTransfer.dropEffect = "move";
+    });
+    cell.addEventListener("drop", (event) => {
+      var _a5;
+      event.preventDefault();
+      const fromIndex = Number.parseInt(((_a5 = event.dataTransfer) == null ? void 0 : _a5.getData("text/plain")) || "", 10);
+      if (Number.isInteger(fromIndex) && fromIndex !== index) {
+        onMove == null ? void 0 : onMove(fromIndex, index, items[fromIndex]);
+      }
+    });
+    if (focusKey && item.key === focusKey) {
+      window.setTimeout(() => cell.focus(), 0);
+    }
+  });
+  return grid;
+}
+
+// views/converter/sticker-preview.js
+var stickerPreviewMethods = {
+  getStickerUiState(filePath) {
+    const selfRecord = toRecord11(this);
+    if (!selfRecord.stickerUiStates) {
+      selfRecord.stickerUiStates = /* @__PURE__ */ new Map();
+    }
+    const states = (
+      /** @type {Map<string, {
+      * order: string[],
+      * removedKeys: string[],
+      * manualItems: object[],
+      * undoItems: Array<{item:object,index:number,wasManual:boolean}>,
+      * objectUrls: Set<string>
+      * }>} */
+      selfRecord.stickerUiStates
+    );
+    const key = filePath || "";
+    let state = states.get(key);
+    if (!state) {
+      state = {
+        order: [],
+        removedKeys: [],
+        manualItems: [],
+        undoItems: [],
+        objectUrls: /* @__PURE__ */ new Set()
+      };
+      states.set(key, state);
+    }
+    return state;
+  },
+  removeStickerImageItem(filePath, item, index) {
+    const uiState = this.getStickerUiState(filePath);
+    const wasManual = (item == null ? void 0 : item.source) !== "body";
+    uiState.undoItems.push({ item, index, wasManual });
+    if (uiState.undoItems.length > 9)
+      uiState.undoItems.shift();
+    if (wasManual) {
+      uiState.manualItems = uiState.manualItems.filter((candidate) => candidate.key !== item.key);
+    } else if (!uiState.removedKeys.includes(item.key)) {
+      uiState.removedKeys.push(item.key);
+    }
+    uiState.order = uiState.order.filter((key) => key !== item.key);
+  },
+  restoreLastStickerImage(filePath) {
+    const uiState = this.getStickerUiState(filePath);
+    const undo = uiState.undoItems.pop();
+    if (!(undo == null ? void 0 : undo.item))
+      return "";
+    const item = undo.item;
+    if (undo.wasManual && !uiState.manualItems.some((candidate) => candidate.key === item.key)) {
+      uiState.manualItems.push(item);
+    }
+    uiState.removedKeys = uiState.removedKeys.filter((key) => key !== item.key);
+    const nextOrder = uiState.order.filter((key) => key !== item.key);
+    nextOrder.splice(Math.min(Math.max(undo.index, 0), nextOrder.length), 0, item.key);
+    uiState.order = nextOrder;
+    return item.key;
+  },
+  restoreAllStickerImages(filePath) {
+    const uiState = this.getStickerUiState(filePath);
+    while (uiState.undoItems.length > 0) {
+      this.restoreLastStickerImage(filePath);
+    }
+    uiState.removedKeys = [];
+  },
+  resolveStickerImageSrc(src, sourcePath) {
+    var _a5, _b, _c;
+    const raw = String(src || "");
+    if (!raw || /^(data:|https?:\/\/|app:\/\/|capacitor:\/\/)/i.test(raw))
+      return raw;
+    const linkFile = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.metadataCache) == null ? void 0 : _b.getFirstLinkpathDest) == null ? void 0 : _c.call(_b, raw, sourcePath || "");
+    if (!linkFile)
+      return raw;
+    const vault = toRecord11(this.app.vault);
+    const getResourcePathRaw = "getResourcePath" in vault ? vault.getResourcePath : null;
+    if (typeof getResourcePathRaw !== "function")
+      return raw;
+    const getResourcePath = (
+      /** @type {(file: unknown) => unknown} */
+      getResourcePathRaw
+    );
+    const resolved = getResourcePath(linkFile);
+    return typeof resolved === "string" && resolved ? resolved : raw;
+  },
+  async buildStickerData(options = {}) {
+    var _a5, _b, _c;
+    const requestedSourcePath = typeof options.sourcePath === "string" ? options.sourcePath : "";
+    const activeFile = requestedSourcePath ? ((_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.vault) == null ? void 0 : _b.getAbstractFileByPath) == null ? void 0 : _c.call(_b, requestedSourcePath)) || this.getPublishContextFile() : this.getPublishContextFile();
+    const sourcePath = activeFile && typeof activeFile.path === "string" ? activeFile.path : "";
+    let markdown = "";
+    if (requestedSourcePath && activeFile && activeFile.path === requestedSourcePath) {
+      const vault = toRecord11(this.app.vault);
+      const cachedReadRaw = "cachedRead" in vault ? vault.cachedRead : null;
+      if (typeof cachedReadRaw === "function") {
+        markdown = String(await cachedReadRaw.call(this.app.vault, activeFile));
+      }
+    }
+    if (!markdown) {
+      const source = (
+        /** @type {MarkdownSourceResultLike} */
+        await resolveMarkdownSource({
+          app: this.app,
+          lastActiveFile: this.lastActiveFile,
+          MarkdownViewType: MarkdownView
+        })
+      );
+      if (source.ok && typeof source.markdown === "string") {
+        markdown = source.markdown;
+      } else if (typeof this.lastResolvedMarkdown === "string") {
+        markdown = this.lastResolvedMarkdown;
+      }
+    }
+    const fileCache = activeFile ? this.app.metadataCache.getFileCache(activeFile) : null;
+    const frontmatter = fileCache && fileCache.frontmatter && typeof fileCache.frontmatter === "object" ? (
+      /** @type {Record<string, unknown>} */
+      fileCache.frontmatter
+    ) : {};
+    const fallbackTitle = activeFile && typeof activeFile.basename === "string" ? activeFile.basename : "\u672A\u547D\u540D\u8D34\u56FE";
+    const uiState = this.getStickerUiState(sourcePath);
+    const resolveBodyImageIdentity = (src) => {
+      var _a6, _b2, _c2;
+      const resolved = (_c2 = (_b2 = (_a6 = this.app) == null ? void 0 : _a6.metadataCache) == null ? void 0 : _b2.getFirstLinkpathDest) == null ? void 0 : _c2.call(_b2, src, sourcePath);
+      return resolved && typeof resolved.path === "string" ? normalizeVaultPath(resolved.path) : normalizeVaultPath(src);
+    };
+    const extracted = extractStickerData({
+      markdown,
+      frontmatter,
+      fallbackTitle,
+      insertImageIndex: Boolean(this.insertStickerImageIndex),
+      imageOrder: uiState.order,
+      removedImageKeys: uiState.removedKeys,
+      manualImageItems: uiState.manualItems,
+      resolveBodyImageIdentity
+    });
+    uiState.order = extracted.imageItems.map((item) => item.key);
+    const stickerData = {
+      title: extracted.title,
+      content: extracted.content,
+      images: extracted.images,
+      imageItems: extracted.imageItems,
+      omittedImageCount: extracted.omittedImageCount,
+      hasCodeBlocks: extracted.hasCodeBlocks,
+      hasTables: extracted.hasTables,
+      hasMath: extracted.hasMath,
+      hasFootnotes: extracted.hasFootnotes,
+      removed: extracted.removed,
+      // 弹窗与侧边栏都需要可直接显示的地址（vault 内图片必须转成 app:// 资源路径）
+      imageDisplaySources: extracted.imageItems.map((item) => item.source === "body" ? this.resolveStickerImageSrc(getStickerImageItemSrc(item), sourcePath) : item.displaySrc || getStickerImageItemSrc(item)),
+      sourcePath
+    };
+    this.previewStickerData = stickerData;
+    return stickerData;
+  },
+  async renderStickerPreview() {
+    if (!this.previewContainer)
+      return void 0;
+    const selfRecord = toRecord11(this);
+    const generation = (typeof selfRecord.stickerRenderGeneration === "number" ? selfRecord.stickerRenderGeneration : 0) + 1;
+    selfRecord.stickerRenderGeneration = generation;
+    const stickerData = await this.buildStickerData();
+    if (this.previewMode !== "sticker" || selfRecord.stickerRenderGeneration !== generation)
+      return void 0;
+    this.previewContainer.empty();
+    const stickerContainer = this.previewContainer.createEl("div", { cls: "apple-sticker-preview-wrapper" });
+    const uiState = this.getStickerUiState(stickerData.sourcePath || "");
+    const strippedParts = getStickerTransformParts(stickerData.removed);
+    if (strippedParts.length > 0) {
+      const notice = stickerContainer.createEl("div", { cls: "apple-sticker-notice-warning" });
+      const noticeIcon = notice.createEl("span", { cls: "apple-sticker-notice-icon" });
+      const noticeSetIcon = getObsidianSetIcon();
+      if (typeof noticeSetIcon === "function")
+        noticeSetIcon(noticeIcon, "info");
+      const noticeContent = notice.createEl("div", { cls: "apple-sticker-notice-content" });
+      noticeContent.createEl("span", { cls: "apple-sticker-notice-title", text: `\u5DF2\u8F6C\u6362\uFF1A${strippedParts.join("\u3001")}` });
+      noticeContent.createEl("span", {
+        cls: "apple-sticker-notice-desc",
+        text: "\u5185\u5BB9\u5DF2\u8F6C\u6362\u4E3A\u9002\u5408\u8D34\u56FE\u7684\u7EAF\u6587\u672C\uFF0C\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u539F\u6587\u3002"
+      });
+    }
+    const setIcon = getObsidianSetIcon();
+    const renderRestoreActions = (parent) => {
+      if (uiState.undoItems.length === 0 && uiState.removedKeys.length === 0)
+        return;
+      const restoreRow = parent.createDiv({ cls: "apple-sticker-restore-row" });
+      if (uiState.undoItems.length > 0) {
+        const undoButton = restoreRow.createEl("button", {
+          cls: "apple-sticker-restore-btn",
+          text: "\u64A4\u9500\u4E0A\u6B21\u79FB\u9664"
+        });
+        undoButton.onclick = () => {
+          selfRecord.stickerFocusKey = this.restoreLastStickerImage(stickerData.sourcePath);
+          void this.renderStickerPreview();
+        };
+      }
+      const restoreAllButton = restoreRow.createEl("button", {
+        cls: "apple-sticker-restore-btn",
+        text: "\u6062\u590D\u5168\u90E8"
+      });
+      restoreAllButton.onclick = () => {
+        this.restoreAllStickerImages(stickerData.sourcePath);
+        void this.renderStickerPreview();
+      };
+    };
+    if (stickerData.imageItems.length > 0) {
+      const imagesSection = stickerContainer.createEl("div", { cls: "apple-sticker-images-section" });
+      const sectionHeader = imagesSection.createEl("div", { cls: "apple-sticker-section-header" });
+      const sectionTitle = sectionHeader.createEl("div", { cls: "apple-sticker-section-title" });
+      if (typeof setIcon === "function") {
+        const iconSpan = sectionTitle.createEl("span", { cls: "apple-sticker-section-icon-lucide" });
+        setIcon(iconSpan, "image");
+      }
+      sectionTitle.createEl("span", { text: "\u8D34\u56FE\u56FE\u7247\u5217\u8868" });
+      const imageCountState = getStickerPublishState({
+        title: stickerData.title || "\u8D34\u56FE",
+        content: stickerData.content || "",
+        imageCount: stickerData.imageItems.length
+      }).counters.images;
+      sectionHeader.createEl("span", {
+        cls: `apple-sticker-count-badge${imageCountState.status === "warning" ? " is-warning" : ""}${imageCountState.status === "error" ? " is-error" : ""}`,
+        text: `${stickerData.imageItems.length} / ${STICKER_MAX_IMAGES} \u5F20`
+      });
+      const hintLine = imagesSection.createEl("div", { cls: "apple-sticker-hint-line" });
+      const hintIcon = hintLine.createSpan({ cls: "apple-sticker-hint-icon" });
+      if (typeof setIcon === "function")
+        setIcon(hintIcon, "info");
+      hintLine.createEl("span", {
+        cls: "apple-sticker-hint-text",
+        text: "\u987A\u5E8F\u5373\u6700\u7EC8\u53D1\u5E03\u987A\u5E8F\uFF1B\u6DFB\u52A0\u56FE\u7247\u8BF7\u6253\u5F00\u53D1\u5E03\u5F39\u7A97\uFF0C\u79FB\u9664\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u3002"
+      });
+      renderStickerImageList(imagesSection, {
+        items: stickerData.imageItems,
+        getDisplaySrc: (_, index) => stickerData.imageDisplaySources[index] || "",
+        setIcon,
+        onMove: (fromIndex, toIndex, movedItem) => {
+          uiState.order = moveStickerImageItem(
+            stickerData.imageItems.map((item) => item.key),
+            fromIndex,
+            toIndex
+          );
+          selfRecord.stickerFocusKey = (movedItem == null ? void 0 : movedItem.key) || "";
+          void this.renderStickerPreview();
+        },
+        onRemove: (item, index) => {
+          this.removeStickerImageItem(stickerData.sourcePath, item, index);
+          void this.renderStickerPreview();
+        },
+        focusKey: typeof selfRecord.stickerFocusKey === "string" ? selfRecord.stickerFocusKey : ""
+      });
+      selfRecord.stickerFocusKey = "";
+      renderRestoreActions(imagesSection);
+    } else {
+      const readinessNotice = stickerContainer.createDiv({ cls: "apple-sticker-readiness-notice is-error" });
+      const readinessIcon = readinessNotice.createSpan({ cls: "apple-sticker-readiness-icon" });
+      if (typeof setIcon === "function")
+        setIcon(readinessIcon, "circle-alert");
+      readinessNotice.createSpan({
+        text: "\u8FD8\u7F3A 1 \u5F20\u56FE\u7247\uFF0C\u5F53\u524D\u8D34\u56FE\u65E0\u6CD5\u540C\u6B65\u3002\u8BF7\u5728\u7B14\u8BB0\u4E2D\u63D2\u5165\u56FE\u7247\uFF0C\u6216\u5728\u53D1\u5E03\u5F39\u7A97\u4E2D\u4E0A\u4F20\u3002"
+      });
+      renderRestoreActions(stickerContainer);
+    }
+    const textSection = stickerContainer.createEl("div", { cls: "apple-sticker-text-section" });
+    const textHeader = textSection.createEl("div", { cls: "apple-sticker-section-header" });
+    const textTitle = textHeader.createEl("div", { cls: "apple-sticker-section-title" });
+    if (typeof setIcon === "function") {
+      const iconSpan = textTitle.createEl("span", { cls: "apple-sticker-section-icon-lucide" });
+      setIcon(iconSpan, "file-text");
+    }
+    const textHeading = textTitle.createDiv({ cls: "apple-sticker-text-heading" });
+    textHeading.createEl("span", { text: "\u53D1\u5E03\u6587\u6848" });
+    textHeading.createEl("span", {
+      cls: "apple-sticker-text-subtitle",
+      text: "\u5C06\u4EE5\u7EAF\u6587\u672C\u540C\u6B65\u5230\u5FAE\u4FE1\u8349\u7A3F"
+    });
+    const charCount = stickerData.content ? stickerData.content.length : 0;
+    const contentCountState = getStickerPublishState({
+      title: stickerData.title || "\u8D34\u56FE",
+      content: stickerData.content || "",
+      imageCount: Math.max(1, stickerData.imageItems.length)
+    }).counters.content;
+    const countBadge = textHeader.createEl("span", { cls: "apple-sticker-count-badge" });
+    countBadge.createEl("span", {
+      cls: `apple-sticker-count-current${contentCountState.status === "warning" ? " is-warning" : ""}${contentCountState.status === "error" ? " is-error" : ""}`,
+      text: `${charCount}`
+    });
+    countBadge.createEl("span", {
+      cls: "apple-sticker-count-total",
+      text: ` / ${STICKER_MAX_CONTENT_LENGTH}`
+    });
+    textSection.createEl("div", {
+      cls: "apple-sticker-text-preview",
+      text: stickerData.content || "(\u6B63\u6587\u65E0\u7EAF\u6587\u672C\u5185\u5BB9)"
+    });
+    return stickerContainer;
   }
 };
 
@@ -76473,6 +86653,15 @@ var aiLayoutPanelMethods = {
     var _a5;
     if (!this.aiLayoutBtn)
       return;
+    if (this.previewMode === "sticker") {
+      this.aiLayoutBtn.classList.add("hidden");
+      this.aiLayoutBtn.hidden = true;
+      if (this.aiLayoutOverlay)
+        this.aiLayoutOverlay.classList.remove("visible");
+      this.aiLayoutBtn.classList.remove("active");
+      return;
+    }
+    this.aiLayoutBtn.classList.remove("hidden");
     const aiSettings = ((_a5 = this.plugin.settings) == null ? void 0 : _a5.ai) || createDefaultAiSettings();
     const enabled = aiSettings.enabled === true;
     const hasProvider = !!resolveAiProvider(aiSettings);
@@ -76624,7 +86813,9 @@ var aiLayoutPanelMethods = {
     this.aiRegenerateBtn = actionRow.createEl("button", { cls: "apple-btn-secondary", text: "\u91CD\u65B0\u751F\u6210\u5E76\u5E94\u7528" });
     this.aiRegenerateBtn.addEventListener("click", () => this.generateAiLayoutForCurrentArticle({ applyAfterGenerate: true }));
     this.aiResetBtn = actionRow.createEl("button", { cls: "apple-btn-secondary", text: "\u6062\u590D\u666E\u901A\u9884\u89C8" });
-    this.aiResetBtn.addEventListener("click", () => this.restoreBasePreview());
+    this.aiResetBtn.addEventListener("click", async () => {
+      await this.restoreBasePreview();
+    });
     this.aiRestoreBlocksBtn = actionRow.createEl("button", { cls: "apple-btn-secondary", text: "\u6062\u590D\u5DF2\u79FB\u9664" });
     this.aiRestoreBlocksBtn.addEventListener("click", () => this.restoreRemovedAiLayoutBlocks());
     this.aiResultSection = area.createDiv({ cls: "apple-ai-layout-section apple-ai-layout-result-section" });
@@ -78130,10 +88321,10 @@ var aiLayoutDebugMethods = {
 };
 
 // views/converter/clipboard.js
-function normalizeCopiedCodeSpaces(root) {
-  if (!root)
+function normalizeCopiedCodeSpaces(root2) {
+  if (!root2)
     return;
-  const pending = [root];
+  const pending = [root2];
   while (pending.length > 0) {
     const node = pending.pop();
     if (!node)
@@ -78307,13 +88498,13 @@ var clipboardMethods = {
     spinner.setAttribute("aria-hidden", "true");
     this.copyBtn.appendChild(spinner);
   },
-  async enhanceHtmlForWechatPublishing(root) {
-    if (!root)
+  async enhanceHtmlForWechatPublishing(root2) {
+    if (!root2)
       return;
     const activeDocument = getActiveDocumentCompat();
     let mount = null;
     try {
-      if ((activeDocument == null ? void 0 : activeDocument.body) && !root.isConnected) {
+      if ((activeDocument == null ? void 0 : activeDocument.body) && !root2.isConnected) {
         mount = activeDocument.createElement("div");
         mount.setCssStyles({
           position: "fixed",
@@ -78325,27 +88516,30 @@ var clipboardMethods = {
           overflow: "hidden"
         });
         activeDocument.body.appendChild(mount);
-        mount.appendChild(root);
+        mount.appendChild(root2);
       }
-      await convertRenderedMermaidDiagramsToImages(root, {
+      await convertRenderedMermaidDiagramsToImages(root2, {
         simpleHash: (value) => this.simpleHash(String(value || "")),
         mermaidImageCache: this.mermaidImageCache
       });
-      this.transformCodeBlocksForClipboard(root);
+      this.transformCodeBlocksForClipboard(root2);
     } finally {
       if (mount) {
         mount.remove();
       }
     }
   },
-  async prepareHtmlForWechatDraft(html) {
+  async prepareHtmlForWechatDraft(html, options = {}) {
     let processedHtml = html || "";
-    processedHtml = await this.applyCustomCss(processedHtml);
     const tempDiv = createHtmlContainer("div", processedHtml);
     if (!tempDiv)
       return "";
     await this.enhanceHtmlForWechatPublishing(tempDiv);
-    return tempDiv.innerHTML;
+    processedHtml = await this.applyCustomCss(tempDiv.innerHTML, {
+      target: "wechat-draft",
+      layoutMode: options.layoutMode || (this.aiPreviewApplied ? "ai" : "native")
+    });
+    return processedHtml;
   },
   async prepareHtmlForWechatsyncArticle(html) {
     const tempDiv = createHtmlContainer("div", html || "");
@@ -78441,12 +88635,12 @@ var clipboardMethods = {
     const codeEl = codePre.querySelector("code");
     return ((codeEl ? codeEl.textContent : codePre.textContent) || "").replace(/\u00a0/g, " ");
   },
-  transformCodeBlocksForWechatsync(root) {
-    if (!root)
+  transformCodeBlocksForWechatsync(root2) {
+    if (!root2)
       return;
     const codeBlocks = (
       /** @type {HTMLElement[]} */
-      Array.from(root.querySelectorAll(".code-snippet__fix"))
+      Array.from(root2.querySelectorAll(".code-snippet__fix"))
     );
     codeBlocks.forEach((block) => {
       const codeText = this.extractCodeTextForWechatsync(block);
@@ -78491,12 +88685,12 @@ var clipboardMethods = {
       block.replaceWith(pre);
     });
   },
-  transformCodeBlocksForClipboard(root) {
-    if (!root)
+  transformCodeBlocksForClipboard(root2) {
+    if (!root2)
       return;
     const codeBlocks = (
       /** @type {HTMLElement[]} */
-      Array.from(root.querySelectorAll(".code-snippet__fix"))
+      Array.from(root2.querySelectorAll(".code-snippet__fix"))
     );
     codeBlocks.forEach((block) => {
       const codePre = block.querySelector("pre");
@@ -78601,11 +88795,22 @@ var clipboardMethods = {
       this.setCopyButtonSpinner();
     }
     try {
-      let exportHtml = this.getCurrentExportHtml() || this.currentHtml;
-      exportHtml = await this.applyCustomCss(exportHtml);
-      const tempDiv = createHtmlContainer("div", exportHtml);
-      await this.processImagesToDataURL(tempDiv);
+      const exportSource = this.resolveArticleHtmlSource({ target: "wechat-copy" });
+      if (!(exportSource == null ? void 0 : exportSource.html)) {
+        throw new Error("\u5F53\u524D\u6587\u7AE0\u8FD8\u6CA1\u6709\u53EF\u590D\u5236\u7684\u6E32\u67D3\u7ED3\u679C");
+      }
+      let tempDiv = createHtmlContainer("div", exportSource.html);
+      if (!tempDiv)
+        throw new Error("\u65E0\u6CD5\u51C6\u5907\u590D\u5236\u5185\u5BB9");
       await this.enhanceHtmlForWechatPublishing(tempDiv);
+      const exportHtml = await this.applyCustomCss(tempDiv.innerHTML, {
+        target: "wechat-copy",
+        layoutMode: exportSource.layoutMode
+      });
+      tempDiv = createHtmlContainer("div", exportHtml);
+      if (!tempDiv)
+        throw new Error("\u65E0\u6CD5\u5E94\u7528\u516C\u4F17\u53F7\u6837\u5F0F");
+      await this.processImagesToDataURL(tempDiv);
       const cleanedHtml = this.cleanHtmlForDraft(tempDiv.innerHTML);
       const htmlContent = cleanedHtml;
       window.__OWC_LAST_CLIPBOARD_HTML = htmlContent;
@@ -78727,44 +88932,430 @@ var clipboardMethods = {
   }
 };
 
-// views/publish-modal/wechat-preview-export.js
-var wechatPreviewExportMethods = {
-  getCurrentExportHtml() {
-    var _a5, _b, _c;
+// services/publish-cleanup.js
+function toRecord13(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? (
+    /** @type {Record<string, unknown>} */
+    value
+  ) : null;
+}
+function normalizeFrontmatterKey(key) {
+  return String(key || "").toLowerCase().replace(/[_-]/g, "");
+}
+function getFrontmatterKeyMap(frontmatter, keys) {
+  const result = {};
+  const frontmatterRecord = toRecord13(frontmatter);
+  if (!frontmatterRecord || !Array.isArray(keys) || keys.length === 0)
+    return result;
+  const normalizedTargets = new Set(keys.map(normalizeFrontmatterKey));
+  for (const [key, value] of Object.entries(frontmatterRecord)) {
+    if (!normalizedTargets.has(normalizeFrontmatterKey(key)))
+      continue;
+    if (typeof value !== "string")
+      continue;
+    const normalizedValue = normalizeVaultPath(value);
+    if (normalizedValue)
+      result[key] = normalizedValue;
+  }
+  return result;
+}
+function isPathInsideDirectory(filePath, dirPath) {
+  const file = normalizeVaultPath(filePath);
+  const dir = normalizeVaultPath(dirPath);
+  if (!file || !dir)
+    return false;
+  return file === dir || file.startsWith(`${dir}/`);
+}
+function isPathInsideDirectoryByTail(filePath, dirPath) {
+  const file = normalizeVaultPath(filePath);
+  const dir = normalizeVaultPath(dirPath);
+  if (!file || !dir)
+    return false;
+  const dirSegments = dir.split("/").filter(Boolean);
+  if (dirSegments.length < 2)
+    return false;
+  for (let index = 1; index <= dirSegments.length - 2; index += 1) {
+    const tailDir = dirSegments.slice(index).join("/");
+    if (isPathInsideDirectory(file, tailDir))
+      return true;
+  }
+  return false;
+}
+function shouldClearFrontmatterPathAfterCleanup(pathValue, cleanedDir) {
+  const normalized = normalizeVaultPath(pathValue);
+  if (!normalized)
+    return false;
+  return isPathInsideDirectory(normalized, cleanedDir) || isPathInsideDirectoryByTail(normalized, cleanedDir);
+}
+function clearInvalidPublishMetaInFrontmatter(frontmatter, cleanedDir) {
+  const frontmatterRecord = toRecord13(frontmatter);
+  if (!frontmatterRecord)
+    return false;
+  let changed = false;
+  const coverMap = getFrontmatterKeyMap(frontmatter, ["cover"]);
+  const coverDirMap = getFrontmatterKeyMap(
+    frontmatter,
+    ["cover_dir", "coverDir", "cover-dir", "coverdir", "CoverDIR"]
+  );
+  for (const [key, value] of Object.entries(coverMap)) {
+    if (shouldClearFrontmatterPathAfterCleanup(value, cleanedDir)) {
+      frontmatterRecord[key] = "";
+      changed = true;
+    }
+  }
+  for (const [key, value] of Object.entries(coverDirMap)) {
+    if (shouldClearFrontmatterPathAfterCleanup(value, cleanedDir)) {
+      frontmatterRecord[key] = "";
+      changed = true;
+    }
+  }
+  return changed;
+}
+async function clearInvalidPublishMetaByTextFallback({
+  vault,
+  activeFile,
+  cleanedDir
+}) {
+  if (!vault || typeof vault.read !== "function" || typeof vault.modify !== "function") {
+    return false;
+  }
+  const source = await vault.read(activeFile);
+  if (typeof source !== "string" || !source.startsWith("---"))
+    return false;
+  const match = source.match(/^(---[ \t]*\r?\n)([\s\S]*?)(\r?\n(?:---|\.\.\.)[ \t]*(?:\r?\n|$))/);
+  if (!match)
+    return false;
+  let changed = false;
+  const body = match[2].replace(
+    /^([ \t]*)(cover|cover_dir|coverDir|cover-dir|coverdir|CoverDIR)([ \t]*:[ \t]*)(.*)$/gmi,
+    (line, indent, key, separator, rawValue) => {
+      const value = String(rawValue || "").trim().replace(/^['"]|['"]$/g, "");
+      if (!shouldClearFrontmatterPathAfterCleanup(value, cleanedDir))
+        return line;
+      changed = true;
+      return `${indent}${key}${separator}''`;
+    }
+  );
+  if (!changed)
+    return false;
+  await vault.modify(activeFile, `${match[1]}${body}${match[3]}${source.slice(match[0].length)}`);
+  return true;
+}
+async function clearInvalidPublishMetaAfterCleanup({
+  app,
+  activeFile,
+  cleanedDirPath
+}) {
+  var _a5;
+  if (!activeFile || !cleanedDirPath)
+    return null;
+  const cleanedDir = normalizeVaultPath(cleanedDirPath);
+  if (!cleanedDir)
+    return null;
+  try {
+    const processFrontMatter = (_a5 = app == null ? void 0 : app.fileManager) == null ? void 0 : _a5["processFrontMatter"];
+    if (typeof processFrontMatter === "function") {
+      await processFrontMatter.call(app.fileManager, activeFile, (frontmatter) => {
+        clearInvalidPublishMetaInFrontmatter(frontmatter, cleanedDir);
+      });
+    } else {
+      await clearInvalidPublishMetaByTextFallback({
+        vault: app == null ? void 0 : app.vault,
+        activeFile,
+        cleanedDir
+      });
+    }
+  } catch (error) {
+    return `\u8D44\u6E90\u5DF2\u5220\u9664\uFF0C\u4F46\u6E05\u7406 frontmatter \u4E2D\u5931\u6548\u7684 cover/cover_dir \u5931\u8D25: ${toReadableError5(error).message}`;
+  }
+  return null;
+}
+function resolveCleanupDirPath(templateValue, activeFile) {
+  const template = normalizeVaultPath(templateValue);
+  if (!template) {
+    return { path: "", warning: "\u672A\u914D\u7F6E\u6E05\u7406\u76EE\u5F55\uFF0C\u8BF7\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u5148\u586B\u5199\u76EE\u5F55\u540E\u518D\u542F\u7528\u81EA\u52A8\u6E05\u7406" };
+  }
+  const hasNotePlaceholder = /\{\{\s*note\s*\}\}/i.test(template);
+  if (hasNotePlaceholder && !activeFile) {
+    return { path: "", warning: "\u5F53\u524D\u6CA1\u6709\u6D3B\u52A8\u6587\u6863\uFF0C\u65E0\u6CD5\u89E3\u6790\u6E05\u7406\u76EE\u5F55\u4E2D\u7684 {{note}}" };
+  }
+  const noteName = typeof (activeFile == null ? void 0 : activeFile.basename) === "string" ? activeFile.basename.trim() : "";
+  const resolved = template.replace(/\{\{\s*note\s*\}\}/gi, noteName);
+  const normalized = normalizeVaultPath(resolved);
+  if (!normalized)
+    return { path: "", warning: "\u6E05\u7406\u76EE\u5F55\u4E3A\u7A7A\uFF0C\u8BF7\u68C0\u67E5\u8BBE\u7F6E\u503C" };
+  return { path: normalized };
+}
+function isSafeCleanupDirPath(vaultPath, configDirValue) {
+  const normalized = normalizeVaultPath(vaultPath);
+  if (!normalized || normalized === "." || normalized.includes(".."))
+    return false;
+  const configDir = normalizeVaultPath(configDirValue);
+  return !configDir || normalized !== configDir && !normalized.startsWith(`${configDir}/`);
+}
+async function cleanupConfiguredDirectory({
+  app,
+  settings,
+  activeFile
+}) {
+  var _a5, _b, _c;
+  if (!(settings == null ? void 0 : settings.cleanupAfterSync))
+    return { attempted: false };
+  const useSystemTrash = settings.cleanupUseSystemTrash !== false;
+  const resolved = resolveCleanupDirPath(settings.cleanupDirTemplate, activeFile);
+  if (!resolved.path) {
+    return { attempted: true, success: false, warning: resolved.warning || "\u672A\u89E3\u6790\u5230\u6E05\u7406\u76EE\u5F55" };
+  }
+  const normalized = resolved.path;
+  if (!isSafeCleanupDirPath(normalized, (_a5 = app == null ? void 0 : app.vault) == null ? void 0 : _a5.configDir)) {
+    return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u5F55\u4E0D\u5B89\u5168\uFF0C\u5DF2\u8DF3\u8FC7: ${normalized}` };
+  }
+  const abstractFile = (_c = (_b = app == null ? void 0 : app.vault) == null ? void 0 : _b.getAbstractFileByPath) == null ? void 0 : _c.call(_b, normalized);
+  if (!abstractFile) {
+    return { attempted: true, success: false, warning: `\u6E05\u7406\u76EE\u5F55\u4E0D\u5B58\u5728: ${normalized}` };
+  }
+  if (typeof abstractFile.extension === "string") {
+    return { attempted: true, success: false, warning: `\u6E05\u7406\u8DEF\u5F84\u4E0D\u662F\u76EE\u5F55\uFF0C\u5DF2\u8DF3\u8FC7: ${normalized}` };
+  }
+  try {
+    if (typeof app.vault.trash === "function") {
+      await app.vault.trash(abstractFile, useSystemTrash);
+    } else if (typeof app.vault.delete === "function") {
+      await app.vault.delete(abstractFile, true);
+    } else {
+      throw new Error("\u5F53\u524D Obsidian \u7248\u672C\u4E0D\u652F\u6301\u5220\u9664\u63A5\u53E3");
+    }
+  } catch (error) {
+    return {
+      attempted: true,
+      success: false,
+      warning: `\u5220\u9664\u5931\u8D25 (${normalized}): ${toReadableError5(error).message}`
+    };
+  }
+  const frontmatterWarning = await clearInvalidPublishMetaAfterCleanup({
+    app,
+    activeFile,
+    cleanedDirPath: normalized
+  });
+  return frontmatterWarning ? { attempted: true, success: true, cleanedPath: normalized, warning: frontmatterWarning } : { attempted: true, success: true, cleanedPath: normalized };
+}
+
+// views/publish-modal/publish-context.js
+var publishContextMethods = {
+  createAccountSelector(parent) {
+    const accounts = this.plugin.settings.wechatAccounts || [];
+    if (accounts.length === 0)
+      return;
+    const section = parent.createEl("div", { cls: "apple-setting-section wechat-account-selector" });
+    section.createEl("label", { cls: "apple-setting-label", text: "\u540C\u6B65\u8D26\u53F7" });
+    const select = (
+      /** @type {ObsidianInputLike} */
+      section.createEl("select", { cls: "wechat-account-select" })
+    );
+    const defaultId = this.plugin.settings.defaultAccountId;
+    for (const account of accounts) {
+      const option = (
+        /** @type {ObsidianInputLike} */
+        select.createEl("option", {
+          value: account.id,
+          text: account.id === defaultId ? `${account.name} (\u9ED8\u8BA4)` : account.name
+        })
+      );
+      if (account.id === defaultId)
+        option.selected = true;
+    }
+    this.selectedAccountId = defaultId;
+    select.addEventListener("change", (event) => {
+      this.selectedAccountId = getEventTargetValue(event, defaultId);
+    });
+  },
+  getFirstImageFromArticle() {
     if (!this.currentHtml)
       return null;
-    if (!this.aiPreviewApplied)
-      return this.currentHtml;
+    const tempDiv = createHtmlContainer("div", this.currentHtml);
+    const imgs = Array.from(tempDiv.querySelectorAll("img"));
+    for (const img of imgs) {
+      if (img.alt === "logo")
+        continue;
+      const src = String(img.getAttribute("src") || img.src || "").trim();
+      if (src)
+        return src;
+    }
+    return null;
+  },
+  getPublishContextFile() {
+    var _a5, _b, _c;
+    return ((_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.workspace) == null ? void 0 : _b.getActiveFile) == null ? void 0 : _c.call(_b)) || this.lastActiveFile || null;
+  },
+  getFrontmatterPublishMeta(activeFile) {
+    var _a5, _b, _c, _d;
+    if (!activeFile) {
+      return { excerpt: "", cover: "", cover_dir: "", coverSrc: null, title: "" };
+    }
+    const frontmatter = (_d = (_c = (_b = (_a5 = this.app) == null ? void 0 : _a5.metadataCache) == null ? void 0 : _b.getFileCache) == null ? void 0 : _c.call(_b, activeFile)) == null ? void 0 : _d.frontmatter;
+    const excerpt = this.getFrontmatterString(frontmatter, ["excerpt"]);
+    const cover = this.getFrontmatterString(frontmatter, ["cover"]);
+    const cover_dir = this.getFrontmatterString(
+      frontmatter,
+      ["cover_dir", "coverDir", "cover-dir", "coverdir", "CoverDIR"]
+    );
+    const title = this.getFrontmatterString(frontmatter, ["title"]);
+    const coverSrc = cover ? this.resolveVaultPathToResourceSrc(cover) : null;
+    return { excerpt, cover, cover_dir, coverSrc, title };
+  },
+  getFrontmatterString(frontmatter, keys) {
+    const frontmatterRecord = toRecord11(frontmatter);
+    if (!frontmatterRecord || !Array.isArray(keys) || keys.length === 0)
+      return "";
+    const normalizedTargets = new Set(keys.map(normalizeFrontmatterKey));
+    for (const key of keys) {
+      const value = frontmatterRecord[key];
+      if (typeof value === "string" && value.trim())
+        return value.trim();
+    }
+    for (const [key, value] of Object.entries(frontmatterRecord)) {
+      if (!normalizedTargets.has(normalizeFrontmatterKey(key)))
+        continue;
+      if (typeof value === "string" && value.trim())
+        return value.trim();
+    }
+    return "";
+  },
+  normalizeFrontmatterKey,
+  getFrontmatterKeyMap,
+  isPathInsideDirectory,
+  isPathInsideDirectoryByTail,
+  shouldClearFrontmatterPathAfterCleanup,
+  clearInvalidPublishMetaInFrontmatter,
+  clearInvalidPublishMetaByTextFallback(activeFile, cleanedDir) {
+    var _a5;
+    return clearInvalidPublishMetaByTextFallback({
+      vault: (_a5 = this.app) == null ? void 0 : _a5.vault,
+      activeFile,
+      cleanedDir
+    });
+  },
+  clearInvalidPublishMetaAfterCleanup(activeFile, cleanedDirPath) {
+    return clearInvalidPublishMetaAfterCleanup({
+      app: this.app,
+      activeFile,
+      cleanedDirPath
+    });
+  },
+  resolveVaultPathToResourceSrc(vaultPath) {
+    if (typeof vaultPath !== "string")
+      return null;
+    const normalized = vaultPath.trim().replace(/\\/g, "/").replace(/^\/+/, "");
+    if (!normalized)
+      return null;
+    try {
+      const file = this.app.vault.getAbstractFileByPath(normalized);
+      if (!file || typeof file.extension !== "string")
+        return null;
+      return this.app.vault.getResourcePath(file);
+    } catch (e) {
+      return null;
+    }
+  },
+  normalizeVaultPath,
+  getVaultConfigDir() {
+    var _a5, _b;
+    return normalizeVaultPath((_b = (_a5 = this.app) == null ? void 0 : _a5.vault) == null ? void 0 : _b.configDir);
+  },
+  getCleanupDirTemplate() {
+    var _a5, _b;
+    return normalizeVaultPath((_b = (_a5 = this.plugin) == null ? void 0 : _a5.settings) == null ? void 0 : _b.cleanupDirTemplate);
+  },
+  resolveCleanupDirPath(activeFile) {
+    return resolveCleanupDirPath(this.getCleanupDirTemplate(), activeFile);
+  },
+  isSafeCleanupDirPath(vaultPath) {
+    return isSafeCleanupDirPath(vaultPath, this.getVaultConfigDir());
+  },
+  cleanupConfiguredDirectory(activeFile) {
+    return cleanupConfiguredDirectory({
+      app: this.app,
+      settings: this.plugin.settings,
+      activeFile
+    });
+  }
+};
+
+// views/publish-modal/wechat-preview-export.js
+var wechatPreviewExportMethods = {
+  /**
+   * @param {{ target?: 'wechat-copy'|'wechat-draft'|'multi-platform' }} [options]
+   */
+  resolveArticleHtmlSource(options = {}) {
+    var _a5, _b, _c;
+    const { target } = options;
+    const resolvedTarget = target || "wechat-copy";
+    if (!["wechat-copy", "wechat-draft", "multi-platform"].includes(resolvedTarget)) {
+      return null;
+    }
+    if (!this.aiPreviewApplied) {
+      if (!this.baseRenderedHtml)
+        return null;
+      return {
+        html: this.baseRenderedHtml,
+        layoutMode: "native",
+        sourceKind: "base"
+      };
+    }
     const context = this.getCurrentLayoutContext();
     const state = this.getCurrentArticleLayoutState();
     const visibleSnapshot = this.getVisibleAiLayoutSnapshot(state);
     if (!state || !((_b = (_a5 = visibleSnapshot.layoutJson) == null ? void 0 : _a5.blocks) == null ? void 0 : _b.length)) {
-      return this.currentHtml;
+      return null;
     }
     if (context.sourceHash && state.sourceHash && context.sourceHash !== state.sourceHash) {
-      return this.currentHtml;
+      return null;
     }
-    const imageRefs = extractImageRefsFromHtml(this.baseRenderedHtml || this.currentHtml || "");
-    const renderedSectionFragments = extractRenderedSectionFragments(this.baseRenderedHtml || this.currentHtml || "");
+    const imageRefs = extractImageRefsFromHtml(this.baseRenderedHtml || "");
+    const renderedSectionFragments = extractRenderedSectionFragments(this.baseRenderedHtml || "");
     const renderLayout = this.getAiRenderLayoutJson(visibleSnapshot.layoutJson);
-    return renderArticleLayoutHtml(renderLayout, {
+    const html = renderArticleLayoutHtml(renderLayout, {
       imageRefs,
       mode: "draft",
       renderedSectionFragments,
       colorPaletteOverride: this.getAiColorPaletteOverride(((_c = renderLayout == null ? void 0 : renderLayout.resolved) == null ? void 0 : _c.colorPalette) || (renderLayout == null ? void 0 : renderLayout.stylePack))
     });
+    if (!html)
+      return null;
+    return {
+      html,
+      layoutMode: "ai",
+      sourceKind: "ai-export"
+    };
   },
-  restoreBasePreview() {
+  getCurrentExportHtml() {
+    var _a5;
+    return ((_a5 = this.resolveArticleHtmlSource({ target: "wechat-copy" })) == null ? void 0 : _a5.html) || null;
+  },
+  async restoreBasePreview() {
     if (!this.baseRenderedHtml || !this.previewContainer)
       return;
     const scrollTop = this.previewContainer.scrollTop;
-    this.currentHtml = this.baseRenderedHtml;
-    this.aiPreviewApplied = false;
-    setElementHtml(this.previewContainer, this.baseRenderedHtml);
-    this.previewContainer.scrollTop = scrollTop;
-    this.previewContainer.addClass("apple-has-content");
-    this.syncPreviewPresentationMode();
-    this.refreshAiLayoutPanel();
+    try {
+      const html = await this.deriveNativePreviewHtml(this.baseRenderedHtml);
+      this.currentHtml = html;
+      this.aiPreviewApplied = false;
+      setElementHtml(this.previewContainer, html);
+      this.previewContainer.scrollTop = scrollTop;
+      this.previewContainer.addClass("apple-has-content");
+      this.syncPreviewPresentationMode();
+      this.refreshAiLayoutPanel();
+    } catch (error) {
+      console.warn("\u6062\u590D\u666E\u901A\u9884\u89C8\u5931\u8D25\uFF0C\u5DF2\u56DE\u9000\u57FA\u7840\u4E3B\u9898:", error);
+      this.currentHtml = this.baseRenderedHtml;
+      this.aiPreviewApplied = false;
+      setElementHtml(this.previewContainer, this.baseRenderedHtml);
+      this.previewContainer.scrollTop = scrollTop;
+      this.previewContainer.addClass("apple-has-content");
+      this.syncPreviewPresentationMode();
+      this.refreshAiLayoutPanel();
+      new Notice("\u6062\u590D\u666E\u901A\u9884\u89C8\u65F6\u672A\u80FD\u5E94\u7528\u81EA\u5B9A\u4E49 CSS\uFF0C\u5DF2\u663E\u793A\u57FA\u7840\u4E3B\u9898\u3002");
+    }
   },
   syncPreviewPresentationMode() {
     if (!this.previewContainer)
@@ -78865,7 +89456,7 @@ var wechatAccountStateMethods = {
   showSyncFailureActions(message, options = {}) {
     var _a5, _b, _c;
     if (typeof getObsidianModalClass() !== "function") {
-      new Notice(`\u274C \u540C\u6B65\u5931\u8D25: ${message}`);
+      new Notice(`\u540C\u6B65\u5931\u8D25: ${message}`);
       return;
     }
     const modal = createObsidianModal(this.app);
@@ -78926,6 +89517,7 @@ var wechatAccountStateMethods = {
 var wechatModalShellMethods = {
   preparePublishModalShell(modal, { mode = "wechat", mobileSync = false } = {}) {
     var _a5, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q;
+    this.stickerModalGeneration = (this.stickerModalGeneration || 0) + 1;
     modal.titleEl.setText("\u53D1\u5E03\u4E0E\u5206\u53D1");
     (_b = (_a5 = modal.titleEl).removeClass) == null ? void 0 : _b.call(_a5, "wechat-multiplatform-title");
     if (typeof modal.contentEl.empty === "function") {
@@ -78967,11 +89559,392 @@ var wechatModalShellMethods = {
   }
 };
 
+// views/publish-modal/sticker-publish-content.js
+function getStickerModalItems(data) {
+  if (Array.isArray(data == null ? void 0 : data.imageItems))
+    return data.imageItems;
+  return (Array.isArray(data == null ? void 0 : data.images) ? data.images : []).map((src) => createBodyStickerImageItem(src)).filter(Boolean);
+}
+function renderStickerPublishContent(view, {
+  modal,
+  accounts,
+  activeFile,
+  sourcePath,
+  frontmatterMeta,
+  shouldOpenModal
+}) {
+  var _a5, _b;
+  modal.contentEl.addClass("wechat-sticker-publish-content");
+  const setIcon = getObsidianSetIcon();
+  const generation = view.stickerModalGeneration;
+  view.sessionStickerSourcePath = sourcePath;
+  const defaultId = view.plugin.settings.defaultAccountId;
+  const hasDefault = accounts.some((account) => account.id === defaultId);
+  let selectedAccountId = hasDefault ? defaultId : ((_a5 = accounts[0]) == null ? void 0 : _a5.id) || "";
+  let focusKey = "";
+  let currentData = ((_b = view.previewStickerData) == null ? void 0 : _b.sourcePath) === sourcePath ? view.previewStickerData : null;
+  let previewNeedsRefresh = false;
+  const accountSection = modal.contentEl.createDiv({ cls: "wechat-modal-section sticker-publish-account" });
+  accountSection.createEl("label", { text: "\u53D1\u5E03\u8D26\u53F7", cls: "wechat-modal-label" });
+  if (accounts.length === 1) {
+    selectedAccountId = accounts[0].id;
+    accountSection.createDiv({
+      cls: "wechat-sync-account-single",
+      text: `${accounts[0].name}\uFF08\u9ED8\u8BA4\uFF09`
+    });
+  } else {
+    const accountSelect = accountSection.createEl("select", { cls: "wechat-account-select" });
+    for (const account of accounts) {
+      const option = accountSelect.createEl("option", {
+        value: account.id,
+        text: account.id === defaultId ? `${account.name}\uFF08\u9ED8\u8BA4\uFF09` : account.name
+      });
+      option.selected = account.id === selectedAccountId;
+    }
+    accountSelect.addEventListener("change", (event) => {
+      selectedAccountId = getEventTargetValue(event, selectedAccountId);
+      renderCurrent();
+    });
+  }
+  const titleSection = modal.contentEl.createDiv({ cls: "wechat-modal-section sticker-publish-title" });
+  const titleHeader = titleSection.createDiv({ cls: "sticker-publish-field-header" });
+  titleHeader.createEl("label", { text: "\u8D34\u56FE\u6807\u9898", cls: "wechat-modal-label" });
+  const titleCount = titleHeader.createSpan({ cls: "sticker-publish-count" });
+  const titleCountValue = titleCount.createSpan({ cls: "sticker-publish-count-value" });
+  titleCount.createSpan({ text: `/${STICKER_MAX_TITLE_LENGTH} \u5B57` });
+  const titleInput = titleSection.createEl("input", {
+    type: "text",
+    cls: "wechat-modal-title-input",
+    placeholder: "\u9ED8\u8BA4\u4F7F\u7528 frontmatter title \u6216\u6587\u4EF6\u540D"
+  });
+  titleInput.value = String(frontmatterMeta.title || (activeFile == null ? void 0 : activeFile.basename) || "\u672A\u547D\u540D\u8D34\u56FE");
+  const titleFeedback = titleSection.createDiv({ cls: "sticker-publish-field-feedback" });
+  const contentMetaSection = modal.contentEl.createDiv({ cls: "sticker-publish-content-meta" });
+  const contentMetaHeader = contentMetaSection.createDiv({ cls: "sticker-publish-content-meta-header" });
+  contentMetaHeader.createSpan({ text: "\u53D1\u5E03\u6587\u6848", cls: "sticker-publish-content-meta-label" });
+  const contentCount = contentMetaHeader.createSpan({ cls: "sticker-publish-count" });
+  const contentCountValue = contentCount.createSpan({ cls: "sticker-publish-count-value" });
+  contentCount.createSpan({ text: `/${STICKER_MAX_CONTENT_LENGTH} \u5B57` });
+  const transformSummary = contentMetaSection.createDiv({ cls: "sticker-publish-cleaning-note" });
+  const contentFeedback = contentMetaSection.createDiv({ cls: "sticker-publish-field-feedback" });
+  const imageSection = modal.contentEl.createDiv({ cls: "wechat-modal-section sticker-publish-images" });
+  const imageHeader = imageSection.createDiv({ cls: "sticker-publish-section-header" });
+  const imageTitle = imageHeader.createDiv({ cls: "sticker-publish-section-title" });
+  const imageIcon = imageTitle.createSpan({ cls: "sticker-publish-section-icon" });
+  if (typeof setIcon === "function")
+    setIcon(imageIcon, "images");
+  imageTitle.createSpan({ text: "\u53D1\u5E03\u56FE\u7247" });
+  const imageCount = imageTitle.createSpan({ cls: "sticker-publish-count" });
+  const imageActions = imageHeader.createDiv({
+    cls: "sticker-publish-image-actions wechat-modal-cover-btns"
+  });
+  const localButton = imageActions.createEl("button", {
+    text: "\u4E0A\u4F20",
+    attr: { type: "button" }
+  });
+  const materialButton = imageActions.createEl("button", {
+    text: "\u4ECE\u7D20\u6750\u5E93\u9009\u62E9",
+    cls: "wechat-cover-select-material-btn",
+    attr: { type: "button" }
+  });
+  const imageBody = imageSection.createDiv({ cls: "sticker-publish-image-body wechat-modal-sticker-grid-preview" });
+  const restoreRow = imageSection.createDiv({ cls: "sticker-publish-restore-row" });
+  const imageFeedback = imageSection.createDiv({ cls: "sticker-publish-image-feedback" });
+  modal.contentEl.createDiv({ cls: "wechat-draft-status" });
+  const buttonRow = modal.contentEl.createDiv({ cls: "wechat-modal-buttons sticker-publish-footer" });
+  const cancelButton = buttonRow.createEl("button", { text: "\u53D6\u6D88" });
+  const syncButton = buttonRow.createEl("button", { text: "\u540C\u6B65\u5230\u8D34\u56FE\u8349\u7A3F", cls: "mod-cta" });
+  cancelButton.onclick = () => modal.close();
+  let currentItems = [];
+  let currentContent = "";
+  let currentForeignMaterialCount = 0;
+  const getSelectedAccount = () => accounts.find((account) => account.id === selectedAccountId) || accounts[0] || null;
+  const markPreviewDirty = () => {
+    previewNeedsRefresh = true;
+  };
+  const originalOnClose = typeof modal.onClose === "function" ? (
+    /** @type {() => void} */
+    modal.onClose.bind(modal)
+  ) : null;
+  modal.onClose = () => {
+    var _a6;
+    if (originalOnClose)
+      originalOnClose();
+    if (!previewNeedsRefresh || view.previewMode !== "sticker")
+      return;
+    previewNeedsRefresh = false;
+    Promise.resolve((_a6 = view.renderStickerPreview) == null ? void 0 : _a6.call(view)).catch((error) => {
+      console.error("Sticker preview refresh after modal close failed:", error);
+    });
+  };
+  const refreshData = async () => {
+    const nextData = await view.buildStickerData({ sourcePath });
+    if (view.stickerModalGeneration !== generation)
+      return;
+    currentData = nextData;
+    renderCurrent();
+  };
+  function updatePublishState() {
+    var _a6, _b2, _c, _d, _e, _f, _g;
+    const publishState = getStickerPublishState({
+      title: titleInput.value,
+      content: currentContent,
+      imageCount: currentItems.length,
+      foreignMaterialCount: currentForeignMaterialCount
+    });
+    const imageLimitReached = currentItems.length >= STICKER_MAX_IMAGES;
+    titleCountValue.setText(String(publishState.counters.title.value));
+    (_a6 = titleCountValue.toggleClass) == null ? void 0 : _a6.call(titleCountValue, "is-warning", publishState.counters.title.status === "warning");
+    (_b2 = titleCountValue.toggleClass) == null ? void 0 : _b2.call(titleCountValue, "is-error", publishState.counters.title.status === "error");
+    contentCountValue.setText(String(publishState.counters.content.value));
+    (_c = contentCountValue.toggleClass) == null ? void 0 : _c.call(contentCountValue, "is-warning", publishState.counters.content.status === "warning");
+    (_d = contentCountValue.toggleClass) == null ? void 0 : _d.call(contentCountValue, "is-error", publishState.counters.content.status === "error");
+    (_e = imageCount.toggleClass) == null ? void 0 : _e.call(imageCount, "is-warning", publishState.counters.images.status === "warning");
+    (_f = imageCount.toggleClass) == null ? void 0 : _f.call(imageCount, "is-error", publishState.counters.images.status === "error");
+    localButton.disabled = imageLimitReached;
+    materialButton.disabled = imageLimitReached || !getSelectedAccount();
+    const imageLimitHint = `\u8D34\u56FE\u6700\u591A ${STICKER_MAX_IMAGES} \u5F20\uFF0C\u8BF7\u5148\u79FB\u9664\u4E00\u5F20`;
+    if (imageLimitReached) {
+      localButton.setAttribute("title", imageLimitHint);
+      materialButton.setAttribute("title", imageLimitHint);
+    } else {
+      localButton.removeAttribute("title");
+      materialButton.removeAttribute("title");
+    }
+    titleFeedback.setText(
+      publishState.issueCode === "title-required" || publishState.issueCode === "title-exceeded" ? publishState.issueMessage : ""
+    );
+    contentFeedback.setText(
+      publishState.issueCode === "content-exceeded" ? publishState.issueMessage : ""
+    );
+    syncButton.disabled = !publishState.canSync;
+    (_g = syncButton.toggleClass) == null ? void 0 : _g.call(syncButton, "apple-btn-disabled", !publishState.canSync);
+    syncButton.setText(publishState.buttonText);
+    if (publishState.issueMessage)
+      syncButton.setAttribute("title", publishState.issueMessage);
+    else
+      syncButton.removeAttribute("title");
+  }
+  function renderCurrent() {
+    const data = currentData;
+    const items = getStickerModalItems(data);
+    const displaySources = Array.isArray(data == null ? void 0 : data.imageDisplaySources) ? data.imageDisplaySources : [];
+    const content = typeof (data == null ? void 0 : data.content) === "string" ? data.content : "";
+    const uiState = view.getStickerUiState(sourcePath);
+    const selectedAccount = getSelectedAccount();
+    const foreignMaterialCount = items.filter((item) => {
+      var _a6;
+      return ((_a6 = item.uploadRef) == null ? void 0 : _a6.kind) === "media" && item.uploadRef.accountId !== (selectedAccount == null ? void 0 : selectedAccount.id);
+    }).length;
+    currentItems = items;
+    currentContent = content;
+    currentForeignMaterialCount = foreignMaterialCount;
+    imageCount.setText(`${items.length} / ${STICKER_MAX_IMAGES}`);
+    const transformParts = getStickerTransformParts(data == null ? void 0 : data.removed);
+    transformSummary.setText(
+      transformParts.length > 0 ? `\u5DF2\u8F6C\u6362\u4E3A\u7EAF\u6587\u672C\uFF1A${transformParts.join("\u3001")}\u3002\u7B14\u8BB0\u539F\u6587\u672A\u6539\u52A8\u3002` : "\u5C06\u4EE5\u7EAF\u6587\u672C\u540C\u6B65\u5230\u5FAE\u4FE1\u8349\u7A3F\uFF1B\u7B14\u8BB0\u539F\u6587\u4E0D\u4F1A\u6539\u52A8\u3002"
+    );
+    imageBody.empty();
+    renderStickerImageList(imageBody, {
+      items,
+      getDisplaySrc: (item, index) => item.source === "body" ? displaySources[index] || item.displaySrc || "" : item.displaySrc || displaySources[index] || "",
+      setIcon,
+      emptyText: "\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247\u3002\u53EF\u4E0A\u4F20\u672C\u5730\u56FE\u7247\uFF0C\u6216\u4ECE\u5F53\u524D\u516C\u4F17\u53F7\u7D20\u6750\u5E93\u9009\u62E9\u3002",
+      focusKey,
+      onMove: (fromIndex, toIndex, movedItem) => {
+        uiState.order = moveStickerImageItem(
+          items.map((item) => item.key),
+          fromIndex,
+          toIndex
+        );
+        focusKey = (movedItem == null ? void 0 : movedItem.key) || "";
+        markPreviewDirty();
+        void refreshData();
+      },
+      onRemove: (item, index) => {
+        view.removeStickerImageItem(sourcePath, item, index);
+        focusKey = "";
+        markPreviewDirty();
+        void refreshData();
+      }
+    });
+    focusKey = "";
+    restoreRow.empty();
+    if (uiState.undoItems.length > 0) {
+      const undoButton = restoreRow.createEl("button", { text: "\u64A4\u9500\u4E0A\u6B21\u79FB\u9664" });
+      undoButton.onclick = () => {
+        focusKey = view.restoreLastStickerImage(sourcePath);
+        markPreviewDirty();
+        void refreshData();
+      };
+    }
+    if (uiState.removedKeys.length > 0 || uiState.undoItems.length > 0) {
+      const restoreAllButton = restoreRow.createEl("button", { text: "\u6062\u590D\u5168\u90E8" });
+      restoreAllButton.onclick = () => {
+        view.restoreAllStickerImages(sourcePath);
+        markPreviewDirty();
+        void refreshData();
+      };
+    }
+    imageFeedback.empty();
+    const omittedImageCount = Number.isFinite(data == null ? void 0 : data.omittedImageCount) ? Math.max(0, Number(data.omittedImageCount)) : 0;
+    if (omittedImageCount > 0) {
+      imageFeedback.createDiv({
+        cls: "sticker-publish-account-warning",
+        text: `\u53E6\u6709 ${omittedImageCount} \u5F20\u56FE\u7247\u8D85\u8FC7 ${STICKER_MAX_IMAGES} \u5F20\u4E0A\u9650\uFF0C\u672A\u52A0\u5165\u672C\u6B21\u8D34\u56FE\u3002`
+      });
+    }
+    if (foreignMaterialCount > 0) {
+      imageFeedback.createDiv({
+        cls: "sticker-publish-account-warning",
+        text: `\u6709 ${foreignMaterialCount} \u5F20\u516C\u4F17\u53F7\u7D20\u6750\u4E0D\u5C5E\u4E8E\u5F53\u524D\u8D26\u53F7\uFF0C\u8BF7\u79FB\u9664\u6216\u5207\u56DE\u539F\u8D26\u53F7\u3002`
+      });
+    }
+    updatePublishState();
+  }
+  titleInput.addEventListener("input", updatePublishState);
+  localButton.onclick = () => {
+    const remainingSlots = Math.max(0, STICKER_MAX_IMAGES - currentItems.length);
+    if (remainingSlots === 0) {
+      new Notice(`\u8D34\u56FE\u6700\u591A ${STICKER_MAX_IMAGES} \u5F20\uFF0C\u8BF7\u5148\u79FB\u9664\u4E00\u5F20`);
+      return;
+    }
+    const activeDocument = getActiveDocumentCompat();
+    if (!activeDocument)
+      return;
+    const input = activeDocument.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.multiple = true;
+    input.onchange = () => {
+      const files = Array.from(input.files || []);
+      const uiState = view.getStickerUiState(sourcePath);
+      let addedCount = 0;
+      let duplicateCount = 0;
+      let overLimitCount = 0;
+      for (const file of files) {
+        const fingerprint = `${file.name}:${file.size}:${file.lastModified}:${file.type}`;
+        const existing = uiState.manualItems.find((item2) => item2.key === `upload:${fingerprint}`);
+        if (existing) {
+          duplicateCount += 1;
+          continue;
+        }
+        if (addedCount >= remainingSlots) {
+          overLimitCount += 1;
+          continue;
+        }
+        const objectUrl = window.URL.createObjectURL(file);
+        const item = createUploadStickerImageItem({
+          blob: file,
+          fingerprint,
+          displaySrc: objectUrl,
+          name: file.name
+        });
+        if (!item) {
+          window.URL.revokeObjectURL(objectUrl);
+          continue;
+        }
+        uiState.objectUrls.add(objectUrl);
+        uiState.manualItems.push(item);
+        uiState.order.push(item.key);
+        addedCount += 1;
+      }
+      if (addedCount > 0) {
+        markPreviewDirty();
+        void refreshData();
+      }
+      if (overLimitCount > 0) {
+        new Notice(`\u5DF2\u6DFB\u52A0 ${addedCount} \u5F20\uFF1B\u53E6\u6709 ${overLimitCount} \u5F20\u8D85\u8FC7 ${STICKER_MAX_IMAGES} \u5F20\u4E0A\u9650\uFF0C\u672A\u6DFB\u52A0`);
+      } else if (duplicateCount > 0) {
+        new Notice(`\u6709 ${duplicateCount} \u5F20\u672C\u5730\u56FE\u7247\u5DF2\u5728\u5217\u8868\u4E2D\uFF0C\u672A\u91CD\u590D\u6DFB\u52A0`);
+      }
+    };
+    input.click();
+  };
+  materialButton.onclick = async () => {
+    if (currentItems.length >= STICKER_MAX_IMAGES) {
+      new Notice(`\u8D34\u56FE\u6700\u591A ${STICKER_MAX_IMAGES} \u5F20\uFF0C\u8BF7\u5148\u79FB\u9664\u4E00\u5F20`);
+      return;
+    }
+    const account = getSelectedAccount();
+    if (!account) {
+      new Notice("\u8BF7\u5148\u9009\u62E9\u516C\u4F17\u53F7\u8D26\u53F7");
+      return;
+    }
+    const api = new WechatAPI(
+      account.appId,
+      account.appSecret,
+      view.plugin.settings.proxyUrl,
+      view.plugin.settings.clientId
+    );
+    await view.showMaterialPickerModal(api, (material) => {
+      if (currentItems.length >= STICKER_MAX_IMAGES) {
+        new Notice(`\u8D34\u56FE\u6700\u591A ${STICKER_MAX_IMAGES} \u5F20\uFF0C\u8BF7\u5148\u79FB\u9664\u4E00\u5F20`);
+        return;
+      }
+      const item = createMaterialStickerImageItem({
+        mediaId: material.mediaId,
+        accountId: account.id,
+        displaySrc: material.url,
+        name: material.name
+      });
+      if (!item)
+        return;
+      const uiState = view.getStickerUiState(sourcePath);
+      if (!uiState.manualItems.some((candidate) => candidate.key === item.key)) {
+        uiState.manualItems.push(item);
+        uiState.order.push(item.key);
+        markPreviewDirty();
+        void refreshData();
+      } else {
+        new Notice("\u8FD9\u5F20\u516C\u4F17\u53F7\u7D20\u6750\u5DF2\u5728\u5217\u8868\u4E2D");
+      }
+    }, {
+      title: "\u4ECE\u516C\u4F17\u53F7\u7D20\u6750\u5E93\u6DFB\u52A0\u56FE\u7247",
+      confirmText: "\u6DFB\u52A0\u8FD9\u5F20\u56FE\u7247"
+    });
+  };
+  syncButton.onclick = async () => {
+    if (syncButton.disabled)
+      return;
+    const account = getSelectedAccount();
+    if (!account) {
+      new Notice("\u8BF7\u5148\u9009\u62E9\u516C\u4F17\u53F7\u8D26\u53F7");
+      return;
+    }
+    view.selectedAccountId = account.id;
+    view.sessionStickerSourcePath = sourcePath;
+    view.sessionTitle = titleInput.value.trim();
+    view.sessionDraftMediaId = "";
+    view.sessionDraftIndex = 0;
+    modal.close();
+    await view.onSyncToWechat();
+  };
+  const handleRefreshError = (error) => {
+    if (view.stickerModalGeneration !== generation)
+      return;
+    contentFeedback.setText(`\u6682\u65F6\u65E0\u6CD5\u8BFB\u53D6\u8D34\u56FE\u5185\u5BB9\uFF1A${(error == null ? void 0 : error.message) || "\u672A\u77E5\u9519\u8BEF"}`);
+    syncButton.disabled = true;
+    if (shouldOpenModal)
+      modal.open();
+  };
+  if (currentData) {
+    renderCurrent();
+    if (shouldOpenModal)
+      modal.open();
+  } else {
+    void refreshData().then(() => {
+      if (shouldOpenModal && view.stickerModalGeneration === generation)
+        modal.open();
+    }).catch(handleRefreshError);
+  }
+}
+
 // views/publish-modal/wechat-sync-modal.js
 var wechatSyncModalMethods = {
   showSyncModal(options = {}) {
     var _a5, _b, _c;
-    if (!this.currentHtml) {
+    if (this.previewMode !== "sticker" && !this.currentHtml) {
       new Notice(this.getMissingRenderNotice());
       return;
     }
@@ -79031,6 +90004,17 @@ var wechatSyncModalMethods = {
     const defaultId = this.plugin.settings.defaultAccountId;
     const hasDefault = accounts.some((account) => account.id === defaultId);
     let selectedAccountId = hasDefault ? defaultId : ((_c = accounts[0]) == null ? void 0 : _c.id) || "";
+    if (this.previewMode === "sticker") {
+      renderStickerPublishContent(this, {
+        modal,
+        accounts,
+        activeFile,
+        sourcePath: currentPath || "",
+        frontmatterMeta,
+        shouldOpenModal
+      });
+      return;
+    }
     let coverBase64 = (cachedState == null ? void 0 : cachedState.coverBase64) || frontmatterMeta.coverSrc || this.getFirstImageFromArticle() || "";
     let thumbMediaId = (cachedState == null ? void 0 : cachedState.thumbMediaId) || "";
     let materialCover = (cachedState == null ? void 0 : cachedState.materialCover) || null;
@@ -79107,11 +90091,14 @@ var wechatSyncModalMethods = {
       advancedOptions.setAttribute("open", "");
     advancedOptions.createEl("summary", {
       cls: "wechat-sync-advanced-summary",
-      text: "\u9AD8\u7EA7\u9009\u9879\uFF08\u6807\u9898\u3001\u5C01\u9762\u4E0E\u6458\u8981\uFF09"
+      text: this.previewMode === "sticker" ? "\u8D34\u56FE\u53D1\u5E03\u914D\u7F6E\uFF08\u6807\u9898\u4E0E\u914D\u56FE\uFF09" : "\u9AD8\u7EA7\u9009\u9879\uFF08\u6807\u9898\u3001\u5C01\u9762\u4E0E\u6458\u8981\uFF09"
     });
     const advancedBody = advancedOptions.createDiv({ cls: "wechat-sync-advanced-body" });
     const titleSection = advancedBody.createDiv({ cls: "wechat-modal-section" });
-    titleSection.createEl("label", { text: "\u6587\u7AE0\u6807\u9898", cls: "wechat-modal-label" });
+    titleSection.createEl("label", {
+      text: this.previewMode === "sticker" ? "\u8D34\u56FE\u6807\u9898" : "\u6587\u7AE0\u6807\u9898",
+      cls: "wechat-modal-label"
+    });
     const initialTitle = (cachedState == null ? void 0 : cachedState.title) !== void 0 ? cachedState.title : frontmatterMeta.title || (activeFile ? activeFile.basename : "");
     const titleInput = (
       /** @type {ObsidianInputLike} */
@@ -79131,12 +90118,63 @@ var wechatSyncModalMethods = {
       }
     });
     const coverSection = advancedBody.createDiv({ cls: "wechat-modal-section" });
-    coverSection.createEl("label", { text: "\u5C01\u9762\u56FE", cls: "wechat-modal-label" });
+    coverSection.createEl("label", {
+      text: this.previewMode === "sticker" ? "\u8D34\u56FE\u914D\u56FE\u5217\u8868" : "\u5C01\u9762\u56FE",
+      cls: "wechat-modal-label"
+    });
     const coverContent = coverSection.createDiv({ cls: "wechat-modal-cover-content" });
     const coverPreview = coverContent.createDiv({ cls: "wechat-modal-cover-preview" });
+    const stickerStatusEl = coverSection.createDiv({ cls: "wechat-modal-sticker-status" });
+    if (this.previewMode !== "sticker") {
+      stickerStatusEl.setCssStyles({ display: "none" });
+    }
     const updatePreview = () => {
       coverPreview.empty();
       coverPreview.removeClass("has-material-cover");
+      if (this.previewMode === "sticker") {
+        const stickerData = this.previewStickerData;
+        const stickerImages = stickerData && Array.isArray(stickerData.images) ? stickerData.images : [];
+        const displaySources = stickerData && Array.isArray(stickerData.imageDisplaySources) ? stickerData.imageDisplaySources : [];
+        const stickerContent = stickerData && typeof stickerData.content === "string" ? stickerData.content : "";
+        const stickerCharCount = stickerContent.length;
+        coverPreview.addClass("has-sticker-preview");
+        const stickerGrid = coverPreview.createDiv({ cls: "wechat-modal-sticker-grid-preview" });
+        if (stickerImages.length === 0) {
+          stickerGrid.createEl("div", { text: "\u672A\u68C0\u6D4B\u5230\u56FE\u7247\u7D20\u6750\uFF08\u8D34\u56FE\u8981\u6C42\u81F3\u5C11\u6709\u4E00\u5F20\u56FE\u7247\uFF09", cls: "wechat-modal-no-cover" });
+        } else {
+          stickerImages.slice(0, 4).forEach((imgSrc, idx) => {
+            stickerGrid.createEl("img", { attr: { src: displaySources[idx] || imgSrc } });
+          });
+          if (stickerImages.length > 4) {
+            stickerGrid.createEl("div", { cls: "more-badge", text: `+${stickerImages.length - 4}` });
+          }
+        }
+        if (stickerImages.length === 0) {
+          syncBtn.disabled = true;
+          syncBtn.setText("\u56FE\u7247\u4E0D\u8DB3\uFF0C\u65E0\u6CD5\u540C\u6B65");
+          syncBtn.addClass("apple-btn-disabled");
+          syncBtn.setAttribute("title", "\u5FAE\u4FE1\u8D34\u56FE\u8981\u6C42\u81F3\u5C11\u5305\u542B 1 \u5F20\u56FE\u7247\u7D20\u6750\uFF0C\u8BF7\u5148\u5728\u7B14\u8BB0\u4E2D\u63D2\u5165\u56FE\u7247");
+        } else if (stickerCharCount > STICKER_MAX_CONTENT_LENGTH) {
+          syncBtn.disabled = true;
+          syncBtn.setText("\u6587\u5B57\u8D85\u957F\uFF0C\u65E0\u6CD5\u540C\u6B65");
+          syncBtn.addClass("apple-btn-disabled");
+          syncBtn.setAttribute(
+            "title",
+            `\u5FAE\u4FE1\u8D34\u56FE\u9650\u5236\u6587\u6848\u5728 ${STICKER_MAX_CONTENT_LENGTH} \u5B57\u4EE5\u5185\uFF0C\u5F53\u524D\u4E3A ${stickerCharCount} \u5B57\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u540C\u6B65`
+          );
+        } else {
+          syncBtn.disabled = false;
+          syncBtn.setText("\u540C\u6B65\u5230\u8D34\u56FE\u8349\u7A3F");
+          syncBtn.removeClass("apple-btn-disabled");
+          syncBtn.removeAttribute("title");
+        }
+        stickerStatusEl.empty();
+        stickerStatusEl.createEl("span", {
+          text: `\u5171 ${stickerImages.length} \u5F20\u56FE\u7247 \xB7 \u6587\u6848 ${stickerCharCount} / ${STICKER_MAX_CONTENT_LENGTH} \u5B57`,
+          cls: stickerCharCount > STICKER_MAX_CONTENT_LENGTH ? "is-error" : ""
+        });
+        return;
+      }
       if (thumbMediaId) {
         coverPreview.addClass("has-material-cover");
         const materialPreview = coverPreview.createDiv({ cls: "wechat-modal-cover-material-preview" });
@@ -79180,7 +90218,13 @@ var wechatSyncModalMethods = {
       text: "\u4ECE\u7D20\u6750\u5E93\u9009\u62E9",
       cls: "wechat-cover-select-material-btn"
     });
+    if (this.previewMode === "sticker") {
+      coverBtns.setCssStyles({ display: "none" });
+    }
     const digestSection = advancedBody.createDiv({ cls: "wechat-modal-section" });
+    if (this.previewMode === "sticker") {
+      digestSection.setCssStyles({ display: "none" });
+    }
     digestSection.createEl("label", { text: "\u6587\u7AE0\u6458\u8981\uFF08\u53EF\u9009\uFF09", cls: "wechat-modal-label" });
     const autoDigest = htmlToText(this.currentHtml || "").replace(/\s+/g, " ").trim().substring(0, 45);
     const initialDigest = (cachedState == null ? void 0 : cachedState.digest) !== void 0 ? cachedState.digest : frontmatterMeta.excerpt || autoDigest;
@@ -79217,6 +90261,8 @@ var wechatSyncModalMethods = {
       if (!draftStatusEl)
         return;
       draftStatusEl.empty();
+      if (this.previewMode === "sticker")
+        return;
       if (!draftAssociation || forceNewDraft)
         return;
       let confirmUnlink = false;
@@ -79251,17 +90297,21 @@ var wechatSyncModalMethods = {
     const syncBtn = btnRow.createEl("button", { text: getSyncButtonText(), cls: "mod-cta" });
     updatePreview();
     updateDraftStatusUI();
+    if (this.previewMode === "sticker") {
+      void this.buildStickerData().then(() => updatePreview()).catch(() => void 0);
+    }
     syncBtn.onclick = async () => {
-      if (!coverBase64 && !thumbMediaId) {
-        new Notice("\u274C \u8BF7\u5148\u8BBE\u7F6E\u5C01\u9762\u56FE");
+      const isStickerMode = this.previewMode === "sticker";
+      if (!isStickerMode && !coverBase64 && !thumbMediaId) {
+        new Notice("\u8BF7\u5148\u8BBE\u7F6E\u5C01\u9762\u56FE");
         return;
       }
       modal.close();
       this.selectedAccountId = selectedAccountId;
       this.sessionCoverBase64 = coverBase64;
       this.sessionThumbMediaId = thumbMediaId;
-      this.sessionDraftMediaId = !forceNewDraft && (draftAssociation == null ? void 0 : draftAssociation.mediaId) ? draftAssociation.mediaId : "";
-      this.sessionDraftIndex = !forceNewDraft && Number.isInteger(draftAssociation == null ? void 0 : draftAssociation.index) ? draftAssociation.index : 0;
+      this.sessionDraftMediaId = !isStickerMode && !forceNewDraft && (draftAssociation == null ? void 0 : draftAssociation.mediaId) ? draftAssociation.mediaId : "";
+      this.sessionDraftIndex = !isStickerMode && !forceNewDraft && Number.isInteger(draftAssociation == null ? void 0 : draftAssociation.index) ? draftAssociation.index : 0;
       this.sessionTitle = titleInput.value.trim() || frontmatterMeta.title || (activeFile ? activeFile.basename : "\u65E0\u6807\u9898\u6587\u7AE0");
       this.sessionDigest = digestInput.value.trim() || autoDigest || "\u4E00\u952E\u540C\u6B65\u81EA Obsidian";
       await this.onSyncToWechat();
@@ -79504,7 +90554,7 @@ var wechatMultiPlatformActionMethods = {
     summary.createEl("p", {
       text: skippedPlatformIds.length ? `\u5DF2\u53D1\u5E03\u5230\uFF1A${formatPlatformNames(publishedPlatformIds)}\u3002\u8DF3\u8FC7 ${skippedPlatformIds.length} \u4E2A\u8D85\u51FA\u4ECA\u65E5\u989D\u5EA6\u7684\u5E73\u53F0\uFF1A${formatPlatformNames(skippedPlatformIds)}\u3002\u5347\u7EA7 Pro \u53EF\u53D1\u5E03\u5230\u5168\u90E8\u5E73\u53F0\u3002` : taskId ? "Obsidian \u5DF2\u5B8C\u6210\u6295\u9012\uFF0C\u4E0D\u4F1A\u957F\u65F6\u95F4\u7B49\u5F85\u6240\u6709\u5E73\u53F0\u5B8C\u6210\u3002\u540E\u7EED\u8349\u7A3F\u94FE\u63A5\u3001\u5931\u8D25\u539F\u56E0\u548C\u91CD\u8BD5\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4EFB\u52A1\u7A97\u53E3\u91CC\u67E5\u770B\u3002" : "\u5F53\u524D\u63D2\u4EF6\u7248\u672C\u6CA1\u6709\u8FD4\u56DE\u4EFB\u52A1 ID\u3002\u6587\u7AE0\u5DF2\u53D1\u9001\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u5386\u53F2\u8BB0\u5F55\u4E2D\u67E5\u770B\u6700\u8FD1\u4EFB\u52A1\u3002"
     });
-    const list = modal.contentEl.createDiv({ cls: "wechat-multiplatform-result-list" });
+    const list2 = modal.contentEl.createDiv({ cls: "wechat-multiplatform-result-list" });
     let taskPlatformSource = [];
     if (Array.isArray(task == null ? void 0 : task.platforms) && task.platforms.length) {
       taskPlatformSource = task.platforms;
@@ -79532,7 +90582,7 @@ var wechatMultiPlatformActionMethods = {
       return parseWechatsyncPlatformIds([itemRecord.id || itemRecord.platform || item])[0] || "";
     });
     if (taskId) {
-      const taskRow = list.createDiv({ cls: "wechat-multiplatform-result-row" });
+      const taskRow = list2.createDiv({ cls: "wechat-multiplatform-result-row" });
       taskRow.createEl("div", { text: "\u4EFB\u52A1", cls: "wechat-multiplatform-result-pill is-success" });
       const taskBody = taskRow.createDiv({ cls: "wechat-multiplatform-result-body" });
       taskBody.createEl("div", {
@@ -79552,7 +90602,7 @@ var wechatMultiPlatformActionMethods = {
       if (!platformId)
         continue;
       const platformName = typeof itemRecord.name === "string" ? itemRecord.name : ((_e = platformById.get(platformId)) == null ? void 0 : _e.name) || platformId;
-      const row = list.createDiv({ cls: "wechat-multiplatform-result-row" });
+      const row = list2.createDiv({ cls: "wechat-multiplatform-result-row" });
       row.createEl("div", { text: "\u5DF2\u6295\u9012", cls: "wechat-multiplatform-result-pill" });
       const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
       body.createEl("div", { text: platformName, cls: "wechat-multiplatform-result-name" });
@@ -79560,7 +90610,7 @@ var wechatMultiPlatformActionMethods = {
     for (const platformItem of sortPlatformItems(skippedPlatformIds)) {
       const platformId = String(platformItem || "");
       const platformName = ((_f = platformById.get(platformId)) == null ? void 0 : _f.name) || platformId;
-      const row = list.createDiv({ cls: "wechat-multiplatform-result-row is-warning" });
+      const row = list2.createDiv({ cls: "wechat-multiplatform-result-row is-warning" });
       row.createEl("div", {
         text: "\u5DF2\u8DF3\u8FC7",
         cls: "wechat-multiplatform-result-pill is-warning"
@@ -79686,9 +90736,9 @@ var wechatMultiPlatformActionMethods = {
     summary.createEl("p", {
       text: fatalError ? fatalError.code === "SYNC_TIMEOUT" ? "Obsidian \u6CA1\u6709\u7B49\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6\u7684\u6700\u7EC8\u56DE\u8C03\u3002\u63D2\u4EF6\u53EF\u80FD\u4ECD\u5728\u540E\u53F0\u540C\u6B65\uFF0C\u8BF7\u5148\u67E5\u770B\u63D2\u4EF6\u5386\u53F2\u6216\u76EE\u6807\u5E73\u53F0\u8349\u7A3F\u7BB1\uFF1B\u4E4B\u540E\u53EF\u4EE5\u51CF\u5C11\u5E73\u53F0\u540E\u91CD\u8BD5\u3002" : fatalError.message || "\u6D4F\u89C8\u5668\u63D2\u4EF6\u8FDE\u63A5\u4E2D\u65AD\uFF0C\u8BF7\u68C0\u67E5\u63D2\u4EF6\u3001\u8FDE\u63A5\u4EE4\u724C\u6216\u6D4F\u89C8\u5668\u767B\u5F55\u6001\u540E\u91CD\u8BD5\u3002" : normalizedResults.length > 0 ? `${successCount}/${normalizedResults.length} \u4E2A\u5E73\u53F0\u5DF2\u4FDD\u5B58\u4E3A\u8349\u7A3F\u3002\u6210\u529F\u7684\u5E73\u53F0\u53EF\u4EE5\u76F4\u63A5\u6253\u5F00\u8349\u7A3F\u68C0\u67E5\uFF0C\u5931\u8D25\u7684\u5E73\u53F0\u4FEE\u590D\u540E\u91CD\u65B0\u540C\u6B65\u3002` : "\u8BF7\u6C42\u5DF2\u53D1\u9001\u5230\u6D4F\u89C8\u5668\u63D2\u4EF6\u3002\u82E5\u8FD9\u91CC\u6CA1\u6709\u8FD4\u56DE\u5E73\u53F0\u660E\u7EC6\uFF0C\u8BF7\u5728\u6D4F\u89C8\u5668\u63D2\u4EF6\u4E2D\u67E5\u770B\u7ED3\u679C\u3002"
     });
-    const list = modal.contentEl.createDiv({ cls: "wechat-multiplatform-result-list" });
+    const list2 = modal.contentEl.createDiv({ cls: "wechat-multiplatform-result-list" });
     if (fatalError) {
-      const row = list.createDiv({ cls: "wechat-multiplatform-result-row is-error" });
+      const row = list2.createDiv({ cls: "wechat-multiplatform-result-row is-error" });
       const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
       body.createEl("div", { text: "\u6D4F\u89C8\u5668\u63D2\u4EF6\u53D1\u5E03", cls: "wechat-multiplatform-result-name" });
       body.createEl("div", {
@@ -79696,7 +90746,7 @@ var wechatMultiPlatformActionMethods = {
         cls: "wechat-multiplatform-result-detail"
       });
     } else if (normalizedResults.length === 0) {
-      const row = list.createDiv({ cls: "wechat-multiplatform-result-row" });
+      const row = list2.createDiv({ cls: "wechat-multiplatform-result-row" });
       const body = row.createDiv({ cls: "wechat-multiplatform-result-body" });
       body.createEl("div", { text: "\u7B49\u5F85\u63D2\u4EF6\u7ED3\u679C", cls: "wechat-multiplatform-result-name" });
       body.createEl("div", {
@@ -79716,7 +90766,7 @@ var wechatMultiPlatformActionMethods = {
         const draftUrl = getWechatSyncResultUrl(result);
         const errorMessage = getWechatSyncResultError(result);
         const isSuccess = (result == null ? void 0 : result.success) === true;
-        const row = list.createDiv({
+        const row = list2.createDiv({
           cls: `wechat-multiplatform-result-row ${isSuccess ? "is-success" : "is-error"}`
         });
         row.createEl("div", {
@@ -79784,7 +90834,74 @@ var wechatMultiPlatformActionMethods = {
   }
 };
 
+// services/sticker-media-resolver.js
+function getStickerAccountKey(account) {
+  return String((account == null ? void 0 : account.id) || (account == null ? void 0 : account.appId) || "").trim();
+}
+function getStickerUploadCacheKey(item, account) {
+  const accountKey = getStickerAccountKey(account);
+  const itemKey = String((item == null ? void 0 : item.fingerprint) || (item == null ? void 0 : item.key) || "").trim();
+  return accountKey && itemKey ? `${accountKey}::${itemKey}` : "";
+}
+async function resolveStickerMediaIds({
+  items,
+  account,
+  api,
+  srcToBlob,
+  cache = /* @__PURE__ */ new Map(),
+  onProgress
+}) {
+  const safeItems = Array.isArray(items) ? items : [];
+  const accountKey = getStickerAccountKey(account);
+  if (!accountKey)
+    throw new Error("\u5F53\u524D\u516C\u4F17\u53F7\u8D26\u53F7\u7F3A\u5C11\u53EF\u7528\u8EAB\u4EFD");
+  const mediaIds = [];
+  for (let index = 0; index < safeItems.length; index += 1) {
+    const item = safeItems[index];
+    onProgress == null ? void 0 : onProgress(index + 1, safeItems.length, item);
+    const uploadRef = item == null ? void 0 : item.uploadRef;
+    if ((uploadRef == null ? void 0 : uploadRef.kind) === "media") {
+      if (uploadRef.accountId !== accountKey && uploadRef.accountId !== (account == null ? void 0 : account.id)) {
+        throw new Error(`\u7B2C ${index + 1} \u5F20\u7D20\u6750\u5C5E\u4E8E\u5176\u4ED6\u516C\u4F17\u53F7\uFF0C\u8BF7\u79FB\u9664\u540E\u91CD\u65B0\u9009\u62E9`);
+      }
+      mediaIds.push(uploadRef.mediaId);
+      continue;
+    }
+    const cacheKey = getStickerUploadCacheKey(item, account);
+    const cachedMediaId = cacheKey ? cache.get(cacheKey) : "";
+    if (cachedMediaId) {
+      mediaIds.push(cachedMediaId);
+      continue;
+    }
+    let mediaId = "";
+    try {
+      let blob;
+      if ((uploadRef == null ? void 0 : uploadRef.kind) === "blob") {
+        blob = uploadRef.blob;
+      } else if ((uploadRef == null ? void 0 : uploadRef.kind) === "src") {
+        blob = await srcToBlob(uploadRef.src);
+      } else {
+        throw new Error("\u7F3A\u5C11\u53EF\u4E0A\u4F20\u5185\u5BB9");
+      }
+      const response = await api.uploadCover(blob);
+      mediaId = typeof (response == null ? void 0 : response.media_id) === "string" ? response.media_id.trim() : "";
+      if (!mediaId)
+        throw new Error("\u4E0A\u4F20\u540E\u672A\u8FD4\u56DE media_id");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error || "\u672A\u77E5\u9519\u8BEF");
+      const label = (item == null ? void 0 : item.name) || (uploadRef == null ? void 0 : uploadRef.src) || (item == null ? void 0 : item.key) || "\u672A\u77E5\u56FE\u7247";
+      throw new Error(`\u7B2C ${index + 1} \u5F20\u56FE\u7247\u4E0A\u4F20\u5931\u8D25\uFF08${label}\uFF09\uFF1A${message}`);
+    }
+    if (cacheKey)
+      cache.set(cacheKey, mediaId);
+    mediaIds.push(mediaId);
+  }
+  return mediaIds;
+}
+
 // views/publish-modal/wechat-sync-action.js
+var WECHAT_SYNC_SUCCESS_NOTICE = "\u540C\u6B65\u6210\u529F\uFF01\u8BF7\u524D\u5F80\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0\u8349\u7A3F\u7BB1\u67E5\u770B";
+var WECHAT_UPDATE_SUCCESS_NOTICE = "\u66F4\u65B0\u6210\u529F\uFF01\u5FAE\u4FE1\u8349\u7A3F\u5DF2\u66F4\u65B0";
 var wechatSyncActionMethods = {
   async onSyncToWechat() {
     const accountRecord = (
@@ -79803,13 +90920,24 @@ var wechatSyncActionMethods = {
       this.promptConfigureWechatAccount();
       return;
     }
-    if (!this.currentHtml) {
+    const isStickerMode = this.previewMode === "sticker";
+    if (!isStickerMode && !this.currentHtml) {
       new Notice(this.getMissingRenderNotice());
       return;
     }
-    const notice = new Notice(`\u{1F680} \u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65...`, 0);
+    if (isStickerMode) {
+      await this.onSyncStickerToWechat(account);
+      return;
+    }
+    const notice = new Notice(`\u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65...`, 0);
     const activeFile = this.getPublishContextFile();
     const publishMeta = this.getFrontmatterPublishMeta(activeFile);
+    const exportSource = this.resolveArticleHtmlSource({ target: "wechat-draft" });
+    if (!(exportSource == null ? void 0 : exportSource.html)) {
+      notice.hide();
+      new Notice("\u5F53\u524D\u6587\u7AE0\u8FD8\u6CA1\u6709\u53EF\u540C\u6B65\u7684\u6E32\u67D3\u7ED3\u679C");
+      return;
+    }
     try {
       const syncService = (
         /** @type {WechatSyncServiceLike} */
@@ -79819,7 +90947,9 @@ var wechatSyncActionMethods = {
           coverUploadCache: this.coverUploadCache,
           processAllImages: (html, api, progressCallback, options) => this.processAllImages(String(html || ""), api, progressCallback, options),
           processMathFormulas: (html, api, progressCallback) => this.processMathFormulas(String(html || ""), api, progressCallback),
-          prepareHtmlForDraft: (html) => this.prepareHtmlForWechatDraft(String(html || "")),
+          prepareHtmlForDraft: (html) => this.prepareHtmlForWechatDraft(String(html || ""), {
+            layoutMode: exportSource.layoutMode
+          }),
           cleanHtmlForDraft: (html) => this.cleanHtmlForDraft(String(html || "")),
           cleanupConfiguredDirectory: (file) => this.cleanupConfiguredDirectory(isRecord14(file) ? (
             /** @type {TFileLike} */
@@ -79831,7 +90961,7 @@ var wechatSyncActionMethods = {
       const result = await syncService.syncToDraft({
         account,
         proxyUrl: this.plugin.settings.proxyUrl,
-        currentHtml: this.getCurrentExportHtml() || "",
+        currentHtml: exportSource.html,
         activeFile,
         publishMeta,
         sessionTitle: this.sessionTitle,
@@ -79870,7 +91000,7 @@ var wechatSyncActionMethods = {
         await this.plugin.saveSettings();
       }
       notice.hide();
-      new Notice(isUpdate ? "\u2705 \u66F4\u65B0\u6210\u529F\uFF01\u5FAE\u4FE1\u8349\u7A3F\u5DF2\u66F4\u65B0" : "\u2705 \u540C\u6B65\u6210\u529F\uFF01\u8BF7\u524D\u5F80\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0\u8349\u7A3F\u7BB1\u67E5\u770B");
+      new Notice(isUpdate ? WECHAT_UPDATE_SUCCESS_NOTICE : WECHAT_SYNC_SUCCESS_NOTICE);
       const failedImageSources = Array.from(/* @__PURE__ */ new Set([
         ...Array.isArray(imageUploadFailures) ? imageUploadFailures.map((item) => item == null ? void 0 : item.src).filter(Boolean) : [],
         ...Array.isArray(placeholderImageSources) ? placeholderImageSources.filter(Boolean) : []
@@ -79878,15 +91008,15 @@ var wechatSyncActionMethods = {
       if (failedImageSources.length > 0) {
         const preview = failedImageSources.slice(0, 3).join("\u3001");
         const suffix = failedImageSources.length > 3 ? ` \u7B49 ${failedImageSources.length} \u5F20` : "";
-        new Notice(`\u26A0\uFE0F \u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6709 ${failedImageSources.length} \u5F20\u6B63\u6587\u56FE\u7247\u672A\u540C\u6B65\uFF1A${preview}${suffix}\u3002\u8BF7\u5728\u5FAE\u4FE1\u540E\u53F0\u624B\u52A8\u8865\u4F20\u3002`, 1e4);
+        new Notice(`\u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6709 ${failedImageSources.length} \u5F20\u6B63\u6587\u56FE\u7247\u672A\u540C\u6B65\uFF1A${preview}${suffix}\u3002\u8BF7\u5728\u5FAE\u4FE1\u540E\u53F0\u624B\u52A8\u8865\u4F20\u3002`, 1e4);
       }
       if (Array.isArray(draftWarnings) && draftWarnings.length > 0) {
         const preview = draftWarnings.slice(0, 3).map((item) => `${(item == null ? void 0 : item.message) || "\u6B63\u6587\u5B58\u5728\u53EF\u7591\u5185\u5BB9"}${(item == null ? void 0 : item.value) ? `\uFF1A${item.value}` : ""}`).join("\uFF1B");
         const suffix = draftWarnings.length > 3 ? `\uFF1B\u53E6\u6709 ${draftWarnings.length - 3} \u9879` : "";
-        new Notice(`\u26A0\uFE0F \u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6B63\u6587\u68C0\u67E5\u53D1\u73B0 ${draftWarnings.length} \u9879\u63D0\u9192\uFF1A${preview}${suffix}`, 1e4);
+        new Notice(`\u8349\u7A3F\u5DF2\u521B\u5EFA\uFF0C\u4F46\u6B63\u6587\u68C0\u67E5\u53D1\u73B0 ${draftWarnings.length} \u9879\u63D0\u9192\uFF1A${preview}${suffix}`, 1e4);
       }
       if (cleanupResult == null ? void 0 : cleanupResult.warning) {
-        new Notice(`\u26A0\uFE0F \u8D44\u6E90\u6E05\u7406\u5931\u8D25\uFF1A${cleanupResult.warning}`, 7e3);
+        new Notice(`\u8D44\u6E90\u6E05\u7406\u5931\u8D25\uFF1A${cleanupResult.warning}`, 7e3);
       }
     } catch (error) {
       notice.hide();
@@ -79902,6 +91032,64 @@ var wechatSyncActionMethods = {
           accountId: account.id || ""
         } : null
       });
+    }
+  },
+  async onSyncStickerToWechat(account) {
+    const notice = new Notice(`\u6B63\u5728\u4F7F\u7528 ${account.name} \u540C\u6B65\u8D34\u56FE...`, 0);
+    try {
+      const sourcePath = typeof this.sessionStickerSourcePath === "string" ? this.sessionStickerSourcePath : "";
+      const stickerData = await this.buildStickerData(sourcePath ? { sourcePath } : {});
+      const imageItems = Array.isArray(stickerData.imageItems) ? stickerData.imageItems : (Array.isArray(stickerData.images) ? stickerData.images : []).map((src) => createBodyStickerImageItem(src)).filter(Boolean);
+      const content = typeof stickerData.content === "string" ? stickerData.content : "";
+      const title = String(this.sessionTitle || stickerData.title || "\u672A\u547D\u540D\u8D34\u56FE").trim();
+      if (imageItems.length === 0) {
+        notice.hide();
+        new Notice("\u5FAE\u4FE1\u8D34\u56FE\u81F3\u5C11\u9700\u8981 1 \u5F20\u56FE\u7247\uFF0C\u8BF7\u5148\u5728\u7B14\u8BB0\u6B63\u6587\u4E2D\u63D2\u5165\u56FE\u7247");
+        return;
+      }
+      if (imageItems.length > STICKER_MAX_IMAGES) {
+        notice.hide();
+        new Notice(`\u5FAE\u4FE1\u8D34\u56FE\u6700\u591A\u652F\u6301 ${STICKER_MAX_IMAGES} \u5F20\u56FE\u7247\uFF0C\u8BF7\u5148\u79FB\u9664\u591A\u4F59\u56FE\u7247`);
+        return;
+      }
+      if (content.length > STICKER_MAX_CONTENT_LENGTH) {
+        notice.hide();
+        new Notice(`\u8D34\u56FE\u6587\u6848 ${content.length} \u5B57\uFF0C\u8D85\u51FA\u5FAE\u4FE1 ${STICKER_MAX_CONTENT_LENGTH} \u5B57\u4E0A\u9650\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u540C\u6B65`);
+        return;
+      }
+      if (title.length > STICKER_MAX_TITLE_LENGTH) {
+        notice.hide();
+        new Notice(`\u8D34\u56FE\u6807\u9898 ${title.length} \u5B57\uFF0C\u8D85\u51FA ${STICKER_MAX_TITLE_LENGTH} \u5B57\u4E0A\u9650\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u540C\u6B65`);
+        return;
+      }
+      const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
+      if (!this.stickerUploadCache)
+        this.stickerUploadCache = /* @__PURE__ */ new Map();
+      const imageMediaIds = await resolveStickerMediaIds({
+        items: imageItems,
+        account,
+        api,
+        srcToBlob: (src) => this.srcToBlob(src),
+        cache: this.stickerUploadCache,
+        onProgress: (current, total) => {
+          notice.setMessage(`\u6B63\u5728\u51C6\u5907\u8D34\u56FE\u56FE\u7247 (${current}/${total})...`);
+        }
+      });
+      notice.setMessage("\u6B63\u5728\u521B\u5EFA\u5FAE\u4FE1\u8D34\u56FE\u8349\u7A3F...");
+      await syncStickerDraft({
+        account,
+        api,
+        title,
+        content,
+        imageMediaIds
+      });
+      notice.hide();
+      new Notice(WECHAT_SYNC_SUCCESS_NOTICE);
+    } catch (error) {
+      notice.hide();
+      console.error("Wechat Sticker Sync Error:", error);
+      const readableError = toReadableError5(error);
+      new Notice(`\u8D34\u56FE\u540C\u6B65\u5931\u8D25\uFF1A${toSyncFriendlyMessage(readableError.message)}`, 1e4);
     }
   }
 };
@@ -79956,10 +91144,10 @@ var materialPickerMethods = {
       fromCache: false
     };
   },
-  async showMaterialPickerModal(api, onSelect) {
+  async showMaterialPickerModal(api, onSelect, options = {}) {
     var _a5, _b, _c;
     const modal = createObsidianModal(this.app);
-    modal.titleEl.setText("\u4ECE\u7D20\u6750\u5E93\u9009\u62E9\u5C01\u9762");
+    modal.titleEl.setText(options.title || "\u4ECE\u7D20\u6750\u5E93\u9009\u62E9\u5C01\u9762");
     (_a5 = modal.modalEl) == null ? void 0 : _a5.addClass("wechat-material-picker-modal");
     modal.contentEl.addClass("wechat-material-picker");
     if (isMobileClient3(this.app)) {
@@ -79979,7 +91167,10 @@ var materialPickerMethods = {
     const grid = modal.contentEl.createDiv({ cls: "wechat-material-grid" });
     const footer = modal.contentEl.createDiv({ cls: "wechat-material-footer" });
     const pagination = footer.createDiv({ cls: "wechat-material-pagination" });
-    const confirmBtn = footer.createEl("button", { text: "\u4F7F\u7528\u8FD9\u5F20\u5C01\u9762", cls: "mod-cta wechat-material-confirm" });
+    const confirmBtn = footer.createEl("button", {
+      text: options.confirmText || "\u4F7F\u7528\u8FD9\u5F20\u5C01\u9762",
+      cls: "mod-cta wechat-material-confirm"
+    });
     confirmBtn.disabled = true;
     const renderLoadingSkeleton = () => {
       grid.empty();
@@ -80051,7 +91242,7 @@ var materialPickerMethods = {
         };
       }
     };
-    const loadPage = async (page, options = {}) => {
+    const loadPage = async (page, options2 = {}) => {
       if (isLoading)
         return;
       isLoading = true;
@@ -80065,7 +91256,7 @@ var materialPickerMethods = {
       try {
         const offset = (currentPage - 1) * pageSize;
         const data = await this.loadWechatMaterialPage(api, "image", offset, pageSize, {
-          forceRefresh: options.forceRefresh === true
+          forceRefresh: options2.forceRefresh === true
         });
         totalCount = Number.isFinite(data.total_count) ? data.total_count : 0;
         const items = Array.isArray(data.item) ? data.item : [];
@@ -80105,14 +91296,21 @@ var AppleStyleView = class extends ItemView {
    * @param {LeafLike} leaf
    * @param {AppleStylePluginLike} plugin
    */
-  constructor(leaf, plugin) {
+  constructor(leaf, plugin2) {
     super(leaf);
-    this.plugin = plugin;
+    this.plugin = plugin2;
     this.currentHtml = null;
     this.converter = null;
     this.nativeRenderPipeline = null;
     this.theme = null;
     this.lastActiveFile = null;
+    this.previewMode = "article";
+    this.previewStickerData = null;
+    this.insertStickerImageIndex = false;
+    this.stickerUiStates = /* @__PURE__ */ new Map();
+    this.stickerUploadCache = /* @__PURE__ */ new Map();
+    this.sessionStickerSourcePath = "";
+    this.stickerModalGeneration = 0;
     this.sessionCoverBase64 = "";
     this.sessionThumbMediaId = "";
     this.sessionDraftMediaId = "";
@@ -80147,6 +91345,16 @@ var AppleStyleView = class extends ItemView {
     this.aiLayoutStaleSuppressUntil = 0;
     this.aiLayoutStaleSuppressTimer = null;
     this.baseRenderedHtml = null;
+    this._customCssLastValidBySource = /* @__PURE__ */ new Map();
+    this.customCssRefreshGeneration = 0;
+    this.customCssStatus = {
+      state: "disabled",
+      sourceKind: "",
+      sourcePath: "",
+      diagnostics: [],
+      matchedRuleCount: 0,
+      matchedElementCount: 0
+    };
     this.aiPreviewApplied = false;
     this.aiLayoutBtn = null;
     this.settingsBtn = null;
@@ -80214,10 +91422,13 @@ var AppleStyleView = class extends ItemView {
 Object.assign(
   AppleStyleView.prototype,
   coreMethods,
-  stylePanelMethods,
+  settingsPanelMethods,
+  panelShellMethods,
+  stickerPreviewMethods,
   aiLayoutPanelMethods,
   aiLayoutDebugMethods,
   clipboardMethods,
+  publishContextMethods,
   wechatPublishMethods,
   materialPickerMethods
 );
@@ -80297,6 +91508,7 @@ var settingsTabShellMethods = {
   },
   renderSettingsContent() {
     const { containerEl } = this;
+    const previousScrollTop = Number(containerEl.scrollTop) || 0;
     containerEl.empty();
     const stickyHeader = containerEl.createDiv({ cls: "apple-settings-sticky-header" });
     const paneBackground = resolveSettingsPaneBackground(containerEl);
@@ -80349,10 +91561,63 @@ var settingsTabShellMethods = {
     }
     this.renderWechatSettingsTab(wechatContent);
     renderMultiPlatformSettingsTab(this, multiContent, { obsidianApi });
+    containerEl.scrollTop = previousScrollTop;
   }
 };
 
 // views/settings/wechat-tab.js
+var WECHAT_ACCOUNT_SETUP_GUIDE_URL = "https://xiaoweibox.top/obsidian-publisher/guide#wechat-api";
+var CUSTOM_CSS_GUIDE_URL = "https://xiaoweibox.top/obsidian-publisher/guide/custom-css";
+function createMutedGuideDescription(activeDocument, text, linkText, href, openLink) {
+  if (!activeDocument)
+    return `${text} ${linkText}`;
+  const description = activeDocument.createDocumentFragment();
+  description.append(activeDocument.createTextNode(`${text} `));
+  const link = activeDocument.createElement("a");
+  link.textContent = linkText;
+  link.href = href;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.className = "apple-settings-guide-link";
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    openLink();
+  });
+  description.append(link);
+  return description;
+}
+async function describeCustomCssStatus(plugin2) {
+  var _a5;
+  const source = await resolveCustomCssSource(plugin2);
+  const sourceFatal = source.diagnostics.find((item) => item.severity === "fatal");
+  const compiled = sourceFatal ? null : compileCustomCss(source.cssText, { sourceIdentity: source.identity });
+  const fatal = sourceFatal || (compiled == null ? void 0 : compiled.diagnostics.find((item) => item.severity === "fatal"));
+  const converterView = (
+    /** @type {{ customCssStatus?: AppleStyleViewContract['customCssStatus'] } | null} */
+    ((_a5 = plugin2.getConverterView) == null ? void 0 : _a5.call(plugin2)) || null
+  );
+  const viewStatus = converterView == null ? void 0 : converterView.customCssStatus;
+  if (fatal) {
+    const location = fatal.line ? `\u7B2C ${fatal.line} \u884C\u9644\u8FD1` : "\u5F53\u524D CSS";
+    const fallback = (viewStatus == null ? void 0 : viewStatus.usingLastValid) ? "\uFF0C\u5F53\u524D\u7EE7\u7EED\u4F7F\u7528\u4E0A\u4E00\u6B21\u6709\u6548\u6837\u5F0F" : "\uFF0C\u5F53\u524D\u7EE7\u7EED\u4F7F\u7528\u57FA\u7840\u4E3B\u9898";
+    return `${location}\u5B58\u5728\u8BED\u6CD5\u95EE\u9898${fallback}`;
+  }
+  const sourceWarning = source.diagnostics.find((item) => item.severity === "warning");
+  if (sourceWarning)
+    return sourceWarning.message;
+  if (!source.cssText.trim())
+    return "\u5C1A\u672A\u586B\u5199 CSS";
+  if ((viewStatus == null ? void 0 : viewStatus.state) === "ai-skipped")
+    return "\u5F53\u524D\u4E3A AI \u7F16\u6392\uFF0C\u81EA\u5B9A\u4E49 CSS \u4E0D\u4F1A\u5E94\u7528";
+  const sourceLabel = source.kind === "note" ? `\u5F53\u524D\u4F7F\u7528 ${source.path}` : "\u5F53\u524D\u4F7F\u7528\u8BBE\u7F6E\u4E2D\u7684 CSS";
+  if ((viewStatus == null ? void 0 : viewStatus.sourceIdentity) === source.identity && viewStatus.state === "unmatched") {
+    return `${sourceLabel}\uFF1BCSS \u6709\u6548\uFF0C\u4F46\u5F53\u524D\u6587\u7AE0\u6CA1\u6709\u5339\u914D\u5230\u5BF9\u5E94\u5185\u5BB9`;
+  }
+  const blockedCount = (compiled == null ? void 0 : compiled.diagnostics.filter((item) => item.severity === "blocked").length) || 0;
+  if (blockedCount > 0)
+    return `${sourceLabel}\uFF1B\u5DF2\u5FFD\u7565 ${blockedCount} \u9879\u4E0D\u652F\u6301\u6216\u4E0D\u5B89\u5168\u7684\u89C4\u5219`;
+  return `${sourceLabel}\uFF0C\u9884\u89C8\u4F1A\u81EA\u52A8\u66F4\u65B0`;
+}
 var wechatSettingsMethods = {
   /**
    * @param {ObsidianElementLike} containerEl
@@ -80420,7 +91685,15 @@ var wechatSettingsMethods = {
       this.plugin.settings.avatarUrl = value;
       await this.plugin.saveSettings();
     }));
-    new Setting(containerEl).setName("\u5FAE\u4FE1\u516C\u4F17\u53F7\u8D26\u53F7").setDesc("\u8BF7\u5728\u5FAE\u4FE1\u516C\u4F17\u53F7\u540E\u53F0 [\u8BBE\u7F6E\u4E0E\u5F00\u53D1] -> [\u57FA\u672C\u914D\u7F6E] \u4E2D\u83B7\u53D6 AppID \u548C AppSecret\uFF0C\u5E76\u786E\u4FDD\u5DF2\u5C06\u5F53\u524D IP \u52A0\u5165\u767D\u540D\u5355\u3002").setHeading();
+    new Setting(containerEl).setName("\u5FAE\u4FE1\u516C\u4F17\u53F7\u8D26\u53F7").setDesc(createMutedGuideDescription(
+      containerEl.ownerDocument || getActiveDocumentCompat(),
+      "\u6DFB\u52A0\u7528\u4E8E\u540C\u6B65\u8349\u7A3F\u7684\u516C\u4F17\u53F7 AppID \u548C AppSecret\u3002\u9996\u6B21\u914D\u7F6E\u8BF7\u5148\u5B8C\u6210 IP \u767D\u540D\u5355\u8BBE\u7F6E\u3002",
+      "\u67E5\u770B\u56FE\u6587\u6307\u5357 \u2192",
+      WECHAT_ACCOUNT_SETUP_GUIDE_URL,
+      () => {
+        this.plugin.openExternalUrl(WECHAT_ACCOUNT_SETUP_GUIDE_URL);
+      }
+    )).setHeading();
     const accounts = this.plugin.settings.wechatAccounts || [];
     const defaultId = this.plugin.settings.defaultAccountId;
     if (accounts.length === 0) {
@@ -80603,7 +91876,7 @@ var wechatSettingsMethods = {
    * @param {ObsidianElementLike} containerEl
    */
   renderCustomCssSection(containerEl) {
-    var _a5, _b;
+    var _a5, _b, _c, _d;
     new Setting(containerEl).setName("\u81EA\u5B9A\u4E49 CSS").setHeading();
     const warningCard = containerEl.createDiv({
       cls: "owc-custom-css-warning",
@@ -80615,11 +91888,15 @@ var wechatSettingsMethods = {
     warningCard.createSpan({
       text: "\uFF1A\u9700\u8981\u60A8\u81EA\u5DF1\u7F16\u5199 CSS\u3002\u63D2\u4EF6\u4F1A\u81EA\u52A8\u628A\u9009\u62E9\u5668\u6837\u5F0F\u5185\u8054\u5230\u5143\u7D20\u4E0A\uFF0C\u4F46\u5FAE\u4FE1\u4ECD\u53EF\u80FD\u6E05\u6D17\u90E8\u5206\u590D\u6742\u6837\u5F0F\uFF1B\u5F53\u6587\u7AE0\u5DF2\u4F7F\u7528 AI \u7F16\u6392\u7ED3\u679C\u65F6\uFF0C\u81EA\u5B9A\u4E49 CSS \u4E0D\u751F\u6548\uFF08\u4E24\u8005\u4E3A\u72EC\u7ACB\u7684\u6837\u5F0F\u7CFB\u7EDF\uFF09\u3002\u542F\u7528\u524D\u5EFA\u8BAE\u5148\u7528\u300C\u590D\u5236\u5230\u516C\u4F17\u53F7\u300D\u5C0F\u8303\u56F4\u6D4B\u8BD5\u3002"
     });
-    new Setting(containerEl).setName("\u4F7F\u7528\u6307\u5357").setDesc("\u81EA\u5B9A\u4E49 CSS \u7684\u4F5C\u7528\u57DF\u539F\u7406\u3001\u53EF\u7528\u9009\u62E9\u5668\u6E05\u5355\u3001\u53EF\u76F4\u63A5\u590D\u5236\u7684\u793A\u4F8B\u4E0E\u7981\u5FCC\u5751\u4F4D\uFF0C\u770B\u8FD9\u7BC7\u5728\u7EBF\u6307\u5357\u3002").addButton((btn) => btn.setButtonText("\u67E5\u770B\u4F7F\u7528\u6307\u5357 \u2192").setCta().onClick(() => {
-      if (typeof window !== "undefined" && typeof window.open === "function") {
-        window.open("https://xiaoweibox.top/obsidian-publisher/guide/custom-css", "_blank", "noopener");
+    new Setting(containerEl).setName("\u4F7F\u7528\u6307\u5357").setDesc(createMutedGuideDescription(
+      containerEl.ownerDocument || getActiveDocumentCompat(),
+      "\u81EA\u5B9A\u4E49 CSS \u7684\u4F5C\u7528\u57DF\u539F\u7406\u3001\u53EF\u7528\u9009\u62E9\u5668\u6E05\u5355\u3001\u53EF\u76F4\u63A5\u590D\u5236\u7684\u793A\u4F8B\u4E0E\u7981\u5FCC\u5751\u4F4D\u3002",
+      "\u67E5\u770B\u4F7F\u7528\u6307\u5357 \u2192",
+      CUSTOM_CSS_GUIDE_URL,
+      () => {
+        this.plugin.openExternalUrl(CUSTOM_CSS_GUIDE_URL);
       }
-    }));
+    ));
     let customCssEnabled = !!this.plugin.settings.enableCustomCss;
     new Setting(containerEl).setName("\u542F\u7528\u81EA\u5B9A\u4E49 CSS").setDesc("\u5F00\u542F\u540E\uFF0C\u4E0B\u65B9\u8F93\u5165\u7684 CSS \u5C06\u8986\u76D6\u5F53\u524D\u4E3B\u9898\u7684\u90E8\u5206\u6837\u5F0F\u3002").addToggle((toggle) => toggle.setValue(customCssEnabled).onChange(async (value) => {
       var _a6, _b2;
@@ -80633,16 +91910,50 @@ var wechatSettingsMethods = {
     if (!customCssEnabled) {
       return;
     }
+    const statusRow = containerEl.createDiv({ cls: "owc-custom-css-status" });
+    (_a5 = statusRow.setCssStyles) == null ? void 0 : _a5.call(statusRow, {
+      display: "flex",
+      gap: "8px",
+      alignItems: "baseline",
+      margin: "-2px 0 12px",
+      padding: "0 2px",
+      fontSize: "12px",
+      lineHeight: "1.5",
+      color: "var(--text-muted)"
+    });
+    const statusLabel = statusRow.createSpan({ text: "\u5F53\u524D\u72B6\u6001" });
+    (_b = statusLabel.setCssStyles) == null ? void 0 : _b.call(statusLabel, {
+      flex: "0 0 auto",
+      color: "var(--text-normal)",
+      fontWeight: "500"
+    });
+    const statusText = statusRow.createSpan({ text: "\u6B63\u5728\u68C0\u67E5\u81EA\u5B9A\u4E49 CSS\u2026" });
+    let statusRefreshGeneration = 0;
+    const refreshCustomCssStatus = async (delayMs = 0) => {
+      const generation = ++statusRefreshGeneration;
+      if (delayMs > 0 && typeof window !== "undefined") {
+        await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+      }
+      if (generation !== statusRefreshGeneration || !statusRow.parentElement)
+        return;
+      const description = await describeCustomCssStatus(this.plugin);
+      if (generation !== statusRefreshGeneration || !statusRow.parentElement)
+        return;
+      statusText.textContent = description;
+    };
+    refreshCustomCssStatus();
     const textareaSetting = new Setting(containerEl).setName("\u81EA\u5B9A\u4E49 CSS \u5185\u5BB9").setDesc("\u76F4\u63A5\u7C98\u8D34 CSS\uFF0C\u4F8B\u5982 p { color: #333; }\u3002\u65E0\u9700\u5199 .owc-article-root \u524D\u7F00\uFF0C\u63D2\u4EF6\u4F1A\u81EA\u52A8\u9650\u5B9A\u4F5C\u7528\u57DF\u3002");
-    (_b = (_a5 = textareaSetting.settingEl).setCssStyles) == null ? void 0 : _b.call(_a5, { flexWrap: "wrap" });
+    (_d = (_c = textareaSetting.settingEl) == null ? void 0 : _c.setCssStyles) == null ? void 0 : _d.call(_c, { flexWrap: "wrap" });
     textareaSetting.addTextArea((text) => {
       var _a6, _b2;
       text.setPlaceholder("/* \u5728\u6B64\u8F93\u5165\u4F60\u7684\u81EA\u5B9A\u4E49 CSS */\np { color: #333; }").setValue(this.plugin.settings.customCss || "").onChange(async (value) => {
         var _a7, _b3;
         this.plugin.settings.customCss = value;
         const saved = await this.plugin.saveSettings();
-        if (saved)
+        if (saved) {
           (_b3 = (_a7 = this.plugin).scheduleCustomCssPreviewNotice) == null ? void 0 : _b3.call(_a7);
+          refreshCustomCssStatus(800);
+        }
       });
       if (text.inputEl) {
         (_b2 = (_a6 = text.inputEl).setCssStyles) == null ? void 0 : _b2.call(_a6, {
@@ -80657,8 +91968,10 @@ var wechatSettingsMethods = {
       var _a6, _b2;
       this.plugin.settings.customCssNote = value.trim();
       const saved = await this.plugin.saveSettings();
-      if (saved)
+      if (saved) {
         (_b2 = (_a6 = this.plugin).scheduleCustomCssPreviewNotice) == null ? void 0 : _b2.call(_a6);
+        refreshCustomCssStatus(800);
+      }
     }));
   }
 };
@@ -81252,9 +92565,9 @@ var AppleStyleSettingTab = class extends PluginSettingTab {
    * @param {AppLike} app
    * @param {AppleStylePluginLike} plugin
    */
-  constructor(app, plugin) {
-    super(app, plugin);
-    this.plugin = plugin;
+  constructor(app, plugin2) {
+    super(app, plugin2);
+    this.plugin = plugin2;
   }
   /**
    * @param {string} vaultPath
@@ -81316,7 +92629,7 @@ AppleStyleSettingTab.prototype[LEGACY_SETTING_RENDER_KEY2] = function legacySett
 function isRecord16(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
-function toRecord13(value) {
+function toRecord14(value) {
   return isRecord16(value) ? value : {};
 }
 function toAiLayoutState2(value) {
@@ -81334,8 +92647,8 @@ function getArticleLayoutStateFromSettings(pluginSettings, sourcePath = "", sele
   const normalizedPath = normalizeVaultPath(sourcePath || "");
   if (!normalizedPath)
     return null;
-  const aiSettings = normalizeAiSettings(toRecord13(pluginSettings.ai));
-  const articleLayoutsByPath = toRecord13(aiSettings.articleLayoutsByPath);
+  const aiSettings = normalizeAiSettings(toRecord14(pluginSettings.ai));
+  const articleLayoutsByPath = toRecord14(aiSettings.articleLayoutsByPath);
   const entry = articleLayoutsByPath[normalizedPath] || null;
   const normalizedEntry = normalizeArticleLayoutCacheEntry(entry);
   if (!normalizedEntry)
@@ -81433,8 +92746,7 @@ function saveArticleLayoutStateToSettings(pluginSettings, sourcePath = "", nextS
 }
 
 // input.js
-var CUSTOM_CSS_PREVIEW_NOTICE = "\u81EA\u5B9A\u4E49 CSS \u5DF2\u66F4\u65B0\uFF0C\u8BF7\u5173\u95ED\u5E76\u91CD\u65B0\u6253\u5F00\u53D1\u5E03\u52A9\u624B\u9762\u677F\u4EE5\u5237\u65B0\u9884\u89C8\u3002";
-var CUSTOM_CSS_PREVIEW_NOTICE_DELAY_MS = 300;
+var CUSTOM_CSS_PREVIEW_REFRESH_DELAY_MS = 650;
 var AppleStylePlugin = class extends Plugin {
   async onload() {
     console.debug("\u{1F4DD} \u6B63\u5728\u52A0\u8F7D Obsidian \u53D1\u5E03\u52A9\u624B...");
@@ -81494,10 +92806,22 @@ var AppleStylePlugin = class extends Plugin {
               });
             }
           }
+          this.handleCustomCssNoteModified({ path: oldPath });
+          this.handleCustomCssNoteModified(file);
         })
       );
       this.registerEvent(
         this.app.vault.on("modify", (file) => {
+          this.handleCustomCssNoteModified(file);
+        })
+      );
+      this.registerEvent(
+        this.app.vault.on("create", (file) => {
+          this.handleCustomCssNoteModified(file);
+        })
+      );
+      this.registerEvent(
+        this.app.vault.on("delete", (file) => {
           this.handleCustomCssNoteModified(file);
         })
       );
@@ -81582,9 +92906,8 @@ var AppleStylePlugin = class extends Plugin {
     return null;
   }
   /**
-   * Coalesces repeated custom CSS changes into one notice while a preview is open.
-   * This intentionally does not rebuild or mutate the existing preview.
-   * @returns {boolean} Whether a notice was scheduled
+   * 合并连续 CSS 变化，只重新派生普通预览，不重新解析 Markdown。
+   * @returns {boolean} 是否已安排刷新
    */
   scheduleCustomCssPreviewNotice() {
     if (!this.getConverterView() || typeof window === "undefined")
@@ -81594,10 +92917,17 @@ var AppleStylePlugin = class extends Plugin {
     }
     this._customCssPreviewNoticeTimer = window.setTimeout(() => {
       this._customCssPreviewNoticeTimer = 0;
-      if (this.getConverterView()) {
-        new Notice(CUSTOM_CSS_PREVIEW_NOTICE);
+      const view = (
+        /** @type {{ refreshCustomCssPreview?: () => Promise<boolean> } | null} */
+        this.getConverterView()
+      );
+      if (typeof (view == null ? void 0 : view.refreshCustomCssPreview) === "function") {
+        const refreshPromise = view.refreshCustomCssPreview();
+        refreshPromise.catch((error) => {
+          console.warn("\u5237\u65B0\u81EA\u5B9A\u4E49 CSS \u9884\u89C8\u5931\u8D25:", error);
+        });
       }
-    }, CUSTOM_CSS_PREVIEW_NOTICE_DELAY_MS);
+    }, CUSTOM_CSS_PREVIEW_REFRESH_DELAY_MS);
     return true;
   }
   /**
@@ -81605,8 +92935,10 @@ var AppleStylePlugin = class extends Plugin {
    * @returns {boolean} Whether the modified file matched the configured CSS note
    */
   handleCustomCssNoteModified(file) {
-    const configuredPath = String(getPluginSettings(this).customCssNote || "").trim();
-    if (!configuredPath || (file == null ? void 0 : file.path) !== configuredPath)
+    const configuredPath = normalizeCustomCssNotePath(getPluginSettings(this).customCssNote || "");
+    const filePath = normalizeCustomCssNotePath((file == null ? void 0 : file.path) || "");
+    const configuredCandidates = configuredPath.toLowerCase().endsWith(".md") ? [configuredPath] : [configuredPath, `${configuredPath}.md`];
+    if (!configuredPath || !configuredCandidates.includes(filePath))
       return false;
     this.scheduleCustomCssPreviewNotice();
     return true;
@@ -81875,6 +93207,9 @@ juice/lib/utils.js:
    * @param {String} selectorText from mensch
    * @api public
    *)
+
+cssesc/cssesc.js:
+  (*! https://mths.be/cssesc v3.0.0 by @mathias *)
 
 @noble/hashes/esm/utils.js:
   (*! noble-hashes - MIT License (c) 2022 Paul Miller (paulmillr.com) *)

@@ -71,6 +71,22 @@ blockquote {
   color: #566573 !important;
 }
 
+/* Obsidian Callout：使用插件承诺的稳定公开 hook */
+.owc-callout {
+  border-left: 5px solid #f39c12 !important;
+}
+
+.owc-callout-title {
+  color: #b35c00 !important;
+}
+
+.owc-callout::before {
+  content: "※";
+  color: #f39c12;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
 blockquote p {
   color: #566573 !important;
   margin: 0 !important;

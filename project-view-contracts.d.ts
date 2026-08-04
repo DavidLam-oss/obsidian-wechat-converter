@@ -28,6 +28,73 @@
  * This file has no runtime output and exists only for JSDoc type checking.
  */
 
+interface StickerImageItemLike {
+    source: 'body' | 'upload' | 'material' | 'render';
+    key: string;
+    displaySrc?: string;
+    name?: string;
+    fingerprint?: string;
+    uploadRef:
+        | { kind: 'src'; src: string }
+        | { kind: 'blob'; blob: Blob }
+        | { kind: 'media'; mediaId: string; accountId: string };
+}
+
+interface StickerUiStateLike {
+    order: string[];
+    removedKeys: string[];
+    manualItems: StickerImageItemLike[];
+    undoItems: Array<{ item: StickerImageItemLike; index: number; wasManual: boolean }>;
+    objectUrls: Set<string>;
+}
+
+/** 微信贴图提取结果：侧边栏预览、发布弹窗与同步动作共用 */
+interface StickerPreviewDataLike {
+    title: string;
+    content: string;
+    /** 原始图片地址（用于上传） */
+    images: string[];
+    imageItems: StickerImageItemLike[];
+    /** 可直接显示的图片地址（用于预览缩略图） */
+    imageDisplaySources: string[];
+    /** 超过公开接口 20 张上限、未进入本次发布列表的图片数量 */
+    omittedImageCount: number;
+    hasCodeBlocks: boolean;
+    hasTables: boolean;
+    hasMath: boolean;
+    hasFootnotes: boolean;
+    removed: Array<{ kind: string; count: number }>;
+    sourcePath: string;
+}
+
+interface CompiledCustomCssLike {
+    sourceIdentity: string;
+    sourceHash: string;
+    scopedCss: string;
+    pseudoRules: Array<{
+        baseSelector: string;
+        pseudoType: "before" | "after";
+        properties: Record<string, string>;
+    }>;
+    fallbackRules?: Array<{
+        selector: string;
+        properties: Record<string, string>;
+    }>;
+    counterConfig: {
+        resets: Array<{ selector: string; name: string; value: number }>;
+        increments: Array<{ selector: string; name: string; value: number }>;
+    };
+    matchSelectors: string[];
+    diagnostics: Array<{
+        severity: "fatal" | "blocked" | "warning" | "info";
+        code: string;
+        message: string;
+        line?: number;
+        column?: number;
+    }>;
+    usable: boolean;
+}
+
 interface AppleStyleViewContract extends ItemViewBaseLike {
     /** @type {AppleStylePluginLike} */
     plugin: AppleStylePluginLike;
@@ -75,6 +142,10 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     coverUploadCache: Map<string, string | CoverCacheEntry>;
     /** @type {Map<string, unknown>} */
     mermaidImageCache: Map<string, unknown>;
+    stickerUiStates: Map<string, StickerUiStateLike>;
+    stickerUploadCache: Map<string, string>;
+    sessionStickerSourcePath: string;
+    stickerModalGeneration: number;
     /** @type {number} */
     renderGeneration: number;
     /** @type {string} */
@@ -107,6 +178,25 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     aiLayoutStaleSuppressTimer: number | null;
     /** @type {string | null} */
     baseRenderedHtml: string | null;
+    _customCssLastValidBySource: Map<string, CompiledCustomCssLike>;
+    customCssRefreshGeneration: number;
+    customCssStatus: {
+        state: string;
+        sourceKind: string;
+        sourcePath: string;
+        sourceIdentity?: string;
+        sourceHash?: string;
+        usingLastValid?: boolean;
+        diagnostics: Array<{
+            severity: "fatal" | "blocked" | "warning" | "info";
+            code: string;
+            message: string;
+            line?: number;
+            column?: number;
+        }>;
+        matchedRuleCount: number;
+        matchedElementCount: number;
+    };
     /** @type {boolean} */
     aiPreviewApplied: boolean;
     aiLayoutBtn: ObsidianElementLike;
@@ -267,6 +357,24 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
      * @param {ObsidianElementLike} container
      */
     createSettingsPanel(container: ObsidianElementLike): void;
+    /** 预览模式：文章排版 / 微信贴图 */
+    previewMode: 'article' | 'sticker';
+    /** 最近一次贴图提取结果，供发布弹窗与同步动作复用 */
+    previewStickerData: StickerPreviewDataLike | null;
+    /** 是否在贴图文案中插入 [配图 N] 序号 */
+    insertStickerImageIndex: boolean;
+    switchPreviewMode(mode: string): void;
+    /** 读取/初始化某个笔记的贴图交互状态（排序与排除项） */
+    getStickerUiState(filePath: string): StickerUiStateLike;
+    removeStickerImageItem(filePath: string, item: StickerImageItemLike, index: number): void;
+    restoreLastStickerImage(filePath: string): string;
+    restoreAllStickerImages(filePath: string): void;
+    /** 把 vault 内图片地址解析成可直接显示的资源地址 */
+    resolveStickerImageSrc(src: string, sourcePath: string): string;
+    /** 提取当前笔记的贴图数据（标题、文案、图片顺序） */
+    buildStickerData(options?: { sourcePath?: string }): Promise<StickerPreviewDataLike>;
+    renderStickerPreview(): Promise<ObsidianElementLike | undefined>;
+    toggleSettingsPanel(): void;
     saveTimeout: number;
     /**
      * 创建账号选择器

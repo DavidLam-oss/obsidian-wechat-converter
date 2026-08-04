@@ -1,7 +1,7 @@
 /*
 ## 核心功能
 
-覆盖自定义 CSS 变化后的预览重开提示调度与 Vault 文件匹配。
+覆盖自定义 CSS 变化后的热预览调度与 Vault 文件匹配。
 
 ## 输入
 
@@ -9,7 +9,7 @@
 
 ## 输出
 
-输出自动化断言结果，保护提示合并、关闭预览静默和卸载清理行为。
+输出自动化断言结果，保护刷新合并、关闭预览静默和卸载清理行为。
 
 ## 定位
 
@@ -21,7 +21,7 @@
 
 ## 维护规则
 
-- 不把提示测试扩展成预览热刷新测试；该功能只提示用户重新打开面板。
+- 连续变化只触发一次视图热刷新，不显示重开面板 Notice。
 - Vault 事件只匹配当前配置的 CSS 笔记路径。
 */
 
@@ -29,7 +29,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { loadInputModule } = require('./helpers/input-module.cjs');
 
-describe('AppleStylePlugin - custom CSS preview notice', () => {
+describe('AppleStylePlugin - custom CSS preview refresh', () => {
   let AppleStylePlugin;
 
   beforeEach(() => {
@@ -42,7 +42,7 @@ describe('AppleStylePlugin - custom CSS preview notice', () => {
     vi.useRealTimers();
   });
 
-  function makePlugin(leaves = [{ view: {} }]) {
+  function makePlugin(leaves = [{ view: { refreshCustomCssPreview: vi.fn().mockResolvedValue(true) } }]) {
     const plugin = new AppleStylePlugin();
     plugin.app = {
       workspace: {
@@ -52,20 +52,20 @@ describe('AppleStylePlugin - custom CSS preview notice', () => {
     return plugin;
   }
 
-  it('coalesces rapid changes into one notice while the preview is open', () => {
+  it('coalesces rapid changes into one hot refresh while the preview is open', async () => {
     const plugin = makePlugin();
+    const view = plugin.getConverterView();
 
     expect(plugin.scheduleCustomCssPreviewNotice()).toBe(true);
     plugin.scheduleCustomCssPreviewNotice();
     plugin.scheduleCustomCssPreviewNotice();
-    vi.advanceTimersByTime(299);
-    expect(globalThis.__obsidianNoticeRegistry).toHaveLength(0);
+    vi.advanceTimersByTime(649);
+    expect(view.refreshCustomCssPreview).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
+    await Promise.resolve();
 
-    expect(globalThis.__obsidianNoticeRegistry).toHaveLength(1);
-    expect(globalThis.__obsidianNoticeRegistry[0].message).toBe(
-      '自定义 CSS 已更新，请关闭并重新打开发布助手面板以刷新预览。'
-    );
+    expect(view.refreshCustomCssPreview).toHaveBeenCalledTimes(1);
+    expect(globalThis.__obsidianNoticeRegistry).toHaveLength(0);
   });
 
   it('does not notify when no converter preview is open', () => {
@@ -76,8 +76,9 @@ describe('AppleStylePlugin - custom CSS preview notice', () => {
     expect(globalThis.__obsidianNoticeRegistry).toHaveLength(0);
   });
 
-  it('rechecks the preview before showing a scheduled notice', () => {
-    const leaves = [{ view: {} }];
+  it('rechecks the preview before running a scheduled refresh', () => {
+    const view = { refreshCustomCssPreview: vi.fn() };
+    const leaves = [{ view }];
     const plugin = makePlugin(leaves);
 
     plugin.scheduleCustomCssPreviewNotice();
@@ -85,6 +86,7 @@ describe('AppleStylePlugin - custom CSS preview notice', () => {
     vi.runAllTimers();
 
     expect(globalThis.__obsidianNoticeRegistry).toHaveLength(0);
+    expect(view.refreshCustomCssPreview).not.toHaveBeenCalled();
   });
 
   it('matches only the currently configured custom CSS note', () => {
@@ -97,7 +99,16 @@ describe('AppleStylePlugin - custom CSS preview notice', () => {
     expect(scheduleSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('clears a pending notice when the plugin unloads', async () => {
+  it('配置省略 .md 时也匹配规范化后的笔记路径', () => {
+    const plugin = makePlugin();
+    plugin.settings = { customCssNote: '\\Meta//custom.css' };
+    const scheduleSpy = vi.spyOn(plugin, 'scheduleCustomCssPreviewNotice');
+
+    expect(plugin.handleCustomCssNoteModified({ path: 'Meta/custom.css.md' })).toBe(true);
+    expect(scheduleSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears a pending refresh when the plugin unloads', async () => {
     const plugin = makePlugin();
     plugin.scheduleCustomCssPreviewNotice();
 

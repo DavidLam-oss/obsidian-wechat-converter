@@ -1,7 +1,9 @@
 ---
-name: "微信公众号排版转换器"
-description: "面向 Obsidian 创作者的安静、可靠、精致的发布工作台"
+version: alpha
+name: "顺序优先的安静发布工作台"
+description: "以最终九宫格顺序为核心、融入 Obsidian 的单列贴图发布体验"
 colors:
+  primary: "#0071e3"
   ink: "#1d1d1f"
   text-secondary: "#6e6e73"
   text-tertiary: "#86868b"
@@ -25,14 +27,19 @@ typography:
     fontFamily: "-apple-system, BlinkMacSystemFont, SF Pro Text, Helvetica Neue, PingFang SC, Arial, sans-serif"
     fontSize: "13px"
     fontWeight: 400
+    lineHeight: 1.5
     letterSpacing: "0"
   label:
     fontFamily: "-apple-system, BlinkMacSystemFont, SF Pro Text, Helvetica Neue, PingFang SC, Arial, sans-serif"
     fontSize: "12px"
     fontWeight: 500
+    lineHeight: 1.4
     letterSpacing: "0"
   code:
     fontFamily: "SF Mono, Menlo, Monaco, Consolas, monospace"
+    fontSize: "12px"
+    fontWeight: 400
+    lineHeight: 1.5
     letterSpacing: "0"
 rounded:
   sm: "4px"
@@ -71,6 +78,12 @@ components:
     rounded: "{rounded.sm}"
     padding: "6px 10px"
 ---
+<!-- OPENPRD:UI-CONTEXT
+status=frozen
+direction=direction-1
+source=user-confirmed
+schema=google-labs-code/design.md@bde692f2bc92ef7fdd0cf277b2704ab074b70efd
+-->
 
 # Design System: 微信公众号排版转换器
 
@@ -138,6 +151,16 @@ components:
 
 **The Quiet Hierarchy Rule.** 通过 1–2 个字号级差、字重与间距建立层级，禁止在侧边栏、设置页和弹窗中使用 Hero 级大字。
 
+## Layout
+
+贴图发布使用单列任务流：账号与标题先建立发布上下文，图片区随后成为主要工作面，清理摘要与发布动作收尾。图片区标题、计数、说明和两个添加动作属于同一层级；3 列网格在侧边栏与弹窗中复用相同顺序语义，不把空槽渲染成装饰卡片。
+
+- 桌面弹窗保持约 `560px`–`640px` 的内容宽度，优先完整展示 3 列图片。
+- 窄屏下标题区动作可换行，网格仍保持 3 列；点击目标通过内边距扩展，不用放大可见图标。
+- 相邻控件使用 `8px`–`12px` 紧凑间距，字段组与图片区之间使用 `16px`–`24px` 分隔。
+- 图片采用正方形裁切；序号固定在左上角，移除入口固定在右上角，键盘排序反馈不改变网格尺寸。
+- 弹窗内容可滚动，页脚动作保持稳定，不允许图片数量变化推动按钮横向漂移。
+
 ## Elevation
 
 系统以扁平和色调分层为默认。主内容、工具栏与设置项依靠背景、1px 边界和间距区分；阴影只用于确实悬浮在当前层级之上的覆盖面板、弹出菜单、手机预览框，或作为焦点反馈，不能给每个分区都制造“卡片感”。
@@ -149,6 +172,12 @@ components:
 - **Preview Device**：仅手机边框预览使用更深的组合阴影，用来表达真实设备边界，不复用于普通容器。
 
 **The Flat-by-Default Rule.** 静止表面默认无阴影；只有层级或状态发生真实变化时才允许抬升。
+
+## Shapes
+
+- 常规控件圆角使用 `4px`，网格图片与信息容器使用 `8px`，弹窗层级最多 `12px`。
+- 图片格使用完整 `1px` 边界或主题背景分层，不使用彩色侧边条。
+- 移除态使用约 78% 的中性深色遮罩；错误红只用于真实错误，不承担普通移除悬停。
 
 ## Components
 
@@ -188,6 +217,14 @@ components:
 - 预览区是内容结果面，保持稳定尺寸和独立滚动；工具栏动作不能挤压预览内容。
 - 手机边框是功能模式而非装饰卡片，固定比例和尺寸，移动端通过结构适配保证完整可见。
 - 微信、飞书与其他平台在同一发布入口下保持分区清楚，账号、状态、结果与恢复动作不跨平台混用。
+
+### Sticker Image Order
+
+- 图片网格是贴图模式的主要结果面；网格顺序与最终发布顺序一一对应。
+- 添加本地图片使用 Obsidian/Lucide `upload`，素材库使用 `images`，移除使用 `x`；键盘排序使用方向箭头并提供可访问名称。
+- 鼠标拖动、触摸移动和键盘排序必须调用同一重排逻辑；焦点在重排后跟随图片。
+- 移除后提供“撤销”，不弹二次确认；超过 9 张时禁用添加入口并说明限制。
+- 动效只表达拖动、焦点、移除和撤销状态，持续 `150ms`–`200ms`，并在减少动态效果偏好下关闭位移动画。
 
 ## Do's and Don'ts
 

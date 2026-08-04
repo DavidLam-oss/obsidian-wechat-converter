@@ -8,12 +8,13 @@
 ## 输入
 
 - 已包进 `.owc-article-root` 的文章 HTML 字符串（wrappedHtml）。
-- 用户原始（未作用域）自定义 CSS 文本。
+- 用户原始（未作用域）自定义 CSS 文本，或 compiler 预先提取的伪元素/计数器规则。
 
 ## 输出
 
 - 注入真实 `<span>`（带 inline style + textContent，含计数器值）后的 HTML 字符串。
-- `removePseudoRulesFromCSS(css)`：从 CSS 中剥离 `::before`/`::after` 规则块。
+- compiler 路径返回注入数量，供设置状态与测试使用。
+- 旧的 raw CSS helper 继续作为兼容和独立测试入口。
 
 ## 定位
 
@@ -507,6 +508,7 @@ function computeCounters(container, config) {
  * @param {Element} el
  * @param {PseudoRule} rule
  * @param {Map<string, number>|undefined} counterMap
+ * @returns {boolean}
  */
 function renderPseudoForElement(el, rule, counterMap) {
     const cssContent = rule.properties['content'] || '';
@@ -518,7 +520,7 @@ function renderPseudoForElement(el, rule, counterMap) {
         textContent = ' ';
     } else {
         textContent = resolveContent(cssContent, counterMap);
-        if (!textContent && textContent !== '') return;
+        if (!textContent && textContent !== '') return false;
     }
 
     const doc = el.ownerDocument;
@@ -545,8 +547,10 @@ function renderPseudoForElement(el, rule, counterMap) {
         } else {
             el.appendChild(span);
         }
+        return true;
     } catch {
         /* 单个元素插入失败不中断整篇 */
+        return false;
     }
 }
 
@@ -582,23 +586,43 @@ export function prerenderPseudoElementsIntoHtml(wrappedHtml, cssText) {
 
     const pseudoRules = parsePseudoRules(cssText);
     if (pseudoRules.length === 0) return wrappedHtml;
+    const counterConfig = parseCounterConfig(cssText);
+    return prerenderCompiledPseudoElementsIntoHtml(wrappedHtml, pseudoRules, counterConfig).html;
+}
+
+/**
+ * 使用 compiler 预先提取的规则注入伪元素，生产路径不再重复解析 CSS。
+ *
+ * @param {string} wrappedHtml
+ * @param {PseudoRule[]} pseudoRules
+ * @param {CounterConfig} counterConfig
+ * @returns {{ html: string, insertedCount: number }}
+ */
+export function prerenderCompiledPseudoElementsIntoHtml(
+    wrappedHtml,
+    pseudoRules,
+    counterConfig = { resets: [], increments: [] }
+) {
+    if (typeof DOMParser === 'undefined' || !Array.isArray(pseudoRules) || pseudoRules.length === 0) {
+        return { html: wrappedHtml, insertedCount: 0 };
+    }
 
     // 用 DOMParser 把受信文章 HTML 解析成 DOM（与 services/dom-utils.js 同款写法，
     // 避开 document.createElement / innerHTML= 这类上架扫描器会标记的写法）。
     const doc = new DOMParser().parseFromString(wrappedHtml, 'text/html');
     const container = doc.body.firstElementChild;
-    if (!container) return wrappedHtml;
+    if (!container) return { html: wrappedHtml, insertedCount: 0 };
 
-    const counterConfig = parseCounterConfig(cssText);
     const counterMap = computeCounters(container, counterConfig);
+    let insertedCount = 0;
 
     for (const rule of pseudoRules) {
         const elements = safeQuerySelectorAll(container, rule.baseSelector);
         for (const el of elements) {
             const elCounters = counterMap.get(el);
-            renderPseudoForElement(el, rule, elCounters);
+            if (renderPseudoForElement(el, rule, elCounters)) insertedCount += 1;
         }
     }
 
-    return container.outerHTML;
+    return { html: container.outerHTML, insertedCount };
 }

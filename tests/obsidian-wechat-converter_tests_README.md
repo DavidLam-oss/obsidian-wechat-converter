@@ -27,6 +27,11 @@ Vitest、jsdom、__mocks__/obsidian.js、tests/helpers/ 和项目源码。
 - `multi_platform_modal_assets.test.js`：本地图片、封面资源、远程素材封面和缓存。
 - `helpers/multi-platform-modal-fixtures.js`：多平台 Modal 的公共 Obsidian view 与 Modal 夹具。
 
+## 发布清理测试
+
+- `publish_cleanup.test.js`：直接验证目录解析、安全拒绝、frontmatter 清理和删除编排。
+- `frontmatter_cleanup.test.js`：验证 AppleStyleView 兼容适配及同步成功后的调用顺序。
+
 ## 维护规则
 
 - 每次新增、删除、移动文件或调整目录职责后，必须更新本 README。

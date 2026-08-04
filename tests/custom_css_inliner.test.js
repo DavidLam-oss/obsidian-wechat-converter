@@ -38,19 +38,29 @@ import {
 describe('custom-css-inliner', () => {
   describe('sanitizeCustomCss', () => {
     it('允许普通样式规则', () => {
-      expect(() => sanitizeCustomCss('p { color: red; }')).not.toThrow();
+      expect(sanitizeCustomCss('p { color: red; }').usable).toBe(true);
     });
 
     it('拦截 expression()', () => {
-      expect(() => sanitizeCustomCss('div { width: expression(1+1); }')).toThrow('expression');
+      const result = sanitizeCustomCss('div { width: expression(1+1); color: red; }');
+      expect(result.usable).toBe(true);
+      expect(result.diagnostics).toEqual(expect.arrayContaining([
+        expect.objectContaining({ code: 'custom-css-expression-blocked' }),
+      ]));
     });
 
     it('拦截 javascript: url', () => {
-      expect(() => sanitizeCustomCss('div { background: url(javascript:alert(1)); }')).toThrow('javascript');
+      const result = sanitizeCustomCss('div { background: url(javascript:alert(1)); }');
+      expect(result.diagnostics).toEqual(expect.arrayContaining([
+        expect.objectContaining({ code: 'custom-css-resource-url-blocked' }),
+      ]));
     });
 
     it('拦截 @import', () => {
-      expect(() => sanitizeCustomCss('@import url("https://example.com/a.css");')).toThrow('@import');
+      const result = sanitizeCustomCss('@import url("https://example.com/a.css");');
+      expect(result.diagnostics).toEqual(expect.arrayContaining([
+        expect.objectContaining({ code: 'custom-css-import-blocked' }),
+      ]));
     });
   });
 
@@ -74,11 +84,10 @@ describe('custom-css-inliner', () => {
       expect(scoped).toContain('.owc-article-root p');
     });
 
-    it('保留 @font-face', () => {
+    it('移除 @font-face，避免字体资源请求', () => {
       const css = '@font-face { font-family: "X"; src: url("x.woff2"); }';
       const scoped = scopeCustomCss(css);
-      expect(scoped).toContain('@font-face');
-      expect(scoped).not.toContain('.owc-article-root @font-face');
+      expect(scoped).not.toContain('@font-face');
     });
   });
 
@@ -120,9 +129,9 @@ describe('custom-css-inliner', () => {
       expect(result).toContain('<p style="color: red;">hello</p>');
     });
 
-    it('拒绝危险 CSS', () => {
+    it('危险声明 fail-open，不中断文章输出', () => {
       const html = '<p>hello</p>';
-      expect(() => inlineCustomCss(html, 'p { width: expression(1); }')).toThrow('expression');
+      expect(inlineCustomCss(html, 'p { width: expression(1); }')).toBe(html);
     });
   });
 

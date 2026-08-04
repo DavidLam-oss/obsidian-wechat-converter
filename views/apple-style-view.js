@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`./apple-style-view-shared.js`、`./converter/core.js`、`./converter/style-panel.js`、`./converter/ai-layout-panel.js`、`./converter/ai-layout-debug.js`、`./converter/clipboard.js`、`./publish-modal/wechat.js`、`./publish-modal/material-picker.js`。
+关键依赖：`./apple-style-view-shared.js`、`./converter/core.js`、`./converter/settings-panel.js`、`./converter/panel-shell.js`、`./converter/sticker-preview.js`、`./publish-modal/publish-context.js`、`./publish-modal/wechat.js`。
 
 ## 维护规则
 
@@ -27,10 +27,13 @@
 
 import { ItemView } from './apple-style-view-shared.js';
 import { coreMethods } from './converter/core.js';
-import { stylePanelMethods } from './converter/style-panel.js';
+import { settingsPanelMethods } from './converter/settings-panel.js';
+import { panelShellMethods } from './converter/panel-shell.js';
+import { stickerPreviewMethods } from './converter/sticker-preview.js';
 import { aiLayoutPanelMethods } from './converter/ai-layout-panel.js';
 import { aiLayoutDebugMethods } from './converter/ai-layout-debug.js';
 import { clipboardMethods } from './converter/clipboard.js';
+import { publishContextMethods } from './publish-modal/publish-context.js';
 import { wechatPublishMethods } from './publish-modal/wechat.js';
 import { materialPickerMethods } from './publish-modal/material-picker.js';
 
@@ -53,6 +56,30 @@ class AppleStyleView extends ItemView {
     this.theme = null;
     /** @type {TFileLike | null} */
     this.lastActiveFile = null;
+    /** @type {'article' | 'sticker'} */
+    this.previewMode = 'article';
+    /** @type {StickerPreviewDataLike | null} */
+    this.previewStickerData = null;
+    /** @type {boolean} */
+    this.insertStickerImageIndex = false;
+    /**
+     * 贴图模式的按笔记交互状态：拖拽后的顺序与被排除的图片。
+     * 只影响这次发布，不会改写笔记正文。
+     * @type {Map<string, {
+     *   order: string[],
+     *   removedKeys: string[],
+     *   manualItems: object[],
+     *   undoItems: object[],
+     *   objectUrls: Set<string>
+     * }>}
+     */
+    this.stickerUiStates = new Map();
+    /** @type {Map<string, string>} */
+    this.stickerUploadCache = new Map();
+    /** @type {string} */
+    this.sessionStickerSourcePath = '';
+    /** @type {number} */
+    this.stickerModalGeneration = 0;
     /** @type {string | null} */
     this.sessionCoverBase64 = ''; // 本次文章的临时封面
     /** @type {string} */
@@ -135,6 +162,18 @@ class AppleStyleView extends ItemView {
     this.aiLayoutStaleSuppressTimer = null;
     /** @type {string | null} */
     this.baseRenderedHtml = null;
+    /** @type {Map<string, CompiledCustomCssLike>} */
+    this._customCssLastValidBySource = new Map();
+    /** @type {number} */
+    this.customCssRefreshGeneration = 0;
+    this.customCssStatus = {
+      state: 'disabled',
+      sourceKind: '',
+      sourcePath: '',
+      diagnostics: [],
+      matchedRuleCount: 0,
+      matchedElementCount: 0,
+    };
     /** @type {boolean} */
     this.aiPreviewApplied = false;
     this.aiLayoutBtn = null;
@@ -263,10 +302,13 @@ class AppleStyleView extends ItemView {
 Object.assign(
   AppleStyleView.prototype,
   coreMethods,
-  stylePanelMethods,
+  settingsPanelMethods,
+  panelShellMethods,
+  stickerPreviewMethods,
   aiLayoutPanelMethods,
   aiLayoutDebugMethods,
   clipboardMethods,
+  publishContextMethods,
   wechatPublishMethods,
   materialPickerMethods,
 );

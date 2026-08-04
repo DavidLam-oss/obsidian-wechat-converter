@@ -305,6 +305,14 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   background: color-mix(in srgb, var(--apple-accent) 5%, var(--apple-background));
 }
 
+.wechat-modal-cover-btns button:disabled {
+  color: var(--text-faint);
+  border-color: color-mix(in srgb, var(--apple-border) 70%, transparent);
+  background: var(--apple-background);
+  cursor: not-allowed;
+  opacity: 0.66;
+}
+
 .wechat-publish-shell .wechat-modal-digest-input {
   min-height: 78px;
   padding: 9px 10px;
@@ -445,6 +453,16 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
+.wechat-modal-buttons .mod-cta.is-disabled,
+.wechat-modal-buttons .mod-cta.is-disabled:hover {
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 /* 测试连接按钮 - 绿色文字 */
 .wechat-modal-buttons .wechat-btn-test {
   color: var(--text-success);
@@ -542,8 +560,3 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   border-radius: 999px;
   background: color-mix(in srgb, var(--apple-tertiary) 36%, transparent);
 }
-
-.wechat-multiplatform-shell .modal-content.wechat-multiplatform-modal:not(.wechat-multiplatform-result-modal) {
-  overflow: hidden;
-}
-

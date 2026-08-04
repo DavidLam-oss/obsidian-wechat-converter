@@ -26,28 +26,50 @@
 */
 
 /* ========================================
-   顶部工具栏 (Top Toolbar)
+   顶部双行 Header 容器 (Preview Header)
    ======================================== */
-.apple-top-toolbar {
+.apple-preview-header {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-primary, var(--apple-background));
+  border-bottom: 1px solid var(--apple-divider);
+  flex-shrink: 0;
+  z-index: 200;
+  padding: 16px 18px 14px 18px;
+  gap: 12px;
+}
+
+.apple-preview-header-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px; /* 增加高度以容纳双行 */
-  padding: 0 16px;
-  border-bottom: 1px solid var(--apple-divider);
-  background: var(--apple-background);
-  flex-shrink: 0;
-  z-index: 200; /* 确保在最上层 */
+  min-height: 28px;
+}
+
+.apple-preview-header-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 1;
+}
+
+.apple-preview-header-bottom.hidden {
+  display: none;
+}
+
+.apple-icon-btn.hidden {
+  display: none;
 }
 
 .apple-toolbar-title {
   flex: 1;
-  margin-right: 16px;
   display: flex;
-  flex-direction: column; /* 双行布局 */
+  flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  overflow: hidden; /* 关键：确保子元素截断生效 */
+  overflow: hidden;
 }
 
 .apple-toolbar-plugin-line {
@@ -55,7 +77,6 @@
   align-items: center;
   gap: 6px;
   max-width: 100%;
-  margin-bottom: 2px;
 }
 
 .apple-toolbar-plugin-name {
@@ -76,26 +97,88 @@
   white-space: nowrap;
 }
 
+/* 微型 Icon 切换胶囊 */
+.apple-preview-mode-segment {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.theme-dark .apple-preview-mode-segment {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.apple-preview-mode-segment .apple-mode-btn {
+  border: 1px solid transparent;
+  background: transparent;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #68686d;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-dark .apple-preview-mode-segment .apple-mode-btn {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.apple-preview-mode-segment .apple-mode-btn:hover {
+  color: var(--text-normal);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.theme-dark .apple-preview-mode-segment .apple-mode-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* 选中高亮状态 */
+.apple-preview-header-bottom .apple-preview-mode-segment .apple-mode-btn.active {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #1d1d1f;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.theme-dark .apple-preview-header-bottom .apple-preview-mode-segment .apple-mode-btn.active {
+  background: #ffffff;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #1d1d1f;
+}
+
 .apple-toolbar-doc-name {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--apple-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 100%; /* 确保占据全宽以触发截断 */
-  line-height: 1.2;
+  width: 100%;
+  line-height: 1.35;
 }
 
 .apple-toolbar-actions {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+  align-items: center;
 }
 
-.apple-converter-container.apple-converter-mobile .apple-top-toolbar {
-  height: 52px;
-  padding: 0 10px;
+/* 移动端两行 Header 兼容 */
+.apple-converter-container.apple-converter-mobile .apple-preview-header {
+  padding: 10px 12px 6px 12px;
+  gap: 6px;
 }
 
 .apple-converter-container.apple-converter-mobile .apple-toolbar-title {
@@ -108,7 +191,7 @@
 }
 
 .apple-converter-container.apple-converter-mobile .apple-toolbar-doc-name {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
   line-height: 1.25;
 }
@@ -118,16 +201,16 @@
 }
 
 .apple-converter-container.apple-converter-mobile .apple-icon-btn {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
 }
 
 .apple-converter-container.apple-converter-mobile .apple-ai-layout-overlay {
-  top: 56px;
+  top: var(--apple-header-height, 106px);
   left: clamp(10px, 3.2vw, 16px);
   right: clamp(10px, 3.2vw, 16px);
   width: auto;
-  max-height: calc(100% - 56px - max(8px, env(safe-area-inset-bottom)));
+  max-height: calc(100% - var(--apple-header-height, 106px) - max(8px, env(safe-area-inset-bottom)));
   border-radius: 14px;
   border: 1px solid var(--apple-border);
   box-shadow:
