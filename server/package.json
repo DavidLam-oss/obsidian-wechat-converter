@@ -13,5 +13,8 @@
     "form-data": "^4.0.0"
   },
   "author": "Indie Developer",
-  "license": "MIT"
+  "license": "MIT",
+  "overrides": {
+    "tar": "7.5.22"
+  }
 }
