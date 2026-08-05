@@ -26,7 +26,11 @@
 */
 
 import { describe, it, expect, vi } from 'vitest';
-const { resolveMarkdownSource } = require('../services/markdown-source');
+const {
+  getMarkdownViewFromLeaf,
+  resolveMarkdownContext,
+  resolveMarkdownSource,
+} = require('../services/markdown-source');
 
 describe('Markdown Source Resolver', () => {
   const MarkdownViewType = class MockMarkdownView {};
@@ -76,6 +80,92 @@ describe('Markdown Source Resolver', () => {
     expect(result.markdown).toBe('# from vault');
     expect(result.sourcePath).toBe('notes/fallback.md');
     expect(app.vault.read).toHaveBeenCalledWith({ path: 'notes/fallback.md' });
+  });
+
+  it('should read the workspace active file when the converter sidebar is active', async () => {
+    const activeFile = { path: 'notes/current.md', extension: 'md' };
+    const app = {
+      workspace: {
+        getActiveViewOfType: vi.fn(() => null),
+        getActiveFile: vi.fn(() => activeFile),
+      },
+      vault: {
+        read: vi.fn(async () => '# from recent workspace file'),
+      },
+    };
+
+    const result = await resolveMarkdownSource({
+      app,
+      lastActiveFile: { path: 'notes/stale.md' },
+      MarkdownViewType,
+    });
+
+    expect(result).toMatchObject({
+      ok: true,
+      markdown: '# from recent workspace file',
+      sourcePath: 'notes/current.md',
+    });
+    expect(app.vault.read).toHaveBeenCalledWith(activeFile);
+  });
+
+  it('should keep event Markdown editor content ahead of workspace file reads', async () => {
+    const eventView = {
+      editor: { getValue: () => '# unsaved editor content' },
+      file: { path: 'notes/event.md', extension: 'md' },
+      getViewType: () => 'markdown',
+    };
+    const app = {
+      workspace: {
+        getActiveViewOfType: vi.fn(() => null),
+        getActiveFile: vi.fn(() => ({ path: 'notes/recent.md', extension: 'md' })),
+      },
+      vault: { read: vi.fn() },
+    };
+
+    const result = await resolveMarkdownSource({
+      app,
+      lastActiveFile: null,
+      MarkdownViewType,
+      activeViewOverride: eventView,
+    });
+
+    expect(result).toMatchObject({
+      ok: true,
+      markdown: '# unsaved editor content',
+      sourcePath: 'notes/event.md',
+    });
+    expect(app.workspace.getActiveViewOfType).not.toHaveBeenCalled();
+    expect(app.vault.read).not.toHaveBeenCalled();
+  });
+
+  it('should ignore non-Markdown workspace files and fallback to the last Markdown file', () => {
+    const lastActiveFile = { path: 'notes/fallback.md', extension: 'md' };
+    const app = {
+      workspace: {
+        getActiveViewOfType: vi.fn(() => null),
+        getActiveFile: vi.fn(() => ({ path: 'boards/plan.canvas', extension: 'canvas' })),
+      },
+      vault: { read: vi.fn() },
+    };
+
+    const context = resolveMarkdownContext({
+      app,
+      lastActiveFile,
+      MarkdownViewType,
+    });
+
+    expect(context).toEqual({ view: null, file: lastActiveFile });
+  });
+
+  it('should resolve a Markdown view directly from the active-leaf event', () => {
+    const eventView = {
+      file: { path: 'notes/event.md' },
+      editor: { getValue: () => '# event' },
+      getViewType: () => 'markdown',
+    };
+
+    expect(getMarkdownViewFromLeaf({ view: eventView }, MarkdownViewType)).toBe(eventView);
+    expect(getMarkdownViewFromLeaf({ view: { getViewType: () => 'apple-style-converter' } }, MarkdownViewType)).toBeNull();
   });
 
   it('should return NO_ACTIVE_FILE when nothing is available', async () => {

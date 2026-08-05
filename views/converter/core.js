@@ -28,6 +28,8 @@
 import {
   createRenderPipelines,
   buildRenderRuntime,
+  getMarkdownViewFromLeaf,
+  resolveMarkdownContext,
   resolveMarkdownSource,
   renderObsidianTripletMarkdown,
   renderMermaidCodeBlocks,
@@ -121,17 +123,35 @@ async onOpen() {
 
   this.setPlaceholder();
 
+  const initialContext = resolveMarkdownContext({
+    app: this.app,
+    lastActiveFile: this.lastActiveFile,
+    MarkdownViewType: MarkdownView,
+  });
+  if (initialContext.file) {
+    this.lastActiveFile = initialContext.file;
+  }
+  this.updateCurrentDoc();
+
   // 监听文件切换
   this.registerActiveFileChange();
 
   // 初始化同步滚动
-  const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+  const activeView = initialContext.view;
   if (activeView) this.registerScrollSync(activeView);
 
   // 自动转换当前文档
   window.setTimeout(async () => {
-    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (activeView && this.converter) {
+    const currentContext = resolveMarkdownContext({
+      app: this.app,
+      lastActiveFile: this.lastActiveFile,
+      MarkdownViewType: MarkdownView,
+    });
+    if (currentContext.file) {
+      this.lastActiveFile = currentContext.file;
+      this.updateCurrentDoc();
+    }
+    if (currentContext.file && this.converter) {
       await this.convertCurrent(true);
     }
   }, 500);
@@ -141,16 +161,23 @@ async onOpen() {
 registerActiveFileChange() {
   // 监听文件切换
   this.registerEvent(
-    this.app.workspace.on('active-leaf-change', async () => {
-      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-      if (activeView && activeView.file) {
-        this.lastActiveFile = activeView.file;
-        const nextSourcePath = activeView.file.path || '';
+    this.app.workspace.on('active-leaf-change', async (leaf) => {
+      const eventView = getMarkdownViewFromLeaf(leaf, MarkdownView);
+      const context = resolveMarkdownContext({
+        app: this.app,
+        lastActiveFile: this.lastActiveFile,
+        MarkdownViewType: MarkdownView,
+        activeViewOverride: leaf === undefined ? undefined : eventView,
+      });
+      const activeView = context.view;
+      if (context.file) {
+        this.lastActiveFile = context.file;
+        const nextSourcePath = context.file.path || '';
         if (nextSourcePath && nextSourcePath !== this.lastResolvedSourcePath) {
           this.markAiLayoutSourceSwitch(nextSourcePath);
         }
       }
-      if (activeView && this.converter) {
+      if (context.file && this.converter) {
         this.scheduleActiveLeafRender(activeView);
       }
       this.updateCurrentDoc();
@@ -201,7 +228,7 @@ registerActiveFileChange() {
 }
 ,
 
-scheduleActiveLeafRender(activeViewOverride = null) {
+scheduleActiveLeafRender(activeViewOverride = undefined) {
   if (this.activeLeafRenderTimer) {
     window.clearTimeout(this.activeLeafRenderTimer);
     this.activeLeafRenderTimer = null;
@@ -210,19 +237,26 @@ scheduleActiveLeafRender(activeViewOverride = null) {
   // 让出当前 active-leaf 事件栈，但不额外等待一帧，避免切文档时可见卡顿。
   this.activeLeafRenderTimer = window.setTimeout(() => {
     this.activeLeafRenderTimer = null;
-    const activeView = activeViewOverride || this.app.workspace.getActiveViewOfType(MarkdownView);
+    const activeView = activeViewOverride === undefined
+      ? this.app.workspace.getActiveViewOfType(MarkdownView)
+      : activeViewOverride;
     const sourceOverride = activeView && activeView.file
       ? {
         markdown: activeView.editor.getValue(),
         sourcePath: activeView.file.path || '',
       }
       : null;
-    this.convertCurrent(true, {
+    /** @type {ConvertCurrentOptionsLike} */
+    const renderOptions = {
       showLoading: true,
       loadingText: '正在切换文章预览...',
       loadingDelay: 120,
       sourceOverride,
-    });
+    };
+    if (activeViewOverride !== undefined) {
+      renderOptions.activeViewOverride = activeViewOverride;
+    }
+    this.convertCurrent(true, renderOptions);
   }, 0);
 }
 ,
@@ -713,11 +747,18 @@ async applyCustomCss(html, options = {}) {
 ,
 
 updateCurrentDoc() {
-  const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-  const file = activeView ? activeView.file : this.lastActiveFile;
+  const context = resolveMarkdownContext({
+    app: this.app,
+    lastActiveFile: this.lastActiveFile,
+    MarkdownViewType: MarkdownView,
+  });
+  const file = context.file;
 
   if (file && this.docTitleText) {
-    this.docTitleText.setText(file.basename);
+    const basename = toOptionalText(file.basename)
+      || toOptionalText(file.path).split('/').pop()?.replace(/\.md$/i, '')
+      || '';
+    this.docTitleText.setText(basename);
     this.docTitleText.setCssStyles({ color: 'var(--apple-primary)' }); // 恢复激活色
     const selfRec = toRecord(this);
     const bottomRow = /** @type {HTMLElement} */ (selfRec.headerBottomRow);
@@ -824,6 +865,7 @@ async convertCurrent(silent = false, options = {}) {
     loadingText = '正在渲染预览...',
     loadingDelay = 0,
     sourceOverride = null,
+    activeViewOverride,
   } = options;
   const generation = ++this.renderGeneration;
   if (showLoading) {
@@ -854,6 +896,7 @@ async convertCurrent(silent = false, options = {}) {
       app: this.app,
       lastActiveFile: this.lastActiveFile,
       MarkdownViewType: MarkdownView,
+      activeViewOverride,
     }));
 
   let markdown = '';

@@ -61957,15 +61957,89 @@ async function buildRenderRuntime({
 }
 
 // services/markdown-source.js
-async function resolveMarkdownSource({ app, lastActiveFile, MarkdownViewType }) {
-  const activeView = app.workspace.getActiveViewOfType(MarkdownViewType);
-  if (!activeView && lastActiveFile) {
+function isMarkdownFile(file) {
+  if (!file)
+    return false;
+  const extension = typeof file.extension === "string" ? file.extension.trim().toLowerCase() : "";
+  if (extension)
+    return extension === "md";
+  return typeof file.path === "string" && /\.md$/i.test(file.path);
+}
+function getMarkdownViewFromLeaf(leaf, MarkdownViewType) {
+  const view = leaf && typeof leaf === "object" ? leaf.view : null;
+  if (!view || typeof view !== "object")
+    return null;
+  const candidateView = (
+    /** @type {MarkdownViewLike} */
+    view
+  );
+  if (typeof MarkdownViewType === "function" && view instanceof MarkdownViewType) {
+    return candidateView;
+  }
+  const viewType = typeof candidateView.getViewType === "function" ? candidateView.getViewType() : "";
+  if (viewType === "markdown" && candidateView.file) {
+    return candidateView;
+  }
+  return null;
+}
+function resolveMarkdownContext({
+  app,
+  lastActiveFile = null,
+  MarkdownViewType,
+  activeViewOverride
+}) {
+  const activeView = activeViewOverride === void 0 ? app.workspace.getActiveViewOfType(MarkdownViewType) : activeViewOverride;
+  if (activeView == null ? void 0 : activeView.file) {
+    return {
+      view: activeView,
+      file: activeView.file
+    };
+  }
+  const workspaceFile = typeof app.workspace.getActiveFile === "function" ? app.workspace.getActiveFile() : null;
+  if (isMarkdownFile(workspaceFile)) {
+    return {
+      view: null,
+      file: workspaceFile
+    };
+  }
+  if (isMarkdownFile(lastActiveFile)) {
+    return {
+      view: null,
+      file: lastActiveFile
+    };
+  }
+  return {
+    view: null,
+    file: null
+  };
+}
+async function resolveMarkdownSource({
+  app,
+  lastActiveFile,
+  MarkdownViewType,
+  activeViewOverride
+}) {
+  var _a5, _b;
+  const context = resolveMarkdownContext({
+    app,
+    lastActiveFile,
+    MarkdownViewType,
+    activeViewOverride
+  });
+  if (((_a5 = context.view) == null ? void 0 : _a5.editor) && typeof context.view.editor.getValue === "function") {
+    return {
+      ok: true,
+      markdown: context.view.editor.getValue(),
+      sourcePath: ((_b = context.file) == null ? void 0 : _b.path) || ""
+    };
+  }
+  if (context.file) {
     try {
-      const markdown = await app.vault.read(lastActiveFile);
+      const markdown = await app.vault.read(context.file);
       return {
         ok: true,
         markdown,
-        sourcePath: lastActiveFile.path || ""
+        sourcePath: context.file.path || ""
       };
     } catch (error) {
       const readError = error;
@@ -61975,13 +62049,6 @@ async function resolveMarkdownSource({ app, lastActiveFile, MarkdownViewType }) 
         error: readError
       };
     }
-  }
-  if (activeView) {
-    return {
-      ok: true,
-      markdown: activeView.editor ? activeView.editor.getValue() : "",
-      sourcePath: activeView.file ? activeView.file.path : ""
-    };
   }
   return {
     ok: false,
@@ -83531,7 +83598,7 @@ function extractCustomCssFromMarkdown(markdown) {
     diagnostics: frontmatterResult.diagnostics
   };
 }
-function isMarkdownFile(file) {
+function isMarkdownFile2(file) {
   if (!file || typeof file !== "object")
     return false;
   const record = (
@@ -83555,7 +83622,7 @@ function resolveNoteFile(vault, configuredPath) {
       /** @type {unknown} */
       getFile.call(vault, candidate)
     );
-    if (isMarkdownFile(file)) {
+    if (isMarkdownFile2(file)) {
       return {
         file,
         resolvedPath: normalizeCustomCssNotePath(
@@ -83818,29 +83885,53 @@ var coreMethods = {
       });
     }
     this.setPlaceholder();
+    const initialContext = resolveMarkdownContext({
+      app: this.app,
+      lastActiveFile: this.lastActiveFile,
+      MarkdownViewType: MarkdownView
+    });
+    if (initialContext.file) {
+      this.lastActiveFile = initialContext.file;
+    }
+    this.updateCurrentDoc();
     this.registerActiveFileChange();
-    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    const activeView = initialContext.view;
     if (activeView)
       this.registerScrollSync(activeView);
     window.setTimeout(async () => {
-      const activeView2 = this.app.workspace.getActiveViewOfType(MarkdownView);
-      if (activeView2 && this.converter) {
+      const currentContext = resolveMarkdownContext({
+        app: this.app,
+        lastActiveFile: this.lastActiveFile,
+        MarkdownViewType: MarkdownView
+      });
+      if (currentContext.file) {
+        this.lastActiveFile = currentContext.file;
+        this.updateCurrentDoc();
+      }
+      if (currentContext.file && this.converter) {
         await this.convertCurrent(true);
       }
     }, 500);
   },
   registerActiveFileChange() {
     this.registerEvent(
-      this.app.workspace.on("active-leaf-change", async () => {
-        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-        if (activeView && activeView.file) {
-          this.lastActiveFile = activeView.file;
-          const nextSourcePath = activeView.file.path || "";
+      this.app.workspace.on("active-leaf-change", async (leaf) => {
+        const eventView = getMarkdownViewFromLeaf(leaf, MarkdownView);
+        const context = resolveMarkdownContext({
+          app: this.app,
+          lastActiveFile: this.lastActiveFile,
+          MarkdownViewType: MarkdownView,
+          activeViewOverride: leaf === void 0 ? void 0 : eventView
+        });
+        const activeView = context.view;
+        if (context.file) {
+          this.lastActiveFile = context.file;
+          const nextSourcePath = context.file.path || "";
           if (nextSourcePath && nextSourcePath !== this.lastResolvedSourcePath) {
             this.markAiLayoutSourceSwitch(nextSourcePath);
           }
         }
-        if (activeView && this.converter) {
+        if (context.file && this.converter) {
           this.scheduleActiveLeafRender(activeView);
         }
         this.updateCurrentDoc();
@@ -83873,24 +83964,28 @@ var coreMethods = {
       this.app.workspace.on("editor-change", debouncedConvert)
     );
   },
-  scheduleActiveLeafRender(activeViewOverride = null) {
+  scheduleActiveLeafRender(activeViewOverride = void 0) {
     if (this.activeLeafRenderTimer) {
       window.clearTimeout(this.activeLeafRenderTimer);
       this.activeLeafRenderTimer = null;
     }
     this.activeLeafRenderTimer = window.setTimeout(() => {
       this.activeLeafRenderTimer = null;
-      const activeView = activeViewOverride || this.app.workspace.getActiveViewOfType(MarkdownView);
+      const activeView = activeViewOverride === void 0 ? this.app.workspace.getActiveViewOfType(MarkdownView) : activeViewOverride;
       const sourceOverride = activeView && activeView.file ? {
         markdown: activeView.editor.getValue(),
         sourcePath: activeView.file.path || ""
       } : null;
-      this.convertCurrent(true, {
+      const renderOptions = {
         showLoading: true,
         loadingText: "\u6B63\u5728\u5207\u6362\u6587\u7AE0\u9884\u89C8...",
         loadingDelay: 120,
         sourceOverride
-      });
+      };
+      if (activeViewOverride !== void 0) {
+        renderOptions.activeViewOverride = activeViewOverride;
+      }
+      this.convertCurrent(true, renderOptions);
     }, 0);
   },
   scheduleSidePaddingPreview(delay = 120) {
@@ -84327,10 +84422,16 @@ var coreMethods = {
     return result.html;
   },
   updateCurrentDoc() {
-    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    const file = activeView ? activeView.file : this.lastActiveFile;
+    var _a5;
+    const context = resolveMarkdownContext({
+      app: this.app,
+      lastActiveFile: this.lastActiveFile,
+      MarkdownViewType: MarkdownView
+    });
+    const file = context.file;
     if (file && this.docTitleText) {
-      this.docTitleText.setText(file.basename);
+      const basename = toOptionalText2(file.basename) || ((_a5 = toOptionalText2(file.path).split("/").pop()) == null ? void 0 : _a5.replace(/\.md$/i, "")) || "";
+      this.docTitleText.setText(basename);
       this.docTitleText.setCssStyles({ color: "var(--apple-primary)" });
       const selfRec = toRecord11(this);
       const bottomRow = (
@@ -84436,7 +84537,8 @@ var coreMethods = {
       showLoading = false,
       loadingText = "\u6B63\u5728\u6E32\u67D3\u9884\u89C8...",
       loadingDelay = 0,
-      sourceOverride = null
+      sourceOverride = null,
+      activeViewOverride
     } = options;
     const generation = ++this.renderGeneration;
     if (showLoading) {
@@ -84465,7 +84567,8 @@ var coreMethods = {
       await resolveMarkdownSource({
         app: this.app,
         lastActiveFile: this.lastActiveFile,
-        MarkdownViewType: MarkdownView
+        MarkdownViewType: MarkdownView,
+        activeViewOverride
       })
     );
     let markdown = "";

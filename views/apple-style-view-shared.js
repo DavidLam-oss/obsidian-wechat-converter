@@ -9,7 +9,7 @@
 
 ## 输出
 
-输出 `createRenderPipelines`、`buildRenderRuntime`、`resolveMarkdownSource`、`normalizeVaultPath`、`isAbsolutePathLike`、`renderObsidianTripletMarkdown`、`canUseNativePreviewFastPath`、`renderNativeMarkdown`、`convertRenderedMermaidDiagramsToImages`、`renderMermaidCodeBlocks`，用于组装主视图、状态栏或共享视图方法。
+输出 `createRenderPipelines`、`buildRenderRuntime`、Markdown 上下文解析器、`normalizeVaultPath`、`isAbsolutePathLike`、`renderObsidianTripletMarkdown`、`canUseNativePreviewFastPath`、`renderNativeMarkdown`、`convertRenderedMermaidDiagramsToImages`、`renderMermaidCodeBlocks`，用于组装主视图、状态栏或共享视图方法。
 
 ## 定位
 
@@ -33,6 +33,9 @@ export {
   buildRenderRuntime,
 } from '../services/dependency-loader.js';
 export {
+  getMarkdownViewFromLeaf,
+  isMarkdownFile,
+  resolveMarkdownContext,
   resolveMarkdownSource,
 } from '../services/markdown-source.js';
 export {

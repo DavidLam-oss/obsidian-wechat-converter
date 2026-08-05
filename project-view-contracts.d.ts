@@ -334,7 +334,7 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
      */
     registerActiveFileChange(): void;
     /**
-     * @param {MarkdownViewLike | null} [activeViewOverride]
+     * @param {MarkdownViewLike | null | undefined} [activeViewOverride]
      */
     scheduleActiveLeafRender(activeViewOverride?: MarkdownViewLike | null): void;
     scheduleSidePaddingPreview(delay?: number): void;

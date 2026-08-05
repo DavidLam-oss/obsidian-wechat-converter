@@ -43,7 +43,7 @@
  * @typedef {{ base64?: string, mimeType?: string }} WechatsyncAssetLike
  * @typedef {{ getValue?: () => string, getSelection?: () => string, replaceSelection?: (value: string) => void }} EditorLike
  * @typedef {{ path?: string, name?: string, basename?: string }} TFileLike
- * @typedef {{ file?: TFileLike | null, editor?: EditorLike, contentEl: ObsidianElementLike }} MarkdownViewLike
+ * @typedef {{ file?: TFileLike | null, editor?: EditorLike, contentEl: ObsidianElementLike, getViewType?: () => string }} MarkdownViewLike
  * @typedef {{ type?: string, state?: Record<string, unknown>, icon?: string, title?: string, active?: boolean }} ViewStateLike
  * @typedef {{ open?: () => void, view?: unknown, getViewState?: () => ViewStateLike, setViewState?: (state: ViewStateLike) => Promise<void> }} LeafLike
  * @typedef {{ on: (name: string, callback: (...args: unknown[]) => unknown) => unknown, getActiveViewOfType: (viewType: unknown) => MarkdownViewLike | null, getActiveFile?: () => TFileLike | null, getLeavesOfType: (viewType: string) => LeafLike[], getRightLeaf: (split?: boolean) => LeafLike | null, getLeaf?: (type?: string | boolean) => LeafLike | null, onLayoutReady: (callback: () => void) => void, revealLeaf?: (leaf: unknown) => Promise<void>, setActiveLeaf?: (leaf: unknown, options?: Record<string, unknown>) => void }} WorkspaceLike
@@ -90,7 +90,7 @@
  * @typedef {{ url?: string, [key: string]: unknown }} ImageCacheEntry
  * @typedef {{ url?: string, [key: string]: unknown }} SvgUploadCacheEntry
  * @typedef {{ ok: boolean, markdown?: string, sourcePath?: string }} MarkdownSourceResultLike
- * @typedef {{ showLoading?: boolean, loadingText?: string, loadingDelay?: number, sourceOverride?: { markdown?: string, sourcePath?: string } | null }} ConvertCurrentOptionsLike
+ * @typedef {{ showLoading?: boolean, loadingText?: string, loadingDelay?: number, sourceOverride?: { markdown?: string, sourcePath?: string } | null, activeViewOverride?: MarkdownViewLike | null }} ConvertCurrentOptionsLike
  * @typedef {{ sourcePath?: string, settings?: PluginSettingsLike | Record<string, unknown> }} RenderCandidateContextLike
  * @typedef {{ id: string, name: string, kind: string, baseUrl: string, apiKey: string, model: string, enabled?: boolean }} AiProviderLike
  * @typedef {{ enabled: boolean, defaultLayoutFamily: string, defaultColorPalette: string, defaultProviderId: string, customColor?: string, includeImagesInLayout?: boolean, requestTimeoutMs?: number, providers: AiProviderLike[], articleLayoutsByPath: Record<string, unknown> }} AiSettingsLike

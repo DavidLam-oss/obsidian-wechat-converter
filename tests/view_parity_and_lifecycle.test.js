@@ -43,6 +43,52 @@ describe('AppleStyleView native render + lifecycle', () => {
     expect(view.getDisplayText()).toBe('Obsidian 发布助手');
   });
 
+  it('onOpen should render the recent Markdown file even when the new sidebar is active', async () => {
+    vi.useFakeTimers();
+    const recentFile = {
+      path: 'notes/first-open.md',
+      basename: 'first-open',
+      extension: 'md',
+    };
+    const view = new AppleStyleView(null, {
+      settings: { usePhoneFrame: false },
+    });
+    view.containerEl.appendChild(createObsidianLikeElement());
+    view.containerEl.appendChild(createObsidianLikeElement());
+    view.app = {
+      workspace: {
+        getActiveViewOfType: vi.fn(() => null),
+        getActiveFile: vi.fn(() => recentFile),
+        on: vi.fn(() => ({ eventName: 'registered' })),
+      },
+      vault: {
+        read: vi.fn(async () => '# first open'),
+      },
+    };
+    view.registerEvent = vi.fn();
+    vi.spyOn(view, 'loadDependencies').mockImplementation(async () => {
+      view.converter = {};
+    });
+    vi.spyOn(view, 'createSettingsPanel').mockImplementation((container) => {
+      view.docTitleText = container.createDiv({ text: '未选择文档' });
+    });
+    vi.spyOn(view, 'renderMarkdownForPreview').mockResolvedValue('<section><p>first open</p></section>');
+
+    await view.onOpen();
+
+    expect(view.lastActiveFile).toBe(recentFile);
+    expect(view.docTitleText.textContent).toBe('first-open');
+    expect(view.currentHtml).toBeNull();
+
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.waitFor(() => {
+      expect(view.currentHtml).toContain('first open');
+    });
+
+    expect(view.app.vault.read).toHaveBeenCalledWith(recentFile);
+    expect(view.previewContainer.classList.contains('apple-has-content')).toBe(true);
+  });
+
   it('convertCurrent should render native html in silent mode', async () => {
     const view = new AppleStyleView(null, { settings: {} });
     view.previewContainer = createObsidianLikeElement();
@@ -258,6 +304,47 @@ describe('AppleStyleView native render + lifecycle', () => {
       sourceOverride: null,
     });
     expect(view.activeLeafRenderTimer).toBeNull();
+  });
+
+  it('active converter leaf should render the workspace recent Markdown file on first use', async () => {
+    vi.useFakeTimers();
+    let activeLeafHandler;
+    const recentFile = {
+      path: 'notes/first-use.md',
+      basename: 'first-use',
+      extension: 'md',
+    };
+    const view = new AppleStyleView(null, { settings: {} });
+    view.previewContainer = createObsidianLikeElement();
+    view.converter = {};
+    view.app = {
+      workspace: {
+        getActiveViewOfType: vi.fn(() => null),
+        getActiveFile: vi.fn(() => recentFile),
+        on: vi.fn((eventName, handler) => {
+          if (eventName === 'active-leaf-change') activeLeafHandler = handler;
+          return { eventName };
+        }),
+      },
+      vault: {
+        read: vi.fn(async () => '# first use'),
+      },
+    };
+    view.registerEvent = vi.fn();
+    vi.spyOn(view, 'renderMarkdownForPreview').mockResolvedValue('<section><p>first use</p></section>');
+
+    view.registerActiveFileChange();
+    await activeLeafHandler({
+      view: { getViewType: () => 'apple-style-converter' },
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    await vi.waitFor(() => {
+      expect(view.currentHtml).toContain('first use');
+    });
+
+    expect(view.lastActiveFile).toBe(recentFile);
+    expect(view.app.vault.read).toHaveBeenCalledWith(recentFile);
+    expect(view.previewContainer.classList.contains('apple-has-content')).toBe(true);
   });
 
   it('active leaf change should refresh AI panel only after preview render settles', async () => {
