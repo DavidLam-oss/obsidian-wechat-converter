@@ -50,6 +50,9 @@ if (!globalThis.__obsidianModalRegistry) {
 if (!globalThis.__obsidianNoticeRegistry) {
   globalThis.__obsidianNoticeRegistry = [];
 }
+if (!globalThis.__obsidianSettingInstancesRegistry) {
+  globalThis.__obsidianSettingInstancesRegistry = [];
+}
 
 // Sentinel exposed on globalThis so tests can assert that the resolver patch
 // is wired up correctly: `expect(globalThis.__obsidianMockLoaded).toBe(true)`.
@@ -166,19 +169,26 @@ function applyExtensions(el) {
 class SettingMock {
   constructor(containerEl) {
     this.containerEl = containerEl;
+    this.name = '';
     this.nameEl = null;
-    this.descEl = null;
+    this.descEl = applyExtensions(document.createElement('div'));
     this.controlEl = applyExtensions(document.createElement('div'));
+    globalThis.__obsidianSettingInstancesRegistry.push(this);
   }
   setName(name) {
     if (typeof name === 'string') {
+      this.name = name;
       globalThis.__obsidianSettingNamesRegistry.push(name);
     }
     return this;
   }
   setDesc(description) {
     this.description = description;
-    globalThis.__obsidianSettingDescriptionsRegistry?.push(description);
+    // Obsidian 1.13.4 stringifies DocumentFragment descriptions instead of
+    // inserting their child nodes. Keep that behavior in the mock so settings
+    // UI tests catch accidental regressions back to setDesc(fragment).
+    this.descEl.setText(description);
+    globalThis.__obsidianSettingDescriptionsRegistry?.push(this.descEl);
     return this;
   }
   setHeading() { return this; }

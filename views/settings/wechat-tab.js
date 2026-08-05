@@ -44,18 +44,28 @@ const CUSTOM_CSS_GUIDE_URL =
   'https://xiaoweibox.top/obsidian-publisher/guide/custom-css';
 
 /**
+ * Obsidian 1.13.4 may stringify a DocumentFragment passed to Setting.setDesc()
+ * as "[object DocumentFragment]". Build rich descriptions directly inside the
+ * public descEl instead, while keeping a plain-text fallback for older mocks or
+ * incomplete runtimes.
+ *
+ * @param {{ descEl?: HTMLElement, setDesc: (description: string) => unknown }} setting
  * @param {Document | null} activeDocument
  * @param {string} text
  * @param {string} linkText
  * @param {string} href
  * @param {() => void} openLink
- * @returns {string | DocumentFragment}
+ * @returns {void}
  */
-function createMutedGuideDescription(activeDocument, text, linkText, href, openLink) {
-  if (!activeDocument) return `${text} ${linkText}`;
+function setMutedGuideDescription(setting, activeDocument, text, linkText, href, openLink) {
+  const fallbackText = `${text} ${linkText}`;
+  const description = setting?.descEl;
+  if (!activeDocument || !description) {
+    setting.setDesc(fallbackText);
+    return;
+  }
 
-  const description = activeDocument.createDocumentFragment();
-  description.append(activeDocument.createTextNode(`${text} `));
+  description.replaceChildren(activeDocument.createTextNode(`${text} `));
   const link = activeDocument.createElement('a');
   link.textContent = linkText;
   link.href = href;
@@ -67,7 +77,6 @@ function createMutedGuideDescription(activeDocument, text, linkText, href, openL
     openLink();
   });
   description.append(link);
-  return description;
 }
 
 /**
@@ -211,18 +220,19 @@ const wechatSettingsMethods = {
           await this.plugin.saveSettings();
         }));
 
-    new Setting(containerEl)
-      .setName('微信公众号账号')
-      .setDesc(createMutedGuideDescription(
-        containerEl.ownerDocument || getActiveDocumentCompat(),
-        '添加用于同步草稿的公众号 AppID 和 AppSecret。首次配置请先完成 IP 白名单设置。',
-        '查看图文指南 →',
-        WECHAT_ACCOUNT_SETUP_GUIDE_URL,
-        () => {
-          this.plugin.openExternalUrl(WECHAT_ACCOUNT_SETUP_GUIDE_URL);
-        }
-      ))
-      .setHeading();
+    const accountHeadingSetting = new Setting(containerEl)
+      .setName('微信公众号账号');
+    setMutedGuideDescription(
+      accountHeadingSetting,
+      containerEl.ownerDocument || getActiveDocumentCompat(),
+      '添加用于同步草稿的公众号 AppID 和 AppSecret。首次配置请先完成 IP 白名单设置。',
+      '查看图文指南 →',
+      WECHAT_ACCOUNT_SETUP_GUIDE_URL,
+      () => {
+        this.plugin.openExternalUrl(WECHAT_ACCOUNT_SETUP_GUIDE_URL);
+      }
+    );
+    accountHeadingSetting.setHeading();
 
     // 账号列表
     const accounts = this.plugin.settings.wechatAccounts || [];
@@ -478,17 +488,18 @@ const wechatSettingsMethods = {
     });
 
     // 使用指南外链
-    new Setting(containerEl)
-      .setName('使用指南')
-      .setDesc(createMutedGuideDescription(
-        containerEl.ownerDocument || getActiveDocumentCompat(),
-        '自定义 CSS 的作用域原理、可用选择器清单、可直接复制的示例与禁忌坑位。',
-        '查看使用指南 →',
-        CUSTOM_CSS_GUIDE_URL,
-        () => {
-          this.plugin.openExternalUrl(CUSTOM_CSS_GUIDE_URL);
-        }
-      ));
+    const customCssGuideSetting = new Setting(containerEl)
+      .setName('使用指南');
+    setMutedGuideDescription(
+      customCssGuideSetting,
+      containerEl.ownerDocument || getActiveDocumentCompat(),
+      '自定义 CSS 的作用域原理、可用选择器清单、可直接复制的示例与禁忌坑位。',
+      '查看使用指南 →',
+      CUSTOM_CSS_GUIDE_URL,
+      () => {
+        this.plugin.openExternalUrl(CUSTOM_CSS_GUIDE_URL);
+      }
+    );
 
     // 启用开关
     let customCssEnabled = !!this.plugin.settings.enableCustomCss;

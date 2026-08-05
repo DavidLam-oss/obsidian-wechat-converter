@@ -131,6 +131,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
   beforeEach(() => {
     globalThis.__obsidianSettingNamesRegistry = [];
     globalThis.__obsidianSettingDescriptionsRegistry = [];
+    globalThis.__obsidianSettingInstancesRegistry = [];
     globalThis.__obsidianButtonRegistry = [];
     globalThis.__obsidianModalRegistry = [];
     globalThis.__obsidianDisableSetDestructiveForButtons = false;
@@ -181,12 +182,13 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
       )
     ).toBe(false);
 
-    const accountGuideDescription = globalThis.__obsidianSettingDescriptionsRegistry.find(
-      (description) => description?.textContent?.includes('查看图文指南 →')
-    );
+    const accountGuideDescription = globalThis.__obsidianSettingInstancesRegistry.find(
+      (setting) => setting.name === '微信公众号账号'
+    )?.descEl;
     expect(accountGuideDescription?.textContent).toContain(
       '首次配置请先完成 IP 白名单设置。 查看图文指南 →'
     );
+    expect(accountGuideDescription?.textContent).not.toContain('[object DocumentFragment]');
     const accountGuideLink = accountGuideDescription?.querySelector('a');
     expect(accountGuideLink?.classList.contains('apple-settings-guide-link')).toBe(true);
     expect(accountGuideLink?.href).toBe(
@@ -199,9 +201,13 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
       'https://xiaoweibox.top/obsidian-publisher/guide#wechat-api'
     );
 
-    const customCssGuideDescription = globalThis.__obsidianSettingDescriptionsRegistry.find(
-      (description) => description?.textContent?.includes('查看使用指南 →')
+    const customCssGuideDescription = globalThis.__obsidianSettingInstancesRegistry.find(
+      (setting) => setting.name === '使用指南'
+    )?.descEl;
+    expect(customCssGuideDescription?.textContent).toContain(
+      '可直接复制的示例与禁忌坑位。 查看使用指南 →'
     );
+    expect(customCssGuideDescription?.textContent).not.toContain('[object DocumentFragment]');
     const customCssGuideLink = customCssGuideDescription?.querySelector('a');
     expect(customCssGuideLink?.classList.contains('apple-settings-guide-link')).toBe(true);
     expect(customCssGuideLink?.href).toBe(
