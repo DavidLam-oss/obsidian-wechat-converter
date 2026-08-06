@@ -61,6 +61,22 @@ function resolveSettingsPaneBackground(el) {
   return '';
 }
 
+/**
+ * Read the settings pane's actual top padding so the sticky shell covers the
+ * complete scrollport edge. Obsidian 1.13.4 increased this padding from 32px
+ * to 48px, which otherwise leaves scrolled settings visible above the banner.
+ * @param {ObsidianElementLike} el
+ * @returns {string} resolved pixel value, or '' when it cannot be measured
+ */
+function resolveSettingsPaneTopPadding(el) {
+  const win = /** @type {{ getComputedStyle?: (el: Element) => CSSStyleDeclaration } | null | undefined} */ (
+    /** @type {{ ownerDocument?: { defaultView?: unknown } } | null | undefined} */ (el)?.ownerDocument?.defaultView
+  );
+  if (!win || typeof win.getComputedStyle !== 'function') return '';
+  const value = Number.parseFloat(win.getComputedStyle(/** @type {Element} */ (el)).paddingTop);
+  return Number.isFinite(value) && value >= 0 ? `${value}px` : '';
+}
+
 /** @type {SettingsTabShellMethodsContract & ThisType<AppleStyleSettingTabContract>} */
 const settingsTabShellMethods = {
   /**
@@ -112,6 +128,13 @@ const settingsTabShellMethods = {
     // Sticky shell: keep the GitHub banner + tab bar pinned while the
     // settings body scrolls underneath (containerEl is the scroll container).
     const stickyHeader = containerEl.createDiv({ cls: 'apple-settings-sticky-header' });
+    const paneTopPadding = resolveSettingsPaneTopPadding(containerEl);
+    if (paneTopPadding) {
+      stickyHeader.setCssStyles({
+        top: `-${paneTopPadding}`,
+        marginTop: `-${paneTopPadding}`,
+      });
+    }
     // Repaint the pane's real background on the pinned layer so scrolled
     // content can never shine through, whatever the active theme uses.
     const paneBackground = resolveSettingsPaneBackground(containerEl);

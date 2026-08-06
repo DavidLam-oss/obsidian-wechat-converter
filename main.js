@@ -91611,6 +91611,21 @@ function resolveSettingsPaneBackground(el) {
   }
   return "";
 }
+function resolveSettingsPaneTopPadding(el) {
+  var _a5;
+  const win = (
+    /** @type {{ getComputedStyle?: (el: Element) => CSSStyleDeclaration } | null | undefined} */
+    /** @type {{ ownerDocument?: { defaultView?: unknown } } | null | undefined} */
+    (_a5 = el == null ? void 0 : el.ownerDocument) == null ? void 0 : _a5.defaultView
+  );
+  if (!win || typeof win.getComputedStyle !== "function")
+    return "";
+  const value = Number.parseFloat(win.getComputedStyle(
+    /** @type {Element} */
+    el
+  ).paddingTop);
+  return Number.isFinite(value) && value >= 0 ? `${value}px` : "";
+}
 var settingsTabShellMethods = {
   /**
    * @param {ObsidianElementLike} containerEl
@@ -91654,6 +91669,13 @@ var settingsTabShellMethods = {
     const previousScrollTop = Number(containerEl.scrollTop) || 0;
     containerEl.empty();
     const stickyHeader = containerEl.createDiv({ cls: "apple-settings-sticky-header" });
+    const paneTopPadding = resolveSettingsPaneTopPadding(containerEl);
+    if (paneTopPadding) {
+      stickyHeader.setCssStyles({
+        top: `-${paneTopPadding}`,
+        marginTop: `-${paneTopPadding}`
+      });
+    }
     const paneBackground = resolveSettingsPaneBackground(containerEl);
     if (paneBackground) {
       stickyHeader.setCssStyles({ backgroundColor: paneBackground });

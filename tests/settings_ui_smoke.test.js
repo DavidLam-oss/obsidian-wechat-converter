@@ -285,6 +285,22 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     expect(sticky.querySelector('.apple-settings-tab-content')).toBeNull();
   });
 
+  it('covers the full Obsidian settings top padding without widening the visual inset', () => {
+    const plugin = makePlugin();
+    const tab = new AppleStyleSettingTab(plugin.app, plugin);
+    tab.containerEl = createObsidianLikeElement('div');
+    tab.containerEl.setCssStyles({ paddingTop: '48px' });
+
+    tab.renderSettingsContent();
+
+    const sticky = tab.containerEl.querySelector('.apple-settings-sticky-header');
+    expect(sticky.style.top).toBe('-48px');
+    expect(sticky.style.marginTop).toBe('-48px');
+    // Keep the CSS-defined 32px visual inset instead of expanding it to the
+    // 48px scrollport mask used by Obsidian 1.13.4.
+    expect(sticky.style.paddingTop).toBe('');
+  });
+
   it('paints the sticky header with the pane\u2019s real opaque background', () => {
     const plugin = makePlugin();
     const tab = new AppleStyleSettingTab(plugin.app, plugin);

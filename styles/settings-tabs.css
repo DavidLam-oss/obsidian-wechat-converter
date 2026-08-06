@@ -29,10 +29,13 @@
    设置面板 Tab 导航
    ======================================== */
 /* Sticky shell: containerEl (.vertical-tab-content) is the scroll container.
-   The container has --size-4-8 (32px) top padding. To keep the pinned banner + tabs
-   fully opaque with no scrolled text peeking above the banner or under the tabs:
-   - top and margin-top use -var(--size-4-8) so the sticky border box covers from
-     scrollTop + 0 all the way through the container's top padding.
+   Runtime code reads the pane's real top padding (32px on older Obsidian,
+   48px on 1.13.4) and applies matching top/margin values inline. The visual
+   padding stays at 32px, preserving the compact 2.10.0 spacing while the
+   opaque shell still covers the full scrollport edge. To keep the pinned
+   banner + tabs fully opaque with no scrolled text peeking above or below:
+   - top and margin-top negate the pane padding so the sticky border box covers
+     from scrollTop + 0 all the way through the container's top padding.
    - padding-bottom (instead of margin-bottom) keeps the area below the tab bar
      inside the opaque border box so scrolling text disappears smoothly behind it. */
 .apple-settings-sticky-header {
