@@ -82360,12 +82360,42 @@ function createFallbackSvgElement() {
   }
   return activeDocument.createElementNS("http://www.w3.org/2000/svg", "svg");
 }
-function getAppleThemeApi() {
-  const api = getActiveWindowValue("AppleTheme");
+function getAppleThemeApi(fallbackApi = null) {
+  const candidates = [
+    getActiveWindowValue("AppleTheme"),
+    getActiveWindowValueFromRootWindow("AppleTheme"),
+    fallbackApi
+  ];
+  for (const candidate of candidates) {
+    if (isAppleThemeApi(candidate)) {
+      return (
+        /** @type {AppleThemeApiLike} */
+        candidate
+      );
+    }
+  }
+  return null;
+}
+function getActiveWindowValueFromRootWindow(name) {
+  const rootWindow = typeof window !== "undefined" && window ? window : null;
+  if (!rootWindow)
+    return void 0;
+  const activeWindow = getActiveWindow();
+  if (activeWindow === rootWindow)
+    return void 0;
   return (
-    /** @type {AppleThemeApiLike} */
-    api
+    /** @type {Record<string, unknown>} */
+    rootWindow[name]
   );
+}
+function isAppleThemeApi(value) {
+  if (!value || typeof value !== "object" && typeof value !== "function")
+    return false;
+  const api = (
+    /** @type {Record<string, unknown>} */
+    value
+  );
+  return typeof api.getThemeList === "function" && typeof api.getColorList === "function";
 }
 function getValueElementFromEvent(event) {
   const target = event.target;
@@ -83861,8 +83891,6 @@ var coreMethods = {
     if (isMobileClient3(this.app)) {
       container.addClass("apple-converter-mobile");
     }
-    await this.loadDependencies();
-    this.createSettingsPanel(container);
     const usePhoneFrame = this.plugin.settings.usePhoneFrame && !isMobileClient3(this.app);
     const previewWrapper = container.createEl("div", {
       cls: `apple-preview-wrapper ${usePhoneFrame ? "mode-phone" : "mode-classic"}`
@@ -83885,6 +83913,14 @@ var coreMethods = {
       });
     }
     this.setPlaceholder();
+    await this.loadDependencies();
+    try {
+      this.createSettingsPanel(container);
+    } catch (error) {
+      console.error("\u274C \u8BBE\u7F6E\u9762\u677F\u52A0\u8F7D\u5931\u8D25:", error);
+      new Notice("\u8BBE\u7F6E\u9762\u677F\u52A0\u8F7D\u5931\u8D25\uFF0C\u6B63\u6587\u9884\u89C8\u4ECD\u53EF\u7528");
+    }
+    container.appendChild(previewWrapper);
     const initialContext = resolveMarkdownContext({
       app: this.app,
       lastActiveFile: this.lastActiveFile,
@@ -84764,6 +84800,17 @@ var coreMethods = {
 };
 
 // views/converter/settings-panel.js
+function readThemeOptions(themeApi, method) {
+  if (!themeApi || typeof themeApi[method] !== "function")
+    return [];
+  try {
+    const options = themeApi[method]();
+    return Array.isArray(options) ? options : [];
+  } catch (error) {
+    console.warn(`\u8BFB\u53D6${method === "getThemeList" ? "\u4E3B\u9898" : "\u4E3B\u9898\u8272"}\u5217\u8868\u5931\u8D25:`, error);
+    return [];
+  }
+}
 var settingsPanelMethods = {
   createSettingsPanel(container) {
     const header = container.createEl("div", { cls: "apple-preview-header" });
@@ -84842,8 +84889,10 @@ var settingsPanelMethods = {
     this.stickerSettingsWrapper = stickerSettingsWrapper;
     const targetArea = articleSettingsWrapper;
     this.createSection(targetArea, "\u4E3B\u9898", (section) => {
+      var _a5;
       const grid = section.createEl("div", { cls: "apple-btn-grid" });
-      const themes = getAppleThemeApi().getThemeList();
+      const themeApi = getAppleThemeApi((_a5 = this.theme) == null ? void 0 : _a5.constructor);
+      const themes = readThemeOptions(themeApi, "getThemeList");
       themes.forEach((t) => {
         const btn = grid.createEl("button", {
           cls: `apple-btn-theme ${this.plugin.settings.theme === t.value ? "active" : ""}`,
@@ -84892,8 +84941,10 @@ var settingsPanelMethods = {
       });
     });
     this.createSection(targetArea, "\u4E3B\u9898\u8272", (section) => {
+      var _a5;
       const grid = section.createEl("div", { cls: "apple-color-grid" });
-      const colors = getAppleThemeApi().getColorList();
+      const themeApi = getAppleThemeApi((_a5 = this.theme) == null ? void 0 : _a5.constructor);
+      const colors = readThemeOptions(themeApi, "getColorList");
       colors.forEach((c) => {
         const btn = grid.createEl("button", {
           cls: `apple-btn-color ${this.plugin.settings.themeColor === c.value ? "active" : ""}`

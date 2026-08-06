@@ -25,7 +25,7 @@
 - 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
 */
 
-import { getActiveDocument, getActiveWindowValue } from '../../services/dom-utils.js';
+import { getActiveDocument, getActiveWindow, getActiveWindowValue } from '../../services/dom-utils.js';
 
 function getActiveDocumentCompat() {
   return getActiveDocument();
@@ -43,11 +43,49 @@ function createFallbackSvgElement() {
 }
 
 /**
- * @returns {AppleThemeApiLike}
+ * @param {unknown} [fallbackApi]
+ * @returns {AppleThemeApiLike | null}
  */
-function getAppleThemeApi() {
-  const api = getActiveWindowValue('AppleTheme');
-  return /** @type {AppleThemeApiLike} */ (api);
+function getAppleThemeApi(fallbackApi = null) {
+  const candidates = [
+    getActiveWindowValue('AppleTheme'),
+    getActiveWindowValueFromRootWindow('AppleTheme'),
+    fallbackApi,
+  ];
+
+  for (const candidate of candidates) {
+    if (isAppleThemeApi(candidate)) {
+      return /** @type {AppleThemeApiLike} */ (candidate);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Obsidian 1.13 may focus a popout/settings window while the plugin runtime
+ * and its globals remain attached to the main plugin window. Keep this
+ * fallback scoped to the actual root window; do not read from globalThis.
+ *
+ * @param {string} name
+ * @returns {unknown}
+ */
+function getActiveWindowValueFromRootWindow(name) {
+  const rootWindow = typeof window !== 'undefined' && window ? window : null;
+  if (!rootWindow) return undefined;
+  const activeWindow = getActiveWindow();
+  if (activeWindow === rootWindow) return undefined;
+  return /** @type {Record<string, unknown>} */ (rootWindow)[name];
+}
+
+/**
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+function isAppleThemeApi(value) {
+  if (!value || (typeof value !== 'object' && typeof value !== 'function')) return false;
+  const api = /** @type {Record<string, unknown>} */ (value);
+  return typeof api.getThemeList === 'function' && typeof api.getColorList === 'function';
 }
 
 /**
