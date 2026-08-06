@@ -79,14 +79,9 @@ async onOpen() {
     container.addClass('apple-converter-mobile');
   }
 
-  // 加载依赖
-  await this.loadDependencies();
-
-  // 创建设置面板
-  this.createSettingsPanel(container);
-
-
-  // 创建预览区 - 根据设置决定是否使用手机框
+  // 先创建预览壳和占位内容。设置控件属于辅助能力，不能因为某个
+  // 运行时 API 或 Obsidian 窗口兼容问题而阻断正文预览的挂载。
+  // 根据设置决定是否使用手机框
   const usePhoneFrame = this.plugin.settings.usePhoneFrame && !isMobileClient(this.app);
   const previewWrapper = container.createEl('div', {
     cls: `apple-preview-wrapper ${usePhoneFrame ? 'mode-phone' : 'mode-classic'}`
@@ -122,6 +117,22 @@ async onOpen() {
   }
 
   this.setPlaceholder();
+
+  // 加载依赖
+  await this.loadDependencies();
+
+  // 创建设置面板。即使未来某个非核心设置控件再次出错，也保留正文
+  // 预览和当前文档识别链路，避免出现只有半截工具栏的空白侧栏。
+  try {
+    this.createSettingsPanel(container);
+  } catch (error) {
+    console.error('❌ 设置面板加载失败:', error);
+    new Notice('设置面板加载失败，正文预览仍可用');
+  }
+
+  // 预览壳是提前创建的，但最终仍放在 header/overlay 之后，保持原有
+  // flex 布局顺序；appendChild 会把已存在节点移动到容器末尾。
+  container.appendChild(previewWrapper);
 
   const initialContext = resolveMarkdownContext({
     app: this.app,

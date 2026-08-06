@@ -89,6 +89,44 @@ describe('AppleStyleView native render + lifecycle', () => {
     expect(view.previewContainer.classList.contains('apple-has-content')).toBe(true);
   });
 
+  it('onOpen should keep the preview shell when a non-core settings control throws', async () => {
+    const recentFile = {
+      path: 'notes/settings-failure.md',
+      basename: 'settings-failure',
+      extension: 'md',
+    };
+    const view = new AppleStyleView(null, {
+      settings: { usePhoneFrame: false },
+    });
+    view.containerEl.appendChild(createObsidianLikeElement());
+    view.containerEl.appendChild(createObsidianLikeElement());
+    view.app = {
+      workspace: {
+        getActiveViewOfType: vi.fn(() => null),
+        getActiveFile: vi.fn(() => recentFile),
+        on: vi.fn(() => ({ eventName: 'registered' })),
+      },
+      vault: {
+        read: vi.fn(async () => '# settings failure'),
+      },
+    };
+    view.registerEvent = vi.fn();
+    vi.spyOn(view, 'loadDependencies').mockImplementation(async () => {
+      view.converter = {};
+    });
+    vi.spyOn(view, 'createSettingsPanel').mockImplementation(() => {
+      throw new Error('theme API unavailable');
+    });
+
+    await view.onOpen();
+
+    expect(view.previewContainer).toBeTruthy();
+    expect(view.previewContainer.textContent).toContain('当前面板用于预览微信公众号排版');
+    expect(view.docTitleText).toBeNull();
+    expect(view.lastActiveFile).toBe(recentFile);
+    expect(view.containerEl.children[1].lastElementChild?.classList.contains('apple-preview-wrapper')).toBe(true);
+  });
+
   it('convertCurrent should render native html in silent mode', async () => {
     const view = new AppleStyleView(null, { settings: {} });
     view.previewContainer = createObsidianLikeElement();

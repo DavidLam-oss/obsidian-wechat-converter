@@ -82,6 +82,83 @@ describe('AppleStyleView settings panel + toolbar', () => {
     expect(container.querySelector('.apple-icon-btn[aria-label="复制到公众号"]')).toBeNull();
   });
 
+  it('createSettingsPanel should read theme APIs from the plugin window when activeWindow is a popout', () => {
+    const view = new AppleStyleView(null, {
+      settings: {
+        theme: 'github',
+        themeColor: 'blue',
+        customColor: '#0366d6',
+        fontFamily: 'sans-serif',
+        fontSize: 3,
+        coloredHeader: false,
+        macCodeBlock: true,
+        codeLineNumber: true,
+        sidePadding: 16,
+        showImageCaption: true,
+        enableWatermark: false,
+      },
+      saveSettings: vi.fn(),
+    });
+    view.app = { isMobile: false };
+    view.theme = { update: vi.fn() };
+    view.converter = { updateConfig: vi.fn() };
+
+    const themeApi = {
+      getThemeList: () => [{ value: 'github', label: '简约' }],
+      getColorList: () => [{ value: 'blue', color: '#0366d6' }],
+    };
+    const previousActiveWindow = window.activeWindow;
+    const previousThemeApi = window.AppleTheme;
+    window.AppleTheme = themeApi;
+    window.activeWindow = {};
+
+    try {
+      const container = createObsidianLikeElement();
+      view.createSettingsPanel(container);
+
+      expect(container.querySelector('.apple-btn-theme')?.textContent).toBe('简约');
+      expect(container.querySelector('.apple-btn-color')).toBeTruthy();
+    } finally {
+      window.activeWindow = previousActiveWindow;
+      window.AppleTheme = previousThemeApi;
+    }
+  });
+
+  it('createSettingsPanel should continue building when a theme list method throws', () => {
+    const view = new AppleStyleView(null, {
+      settings: {
+        theme: 'github',
+        themeColor: 'blue',
+        customColor: '#0366d6',
+        fontFamily: 'sans-serif',
+        fontSize: 3,
+        coloredHeader: false,
+        macCodeBlock: true,
+        codeLineNumber: true,
+        sidePadding: 16,
+        showImageCaption: true,
+        enableWatermark: false,
+      },
+      saveSettings: vi.fn(),
+    });
+    view.app = { isMobile: false };
+    view.theme = { update: vi.fn() };
+    view.converter = { updateConfig: vi.fn() };
+    global.AppleTheme = {
+      getThemeList: () => {
+        throw new Error('stale theme registry');
+      },
+      getColorList: () => [{ value: 'blue', color: '#0366d6' }],
+    };
+
+    const container = createObsidianLikeElement();
+    view.createSettingsPanel(container);
+
+    expect(container.querySelector('.apple-setting-label')?.textContent).toContain('主题');
+    expect(Array.from(container.querySelectorAll('.apple-setting-label')).some((label) => label.textContent === '字体')).toBe(true);
+    expect(container.querySelector('.apple-btn-color')).toBeTruthy();
+  });
+
   it('createSettingsPanel should explain the sticker index and plain-text conversion accurately', () => {
     const view = new AppleStyleView(null, {
       settings: {

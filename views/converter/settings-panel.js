@@ -35,6 +35,22 @@ import {
   isMobileClient,
 } from '../apple-style-view-shared.js';
 
+/**
+ * @param {AppleThemeApiLike | null} themeApi
+ * @param {'getThemeList' | 'getColorList'} method
+ * @returns {Array<Record<string, unknown>>}
+ */
+function readThemeOptions(themeApi, method) {
+  if (!themeApi || typeof themeApi[method] !== 'function') return [];
+  try {
+    const options = themeApi[method]();
+    return Array.isArray(options) ? options : [];
+  } catch (error) {
+    console.warn(`读取${method === 'getThemeList' ? '主题' : '主题色'}列表失败:`, error);
+    return [];
+  }
+}
+
 /** @type {SettingsPanelMethodsContract & ThisType<AppleStyleViewContract>} */
 export const settingsPanelMethods = {
 createSettingsPanel(container) {
@@ -138,7 +154,8 @@ createSettingsPanel(container) {
   // === 主题选择 ===
   this.createSection(targetArea, '主题', (section) => {
     const grid = section.createEl('div', { cls: 'apple-btn-grid' });
-    const themes = getAppleThemeApi().getThemeList();
+    const themeApi = getAppleThemeApi(this.theme?.constructor);
+    const themes = readThemeOptions(themeApi, 'getThemeList');
     themes.forEach(t => {
       const btn = grid.createEl('button', {
         cls: `apple-btn-theme ${this.plugin.settings.theme === t.value ? 'active' : ''}`,
@@ -188,7 +205,8 @@ createSettingsPanel(container) {
   // === 主题色 (移到标题样式上方) ===
   this.createSection(targetArea, '主题色', (section) => {
     const grid = section.createEl('div', { cls: 'apple-color-grid' });
-    const colors = getAppleThemeApi().getColorList();
+    const themeApi = getAppleThemeApi(this.theme?.constructor);
+    const colors = readThemeOptions(themeApi, 'getColorList');
 
     // 预设颜色
     colors.forEach(c => {
