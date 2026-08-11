@@ -5,7 +5,7 @@
 ## 开发准备
 
 ```bash
-npm install --legacy-peer-deps
+npm install
 npm run build
 npm test -- --run
 ```
