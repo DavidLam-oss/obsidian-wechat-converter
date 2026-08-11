@@ -879,6 +879,71 @@ describe('AppleStyleView AI layout state + debug', () => {
     expect(status.textContent.match(/生成失败/g)).toHaveLength(2);
   });
 
+  it('refreshAiLayoutPanel should show the manual timeout adjustment path in the status card', () => {
+    const timeoutMessage = 'AI 请求超时（120s）。本次生成已达到你设置的等待时间，可在插件设置 → AI 编排 → 高级选项中手动调高“AI 请求超时（秒）”（最高 180 秒）后重试。';
+    const timeoutState = {
+      version: 1,
+      updatedAt: Date.now(),
+      sourceHash: '123',
+      providerId: 'provider-1',
+      model: 'deepseek-chat',
+      stylePack: 'tech-green',
+      status: 'error',
+      lastError: timeoutMessage,
+      lastAttemptStatus: 'error',
+      lastAttemptError: timeoutMessage,
+      layoutJson: { blocks: [] },
+    };
+    const view = new AppleStyleView(null, {
+      settings: {
+        ai: {
+          enabled: true,
+          defaultStylePack: 'tech-green',
+          requestTimeoutMs: 120000,
+          defaultProviderId: 'provider-1',
+          providers: [{
+            id: 'provider-1',
+            name: 'DeepSeek',
+            kind: 'openai-compatible',
+            baseUrl: 'https://api.example.com/v1',
+            apiKey: 'secret',
+            model: 'deepseek-chat',
+            enabled: true,
+          }],
+          articleLayoutsByPath: { 'notes/demo.md': timeoutState },
+        },
+      },
+      saveSettings: vi.fn(),
+      getArticleLayoutState: vi.fn(() => timeoutState),
+    });
+    view.app = {
+      isMobile: false,
+      workspace: {
+        getActiveFile: vi.fn(() => ({ path: 'notes/demo.md', basename: 'demo' })),
+      },
+    };
+    view.theme = { update: vi.fn() };
+    view.converter = { updateConfig: vi.fn() };
+    view.lastResolvedSourcePath = 'notes/demo.md';
+    view.lastResolvedMarkdown = '# demo';
+    timeoutState.sourceHash = String(view.simpleHash('# demo'));
+    view.lastResolvedSourceHash = timeoutState.sourceHash;
+
+    global.AppleTheme = {
+      getThemeList: () => [{ value: 'github', label: '简约' }],
+      getColorList: () => [{ value: 'blue', color: '#0366d6' }],
+    };
+
+    const container = createObsidianLikeElement();
+    view.createSettingsPanel(container);
+    view.refreshAiLayoutPanel();
+
+    const statusText = container.querySelector('.apple-ai-layout-status-text')?.textContent || '';
+    expect(statusText).toContain('AI 请求超时（120s）');
+    expect(statusText).toContain('插件设置 → AI 编排 → 高级选项');
+    expect(statusText).toContain('手动调高');
+  });
+
   it('refreshAiLayoutPanel should show schema warnings even when generation succeeds', () => {
     const cachedState = {
       version: 1,

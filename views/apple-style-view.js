@@ -70,6 +70,7 @@ class AppleStyleView extends ItemView {
      *   removedKeys: string[],
      *   manualItems: object[],
      *   undoItems: object[],
+     *   imageListExpanded?: boolean,
      *   objectUrls: Set<string>
      * }>}
      */

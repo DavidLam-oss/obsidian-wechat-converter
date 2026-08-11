@@ -26,7 +26,9 @@
 */
 
 import { describe, expect, it } from 'vitest';
-import { moveStickerImageItem } from '../views/shared/sticker-image-list.js';
+import { moveStickerImageItem, renderStickerImageList } from '../views/shared/sticker-image-list.js';
+
+const { createObsidianLikeElement } = require('./helpers/obsidian-dom.js');
 
 describe('sticker image list ordering', () => {
   it('moves one item while preserving all other relative positions', () => {
@@ -38,5 +40,20 @@ describe('sticker image list ordering', () => {
     const result = moveStickerImageItem(source, -1, 1);
     expect(result).toEqual(source);
     expect(result).not.toBe(source);
+  });
+
+  it('does not collapse shared lists unless the caller opts in', () => {
+    const container = createObsidianLikeElement();
+    const items = Array.from({ length: 7 }, (_, index) => ({
+      key: `image-${index + 1}`,
+      source: 'body',
+      displaySrc: `app://local/image-${index + 1}.png`,
+    }));
+
+    renderStickerImageList(container, { items });
+
+    expect(container.querySelector('.sticker-image-list__toggle')).toBeNull();
+    expect(Array.from(container.querySelectorAll('.sticker-image-list__item')).every((cell) => !cell.hidden))
+      .toBe(true);
   });
 });

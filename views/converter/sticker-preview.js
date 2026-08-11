@@ -61,6 +61,7 @@ getStickerUiState(filePath) {
    * removedKeys: string[],
    * manualItems: object[],
    * undoItems: Array<{item:object,index:number,wasManual:boolean}>,
+   * imageListExpanded?: boolean,
    * objectUrls: Set<string>
    * }>} */ (selfRecord.stickerUiStates);
   const key = filePath || '';
@@ -71,6 +72,7 @@ getStickerUiState(filePath) {
       removedKeys: [],
       manualItems: [],
       undoItems: [],
+      imageListExpanded: false,
       objectUrls: new Set(),
     };
     states.set(key, state);
@@ -238,9 +240,6 @@ async renderStickerPreview() {
   const strippedParts = getStickerTransformParts(stickerData.removed);
   if (strippedParts.length > 0) {
     const notice = stickerContainer.createEl('div', { cls: 'apple-sticker-notice-warning' });
-    const noticeIcon = notice.createEl('span', { cls: 'apple-sticker-notice-icon' });
-    const noticeSetIcon = getObsidianSetIcon();
-    if (typeof noticeSetIcon === 'function') noticeSetIcon(noticeIcon, 'info');
     const noticeContent = notice.createEl('div', { cls: 'apple-sticker-notice-content' });
     noticeContent.createEl('span', { cls: 'apple-sticker-notice-title', text: `已转换：${strippedParts.join('、')}` });
     noticeContent.createEl('span', {
@@ -295,8 +294,6 @@ async renderStickerPreview() {
     });
 
     const hintLine = imagesSection.createEl('div', { cls: 'apple-sticker-hint-line' });
-    const hintIcon = hintLine.createSpan({ cls: 'apple-sticker-hint-icon' });
-    if (typeof setIcon === 'function') setIcon(hintIcon, 'info');
     hintLine.createEl('span', {
       cls: 'apple-sticker-hint-text',
       text: '顺序即最终发布顺序；添加图片请打开发布弹窗，移除不会改动笔记。'
@@ -305,6 +302,11 @@ async renderStickerPreview() {
     renderStickerImageList(imagesSection, {
       items: stickerData.imageItems,
       getDisplaySrc: (_, index) => stickerData.imageDisplaySources[index] || '',
+      collapsedRows: 2,
+      expanded: uiState.imageListExpanded === true,
+      onExpandedChange: (expanded) => {
+        uiState.imageListExpanded = expanded;
+      },
       setIcon,
       onMove: (fromIndex, toIndex, movedItem) => {
         uiState.order = moveStickerImageItem(

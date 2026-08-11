@@ -28,11 +28,130 @@
 import { describe, expect, it, vi } from 'vitest';
 const {
   generateArticleLayout,
+  testAiProviderConnection,
   AiLayoutSchemaError,
   AiLayoutTimeoutError,
+  AiProviderConnectionTimeoutError,
 } = require('../services/ai-layout');
 
 describe('ai-layout service generation providers', () => {
+  it('should test OpenAI-compatible providers with a minimal text request', async () => {
+    const provider = {
+      name: 'DeepSeek',
+      kind: 'openai-compatible',
+      baseUrl: 'https://api.deepseek.com',
+      apiKey: 'secret',
+      model: 'deepseek-v4-flash',
+    };
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: 'OK' } }] }),
+    });
+
+    await expect(testAiProviderConnection(provider, fetchImpl)).resolves.toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+    const [url, options] = fetchImpl.mock.calls[0];
+    const body = JSON.parse(options.body);
+    expect(url).toBe('https://api.deepseek.com/chat/completions');
+    expect(body).toEqual({
+      model: 'deepseek-v4-flash',
+      temperature: 0,
+      max_tokens: 16,
+      messages: [{ role: 'user', content: 'Reply with OK only.' }],
+    });
+    expect(options.headers.Authorization).toBe('Bearer secret');
+    expect(body).not.toHaveProperty('selection');
+    expect(options.body).not.toContain('排版');
+  });
+
+  it('should test Gemini providers with a minimal text request', async () => {
+    const provider = {
+      name: 'Gemini',
+      kind: 'gemini',
+      baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+      apiKey: 'secret',
+      model: 'gemini-3-flash-preview',
+    };
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ candidates: [{ content: { parts: [{ text: 'OK' }] } }] }),
+    });
+
+    await expect(testAiProviderConnection(provider, fetchImpl)).resolves.toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+    const [url, options] = fetchImpl.mock.calls[0];
+    const body = JSON.parse(options.body);
+    expect(url).toBe('https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent');
+    expect(body.contents).toEqual([{ role: 'user', parts: [{ text: 'Reply with OK only.' }] }]);
+    expect(body.generationConfig).toEqual({ temperature: 0, maxOutputTokens: 16 });
+    expect(options.headers['x-goog-api-key']).toBe('secret');
+  });
+
+  it('should test Anthropic providers with a minimal text request', async () => {
+    const provider = {
+      name: 'Anthropic',
+      kind: 'anthropic',
+      baseUrl: 'https://api.anthropic.com/v1',
+      apiKey: 'secret',
+      model: 'claude-3-5-haiku-latest',
+    };
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [{ type: 'text', text: 'OK' }] }),
+    });
+
+    await expect(testAiProviderConnection(provider, fetchImpl)).resolves.toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+    const [url, options] = fetchImpl.mock.calls[0];
+    const body = JSON.parse(options.body);
+    expect(url).toBe('https://api.anthropic.com/v1/messages');
+    expect(body).toEqual({
+      model: 'claude-3-5-haiku-latest',
+      max_tokens: 16,
+      temperature: 0,
+      messages: [{ role: 'user', content: 'Reply with OK only.' }],
+    });
+    expect(options.headers['x-api-key']).toBe('secret');
+  });
+
+  it('should distinguish connection-test timeout from the configured layout timeout', async () => {
+    vi.useFakeTimers();
+    const provider = {
+      name: '测试 Provider',
+      kind: 'openai-compatible',
+      baseUrl: 'https://api.example.com/v1',
+      apiKey: 'secret',
+      model: 'test-model',
+    };
+    const fetchImpl = (_url, options) => new Promise((_, reject) => {
+      options.signal.addEventListener('abort', () => reject(new Error('aborted')), { once: true });
+    });
+
+    try {
+      const errorPromise = testAiProviderConnection(provider, fetchImpl).catch((error) => error);
+      await vi.advanceTimersByTimeAsync(15000);
+      const error = await errorPromise;
+      expect(error).toMatchObject({
+        name: 'AiProviderConnectionTimeoutError',
+        code: 'ai-provider-connection-timeout',
+        timeoutMs: 15000,
+        message: '连接测试超时（15s）。接口可能响应较慢，请稍后再试。',
+      });
+      expect(error).toBeInstanceOf(AiProviderConnectionTimeoutError);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('should explain the 180-second timeout without suggesting an unavailable higher setting', () => {
+    expect(new AiLayoutTimeoutError(180000).message).toBe(
+      'AI 请求超时（180s）。本次生成已达到你设置的等待时间，当前已是最长等待时间（180 秒），可缩短文章或改用响应更快的模型后重试。'
+    );
+  });
+
   it('should return generation meta and fallback info for sparse model output', async () => {
     const provider = {
       id: 'p1',
@@ -569,7 +688,7 @@ describe('ai-layout service generation providers', () => {
     })).rejects.toMatchObject({
       name: 'AiLayoutTimeoutError',
       code: 'ai-layout-timeout',
-      message: 'AI 请求超时（1s）',
+      message: 'AI 请求超时（1s）。本次生成已达到你设置的等待时间，可在插件设置 → AI 编排 → 高级选项中手动调高“AI 请求超时（秒）”（最高 180 秒）后重试。',
     });
 
     try {

@@ -34,7 +34,8 @@ AI layout 面板和生成结果的视觉样式
   --ai-layout-accent-soft: color-mix(in srgb, var(--ai-layout-accent) 10%, transparent);
   --ai-layout-accent-border: color-mix(in srgb, var(--ai-layout-accent) 72%, transparent);
   position: absolute;
-  top: 48px;
+  /* Header may occupy one or two rows. JS keeps this variable aligned with its real height. */
+  top: var(--apple-header-height, 98px);
   left: 0;
   right: 0;
   background: rgba(255, 255, 255, 0.72);
@@ -48,7 +49,10 @@ AI layout 面板和生成结果的视觉样式
   border-bottom-right-radius: 20px;
   z-index: 100;
   padding: 24px 12px 32px 12px;
-  max-height: 60%;
+  max-height: min(
+    60%,
+    calc(100% - var(--apple-header-height, 98px) - max(8px, env(safe-area-inset-bottom)))
+  );
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
@@ -142,7 +146,7 @@ AI layout 面板和生成结果的视觉样式
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   padding: 2px 16px 0;
   box-sizing: border-box;
 }
@@ -219,18 +223,19 @@ AI layout 面板和生成结果的视觉样式
 }
 
 .apple-ai-layout-header {
-  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .apple-ai-layout-title {
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--apple-primary);
-  line-height: 1.2;
+  line-height: 1.3;
 }
 
 .apple-ai-layout-subtitle {
-  margin-top: 6px;
   font-size: 12px;
   line-height: 1.5;
   color: var(--apple-secondary);
@@ -828,4 +833,3 @@ AI layout 面板和生成结果的视觉样式
 .apple-converter-container.apple-converter-mobile .apple-ai-layout-section {
   gap: 10px;
 }
-

@@ -9,7 +9,7 @@
 
 ## 输出
 
-输出可访问的图片网格 DOM；导出纯函数 `moveStickerImageItem` 供状态更新和测试复用。
+输出可访问的图片网格 DOM，并支持调用方按行数启用展开/收起；导出纯函数 `moveStickerImageItem` 供状态更新和测试复用。
 
 ## 定位
 
@@ -62,6 +62,10 @@ function moveStickerImageItem(items, fromIndex, toIndex) {
  * @param {(element:HTMLElement,icon:string)=>void} [options.setIcon]
  * @param {string} [options.emptyText]
  * @param {string} [options.focusKey]
+ * @param {number} [options.collapsedRows]
+ * @param {number} [options.columnCount]
+ * @param {boolean} [options.expanded]
+ * @param {(expanded:boolean)=>void} [options.onExpandedChange]
  * @returns {ObsidianElementLike}
  */
 function renderStickerImageList(container, {
@@ -72,6 +76,10 @@ function renderStickerImageList(container, {
   setIcon,
   emptyText = '还没有可发布的图片。',
   focusKey = '',
+  collapsedRows = 0,
+  columnCount = 3,
+  expanded = false,
+  onExpandedChange,
 } = {}) {
   const grid = container.createDiv({ cls: 'sticker-image-list' });
   grid.setAttribute('role', 'list');
@@ -92,8 +100,11 @@ function renderStickerImageList(container, {
     render: '渲染',
   };
 
+  const cells = [];
+
   items.forEach((item, index) => {
     const cell = grid.createDiv({ cls: 'sticker-image-list__item' });
+    cells.push(cell);
     cell.setAttribute('role', 'listitem');
     cell.setAttribute('tabindex', '0');
     cell.setAttribute('draggable', 'true');
@@ -207,6 +218,44 @@ function renderStickerImageList(container, {
       window.setTimeout(() => cell.focus(), 0);
     }
   });
+
+  const safeRows = Math.max(0, Math.floor(Number(collapsedRows) || 0));
+  const safeColumns = Math.max(1, Math.floor(Number(columnCount) || 3));
+  const collapsedItemLimit = safeRows * safeColumns;
+  const canCollapse = collapsedItemLimit > 0 && items.length > collapsedItemLimit;
+
+  if (canCollapse) {
+    const focusedIndex = focusKey
+      ? items.findIndex((item) => item.key === focusKey)
+      : -1;
+    let isExpanded = expanded === true || focusedIndex >= collapsedItemLimit;
+    if (isExpanded && expanded !== true) onExpandedChange?.(true);
+
+    const toggleButton = container.createEl('button', {
+      cls: 'sticker-image-list__toggle',
+      attr: { type: 'button' },
+    });
+
+    const updateCollapsedState = () => {
+      grid.classList.toggle('is-collapsed', !isExpanded);
+      cells.forEach((cell, index) => {
+        cell.hidden = !isExpanded && index >= collapsedItemLimit;
+      });
+      toggleButton.setAttribute('aria-expanded', String(isExpanded));
+      toggleButton.setText(
+        isExpanded
+          ? `收起到 ${safeRows} 行`
+          : `展开全部 ${items.length} 张`
+      );
+    };
+
+    toggleButton.addEventListener('click', () => {
+      isExpanded = !isExpanded;
+      onExpandedChange?.(isExpanded);
+      updateCollapsedState();
+    });
+    updateCollapsedState();
+  }
 
   return grid;
 }
