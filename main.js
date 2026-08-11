@@ -24199,6 +24199,9 @@ var require_stringifier = __commonJS({
         return value;
       }
       root(node) {
+        if (node.source && node.source.input.hasBOM) {
+          this.builder("\uFEFF", node, "start");
+        }
         this.body(node);
         if (node.raws.after) {
           let after = node.raws.after;
@@ -25257,9 +25260,16 @@ var require_source_map = __commonJS({
 var require_previous_map = __commonJS({
   "node_modules/postcss/lib/previous-map.js"(exports, module2) {
     "use strict";
-    var { existsSync, readFileSync } = require("fs");
+    var { existsSync, readFileSync, realpathSync } = require("fs");
     var { dirname, isAbsolute, join, relative, sep } = require("path");
     var { SourceMapConsumer, SourceMapGenerator } = require_source_map();
+    function realPath(path) {
+      try {
+        return realpathSync(path);
+      } catch (e) {
+        return path;
+      }
+    }
     function fromBase64(str) {
       if (Buffer) {
         return Buffer.from(str, "base64").toString();
@@ -25332,7 +25342,7 @@ var require_previous_map = __commonJS({
             return void 0;
           if (!cssFile)
             return void 0;
-          let rel = relative(dirname(cssFile), path);
+          let rel = relative(realPath(dirname(cssFile)), realPath(path));
           if (rel === ".." || rel.startsWith(".." + sep) || isAbsolute(rel)) {
             return void 0;
           }
@@ -25720,6 +25730,8 @@ var require_list = __commonJS({
         return list2.split(string, spaces);
       },
       split(string, separators, last) {
+        if (typeof string !== "string")
+          return [];
         let array = [];
         let current = "";
         let split = false;
@@ -27588,14 +27600,19 @@ var require_lazy_result = __commonJS({
         }
         if (visit.iterator !== 0) {
           let iterator = visit.iterator;
+          if (visit.descending) {
+            visit.descending = false;
+            node.indexes[iterator] += 1;
+          }
           let child;
           while (child = node.nodes[node.indexes[iterator]]) {
-            node.indexes[iterator] += 1;
             if (!child[isClean]) {
               child[isClean] = true;
+              visit.descending = true;
               stack.push(toStack(child));
               return;
             }
+            node.indexes[iterator] += 1;
           }
           visit.iterator = 0;
           delete node.indexes[iterator];
@@ -27625,12 +27642,16 @@ var require_lazy_result = __commonJS({
           let visitNode = visit.node;
           if (visit.iterator !== 0) {
             let iterator = visit.iterator;
+            if (visit.descending) {
+              visit.descending = false;
+              visitNode.indexes[iterator] += 1;
+            }
             let child;
             let descended = false;
             while (child = visitNode.nodes[visitNode.indexes[iterator]]) {
-              visitNode.indexes[iterator] += 1;
               if (!child[isClean]) {
                 child[isClean] = true;
+                visit.descending = true;
                 stack.push({
                   eventIndex: 0,
                   events: getEvents(child),
@@ -27640,6 +27661,7 @@ var require_lazy_result = __commonJS({
                 descended = true;
                 break;
               }
+              visitNode.indexes[iterator] += 1;
             }
             if (descended)
               continue;
@@ -27806,7 +27828,7 @@ var require_processor = __commonJS({
     var Root2 = require_root();
     var Processor2 = class {
       constructor(plugins = []) {
-        this.version = "8.5.23";
+        this.version = "8.5.26";
         this.plugins = this.normalize(plugins);
       }
       normalize(plugins) {
