@@ -140,7 +140,10 @@ class AiLayoutSchemaError extends Error {
 class AiLayoutTimeoutError extends Error {
   constructor(timeoutMs) {
     const seconds = Math.max(1, Math.round(Number(timeoutMs || 0) / 1000));
-    super(`AI 请求超时（${seconds}s）`);
+    const suggestion = seconds >= 180
+      ? '当前已是最长等待时间（180 秒），可缩短文章或改用响应更快的模型后重试。'
+      : '可在插件设置 → AI 编排 → 高级选项中手动调高“AI 请求超时（秒）”（最高 180 秒）后重试。';
+    super(`AI 请求超时（${seconds}s）。本次生成已达到你设置的等待时间，${suggestion}`);
     this.name = 'AiLayoutTimeoutError';
     this.code = 'ai-layout-timeout';
     this.timeoutMs = Number(timeoutMs || 0);

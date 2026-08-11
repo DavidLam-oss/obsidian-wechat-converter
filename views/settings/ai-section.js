@@ -183,7 +183,7 @@ const aiSettingsMethods = {
           testBtn.textContent = '测试中...';
           try {
             await testAiProviderConnection(provider, createObsidianFetchAdapter({ requestUrl: getObsidianRequestUrl(), request: getObsidianRequest() }));
-            new Notice(`✅ ${provider.name} 连接成功！`);
+            new Notice(`✅ ${provider.name} 模型可用！`);
           } catch (error) {
             new Notice(`❌ ${provider.name} 连接失败: ${toReadableError(error).message}`);
           }
@@ -411,7 +411,7 @@ const aiSettingsMethods = {
       testBtn.textContent = '测试中...';
       try {
         await testAiProviderConnection(candidate, createObsidianFetchAdapter({ requestUrl: getObsidianRequestUrl(), request: getObsidianRequest() }));
-        new Notice('✅ AI Provider 连接成功！');
+        new Notice('✅ AI Provider 模型可用！');
       } catch (error) {
         new Notice(`❌ 连接失败: ${toReadableError(error).message}`);
       }

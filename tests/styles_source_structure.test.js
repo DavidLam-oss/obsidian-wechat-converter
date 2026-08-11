@@ -86,4 +86,23 @@ describe('stylesheet source structure', () => {
     expect(stickerSettings).not.toContain('.apple-settings-sticker-header');
     expect(stickerSettings).not.toMatch(/\.apple-settings-sticker-wrapper\s+\.apple-setting-section/);
   });
+
+  it('positions the AI layout overlay below the measured preview header', () => {
+    const aiLayout = readProjectFile('styles/ai-layout.css');
+    const overlayRule = aiLayout.match(/\.apple-ai-layout-overlay\s*\{(?<body>[\s\S]*?)\n\}/)?.groups?.body || '';
+
+    expect(overlayRule).toContain('top: var(--apple-header-height');
+    expect(overlayRule).toMatch(/max-height:\s*min\([\s\S]*var\(--apple-header-height/);
+    expect(overlayRule).not.toMatch(/top:\s*48px/);
+  });
+
+  it('keeps the AI layout heading within the compact settings hierarchy', () => {
+    const aiLayout = readProjectFile('styles/ai-layout.css');
+    const titleRule = aiLayout.match(/\.apple-ai-layout-title\s*\{(?<body>[\s\S]*?)\n\}/)?.groups?.body || '';
+
+    expect(titleRule).toMatch(/font-size:\s*14px/);
+    expect(titleRule).toMatch(/font-weight:\s*600/);
+    expect(titleRule).not.toMatch(/font-size:\s*18px/);
+    expect(titleRule).not.toMatch(/font-weight:\s*800/);
+  });
 });

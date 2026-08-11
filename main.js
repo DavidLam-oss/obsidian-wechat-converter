@@ -68723,7 +68723,8 @@ var AiLayoutSchemaError = class extends Error {
 var AiLayoutTimeoutError = class extends Error {
   constructor(timeoutMs) {
     const seconds = Math.max(1, Math.round(Number(timeoutMs || 0) / 1e3));
-    super(`AI \u8BF7\u6C42\u8D85\u65F6\uFF08${seconds}s\uFF09`);
+    const suggestion = seconds >= 180 ? "\u5F53\u524D\u5DF2\u662F\u6700\u957F\u7B49\u5F85\u65F6\u95F4\uFF08180 \u79D2\uFF09\uFF0C\u53EF\u7F29\u77ED\u6587\u7AE0\u6216\u6539\u7528\u54CD\u5E94\u66F4\u5FEB\u7684\u6A21\u578B\u540E\u91CD\u8BD5\u3002" : "\u53EF\u5728\u63D2\u4EF6\u8BBE\u7F6E \u2192 AI \u7F16\u6392 \u2192 \u9AD8\u7EA7\u9009\u9879\u4E2D\u624B\u52A8\u8C03\u9AD8\u201CAI \u8BF7\u6C42\u8D85\u65F6\uFF08\u79D2\uFF09\u201D\uFF08\u6700\u9AD8 180 \u79D2\uFF09\u540E\u91CD\u8BD5\u3002";
+    super(`AI \u8BF7\u6C42\u8D85\u65F6\uFF08${seconds}s\uFF09\u3002\u672C\u6B21\u751F\u6210\u5DF2\u8FBE\u5230\u4F60\u8BBE\u7F6E\u7684\u7B49\u5F85\u65F6\u95F4\uFF0C${suggestion}`);
     this.name = "AiLayoutTimeoutError";
     this.code = "ai-layout-timeout";
     this.timeoutMs = Number(timeoutMs || 0);
@@ -70291,6 +70292,9 @@ function buildLayoutResult(rawLayout = {}, context = {}) {
 }
 
 // services/ai-layout/generation.js
+var AI_PROVIDER_CONNECTION_TEST_TIMEOUT_MS = 15e3;
+var AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS = 16;
+var AI_PROVIDER_CONNECTION_TEST_PROMPT = "Reply with OK only.";
 function extractJsonPayload(text) {
   const content = String(text || "").trim();
   if (!content)
@@ -70956,21 +70960,123 @@ async function generateArticleLayout({
     });
   }
 }
+var AiProviderConnectionTimeoutError = class extends Error {
+  constructor(timeoutMs) {
+    const seconds = Math.max(1, Math.round(Number(timeoutMs || 0) / 1e3));
+    super(`\u8FDE\u63A5\u6D4B\u8BD5\u8D85\u65F6\uFF08${seconds}s\uFF09\u3002\u63A5\u53E3\u53EF\u80FD\u54CD\u5E94\u8F83\u6162\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5\u3002`);
+    this.name = "AiProviderConnectionTimeoutError";
+    this.code = "ai-provider-connection-timeout";
+    this.timeoutMs = Number(timeoutMs || 0);
+  }
+};
+async function ensureAiConnectionResponseOk(response) {
+  if (response.ok === true)
+    return;
+  const text = await response.text();
+  throw new Error(`AI \u8BF7\u6C42\u5931\u8D25 (${response.status || 0}): ${text || response.statusText || ""}`);
+}
+function hasAiConnectionResponse(providerKind, data) {
+  const source = toRecord(data);
+  if (providerKind === AI_PROVIDER_KINDS.OPENAI_COMPATIBLE) {
+    const choices = Array.isArray(source.choices) ? source.choices : [];
+    return choices.some((choice) => isRecord(toRecord(choice).message));
+  }
+  if (providerKind === AI_PROVIDER_KINDS.GEMINI) {
+    return Array.isArray(source.candidates) && source.candidates.length > 0;
+  }
+  if (providerKind === AI_PROVIDER_KINDS.ANTHROPIC) {
+    return Array.isArray(source.content) && source.content.length > 0;
+  }
+  return false;
+}
 async function testAiProviderConnection(provider, fetchImpl = getDefaultFetch()) {
-  var _a5, _b;
-  const result = await generateArticleLayout({
-    provider,
-    title: "\u8FDE\u63A5\u6D4B\u8BD5",
-    markdown: "\u8FD9\u662F\u4E00\u4E2A\u8FDE\u63A5\u6D4B\u8BD5\u3002\u8BF7\u8F93\u51FA\u6700\u5C0F\u53EF\u7528\u7684\u6559\u7A0B\u6392\u7248 JSON\u3002",
-    selection: {
-      layoutFamily: "tutorial-cards",
-      colorPalette: "tech-green"
-    },
-    imageRefs: [],
-    timeoutMs: 15e3,
-    fetchImpl
-  });
-  return !!((_b = (_a5 = result == null ? void 0 : result.layoutJson) == null ? void 0 : _a5.blocks) == null ? void 0 : _b.length);
+  const safeProvider = normalizeAiProvider(provider);
+  if (typeof fetchImpl !== "function")
+    throw new Error("\u5F53\u524D\u73AF\u5883\u4E0D\u652F\u6301 AI \u7F51\u7EDC\u8BF7\u6C42");
+  const controller = new AbortController();
+  const timer = setAiLayoutTimeout(
+    () => controller.abort(),
+    AI_PROVIDER_CONNECTION_TEST_TIMEOUT_MS
+  );
+  try {
+    let response;
+    let data;
+    switch (safeProvider.kind) {
+      case AI_PROVIDER_KINDS.OPENAI_COMPATIBLE: {
+        response = await fetchImpl(`${safeProvider.baseUrl}/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${safeProvider.apiKey}`
+          },
+          body: JSON.stringify({
+            model: safeProvider.model,
+            temperature: 0,
+            max_tokens: AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS,
+            messages: [{ role: "user", content: AI_PROVIDER_CONNECTION_TEST_PROMPT }]
+          }),
+          signal: controller.signal
+        });
+        await ensureAiConnectionResponseOk(response);
+        data = await response.json();
+        break;
+      }
+      case AI_PROVIDER_KINDS.GEMINI: {
+        const endpoint = `${safeProvider.baseUrl}/models/${encodeURIComponent(safeProvider.model)}:generateContent`;
+        response = await fetchImpl(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": safeProvider.apiKey
+          },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: AI_PROVIDER_CONNECTION_TEST_PROMPT }] }],
+            generationConfig: {
+              temperature: 0,
+              maxOutputTokens: AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS
+            }
+          }),
+          signal: controller.signal
+        });
+        await ensureAiConnectionResponseOk(response);
+        data = await response.json();
+        break;
+      }
+      case AI_PROVIDER_KINDS.ANTHROPIC: {
+        response = await fetchImpl(`${safeProvider.baseUrl}/messages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": safeProvider.apiKey,
+            "anthropic-version": "2023-06-01"
+          },
+          body: JSON.stringify({
+            model: safeProvider.model,
+            max_tokens: AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS,
+            temperature: 0,
+            messages: [{ role: "user", content: AI_PROVIDER_CONNECTION_TEST_PROMPT }]
+          }),
+          signal: controller.signal
+        });
+        await ensureAiConnectionResponseOk(response);
+        data = await response.json();
+        break;
+      }
+      default:
+        throw new Error(`\u6682\u4E0D\u652F\u6301\u7684 AI Provider \u7C7B\u578B: ${safeProvider.kind}`);
+    }
+    if (!hasAiConnectionResponse(safeProvider.kind, data)) {
+      throw new Error("\u6A21\u578B\u5DF2\u8FDE\u63A5\uFF0C\u4F46\u54CD\u5E94\u683C\u5F0F\u65E0\u6CD5\u8BC6\u522B");
+    }
+    return true;
+  } catch (error) {
+    if (controller.signal.aborted || isAbortError(error)) {
+      throw new AiProviderConnectionTimeoutError(AI_PROVIDER_CONNECTION_TEST_TIMEOUT_MS);
+    }
+    throw error;
+  } finally {
+    clearAiLayoutTimeout(timer);
+  }
 }
 
 // services/ai-layout/render.js
@@ -86340,7 +86446,11 @@ function renderStickerImageList(container, {
   onRemove,
   setIcon,
   emptyText = "\u8FD8\u6CA1\u6709\u53EF\u53D1\u5E03\u7684\u56FE\u7247\u3002",
-  focusKey = ""
+  focusKey = "",
+  collapsedRows = 0,
+  columnCount = 3,
+  expanded = false,
+  onExpandedChange
 } = {}) {
   const grid = container.createDiv({ cls: "sticker-image-list" });
   grid.setAttribute("role", "list");
@@ -86359,8 +86469,10 @@ function renderStickerImageList(container, {
     material: "\u7D20\u6750\u5E93",
     render: "\u6E32\u67D3"
   };
+  const cells = [];
   items.forEach((item, index) => {
     const cell = grid.createDiv({ cls: "sticker-image-list__item" });
+    cells.push(cell);
     cell.setAttribute("role", "listitem");
     cell.setAttribute("tabindex", "0");
     cell.setAttribute("draggable", "true");
@@ -86481,6 +86593,36 @@ function renderStickerImageList(container, {
       window.setTimeout(() => cell.focus(), 0);
     }
   });
+  const safeRows = Math.max(0, Math.floor(Number(collapsedRows) || 0));
+  const safeColumns = Math.max(1, Math.floor(Number(columnCount) || 3));
+  const collapsedItemLimit = safeRows * safeColumns;
+  const canCollapse = collapsedItemLimit > 0 && items.length > collapsedItemLimit;
+  if (canCollapse) {
+    const focusedIndex = focusKey ? items.findIndex((item) => item.key === focusKey) : -1;
+    let isExpanded = expanded === true || focusedIndex >= collapsedItemLimit;
+    if (isExpanded && expanded !== true)
+      onExpandedChange == null ? void 0 : onExpandedChange(true);
+    const toggleButton = container.createEl("button", {
+      cls: "sticker-image-list__toggle",
+      attr: { type: "button" }
+    });
+    const updateCollapsedState = () => {
+      grid.classList.toggle("is-collapsed", !isExpanded);
+      cells.forEach((cell, index) => {
+        cell.hidden = !isExpanded && index >= collapsedItemLimit;
+      });
+      toggleButton.setAttribute("aria-expanded", String(isExpanded));
+      toggleButton.setText(
+        isExpanded ? `\u6536\u8D77\u5230 ${safeRows} \u884C` : `\u5C55\u5F00\u5168\u90E8 ${items.length} \u5F20`
+      );
+    };
+    toggleButton.addEventListener("click", () => {
+      isExpanded = !isExpanded;
+      onExpandedChange == null ? void 0 : onExpandedChange(isExpanded);
+      updateCollapsedState();
+    });
+    updateCollapsedState();
+  }
   return grid;
 }
 
@@ -86497,6 +86639,7 @@ var stickerPreviewMethods = {
       * removedKeys: string[],
       * manualItems: object[],
       * undoItems: Array<{item:object,index:number,wasManual:boolean}>,
+      * imageListExpanded?: boolean,
       * objectUrls: Set<string>
       * }>} */
       selfRecord.stickerUiStates
@@ -86509,6 +86652,7 @@ var stickerPreviewMethods = {
         removedKeys: [],
         manualItems: [],
         undoItems: [],
+        imageListExpanded: false,
         objectUrls: /* @__PURE__ */ new Set()
       };
       states.set(key, state);
@@ -86653,10 +86797,6 @@ var stickerPreviewMethods = {
     const strippedParts = getStickerTransformParts(stickerData.removed);
     if (strippedParts.length > 0) {
       const notice = stickerContainer.createEl("div", { cls: "apple-sticker-notice-warning" });
-      const noticeIcon = notice.createEl("span", { cls: "apple-sticker-notice-icon" });
-      const noticeSetIcon = getObsidianSetIcon();
-      if (typeof noticeSetIcon === "function")
-        noticeSetIcon(noticeIcon, "info");
       const noticeContent = notice.createEl("div", { cls: "apple-sticker-notice-content" });
       noticeContent.createEl("span", { cls: "apple-sticker-notice-title", text: `\u5DF2\u8F6C\u6362\uFF1A${strippedParts.join("\u3001")}` });
       noticeContent.createEl("span", {
@@ -86707,9 +86847,6 @@ var stickerPreviewMethods = {
         text: `${stickerData.imageItems.length} / ${STICKER_MAX_IMAGES} \u5F20`
       });
       const hintLine = imagesSection.createEl("div", { cls: "apple-sticker-hint-line" });
-      const hintIcon = hintLine.createSpan({ cls: "apple-sticker-hint-icon" });
-      if (typeof setIcon === "function")
-        setIcon(hintIcon, "info");
       hintLine.createEl("span", {
         cls: "apple-sticker-hint-text",
         text: "\u987A\u5E8F\u5373\u6700\u7EC8\u53D1\u5E03\u987A\u5E8F\uFF1B\u6DFB\u52A0\u56FE\u7247\u8BF7\u6253\u5F00\u53D1\u5E03\u5F39\u7A97\uFF0C\u79FB\u9664\u4E0D\u4F1A\u6539\u52A8\u7B14\u8BB0\u3002"
@@ -86717,6 +86854,11 @@ var stickerPreviewMethods = {
       renderStickerImageList(imagesSection, {
         items: stickerData.imageItems,
         getDisplaySrc: (_, index) => stickerData.imageDisplaySources[index] || "",
+        collapsedRows: 2,
+        expanded: uiState.imageListExpanded === true,
+        onExpandedChange: (expanded) => {
+          uiState.imageListExpanded = expanded;
+        },
         setIcon,
         onMove: (fromIndex, toIndex, movedItem) => {
           uiState.order = moveStickerImageItem(
@@ -87698,6 +87840,9 @@ var aiLayoutPanelMethods = {
 };
 
 // views/converter/ai-layout-debug.js
+function isAiLayoutTimeoutMessage(errorText) {
+  return /^AI 请求超时（\d+s）/.test(String(errorText || "").trim());
+}
 var aiLayoutDebugMethods = {
   buildAiLayoutDebugJson(state) {
     if (!state)
@@ -88028,7 +88173,7 @@ var aiLayoutDebugMethods = {
       statusText = hasReusableLayout ? "\u8FD9\u6B21\u751F\u6210\u6CA1\u6709\u6210\u529F\uFF0C\u5DF2\u4E3A\u4F60\u4FDD\u7559\u4E0A\u4E00\u7248\u7ED3\u679C\u3002" : "\u8FD9\u6B21\u751F\u6210\u6CA1\u6709\u6210\u529F\uFF0C\u8BF7\u91CD\u8BD5\u6216\u68C0\u67E5 AI \u8BBE\u7F6E\u3002";
     } else if ((state == null ? void 0 : state.status) === "error") {
       badge = hasReusableLayout ? "\u5DF2\u4FDD\u7559\u4E0A\u4E00\u7248" : "\u751F\u6210\u5931\u8D25";
-      statusText = hasReusableLayout ? "\u8FD9\u6B21\u751F\u6210\u6CA1\u6709\u6210\u529F\uFF0C\u5DF2\u4E3A\u4F60\u4FDD\u7559\u4E0A\u4E00\u7248\u7ED3\u679C\u3002" : "\u751F\u6210\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u6216\u68C0\u67E5 AI \u8BBE\u7F6E\u3002";
+      statusText = isAiLayoutTimeoutMessage(state.lastError) ? state.lastError : hasReusableLayout ? "\u8FD9\u6B21\u751F\u6210\u6CA1\u6709\u6210\u529F\uFF0C\u5DF2\u4E3A\u4F60\u4FDD\u7559\u4E0A\u4E00\u7248\u7ED3\u679C\u3002" : "\u751F\u6210\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u6216\u68C0\u67E5 AI \u8BBE\u7F6E\u3002";
     } else if (state && isStale) {
       if (canGenerateForSelection) {
         badge = "\u9700\u66F4\u65B0";
@@ -88039,7 +88184,7 @@ var aiLayoutDebugMethods = {
       }
     } else if (hasReusableLayout && hasLastAttemptFailure) {
       badge = "\u5DF2\u4FDD\u7559\u4E0A\u4E00\u7248";
-      statusText = "\u8FD9\u6B21\u751F\u6210\u6CA1\u6709\u6210\u529F\uFF0C\u5DF2\u4E3A\u4F60\u4FDD\u7559\u4E0A\u4E00\u7248\u7ED3\u679C\u3002";
+      statusText = isAiLayoutTimeoutMessage(state.lastAttemptError) ? state.lastAttemptError : "\u8FD9\u6B21\u751F\u6210\u6CA1\u6709\u6210\u529F\uFF0C\u5DF2\u4E3A\u4F60\u4FDD\u7559\u4E0A\u4E00\u7248\u7ED3\u679C\u3002";
     } else if (state) {
       badge = hasApplied ? "\u5DF2\u5E94\u7528" : "\u53EF\u5E94\u7528";
       statusText = hasApplied ? "\u5DF2\u5E94\u7528\u5230\u9884\u89C8\u3002" : "\u53EF\u4EE5\u76F4\u63A5\u5E94\u7528\u5230\u9884\u89C8\u3002";
@@ -92254,7 +92399,7 @@ var aiSettingsMethods = {
           testBtn.textContent = "\u6D4B\u8BD5\u4E2D...";
           try {
             await testAiProviderConnection(provider, createObsidianFetchAdapter({ requestUrl: getObsidianRequestUrl(), request: getObsidianRequest() }));
-            new Notice(`\u2705 ${provider.name} \u8FDE\u63A5\u6210\u529F\uFF01`);
+            new Notice(`\u2705 ${provider.name} \u6A21\u578B\u53EF\u7528\uFF01`);
           } catch (error) {
             new Notice(`\u274C ${provider.name} \u8FDE\u63A5\u5931\u8D25: ${toReadableError5(error).message}`);
           }
@@ -92479,7 +92624,7 @@ var aiSettingsMethods = {
       testBtn.textContent = "\u6D4B\u8BD5\u4E2D...";
       try {
         await testAiProviderConnection(candidate, createObsidianFetchAdapter({ requestUrl: getObsidianRequestUrl(), request: getObsidianRequest() }));
-        new Notice("\u2705 AI Provider \u8FDE\u63A5\u6210\u529F\uFF01");
+        new Notice("\u2705 AI Provider \u6A21\u578B\u53EF\u7528\uFF01");
       } catch (error) {
         new Notice(`\u274C \u8FDE\u63A5\u5931\u8D25: ${toReadableError5(error).message}`);
       }

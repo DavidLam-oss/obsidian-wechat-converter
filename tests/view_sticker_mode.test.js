@@ -101,6 +101,7 @@ describe('AppleStyleView - Sticker Mode Integration', () => {
       .toBe('已转换：代码块 1 处、表格 2 处');
     expect(view.previewContainer.querySelector('.apple-sticker-notice-desc')?.textContent)
       .toBe('内容已转换为适合贴图的纯文本，不会改动笔记原文。');
+    expect(view.previewContainer.querySelector('.apple-sticker-notice-icon')).toBeNull();
   });
 
   it('should collapse the image section into a blocking notice when no image exists', async () => {
@@ -162,5 +163,51 @@ describe('AppleStyleView - Sticker Mode Integration', () => {
     const gridIndex = children.indexOf(imageSection.querySelector('.sticker-image-list'));
     expect(headerIndex).toBeLessThan(hintIndex);
     expect(hintIndex).toBeLessThan(gridIndex);
+    expect(imageSection.querySelector('.apple-sticker-hint-icon')).toBeNull();
+  });
+
+  it('should keep the image list to two rows until the user expands it', async () => {
+    const leaf = { view: null };
+    const plugin = { settings: { wechatAccounts: [] } };
+    const view = new AppleStyleView(leaf, plugin);
+    const imageItems = Array.from({ length: 20 }, (_, index) => ({
+      key: `body:image-${index + 1}.png`,
+      source: 'body',
+      src: `image-${index + 1}.png`,
+      name: `image-${index + 1}.png`,
+    }));
+    const uiState = {
+      order: imageItems.map((item) => item.key),
+      removedKeys: [],
+      undoItems: [],
+      imageListExpanded: false,
+    };
+    view.previewMode = 'sticker';
+    view.previewContainer = createObsidianLikeElement();
+    view.buildStickerData = vi.fn().mockResolvedValue({
+      title: '测试',
+      content: '正文',
+      imageItems,
+      imageDisplaySources: imageItems.map((_, index) => `app://local/image-${index + 1}.png`),
+      sourcePath: 'test.md',
+      removed: [],
+    });
+    view.getStickerUiState = vi.fn().mockReturnValue(uiState);
+
+    await view.renderStickerPreview();
+
+    const cells = Array.from(view.previewContainer.querySelectorAll('.sticker-image-list__item'));
+    const toggle = view.previewContainer.querySelector('.sticker-image-list__toggle');
+    expect(cells).toHaveLength(20);
+    expect(cells.filter((cell) => !cell.hidden)).toHaveLength(6);
+    expect(toggle?.textContent).toBe('展开全部 20 张');
+    expect(toggle?.getAttribute('aria-expanded')).toBe('false');
+
+    toggle.click();
+
+    expect(cells.every((cell) => !cell.hidden)).toBe(true);
+    expect(toggle.textContent).toBe('收起到 2 行');
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(uiState.imageListExpanded).toBe(true);
   });
 });

@@ -9,7 +9,7 @@
 
 ## 输出
 
-输出 `extractJsonPayload`、`sanitizeJsonStringLiteralControls`、`inferBlockType`、`repairRawLayoutPayload`、`extractImageRefsFromHtml`、`buildLayoutMessages`、`readChatCompletionContent`、`readGeminiContent`、`readAnthropicContent`、`toPlainPromptFromMessages`，供 AI layout 入口和转换器面板调用。
+输出 AI 编排请求、轻量 Provider 连接检测、响应解析和 JSON 修复能力，供 AI layout 入口、设置页和转换器面板调用。
 
 ## 定位
 
@@ -76,6 +76,10 @@ import {
   toRecord,
   toSelectionRecord,
 } from './utils.js';
+
+const AI_PROVIDER_CONNECTION_TEST_TIMEOUT_MS = 15000;
+const AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS = 16;
+const AI_PROVIDER_CONNECTION_TEST_PROMPT = 'Reply with OK only.';
 
 /** @param {unknown} text @returns {string} */
 function extractJsonPayload(text) {
@@ -789,21 +793,133 @@ async function generateArticleLayout({
   }
 }
 
+class AiProviderConnectionTimeoutError extends Error {
+  constructor(timeoutMs) {
+    const seconds = Math.max(1, Math.round(Number(timeoutMs || 0) / 1000));
+    super(`连接测试超时（${seconds}s）。接口可能响应较慢，请稍后再试。`);
+    this.name = 'AiProviderConnectionTimeoutError';
+    this.code = 'ai-provider-connection-timeout';
+    this.timeoutMs = Number(timeoutMs || 0);
+  }
+}
+
+/** @param {FetchResponseLike} response @returns {Promise<void>} */
+async function ensureAiConnectionResponseOk(response) {
+  if (response.ok === true) return;
+  const text = await response.text();
+  throw new Error(`AI 请求失败 (${response.status || 0}): ${text || response.statusText || ''}`);
+}
+
+/** @param {string} providerKind @param {unknown} data @returns {boolean} */
+function hasAiConnectionResponse(providerKind, data) {
+  const source = toRecord(data);
+  if (providerKind === AI_PROVIDER_KINDS.OPENAI_COMPATIBLE) {
+    const choices = Array.isArray(source.choices) ? source.choices : [];
+    return choices.some((choice) => isRecord(toRecord(choice).message));
+  }
+  if (providerKind === AI_PROVIDER_KINDS.GEMINI) {
+    return Array.isArray(source.candidates) && source.candidates.length > 0;
+  }
+  if (providerKind === AI_PROVIDER_KINDS.ANTHROPIC) {
+    return Array.isArray(source.content) && source.content.length > 0;
+  }
+  return false;
+}
+
 /** @param {unknown} provider @param {FetchLike} [fetchImpl] @returns {Promise<boolean>} */
 async function testAiProviderConnection(provider, fetchImpl = getDefaultFetch()) {
-  const result = await generateArticleLayout({
-    provider,
-    title: '连接测试',
-    markdown: '这是一个连接测试。请输出最小可用的教程排版 JSON。',
-    selection: {
-      layoutFamily: 'tutorial-cards',
-      colorPalette: 'tech-green',
-    },
-    imageRefs: [],
-    timeoutMs: 15000,
-    fetchImpl,
-  });
-  return !!result?.layoutJson?.blocks?.length;
+  const safeProvider = normalizeAiProvider(provider);
+  if (typeof fetchImpl !== 'function') throw new Error('当前环境不支持 AI 网络请求');
+
+  const controller = new AbortController();
+  const timer = setAiLayoutTimeout(
+    () => controller.abort(),
+    AI_PROVIDER_CONNECTION_TEST_TIMEOUT_MS
+  );
+
+  try {
+    /** @type {FetchResponseLike} */
+    let response;
+    /** @type {unknown} */
+    let data;
+
+    switch (safeProvider.kind) {
+      case AI_PROVIDER_KINDS.OPENAI_COMPATIBLE: {
+        response = await fetchImpl(`${safeProvider.baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${safeProvider.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: safeProvider.model,
+            temperature: 0,
+            max_tokens: AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS,
+            messages: [{ role: 'user', content: AI_PROVIDER_CONNECTION_TEST_PROMPT }],
+          }),
+          signal: controller.signal,
+        });
+        await ensureAiConnectionResponseOk(response);
+        data = await response.json();
+        break;
+      }
+      case AI_PROVIDER_KINDS.GEMINI: {
+        const endpoint = `${safeProvider.baseUrl}/models/${encodeURIComponent(safeProvider.model)}:generateContent`;
+        response = await fetchImpl(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': safeProvider.apiKey,
+          },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: AI_PROVIDER_CONNECTION_TEST_PROMPT }] }],
+            generationConfig: {
+              temperature: 0,
+              maxOutputTokens: AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS,
+            },
+          }),
+          signal: controller.signal,
+        });
+        await ensureAiConnectionResponseOk(response);
+        data = await response.json();
+        break;
+      }
+      case AI_PROVIDER_KINDS.ANTHROPIC: {
+        response = await fetchImpl(`${safeProvider.baseUrl}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': safeProvider.apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: safeProvider.model,
+            max_tokens: AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS,
+            temperature: 0,
+            messages: [{ role: 'user', content: AI_PROVIDER_CONNECTION_TEST_PROMPT }],
+          }),
+          signal: controller.signal,
+        });
+        await ensureAiConnectionResponseOk(response);
+        data = await response.json();
+        break;
+      }
+      default:
+        throw new Error(`暂不支持的 AI Provider 类型: ${safeProvider.kind}`);
+    }
+
+    if (!hasAiConnectionResponse(safeProvider.kind, data)) {
+      throw new Error('模型已连接，但响应格式无法识别');
+    }
+    return true;
+  } catch (error) {
+    if (controller.signal.aborted || isAbortError(error)) {
+      throw new AiProviderConnectionTimeoutError(AI_PROVIDER_CONNECTION_TEST_TIMEOUT_MS);
+    }
+    throw error;
+  } finally {
+    clearAiLayoutTimeout(timer);
+  }
 }
 
 export {
@@ -821,5 +937,6 @@ export {
   isAbortError,
   parseAndRepairLayoutPayload,
   generateArticleLayout,
+  AiProviderConnectionTimeoutError,
   testAiProviderConnection,
 };

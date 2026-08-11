@@ -49,6 +49,11 @@ import {
   getObsidianRequest,
 } from '../apple-style-view-shared.js';
 
+/** @param {unknown} errorText @returns {boolean} */
+function isAiLayoutTimeoutMessage(errorText) {
+  return /^AI 请求超时（\d+s）/.test(String(errorText || '').trim());
+}
+
 /** @type {AiLayoutDebugMethodsContract & ThisType<AppleStyleViewContract>} */
 export const aiLayoutDebugMethods = {
 buildAiLayoutDebugJson(state) {
@@ -418,9 +423,11 @@ refreshAiLayoutPanel() {
       : '这次生成没有成功，请重试或检查 AI 设置。';
   } else if (state?.status === 'error') {
     badge = hasReusableLayout ? '已保留上一版' : '生成失败';
-    statusText = hasReusableLayout
-      ? '这次生成没有成功，已为你保留上一版结果。'
-      : '生成失败，请重试或检查 AI 设置。';
+    statusText = isAiLayoutTimeoutMessage(state.lastError)
+      ? state.lastError
+      : (hasReusableLayout
+        ? '这次生成没有成功，已为你保留上一版结果。'
+        : '生成失败，请重试或检查 AI 设置。');
   } else if (state && isStale) {
     if (canGenerateForSelection) {
       badge = '需更新';
@@ -435,7 +442,9 @@ refreshAiLayoutPanel() {
     }
   } else if (hasReusableLayout && hasLastAttemptFailure) {
     badge = '已保留上一版';
-    statusText = '这次生成没有成功，已为你保留上一版结果。';
+    statusText = isAiLayoutTimeoutMessage(state.lastAttemptError)
+      ? state.lastAttemptError
+      : '这次生成没有成功，已为你保留上一版结果。';
   } else if (state) {
     badge = hasApplied ? '已应用' : '可应用';
     statusText = hasApplied
