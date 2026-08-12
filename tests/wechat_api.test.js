@@ -100,6 +100,67 @@ describe('WechatAPI - Upload & MIME Logic', () => {
     expect(body.fileData).toBe('ZmFrZS1pbWFnZS1kYXRh');
   });
 
+  it('should transcode WebP to PNG at the shared WeChat upload boundary', async () => {
+    const originalImage = window.Image;
+    const originalCreateObjectUrl = window.URL.createObjectURL;
+    const originalRevokeObjectUrl = window.URL.revokeObjectURL;
+    const createElement = document.createElement.bind(document);
+    const drawImage = vi.fn();
+    const canvas = {
+      width: 0,
+      height: 0,
+      getContext: vi.fn(() => ({ drawImage })),
+      toBlob: vi.fn((callback, mimeType) => callback(new Blob(['png-data'], { type: mimeType }))),
+    };
+
+    class MockImage {
+      constructor() {
+        this.naturalWidth = 640;
+        this.naturalHeight = 360;
+        this.onload = null;
+        this.onerror = null;
+      }
+
+      set src(value) {
+        this.currentSrc = value;
+        this.onload?.();
+      }
+    }
+
+    window.Image = MockImage;
+    window.URL.createObjectURL = vi.fn(() => 'blob:wechat-webp');
+    window.URL.revokeObjectURL = vi.fn();
+    const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tagName, options) => {
+      if (tagName === 'canvas') return canvas;
+      return createElement(tagName, options);
+    });
+
+    try {
+      const api = new WechatAPI('appid', 'secret', 'https://proxy.com');
+      const webpBytes = new Uint8Array([
+        0x52, 0x49, 0x46, 0x46,
+        0x04, 0x00, 0x00, 0x00,
+        0x57, 0x45, 0x42, 0x50,
+      ]);
+      const source = new Blob([webpBytes], { type: 'image/webp' });
+      obsidianMock.requestUrl.mockResolvedValue({ json: { url: 'https://mmbiz.qpic.cn/png' } });
+
+      await api.uploadMultipart('https://api.weixin.qq.com/upload', source, 'media');
+
+      const body = JSON.parse(obsidianMock.requestUrl.mock.calls[0][0].body);
+      expect(body.mimeType).toBe('image/png');
+      expect(body.fileName).toBe('image.png');
+      expect(canvas.width).toBe(640);
+      expect(canvas.height).toBe(360);
+      expect(drawImage).toHaveBeenCalledTimes(1);
+    } finally {
+      createElementSpy.mockRestore();
+      window.Image = originalImage;
+      window.URL.createObjectURL = originalCreateObjectUrl;
+      window.URL.revokeObjectURL = originalRevokeObjectUrl;
+    }
+  });
+
   // === Task B: Remote MIME Parsing ===
   it('should detect MIME type from headers for http images', async () => {
     const view = new AppleStyleView(null, null);

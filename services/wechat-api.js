@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`./obsidian-compat.js`、`./concurrency.js`、`./sticker-constants.js`。
+关键依赖：`./obsidian-compat.js`、`./concurrency.js`、`./sticker-constants.js`、`./wechat-image-transcoder.js`。
 
 ## 维护规则
 
@@ -28,6 +28,7 @@
 import { getObsidianRequestUrl } from './obsidian-compat.js';
 import { sleep } from './concurrency.js';
 import { STICKER_MAX_IMAGES } from './sticker-constants.js';
+import { normalizeWechatUploadImageBlob } from './wechat-image-transcoder.js';
 
 /** @param {unknown} error @returns {ReadableErrorLike} */
 function toReadableError(error) {
@@ -573,17 +574,18 @@ export class WechatAPI {
    * @returns {Promise<Record<string, unknown>>}
    */
   async uploadMultipart(url, blob, fieldName) {
+    if (this.proxyUrl) this.validateProxyUrl(this.proxyUrl);
+    const uploadBlob = await normalizeWechatUploadImageBlob(blob);
+
     return this.requestWithRetry(async () => {
 
       // 获取真实的 MIME 类型和文件扩展名
-      const mimeType = blob.type || 'image/jpeg';
+      const mimeType = uploadBlob.type || 'image/jpeg';
       const ext = mimeType.includes('gif') ? 'gif' : mimeType.includes('png') ? 'png' : 'jpg';
 
       if (this.proxyUrl) {
-        this.validateProxyUrl(this.proxyUrl);
-
         // 通过代理发送：将文件转为 base64 (使用 FileReader 提升性能)
-        const base64Data = await readBlobAsBase64Payload(blob);
+        const base64Data = await readBlobAsBase64Payload(uploadBlob);
 
         const headers = { 'Content-Type': 'application/json' };
         if (this.clientId) {
@@ -619,7 +621,7 @@ export class WechatAPI {
       } else {
         // 直连：原有逻辑
         const boundary = '----ObsidianWechatConverterBoundary' + Math.random().toString(36).substring(2);
-        const arrayBuffer = await blob.arrayBuffer();
+        const arrayBuffer = await uploadBlob.arrayBuffer();
         const bytes = new Uint8Array(arrayBuffer);
 
         let header = `--${boundary}\r\n`;

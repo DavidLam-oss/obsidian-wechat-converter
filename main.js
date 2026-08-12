@@ -81872,6 +81872,114 @@ async function pMap(array, mapper, concurrency = 3) {
   return Promise.all(results);
 }
 
+// services/wechat-image-transcoder.js
+var WEBP_HEADER_SIZE = 12;
+var PNG_MIME_TYPE = "image/png";
+function normalizeMimeType(value) {
+  return String(value || "").split(";")[0].trim().toLowerCase();
+}
+function getErrorMessage4(error) {
+  if (error instanceof Error)
+    return error.message;
+  if (error && typeof error === "object" && typeof error["message"] === "string") {
+    return error["message"];
+  }
+  return String(error || "\u672A\u77E5\u9519\u8BEF");
+}
+async function readBlobArrayBuffer(blob) {
+  if (typeof (blob == null ? void 0 : blob.arrayBuffer) === "function") {
+    return await blob.arrayBuffer();
+  }
+  if (typeof FileReader !== "function") {
+    throw new Error("\u5F53\u524D\u73AF\u5883\u65E0\u6CD5\u8BFB\u53D6\u56FE\u7247\u6570\u636E");
+  }
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result instanceof ArrayBuffer) {
+        resolve(reader.result);
+      } else {
+        reject(new Error("\u8BFB\u53D6\u56FE\u7247\u6570\u636E\u5931\u8D25"));
+      }
+    };
+    reader.onerror = () => reject(reader.error || new Error("\u8BFB\u53D6\u56FE\u7247\u6570\u636E\u5931\u8D25"));
+    reader.readAsArrayBuffer(blob);
+  });
+}
+async function isWebpBlob(blob) {
+  if (!blob)
+    return false;
+  if (normalizeMimeType(blob.type) === "image/webp")
+    return true;
+  if (typeof blob.slice !== "function")
+    return false;
+  const headerBuffer = await readBlobArrayBuffer(blob.slice(0, WEBP_HEADER_SIZE));
+  const bytes = new Uint8Array(headerBuffer);
+  if (bytes.length < WEBP_HEADER_SIZE)
+    return false;
+  return bytes[0] === 82 && bytes[1] === 73 && bytes[2] === 70 && bytes[3] === 70 && bytes[8] === 87 && bytes[9] === 69 && bytes[10] === 66 && bytes[11] === 80;
+}
+function canvasToPngBlob(canvas) {
+  if (typeof (canvas == null ? void 0 : canvas.toBlob) !== "function") {
+    return Promise.reject(new Error("\u5F53\u524D\u73AF\u5883\u4E0D\u652F\u6301 Canvas PNG \u8F6C\u6362"));
+  }
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("Canvas \u672A\u751F\u6210 PNG \u6570\u636E"));
+        return;
+      }
+      resolve(normalizeMimeType(blob.type) === PNG_MIME_TYPE ? blob : new Blob([blob], { type: PNG_MIME_TYPE }));
+    }, PNG_MIME_TYPE);
+  });
+}
+function loadImage(objectUrl, options) {
+  return new Promise((resolve, reject) => {
+    const image = typeof options.createImage === "function" ? options.createImage() : typeof Image === "function" ? new Image() : null;
+    if (!image) {
+      reject(new Error("\u5F53\u524D\u73AF\u5883\u65E0\u6CD5\u89E3\u7801 WebP \u56FE\u7247"));
+      return;
+    }
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("WebP \u56FE\u7247\u89E3\u7801\u5931\u8D25"));
+    image.src = objectUrl;
+  });
+}
+async function normalizeWechatUploadImageBlob(blob, options = {}) {
+  if (!await isWebpBlob(blob))
+    return blob;
+  const activeDocument = options.document || getActiveDocument();
+  const createObjectUrl = options.createObjectUrl || (typeof URL !== "undefined" && typeof URL.createObjectURL === "function" ? (value) => URL.createObjectURL(value) : null);
+  const revokeObjectUrl = options.revokeObjectUrl || (typeof URL !== "undefined" && typeof URL.revokeObjectURL === "function" ? (value) => URL.revokeObjectURL(value) : null);
+  if (!activeDocument || typeof createObjectUrl !== "function") {
+    throw new Error("WebP \u8F6C PNG \u5931\u8D25\uFF1A\u5F53\u524D\u73AF\u5883\u7F3A\u5C11\u56FE\u7247\u8F6C\u6362\u80FD\u529B");
+  }
+  let objectUrl = "";
+  try {
+    objectUrl = createObjectUrl(blob);
+    const image = await loadImage(objectUrl, options);
+    const width = Number(image.naturalWidth || image.width) || 0;
+    const height = Number(image.naturalHeight || image.height) || 0;
+    if (width <= 0 || height <= 0) {
+      throw new Error("\u65E0\u6CD5\u83B7\u53D6 WebP \u56FE\u7247\u5C3A\u5BF8");
+    }
+    const canvas = activeDocument.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context)
+      throw new Error("\u65E0\u6CD5\u521B\u5EFA Canvas 2D \u4E0A\u4E0B\u6587");
+    context.drawImage(image, 0, 0, width, height);
+    return await canvasToPngBlob(canvas);
+  } catch (error) {
+    throw new Error(`WebP \u8F6C PNG \u5931\u8D25\uFF1A${getErrorMessage4(error)}`);
+  } finally {
+    if (objectUrl && typeof revokeObjectUrl === "function") {
+      revokeObjectUrl(objectUrl);
+    }
+  }
+}
+
 // services/wechat-api.js
 function toReadableError4(error) {
   if (error instanceof Error)
@@ -82320,12 +82428,14 @@ var WechatAPI = class {
    * @returns {Promise<Record<string, unknown>>}
    */
   async uploadMultipart(url, blob, fieldName) {
+    if (this.proxyUrl)
+      this.validateProxyUrl(this.proxyUrl);
+    const uploadBlob = await normalizeWechatUploadImageBlob(blob);
     return this.requestWithRetry(async () => {
-      const mimeType = blob.type || "image/jpeg";
+      const mimeType = uploadBlob.type || "image/jpeg";
       const ext = mimeType.includes("gif") ? "gif" : mimeType.includes("png") ? "png" : "jpg";
       if (this.proxyUrl) {
-        this.validateProxyUrl(this.proxyUrl);
-        const base64Data = await readBlobAsBase64Payload(blob);
+        const base64Data = await readBlobAsBase64Payload(uploadBlob);
         const headers = { "Content-Type": "application/json" };
         if (this.clientId) {
           headers["X-Client-Id"] = this.clientId;
@@ -82360,7 +82470,7 @@ var WechatAPI = class {
         }
       } else {
         const boundary = "----ObsidianWechatConverterBoundary" + Math.random().toString(36).substring(2);
-        const arrayBuffer = await blob.arrayBuffer();
+        const arrayBuffer = await uploadBlob.arrayBuffer();
         const bytes = new Uint8Array(arrayBuffer);
         let header = `--${boundary}\r
 `;
