@@ -58,7 +58,98 @@ describe('WechatAPI - Upload & MIME Logic', () => {
     });
   };
 
+  const asciiBytes = (text) => Uint8Array.from(Array.from(text, (char) => char.charCodeAt(0)));
+  const uint32Le = (value) => Uint8Array.from([
+    value & 0xff,
+    (value >>> 8) & 0xff,
+    (value >>> 16) & 0xff,
+    (value >>> 24) & 0xff,
+  ]);
+  const concatBytes = (...parts) => {
+    const result = new Uint8Array(parts.reduce((size, part) => size + part.length, 0));
+    let offset = 0;
+    parts.forEach((part) => {
+      result.set(part, offset);
+      offset += part.length;
+    });
+    return result;
+  };
+  const createChunk = (type, payload) => {
+    const padding = payload.length % 2 ? new Uint8Array([0]) : new Uint8Array();
+    return concatBytes(asciiBytes(type), uint32Le(payload.length), payload, padding);
+  };
+  const createWebpBlob = (imageChunk, mimeType = 'image/webp') => {
+    const chunk = createChunk(imageChunk, Uint8Array.from([1, 2, 3, 4]));
+    const bytes = concatBytes(asciiBytes('RIFF'), uint32Le(chunk.length + 4), asciiBytes('WEBP'), chunk);
+    return new Blob([bytes], { type: mimeType });
+  };
+
+  const installWebpCanvasHarness = ({ outputMimeType, outputBytes }) => {
+    const originalImage = window.Image;
+    const originalCreateObjectUrl = window.URL.createObjectURL;
+    const originalRevokeObjectUrl = window.URL.revokeObjectURL;
+    const createElement = document.createElement.bind(document);
+    const drawImage = vi.fn();
+    const toBlob = vi.fn((callback, mimeType) => {
+      callback(new Blob([outputBytes], { type: outputMimeType || mimeType }));
+    });
+    const canvas = {
+      width: 0,
+      height: 0,
+      getContext: vi.fn(() => ({ drawImage })),
+      toBlob,
+    };
+
+    class MockImage {
+      constructor() {
+        this.naturalWidth = 640;
+        this.naturalHeight = 360;
+        this.onload = null;
+        this.onerror = null;
+      }
+
+      set src(value) {
+        this.currentSrc = value;
+        this.onload?.();
+      }
+    }
+
+    window.Image = MockImage;
+    window.URL.createObjectURL = vi.fn(() => 'blob:wechat-webp');
+    window.URL.revokeObjectURL = vi.fn();
+    const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tagName, options) => {
+      if (tagName === 'canvas') return canvas;
+      return createElement(tagName, options);
+    });
+
+    return {
+      canvas,
+      drawImage,
+      toBlob,
+      restore() {
+        createElementSpy.mockRestore();
+        window.Image = originalImage;
+        window.URL.createObjectURL = originalCreateObjectUrl;
+        window.URL.revokeObjectURL = originalRevokeObjectUrl;
+      },
+    };
+  };
+
   beforeEach(async () => {
+    if (typeof Blob.prototype.arrayBuffer !== 'function') {
+      Object.defineProperty(Blob.prototype, 'arrayBuffer', {
+        configurable: true,
+        value() {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error || new Error('Failed to read Blob'));
+            reader.readAsArrayBuffer(this);
+          });
+        },
+      });
+    }
+
     // 1. Reset modules to ensure we get a fresh import of input.js
     vi.resetModules();
 
@@ -98,6 +189,91 @@ describe('WechatAPI - Upload & MIME Logic', () => {
 
     expect(body.method).toBe('UPLOAD');
     expect(body.fileData).toBe('ZmFrZS1pbWFnZS1kYXRh');
+  });
+
+  it('should proxy a lossless WebP as real PNG bytes', async () => {
+    const pngBytes = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2]);
+    const harness = installWebpCanvasHarness({ outputMimeType: 'image/png', outputBytes: pngBytes });
+    const api = new WechatAPI('appid', 'secret', 'https://proxy.com');
+    obsidianMock.requestUrl.mockResolvedValue({ json: { url: 'https://mmbiz.qpic.cn/png' } });
+
+    try {
+      await api.uploadMultipart('https://api.weixin.qq.com/cgi-bin/media/uploadimg', createWebpBlob('VP8L'), 'media');
+
+      const body = JSON.parse(obsidianMock.requestUrl.mock.calls[0][0].body);
+      expect(body.mimeType).toBe('image/png');
+      expect(body.fileName).toBe('image.png');
+      expect(body.fileData).toBe(Buffer.from(pngBytes).toString('base64'));
+      expect(harness.canvas.width).toBe(640);
+      expect(harness.canvas.height).toBe(360);
+    } finally {
+      harness.restore();
+    }
+  });
+
+  it('should proxy a lossy WebP as real JPEG bytes even when its source MIME is wrong', async () => {
+    const jpegBytes = Uint8Array.from([0xff, 0xd8, 0xff, 0xdb, 1, 2]);
+    const harness = installWebpCanvasHarness({ outputMimeType: 'image/jpeg', outputBytes: jpegBytes });
+    const api = new WechatAPI('appid', 'secret', 'https://proxy.com');
+    obsidianMock.requestUrl.mockResolvedValue({ json: { url: 'https://mmbiz.qpic.cn/jpeg' } });
+
+    try {
+      await api.uploadMultipart('https://api.weixin.qq.com/cgi-bin/media/uploadimg', createWebpBlob('VP8 ', 'image/png'), 'media');
+
+      const body = JSON.parse(obsidianMock.requestUrl.mock.calls[0][0].body);
+      expect(body.mimeType).toBe('image/jpeg');
+      expect(body.fileName).toBe('image.jpg');
+      expect(body.fileData).toBe(Buffer.from(jpegBytes).toString('base64'));
+      expect(harness.toBlob).toHaveBeenCalledWith(expect.any(Function), 'image/jpeg', 0.9);
+    } finally {
+      harness.restore();
+    }
+  });
+
+  it('should send converted WebP bytes and matching headers through direct multipart upload', async () => {
+    const pngBytes = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 5, 6]);
+    const harness = installWebpCanvasHarness({ outputMimeType: 'image/png', outputBytes: pngBytes });
+    const api = new WechatAPI('appid', 'secret');
+    obsidianMock.requestUrl.mockResolvedValue({ json: { media_id: 'media-png' } });
+
+    try {
+      await api.uploadMultipart('https://api.weixin.qq.com/cgi-bin/material/add_material', createWebpBlob('VP8L'), 'media');
+
+      const request = obsidianMock.requestUrl.mock.calls[0][0];
+      const body = new Uint8Array(request.body);
+      const bodyText = new TextDecoder('latin1').decode(body);
+      expect(bodyText).toContain('filename="image.png"');
+      expect(bodyText).toContain('Content-Type: image/png');
+      expect(Array.from(body).join(',')).toContain(Array.from(pngBytes).join(','));
+    } finally {
+      harness.restore();
+    }
+  });
+
+  it('should transcode once while network retry attempts reuse the same output Blob', async () => {
+    const jpegBytes = Uint8Array.from([0xff, 0xd8, 0xff, 0xdb, 7, 8]);
+    const harness = installWebpCanvasHarness({ outputMimeType: 'image/jpeg', outputBytes: jpegBytes });
+    const api = new WechatAPI('appid', 'secret', 'https://proxy.com');
+    obsidianMock.requestUrl
+      .mockRejectedValueOnce(new Error('temporary network failure'))
+      .mockResolvedValueOnce({ json: { url: 'https://mmbiz.qpic.cn/retry' } });
+    api.requestWithRetry = async (operation) => {
+      try {
+        return await operation();
+      } catch {
+        return await operation();
+      }
+    };
+
+    try {
+      await api.uploadMultipart('https://api.weixin.qq.com/cgi-bin/media/uploadimg', createWebpBlob('VP8 '), 'media');
+
+      expect(obsidianMock.requestUrl).toHaveBeenCalledTimes(2);
+      expect(harness.toBlob).toHaveBeenCalledTimes(1);
+      expect(harness.drawImage).toHaveBeenCalledTimes(1);
+    } finally {
+      harness.restore();
+    }
   });
 
   // === Task B: Remote MIME Parsing ===

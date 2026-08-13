@@ -81872,6 +81872,276 @@ async function pMap(array, mapper, concurrency = 3) {
   return Promise.all(results);
 }
 
+// services/wechat-image-transcoder.js
+var WEBP_MIME_TYPE = "image/webp";
+var PNG_MIME_TYPE = "image/png";
+var JPEG_MIME_TYPE = "image/jpeg";
+var RIFF_HEADER_SIZE = 12;
+var VP8X_PAYLOAD_SIZE = 10;
+var VP8X_ALPHA_FLAG = 16;
+var VP8X_ANIMATION_FLAG = 2;
+var JPEG_QUALITY = 0.9;
+function normalizeMimeType(value) {
+  return String(value || "").split(";")[0].trim().toLowerCase();
+}
+function getErrorMessage4(error) {
+  if (error instanceof Error)
+    return error.message;
+  if (error && typeof error === "object" && typeof error["message"] === "string") {
+    return error["message"];
+  }
+  return String(error || "\u672A\u77E5\u9519\u8BEF");
+}
+function readUint32Le(bytes, offset) {
+  return (bytes[offset] | bytes[offset + 1] << 8 | bytes[offset + 2] << 16 | bytes[offset + 3] << 24) >>> 0;
+}
+function matchesAscii(bytes, offset, text) {
+  if (offset < 0 || offset + text.length > bytes.length)
+    return false;
+  for (let index = 0; index < text.length; index += 1) {
+    if (bytes[offset + index] !== text.charCodeAt(index))
+      return false;
+  }
+  return true;
+}
+function readFourCc(bytes, offset) {
+  return String.fromCharCode(bytes[offset], bytes[offset + 1], bytes[offset + 2], bytes[offset + 3]);
+}
+async function readBlobRange(blob, start, end) {
+  if (!blob || typeof blob.slice !== "function") {
+    throw new Error("\u5F53\u524D\u73AF\u5883\u65E0\u6CD5\u8BFB\u53D6\u56FE\u7247\u6570\u636E");
+  }
+  const part = blob.slice(start, end);
+  if (part && typeof part.arrayBuffer === "function") {
+    return new Uint8Array(await part.arrayBuffer());
+  }
+  if (typeof blob.arrayBuffer === "function") {
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    return bytes.slice(start, Math.min(end, bytes.length));
+  }
+  throw new Error("\u5F53\u524D\u73AF\u5883\u65E0\u6CD5\u8BFB\u53D6\u56FE\u7247\u6570\u636E");
+}
+function createNonWebpInspection() {
+  return {
+    isWebp: false,
+    isAnimated: false,
+    hasAlpha: false,
+    isLossless: false,
+    targetMimeType: "",
+    imageChunk: ""
+  };
+}
+function inspectWebpBytes(bytes) {
+  if (bytes.length < RIFF_HEADER_SIZE || !matchesAscii(bytes, 0, "RIFF") || !matchesAscii(bytes, 8, "WEBP")) {
+    throw new Error("WebP \u6587\u4EF6\u5934\u65E0\u6548\u6216\u56FE\u7247\u5DF2\u635F\u574F");
+  }
+  const declaredEnd = readUint32Le(bytes, 4) + 8;
+  if (declaredEnd < RIFF_HEADER_SIZE || declaredEnd > bytes.length) {
+    throw new Error("WebP RIFF \u957F\u5EA6\u65E0\u6548\u6216\u56FE\u7247\u6570\u636E\u4E0D\u5B8C\u6574");
+  }
+  let offset = RIFF_HEADER_SIZE;
+  let hasVp8x = false;
+  let hasAlpha = false;
+  let isAnimated = false;
+  let imageChunkCount = 0;
+  const imageChunks = /* @__PURE__ */ new Set();
+  while (offset < declaredEnd) {
+    if (offset + 8 > declaredEnd) {
+      throw new Error("WebP chunk \u5934\u90E8\u4E0D\u5B8C\u6574");
+    }
+    const chunkType = readFourCc(bytes, offset);
+    const chunkSize = readUint32Le(bytes, offset + 4);
+    const payloadStart = offset + 8;
+    const payloadEnd = payloadStart + chunkSize;
+    if (payloadEnd > declaredEnd) {
+      throw new Error(`WebP ${chunkType} chunk \u957F\u5EA6\u8D8A\u754C`);
+    }
+    if (chunkType === "VP8X") {
+      if (chunkSize < VP8X_PAYLOAD_SIZE) {
+        throw new Error("WebP VP8X chunk \u6570\u636E\u4E0D\u5B8C\u6574");
+      }
+      hasVp8x = true;
+      const flags = bytes[payloadStart];
+      if ((flags & VP8X_ALPHA_FLAG) !== 0)
+        hasAlpha = true;
+      if ((flags & VP8X_ANIMATION_FLAG) !== 0)
+        isAnimated = true;
+    } else if (chunkType === "ALPH") {
+      hasAlpha = true;
+    } else if (chunkType === "ANIM" || chunkType === "ANMF") {
+      isAnimated = true;
+    } else if (chunkType === "VP8 " || chunkType === "VP8L") {
+      imageChunkCount += 1;
+      imageChunks.add(chunkType);
+    }
+    const paddedEnd = payloadEnd + chunkSize % 2;
+    if (paddedEnd > declaredEnd) {
+      throw new Error(`WebP ${chunkType} chunk padding \u8D8A\u754C`);
+    }
+    offset = paddedEnd;
+  }
+  if (offset !== declaredEnd) {
+    throw new Error("WebP RIFF \u7ED3\u6784\u4E0D\u5B8C\u6574");
+  }
+  if (isAnimated) {
+    return {
+      isWebp: true,
+      isAnimated: true,
+      hasAlpha,
+      isLossless: false,
+      targetMimeType: "",
+      imageChunk: ""
+    };
+  }
+  if (imageChunks.size !== 1 || imageChunkCount !== 1) {
+    throw new Error(imageChunkCount === 0 ? "WebP \u7F3A\u5C11\u53EF\u89E3\u7801\u7684\u56FE\u50CF\u6570\u636E" : "WebP \u5305\u542B\u51B2\u7A81\u7684\u56FE\u50CF\u6570\u636E");
+  }
+  const imageChunk = (
+    /** @type {'VP8 ' | 'VP8L'} */
+    Array.from(imageChunks)[0]
+  );
+  const isLossless = imageChunk === "VP8L";
+  if (hasAlpha && !hasVp8x && imageChunk !== "VP8L") {
+    throw new Error("WebP \u900F\u660E\u901A\u9053\u7ED3\u6784\u65E0\u6548");
+  }
+  return {
+    isWebp: true,
+    isAnimated: false,
+    hasAlpha,
+    isLossless,
+    targetMimeType: hasAlpha || isLossless ? PNG_MIME_TYPE : JPEG_MIME_TYPE,
+    imageChunk
+  };
+}
+async function inspectWebpBlob(blob) {
+  if (!blob)
+    return createNonWebpInspection();
+  const mimeType = normalizeMimeType(blob.type);
+  const header = await readBlobRange(blob, 0, RIFF_HEADER_SIZE);
+  const hasWebpHeader = header.length >= RIFF_HEADER_SIZE && matchesAscii(header, 0, "RIFF") && matchesAscii(header, 8, "WEBP");
+  if (!hasWebpHeader) {
+    if (mimeType === WEBP_MIME_TYPE) {
+      throw new Error("WebP \u6587\u4EF6\u5934\u65E0\u6548\u6216\u56FE\u7247\u5DF2\u635F\u574F");
+    }
+    return createNonWebpInspection();
+  }
+  if (typeof blob.arrayBuffer !== "function") {
+    throw new Error("\u5F53\u524D\u73AF\u5883\u65E0\u6CD5\u8BFB\u53D6 WebP \u56FE\u7247\u6570\u636E");
+  }
+  return inspectWebpBytes(new Uint8Array(await blob.arrayBuffer()));
+}
+function loadImage(objectUrl, options, activeWindow) {
+  return new Promise((resolve, reject) => {
+    const ImageCtor = activeWindow == null ? void 0 : activeWindow.Image;
+    const image = typeof options.createImage === "function" ? options.createImage() : typeof ImageCtor === "function" ? new ImageCtor() : null;
+    if (!image) {
+      reject(new Error("\u5F53\u524D\u73AF\u5883\u65E0\u6CD5\u89E3\u7801 WebP \u56FE\u7247"));
+      return;
+    }
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("WebP \u56FE\u7247\u89E3\u7801\u5931\u8D25"));
+    image.src = objectUrl;
+  });
+}
+function canvasToTargetBlob(canvas, targetMimeType) {
+  if (typeof (canvas == null ? void 0 : canvas.toBlob) !== "function") {
+    return Promise.reject(new Error("\u5F53\u524D\u73AF\u5883\u4E0D\u652F\u6301 Canvas \u56FE\u7247\u8F6C\u6362"));
+  }
+  return new Promise((resolve, reject) => {
+    const quality = targetMimeType === JPEG_MIME_TYPE ? JPEG_QUALITY : void 0;
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("Canvas \u672A\u751F\u6210\u56FE\u7247\u6570\u636E"));
+        return;
+      }
+      if (normalizeMimeType(blob.type) !== targetMimeType) {
+        reject(new Error(`Canvas \u8F93\u51FA\u683C\u5F0F\u9519\u8BEF\uFF1A\u9884\u671F ${targetMimeType}\uFF0C\u5B9E\u9645 ${blob.type || "\u672A\u77E5"}`));
+        return;
+      }
+      resolve(blob);
+    }, targetMimeType, quality);
+  });
+}
+async function assertImageSignature(blob, targetMimeType) {
+  const signatureSize = targetMimeType === PNG_MIME_TYPE ? 8 : 3;
+  const bytes = await readBlobRange(blob, 0, signatureSize);
+  const valid = targetMimeType === PNG_MIME_TYPE ? bytes.length === 8 && bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71 && bytes[4] === 13 && bytes[5] === 10 && bytes[6] === 26 && bytes[7] === 10 : bytes.length === 3 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255;
+  if (!valid) {
+    throw new Error(`Canvas \u8F93\u51FA\u7684 ${targetMimeType === PNG_MIME_TYPE ? "PNG" : "JPEG"} \u6587\u4EF6\u7B7E\u540D\u65E0\u6548`);
+  }
+}
+async function normalizeWechatUploadImageBlob(blob, options = {}) {
+  let inspection;
+  try {
+    inspection = await inspectWebpBlob(blob);
+  } catch (error) {
+    throw new Error(`WebP \u8F6C\u6362\u5931\u8D25\uFF1A${getErrorMessage4(error)}`);
+  }
+  if (!inspection.isWebp)
+    return blob;
+  if (inspection.isAnimated) {
+    throw new Error("WebP \u8F6C\u6362\u5931\u8D25\uFF1A\u6682\u4E0D\u652F\u6301\u52A8\u753B WebP\uFF0C\u8BF7\u5148\u8F6C\u6362\u4E3A GIF\u3001PNG \u6216 JPEG");
+  }
+  if (inspection.targetMimeType !== PNG_MIME_TYPE && inspection.targetMimeType !== JPEG_MIME_TYPE) {
+    throw new Error("WebP \u8F6C\u6362\u5931\u8D25\uFF1A\u65E0\u6CD5\u786E\u5B9A\u5B89\u5168\u7684\u8F93\u51FA\u683C\u5F0F");
+  }
+  const activeDocument = options.document || getActiveDocument();
+  const activeWindow = (
+    /** @type {WebpActiveWindowLike | null} */
+    (activeDocument == null ? void 0 : activeDocument.defaultView) || null
+  );
+  const activeUrlApi = (activeWindow == null ? void 0 : activeWindow.URL) || null;
+  const activeCreateObjectUrl = (
+    /** @type {((blob: Blob) => string) | undefined} */
+    activeUrlApi == null ? void 0 : activeUrlApi.createObjectURL
+  );
+  const activeRevokeObjectUrl = (
+    /** @type {((url: string) => void) | undefined} */
+    activeUrlApi == null ? void 0 : activeUrlApi.revokeObjectURL
+  );
+  const createObjectUrl = typeof options.createObjectUrl === "function" ? options.createObjectUrl : activeUrlApi && typeof activeCreateObjectUrl === "function" ? (value) => activeCreateObjectUrl(value) : null;
+  const revokeObjectUrl = typeof options.revokeObjectUrl === "function" ? options.revokeObjectUrl : activeUrlApi && typeof activeRevokeObjectUrl === "function" ? (value) => {
+    activeRevokeObjectUrl(value);
+  } : null;
+  if (!activeDocument || !createObjectUrl || !revokeObjectUrl) {
+    throw new Error("WebP \u8F6C\u6362\u5931\u8D25\uFF1A\u5F53\u524D\u73AF\u5883\u7F3A\u5C11\u56FE\u7247\u8F6C\u6362\u80FD\u529B");
+  }
+  let objectUrl = "";
+  try {
+    objectUrl = createObjectUrl(blob);
+    const image = await loadImage(objectUrl, options, activeWindow);
+    const width = Number(image.naturalWidth || image.width) || 0;
+    const height = Number(image.naturalHeight || image.height) || 0;
+    if (width <= 0 || height <= 0) {
+      throw new Error("\u65E0\u6CD5\u83B7\u53D6 WebP \u56FE\u7247\u5C3A\u5BF8");
+    }
+    const canvas = activeDocument.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context)
+      throw new Error("\u65E0\u6CD5\u521B\u5EFA Canvas 2D \u4E0A\u4E0B\u6587");
+    context.drawImage(
+      /** @type {CanvasImageSource} */
+      image,
+      0,
+      0,
+      width,
+      height
+    );
+    const targetMimeType = inspection.targetMimeType;
+    const outputBlob = await canvasToTargetBlob(canvas, targetMimeType);
+    await assertImageSignature(outputBlob, targetMimeType);
+    return outputBlob;
+  } catch (error) {
+    throw new Error(`WebP \u8F6C\u6362\u5931\u8D25\uFF1A${getErrorMessage4(error)}`);
+  } finally {
+    if (objectUrl) {
+      revokeObjectUrl(objectUrl);
+    }
+  }
+}
+
 // services/wechat-api.js
 function toReadableError4(error) {
   if (error instanceof Error)
@@ -82320,12 +82590,14 @@ var WechatAPI = class {
    * @returns {Promise<Record<string, unknown>>}
    */
   async uploadMultipart(url, blob, fieldName) {
+    if (this.proxyUrl)
+      this.validateProxyUrl(this.proxyUrl);
+    const uploadBlob = await normalizeWechatUploadImageBlob(blob);
     return this.requestWithRetry(async () => {
-      const mimeType = blob.type || "image/jpeg";
+      const mimeType = uploadBlob.type || "image/jpeg";
       const ext = mimeType.includes("gif") ? "gif" : mimeType.includes("png") ? "png" : "jpg";
       if (this.proxyUrl) {
-        this.validateProxyUrl(this.proxyUrl);
-        const base64Data = await readBlobAsBase64Payload(blob);
+        const base64Data = await readBlobAsBase64Payload(uploadBlob);
         const headers = { "Content-Type": "application/json" };
         if (this.clientId) {
           headers["X-Client-Id"] = this.clientId;
@@ -82360,7 +82632,7 @@ var WechatAPI = class {
         }
       } else {
         const boundary = "----ObsidianWechatConverterBoundary" + Math.random().toString(36).substring(2);
-        const arrayBuffer = await blob.arrayBuffer();
+        const arrayBuffer = await uploadBlob.arrayBuffer();
         const bytes = new Uint8Array(arrayBuffer);
         let header = `--${boundary}\r
 `;

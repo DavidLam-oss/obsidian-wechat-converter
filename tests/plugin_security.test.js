@@ -33,6 +33,20 @@ describe('WechatAPI Security', () => {
   let obsidianMock;
 
   beforeEach(() => {
+    if (typeof Blob.prototype.arrayBuffer !== 'function') {
+      Object.defineProperty(Blob.prototype, 'arrayBuffer', {
+        configurable: true,
+        value() {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error || new Error('Failed to read Blob'));
+            reader.readAsArrayBuffer(this);
+          });
+        },
+      });
+    }
+
     // 1. Reset modules to ensure clean state
     vi.resetModules();
 
@@ -63,6 +77,18 @@ describe('WechatAPI Security', () => {
     await expect(api.uploadMultipart('https://api.weixin.qq.com/upload', blob, 'media')).rejects.toThrow(
       'Security Error: Insecure HTTP proxy blocked. Proxy URL must use HTTPS.'
     );
+  });
+
+  it('should reject an insecure proxy before inspecting or decoding a WebP blob', async () => {
+    const api = new WechatAPI('appId', 'secret', 'http://insecure-proxy.com');
+    const blob = new Blob(['webp'], { type: 'image/webp' });
+    const sliceSpy = vi.spyOn(blob, 'slice');
+
+    await expect(api.uploadMultipart('https://api.weixin.qq.com/upload', blob, 'media')).rejects.toThrow(
+      'Security Error: Insecure HTTP proxy blocked. Proxy URL must use HTTPS.'
+    );
+    expect(sliceSpy).not.toHaveBeenCalled();
+    expect(obsidianMock.requestUrl).not.toHaveBeenCalled();
   });
 
   it('should allow HTTPS proxy in sendRequest', async () => {

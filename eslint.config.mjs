@@ -188,6 +188,7 @@ export default [
       "services/wechat-draft-cache.js",
       "services/wechat-api.js",
       "services/wechat-api-utils.js",
+      "services/wechat-image-transcoder.js",
       "services/wechat-html-cleaner.js",
       "services/wechat-media.js",
       "services/wechat-sync.js",

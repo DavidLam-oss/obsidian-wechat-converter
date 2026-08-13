@@ -19,6 +19,11 @@
 - `sticker-image-items.js`：统一正文、本地上传和公众号素材图片项，只做同来源去重。
 - `sticker-media-resolver.js`：校验素材所属账号、复用成功上传缓存并解析 media_id。
 
+## 微信图片上传兼容
+
+- `wechat-image-transcoder.js`：在共用微信上传边界识别 WebP 容器；照片型静态 WebP 转 JPEG，透明或无损型静态 WebP 转 PNG，动画 WebP 明确拒绝；不修改源文件。
+- `wechat-api.js`：让正文图片、封面和贴图图片的代理/直连上传统一消费格式归一化后的 Blob，网络重试复用同一次转换结果。
+
 ## 发布清理模块
 
 - `publish-cleanup.js`：负责发布后目录解析、安全校验、删除和失效 `cover` / `cover_dir` 清理；视图层只保留兼容适配。
