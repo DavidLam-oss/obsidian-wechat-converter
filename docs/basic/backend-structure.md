@@ -10,7 +10,7 @@
 - `services/dependency-loader.js` 加载嵌入式运行时依赖，避免 Obsidian 环境中动态依赖失配。
 - `services/native-renderer.js`、`services/obsidian-triplet-renderer.js` 和 serializer 模块承接 native-only 渲染方向。
 - `services/sticker-extractor.js` 与 `services/markdown-cleaner.js` 负责微信贴图数据提取和纯文本降级：图片嵌入与非图片嵌入分流，代码、表格、公式、脚注等复杂结构优先保留可读语义，无法可靠展开的结构使用明确占位。
-- `services/wechat-*` 模块负责微信 token、素材、草稿、HTML 清洗、媒体上传、同步上下文和失败反馈。
+- `services/wechat-*` 模块负责微信 token、素材、草稿、HTML 清洗、媒体上传、同步上下文和失败反馈；共用上传边界会在内存中将静态 WebP 转成匹配实际字节的 PNG 或 JPEG，动画 WebP 明确拒绝，不修改 Markdown、Vault 或图床源文件。
 - `services/feishu-*` 模块负责飞书文档同步、媒体处理、设置、API 调用和 Mermaid 远程渲染策略。
 - `services/wechatsync-*` 模块负责桌面端浏览器发布助手桥接、平台设置、结果回传和任务状态；模块本身必须可在移动端安全加载，桌面专用 Node API 只能在平台守卫后动态获取。
 - `server/` 是可部署的微信代理辅助服务，不是插件运行的必需组件。

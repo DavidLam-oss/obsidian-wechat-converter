@@ -32,6 +32,12 @@ Vitest、jsdom、__mocks__/obsidian.js、tests/helpers/ 和项目源码。
 - `publish_cleanup.test.js`：直接验证目录解析、安全拒绝、frontmatter 清理和删除编排。
 - `frontmatter_cleanup.test.js`：验证 AppleStyleView 兼容适配及同步成功后的调用顺序。
 
+## 微信图片上传兼容测试
+
+- `wechat_image_transcoder.test.js`：覆盖 WebP RIFF/chunk 解析、错误 MIME、静态 JPEG/PNG 分类、动画拒绝、active realm、输出签名和 Object URL 清理。
+- `wechat_api.test.js`：覆盖转码后 Blob 在代理 JSON、直连 multipart 和网络重试中的 MIME、扩展名与真实字节一致性。
+- `plugin_security.test.js`：验证不安全代理在 WebP 检查和解码之前被拒绝。
+
 ## 维护规则
 
 - 每次新增、删除、移动文件或调整目录职责后，必须更新本 README。
