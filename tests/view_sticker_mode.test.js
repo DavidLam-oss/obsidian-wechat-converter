@@ -210,4 +210,36 @@ describe('AppleStyleView - Sticker Mode Integration', () => {
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(uiState.imageListExpanded).toBe(true);
   });
+
+  it.each([
+    [900, false],
+    [1000, false],
+    [1001, true],
+  ])('should only mark the sidebar content count as an error after %i characters exceed the limit', async (contentLength, shouldError) => {
+    const leaf = { view: null };
+    const plugin = { settings: { wechatAccounts: [] } };
+    const view = new AppleStyleView(leaf, plugin);
+    view.previewMode = 'sticker';
+    view.previewContainer = createObsidianLikeElement();
+    view.buildStickerData = vi.fn().mockResolvedValue({
+      title: '测试',
+      content: '文'.repeat(contentLength),
+      imageItems: [{ key: 'body:test.png', source: 'body', src: 'test.png', name: 'test.png' }],
+      imageDisplaySources: ['app://local/test.png'],
+      sourcePath: 'test.md',
+      removed: [],
+    });
+    view.getStickerUiState = vi.fn().mockReturnValue({
+      order: ['body:test.png'],
+      removedKeys: [],
+      undoItems: [],
+    });
+
+    await view.renderStickerPreview();
+
+    const currentCount = view.previewContainer.querySelector('.apple-sticker-count-current');
+    expect(currentCount?.textContent).toBe(String(contentLength));
+    expect(currentCount?.classList.contains('is-warning')).toBe(false);
+    expect(currentCount?.classList.contains('is-error')).toBe(shouldError);
+  });
 });

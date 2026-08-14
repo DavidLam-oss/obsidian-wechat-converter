@@ -358,7 +358,7 @@ async renderStickerPreview() {
   }).counters.content;
   const countBadge = textHeader.createEl('span', { cls: 'apple-sticker-count-badge' });
   countBadge.createEl('span', {
-    cls: `apple-sticker-count-current${contentCountState.status === 'warning' ? ' is-warning' : ''}${contentCountState.status === 'error' ? ' is-error' : ''}`,
+    cls: `apple-sticker-count-current${contentCountState.status === 'error' ? ' is-error' : ''}`,
     text: `${charCount}`
   });
   countBadge.createEl('span', {

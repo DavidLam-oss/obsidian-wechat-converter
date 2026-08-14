@@ -35,13 +35,9 @@ import {
   toReadableError,
   isRecord,
 } from '../apple-style-view-shared.js';
-import {
-  STICKER_MAX_CONTENT_LENGTH,
-  STICKER_MAX_IMAGES,
-  STICKER_MAX_TITLE_LENGTH,
-} from '../../services/sticker-extractor.js';
 import { createBodyStickerImageItem } from '../../services/sticker-image-items.js';
 import { resolveStickerMediaIds } from '../../services/sticker-media-resolver.js';
+import { getStickerPublishState } from '../../services/sticker-publish-state.js';
 import { syncStickerDraft } from '../../services/wechat-sync.js';
 
 const WECHAT_SYNC_SUCCESS_NOTICE = '同步成功！请前往微信公众号后台草稿箱查看';
@@ -196,26 +192,15 @@ async onSyncStickerToWechat(account) {
     const content = typeof stickerData.content === 'string' ? stickerData.content : '';
     const title = String(this.sessionTitle || stickerData.title || '未命名贴图').trim();
 
-    if (imageItems.length === 0) {
+    // 发送前重新使用与弹窗相同的状态模型校验，避免其他入口绕过按钮禁用状态。
+    const publishState = getStickerPublishState({
+      title,
+      content,
+      imageCount: imageItems.length,
+    });
+    if (!publishState.canSync) {
       notice.hide();
-      new Notice('微信贴图至少需要 1 张图片，请先在笔记正文中插入图片');
-      return;
-    }
-    if (imageItems.length > STICKER_MAX_IMAGES) {
-      notice.hide();
-      new Notice(`微信贴图最多支持 ${STICKER_MAX_IMAGES} 张图片，请先移除多余图片`);
-      return;
-    }
-
-    if (content.length > STICKER_MAX_CONTENT_LENGTH) {
-      notice.hide();
-      new Notice(`贴图文案 ${content.length} 字，超出微信 ${STICKER_MAX_CONTENT_LENGTH} 字上限，请精简后再同步`);
-      return;
-    }
-
-    if (title.length > STICKER_MAX_TITLE_LENGTH) {
-      notice.hide();
-      new Notice(`贴图标题 ${title.length} 字，超出 ${STICKER_MAX_TITLE_LENGTH} 字上限，请精简后再同步`);
+      new Notice(`${publishState.issueMessage}，请调整后再同步`);
       return;
     }
 

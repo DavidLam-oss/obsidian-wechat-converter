@@ -181,6 +181,20 @@ describe('WeChat sticker publish flow', () => {
       expect(titleCountValue.textContent).toBe('6');
       expect(titleCountValue.classList.contains('is-error')).toBe(false);
 
+      titleInput.value = '字'.repeat(18);
+      titleInput.dispatchEvent(new Event('input'));
+      expect(titleCount.textContent).toBe('18/20 字');
+      expect(titleCountValue.classList.contains('is-warning')).toBe(false);
+      expect(titleCountValue.classList.contains('is-error')).toBe(false);
+      expect(syncBtn.disabled).toBe(false);
+
+      titleInput.value = '字'.repeat(20);
+      titleInput.dispatchEvent(new Event('input'));
+      expect(titleCount.textContent).toBe('20/20 字');
+      expect(titleCountValue.classList.contains('is-warning')).toBe(false);
+      expect(titleCountValue.classList.contains('is-error')).toBe(false);
+      expect(syncBtn.disabled).toBe(false);
+
       titleInput.value = '字'.repeat(21);
       titleInput.dispatchEvent(new Event('input'));
 
@@ -297,10 +311,27 @@ describe('WeChat sticker publish flow', () => {
       view.showSyncModal();
 
       const modal = getLastModal();
+      const contentCountValue = modal.contentEl.querySelector('.sticker-publish-content-meta .sticker-publish-count-value');
       const syncBtn = modal.contentEl.querySelector('.wechat-modal-buttons .mod-cta');
+      expect(contentCountValue.classList.contains('is-error')).toBe(true);
       expect(syncBtn.disabled).toBe(true);
       expect(syncBtn.textContent).toBe('文案超长，无法同步');
       expect(syncBtn.getAttribute('title')).toContain('1001 字');
+    });
+
+    it.each([900, 1000])('should keep the caption counter neutral at %i characters', (contentLength) => {
+      view.previewStickerData = createStickerData({ content: '字'.repeat(contentLength) });
+      view.buildStickerData = vi.fn(async () => view.previewStickerData);
+
+      view.showSyncModal();
+
+      const modal = getLastModal();
+      const contentCountValue = modal.contentEl.querySelector('.sticker-publish-content-meta .sticker-publish-count-value');
+      const syncBtn = modal.contentEl.querySelector('.wechat-modal-buttons .mod-cta');
+      expect(contentCountValue.textContent).toBe(String(contentLength));
+      expect(contentCountValue.classList.contains('is-warning')).toBe(false);
+      expect(contentCountValue.classList.contains('is-error')).toBe(false);
+      expect(syncBtn.disabled).toBe(false);
     });
 
     it('should block syncing when there is no image at all', () => {
@@ -433,7 +464,7 @@ describe('WeChat sticker publish flow', () => {
       await view.onSyncStickerToWechat({ id: 'acc-1', name: '账号1', appId: 'wx1', appSecret: 'sec1' });
 
       expect(view.srcToBlob).not.toHaveBeenCalled();
-      expect(notices.some((notice) => String(notice.message).includes('超出微信 1000 字上限'))).toBe(true);
+      expect(notices.some((notice) => String(notice.message).includes('超过 1000 字上限'))).toBe(true);
     });
 
     it('should refuse to upload images when the sticker title exceeds 20 characters', async () => {
@@ -444,7 +475,7 @@ describe('WeChat sticker publish flow', () => {
       await view.onSyncStickerToWechat({ id: 'acc-1', name: '账号1', appId: 'wx1', appSecret: 'sec1' });
 
       expect(view.srcToBlob).not.toHaveBeenCalled();
-      expect(notices.some((notice) => String(notice.message).includes('超出 20 字上限'))).toBe(true);
+      expect(notices.some((notice) => String(notice.message).includes('超过 20 字上限'))).toBe(true);
     });
 
     it('should report which image failed to upload', async () => {

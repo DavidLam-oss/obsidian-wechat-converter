@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`esbuild`、`process`、`node:module`。
+关键依赖：`esbuild`、`process`。
 
 ## 维护规则
 
@@ -27,7 +27,6 @@
 
 import esbuild from "esbuild";
 import process from "process";
-import { builtinModules } from "node:module";
 
 const banner =
     `/*
@@ -57,12 +56,15 @@ const context = await esbuild.context({
         "@codemirror/view",
         "@lezer/common",
         "@lezer/highlight",
-        "@lezer/lr",
-        ...builtinModules],
+        "@lezer/lr"],
     format: "cjs",
+    platform: "browser",
     target: "es2018",
+    supported: prod ? { "template-literal": false } : {},
     logLevel: "info",
     sourcemap: prod ? false : "inline",
+    minify: prod,
+    legalComments: prod ? "eof" : "inline",
     treeShaking: true,
     outfile: "main.js",
 });

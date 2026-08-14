@@ -90,6 +90,40 @@ describe('wechat-sync - syncStickerDraft', () => {
     expect(mockApi.createImageDraft).not.toHaveBeenCalled();
   });
 
+  it('should reject content longer than 1000 characters before calling the api', async () => {
+    const mockApi = {
+      createImageDraft: vi.fn().mockResolvedValue({ media_id: 'sticker-123' })
+    };
+
+    await expect(
+      syncStickerDraft({
+        account: { appId: 'wx123', appSecret: 'secret123' },
+        api: mockApi,
+        title: '测试贴图',
+        content: '字'.repeat(1001),
+        imageMediaIds: ['m1']
+      })
+    ).rejects.toThrow('微信贴图文案不能超过 1000 字');
+
+    expect(mockApi.createImageDraft).not.toHaveBeenCalled();
+  });
+
+  it('should accept title and content exactly at their limits', async () => {
+    const mockApi = {
+      createImageDraft: vi.fn().mockResolvedValue({ media_id: 'sticker-123' })
+    };
+
+    await syncStickerDraft({
+      account: { appId: 'wx123', appSecret: 'secret123' },
+      api: mockApi,
+      title: '字'.repeat(20),
+      content: '文'.repeat(1000),
+      imageMediaIds: ['m1']
+    });
+
+    expect(mockApi.createImageDraft).toHaveBeenCalledTimes(1);
+  });
+
   it('should reject more than 20 images before calling the api', async () => {
     const mockApi = {
       createImageDraft: vi.fn().mockResolvedValue({ media_id: 'sticker-123' })

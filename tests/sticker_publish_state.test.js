@@ -9,7 +9,7 @@
 
 ## 输出
 
-输出 Vitest 断言，保护提醒阈值、阻断优先级和按钮文案。
+输出 Vitest 断言，保护超限阈值、阻断优先级和按钮文案。
 
 ## 定位
 
@@ -32,18 +32,32 @@ import {
 } from '../services/sticker-publish-state.js';
 
 describe('sticker publish state', () => {
-  it('marks near-limit values as warnings without blocking sync', () => {
+  it.each([
+    [18, 900],
+    [20, 1000],
+  ])('keeps title %i and content %i neutral while they remain within the limit', (titleLength, contentLength) => {
     const state = getStickerPublishState({
-      title: '标'.repeat(18),
-      content: '文'.repeat(900),
-      imageCount: 20,
+      title: '标'.repeat(titleLength),
+      content: '文'.repeat(contentLength),
+      imageCount: 1,
     });
 
     expect(state.canSync).toBe(true);
     expect(state.buttonText).toBe('同步到贴图草稿');
-    expect(state.counters.title.status).toBe('warning');
-    expect(state.counters.content.status).toBe('warning');
-    expect(state.counters.images.status).toBe('warning');
+    expect(state.counters.title.status).toBe('normal');
+    expect(state.counters.content.status).toBe('normal');
+  });
+
+  it('marks text counters as errors only after their limits are exceeded', () => {
+    const state = getStickerPublishState({
+      title: '标'.repeat(21),
+      content: '文'.repeat(1001),
+      imageCount: 1,
+    });
+
+    expect(state.canSync).toBe(false);
+    expect(state.counters.title.status).toBe('error');
+    expect(state.counters.content.status).toBe('error');
   });
 
   it('prioritizes missing images before other blocking issues', () => {
@@ -56,7 +70,7 @@ describe('sticker publish state', () => {
     expect(state.canSync).toBe(false);
     expect(state.issueCode).toBe('images-required');
     expect(state.buttonText).toBe('图片不足，无法同步');
-    expect(state.counters.title.status).toBe('error');
+    expect(state.counters.title.status).toBe('normal');
   });
 
   it('returns specific copy for title, content, and account blockers', () => {

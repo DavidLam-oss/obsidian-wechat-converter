@@ -27,6 +27,7 @@
 
 import { createHtmlContainer, getActiveDocument } from './dom-utils.js';
 import {
+  STICKER_MAX_CONTENT_LENGTH,
   STICKER_MAX_IMAGES,
   STICKER_MAX_TITLE_LENGTH,
 } from './sticker-constants.js';
@@ -514,6 +515,10 @@ export async function syncStickerDraft({ account, api, title, content = '', imag
   if (normalizedTitle.length > STICKER_MAX_TITLE_LENGTH) {
     throw new Error(`微信贴图标题不能超过 ${STICKER_MAX_TITLE_LENGTH} 字`);
   }
+  const normalizedContent = String(content || '');
+  if (normalizedContent.length > STICKER_MAX_CONTENT_LENGTH) {
+    throw new Error(`微信贴图文案不能超过 ${STICKER_MAX_CONTENT_LENGTH} 字`);
+  }
   if (!Array.isArray(imageMediaIds) || imageMediaIds.length === 0) {
     throw new Error('微信贴图至少需要 1 张图片');
   }
@@ -523,7 +528,7 @@ export async function syncStickerDraft({ account, api, title, content = '', imag
 
   const res = await stickerApi.createImageDraft({
     title: normalizedTitle,
-    content,
+    content: normalizedContent,
     imageMediaIds,
     needOpenComment: account.openComment ? 1 : 0,
     onlyFansCanComment: account.onlyFansCanComment ? 1 : 0

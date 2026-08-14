@@ -70,6 +70,12 @@ const RULES = [
     ignoredPathPrefixes: ['server/'],
   },
   {
+    id: 'no-clipboard-read',
+    message: 'Do not read the system clipboard. Clipboard access must be limited to user-initiated writes.',
+    pattern: /\b(?:window\.)?navigator\.clipboard\.(?:read|readText)\s*\(/,
+    extensions: new Set(['.js', '.mjs', '.cjs']),
+  },
+  {
     id: 'no-direct-html-write',
     message: 'Avoid direct rendered HTML writes. Use DOM helpers or add a narrow eslint-disable-next-line reason for intentional sanitized rendering.',
     pattern: /\b(?:innerHTML|outerHTML)\s=|\.insertAdjacentHTML\s*\(/,

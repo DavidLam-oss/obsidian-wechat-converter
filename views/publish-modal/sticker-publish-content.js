@@ -211,10 +211,8 @@ function renderStickerPublishContent(view, {
     });
     const imageLimitReached = currentItems.length >= STICKER_MAX_IMAGES;
     titleCountValue.setText(String(publishState.counters.title.value));
-    titleCountValue.toggleClass?.('is-warning', publishState.counters.title.status === 'warning');
     titleCountValue.toggleClass?.('is-error', publishState.counters.title.status === 'error');
     contentCountValue.setText(String(publishState.counters.content.value));
-    contentCountValue.toggleClass?.('is-warning', publishState.counters.content.status === 'warning');
     contentCountValue.toggleClass?.('is-error', publishState.counters.content.status === 'error');
     imageCount.toggleClass?.('is-warning', publishState.counters.images.status === 'warning');
     imageCount.toggleClass?.('is-error', publishState.counters.images.status === 'error');

@@ -402,14 +402,10 @@ interface AppleStyleViewContract {
     renderHTML(html: string): void;
     /**
      * @param {string} htmlContent
+     * @param {string} plainTextContent
      * @returns {Promise<boolean>}
      */
-    copyRichHTMLByClipboard(htmlContent: string): Promise<boolean>;
-    /**
-     * @param {unknown} text
-     * @returns {string}
-     */
-    normalizeClipboardText(text: unknown): string;
+    copyRichHTMLByClipboard(htmlContent: string, plainTextContent: string): Promise<boolean>;
     /**
      * @param {string} icon
      */
@@ -455,10 +451,6 @@ interface AppleStyleViewContract {
      * @param {Element | null} root
      */
     transformCodeBlocksForClipboard(root: Element | null): void;
-    readClipboardTextSnapshot(): Promise<{
-        supported: boolean;
-        text: string;
-    }>;
     /**
      * 复制 HTML
      */

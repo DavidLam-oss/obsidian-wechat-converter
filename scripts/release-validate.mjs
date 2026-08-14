@@ -30,6 +30,9 @@ import path from "node:path";
 import { execSync } from "node:child_process";
 
 const ROOT = process.cwd();
+const MAIN_JS_MAX_BYTES = 5_000_000;
+const DIRECT_FS_IMPORT_PATTERN = /require\(\s*["'](?:node:)?fs["']\s*\)/;
+const CLIPBOARD_READ_PATTERN = /\.clipboard\??\.(?:read|readText)\s*\(/;
 
 function fail(message) {
   console.error(`[ERROR] ${message}`);
@@ -89,6 +92,27 @@ function main() {
     `versions.json: expected ${manifest.version} -> ${manifest.minAppVersion}, got ${versions[manifest.version]}`
   );
   ok(`versions.json mapping OK: ${manifest.version} -> ${manifest.minAppVersion}`);
+
+  const mainJsPath = path.join(ROOT, "main.js");
+  assert(fs.existsSync(mainJsPath), `Missing production bundle: ${mainJsPath}. Run npm run build first.`);
+  const mainJsSize = fs.statSync(mainJsPath).size;
+  assert(
+    mainJsSize <= MAIN_JS_MAX_BYTES,
+    `main.js is ${mainJsSize} bytes, exceeding the ${MAIN_JS_MAX_BYTES}-byte Obsidian Sync Standard limit.`
+  );
+  ok(`main.js size OK: ${mainJsSize} / ${MAIN_JS_MAX_BYTES} bytes`);
+
+  const mainJsSource = fs.readFileSync(mainJsPath, "utf8");
+  assert(
+    !DIRECT_FS_IMPORT_PATTERN.test(mainJsSource),
+    "main.js contains a direct Node.js fs import. Use the browser-safe dependency build instead."
+  );
+  ok("main.js contains no direct Node.js fs import");
+  assert(
+    !CLIPBOARD_READ_PATTERN.test(mainJsSource),
+    "main.js reads the system clipboard. Clipboard access must be limited to user-initiated writes."
+  );
+  ok("main.js contains no system clipboard reads");
 
   const zipPath = path.join(ROOT, resolveZipPath());
   assert(fs.existsSync(zipPath), `Missing release zip: ${zipPath}. Run npm run release:pack first.`);

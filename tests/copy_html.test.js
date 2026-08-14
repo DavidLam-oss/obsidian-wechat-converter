@@ -37,7 +37,6 @@ const { createLegacyConverter } = require('./helpers/render-runtime');
 describe('AppleStyleView - copyHTML clipboard behavior', () => {
   let view;
   let writeMock;
-  let readTextMock;
   let realBlob;
   const blobToText = async (blob) => {
     if (blob && typeof blob.text === 'function') return blob.text();
@@ -57,9 +56,8 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
     view.cleanHtmlForDraft = vi.fn(() => '<ol><li>清理时机： 正文</li></ol>');
 
     writeMock = vi.fn().mockResolvedValue(undefined);
-    readTextMock = vi.fn().mockResolvedValue('清理时机： 正文');
     Object.defineProperty(global.navigator, 'clipboard', {
-      value: { write: writeMock, readText: readTextMock },
+      value: { write: writeMock },
       configurable: true,
     });
 
@@ -98,9 +96,11 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
 
     expect(writeMock).toHaveBeenCalledTimes(1);
     const item = writeMock.mock.calls[0][0][0];
-    expect(Object.keys(item.items)).toEqual(['text/html']);
+    expect(Object.keys(item.items)).toEqual(['text/html', 'text/plain']);
     const html = await blobToText(item.items['text/html']);
+    const plainText = await blobToText(item.items['text/plain']);
     expect(html).toBe('<ol><li>清理时机： 正文</li></ol>');
+    expect(plainText).toBe('清理时机： 正文');
     expect(window.__OWC_LAST_CLIPBOARD_TEXT).toBe('清理时机： 正文');
   });
 
@@ -401,53 +401,6 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
     expect(writeMock).not.toHaveBeenCalled();
   });
 
-  it('should fail fast on mobile when rich clipboard write is unavailable', async () => {
-    view.app = { isMobile: true };
-    Object.defineProperty(global.navigator, 'clipboard', {
-      value: {},
-      configurable: true,
-    });
-
-    await view.copyHTML();
-
-    expect(writeMock).not.toHaveBeenCalled();
-    expect(readTextMock).not.toHaveBeenCalled();
-  });
-
-  it('should fail on mobile when copy cannot be verified by clipboard readback', async () => {
-    view.app = { isMobile: true };
-    readTextMock.mockResolvedValue('旧剪贴板内容');
-
-    await view.copyHTML();
-
-    expect(writeMock).toHaveBeenCalledTimes(1);
-    expect(readTextMock).toHaveBeenCalledTimes(1);
-  });
-
-  it('should preserve user selection when using Clipboard API on mobile', async () => {
-    view.app = { isMobile: true };
-    const textEl = document.createElement('div');
-    textEl.textContent = 'abcdef';
-    document.body.appendChild(textEl);
-
-    const originalRange = document.createRange();
-    originalRange.setStart(textEl.firstChild, 1);
-    originalRange.setEnd(textEl.firstChild, 3);
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(originalRange);
-
-    await view.copyHTML();
-
-    expect(selection.rangeCount).toBe(1);
-    const restored = selection.getRangeAt(0);
-    expect(restored.startContainer).toBe(textEl.firstChild);
-    expect(restored.startOffset).toBe(1);
-    expect(restored.endContainer).toBe(textEl.firstChild);
-    expect(restored.endOffset).toBe(3);
-
-    textEl.remove();
-  });
 
   it('should block copy when latest render has failed', async () => {
     view.currentHtml = null;

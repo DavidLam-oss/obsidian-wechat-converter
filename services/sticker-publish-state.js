@@ -41,17 +41,14 @@ const STICKER_TRANSFORM_LABELS = {
   footnotes: '脚注',
 };
 
-const TITLE_WARNING_LENGTH = 18;
-const CONTENT_WARNING_LENGTH = 900;
-
 /**
  * @param {number} value
  * @param {number} max
- * @param {number} warningAt
+ * @param {number} [warningAt]
  * @param {number} [min]
  * @returns {{value:number,max:number,status:'normal'|'warning'|'error'}}
  */
-function getStickerCounterState(value, max, warningAt, min = 0) {
+function getStickerCounterState(value, max, warningAt = Number.POSITIVE_INFINITY, min = 0) {
   const normalizedValue = Number.isFinite(value) ? Math.max(0, Number(value)) : 0;
   let status = 'normal';
   if (normalizedValue < min || normalizedValue > max) status = 'error';
@@ -88,16 +85,13 @@ function getStickerPublishState({
   const normalizedImageCount = Number.isFinite(imageCount) ? Math.max(0, Number(imageCount)) : 0;
   const titleCounter = getStickerCounterState(
     titleValue.length,
-    STICKER_MAX_TITLE_LENGTH,
-    TITLE_WARNING_LENGTH
+    STICKER_MAX_TITLE_LENGTH
   );
-  if (titleValue.trim().length === 0) titleCounter.status = 'error';
   const counters = {
     title: titleCounter,
     content: getStickerCounterState(
       contentValue.length,
-      STICKER_MAX_CONTENT_LENGTH,
-      CONTENT_WARNING_LENGTH
+      STICKER_MAX_CONTENT_LENGTH
     ),
     images: getStickerCounterState(
       normalizedImageCount,
@@ -156,9 +150,7 @@ function getStickerTransformParts(entries) {
 }
 
 export {
-  CONTENT_WARNING_LENGTH,
   STICKER_TRANSFORM_LABELS,
-  TITLE_WARNING_LENGTH,
   getStickerCounterState,
   getStickerPublishState,
   getStickerTransformParts,

@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-wechat-converter",
-	"version": "2.10.5",
+	"version": "2.10.6",
 	"description": "Obsidian plugin for WeChat articles, Feishu cloud docs, and multi-platform publishing.",
 	"main": "main.js",
 	"scripts": {

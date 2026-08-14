@@ -50,7 +50,6 @@ import {
   getVaultDirnameFromPath,
   getObsidianSetIcon,
   getObsidianRequestUrl,
-  isMobileClient,
   pMap,
 } from '../apple-style-view-shared.js';
 
@@ -215,7 +214,7 @@ renderHTML(html) {
 }
 ,
 
-async copyRichHTMLByClipboard(htmlContent) {
+async copyRichHTMLByClipboard(htmlContent, plainTextContent) {
   if (
     !navigator.clipboard ||
     typeof navigator.clipboard.write !== 'function' ||
@@ -226,14 +225,10 @@ async copyRichHTMLByClipboard(htmlContent) {
 
   const item = new ClipboardItem({
     'text/html': new Blob([htmlContent], { type: 'text/html' }),
+    'text/plain': new Blob([plainTextContent], { type: 'text/plain' }),
   });
   await navigator.clipboard.write([item]);
   return true;
-}
-,
-
-normalizeClipboardText(text) {
-  return String(text || '').replace(/\s+/g, ' ').trim();
 }
 ,
 
@@ -560,19 +555,6 @@ transformCodeBlocksForClipboard(root) {
 }
 ,
 
-async readClipboardTextSnapshot() {
-  if (!navigator.clipboard || typeof navigator.clipboard.readText !== 'function') {
-    return { supported: false, text: '' };
-  }
-  try {
-    const text = await navigator.clipboard.readText();
-    return { supported: true, text: this.normalizeClipboardText(text) };
-  } catch {
-    return { supported: false, text: '' };
-  }
-}
-,
-
 async copyHTML() {
   if (this.isCopying) return;
 
@@ -614,20 +596,15 @@ async copyHTML() {
     const cleanedHtml = this.cleanHtmlForDraft(tempDiv.innerHTML);
 
     const htmlContent = cleanedHtml;
+    const plainTextContent = htmlToText(cleanedHtml);
     window.__OWC_LAST_CLIPBOARD_HTML = htmlContent;
-    window.__OWC_LAST_CLIPBOARD_TEXT = htmlToText(cleanedHtml);
-    const expectedPlainText = this.normalizeClipboardText(window.__OWC_LAST_CLIPBOARD_TEXT);
+    window.__OWC_LAST_CLIPBOARD_TEXT = plainTextContent;
 
-    const mobile = isMobileClient(this.app);
     let copied = false;
     try {
-      copied = await this.copyRichHTMLByClipboard(htmlContent);
+      copied = await this.copyRichHTMLByClipboard(htmlContent, plainTextContent);
     } catch {
       copied = false;
-    }
-    if (mobile && copied) {
-      const snapshot = await this.readClipboardTextSnapshot();
-      copied = snapshot.supported && snapshot.text === expectedPlainText;
     }
 
     if (!copied) {
