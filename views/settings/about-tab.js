@@ -106,13 +106,17 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
     text: 'Obsidian 发布助手',
     cls: 'apple-settings-about-title',
   });
+  titleRow.createEl('span', {
+    text: '(Wechat Converter)',
+    cls: 'apple-settings-about-subtitle',
+  });
   titleRow.createSpan({
     text: `v${version}`,
     cls: 'apple-settings-about-version-badge',
   });
 
   headerEl.createEl('div', {
-    text: '让技术写作回归优雅与纯粹 · 连接 Obsidian 与全网发布 (Wechat Converter)',
+    text: '让技术写作回归优雅与纯粹 · 连接 Obsidian 与全网发布',
     cls: 'apple-settings-about-tagline',
   });
 

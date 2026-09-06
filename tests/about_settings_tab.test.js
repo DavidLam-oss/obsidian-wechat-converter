@@ -92,13 +92,20 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
 
     renderAboutSettingsTab(mockTabInstance, containerEl);
 
-    // 检查标题与版本徽章
+    // 检查标题、英文副标题与版本徽章
     const titleEl = containerEl.querySelector('.apple-settings-about-title');
     expect(titleEl).not.toBeNull();
     expect(titleEl?.textContent).toBe('Obsidian 发布助手');
 
+    const subtitleEl = containerEl.querySelector('.apple-settings-about-subtitle');
+    expect(subtitleEl).not.toBeNull();
+    expect(subtitleEl?.textContent).toBe('(Wechat Converter)');
+
     const badgeEl = containerEl.querySelector('.apple-settings-about-version-badge');
     expect(badgeEl?.textContent).toBe('v2.10.6');
+
+    const taglineEl = containerEl.querySelector('.apple-settings-about-tagline');
+    expect(taglineEl?.textContent).toBe('让技术写作回归优雅与纯粹 · 连接 Obsidian 与全网发布');
 
     // 检查是否有 4 个快捷操作链接
     const actionLinks = containerEl.querySelectorAll('.apple-settings-about-link');
