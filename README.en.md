@@ -8,12 +8,13 @@ Convert Obsidian Markdown into polished WeChat articles, WeChat image posts, Fei
 ![Obsidian](https://img.shields.io/badge/Obsidian-1.4.0+-purple)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Chrome Companion](https://img.shields.io/badge/Chrome%20Companion-Obsidian%20Publisher%20%E2%80%A2%20Available-7c3aed)
+[![Sponsor](https://img.shields.io/badge/Sponsor-Support%20Project-ff69b4?logo=github-sponsors)](#support)
 
 This plugin is built for writers who publish from Obsidian to WeChat Official Accounts, Feishu cloud documents, and other Chinese content platforms. It focuses on the last mile of publishing: preserving layout, code blocks, math, images, and article metadata while keeping the workflow fast inside Obsidian.
 
 > This project is deeply refactored from [ai-writing-plugins](https://github.com/Ceeon/ai-writing-plugins). Proper attribution is retained in this repository.
 
-If this plugin saves you time when formatting, copying, or syncing WeChat articles, you can [support ongoing maintenance](./docs/support.md).
+> ☕ **If this plugin saves you time formatting or publishing notes, consider [👉 buying the author a coffee](#support) to support ongoing development!**
 
 
 ## Big Update: Feishu Cloud Documents and Multi-platform Publishing
@@ -68,6 +69,32 @@ Wechat Converter is no longer limited to WeChat Official Accounts. From the same
 - Mermaid diagrams keep the Obsidian preview experience, then switch to PNG automatically during copy and draft sync so WeChat does not strip or choke on large SVG payloads.
 - Draft sync gained account-level publish defaults for supported WeChat fields, so each Official Account profile can keep its own source URL and comment preferences.
 - Quote and callout styling now includes a neutral gray mode for calmer reading, plus semantic accents for common callout types such as `note`, `tip`, `warning`, and `danger`.
+
+<span id="support"></span>
+## ☕ Support & Sponsor
+
+Wechat Converter will remain free and open source. If it streamlines your publishing workflow, you are welcome to buy the author a coffee to support continued maintenance!
+
+Your support helps with:
+- **WeChat ecosystem compatibility**: adapting to WeChat Official Account editor and draft API changes
+- **Cross-platform distribution**: enhancing publishing to Feishu, Xiaohongshu, Zhihu, Bilibili, Toutiao, and more
+- **Rendering perfection**: refining syntax highlighting, LaTeX math, Mermaid diagrams, and media formatting
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="240">
+        <img src="images/support-wechat.png" alt="WeChat Pay QR Code" width="180" /><br />
+        <sub><b>WeChat Pay</b></sub>
+      </td>
+      <td align="center" width="240">
+        <img src="images/support-alipay.jpg" alt="Alipay QR Code" width="180" /><br />
+        <sub><b>Alipay</b></sub>
+      </td>
+    </tr>
+  </table>
+  <p><i>❤️ Thank you to every creator and supporter helping keep this project moving forward!</i></p>
+</div>
 
 ## Usage
 

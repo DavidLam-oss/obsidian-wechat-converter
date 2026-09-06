@@ -12,10 +12,11 @@
 ![Obsidian](https://img.shields.io/badge/Obsidian-1.4.0+-purple)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Chrome Companion](https://img.shields.io/badge/Chrome%20%E5%8D%8F%E5%90%8C%E6%89%A9%E5%B1%95-Obsidian%20%E5%8F%91%E5%B8%83%E5%8A%A9%E6%89%8B%E2%80%A2%E5%B7%B2%E4%B8%8A%E7%BA%BF-7c3aed)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E8%B5%9E%E5%8A%A9%E6%94%AF%E6%8C%81-ff69b4?logo=github-sponsors)](#support)
 
 > 本项目基于开源项目 [ai-writing-plugins](https://github.com/Ceeon/ai-writing-plugins) 进行深度重构与迭代开发。我们致力于打造 Obsidian 生态中体验最好的公众号排版工具。
 
-如果这个插件帮你节省了公众号排版、复制或同步草稿箱的时间，欢迎[支持项目继续维护](./docs/support.md)。
+> ☕ **开源不易，如果这个插件帮您节省了排版与多平台发布的时间，欢迎 [👉 扫码请作者喝杯咖啡](#support) 支持项目持续维护！**
 
 
 ## 🚀 发布能力一览
@@ -192,6 +193,32 @@
     <p align="center">
       <img src="images/code_render.png" alt="Mac风格代码块" width="520" />
     </p>
+
+<span id="support"></span>
+## ☕ 支持与赞助
+
+Wechat Converter 会始终保持免费与开源。如果它帮您节省了公众号排版或多平台发布的时间，欢迎请作者喝杯咖啡，支持项目持续维护！
+
+您的每一份支持都将用于：
+- **持续适配微信生态**：紧跟微信公众号编辑器与官方草稿箱 API 规则变动，保障稳定排版与同步
+- **优化多平台分发体验**：持续打磨飞书云文档、小红书、知乎、B 站、今日头条等更多平台的分发体验与格式兼容
+- **打磨极致渲染细节**：不断改进代码高亮、数学公式、Mermaid 图表及多图排版的高清导出呈现
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="240">
+        <img src="images/support-wechat.png" alt="微信赞赏码" width="180" /><br />
+        <sub><b>微信赞赏</b></sub>
+      </td>
+      <td align="center" width="240">
+        <img src="images/support-alipay.jpg" alt="支付宝收款码" width="180" /><br />
+        <sub><b>支付宝</b></sub>
+      </td>
+    </tr>
+  </table>
+  <p><i>❤️ 开源不易，感谢每一位支持项目持续迭代的创作者！</i></p>
+</div>
 
 ## 📖 使用方法
 

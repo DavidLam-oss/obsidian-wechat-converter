@@ -16,6 +16,8 @@ description: Release workflow for obsidian-wechat-converter (version bump, relea
 3. **`versions.json`**: 添加新版本映射，如 `"2.6.0": "0.15.0"`
 4. **`README.md`**: 更新 Badge 中的版本号 `![Version](https://img.shields.io/badge/version-X.X.X-blue)`
 
+> **提示**：插件设置面板的「关于」页面（`views/settings/about-tab.js`）会自动读取 `manifest.json` 中的 `version` 动态呈现标题版本号，无需手动修改代码。若本次发版包含新增赞助者，可顺带在 `services/sponsors-data.js` 中追加赞助鸣谢记录。
+
 ## 开发期门禁
 
 在做 feature / enhancement 时，先跑快速自检：

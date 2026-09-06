@@ -30,6 +30,7 @@ import {
   MULTI_PLATFORM_TAB_LABEL,
   getObsidianSetIcon,
   obsidianApi,
+  renderAboutSettingsTab,
   renderFeishuSettingsTab,
   renderMultiPlatformSettingsTab,
 } from '../apple-style-view-shared.js';
@@ -149,30 +150,37 @@ const settingsTabShellMethods = {
     const multiTab = tabBar.createDiv({ cls: 'apple-settings-tab apple-settings-tab-multi' });
     multiTab.createSpan({ text: MULTI_PLATFORM_TAB_LABEL, cls: 'apple-settings-tab-label' });
     const feishuTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '飞书' });
+    const aboutTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '关于' });
 
     const wechatContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
     const multiContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
     multiContent.setCssStyles({ display: 'none' });
     const feishuContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
     feishuContent.setCssStyles({ display: 'none' });
+    const aboutContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
+    aboutContent.setCssStyles({ display: 'none' });
 
     wechatTab.onclick = () => {
       this._activeSettingsTab = 'wechat';
       wechatTab.addClass('active');
       feishuTab.removeClass('active');
       multiTab.removeClass('active');
+      aboutTab.removeClass('active');
       wechatContent.setCssStyles({ display: '' });
       feishuContent.setCssStyles({ display: 'none' });
       multiContent.setCssStyles({ display: 'none' });
+      aboutContent.setCssStyles({ display: 'none' });
     };
     feishuTab.onclick = () => {
       this._activeSettingsTab = 'feishu';
       feishuTab.addClass('active');
       wechatTab.removeClass('active');
       multiTab.removeClass('active');
+      aboutTab.removeClass('active');
       wechatContent.setCssStyles({ display: 'none' });
       feishuContent.setCssStyles({ display: '' });
       multiContent.setCssStyles({ display: 'none' });
+      aboutContent.setCssStyles({ display: 'none' });
       renderFeishuSettingsTab(this, feishuContent, { obsidianApi });
     };
     multiTab.onclick = () => {
@@ -180,15 +188,31 @@ const settingsTabShellMethods = {
       multiTab.addClass('active');
       wechatTab.removeClass('active');
       feishuTab.removeClass('active');
+      aboutTab.removeClass('active');
       wechatContent.setCssStyles({ display: 'none' });
       feishuContent.setCssStyles({ display: 'none' });
       multiContent.setCssStyles({ display: '' });
+      aboutContent.setCssStyles({ display: 'none' });
+    };
+    aboutTab.onclick = () => {
+      this._activeSettingsTab = 'about';
+      aboutTab.addClass('active');
+      wechatTab.removeClass('active');
+      feishuTab.removeClass('active');
+      multiTab.removeClass('active');
+      wechatContent.setCssStyles({ display: 'none' });
+      feishuContent.setCssStyles({ display: 'none' });
+      multiContent.setCssStyles({ display: 'none' });
+      aboutContent.setCssStyles({ display: '' });
+      renderAboutSettingsTab(this, aboutContent);
     };
 
     if (this._activeSettingsTab === 'feishu') {
       feishuTab.onclick();
     } else if (this._activeSettingsTab === 'multi') {
       multiTab.onclick();
+    } else if (this._activeSettingsTab === 'about') {
+      aboutTab.onclick();
     }
 
     this.renderWechatSettingsTab(wechatContent);

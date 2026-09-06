@@ -156,6 +156,9 @@ export {
   renderFeishuSettingsTab,
 } from './settings/feishu-tab.js';
 export {
+  renderAboutSettingsTab,
+} from './settings/about-tab.js';
+export {
   renderFeishuPublishTab,
 } from './publish-modal/feishu.js';
 export {
