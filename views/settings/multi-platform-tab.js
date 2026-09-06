@@ -357,7 +357,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
 
   new Setting(containerEl)
     .setName('浏览器插件发布')
-    .setDesc('Obsidian 负责写作、预览和平台选择；浏览器插件使用当前的浏览器登录态，把文章保存到知乎、掘金、CSDN 等平台草稿箱。微信仍可使用上方公众号 API。')
+    .setDesc('Obsidian 负责写作、预览和平台选择；浏览器插件使用当前的浏览器登录态，把文章保存到小红书、知乎、抖音、头条、B 站、微博等平台草稿箱。')
     .setHeading();
 
   const guide = containerEl.createDiv({
