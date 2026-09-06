@@ -166,7 +166,15 @@ async function checkAccess(req, res, next) {
 app.post('/proxy', checkAccess, async (req, res) => {
   const { url, method = 'GET', data, fileData, fileName, mimeType, fieldName = 'media' } = req.body;
 
-  if (!url || !url.startsWith('https://api.weixin.qq.com/')) {
+  // 使用严格的 URL 解析校验协议与主机名，避免前缀匹配被绕过 (SSRF)
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    return res.status(400).json({ error: '非法 URL。只允许访问微信官方 API (api.weixin.qq.com)' });
+  }
+
+  if (parsedUrl.protocol !== 'https:' || parsedUrl.hostname !== 'api.weixin.qq.com') {
     return res.status(400).json({ error: '非法 URL。只允许访问微信官方 API (api.weixin.qq.com)' });
   }
 
