@@ -75,7 +75,7 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
     const mockTabInstance = {
       app: {
         vault: {
-          configDir: '.obsidian',
+          configDir: '.config/obsidian',
           adapter: {
             getResourcePath: vi.fn((p) => `app://local/${p}`),
           },
@@ -91,6 +91,15 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
     };
 
     renderAboutSettingsTab(mockTabInstance, containerEl);
+
+    expect(mockTabInstance.app.vault.adapter.getResourcePath).toHaveBeenNthCalledWith(
+      1,
+      '.config/obsidian/plugins/obsidian-wechat-converter/images/support-wechat.png',
+    );
+    expect(mockTabInstance.app.vault.adapter.getResourcePath).toHaveBeenNthCalledWith(
+      2,
+      '.config/obsidian/plugins/obsidian-wechat-converter/images/support-alipay.jpg',
+    );
 
     // 检查标题与版本徽章
     const titleEl = containerEl.querySelector('.apple-settings-about-title');

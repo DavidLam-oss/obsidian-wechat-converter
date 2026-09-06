@@ -67,6 +67,6 @@
 		"postcss-value-parser": "^4.2.0"
 	},
 	"overrides": {
-		"@xmldom/xmldom": "0.9.10"
+		"@xmldom/xmldom": "0.9.12"
 	}
 }

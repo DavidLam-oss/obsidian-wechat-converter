@@ -46,8 +46,14 @@ const ISSUES_URL = 'https://github.com/DavidLam-oss/obsidian-wechat-converter/is
  * @returns {string}
  */
 function resolvePluginAssetUrl(app, manifest, relativePath) {
+  const fallbackUrl = `https://raw.githubusercontent.com/DavidLam-oss/obsidian-wechat-converter/main/${relativePath}`;
   try {
-    const pluginDir = /** @type {string | undefined} */ (manifest?.dir) || `${app.vault?.configDir || '.obsidian'}/plugins/${manifest?.id || 'obsidian-wechat-converter'}`;
+    const configDir = app.vault?.configDir;
+    const pluginDir = /** @type {string | undefined} */ (manifest?.dir)
+      || (typeof configDir === 'string' && configDir
+        ? `${configDir}/plugins/${manifest?.id || 'obsidian-wechat-converter'}`
+        : undefined);
+    if (!pluginDir) return fallbackUrl;
     const fullPath = `${pluginDir}/${relativePath}`.replace(/\\/g, '/');
     const adapter = /** @type {{ getResourcePath?: (path: string) => string } | undefined} */ (app.vault?.adapter);
     if (typeof adapter?.getResourcePath === 'function') {
@@ -56,7 +62,7 @@ function resolvePluginAssetUrl(app, manifest, relativePath) {
   } catch {
     // 降级使用网络资源
   }
-  return `https://raw.githubusercontent.com/DavidLam-oss/obsidian-wechat-converter/main/${relativePath}`;
+  return fallbackUrl;
 }
 
 /**
@@ -234,3 +240,5 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
     text: '作者：林小卫很行 (DavidLam)。一名热衷于提升生产力工具体验的开发者与创作者。相信工具的力量，让写作更优雅，让创作更自由。',
   });
 }
+
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access -- reason: resume typed linting after the dynamic Obsidian settings UI boundary */
