@@ -37,6 +37,7 @@ const STYLE_FRAGMENTS = [
   "styles/sticker-settings.css",
   "styles/preview.css",
   "styles/sticker-preview.css",
+  "styles/card-preview.css",
   "styles/settings-base.css",
   "styles/wechat-settings.css",
   "styles/wechat-publish.css",

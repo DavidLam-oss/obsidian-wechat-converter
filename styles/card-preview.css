@@ -1,0 +1,20 @@
+/*
+## 核心功能
+
+图片卡片预览/实验样式分片（A03）：离屏捕获容器。卡片成品页样式由主题 token 动态生成（services/card-themes.js），不进本分片。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 新增选择器必须以 icard- 前缀作用域，避免污染宿主 UI。
+*/
+
+/* 离屏捕获容器：参与布局但不可见、不可交互（禁止 display:none，见规划 §5.1） */
+.icard-offscreen {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: -1;
+}

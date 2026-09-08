@@ -60,8 +60,10 @@
 	},
 	"dependencies": {
 		"@noble/hashes": "^1.8.0",
+		"@zumer/snapdom": "^2.24.15",
 		"juice": "^10.0.1",
 		"markdown-it-mathjax3": "^4.3.2",
+		"modern-screenshot": "^4.7.0",
 		"postcss": "^8.5.26",
 		"postcss-selector-parser": "^7.1.4",
 		"postcss-value-parser": "^4.2.0"
