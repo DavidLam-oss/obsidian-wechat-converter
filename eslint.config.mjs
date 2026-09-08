@@ -151,7 +151,7 @@ export default [
       "services/ai-layout-skill-bundle.js",
       "services/article-image-assets.js",
       "services/card-document.js",
-      "services/card-experiment.js",
+      "services/card-pagination.js",
       "services/card-render-engine.js",
       "services/card-render-profile.js",
       "services/card-resources.js",

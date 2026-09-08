@@ -2,7 +2,7 @@
 ## 核心功能
 
 图片卡片渲染引擎：页面装配（主题 CSS + 内容 DOM + 页脚）、离屏附着容器、**真实 DOM 测量**（A05）、
-**分页片段重建**（A05：measure → plan → assemble 布局循环）、截图捕获适配（modern-screenshot / snapdom 双候选，A06 择一）。
+**分页片段重建**（A05：measure → plan → assemble 布局循环）、截图捕获（modern-screenshot，A06 选型定案）。
 
 ## 输入
 
@@ -37,11 +37,11 @@ PNG Blob（捕获）；页面 DOM（装配）；测量结果与分页页面集�
 
 ## 定位
 
-位于 services/，卡片渲染、测量与捕获层；动态 import 两个候选库（A06 定型后移除落选者）。
+位于 services/，卡片渲染、测量与捕获层；动态 import modern-screenshot（A06 选型：0 失败稳定性优于 snapdom，详见 docs/plans/evidence/image-card-phase1/A06/record.md）。
 
 ## 依赖
 
-`modern-screenshot@4.7.0`、`@zumer/snapdom@2.24.15`（实验版本，均 MIT）；`card-themes.js`、`card-render-profile.js`、`card-pagination.js`、`card-resources.js`。
+`modern-screenshot@4.7.0`（MIT，唯一捕获引擎）；`card-themes.js`、`card-render-profile.js`、`card-pagination.js`、`card-resources.js`。
 
 ## 维护规则
 
@@ -61,7 +61,8 @@ import {
   verifyPagePlan,
 } from "./card-pagination.js";
 
-export const CAPTURE_LIBRARY_IDS = /** @type {const} */ (["modern-screenshot", "snapdom"]);
+/** 捕获引擎白名单（A06 选型定案：仅 modern-screenshot；snapdom 因真实内容页 URI malformed 落选移除） */
+export const CAPTURE_LIBRARY_IDS = /** @type {const} */ (["modern-screenshot"]);
 export const DEFAULT_CAPTURE_TIMEOUT_MS = 15000;
 
 /** 比例 → 逻辑尺寸（规划 §4.3：统一由比例计算，最终像素 = 逻辑 × 倍率后取整） */
@@ -608,23 +609,6 @@ async function captureWithModernScreenshot(root, pixelRatio) {
 }
 
 /**
- * snapdom 适配：snapdom(root, {scale}).toBlob()
- * 注意：snapdom 的 toBlob 不传参数默认导出 SVG（内部 type ?? "svg"），必须显式 type:"png" 光栅化。
- * @param {HTMLElement} root
- * @param {number} pixelRatio
- * @returns {Promise<Blob>}
- */
-async function captureWithSnapdom(root, pixelRatio) {
-  const mod = /** @type {{snapdom: (el: HTMLElement, opts: {scale: number}) => Promise<{toBlob: (opts?: {type?: string}) => Promise<Blob|null>}>}} */ (
-    await import("@zumer/snapdom")
-  );
-  const result = await mod.snapdom(root, { scale: pixelRatio });
-  const blob = await result.toBlob({ type: "png" });
-  if (!blob) throw new Error("snapdom returned empty blob");
-  return /** @type {Blob} */ (blob);
-}
-
-/**
  * 捕获页面为 PNG Blob。
  * @param {HTMLElement} root `.icard-page`
  * @param {{library: string, pixelRatio?: number, timeoutMs?: number}} options
@@ -649,10 +633,7 @@ export async function capturePage(root, options) {
   /** @type {Promise<Blob>} */
   let task;
   try {
-    task =
-      library === "modern-screenshot"
-        ? captureWithModernScreenshot(root, pixelRatio)
-        : captureWithSnapdom(root, pixelRatio);
+    task = captureWithModernScreenshot(root, pixelRatio);
   } catch (error) {
     if (isOffscreenParent) offscreenParent.classList.add("icard-offscreen");
     releaseCaptureSlot();

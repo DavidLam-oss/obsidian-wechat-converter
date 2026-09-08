@@ -186,7 +186,7 @@ describe("card-render-engine 页面装配", () => {
     await expect(capturePage(document.createElement("div"), { library: "unknown" })).rejects.toThrow(
       /unknown capture library/
     );
-    expect(CAPTURE_LIBRARY_IDS).toEqual(["modern-screenshot", "snapdom"]);
+    expect(CAPTURE_LIBRARY_IDS).toEqual(["modern-screenshot"]);
   });
 
   it("离屏容器参与布局（非 display:none）且可干净移除", () => {

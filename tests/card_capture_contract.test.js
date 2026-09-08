@@ -5,14 +5,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 /* 捕获契约测试（A06）：尺寸、PNG 类型守卫、超时语义、捕获槽（§5.6：超时后底层仍占用槽位，实际退出才启动下一次）。
-   两引擎库均 mock，通过 deferred 手动控制底层调用生命周期。 */
+   引擎库 mock，通过 deferred 手动控制底层调用生命周期。A06 选型后仅 modern-screenshot。 */
 
 const state = vi.hoisted(() => ({
   modern: { /** @type {any[]} */ calls: [], impl: null },
-  snapdom: { /** @type {any[]} */ calls: [], impl: null },
   reset() {
     this.modern = { calls: [], impl: null };
-    this.snapdom = { calls: [], impl: null };
   },
 }));
 
@@ -21,15 +19,6 @@ vi.mock("modern-screenshot", () => ({
     state.modern.calls.push(args);
     if (state.modern.impl) return state.modern.impl(...args);
     return Promise.resolve(null);
-  },
-}));
-
-vi.mock("@zumer/snapdom", () => ({
-  snapdom: (...args) => {
-    state.snapdom.calls.push(args);
-    const impl = state.snapdom.impl;
-    if (impl) return impl(...args);
-    return Promise.resolve({ toBlob: () => Promise.resolve(null) });
   },
 }));
 
@@ -81,23 +70,6 @@ describe("capturePage 契约", () => {
     expect(blob.type).toBe("image/png");
     expect(readPngSize(await blob.arrayBuffer())).toEqual({ width: 8, height: 8 });
     expect(state.modern.calls[0][1]).toEqual({ scale: 2 });
-  });
-
-  it("snapdom：toBlob 必须显式请求 png 类型", async () => {
-    /** @type {any[]} */
-    const toBlobArgs = [];
-    state.snapdom.impl = () =>
-      Promise.resolve({
-        toBlob: async (opts) => {
-          toBlobArgs.push(opts);
-          return pngBlob();
-        },
-      });
-    const root = /** @type {any} */ ({}); // 引擎已 mock，root 不参与 DOM
-    const blob = await capturePage(root, { library: "snapdom", pixelRatio: 3 });
-    expect(blob.type).toBe("image/png");
-    expect(toBlobArgs[0]).toEqual({ type: "png" });
-    expect(state.snapdom.calls[0][1]).toEqual({ scale: 3 });
   });
 
   it("非 PNG blob 与空结果都被拒绝", async () => {

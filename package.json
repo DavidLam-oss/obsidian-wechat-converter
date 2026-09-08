@@ -60,7 +60,6 @@
 	},
 	"dependencies": {
 		"@noble/hashes": "^1.8.0",
-		"@zumer/snapdom": "^2.24.15",
 		"juice": "^10.0.1",
 		"markdown-it-mathjax3": "^4.3.2",
 		"modern-screenshot": "^4.7.0",

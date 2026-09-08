@@ -33,7 +33,6 @@ import {
 } from './services/ai-layout-cache.js';
 import { normalizeLoadedSettings } from './services/plugin-settings.js';
 import { normalizeCustomCssNotePath } from './services/custom-css-source.js';
-import { registerCardExperiment } from './services/card-experiment.js';
 import {
   createWechatSyncBridgeService,
   stripMarkdownFrontmatter,
@@ -118,9 +117,6 @@ class AppleStylePlugin extends Plugin {
         this.insertImageSwipeCalloutFromActiveEditor('image-sensitive');
       },
     });
-
-    // A03 实验入口：截图引擎选型验证（A06 完成后移除）
-    registerCardExperiment(this);
 
     // Command 'convert-to-apple-style' removed as per user request
 
