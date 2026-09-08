@@ -155,6 +155,7 @@ export default [
       "services/card-render-engine.js",
       "services/card-render-profile.js",
       "services/card-resources.js",
+      "services/card-session.js",
       "services/card-themes.js",
       "services/chinese-punctuation.js",
       "services/dependency-loader.js",

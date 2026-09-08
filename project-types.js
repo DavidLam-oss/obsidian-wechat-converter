@@ -145,4 +145,13 @@
  * @typedef {{ initMarkdownIt?: () => Promise<void> | void }} ConverterLike
  * @typedef {{ introParagraphs: string[], introBulletGroups: string[][], introCallouts: MarkdownCallout[], headings: MarkdownHeading[], sections: MarkdownSection[] }} MarkdownStructure
  * @typedef {{ ok: boolean, status: number, statusText?: string, text: () => Promise<string>, json: () => Promise<unknown> }} FetchResponseLike
+ * —— 图片卡片会话/视图状态（B01，运行时实现在 services/card-session.js）——
+ * @typedef {{ content: number, config: number, theme: number, resource: number }} CardVersionSetLike
+ * @typedef {"idle"|"updating"|"ready"|"failed"} CardPreviewStatusLike
+ * @typedef {{ state: CardPreviewStatusLike, layoutKey: string | null, stale: boolean, hasOmissions: boolean, hasResult: boolean }} CardPreviewUiStateLike
+ * @typedef {"running"|"canceling"|"completed"|"partial"|"failed"|"canceled"} CardExportJobStatusLike
+ * @typedef {{ pageId: string, snapshotId: string, status: "saved"|"failed"|"canceled", bytes?: number, width?: number, height?: number, reason?: string }} CardExportPageResultLike
+ * @typedef {{ jobId: string, snapshotId: string, state: CardExportJobStatusLike, display: "open"|"closed", pageIds: string[], scale: number, results: CardExportPageResultLike[], cancelRequested: boolean, unseenResult: boolean, versions: CardVersionSetLike, layoutKey: string }} CardExportJobViewLike
+ * @typedef {{ snapshotId: string, noteId: string, sourcePath: string, versions: CardVersionSetLike, layoutKey: string, plan: unknown, resources: unknown, meta: Record<string, unknown>, createdAt: number }} CardSnapshotViewLike
+ * @typedef {{ kind: "job"|"result"|"none", job?: CardExportJobViewLike }} CardExportReopenViewLike
  */
