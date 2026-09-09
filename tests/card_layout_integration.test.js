@@ -300,13 +300,65 @@ describe("图片等比缩入与测量基建", () => {
     expect(page.style.getPropertyValue("--icard-content-height")).toBe("400px");
   });
 
-  it("measureCardDocument（jsdom 烟雾）：不抛错、结构完整、离屏容器自清理", () => {
+  it("行内图片段落超高：装配端按预算钳制段内 img max-height（shrinkToFit，B02 实机回归）", () => {
+    // 文字行 + 紧跟图片行（无空行）→ 同一段落（Wechat 文章常见写法）
+    const md = "点开仓库我乐了，这项目最大的特点是它把自己设计成用 AI 来安装。\n![占位图|400](local-image.png)";
+    const doc = createCardDocument(md);
+    const para = doc.blocks.find(
+      (b) => !b.parentId && b.type === "paragraph" && (b.images || []).length > 0 && String(b.text || "").trim() !== ""
+    );
+    expect(para).toBeTruthy();
+    const measured = makeMeasured(doc, { heights: { [para.id]: 500 } });
+    measured.imageParagraphs = { [para.id]: { textHeight: 80, imageCount: 1 } };
+    const items = createLayoutItems(doc, measured);
+    const plan = {
+      ok: true,
+      pages: [{ index: 1, entries: [{ blockId: para.id, unitStart: 0, unitEnd: 1, continuedFrom: false, continues: false, scaled: true }] }],
+      diagnostics: [],
+    };
+    const page = assembleCardPageFromPlan(doc, plan.pages[0], items, {
+      theme: THEME,
+      document: document,
+      contentHeight: 419,
+      resolveImageSrc: () => "data:image/png;base64,AAAA",
+    });
+    const img = page.querySelector("img");
+    expect(img).not.toBeNull();
+    // (419 - 80) / 1 = 339
+    expect(img.style.maxHeight).toBe("339px");
+  });
+
+  it("renderCardPages：行内图片段落超高走收缩路径，不阻断输出", async () => {
+    const md = "点开仓库我乐了，这项目最大的特点是它把自己设计成用 AI 来安装。\n![占位图|400](local-image.png)";
+    const doc = createCardDocument(md);
+    const para = doc.blocks.find(
+      (b) => !b.parentId && b.type === "paragraph" && (b.images || []).length > 0 && String(b.text || "").trim() !== ""
+    );
+    const measured = makeMeasured(doc, { heights: { [para.id]: 500 } });
+    measured.imageParagraphs = { [para.id]: { textHeight: 80, imageCount: 1 } };
+    const result = await renderCardPages(doc, {
+      theme: THEME,
+      document: document,
+      contentHeight: 419,
+      measureFn: () => measured,
+      resolveImageSrc: () => "data:image/png;base64,AAAA",
+    });
+    expect(result.ok).toBe(true);
+    expect(result.pages).toHaveLength(1);
+    const img = result.pages[0].querySelector("img");
+    expect(img.style.maxHeight).toBe("339px");
+    result.detach();
+    expect(document.querySelector("[data-icard-offscreen]")).toBeNull();
+  });
+
+  it("measureCardDocument（jsdom 烟雾）：不抛错、结构完整、离屏容器自清理", async () => {
     const doc = createCardDocument("# 标题\n\n段落\n\n- 项目");
-    const measured = measureCardDocument(doc, { theme: THEME, document: document });
+    const measured = await measureCardDocument(doc, { theme: THEME, document: document });
     expect(measured.heights).toBeDefined();
     expect(measured.childHeights).toBeDefined();
     expect(measured.paragraphUnits).toBeDefined();
     expect(measured.paragraphSpans).toBeDefined();
+    expect(measured.imageParagraphs).toBeDefined();
     expect(document.querySelector("[data-icard-offscreen]")).toBeNull();
   });
 

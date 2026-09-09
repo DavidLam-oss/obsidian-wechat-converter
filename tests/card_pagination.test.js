@@ -27,6 +27,7 @@ function item(partial) {
     keepWithNext: partial.keepWithNext ?? false,
     atomic: partial.atomic ?? u.length === 1,
     scaleToFit: partial.scaleToFit ?? partial.type === "image",
+    shrinkToFit: partial.shrinkToFit,
     units: u,
     unitGap: partial.unitGap ?? 6,
     meta: partial.meta || { sourceStart: 1, sourceEnd: 2 },
@@ -414,5 +415,72 @@ describe("实机回归（2026-09-08 首轮分页实验暴露）", () => {
     const pageWithH = plan.pages.find((p) => p.entries.some((e) => e.blockId === "h"));
     expect(pageWithH && pageWithH.endsByManualBreak).toBe(true);
     expect(verifyPagePlan(items, plan).ok).toBe(true);
+  });
+
+  it("尾部孤行回退不得作用于可整放的新页（B02 实机回归：整段被凭空拆成 3+2 造大片空白）", () => {
+    const items = [
+      item({ blockId: "a", units: units(1, 380) }),
+      item({ blockId: "b", type: "paragraph", units: units(5, 20) }),
+    ];
+    // a 占满第一页（380/400）；b 总高 5×20+4×6=124，新页整放绰绰有余。
+    // 旧逻辑：take=5 时 remaining-take=0<2 且 5>=4 → 强砍成 3，凭空造出只有 2 行的续页。
+    const plan = createCardPagePlan(items, { contentHeight: 400, itemGap: 14 });
+    expect(plan.ok).toBe(true);
+    expect(plan.pages).toHaveLength(2);
+    const bEntries = plan.pages.flatMap((p) => p.entries).filter((e) => e.blockId === "b");
+    expect(bEntries).toHaveLength(1); // 不拆分
+    expect(bEntries[0].unitStart).toBe(0);
+    expect(bEntries[0].unitEnd).toBe(5); // 整段放第二页
+    expect(bEntries[0].continues).toBeFalsy();
+    expect(verifyPagePlan(items, plan).ok).toBe(true);
+  });
+
+  it("尾部孤行回退在真实跨页时仍生效（拆分边界留足 orphanUnits 尾段）", () => {
+    const items = [
+      item({ blockId: "b", type: "paragraph", units: units(7, 60) }),
+    ];
+    // 单元 60px、gap 0：整页可装 6 个（360 ≤ 400）→ 拿满 6 后剩余 1 < orphanUnits(2)
+    // → 少拿 1 个，本页 5 个、下页 2 个（真实跨页时保护仍然有效）。
+    const plan = createCardPagePlan(items, { contentHeight: 400 });
+    expect(plan.ok).toBe(true);
+    expect(plan.pages).toHaveLength(2);
+    const first = plan.pages[0].entries[0];
+    const second = plan.pages[1].entries[0];
+    expect(first.unitEnd - first.unitStart).toBe(5);
+    expect(second.unitEnd - second.unitStart).toBe(2);
+    expect(second.continuedFrom).toBe(true);
+    expect(verifyPagePlan(items, plan).ok).toBe(true);
+  });
+
+  it("含行内图片的超高段落：收缩段内图片使整段入页（scaled 标记，不诊断）", () => {
+    const items = [
+      item({
+        blockId: "p",
+        units: units(1, 500),
+        shrinkToFit: { textHeight: 80, imageCount: 1 },
+      }),
+    ];
+    // 段落 500px > 页高 419px，但去图后文字仅 80px：图片预算 339px ≥ 下限 60px → 可缩入
+    const plan = createCardPagePlan(items, { contentHeight: 419 });
+    expect(plan.ok).toBe(true);
+    expect(plan.diagnostics).toHaveLength(0);
+    expect(plan.pages).toHaveLength(1);
+    expect(plan.pages[0].entries[0].scaled).toBe(true);
+    expect(verifyPagePlan(items, plan).ok).toBe(true);
+  });
+
+  it("行内图片收缩到下限仍放不下 → 显式诊断阻断（不裁剪）", () => {
+    const items = [
+      item({
+        blockId: "p",
+        units: units(1, 500),
+        shrinkToFit: { textHeight: 380, imageCount: 1 },
+      }),
+    ];
+    // 图片预算 419-380=39px < 下限 60px → 不可缩入，显式失败
+    const plan = createCardPagePlan(items, { contentHeight: 419 });
+    expect(plan.ok).toBe(false);
+    expect(plan.diagnostics[0].blockId).toBe("p");
+    expect(plan.diagnostics[0].message).toContain("行内图片");
   });
 });

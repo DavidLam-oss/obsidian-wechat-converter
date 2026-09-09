@@ -35,6 +35,9 @@ export const LAYOUT_ROUND_BUDGET = 3;
 /** 拆分边界孤行回退：页首/页尾至少保留的单元数 */
 export const ORPHAN_UNITS = 2;
 
+/** 行内图片收缩下限：每张图缩到低于此高宁可显式诊断（避免缩成不可辨识的细条） */
+export const MIN_SHRUNK_IMAGE_HEIGHT = 60;
+
 /**
  * @typedef {object} LayoutItem
  * @property {string} blockId
@@ -42,6 +45,8 @@ export const ORPHAN_UNITS = 2;
  * @property {boolean} keepWithNext 标题联排：至少与下一项首单元同页
  * @property {boolean} atomic 不可拆分（整体换页）
  * @property {boolean} scaleToFit 图片：超高时等比缩入（CSS 限制最大尺寸），不诊断
+ * @property {{ textHeight: number, imageCount: number }} [shrinkToFit] 行内图片段落：整段超高时收缩段内图片使整段入页
+ *   （textHeight = 去图纯文本实测高度；收缩后仍放不下才诊断）
  * @property {Array<{ height: number }>} units 可拆分单元（atomic 时为整块 1 个）
  * @property {number} unitGap 单元间距（px）
  * @property {{ ordered?: boolean, listStart?: number, calloutType?: string, sourceStart: number, sourceEnd: number, spanRanges?: Array<[number, number]> }} meta
@@ -122,7 +127,8 @@ function classifyType(block) {
  * CardDocument + 测量结果 → 有序 LayoutItem 列表。
  * callout 的子块高度并入 callout 项（units = 子块高度序列）。
  * @param {import('./card-document.js').CardDocument} doc
- * @param {{ heights: { [blockId: string]: number }, childHeights?: { [blockId: string]: number[] }, paragraphUnits?: { [blockId: string]: Array<{ height: number }> }, paragraphSpans?: { [blockId: string]: Array<[number, number]> } }} measured
+ * @param {{ heights: { [blockId: string]: number }, childHeights?: { [blockId: string]: number[] }, paragraphUnits?: { [blockId: string]: Array<{ height: number }> }, paragraphSpans?: { [blockId: string]: Array<[number, number]> }, imageParagraphs?: { [blockId: string]: { textHeight: number, imageCount: number } } }} measured
+ *   imageParagraphs：含行内图片的段落的「去图纯文本高度 + 图片数」（供超高时收缩图片计算）
  * @returns {LayoutItem[]}
  */
 export function createLayoutItems(doc, measured) {
@@ -161,12 +167,14 @@ export function createLayoutItems(doc, measured) {
       }
     }
     const atomic = units.length === 1;
+    const imgInfo = (measured.imageParagraphs || {})[block.id];
     items.push({
       blockId: block.id,
       type: /** @type {LayoutItem["type"]} */ (type),
       keepWithNext: type === "heading",
       atomic,
       scaleToFit: type === "image",
+      shrinkToFit: type === "paragraph" && atomic && imgInfo ? imgInfo : undefined,
       units,
       unitGap: 6,
       meta: {
@@ -265,6 +273,23 @@ export function createCardPagePlan(items, options) {
         used = contentHeight; // 缩入后占满（CSS max-height 实际渲染）
         return;
       }
+      // 行内图片段落：收缩段内图片高度使整段入页（与独立图片等比缩入同语义，内容不裁剪）
+      if (item.shrinkToFit) {
+        const budgetPerImage = (contentHeight - item.shrinkToFit.textHeight) / Math.max(1, item.shrinkToFit.imageCount);
+        if (budgetPerImage >= MIN_SHRUNK_IMAGE_HEIGHT) {
+          flush();
+          currentPage.push({ blockId: item.blockId, unitStart: 0, unitEnd: 1, continuedFrom: false, continues: false, scaled: true });
+          used = contentHeight; // 收缩后整段贴齐页高（装配端按预算钳制 img max-height）
+          return;
+        }
+        diagnostics.push({
+          blockId: item.blockId,
+          reason: "oversized-atomic",
+          message: `段落含 ${item.shrinkToFit.imageCount} 张行内图片，整段高度 ${Math.round(h)}px 超过单页可用高度 ${Math.round(contentHeight)}px；即使把图片缩到下限 ${MIN_SHRUNK_IMAGE_HEIGHT}px 仍放不下（文字部分 ${Math.round(item.shrinkToFit.textHeight)}px）。请把图片移到独立一行或拆短该段。`,
+        });
+        ok = false;
+        return;
+      }
       diagnostics.push({
         blockId: item.blockId,
         reason: "oversized-atomic",
@@ -334,8 +359,10 @@ export function createCardPagePlan(items, options) {
         take += 1;
       }
       const remaining = item.units.length - from;
-      // 孤行回退：若剩余会落在阈值之下，少拿一些让尾部至少 orphanUnits；头部也至少 orphanUnits
-      if (remaining - take < orphanUnits && remaining >= orphanUnits * 2) {
+      // 孤行回退：若剩余会落在阈值之下，少拿一些让尾部至少 orphanUnits；头部也至少 orphanUnits。
+      // 仅在「本页装不下全部、确有跨页」时适用（from + take < 总数）：整项能完整放入本页时
+      // 不存在尾段，裁剪反而会凭空制造一个几乎空白的续页（B02 实机回归：b7 段 5 行被砍成 3+2）。
+      if (from + take < item.units.length && remaining - take < orphanUnits && remaining >= orphanUnits * 2) {
         take = remaining - orphanUnits;
       }
       if (take < Math.min(orphanUnits, remaining)) {

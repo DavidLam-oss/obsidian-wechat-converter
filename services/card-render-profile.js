@@ -314,9 +314,12 @@ export function renderBlockElement(block, options = {}) {
       const p = ownerDoc.createElement("p");
       p.append(renderInlineMarkdown(block.text || "", options));
       const images = (block.images || []).filter((img) => !img.gif && !img.excluded);
+      // 去重：block.text 通常保留图片 markdown，行内渲染已产出 <img>；此处仅补充
+      // 文本流里没有的图（如 wiki 嵌入提取出的 ref），避免同一张图渲染两次（B02 实机回归）。
+      const renderedSrcs = new Set(Array.from(p.querySelectorAll("img")).map((im) => im.getAttribute("src")));
       for (const image of images) {
         const resolved = options.resolveImageSrc ? options.resolveImageSrc(image.ref) : null;
-        if (!resolved) continue;
+        if (!resolved || renderedSrcs.has(resolved)) continue;
         const img = ownerDoc.createElement("img");
         img.setAttribute("src", resolved);
         img.setAttribute("alt", "");

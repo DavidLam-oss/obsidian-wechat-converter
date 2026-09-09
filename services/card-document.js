@@ -250,12 +250,15 @@ function classifyImageRef(ref) {
 
 /**
  * 从块的原始源行中收集图片引用（markdown 形式 + wiki 嵌入）。
- * @param {string[]} parseLines
+ * @param {string[]} parseLines 含 frontmatter 的全文行数组
  * @param {number} relStart 0-based body 相对行（含）
  * @param {number} relEnd 不含
+ * @param {number} bodyOffset body 起始的全文行偏移（frontmatter 行数）；relStart/relEnd 是
+ *   body 相对行号，而 parseLines 是全文数组——不加偏移会把图片错位挂到 bodyStart 行之后的块上
+ *   （B02 实机回归：入门4/文章自动归位 两篇带 frontmatter 笔记的图片全部错位/丢失）。
  */
-function collectImages(parseLines, relStart, relEnd) {
-  const raw = parseLines.slice(relStart, relEnd).join("\n");
+function collectImages(parseLines, relStart, relEnd, bodyOffset = 0) {
+  const raw = parseLines.slice(relStart + bodyOffset, relEnd + bodyOffset).join("\n");
   const images = [];
   let match;
   MD_IMAGE_REGEX.lastIndex = 0;
@@ -376,7 +379,7 @@ export function createCardDocument(markdown, options = {}) {
     if (INLINE_FORMULA_REGEX.test(text)) {
       return { disposition: BlockDisposition.OMIT, omitReason: OmitReason.INLINE_FORMULA, highRisk: true };
     }
-    const images = collectImages(parseLines, parseLineStart, parseLineEnd);
+    const images = collectImages(parseLines, parseLineStart, parseLineEnd, bodyStart);
     const visibleText = trimmed
       .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
       .replace(/!\[\[[^\]]*\]\]/g, "")
@@ -655,9 +658,10 @@ export function createCardDocument(markdown, options = {}) {
         item.childList = childList;
       }
       if (!item.omitReason) {
-        item.images = collectImages(parseLines, relOf(item.sourceStart), relOf(item.sourceEnd) + 1);
+        // relOf(abs) = abs - bodyStart 比 0-based body 行号大 1，故起止各收 1 行对齐 item 实际行区间
+        item.images = collectImages(parseLines, relOf(item.sourceStart) - 1, relOf(item.sourceEnd), bodyStart);
         if (item.images && item.images.length > 0 && item.images.every((img) => img.gif)) {
-          const textProbe = parseLines.slice(relOf(item.sourceStart), relOf(item.sourceEnd) + 1).join("\n");
+          const textProbe = parseLines.slice(relOf(item.sourceStart) - 1 + bodyStart, relOf(item.sourceEnd) + bodyStart).join("\n");
           const stripped = textProbe.replace(/!\[[^\]]*\]\([^)]*\)/g, "").replace(/!\[\[[^\]]*\]\]/g, "").trim();
           if (stripped) {
             item.disposition = BlockDisposition.RENDER;

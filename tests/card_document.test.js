@@ -215,4 +215,50 @@ describe("card-document × 样本账本（expected.json）", () => {
     expect(doc.paginationMarkers).toHaveLength(0);
     expect(doc.blocks.some((b) => b.type === "paginationMarker")).toBe(false);
   });
+
+  it("图片归属：带 frontmatter 的笔记，图片 ref 不得错位到 bodyStart 行之后的块（B02 实机回归）", () => {
+    // 回归背景：collectImages 曾把 body 相对行号当全文下标切 parseLines，
+    // 图片整体错位 bodyStart 行——文字+图片段提取不到图（走拆分路径被截断）、
+    // 独立图片段拿不到 ref（资源池不下载，渲染 0px 不显示）。
+    const md = [
+      "---",
+      "title: 测试",
+      "tags: [a, b]",
+      "created: 2026-09-09",
+      "---",
+      "",
+      "第一段文字。",
+      "",
+      "文字加图片紧邻。",
+      "![图A|400](https://example.com/a.png)",
+      "",
+      "![独立图B|400](https://example.com/b.png)",
+      "",
+      "结尾段。",
+    ].join("\n");
+    const doc = createCardDocument(md);
+    const byId = new Map(doc.blocks.map((b) => [b.id, b]));
+    const textImg = doc.blocks.find((b) => b.sourceStart === 9 && !b.parentId);
+    const standalone = doc.blocks.find((b) => b.sourceStart === 12 && !b.parentId);
+    expect(textImg && textImg.images.map((i) => i.ref)).toEqual(["https://example.com/a.png"]);
+    expect(standalone && standalone.images.map((i) => i.ref)).toEqual(["https://example.com/b.png"]);
+    // 无图段落不得被塞进别处的图片
+    const first = byId.get("b1");
+    expect(first ? first.images || [] : []).toEqual([]);
+    void byId;
+  });
+
+  it("图片归属：列表项图片归所在项，不前串到上一项（含无 frontmatter 回归）", () => {
+    const build = (head) =>
+      createCardDocument(
+        head + "- 列表项一\n- 列表项二带图 ![图C](https://example.com/c.png)\n\n结尾段。\n"
+      );
+    for (const head of ["---\ntitle: t\n---\n\n", ""]) {
+      const doc = build(head);
+      const list = doc.blocks.find((b) => b.type === "list" && !b.parentId);
+      expect(list).toBeTruthy();
+      expect(list.items[0].images || []).toEqual([]);
+      expect(list.items[1].images.map((i) => i.ref)).toEqual(["https://example.com/c.png"]);
+    }
+  });
 });

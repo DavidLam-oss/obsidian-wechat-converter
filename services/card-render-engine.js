@@ -186,6 +186,100 @@ export const CALLOUT_PAD_VERTICAL = 20;
 /** 布局循环溢出重排的安全余量（px） */
 export const LAYOUT_OVERFLOW_SLACK = 4;
 
+/* ===================== 布局调试日志（window.ICARD_DEBUG_LAYOUT 开关控制） =====================
+ * 用途：诊断「页底空白 / 提前断页」。在宿主控制台执行 window.ICARD_DEBUG_LAYOUT = true 后
+ * 重新触发卡片排版即可输出每轮装箱明细；默认关闭、零开销。 */
+
+/**
+ * @param {number} round
+ * @param {{ contentHeight: number, itemGap: number, measured: any, items: any[], pages: any[] }} data
+ */
+function debugLayoutLog(round, data) {
+  const w = /** @type {any} */ (typeof window !== "undefined" ? window : undefined);
+  if (!w || !w.ICARD_DEBUG_LAYOUT) return;
+  const lines = [];
+  lines.push(`[icard-layout] round=${round} contentHeight=${Math.round(data.contentHeight)} itemGap=${data.itemGap} pages=${data.pages.length}`);
+  const itemById = new Map(data.items.map((it) => [it.blockId, it]));
+  data.pages.forEach((page) => {
+    const parts = page.entries.map((/** @type {any} */ e) => {
+      const it = itemById.get(e.blockId);
+      let h = 0;
+      if (it) {
+        h = e.scaled ? data.contentHeight
+          : it.units.slice(e.unitStart, e.unitEnd).reduce((/** @type {number} */ a, /** @type {{height: number}} */ u, /** @type {number} */ i) =>
+            a + u.height + (i > 0 ? it.unitGap : 0), 0);
+      }
+      const src = it && it.meta ? `${it.meta.sourceStart}-${it.meta.sourceEnd}` : "?";
+      return `${e.blockId}@${src}[${e.unitStart},${e.unitEnd})${e.continuedFrom ? "^" : ""}${e.continues ? "…" : ""}${e.scaled ? "scaled" : ""}≈${Math.round(h)}`;
+    });
+    const used = page.entries.reduce((/** @type {number} */ acc, /** @type {any} */ e, /** @type {number} */ i) => {
+      const it = itemById.get(e.blockId);
+      let h = 0;
+      if (it) {
+        h = e.scaled ? data.contentHeight
+          : it.units.slice(e.unitStart, e.unitEnd).reduce((/** @type {number} */ a, /** @type {{height: number}} */ u, /** @type {number} */ i) =>
+            a + u.height + (i > 0 ? it.unitGap : 0), 0);
+      }
+      return acc + h + (i > 0 ? data.itemGap : 0);
+    }, 0);
+    lines.push(`[icard-layout]   p${page.index} used≈${Math.round(used)} | ${parts.join("  ")}`);
+  });
+  const paraInfo = Object.entries(data.measured.paragraphUnits || {})
+    .map(([id, units]) => `${id}:${/** @type {any[]} */ (units).length}行/${Math.round(/** @type {any[]} */ (units).reduce((a, u) => a + u.height, 0))}px`)
+    .join(" ");
+  lines.push(`[icard-layout] 段落行单元 ${paraInfo || "无"}`);
+  const heights = Object.entries(data.measured.heights || {})
+    .map(([id, h]) => `${id}:${Math.round(/** @type {number} */ (h))}`)
+    .join(" ");
+  lines.push(`[icard-layout] 块高 ${heights}`);
+  // eslint-disable-next-line no-console -- 受 ICARD_DEBUG_LAYOUT 开关控制的诊断输出
+  console.log(lines.join("\n"));
+}
+
+/**
+ * @param {number} round
+ * @param {number} worst
+ * @param {number} contentHeight
+ */
+function debugLayoutLogOverflow(round, worst, contentHeight) {
+  const w = /** @type {any} */ (typeof window !== "undefined" ? window : undefined);
+  if (!w || !w.ICARD_DEBUG_LAYOUT) return;
+  // eslint-disable-next-line no-console -- 受 ICARD_DEBUG_LAYOUT 开关控制的诊断输出
+  console.log(`[icard-layout] round=${round} 溢出核验 worst=${worst}px → contentHeight ${Math.round(contentHeight)}${worst > 0 ? ` → 收缩至 ${Math.round(contentHeight - worst - LAYOUT_OVERFLOW_SLACK)}` : "（通过）"}`);
+}
+
+/**
+ * @param {number} round
+ * @param {Array<{ blockId: string, message: string }>} diagnostics
+ * @param {number} contentHeight
+ */
+function debugLayoutLogFail(round, diagnostics, contentHeight) {
+  const w = /** @type {any} */ (typeof window !== "undefined" ? window : undefined);
+  if (!w || !w.ICARD_DEBUG_LAYOUT) return;
+  const lines = [`[icard-layout] round=${round} 布局失败（contentHeight=${Math.round(contentHeight)}）诊断 ${diagnostics.length} 条：`];
+  for (const d of diagnostics) lines.push(`[icard-layout]   ✗ ${d.blockId || "-"}: ${d.message}`);
+  // eslint-disable-next-line no-console -- 受 ICARD_DEBUG_LAYOUT 开关控制的诊断输出
+  console.log(lines.join("\n"));
+}
+
+/**
+ * 资源快照状态诊断：排查「图片没出来」（ref 缺失 / resolve-failed / error / timeout / budget 等）。
+ * @param {import('./card-resources.js').CardResourceSnapshot} [resources]
+ */
+function debugLayoutLogResources(resources) {
+  const w = /** @type {any} */ (typeof window !== "undefined" ? window : undefined);
+  if (!w || !w.ICARD_DEBUG_LAYOUT) return;
+  const images = (resources && resources.images) || {};
+  const refs = Object.keys(images);
+  const lines = [`[icard-layout] 资源快照 ${refs.length} 张图片：`];
+  for (const ref of refs) {
+    const e = /** @type {any} */ (images[ref]);
+    lines.push(`[icard-layout]   ${e.status === "ok" ? "✓" : "✗"} [${e.status}] ${ref.slice(0, 80)}${e.width ? ` ${e.width}x${e.height}` : ""}${e.bytes ? ` ${(e.bytes / 1024).toFixed(0)}KB` : ""}`);
+  }
+  // eslint-disable-next-line no-console -- 受 ICARD_DEBUG_LAYOUT 开关控制的诊断输出
+  console.log(lines.join("\n"));
+}
+
 /**
  * 单页可用内容高度 = 页高 − 上下页边距 − 页脚实测高度。
  * 显式传 contentHeight 时直接返回（测试/覆盖入口）。
@@ -225,12 +319,40 @@ export function measureContentHeight(options = {}) {
 }
 
 /**
+ * 等待 root 内所有图片就绪（加载成功或失败都算就绪），带总超时兜底。
+ * 目的：消除「测量时图片未加载 → 高度按 0 计 → 计划认为放得下 → 实际渲染溢出被裁」的竞态（B02 实机回归）。
+ * @param {Element} root
+ * @param {number} [timeoutMs] 单张图片等待上限（默认 4s；超时按当前状态继续测量，宁可显式溢出收缩也不挂死）
+ * @returns {Promise<void>}
+ */
+async function waitForImagesReady(root, timeoutMs = 4000) {
+  const imgs = Array.from(root.querySelectorAll("img"));
+  await Promise.all(imgs.map((im) => {
+    const img = /** @type {HTMLImageElement} */ (im);
+    if (img.complete) return Promise.resolve();
+    return new Promise((resolve) => {
+      const done = () => {
+        img.removeEventListener("load", done);
+        img.removeEventListener("error", done);
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(done, timeoutMs);
+      img.addEventListener("load", done, { once: true });
+      img.addEventListener("error", done, { once: true });
+    });
+  }));
+}
+
+/**
  * 真实 DOM 测量（A05 ①）：在参与布局的离屏容器中渲染每个块并读取实际高度。
  * 测量与装配共用 renderBlockElement/renderCalloutBlock/wrapParagraphSpans（确定性包裹，span 序号可重放）。
  * 说明：
  * - list 逐项（>1 项才可拆）、callout 逐子块（>1 个才可拆；子块高度含续页开销估算：每单元 + 引用块垂直内边距，
  *   首单元另 + 标题高度——保守方向，宁可提前分页不可裁切）。
- * - 段落按 span 包裹后 offsetTop 分行；含行内图片的段落保持原子（图片无法安全跨行拆分）。
+ * - 段落按 span 包裹后 offsetTop 分行；含行内图片的段落保持原子（图片无法安全跨行拆分），
+ *   并附测去图纯文本高度（imageParagraphs）供装箱层超高时收缩图片。
+ * - 图片块先等加载完成再读高度（waitForImagesReady），保证测量与实际渲染一致。
  * - callout 子块高度与 renderChildren 按下标一一对应（标题剥离后为空的段落计 0，与装配端的跳过行为一致）。
  * @param {import('./card-document.js').CardDocument} cardDoc
  * @param {object} [options]
@@ -240,9 +362,9 @@ export function measureContentHeight(options = {}) {
  * @param {(ref: string) => string | null} [options.resolveImageSrc]
  * @param {import('./card-resources.js').CardResourceSnapshot} [options.resources] 资源快照句柄；未显式传 resolveImageSrc 时由快照构造
  * @param {Document} [options.document]
- * @returns {{ heights: Record<string, number>, childHeights: Record<string, number[]>, paragraphUnits: Record<string, Array<{height: number}>>, paragraphSpans: Record<string, Array<[number, number]>> }}
+ * @returns {Promise<{ heights: Record<string, number>, childHeights: Record<string, number[]>, paragraphUnits: Record<string, Array<{height: number}>>, paragraphSpans: Record<string, Array<[number, number]>>, imageParagraphs: Record<string, { textHeight: number, imageCount: number }> >}
  */
-export function measureCardDocument(cardDoc, options = {}) {
+export async function measureCardDocument(cardDoc, options = {}) {
   const ownerDoc = options.document || window.document;
   const theme = options.theme || getCardTheme(options.themeId);
   const size = options.size || { width: CARD_PAGE_WIDTH, height: CARD_PAGE_HEIGHT_3_4 };
@@ -259,6 +381,8 @@ export function measureCardDocument(cardDoc, options = {}) {
   const paragraphUnits = {};
   /** @type {Record<string, Array<[number, number]>>} */
   const paragraphSpans = {};
+  /** @type {Record<string, { textHeight: number, imageCount: number }>} */
+  const imageParagraphs = {};
   try {
     // 测量宿主与 .icard-page 同构（同宽、同 padding），但不设固定高：内容自然延展
     const host = ownerDoc.createElement("div");
@@ -283,6 +407,7 @@ export function measureCardDocument(cardDoc, options = {}) {
         const renderChildren = allChildren.filter((c) => c.disposition === "render");
         if (renderChildren.length > 1) {
           const quoteFull = appendBlock(renderCalloutBlock(block, allChildren, { resolveImageSrc, doc: ownerDoc }));
+          await waitForImagesReady(quoteFull);
           heights[block.id] = quoteFull.offsetHeight;
           quoteFull.remove();
           // 标题实测（含下边距）
@@ -308,6 +433,7 @@ export function measureCardDocument(cardDoc, options = {}) {
           childHeights[block.id] = perChild.map((h, i) => h + CALLOUT_PAD_VERTICAL + (i === 0 ? titleH : 0));
         } else {
           const quote = appendBlock(renderCalloutBlock(block, allChildren, { resolveImageSrc, doc: ownerDoc }));
+          await waitForImagesReady(quote);
           heights[block.id] = quote.offsetHeight;
         }
         continue;
@@ -316,6 +442,7 @@ export function measureCardDocument(cardDoc, options = {}) {
       const el = renderBlockElement(block, { resolveImageSrc, doc: ownerDoc });
       if (!el) continue;
       appendBlock(el);
+      await waitForImagesReady(el);
       const blockEl = /** @type {HTMLElement} */ (el);
       heights[block.id] = blockEl.offsetHeight;
 
@@ -348,10 +475,20 @@ export function measureCardDocument(cardDoc, options = {}) {
               /** @type {[number, number]} */ ([l.start, i + 1 < lines.length ? lines[i + 1].start : total])
             );
           }
+        } else {
+          // 行内图片段落：附测「去图纯文本高度」（供装箱层超高时按预算收缩图片，B02 实机回归）
+          const imgEls = Array.from(el.querySelectorAll("img"));
+          if (imgEls.length > 0) {
+            const textProbe = /** @type {HTMLElement} */ (blockEl.cloneNode(true));
+            textProbe.querySelectorAll("img").forEach((im) => im.remove());
+            content.append(textProbe);
+            imageParagraphs[block.id] = { textHeight: textProbe.offsetHeight, imageCount: imgEls.length };
+            textProbe.remove();
+          }
         }
       }
     }
-    return { heights, childHeights, paragraphUnits, paragraphSpans };
+    return { heights, childHeights, paragraphUnits, paragraphSpans, imageParagraphs };
   } finally {
     offscreen.detach();
   }
@@ -412,6 +549,16 @@ export function assembleCardPageFromPlan(cardDoc, planPage, items, args) {
     if (entry.scaled) {
       const img = el.tagName === "IMG" ? el : el.querySelector("img");
       if (img) img.classList.add("icard-img-fit");
+      // 行内图片段落（shrinkToFit）：整段贴齐页高，段内图片按预算均分 max-height
+      if (item.shrinkToFit && typeof args.contentHeight === "number") {
+        const imgs = el.tagName === "IMG" ? [el] : Array.from(el.querySelectorAll("img"));
+        const perImage = Math.floor(
+          (args.contentHeight - item.shrinkToFit.textHeight) / Math.max(1, imgs.length || item.shrinkToFit.imageCount)
+        );
+        for (const im of imgs) {
+          /** @type {HTMLElement} */ (im).style.maxHeight = `${perImage}px`;
+        }
+      }
     }
     content.append(el);
   }
@@ -468,9 +615,10 @@ export async function renderCardPages(cardDoc, options = {}) {
     let contentHeight = typeof options.contentHeight === "number"
       ? options.contentHeight
       : measureContentHeight({ theme, size, document: ownerDoc });
+    debugLayoutLogResources(options.resources);
 
     for (let round = 1; round <= maxRounds; round += 1) {
-      const measured = measureFn(cardDoc, { theme, size, resolveImageSrc, document: ownerDoc });
+      const measured = await measureFn(cardDoc, { theme, size, resolveImageSrc, document: ownerDoc });
       const items = createLayoutItems(cardDoc, measured);
       const breakBefore = mapManualBreaks(cardDoc, items);
       const plan = createCardPagePlan(items, {
@@ -478,13 +626,23 @@ export async function renderCardPages(cardDoc, options = {}) {
         breakBeforeItemIds: breakBefore,
         itemGap: theme.tokens.contentGap,
       });
-      if (!plan.ok) return fail(plan.diagnostics, round);
+      if (!plan.ok) {
+        debugLayoutLogFail(round, plan.diagnostics, contentHeight);
+        return fail(plan.diagnostics, round);
+      }
       const verification = verifyPagePlan(items, plan);
       if (!verification.ok) {
         return fail(verification.problems.map((message) =>
           /** @type {import('./card-pagination.js').PlanDiagnostic} */ ({ blockId: "", reason: "oversized-atomic", message })
         ), round);
       }
+      debugLayoutLog(round, {
+        contentHeight,
+        itemGap: theme.tokens.contentGap,
+        measured,
+        items,
+        pages: plan.pages,
+      });
 
       // 装配 + 附着 + 溢出核验（§A05 ⑥）；失败页移除后收缩高度重排
       const pages = plan.pages.map((p) => assembleCardPageFromPlan(cardDoc, p, items, {
@@ -504,6 +662,7 @@ export async function renderCardPages(cardDoc, options = {}) {
         const overflow = contentEl.scrollHeight - contentEl.clientHeight;
         if (overflow > worst) worst = overflow;
       }
+      debugLayoutLogOverflow(round, worst, contentHeight);
       if (worst <= 0) {
         return { ok: true, pages, plan, diagnostics: [], rounds: round, detach: offscreen.detach };
       }
