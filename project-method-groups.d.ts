@@ -181,6 +181,26 @@ type PanelShellMethodsContract = Pick<
     | 'closeTransientPanels'
     | 'toggleSettingsPanel'
     | 'switchPreviewMode'
+    | 'applyModeActionVisibility'
+>;
+
+type CardPreviewMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'getCardSessions'
+    | 'renderCardPreview'
+    | 'scheduleCardPreviewUpdate'
+    | 'resolveCardMarkdownSource'
+    | 'runCardLayoutPipeline'
+    | 'getCardPreviewZoom'
+    | 'setCardPreviewZoom'
+    | 'adjustCardPreviewZoom'
+    | 'applyCardPreviewZoom'
+    | 'renderCardEmptyState'
+    | 'renderCardMobileNotice'
+    | 'renderCardFailureState'
+    | 'renderCardPreviewDom'
+    | 'locateCardPageSource'
+    | 'disposeCardPreview'
 >;
 
 type StickerPreviewMethodsContract = Pick<

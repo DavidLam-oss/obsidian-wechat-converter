@@ -3043,7 +3043,7 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 /*
 ## 核心功能
 
-图片卡片预览/实验样式分片（A03）：离屏捕获容器。卡片成品页样式由主题 token 动态生成（services/card-themes.js），不进本分片。
+图片卡片预览/实验样式分片（A03 离屏容器 + B02 预览 UI）。卡片成品页样式由主题 token 动态生成（services/card-themes.js），不进本分片。
 
 ## 维护规则
 
@@ -3059,6 +3059,157 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   visibility: hidden;
   pointer-events: none;
   z-index: -1;
+}
+
+/* —— B02 卡片预览 UI —— */
+
+.icard-preview-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  height: 100%;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+/* 摘要条：页数 / 过期提示 / 省略与资源警告 */
+.icard-preview-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.icard-preview-summary-count {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.icard-preview-summary-stale {
+  color: var(--text-warning, #b8860b);
+}
+
+.icard-preview-summary-omissions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.icard-preview-chip {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  background: var(--background-modifier-hover);
+  color: var(--text-muted);
+}
+
+.icard-preview-chip.is-warning {
+  background: rgba(255, 179, 0, 0.16);
+  color: var(--text-warning, #8a6d00);
+}
+
+.icard-preview-chip.is-error {
+  background: rgba(224, 62, 62, 0.14);
+  color: var(--text-error, #b3261e);
+}
+
+/* 缩放控制（仅展示层） */
+.icard-preview-zoombar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.icard-preview-zoom-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.icard-preview-zoom-btn:hover {
+  background: var(--background-modifier-hover);
+}
+
+/* 缩略页列表：page-item 外壳承载缩放尺寸，内部 .icard-page transform 缩放 */
+.icard-preview-pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-content: flex-start;
+}
+
+.icard-preview-page-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: outline-color 120ms ease;
+}
+
+.icard-preview-page-item:hover {
+  outline-color: var(--background-modifier-border-hover);
+}
+
+.icard-preview-page-item.is-selected {
+  outline-color: var(--interactive-accent);
+}
+
+.icard-preview-page-item .icard-page {
+  transform-origin: top left;
+}
+
+.icard-preview-page-badge {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 1px 7px;
+  border-radius: 8px;
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  pointer-events: none;
+}
+
+/* 空态 / 失败态 / 移动端说明态 */
+.icard-preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.icard-preview-empty.is-failure .icard-preview-empty-title {
+  color: var(--text-error, #b3261e);
+}
+
+.icard-preview-empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.icard-preview-empty-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  max-width: 420px;
 }
 /*
 ## 核心功能

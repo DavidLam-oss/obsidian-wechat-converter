@@ -178,33 +178,33 @@ toggleSettingsPanel() {
 
 switchPreviewMode(mode) {
   if (this.previewMode === mode) return;
+  if (mode !== 'article' && mode !== 'sticker' && mode !== 'card') return;
   this.previewMode = mode;
 
   const articleBtn = /** @type {unknown} */ (this.btnArticleMode);
   const stickerBtn = /** @type {unknown} */ (this.btnStickerMode);
+  const cardBtn = /** @type {unknown} */ (this.btnCardMode);
 
   if (articleBtn && stickerBtn) {
     const aEl = /** @type {Element} */ (articleBtn);
     const sEl = /** @type {Element} */ (stickerBtn);
-    if (mode === 'article') {
-      aEl.classList.add('active');
-      sEl.classList.remove('active');
-    } else {
-      sEl.classList.add('active');
-      aEl.classList.remove('active');
-    }
+    const cEl = /** @type {Element | null} */ (cardBtn instanceof Element ? cardBtn : null);
+    aEl.classList.toggle('active', mode === 'article');
+    sEl.classList.toggle('active', mode === 'sticker');
+    if (cEl) cEl.classList.toggle('active', mode === 'card');
   }
 
-  // 跨模式切换时收起悬浮面板：文章设置与贴图设置内容不同，留在屏幕上会造成误解。
+  // 跨模式切换时收起悬浮面板：各模式设置内容不同，留在屏幕上会造成误解。
   this.closeTransientPanels();
 
+  // 集中控制操作按钮显隐（B02 ①）
+  this.applyModeActionVisibility();
+
   if (mode === 'sticker') {
-    if (this.aiLayoutBtn && typeof this.aiLayoutBtn.classList === 'object') this.aiLayoutBtn.classList.add('hidden');
-    if (this.copyBtn && typeof this.copyBtn.classList === 'object') this.copyBtn.classList.add('hidden');
     this.renderStickerPreview();
+  } else if (mode === 'card') {
+    void this.renderCardPreview();
   } else {
-    if (this.aiLayoutBtn && typeof this.aiLayoutBtn.classList === 'object') this.aiLayoutBtn.classList.remove('hidden');
-    if (this.copyBtn && typeof this.copyBtn.classList === 'object') this.copyBtn.classList.remove('hidden');
     this.convertCurrent(true);
   }
 
@@ -213,6 +213,28 @@ switchPreviewMode(mode) {
     const h = /** @type {HTMLElement} */ (headerEl).offsetHeight || 80;
     this.containerEl.style.setProperty('--apple-header-height', h + 'px');
   }
+}
+,
+
+/**
+ * 三模式操作按钮显隐的单一事实来源（B02 ①）。
+ * article：全部可用；sticker：隐藏 AI/复制；card：仅显示禁用的卡片导出入口（B04/B05 接入前）。
+ */
+applyModeActionVisibility() {
+  const mode = this.previewMode || 'article';
+  /** @param {unknown} btn @param {boolean} visible */
+  const setVisible = (btn, visible) => {
+    if (btn && typeof btn === 'object' && 'classList' in /** @type {Element} */ (btn)) {
+      (/** @type {Element} */ (btn)).classList.toggle('hidden', !visible);
+    }
+  };
+  setVisible(this.aiLayoutBtn, mode === 'article');
+  setVisible(this.copyBtn, mode === 'article');
+  // 卡片设置在 B03 接入，期间卡片模式隐藏文章设置入口
+  setVisible(this.settingsBtn, mode !== 'card');
+  setVisible(this.cardExportBtn, mode === 'card');
+  setVisible(this.publishBtn, mode !== 'card');
+  if (typeof this.updateAiToolbarState === 'function') this.updateAiToolbarState();
 }
 ,
 };

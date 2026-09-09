@@ -357,13 +357,60 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
      * @param {ObsidianElementLike} container
      */
     createSettingsPanel(container: ObsidianElementLike): void;
-    /** 预览模式：文章排版 / 微信贴图 */
-    previewMode: 'article' | 'sticker';
+    /** 预览模式：文章排版 / 微信贴图 / 图片卡片 */
+    previewMode: 'article' | 'sticker' | 'card';
     /** 最近一次贴图提取结果，供发布弹窗与同步动作复用 */
     previewStickerData: StickerPreviewDataLike | null;
     /** 是否在贴图文案中插入 [配图 N] 序号 */
     insertStickerImageIndex: boolean;
     switchPreviewMode(mode: string): void;
+    /** 卡片模式：模式胶囊第三个按钮（B02） */
+    btnCardMode: ObsidianElementLike | null;
+    /** 卡片模式导出入口（B04/B05 接入前禁用展示） */
+    cardExportBtn: ObsidianElementLike | null;
+    /** 发布与分发按钮引用（集中控制模式显隐，B02 ①） */
+    publishBtn: ObsidianElementLike | null;
+    /** 卡片预览：按笔记隔离的会话注册表（B01，懒建） */
+    cardSessionRegistry: unknown;
+    /** 卡片预览：编辑合并计时器（300ms，§5.6） */
+    cardPreviewMergeTimer: number | null;
+    /** 卡片预览：渲染代次（晚到渲染丢弃） */
+    cardPreviewGeneration: number;
+    /** 卡片预览：当前会话绑定的预览编排器（B01） */
+    cardPreviewRunner: unknown;
+    cardPreviewRunnerNoteId: string;
+    cardPreviewPendingInput: { markdown: string, sourcePath: string, sourcePathKey: string } | null;
+    /** 卡片预览：最近一次落账的渲染负载（layoutKey 版本安全校验用） */
+    cardPreviewLastOutcome: unknown;
+    cardPreviewOutcome: unknown;
+    cardPreviewShell: ObsidianElementLike | null;
+    cardSelectedPageIndex: number;
+    /** 卡片预览：按笔记记录的正文内容 hash（变化 → bumpContent） */
+    cardContentHashes: Map<string, string>;
+    /** 卡片预览：会话级资源累计预算（§5.5） */
+    cardResourceBudget: unknown;
+    /** 卡片预览渲染入口（卡片模式下 convertCurrent 的分支） */
+    renderCardPreview(): Promise<ObsidianElementLike | undefined>;
+    /** 编辑合并入口：连续输入只保留最后一次（§5.6） */
+    scheduleCardPreviewUpdate(): void;
+    resolveCardMarkdownSource(): Promise<{ ok: boolean, markdown?: string, sourcePath?: string } | null>;
+    /** 排版管线：解析 → 资源就绪 → 字体 → 测量分页装配（测试可注入替身） */
+    runCardLayoutPipeline(ctx: { layoutKey: string, isStale: () => boolean }): Promise<Record<string, unknown>>;
+    /** 三模式操作按钮显隐的单一事实来源（B02 ①） */
+    applyModeActionVisibility(): void;
+    getCardSessions(): unknown;
+    getCardPreviewZoom(): number;
+    setCardPreviewZoom(zoom: number): void;
+    adjustCardPreviewZoom(direction: number): void;
+    applyCardPreviewZoom(): void;
+    renderCardEmptyState(): void;
+    renderCardMobileNotice(): void;
+    renderCardFailureState(outcome: unknown): void;
+    renderCardPreviewDom(): ObsidianElementLike | undefined;
+    /** 版本安全源定位：结果过期时不跳转编辑器 */
+    locateCardPageSource(pageIndex: number): void;
+    /** 视图关闭：销毁会话注册表与合并计时器 */
+    disposeCardPreview(): void;
     /** 读取/初始化某个笔记的贴图交互状态（排序与排除项） */
     getStickerUiState(filePath: string): StickerUiStateLike;
     removeStickerImageItem(filePath: string, item: StickerImageItemLike, index: number): void;

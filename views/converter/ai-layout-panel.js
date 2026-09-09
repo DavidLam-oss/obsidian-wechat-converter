@@ -80,7 +80,7 @@ hasCurrentArticleAiLayoutCache() {
 
 updateAiToolbarState() {
   if (!this.aiLayoutBtn) return;
-  if (this.previewMode === 'sticker') {
+  if (this.previewMode === 'sticker' || this.previewMode === 'card') {
     this.aiLayoutBtn.classList.add('hidden');
     this.aiLayoutBtn.hidden = true;
     if (this.aiLayoutOverlay) this.aiLayoutOverlay.classList.remove('visible');

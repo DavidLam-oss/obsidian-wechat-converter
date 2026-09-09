@@ -794,14 +794,15 @@ updateCurrentDoc() {
 
   this.updateAiToolbarState();
 
-  if (this.previewMode === 'sticker') {
+  // 三模式操作按钮显隐统一由 panel-shell 的集中方法管理（B02 ①）
+  if (typeof this.applyModeActionVisibility === 'function') {
+    this.applyModeActionVisibility();
+  } else if (this.previewMode === 'sticker') {
     if (this.copyBtn && typeof this.copyBtn.classList === 'object') {
       this.copyBtn.classList.add('hidden');
     }
-  } else {
-    if (this.copyBtn && typeof this.copyBtn.classList === 'object') {
-      this.copyBtn.classList.remove('hidden');
-    }
+  } else if (this.copyBtn && typeof this.copyBtn.classList === 'object') {
+    this.copyBtn.classList.remove('hidden');
   }
 }
 ,
@@ -869,6 +870,10 @@ getMissingRenderNotice() {
 async convertCurrent(silent = false, options = {}) {
   if (this.previewMode === 'sticker') {
     this.renderStickerPreview();
+    return;
+  }
+  if (this.previewMode === 'card') {
+    this.scheduleCardPreviewUpdate();
     return;
   }
   const {
@@ -1077,6 +1082,10 @@ async onClose() {
   }
   this.expectedEditorScrollTop = null;
   this.expectedPreviewScrollTop = null;
+  // 卡片会话与资源随视图生命周期释放（B01/B02）
+  if (typeof this.disposeCardPreview === 'function') {
+    this.disposeCardPreview();
+  }
   this.previewContainer?.empty();
   this.closeTransientPanels();
   this.aiLayoutBtn = null;

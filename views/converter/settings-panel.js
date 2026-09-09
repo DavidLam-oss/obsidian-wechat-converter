@@ -33,6 +33,7 @@ import {
   getEventTargetValue,
   getImageSwipeCommandCopy,
   isMobileClient,
+  Notice,
 } from '../apple-style-view-shared.js';
 
 /**
@@ -95,8 +96,18 @@ createSettingsPanel(container) {
     setIcon(btnStk, 'layout-grid');
   }
 
+  selfRec.btnCardMode = segment.createEl('button', {
+    cls: 'apple-mode-btn',
+    attr: { 'aria-label': '图片卡片模式', 'title': '图片卡片模式' }
+  });
+  const btnCard = /** @type {HTMLElement} */ (selfRec.btnCardMode);
+  if (typeof setIcon === 'function') {
+    setIcon(btnCard, 'image');
+  }
+
   btnArt.addEventListener('click', () => this.switchPreviewMode('article'));
   btnStk.addEventListener('click', () => this.switchPreviewMode('sticker'));
+  btnCard.addEventListener('click', () => this.switchPreviewMode('card'));
 
   // 1.2.2 第二行右侧：操作按钮组
   const actions = bottomRow.createEl('div', { cls: 'apple-toolbar-actions' });
@@ -135,8 +146,16 @@ createSettingsPanel(container) {
     this.copyBtn = null;
   }
 
-  // [同步] 按钮（始终显示；未配置账号时点击后引导去设置）
-  createIconBtn('send', '发布与分发', () => this.showSyncModal());
+  // [卡片导出] 按钮（仅卡片模式显示；B04/B05 接入前禁用并说明原因）
+  const cardExportBtn = createIconBtn('download', '图片卡片导出（即将开放，当前版本仅支持预览）', () => {
+    new Notice('图片卡片导出即将开放，当前版本仅支持预览');
+  });
+  cardExportBtn.addClass('is-disabled');
+  cardExportBtn.addClass('hidden');
+  this.cardExportBtn = cardExportBtn;
+
+  // [同步] 按钮（始终显示；未配置账号时点击后引导去设置；卡片模式隐藏）
+  this.publishBtn = createIconBtn('send', '发布与分发', () => this.showSyncModal());
 
   // 2. 创建悬浮设置层 (初始隐藏)
   this.settingsOverlay = container.createEl('div', { cls: 'apple-settings-overlay' });
