@@ -2,8 +2,8 @@
 ## 核心功能
 
 图片卡片会话层（B01）：按笔记隔离的会话注册表 + 单笔记会话状态机。
-管理内容/配置/主题/资源四元版本键、预览任务状态、不可变冻结快照、
-页选择与省略确认的版本绑定、导出任务生命周期（任务存活状态与弹窗显示状态分离）。
+管理内容/配置/主题/资源四元版本键、排版设置（B03）、预览任务状态、不可变冻结快照、
+页选择与省略确认的版本绑定；导出任务生命周期委托 card-export-job.js（任务存活状态与弹窗显示状态分离）。
 
 ## 输入
 
@@ -14,10 +14,11 @@
 
 ## 输出
 
-- 注册表：`getSession/has/renameNote/removeNote/disposeAll/listSessions`。
-- 会话（createNoteCardSession 产出）：
+- 注册表：`getSession/has/renameNote/removeNote/disposeAll/listSessions`。- 会话（createNoteCardSession 产出）：
   - 版本：`bumpContent/bumpConfig/bumpTheme/bumpResource`（任一 bump 使选择与省略确认失效）；
     `currentLayoutKey()` = `c{content}.k{config}.t{theme}.r{resource}`。
+  - 排版设置（B03）：`getLayoutSettings/applyLayoutSettings/resetLayoutSettings`，归一化与
+    变化检测委托 card-settings-model.js；值实际变化才 bumpConfig（选择/确认随之失效）。
   - 预览：`beginPreviewUpdate()` → token（{seq, layoutKey}）；`settlePreviewUpdate(token, outcome)`
     仅在 token 仍为最新且版本未变时生效（晚到结果丢弃）；`cancelPreviewUpdate()`；
     `getPreviewState()`（idle/updating/ready/failed + stale 旧预览暂留标记）。
@@ -37,10 +38,12 @@
 ## 定位
 
 位于 services/，卡片功能的状态层；不导入 Obsidian/DOM，可在 node 下独立测试（B02 起 UI 绑定本层）。
+2026-09 拆分：导出任务生命周期 → card-export-job.js（依赖注入，无反向依赖）。
 
 ## 依赖
 
 无运行时依赖；structuredClone（Electron/Node 18+ 均可用）。
+设置归一化/资格检查委托 card-settings-model.js（纯逻辑，无 DOM）；导出任务生命周期委托 card-export-job.js。
 
 ## 维护规则
 
@@ -48,6 +51,9 @@
 - 任务/预览状态枚举变更须同步 project-types.js 的视图状态类型与规划 §5.4/§6.2。
 - 会话为纯状态层：禁止在此引入 DOM、Obsidian app 或直接调用渲染/捕获引擎。
 */
+
+import { createCardLayoutSettingsState } from './card-settings-model.js';
+import { createExportJobState } from './card-export-job.js';
 
 /** 快照缓存上限（§5.3：缓存只覆盖当前会话及有限近期版本） */
 export const MAX_RECENT_SNAPSHOTS = 5;
@@ -109,40 +115,15 @@ function toLayoutKey(versions) {
 
 /** @typedef {"idle"|"updating"|"ready"|"failed"} CardPreviewState */
 
-/** @typedef {"running"|"canceling"|"completed"|"partial"|"failed"|"canceled"} CardExportJobState */
-
-/**
- * 单页导出结果（snapshotId 由会话强制注入，导出各页必然引用同一冻结快照）。
- * @typedef {{ pageId: string, snapshotId: string, status: "saved"|"failed"|"canceled", bytes?: number, width?: number, height?: number, reason?: string }} CardExportPageResult
- */
-
-/**
- * 导出任务公开视图（冻结副本；display 是弹窗展示状态，独立于 state 任务存活状态）。
- * @typedef {{
- *   jobId: string, snapshotId: string, state: CardExportJobState, display: "open"|"closed",
- *   pageIds: string[], scale: number, results: CardExportPageResult[], cancelRequested: boolean,
- *   unseenResult: boolean, versions: CardVersionSet, layoutKey: string
- * }} CardExportJobView
- */
+/** 任务/快照等类型定义迁移至 card-export-job.js，会话侧经 import() 类型引用。 */
 
 /**
  * 冻结快照（plan/meta 深冻结；resources 引用挂快照生命周期）。
  * @typedef {{
  *   snapshotId: string, noteId: string, sourcePath: string, versions: CardVersionSet,
- *   layoutKey: string, plan: unknown, resources: { retain(): any, release(): void } | null,
+ *   layoutKey: string, plan: unknown, resources: import('./card-export-job.js').CardReleasableLike | null,
  *   meta: Record<string, unknown>, createdAt: number
  * }} CardSnapshotLike
- */
-
-/** 会话持有的运行中任务内部态 */
-/**
- * @typedef {{
- *   job: { jobId: string, snapshotId: string, state: CardExportJobState, display: "open"|"closed",
- *     pageIds: string[], scale: number, results: CardExportPageResult[], cancelRequested: boolean,
- *     unseenResult: boolean },
- *   resources: { retain(): any, release(): void } | null,
- *   versions: CardVersionSet, layoutKey: string
- * }} ActiveJobEntry
  */
 
 /** 可释放资源（与 card-resources.js 的 CardResourceSnapshot retain/release 契约一致的最小接口） */
@@ -155,6 +136,9 @@ function toLayoutKey(versions) {
  *   noteId: string, disposed: boolean,
  *   currentLayoutKey(): string,
  *   bumpContent(): string, bumpConfig(): string, bumpTheme(): string, bumpResource(): string,
+ *   getLayoutSettings(): import('./card-settings-model.js').CardLayoutSettings,
+ *   applyLayoutSettings(partial: Partial<import('./card-settings-model.js').CardLayoutSettings> | Record<string, unknown>): { changed: boolean, settings: import('./card-settings-model.js').CardLayoutSettings, layoutKey?: string },
+ *   resetLayoutSettings(): { changed: boolean, settings: import('./card-settings-model.js').CardLayoutSettings, layoutKey?: string },
  *   beginPreviewUpdate(): { seq: number, layoutKey: string } | null,
  *   settlePreviewUpdate(token: { seq: number, layoutKey: string } | null, outcome: Record<string, unknown>): { applied: boolean, reason?: string },
  *   cancelPreviewUpdate(): void,
@@ -165,18 +149,18 @@ function toLayoutKey(versions) {
  *   getValidSelection(): { pageIds: string[], layoutKey: string } | null,
  *   confirmOmissions(diagnosticVersion: string): void,
  *   isOmissionConfirmed(diagnosticVersion: string): boolean,
- *   beginExportJob(input: { snapshotId: string, pageIds: string[], scale: number }): { ok: boolean, reason?: string, job?: CardExportJobView },
+ *   beginExportJob(input: { snapshotId: string, pageIds: string[], scale: number }): { ok: boolean, reason?: string, job?: import('./card-export-job.js').CardExportJobView },
  *   shouldStartNextPage(jobId: string): boolean,
- *   recordPageResult(jobId: string, pageId: string, result: Omit<CardExportPageResult, "snapshotId">): { applied: boolean },
+ *   recordPageResult(jobId: string, pageId: string, result: Omit<import('./card-export-job.js').CardExportPageResult, "snapshotId">): { applied: boolean },
  *   requestCancel(jobId: string): { applied: boolean },
  *   lifecycleCancel(): void,
  *   completeExport(jobId: string, result: { status: "completed"|"partial"|"failed"|"canceled", summary?: string }): { applied: boolean },
  *   closeExportModal(): void,
- *   reopenExportView(): { kind: "job"|"result"|"none", job?: CardExportJobView },
+ *   reopenExportView(): { kind: "job"|"result"|"none", job?: import('./card-export-job.js').CardExportJobView },
  *   markResultSeen(): void,
  *   hasActiveJob(): boolean,
- *   getActiveJob(): CardExportJobView | null,
- *   getLastJob(): CardExportJobView | null,
+ *   getActiveJob(): import('./card-export-job.js').CardExportJobView | null,
+ *   getLastJob(): import('./card-export-job.js').CardExportJobView | null,
  *   getSourcePath(): string,
  *   renameSourcePath(path: string): void,
  *   dispose(): void
@@ -195,6 +179,9 @@ export function createNoteCardSession(options = {}) {
   /** @type {CardVersionSet} */
   const versions = { content: 1, config: 1, theme: 1, resource: 1 };
   let disposed = false;
+
+  // —— 排版设置（B03）：值实际变化 → bumpConfig（选择/省略确认自动失效）——
+  const layoutSettings = createCardLayoutSettingsState({ onChanged: () => bump("config") });
 
   // —— 预览状态 ——
   /** @type {CardPreviewState} */
@@ -215,11 +202,12 @@ export function createNoteCardSession(options = {}) {
   /** @type {Map<string, { data: CardSnapshotLike, resources: CardReleasableLike | null }>} */
   const snapshots = new Map();
 
-  // —— 导出任务 ——
-  /** @type {ActiveJobEntry | null} */
-  let activeJob = null;
-  /** @type {CardExportJobView | null} 待查看的最近完成结果 */
-  let lastJob = null;
+  // —— 导出任务（生命周期状态机在 card-export-job.js；依赖注入，无反向依赖）——
+  const jobState = createExportJobState({
+    nextId,
+    toLayoutKey: (/** @type {CardVersionSet} */ v) => toLayoutKey(v),
+    cloneAndFreeze,
+  });
 
   /** @returns {string} */
   function currentLayoutKey() {
@@ -251,28 +239,6 @@ export function createNoteCardSession(options = {}) {
     if (entry.resources && typeof entry.resources.release === "function") entry.resources.release();
   }
 
-  /**
-   * 任务公开视图的冻结副本。
-   * @param {ActiveJobEntry} entry
-   * @param {CardExportJobState} state
-   * @returns {CardExportJobView}
-   */
-  function jobView(entry, state) {
-    return cloneAndFreeze({
-      jobId: entry.job.jobId,
-      snapshotId: entry.job.snapshotId,
-      state,
-      display: entry.job.display,
-      pageIds: entry.job.pageIds,
-      scale: entry.job.scale,
-      results: entry.job.results,
-      cancelRequested: entry.job.cancelRequested,
-      unseenResult: entry.job.unseenResult,
-      versions: entry.versions,
-      layoutKey: entry.layoutKey,
-    });
-  }
-
   return {
     noteId,
     get disposed() {
@@ -299,6 +265,27 @@ export function createNoteCardSession(options = {}) {
     bumpConfig: () => bump("config"),
     bumpTheme: () => bump("theme"),
     bumpResource: () => bump("resource"),
+
+    // —— 排版设置（B03；归一化/变化检测在 card-settings-model.js）——
+
+    /** @returns {import('./card-settings-model.js').CardLayoutSettings} */
+    getLayoutSettings() {
+      return layoutSettings.get();
+    },
+
+    /**
+     * 应用排版设置：值实际变化才 bumpConfig（返回新 layoutKey）。
+     * @param {Partial<import('./card-settings-model.js').CardLayoutSettings> | Record<string, unknown>} partial
+     * @returns {{ changed: boolean, settings: import('./card-settings-model.js').CardLayoutSettings, layoutKey?: string }}
+     */
+    applyLayoutSettings(partial) {
+      return layoutSettings.apply(partial);
+    },
+
+    /** 恢复当前默认设置（B03 为内置默认；C02 接全局默认后由其提供基准）。 */
+    resetLayoutSettings() {
+      return layoutSettings.reset();
+    },
 
     // —— 预览 ——
 
@@ -455,38 +442,16 @@ export function createNoteCardSession(options = {}) {
       return omissionConfirm.diagnosticVersion === diagnosticVersion;
     },
 
-    // —— 导出任务 ——
+    // —— 导出任务（生命周期状态机委托 card-export-job.js）——
 
     /**
      * 开始导出任务：单会话同时只允许一个运行/取消中任务（§5.4）；任务期间持有快照引用。
      * @param {{ snapshotId: string, pageIds: string[], scale: number }} input
-     * @returns {{ ok: boolean, reason?: string, job?: CardExportJobView }}
+     * @returns {{ ok: boolean, reason?: string, job?: import('./card-export-job.js').CardExportJobView }}
      */
     beginExportJob(input) {
       if (disposed) return { ok: false, reason: "disposed" };
-      if (activeJob) return { ok: false, reason: "job-active" };
-      const entry = snapshots.get(input.snapshotId);
-      if (!entry) return { ok: false, reason: "snapshot-missing" };
-      if (entry.resources && typeof entry.resources.retain === "function") entry.resources.retain();
-      /** @type {ActiveJobEntry} */
-      const active = {
-        job: {
-          jobId: nextId("job"),
-          snapshotId: input.snapshotId,
-          state: "running",
-          display: "open",
-          pageIds: [...input.pageIds],
-          scale: input.scale,
-          results: [],
-          cancelRequested: false,
-          unseenResult: true,
-        },
-        resources: entry.resources,
-        versions: { ...entry.data.versions },
-        layoutKey: toLayoutKey(entry.data.versions),
-      };
-      activeJob = active;
-      return { ok: true, job: jobView(active, "running") };
+      return jobState.beginExportJob(input, snapshots);
     },
 
     /**
@@ -495,34 +460,18 @@ export function createNoteCardSession(options = {}) {
      * @returns {boolean}
      */
     shouldStartNextPage(jobId) {
-      return !!activeJob && activeJob.job.jobId === jobId && activeJob.job.state === "running";
+      return jobState.shouldStartNextPage(jobId);
     },
 
     /**
      * 记录单页结果：running/canceling 均接受（§6.2「写入已启动后取消仍计入已保存」）。
-     * 结果强制携带任务冻结的 snapshotId（导出各页引用同一快照）。
      * @param {string} jobId
      * @param {string} pageId
-     * @param {Omit<CardExportPageResult, "snapshotId">} result
+     * @param {Omit<import('./card-export-job.js').CardExportPageResult, "snapshotId">} result
      * @returns {{ applied: boolean }}
      */
     recordPageResult(jobId, pageId, result) {
-      if (!activeJob || activeJob.job.jobId !== jobId) return { applied: false };
-      const state = activeJob.job.state;
-      if (state !== "running" && state !== "canceling") return { applied: false };
-      if (!activeJob.job.pageIds.includes(pageId)) return { applied: false };
-      /** @type {CardExportPageResult} */
-      const entry = {
-        pageId,
-        snapshotId: activeJob.job.snapshotId,
-        status: result.status,
-      };
-      if (result.bytes !== undefined) entry.bytes = result.bytes;
-      if (result.width !== undefined) entry.width = result.width;
-      if (result.height !== undefined) entry.height = result.height;
-      if (result.reason !== undefined) entry.reason = result.reason;
-      activeJob.job.results.push(Object.freeze(entry));
-      return { applied: true };
+      return jobState.recordPageResult(jobId, pageId, result);
     },
 
     /**
@@ -531,19 +480,12 @@ export function createNoteCardSession(options = {}) {
      * @returns {{ applied: boolean }}
      */
     requestCancel(jobId) {
-      if (!activeJob || activeJob.job.jobId !== jobId) return { applied: false };
-      if (activeJob.job.state !== "running") return { applied: false };
-      activeJob.job.state = "canceling";
-      activeJob.job.cancelRequested = true;
-      return { applied: true };
+      return jobState.requestCancel(jobId);
     },
 
     /** 视图关闭/插件卸载的生命周期取消（§6.2）：标记取消、收起展示层；结果仍可落账后收尾。 */
     lifecycleCancel() {
-      if (!activeJob || activeJob.job.state !== "running") return;
-      activeJob.job.state = "canceling";
-      activeJob.job.cancelRequested = true;
-      activeJob.job.display = "closed";
+      jobState.lifecycleCancel();
     },
 
     /**
@@ -553,77 +495,50 @@ export function createNoteCardSession(options = {}) {
      * @returns {{ applied: boolean }}
      */
     completeExport(jobId, result) {
-      if (!activeJob || activeJob.job.jobId !== jobId) return { applied: false };
-      if (activeJob.job.state !== "running" && activeJob.job.state !== "canceling") {
-        return { applied: false };
-      }
-      const finished = jobView(activeJob, result.status);
-      lastJob = /** @type {CardExportJobView} */ ({
-        ...finished,
-        display: "closed",
-        unseenResult: true,
-      });
-      if (activeJob.resources && typeof activeJob.resources.release === "function") {
-        activeJob.resources.release();
-      }
-      activeJob = null;
-      return { applied: true };
+      return jobState.completeExport(jobId, result);
     },
 
     /** 关闭导出弹窗：只关展示层，任务继续、快照不释放（§6.2）。 */
     closeExportModal() {
-      if (activeJob) activeJob.job.display = "closed";
+      jobState.closeExportModal();
     },
 
     /**
      * 再次打开导出入口：优先恢复运行中任务；有待查看结果先展示原结果，不直接开始新批次（§6.2）。
      * 会话已销毁（视图关闭）时一律无任务。
-     * @returns {{ kind: "job"|"result"|"none", job?: CardExportJobView }}
+     * @returns {{ kind: "job"|"result"|"none", job?: import('./card-export-job.js').CardExportJobView }}
      */
     reopenExportView() {
-      if (disposed) return { kind: "none" };
-      if (activeJob) {
-        activeJob.job.display = "open";
-        return { kind: "job", job: jobView(activeJob, activeJob.job.state) };
-      }
-      if (lastJob && lastJob.unseenResult) {
-        return { kind: "result", job: lastJob };
-      }
-      return { kind: "none" };
+      return jobState.reopenExportView(disposed);
     },
 
     /** 查看待查看结果后标记已读。 */
     markResultSeen() {
-      if (lastJob) lastJob.unseenResult = false;
+      jobState.markResultSeen();
     },
 
     /** @returns {boolean} */
     hasActiveJob() {
-      return !!activeJob;
+      return jobState.hasActiveJob();
     },
 
-    /** @returns {CardExportJobView | null} */
+    /** @returns {import('./card-export-job.js').CardExportJobView | null} */
     getActiveJob() {
-      return activeJob ? jobView(activeJob, activeJob.job.state) : null;
+      return jobState.getActiveJob();
     },
 
-    /** @returns {CardExportJobView | null} */
+    /** @returns {import('./card-export-job.js').CardExportJobView | null} */
     getLastJob() {
-      return lastJob ? cloneAndFreeze(lastJob) : null;
+      return jobState.getLastJob();
     },
 
     /** 视图关闭/卸载：生命周期取消未完成任务（任务与结果随视图终止，不跨视图存活）+ 释放全部快照；此后本会话不再接受新工作。 */
     dispose() {
       if (disposed) return;
-      lifecycleCancelInternal();
+      jobState.lifecycleCancel();
       disposed = true;
       // 任务随视图终止：释放任务对快照的持有（任务本体不再可用，结果不承诺保留）
-      if (activeJob) {
-        if (activeJob.resources && typeof activeJob.resources.release === "function") {
-          activeJob.resources.release();
-        }
-        activeJob = null;
-      }
+      jobState.releaseActiveJob();
       for (const id of [...snapshots.keys()]) releaseSnapshotInternal(id);
       previewHasResult = false;
       previewResultKey = null;
@@ -633,14 +548,6 @@ export function createNoteCardSession(options = {}) {
       omissionConfirm = null;
     },
   };
-
-  /** dispose 前置的生命周期取消（不依赖 this）。 */
-  function lifecycleCancelInternal() {
-    if (!activeJob || activeJob.job.state !== "running") return;
-    activeJob.job.state = "canceling";
-    activeJob.job.cancelRequested = true;
-    activeJob.job.display = "closed";
-  }
 }
 
 /**
