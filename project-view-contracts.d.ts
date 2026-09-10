@@ -417,12 +417,10 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     renderCardDiagnosticArea(shell: ObsidianElementLike, outcome: Record<string, unknown>, session: unknown): void;
     /** 卡片设置浮层：一次性构建 DOM（createSettingsPanel 调用） */
     buildCardSettingsPanel(): void;
-    /** 卡片设置浮层：同步显示值（active 态/stepper/checkbox） */
+    /** 卡片设置浮层：同步显示值（active 态/滑块位置与数值） */
     renderCardSettingsValues(): void;
     /** 卡片设置：应用单项设置（值实际变化 → bumpConfig → 重排版） */
     applyCardLayoutSetting(key: string, value: unknown): void;
-    /** 卡片设置：stepper 步进 */
-    stepCardLayoutSetting(key: string, direction: number): void;
     /** 卡片设置：恢复当前默认 */
     resetCardLayoutSettings(): void;
     /** 卡片设置：当前笔记会话（无会话返回 null） */

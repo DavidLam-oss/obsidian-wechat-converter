@@ -2,10 +2,12 @@
 ## 核心功能
 
 图片卡片排版设置视图（B03）：卡片模式设置浮层（sliders 图标打开的第三 wrapper）。
-暴露一期已生效的排版项：正文字号、行高、页面边距、旧版 `===` 分页兼容；
-主题/比例仅展示阶段 A 已验证值（C01 扩展）。所有调整走会话归一化
-（card-settings-model.js），值实际变化 → bumpConfig → 新版本排版；
-不直接修改完成快照、不修改源 Markdown、不影响其他笔记会话。
+控件风格与文章模式对齐：数值项用 apple-slider 滑块、选项用 apple-btn 胶囊按钮、
+共用同一 createSection 分节结构（间距/留白由 style-panel.css 的 apple-setting-section 统一）。
+暴露一期已生效的排版项：正文字号、行高、页面边距；主题/比例仅展示阶段 A
+已验证值（C01 扩展）。所有调整走会话归一化（card-settings-model.js），
+值实际变化 → bumpConfig → 新版本排版；不直接修改完成快照、不修改源
+Markdown、不影响其他笔记会话。
 
 ## 输入
 
@@ -16,7 +18,7 @@ this.cardSettingsWrapper（settings-panel.js 创建的浮层容器）、
 
 输出 `cardSettingsMethods`，由 AppleStyleView 统一组装：
 - `buildCardSettingsPanel()`：一次性构建浮层 DOM（createSettingsPanel 时调用）；
-- `renderCardSettingsValues()`：打开浮层/设置变化后同步当前值（active 态、数值文本）；
+- `renderCardSettingsValues()`：打开浮层/设置变化后同步当前值（active 态、滑块位置与数值）；
 - `applyCardLayoutSetting(key, value)`：归一化应用单项设置，变化后触发重排版；
 - `resetCardLayoutSettings()`：恢复当前默认（B03 为内置默认，C02 接全局默认）；
 - `getCardSettingsSession()`：当前笔记会话（无会话返回 null，UI 显示默认值）。
@@ -27,12 +29,15 @@ this.cardSettingsWrapper（settings-panel.js 创建的浮层容器）、
 
 ## 依赖
 
-`services/card-settings-model.js`（限额/默认值）；`services/card-themes.js`（主题元信息）。
+`services/card-settings-model.js`（限额/默认值）；`services/card-themes.js`（主题元信息）；
+样式复用 styles/style-panel.css（apple-setting-section / apple-btn-size）与
+styles/style-controls.css（apple-slider）分片，自有样式仅剩 styles/card-settings.css 的说明文案。
 
 ## 维护规则
 
 - 修改逻辑后同步更新本文件说明书，并检查所属目录 README 是否仍准确。
-- DOM 选择器以 icard-settings- 前缀作用域（styles/card-settings.css 分片）。
+- 自有 DOM 选择器以 icard-settings- 前缀作用域（styles/card-settings.css 分片）；
+  通用控件直接复用 apple- 类，不再另起一套。
 - 不在此放未生效的死控件（如代码字号/公式缩放/封面字段，分别属后续任务范围）。
 - 设置持久化（全局默认页签）归 C02，本文件不读写 plugin.settings。
 */
@@ -53,7 +58,7 @@ import { getCardTheme } from '../../services/card-themes.js';
  *   cardSettingsRefs?: {
  *     themeGrid?: ObsidianElementLike | null,
  *     ratioGrid?: ObsidianElementLike | null,
- *     steppers?: Record<string, { valueEl: ObsidianElementLike, minusBtn: HTMLButtonElement, plusBtn: HTMLButtonElement }>,
+ *     sliders?: Record<string, { input: HTMLInputElement, valueEl: ObsidianElementLike }>,
  *   } | null,
  * }} CardSettingsViewStateLike
  */
@@ -66,11 +71,11 @@ function cardSettingsStateOf(view) {
   return /** @type {CardSettingsViewStateLike} */ (view);
 }
 
-/** stepper 数值显示格式 */
-const STEPPER_FORMAT = {
-  fontSize: (v) => `${v} px`,
+/** 滑块数值显示格式（与文章模式 `${val}px` 口径一致） */
+const SLIDER_FORMAT = {
+  fontSize: (v) => `${v}px`,
   lineHeight: (v) => `${v}`,
-  pagePadding: (v) => `${v} px`,
+  pagePadding: (v) => `${v}px`,
 };
 
 /** @type {CardSettingsMethodsContract & ThisType<AppleStyleViewContract>} */
@@ -93,18 +98,18 @@ buildCardSettingsPanel() {
   const refs = /** @type {NonNullable<CardSettingsViewStateLike['cardSettingsRefs']>} */ ({
     themeGrid: null,
     ratioGrid: null,
-    steppers: {},
+    sliders: {},
   });
   cardSettingsStateOf(this).cardSettingsRefs = refs;
 
   // —— 主题（一期仅已验证值；C01 扩展三主题）——
   this.createSection(wrapper, '主题', (section) => {
-    const grid = section.createEl('div', { cls: 'icard-settings-option-grid' });
+    const grid = section.createEl('div', { cls: 'apple-btn-row' });
     refs.themeGrid = grid;
     for (const themeId of VERIFIED_CARD_THEME_IDS) {
       const theme = getCardTheme(themeId);
       const btn = grid.createEl('button', {
-        cls: 'icard-settings-option',
+        cls: 'apple-btn-size',
         text: theme.name,
         attr: { 'data-value': themeId, 'title': theme.name },
       });
@@ -118,10 +123,10 @@ buildCardSettingsPanel() {
 
   // —— 比例（一期仅 3:4；C01 扩展 3:5 / 9:16）——
   this.createSection(wrapper, '比例', (section) => {
-    const grid = section.createEl('div', { cls: 'icard-settings-option-grid' });
+    const grid = section.createEl('div', { cls: 'apple-btn-row' });
     refs.ratioGrid = grid;
     const btn = grid.createEl('button', {
-      cls: 'icard-settings-option',
+      cls: 'apple-btn-size',
       text: '3:4 竖版',
       attr: { 'data-value': '3:4', 'title': '3:4 竖版' },
     });
@@ -132,41 +137,39 @@ buildCardSettingsPanel() {
     });
   });
 
-  // —— 排版数值项（字号 / 行高 / 边距 stepper）——
-  this.createSection(wrapper, '排版', (section) => {
-    const stepperRows = [
-      { key: 'fontSize', label: '正文字号' },
-      { key: 'lineHeight', label: '行高' },
-      { key: 'pagePadding', label: '页面边距' },
-    ];
-    for (const row of stepperRows) {
-      const line = section.createEl('div', { cls: 'icard-settings-stepper' });
-      line.createEl('span', { cls: 'icard-settings-stepper-label', text: row.label });
-      const minusBtn = /** @type {HTMLButtonElement} */ (
-        /** @type {unknown} */ (line.createEl('button', {
-          cls: 'icard-settings-stepper-btn',
-          text: '−',
-          attr: { 'aria-label': `减小${row.label}`, 'title': `减小${row.label}` },
+  // —— 排版数值项（与文章模式同款滑块；分节结构与 apple-setting-section 一致）——
+  const sliderRows = [
+    { key: 'fontSize', label: '正文字号' },
+    { key: 'lineHeight', label: '行高' },
+    { key: 'pagePadding', label: '页面边距' },
+  ];
+  for (const row of sliderRows) {
+    this.createSection(wrapper, row.label, (section) => {
+      const limit = /** @type {Record<string, {min: number, max: number, step: number} | undefined>} */ (CARD_LAYOUT_LIMITS)[row.key];
+      if (!limit) return;
+      const container = section.createEl('div', { cls: 'apple-slider-container' });
+      const slider = /** @type {HTMLInputElement} */ (
+        /** @type {unknown} */ (container.createEl('input', {
+          type: 'range',
+          cls: 'apple-slider',
+          attr: { min: String(limit.min), max: String(limit.max), step: String(limit.step) },
         }))
       );
-      const valueEl = line.createEl('span', { cls: 'icard-settings-stepper-value' });
-      const plusBtn = /** @type {HTMLButtonElement} */ (
-        /** @type {unknown} */ (line.createEl('button', {
-          cls: 'icard-settings-stepper-btn',
-          text: '+',
-          attr: { 'aria-label': `增大${row.label}`, 'title': `增大${row.label}` },
-        }))
-      );
-      minusBtn.addEventListener('click', () => { this.stepCardLayoutSetting(row.key, -1); });
-      plusBtn.addEventListener('click', () => { this.stepCardLayoutSetting(row.key, 1); });
-      refs.steppers[row.key] = { valueEl, minusBtn, plusBtn };
-    }
-  });
+      const valueEl = container.createEl('span', { cls: 'icard-settings-slider-value' });
+      slider.addEventListener('input', () => {
+        const value = Number(slider.value);
+        const formatter = /** @type {Record<string, (v: number) => string>} */ (SLIDER_FORMAT)[row.key];
+        valueEl.textContent = formatter ? formatter(value) : String(value);
+        this.applyCardLayoutSetting(row.key, value);
+      });
+      refs.sliders[row.key] = { input: slider, valueEl };
+    });
+  }
 
   // —— 恢复默认 ——
   this.createSection(wrapper, '其他', (section) => {
     const resetBtn = section.createEl('button', {
-      cls: 'icard-settings-reset',
+      cls: 'apple-btn-size',
       text: '恢复默认排版',
       attr: { 'title': '恢复当前默认排版设置（仅影响本篇）' },
     });
@@ -174,21 +177,6 @@ buildCardSettingsPanel() {
   });
 
   this.renderCardSettingsValues();
-}
-,
-
-/**
- * 单项步进（stepper − / +）；到边界后归一化结果不变，不触发重排版。
- * @param {string} key fontSize | lineHeight | pagePadding
- * @param {number} direction +1 / -1
- */
-stepCardLayoutSetting(key, direction) {
-  const limit = /** @type {Record<string, {step: number} | undefined>} */ (CARD_LAYOUT_LIMITS)[key];
-  if (!limit) return;
-  const current = this.getCurrentCardLayoutSettings();
-  const value = Number(current[key]);
-  const next = Math.round((value + direction * limit.step) * 10) / 10;
-  this.applyCardLayoutSetting(key, next);
 }
 ,
 
@@ -236,14 +224,14 @@ resetCardLayoutSettings() {
 }
 ,
 
-/** 打开浮层/设置变化后同步显示值（active 态、stepper 数值、checkbox） */
+/** 打开浮层/设置变化后同步显示值（active 态、滑块位置与数值） */
 renderCardSettingsValues() {
   const refs = cardSettingsStateOf(this).cardSettingsRefs;
   if (!refs) return;
   const settings = this.getCurrentCardLayoutSettings();
 
   if (refs.themeGrid) {
-    refs.themeGrid.querySelectorAll('.icard-settings-option').forEach((el) => {
+    refs.themeGrid.querySelectorAll('.apple-btn-size').forEach((el) => {
       (/** @type {HTMLElement} */ (el)).classList.toggle(
         'active',
         (/** @type {HTMLElement} */ (el)).dataset.value === settings.themeId,
@@ -251,22 +239,18 @@ renderCardSettingsValues() {
     });
   }
   if (refs.ratioGrid) {
-    refs.ratioGrid.querySelectorAll('.icard-settings-option').forEach((el) => {
+    refs.ratioGrid.querySelectorAll('.apple-btn-size').forEach((el) => {
       (/** @type {HTMLElement} */ (el)).classList.toggle(
         'active',
         (/** @type {HTMLElement} */ (el)).dataset.value === settings.ratioId,
       );
     });
   }
-  for (const [key, ui] of Object.entries(refs.steppers)) {
+  for (const [key, ui] of Object.entries(refs.sliders)) {
     const value = Number(settings[/** @type {'fontSize'|'lineHeight'|'pagePadding'} */ (key)]);
-    const formatter = /** @type {Record<string, (v: number) => string>} */ (STEPPER_FORMAT)[key];
+    ui.input.value = String(value);
+    const formatter = /** @type {Record<string, (v: number) => string>} */ (SLIDER_FORMAT)[key];
     ui.valueEl.textContent = formatter ? formatter(value) : String(value);
-    const limit = /** @type {Record<string, {min: number, max: number} | undefined>} */ (CARD_LAYOUT_LIMITS)[key];
-    if (limit) {
-      ui.minusBtn.disabled = value <= limit.min;
-      ui.plusBtn.disabled = value >= limit.max;
-    }
   }
 }
 ,

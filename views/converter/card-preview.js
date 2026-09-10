@@ -81,6 +81,7 @@ const OMISSION_LABELS = {
  * @typedef {{
  *   cardSessionRegistry?: import('../../services/card-session.js').CardSessionRegistryLike | null,
  *   cardPreviewZoom?: number,
+ *   cardPreviewZoomUserSet?: boolean,
  *   cardPreviewMergeTimer?: number | null,
  *   cardPreviewGeneration?: number,
  *   cardPreviewRunner?: { schedule(): Promise<{ applied: boolean, reason?: string } | null> } | null,
@@ -115,7 +116,7 @@ getCardSessions() {
 }
 ,
 
-/** @returns {number} 当前预览缩放（仅展示层，默认 0.6） */
+/** @returns {number} 当前预览缩放（仅展示层；未手动调整时按容器宽度自适应） */
 getCardPreviewZoom() {
   const selfRecord = cardStateOf(this);
   const zoom = typeof selfRecord.cardPreviewZoom === 'number' ? selfRecord.cardPreviewZoom : CARD_PREVIEW_ZOOM_DEFAULT;
@@ -126,7 +127,9 @@ getCardPreviewZoom() {
 /** @param {number} zoom */
 setCardPreviewZoom(zoom) {
   const clamped = Math.min(CARD_PREVIEW_ZOOM_MAX, Math.max(CARD_PREVIEW_ZOOM_MIN, zoom));
-  cardStateOf(this).cardPreviewZoom = clamped;
+  const selfRecord = cardStateOf(this);
+  selfRecord.cardPreviewZoom = clamped;
+  selfRecord.cardPreviewZoomUserSet = true;
   this.applyCardPreviewZoom();
 }
 ,
@@ -134,6 +137,26 @@ setCardPreviewZoom(zoom) {
 /** @param {number} direction +1 放大 / -1 缩小 */
 adjustCardPreviewZoom(direction) {
   this.setCardPreviewZoom(this.getCardPreviewZoom() + direction * CARD_PREVIEW_ZOOM_STEP);
+}
+,
+
+/**
+ * 首次渲染（用户未手动调过缩放）时按容器宽度自适应：取不产生横向滚动的最大缩放。
+ * 375px 卡片在侧栏 100% 会溢出，固定默认值要么太小要么溢出，自适应是两全解。
+ * @param {number} pageWidth 页面自然宽度（px）
+ */
+maybeAutoFitCardPreviewZoom(pageWidth) {
+  const selfRecord = cardStateOf(this);
+  if (selfRecord.cardPreviewZoomUserSet) return;
+  const shell = selfRecord.cardPreviewShell;
+  const available = shell
+    ? /** @type {HTMLElement} */ (/** @type {unknown} */ (shell)).clientWidth - 24
+    : 0;
+  if (!pageWidth || available < CARD_PREVIEW_ZOOM_MIN * pageWidth) return;
+  selfRecord.cardPreviewZoom = Math.min(
+    CARD_PREVIEW_ZOOM_MAX,
+    Math.max(CARD_PREVIEW_ZOOM_MIN, available / pageWidth),
+  );
 }
 ,
 
@@ -487,6 +510,7 @@ renderCardPreviewDom() {
   // —— 省略/资源诊断区（可展开、可定位、可确认；B03 ③④）——
   this.renderCardDiagnosticArea(shell, outcome, session);
   selfRec.cardRenderedLayoutKey = String(outcome.layoutKey);
+  this.maybeAutoFitCardPreviewZoom(Number(size.width));
   this.applyCardPreviewZoom();
   return /** @type {ObsidianElementLike} */ (/** @type {unknown} */ (shell));
 }
@@ -663,6 +687,7 @@ disposeCardPreview() {
   selfRecord.cardPreviewOutcome = null;
   selfRecord.cardPreviewShell = null;
   selfRecord.cardSelectedPageIndex = 0;
+  selfRecord.cardPreviewZoomUserSet = false;
   selfRecord.cardRenderedLayoutKey = '';
   if (selfRecord.cardSessionRegistry) {
     selfRecord.cardSessionRegistry.disposeAll();
