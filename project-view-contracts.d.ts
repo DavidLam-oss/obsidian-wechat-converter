@@ -398,6 +398,8 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     runCardLayoutPipeline(ctx: { layoutKey: string, isStale: () => boolean }): Promise<Record<string, unknown>>;
     /** 三模式操作按钮显隐的单一事实来源（B02 ①） */
     applyModeActionVisibility(): void;
+    /** 设置按钮 tooltip/aria-label 随模式切换（B03） */
+    updateSettingsButtonLabel(): void;
     getCardSessions(): unknown;
     getCardPreviewZoom(): number;
     setCardPreviewZoom(zoom: number): void;
@@ -409,6 +411,24 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     renderCardPreviewDom(): ObsidianElementLike | undefined;
     /** 版本安全源定位：结果过期时不跳转编辑器 */
     locateCardPageSource(pageIndex: number): void;
+    /** 源定位共用入口（行号 1-based；B03 从页定位与诊断定位共用） */
+    locateCardSourceLine(lineNumber: number): void;
+    /** 省略/资源诊断区：可展开明细 + 绑定版本的确认操作（B03） */
+    renderCardDiagnosticArea(shell: ObsidianElementLike, outcome: Record<string, unknown>, session: unknown): void;
+    /** 卡片设置浮层：一次性构建 DOM（createSettingsPanel 调用） */
+    buildCardSettingsPanel(): void;
+    /** 卡片设置浮层：同步显示值（active 态/stepper/checkbox） */
+    renderCardSettingsValues(): void;
+    /** 卡片设置：应用单项设置（值实际变化 → bumpConfig → 重排版） */
+    applyCardLayoutSetting(key: string, value: unknown): void;
+    /** 卡片设置：stepper 步进 */
+    stepCardLayoutSetting(key: string, direction: number): void;
+    /** 卡片设置：恢复当前默认 */
+    resetCardLayoutSettings(): void;
+    /** 卡片设置：当前笔记会话（无会话返回 null） */
+    getCardSettingsSession(): unknown;
+    /** 卡片设置：当前生效设置（无会话时为默认值） */
+    getCurrentCardLayoutSettings(): Record<string, unknown>;
     /** 视图关闭：销毁会话注册表与合并计时器 */
     disposeCardPreview(): void;
     /** 读取/初始化某个笔记的贴图交互状态（排序与排除项） */

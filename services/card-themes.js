@@ -9,7 +9,7 @@
 
 ## 输出
 
-`getCardTheme(id)` → 主题定义（token + 元信息）；`buildCardPageCss(theme)` → 以 `.icard` 为根的 scoped CSS 字符串。
+`getCardTheme(id)` → 主题定义（token + 元信息）；`buildCardPageCss(theme, typography?)` → 以 `.icard` 为根的 scoped CSS 字符串（typography 为 B03 排版覆盖：正文字号/行高/页面内边距，未提供项回落主题值）。
 
 ## 定位
 
@@ -99,12 +99,32 @@ export function hasCardTheme(id) {
 }
 
 /**
+ * 排版覆盖（B03）：字号/行高/边距；未提供的项回落主题 token 与固定值。
+ * @typedef {{
+ *   fontSize?: number,
+ *   lineHeight?: number,
+ *   pagePadding?: number,
+ * }} CardTypography
+ */
+
+/**
  * 构建主题 scoped CSS。所有选择器以 .icard 开头；颜色/字体全部来自 token，禁止宿主主题变量。
+ * typography（B03）仅覆盖正文字号/行高与页面内边距；标题层级、页脚、表格字号保持固定，
+ * 避免小字号下标题反向小于正文等失衡（归一化钳制在 card-settings-model.js）。
  * @param {CardTheme} theme
+ * @param {CardTypography} [typography]
  * @returns {string}
  */
-export function buildCardPageCss(theme) {
+export function buildCardPageCss(theme, typography = {}) {
   const t = theme.tokens;
+  const fs = Number(typography.fontSize) > 0 ? Number(typography.fontSize) : null;
+  const lh = Number(typography.lineHeight) > 0 ? Number(typography.lineHeight) : null;
+  const pad = Number(typography.pagePadding) > 0 ? Number(typography.pagePadding) : null;
+  const bodySize = fs !== null ? `${fs}px` : "14px";
+  const bodyLine = lh !== null ? `${lh}` : "1.7";
+  const liLine = lh !== null ? `${lh}` : "1.65";
+  // 引用/callout 正文比主字号小半档，保持视觉层级
+  const quoteSize = fs !== null ? `${Math.max(10, fs - 0.5)}px` : "13.5px";
   return `
 .icard {
   font-family: ${t.fontFamily};
@@ -115,7 +135,7 @@ export function buildCardPageCss(theme) {
   width: var(--icard-page-width, ${CARD_PAGE_WIDTH}px);
   min-height: var(--icard-page-height, ${CARD_PAGE_HEIGHT_3_4}px);
   box-sizing: border-box;
-  padding: ${t.pagePadding}px;
+  padding: ${pad !== null ? `${pad}px` : `${t.pagePadding}px`};
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -139,8 +159,8 @@ export function buildCardPageCss(theme) {
 .icard-content h4, .icard-content h5, .icard-content h6 { font-size: 15px; }
 .icard-content p {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: ${bodySize};
+  line-height: ${bodyLine};
   color: ${t.textColor};
 }
 .icard-content a {
@@ -167,8 +187,8 @@ export function buildCardPageCss(theme) {
    不用 ::marker——捕获引擎克隆与 Obsidian 宿主环境对 ::marker 的支持不一致，会丢圆点 */
 .icard-content li {
   position: relative;
-  font-size: 14px;
-  line-height: 1.65;
+  font-size: ${bodySize};
+  line-height: ${liLine};
   margin: 6px 0;
   padding-left: 18px;
 }
@@ -202,8 +222,8 @@ export function buildCardPageCss(theme) {
   background: ${t.quoteBackground};
   border-left: 3px solid ${t.accentColor};
   border-radius: 0 6px 6px 0;
-  font-size: 13.5px;
-  line-height: 1.65;
+  font-size: ${quoteSize};
+  line-height: ${liLine};
 }
 .icard-content blockquote .icard-callout-title {
   font-weight: 700;
@@ -211,7 +231,7 @@ export function buildCardPageCss(theme) {
   color: ${t.accentColor};
   margin-bottom: 4px;
 }
-.icard-content blockquote p { font-size: 13.5px; }
+.icard-content blockquote p { font-size: ${quoteSize}; }
 .icard-content table {
   border-collapse: collapse;
   width: 100%;

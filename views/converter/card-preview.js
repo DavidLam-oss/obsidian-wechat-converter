@@ -35,7 +35,7 @@ AppleStyleView 实例状态（previewMode/previewContainer/app 等）、当前�
 - 修改逻辑后同步更新本文件说明书，并检查所属目录 README 是否仍准确。
 - 预览 DOM 选择器以 icard- 前缀作用域（styles/card-preview.css 分片）。
 - 导出/复制入口在 B04/B05/C03 接入前保持禁用或不展示，不得提前放行。
-- 排版设置（主题/比例/字号）在 B03 接入；当前固定 3:4 + 默认主题。
+- 排版设置已在 B03 接入（会话归一化：card-settings-model.js）；主题/比例仍仅已验证值，C01 扩展。
 */
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call -- reason: AppleStyleView 方法组跨模块动态组合（同 sticker-preview），会话/runner 等合同字段以 unknown 持有，运行时语义由 B01 契约测试约束 */
@@ -52,7 +52,7 @@ import {
   createSnapshotResolver,
 } from '../../services/card-resources.js';
 import { renderCardPages, RATIO_PRESETS } from '../../services/card-render-engine.js';
-import { getCardTheme, DEFAULT_CARD_THEME_ID } from '../../services/card-themes.js';
+import { getCardTheme } from '../../services/card-themes.js';
 import {
   createCardSessionRegistry,
   createPreviewRunner,
@@ -90,6 +90,7 @@ const OMISSION_LABELS = {
  *   cardPreviewOutcome?: Record<string, any> | null,
  *   cardPreviewShell?: ObsidianElementLike | null,
  *   cardSelectedPageIndex?: number,
+ *   cardRenderedLayoutKey?: string,
  *   cardContentHashes?: Map<string, string>,
  *   cardResourceBudget?: import('../../services/card-resources.js').CardResourceSession | null
  * }} CardViewStateLike
@@ -148,11 +149,11 @@ applyCardPreviewZoom() {
     const width = Number(el.dataset.pageWidth || '0');
     const height = Number(el.dataset.pageHeight || '0');
     if (!width || !height) return;
-    el.style.width = `${Math.round(width * zoom)}px`;
-    el.style.height = `${Math.round(height * zoom)}px`;
+    el.style.setProperty('width', `${Math.round(width * zoom)}px`);
+    el.style.setProperty('height', `${Math.round(height * zoom)}px`);
     const inner = el.querySelector('.icard-page');
     if (inner instanceof HTMLElement) {
-      inner.style.transform = `scale(${zoom})`;
+      inner.style.setProperty('transform', `scale(${zoom})`);
     }
   });
 }
@@ -213,7 +214,6 @@ async renderCardPreview() {
   } else {
     selfRecord.cardContentHashes = new Map([[sourcePath, contentHash]]);
   }
-
   // 会话绑定 runner：换篇时重建；渲染负载先落 lastOutcome，settle 生效后转正
   if (!selfRecord.cardPreviewRunner || selfRecord.cardPreviewRunnerNoteId !== session.noteId) {
     selfRecord.cardPreviewRunnerNoteId = session.noteId;
@@ -253,6 +253,10 @@ async resolveCardMarkdownSource() {
 async runCardLayoutPipeline(ctx) {
   const selfRecord = cardStateOf(this);
   const input = selfRecord.cardPreviewPendingInput || { markdown: '', sourcePath: '' };
+  // B03：排版设置来自会话（归一化后），调整设置 → bumpConfig → 新版本重排
+  const settings = typeof (/** @type {any} */ (this).getCurrentCardLayoutSettings) === 'function'
+    ? /** @type {any} */ (this).getCurrentCardLayoutSettings()
+    : { themeId: 'clear-notes', ratioId: '3:4', fontSize: 14, lineHeight: 1.7, pagePadding: 28 };
   const cardDoc = createCardDocument(String(input.markdown || ''));
 
   const imageRefs = [];
@@ -273,11 +277,18 @@ async runCardLayoutPipeline(ctx) {
   await pool.waitForFonts(window.document);
   if (ctx.isStale()) return { ok: false, stale: true };
 
-  const theme = getCardTheme(DEFAULT_CARD_THEME_ID);
-  const size = { width: RATIO_PRESETS['3:4'].width, height: RATIO_PRESETS['3:4'].height };
+  // settings 已经过会话归一化（白名单主题/比例、钳制数值），直接取用
+  const theme = getCardTheme(String(settings.themeId || 'clear-notes'));
+  const size = RATIO_PRESETS[String(settings.ratioId || '3:4')] || RATIO_PRESETS['3:4'];
+  const typography = {
+    fontSize: Number(settings.fontSize),
+    lineHeight: Number(settings.lineHeight),
+    pagePadding: Number(settings.pagePadding),
+  };
   const result = await renderCardPages(cardDoc, {
     theme,
     size,
+    typography,
     resolveImageSrc: createSnapshotResolver(resources),
     resources,
     document: window.document,
@@ -291,6 +302,7 @@ async runCardLayoutPipeline(ctx) {
     plan: result.plan,
     cardDoc,
     resources,
+    settings,
     diagnostics: result.diagnostics || [],
     omissionSummary: cardDoc.omissionSummary || { total: 0 },
     pageCount: result.ok ? result.pages.length : 0,
@@ -370,6 +382,14 @@ renderCardPreviewDom() {
     return undefined;
   }
 
+  // B03：上一渲染版本之后发生过 bump（正文/设置/主题）且当时有页选中 → 选择已失效，提示并重置
+  const selfRec = cardStateOf(this);
+  const prevRenderedKey = String(selfRec.cardRenderedLayoutKey || '');
+  const selectionResetNotice = Boolean(
+    prevRenderedKey && prevRenderedKey !== String(outcome.layoutKey) && Number(selfRec.cardSelectedPageIndex || 0) > 0,
+  );
+  if (selectionResetNotice) selfRec.cardSelectedPageIndex = 0;
+
   const container = this.previewContainer;
   if (!container) return undefined;
   container.empty();
@@ -384,6 +404,12 @@ renderCardPreviewDom() {
   summary.createEl('span', { cls: 'icard-preview-summary-count', text: `共 ${pageCount} 页` });
   if (state.stale) {
     summary.createEl('span', { cls: 'icard-preview-summary-stale', text: '正文已更新，正在重新排版…' });
+  }
+  if (selectionResetNotice) {
+    summary.createEl('span', {
+      cls: 'icard-preview-chip is-info',
+      text: '排版已更新，页选择已重置为全部',
+    });
   }
   const omissionTotal = Number(outcome?.omissionSummary?.total || 0);
   if (omissionTotal > 0) {
@@ -405,6 +431,22 @@ renderCardPreviewDom() {
       cls: 'icard-preview-chip is-error',
       text: '部分图片未能加载，导出前需处理',
     });
+  }
+
+  // —— 全文省略空态（§B03 ⑤：正文全部未进入卡片时不产空白卡，逐条可定位）——
+  if (pageCount === 0 && omissionTotal > 0) {
+    const allOmitted = shell.createEl('div', { cls: 'icard-preview-empty is-all-omitted' });
+    allOmitted.createEl('div', {
+      cls: 'icard-preview-empty-title',
+      text: '正文内容均无法进入卡片',
+    });
+    allOmitted.createEl('div', {
+      cls: 'icard-preview-empty-desc',
+      text: '下方列出了每一条未进入卡片的内容及其在原文中的位置；修改笔记后可重新排版。当前状态无法导出。',
+    });
+    this.renderCardDiagnosticArea(shell, outcome, session);
+    selfRec.cardRenderedLayoutKey = String(outcome.layoutKey);
+    return /** @type {ObsidianElementLike} */ (/** @type {unknown} */ (shell));
   }
 
   // —— 缩放控制（仅展示层）——
@@ -442,8 +484,132 @@ renderCardPreviewDom() {
       this.locateCardPageSource(index + 1);
     });
   });
+  // —— 省略/资源诊断区（可展开、可定位、可确认；B03 ③④）——
+  this.renderCardDiagnosticArea(shell, outcome, session);
+  selfRec.cardRenderedLayoutKey = String(outcome.layoutKey);
   this.applyCardPreviewZoom();
   return /** @type {ObsidianElementLike} */ (/** @type {unknown} */ (shell));
+}
+,
+
+/**
+ * 省略/资源诊断区（B03）：可展开明细（类型 + 摘录 + 定位原文）、
+ * 绑定版本的省略确认操作（bump 后自动失效，由会话保证）。
+ * @param {ObsidianElementLike} shell
+ * @param {Record<string, any>} outcome
+ * @param {import('../../services/card-session.js').CardNoteSessionLike} session
+ */
+renderCardDiagnosticArea(shell, outcome, session) {
+  const omissionTotal = Number(outcome?.omissionSummary?.total || 0);
+  const resourceBlocking = outcome?.resources?.hasBlockingFailures === true;
+  if (!omissionTotal && !resourceBlocking) return;
+
+  const area = shell.createEl('div', { cls: 'icard-preview-diagnostics' });
+  const toggle = area.createEl('button', {
+    cls: 'icard-preview-diagnostics-toggle',
+    text: '查看未进入卡片的内容',
+    attr: { 'aria-expanded': 'false', 'title': '展开省略明细' },
+  });
+  const list = area.createEl('div', { cls: 'icard-preview-diagnostics-list hidden' });
+  toggle.addEventListener('click', () => {
+    const hidden = list.classList.toggle('hidden');
+    toggle.setAttribute('aria-expanded', hidden ? 'false' : 'true');
+    toggle.textContent = hidden ? '查看未进入卡片的内容' : '收起明细';
+  });
+
+  const blocks = Array.isArray(outcome?.cardDoc?.blocks) ? outcome.cardDoc.blocks : [];
+  const diagnostics = Array.isArray(outcome?.diagnostics) ? outcome.diagnostics : [];
+  for (const diag of diagnostics) {
+    const block = blocks.find((b) => b && b.id === diag?.blockId);
+    const excerpt = String(block?.text || diag?.detail || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+    this.appendCardDiagnosticRow(area, list, {
+      kind: OMISSION_LABELS[String(diag?.reason || '')] || String(diag?.reason || '未进入卡片'),
+      excerpt,
+      sourceStart: Number(diag?.sourceStart || 0),
+      highRisk: diag?.highRisk === true,
+    });
+  }
+  if (resourceBlocking) {
+    const failed = Array.isArray(outcome?.resources?.failures) ? outcome.resources.failures : [];
+    for (const failure of failed.slice(0, 20)) {
+      this.appendCardDiagnosticRow(area, list, {
+        kind: '图片加载失败',
+        excerpt: String(failure?.ref || failure?.message || ''),
+        sourceStart: Number(failure?.sourceStart || 0),
+        highRisk: false,
+      });
+    }
+  }
+
+  if (omissionTotal > 0) {
+    // 确认绑定本次渲染版本（layoutKey 已含正文+设置+主题+资源）：任一 bump 后自动失效
+    const diagnosticVersion = String(outcome?.layoutKey || '');
+    if (session.isOmissionConfirmed(diagnosticVersion)) {
+      area.createEl('div', {
+        cls: 'icard-preview-omission-confirmed',
+        text: '已确认接受本次省略（内容或设置更新后需重新确认）',
+      });
+    } else {
+      const confirmBtn = area.createEl('button', {
+        cls: 'icard-preview-omission-confirm',
+        text: '已知悉以上内容不会进入卡片，接受本次省略',
+        attr: { 'title': '确认后才能导出；正文或排版设置变化后需重新确认' },
+      });
+      confirmBtn.addEventListener('click', () => {
+        session.confirmOmissions(diagnosticVersion);
+        this.renderCardPreviewDom();
+      });
+    }
+  }
+}
+,
+
+/**
+ * 诊断明细行：类型 + 摘录 +（可定位时）定位按钮。
+ * @param {ObsidianElementLike} area
+ * @param {ObsidianElementLike} list
+ * @param {{ kind: string, excerpt: string, sourceStart: number, highRisk: boolean }} item
+ */
+appendCardDiagnosticRow(area, list, item) {
+  const row = list.createEl('div', { cls: 'icard-preview-diagnostic-row' });
+  row.createEl('span', {
+    cls: `icard-preview-diagnostic-type${item.highRisk ? ' is-high-risk' : ''}`,
+    text: item.kind,
+  });
+  row.createEl('span', {
+    cls: 'icard-preview-diagnostic-excerpt',
+    text: item.excerpt || '（无文本摘录）',
+  });
+  if (item.sourceStart >= 1) {
+    const locateBtn = row.createEl('button', {
+      cls: 'icard-preview-diagnostic-locate',
+      text: '定位',
+      attr: { 'aria-label': `定位到原文第 ${item.sourceStart} 行`, 'title': '在编辑器中定位原文' },
+    });
+    locateBtn.addEventListener('click', () => this.locateCardSourceLine(item.sourceStart));
+  }
+}
+,
+
+/**
+ * 源定位（B03 抽取，供页定位与诊断定位共用）：行号 1-based；编辑器不可用时静默跳过。
+ * @param {number} lineNumber 1-based
+ */
+locateCardSourceLine(lineNumber) {
+  const line = Number(lineNumber);
+  if (!Number.isFinite(line) || line < 1) return;
+  try {
+    const markdownView = this.app?.workspace?.getActiveViewOfType?.(MarkdownView);
+    const editor = /** @type {any} */ (markdownView?.editor);
+    if (!editor) return;
+    const zeroBased = Math.max(0, line - 1);
+    if (typeof editor.setCursor === 'function') editor.setCursor({ line: zeroBased, ch: 0 });
+    if (typeof editor.scrollIntoView === 'function') {
+      editor.scrollIntoView({ from: { line: zeroBased, ch: 0 }, to: { line: zeroBased, ch: 0 } }, true);
+    }
+  } catch {
+    // 编辑器不可用（如弹窗状态）时静默跳过定位
+  }
 }
 ,
 
@@ -497,6 +663,7 @@ disposeCardPreview() {
   selfRecord.cardPreviewOutcome = null;
   selfRecord.cardPreviewShell = null;
   selfRecord.cardSelectedPageIndex = 0;
+  selfRecord.cardRenderedLayoutKey = '';
   if (selfRecord.cardSessionRegistry) {
     selfRecord.cardSessionRegistry.disposeAll();
     selfRecord.cardSessionRegistry = null;

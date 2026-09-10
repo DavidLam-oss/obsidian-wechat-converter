@@ -104,6 +104,7 @@
 .icard-preview-pages {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 14px;
   align-content: flex-start;
 }
@@ -168,4 +169,117 @@
   font-size: 12px;
   color: var(--text-muted);
   max-width: 420px;
+}
+
+/* —— B03 诊断区（省略/资源失败明细 + 确认闭环）—— */
+
+.icard-preview-chip.is-info {
+  background: var(--background-modifier-hover);
+  color: var(--text-muted);
+}
+
+.icard-preview-diagnostics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-secondary);
+}
+
+.icard-preview-diagnostics-toggle {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.icard-preview-diagnostics-toggle:hover {
+  background: var(--background-modifier-border);
+}
+
+.icard-preview-diagnostics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.icard-preview-diagnostic-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.icard-preview-diagnostic-type {
+  flex: 0 0 auto;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: rgba(255, 179, 0, 0.16);
+  color: var(--text-warning, #8a6d00);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.icard-preview-diagnostic-type.is-high-risk {
+  background: rgba(224, 62, 62, 0.14);
+  color: var(--text-error, #b3261e);
+}
+
+.icard-preview-diagnostic-excerpt {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icard-preview-diagnostic-locate {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-normal);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.icard-preview-diagnostic-locate:hover {
+  background: var(--background-modifier-hover);
+}
+
+.icard-preview-omission-confirm {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 5px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent, #fff);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.icard-preview-omission-confirm:hover {
+  filter: brightness(1.08);
+}
+
+.icard-preview-omission-confirmed {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 全文省略空态 */
+.icard-preview-empty.is-all-omitted {
+  align-items: flex-start;
+  text-align: left;
+  padding: 24px 12px 8px;
 }

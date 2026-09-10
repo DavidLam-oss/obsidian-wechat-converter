@@ -117,8 +117,8 @@ describe('AppleStyleView - Card Mode (B02)', () => {
     view.applyModeActionVisibility();
     expect(view.aiLayoutBtn.classList.contains('hidden')).toBe(true);
     expect(view.copyBtn.classList.contains('hidden')).toBe(true);
-    // 卡片设置 B03 接入前隐藏文章设置入口
-    expect(view.settingsBtn.classList.contains('hidden')).toBe(true);
+    // B03：卡片模式也显示设置入口（打开卡片排版设置浮层），label 随模式切换
+    expect(view.settingsBtn.classList.contains('hidden')).toBe(false);
     expect(view.cardExportBtn.classList.contains('hidden')).toBe(false);
     expect(view.publishBtn.classList.contains('hidden')).toBe(true);
   });

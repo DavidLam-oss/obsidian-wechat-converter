@@ -31,6 +31,7 @@ import { settingsPanelMethods } from './converter/settings-panel.js';
 import { panelShellMethods } from './converter/panel-shell.js';
 import { stickerPreviewMethods } from './converter/sticker-preview.js';
 import { cardPreviewMethods } from './converter/card-preview.js';
+import { cardSettingsMethods } from './converter/card-settings.js';
 import { aiLayoutPanelMethods } from './converter/ai-layout-panel.js';
 import { aiLayoutDebugMethods } from './converter/ai-layout-debug.js';
 import { clipboardMethods } from './converter/clipboard.js';
@@ -308,6 +309,7 @@ Object.assign(
   panelShellMethods,
   stickerPreviewMethods,
   cardPreviewMethods,
+  cardSettingsMethods,
   aiLayoutPanelMethods,
   aiLayoutDebugMethods,
   clipboardMethods,

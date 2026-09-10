@@ -150,26 +150,34 @@ closeTransientPanels() {
 toggleSettingsPanel() {
   const artWrapper = /** @type {unknown} */ (this.articleSettingsWrapper);
   const stkWrapper = /** @type {unknown} */ (this.stickerSettingsWrapper);
+  const cardWrapper = /** @type {unknown} */ (this.cardSettingsWrapper);
+
+  /** @param {unknown} wrapper @param {boolean} hidden */
+  const setWrapperHidden = (wrapper, hidden) => {
+    if (wrapper && typeof wrapper === 'object' && 'classList' in wrapper) {
+      (/** @type {Element} */ (wrapper)).classList.toggle('hidden', hidden);
+    }
+  };
 
   if (this.previewMode === 'sticker') {
-    if (artWrapper && typeof artWrapper === 'object' && 'classList' in artWrapper) {
-      /** @type {Element} */ (artWrapper).classList.add('hidden');
-    }
-    if (stkWrapper && typeof stkWrapper === 'object' && 'classList' in stkWrapper) {
-      /** @type {Element} */ (stkWrapper).classList.remove('hidden');
-    }
+    setWrapperHidden(artWrapper, true);
+    setWrapperHidden(stkWrapper, false);
+    setWrapperHidden(cardWrapper, true);
     const toggleState = toRecord(this.stickerIndexToggleState);
     const checkbox = toggleState ? toRecord(toggleState.checkbox) : null;
     if (checkbox && typeof checkbox.checked === 'boolean') {
       checkbox.checked = Boolean(this.insertStickerImageIndex);
     }
+  } else if (this.previewMode === 'card') {
+    setWrapperHidden(artWrapper, true);
+    setWrapperHidden(stkWrapper, true);
+    setWrapperHidden(cardWrapper, false);
+    // 打开时同步当前会话设置值（换篇/重排后可能已变化）
+    if (typeof this.renderCardSettingsValues === 'function') this.renderCardSettingsValues();
   } else {
-    if (stkWrapper && typeof stkWrapper === 'object' && 'classList' in stkWrapper) {
-      /** @type {Element} */ (stkWrapper).classList.add('hidden');
-    }
-    if (artWrapper && typeof artWrapper === 'object' && 'classList' in artWrapper) {
-      /** @type {Element} */ (artWrapper).classList.remove('hidden');
-    }
+    setWrapperHidden(stkWrapper, true);
+    setWrapperHidden(cardWrapper, true);
+    setWrapperHidden(artWrapper, false);
   }
 
   this.togglePanel(this.settingsOverlay, this.settingsBtn, () => this.resetSettingsPanelViewState());
@@ -230,11 +238,23 @@ applyModeActionVisibility() {
   };
   setVisible(this.aiLayoutBtn, mode === 'article');
   setVisible(this.copyBtn, mode === 'article');
-  // 卡片设置在 B03 接入，期间卡片模式隐藏文章设置入口
-  setVisible(this.settingsBtn, mode !== 'card');
+  // 卡片模式也显示设置入口（B03：打开卡片排版设置浮层），但 label 随模式切换
+  setVisible(this.settingsBtn, true);
+  this.updateSettingsButtonLabel();
   setVisible(this.cardExportBtn, mode === 'card');
   setVisible(this.publishBtn, mode !== 'card');
   if (typeof this.updateAiToolbarState === 'function') this.updateAiToolbarState();
+}
+,
+
+/** 设置按钮 tooltip/aria-label 随模式切换（B03：卡片模式指向卡片排版设置） */
+updateSettingsButtonLabel() {
+  const btn = /** @type {unknown} */ (this.settingsBtn);
+  if (!btn || typeof btn !== 'object' || !('setAttribute' in btn)) return;
+  const label = this.previewMode === 'card' ? '图片卡片排版设置' : '公众号排版样式设置';
+  const el = /** @type {Element} */ (btn);
+  el.setAttribute('aria-label', label);
+  el.setAttribute('title', label);
 }
 ,
 };
