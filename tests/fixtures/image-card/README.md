@@ -12,7 +12,7 @@
 | `s3-callout-table.md` | callout 与表格 | note/warning callout 区分、小表格完整保留、大表格省略需确认、表格内行内样式 |
 | `s4-images.md` | 静态图片 | 相对路径 / wiki / 远程图引用识别、图片说明同页倾向、空 alt |
 | `s5-filtered.md` | 过滤内容 | 代码块×3、Mermaid×1、GIF×1、块级公式×1 的互斥计数；行内公式整段/整项省略并高风险标记 |
-| `s6-pagination.md` | 分页符边界 | 独立块级 `<!-- card:break -->`×5；围栏/行内代码内伪标记不触发；`---`/Setext `===` 语义保持；首尾/连续不产生空白页 |
+| `s6-pagination.md` | 分页符边界 | 独立块级 `<!-- card:break -->`×4 + 独立成行 `===`×1（默认即分页符）；围栏/行内代码内伪标记不触发；`---` 保持分割线；首尾/连续不产生空白页 |
 | `s7-long-cover.md` | 长封面字段 | frontmatter 超长 title/author/description 不静默裁切；日期只读有效元数据；正文不受影响 |
 
 ## 资源

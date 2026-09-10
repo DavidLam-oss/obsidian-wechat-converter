@@ -5,67 +5,249 @@
       "expectOmissionTotal": 0,
       "expectPaginationMarkers": 0,
       "expectBlocks": [
-        { "type": "heading", "level": 1, "sourceLine": 1 },
-        { "type": "heading", "level": 2, "sourceLine": 3 },
-        { "type": "paragraph", "sourceLine": 5 },
-        { "type": "paragraph", "sourceLine": 7 },
-        { "type": "heading", "level": 3, "sourceLine": 9 },
-        { "type": "paragraph", "sourceLine": 11 },
-        { "type": "paragraph", "sourceLine": 13 },
-        { "type": "paragraph", "sourceLine": 15 },
-        { "type": "paragraph", "sourceLine": 17 }
+        {
+          "type": "heading",
+          "level": 1,
+          "sourceLine": 1
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 3
+        },
+        {
+          "type": "paragraph",
+          "sourceLine": 5
+        },
+        {
+          "type": "paragraph",
+          "sourceLine": 7
+        },
+        {
+          "type": "heading",
+          "level": 3,
+          "sourceLine": 9
+        },
+        {
+          "type": "paragraph",
+          "sourceLine": 11
+        },
+        {
+          "type": "paragraph",
+          "sourceLine": 13
+        },
+        {
+          "type": "paragraph",
+          "sourceLine": 15
+        },
+        {
+          "type": "paragraph",
+          "sourceLine": 17
+        }
       ]
     },
     "s2-long-lists.md": {
       "expectOmissionTotal": 0,
       "expectPaginationMarkers": 0,
       "expectBlocks": [
-        { "type": "heading", "level": 1, "sourceLine": 1 },
-        { "type": "heading", "level": 2, "sourceLine": 3 },
-        { "type": "paragraph", "sourceLine": 5, "notes": "超长段落，允许行级拆分为片段；片段须无重叠覆盖原块" },
-        { "type": "heading", "level": 2, "sourceLine": 7 },
-        { "type": "list", "ordered": false, "sourceLine": 9, "notes": "嵌套三层" },
-        { "type": "heading", "level": 2, "sourceLine": 17 },
-        { "type": "list", "ordered": true, "itemCount": 5, "sourceLine": 19, "notes": "续页时显式续号" },
-        { "type": "heading", "level": 2, "sourceLine": 25 },
-        { "type": "list", "taskList": true, "sourceLine": 27 },
-        { "type": "heading", "level": 2, "sourceLine": 31 },
-        { "type": "blockquote", "sourceLine": 33 },
-        { "type": "heading", "level": 2, "sourceLine": 36 },
-        { "type": "list", "sourceLine": 38, "notes": "单个超长列表项，允许项内拆分" }
+        {
+          "type": "heading",
+          "level": 1,
+          "sourceLine": 1
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 3
+        },
+        {
+          "type": "paragraph",
+          "sourceLine": 5,
+          "notes": "超长段落，允许行级拆分为片段；片段须无重叠覆盖原块"
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 7
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "sourceLine": 9,
+          "notes": "嵌套三层"
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 17
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "itemCount": 5,
+          "sourceLine": 19,
+          "notes": "续页时显式续号"
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 25
+        },
+        {
+          "type": "list",
+          "taskList": true,
+          "sourceLine": 27
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 31
+        },
+        {
+          "type": "blockquote",
+          "sourceLine": 33
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 36
+        },
+        {
+          "type": "list",
+          "sourceLine": 38,
+          "notes": "单个超长列表项，允许项内拆分"
+        }
       ]
     },
     "s3-callout-table.md": {
       "expectOmissionTotal": 0,
       "expectPaginationMarkers": 0,
       "expectBlocks": [
-        { "type": "heading", "level": 1, "sourceLine": 1 },
-        { "type": "heading", "level": 2, "sourceLine": 3 },
-        { "type": "callout", "calloutType": "note", "sourceLine": 5 },
-        { "type": "callout", "calloutType": "warning", "sourceLine": 9 },
-        { "type": "heading", "level": 2, "sourceLine": 12 },
-        { "type": "table", "sourceLine": 14, "notes": "小表格，应完整保留" },
-        { "type": "heading", "level": 2, "sourceLine": 20 },
-        { "type": "table", "sourceLine": 22, "notes": "大表格：实际测量放不下时省略并要求确认，不输出占位图" },
-        { "type": "heading", "level": 2, "sourceLine": 45 },
-        { "type": "table", "sourceLine": 47, "notes": "含行内样式的表格" }
+        {
+          "type": "heading",
+          "level": 1,
+          "sourceLine": 1
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 3
+        },
+        {
+          "type": "callout",
+          "calloutType": "note",
+          "sourceLine": 5
+        },
+        {
+          "type": "callout",
+          "calloutType": "warning",
+          "sourceLine": 9
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 12
+        },
+        {
+          "type": "table",
+          "sourceLine": 14,
+          "notes": "小表格，应完整保留"
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 20
+        },
+        {
+          "type": "table",
+          "sourceLine": 22,
+          "notes": "大表格：实际测量放不下时省略并要求确认，不输出占位图"
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 45
+        },
+        {
+          "type": "table",
+          "sourceLine": 47,
+          "notes": "含行内样式的表格"
+        }
       ]
     },
     "s4-images.md": {
       "expectOmissionTotal": 0,
       "expectPaginationMarkers": 0,
       "expectBlocks": [
-        { "type": "heading", "level": 1, "sourceLine": 1 },
-        { "type": "heading", "level": 2, "sourceLine": 3 },
-        { "type": "paragraph", "sourceLine": 5, "images": [{ "ref": "./assets/sample.png", "kind": "local" }] },
-        { "type": "heading", "level": 2, "sourceLine": 7 },
-        { "type": "paragraph", "sourceLine": 9, "images": [{ "ref": "wiki-photo.png", "kind": "wiki" }] },
-        { "type": "heading", "level": 2, "sourceLine": 11 },
-        { "type": "paragraph", "sourceLine": 13, "images": [{ "ref": "https://example.com/images/remote-sample.png", "kind": "remote" }] },
-        { "type": "heading", "level": 2, "sourceLine": 15 },
-        { "type": "paragraph", "sourceLine": 17, "notes": "图片+说明同段落，尽量同页" },
-        { "type": "heading", "level": 2, "sourceLine": 20 },
-        { "type": "paragraph", "sourceLine": 22 }
+        {
+          "type": "heading",
+          "level": 1,
+          "sourceLine": 1
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 3
+        },
+        {
+          "type": "paragraph",
+          "sourceLine": 5,
+          "images": [
+            {
+              "ref": "./assets/sample.png",
+              "kind": "local"
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 7
+        },
+        {
+          "type": "paragraph",
+          "sourceLine": 9,
+          "images": [
+            {
+              "ref": "wiki-photo.png",
+              "kind": "wiki"
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 11
+        },
+        {
+          "type": "paragraph",
+          "sourceLine": 13,
+          "images": [
+            {
+              "ref": "https://example.com/images/remote-sample.png",
+              "kind": "remote"
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 15
+        },
+        {
+          "type": "paragraph",
+          "sourceLine": 17,
+          "notes": "图片+说明同段落，尽量同页"
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 20
+        },
+        {
+          "type": "paragraph",
+          "sourceLine": 22
+        }
       ]
     },
     "s5-filtered.md": {
@@ -80,24 +262,53 @@
       },
       "expectPaginationMarkers": 0,
       "expectHighRisk": [
-        { "sourceLine": 31, "notes": "行内公式段落，整段省略" },
-        { "sourceLine": 34, "notes": "行内公式列表项，整项省略" }
+        {
+          "sourceLine": 31,
+          "notes": "行内公式段落，整段省略"
+        },
+        {
+          "sourceLine": 34,
+          "notes": "行内公式列表项，整项省略"
+        }
       ],
-      "expectKeptTrailing": { "type": "paragraph", "sourceLine": 49, "notes": "结尾正常段必须保留" }
+      "expectKeptTrailing": {
+        "type": "paragraph",
+        "sourceLine": 49,
+        "notes": "结尾正常段必须保留"
+      }
     },
     "s6-pagination.md": {
-      "expectPaginationMarkers": 4,
-      "expectMarkerLines": [3, 9, 15, 15],
-      "notes": "默认配置（=== 兼容关闭）：独立块级 card:break 共 4 处（L3、L9、L15 连写 2 处）。围栏内（L24）与行内代码内（L31）的伪标记不触发。--- 保持分割线（L35），=== 保持 Setext 标题（L41-42）。首/尾/连续分页符不产生空白页（分页阶段验证，此处断言标记位置）。开启 === 兼容后 L42 变为分页符且 L41 不再是标题，需独立断言（标记数 5）。",
+      "expectPaginationMarkers": 5,
+      "expectMarkerLines": [
+        3,
+        9,
+        15,
+        15,
+        42
+      ],
+      "notes": "独立块级 card:break 共 4 处（L3、L9、L15 连写 2 处）+ L42 独立成行 ===（默认即分页符）。围栏内（L24）与行内代码内（L31）的伪标记不触发。--- 保持分割线（L35）。=== 一律作分页符：L42 成为标记且 L41 降级为普通段。首/尾/连续分页符不产生空白页（分页阶段验证）。",
       "expectOmissionTotal": 0,
       "expectSegmentsMinPages": 4,
-      "expectSetextHeading": { "type": "heading", "sourceLine": 41 },
-      "expectHr": { "sourceLine": 35 }
+      "expectHr": {
+        "sourceLine": 35
+      },
+      "expectEqualsBreak": {
+        "markerLine": 42,
+        "prevBlockType": "paragraph",
+        "prevBlockSourceLine": 41
+      }
     },
     "s7-long-cover.md": {
       "expectPaginationMarkers": 0,
       "expectOmissionTotal": 0,
-      "expectFrontmatter": { "startLine": 1, "endLine": 9, "hasTitle": true, "hasAuthor": true, "hasDate": true, "hasDescription": true },
+      "expectFrontmatter": {
+        "startLine": 1,
+        "endLine": 9,
+        "hasTitle": true,
+        "hasAuthor": true,
+        "hasDate": true,
+        "hasDescription": true
+      },
       "expectCoverFields": {
         "title": "超长，不静默裁切，触发提示或排版调整",
         "author": "超长",
@@ -105,10 +316,24 @@
         "description": "超长，不静默裁切"
       },
       "expectBlocks": [
-        { "type": "heading", "level": 1, "sourceLine": 11 },
-        { "type": "paragraph", "sourceLine": 13 },
-        { "type": "heading", "level": 2, "sourceLine": 15 },
-        { "type": "paragraph", "sourceLine": 17 }
+        {
+          "type": "heading",
+          "level": 1,
+          "sourceLine": 11
+        },
+        {
+          "type": "paragraph",
+          "sourceLine": 13
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "sourceLine": 15
+        },
+        {
+          "type": "paragraph",
+          "sourceLine": 17
+        }
       ]
     }
   }

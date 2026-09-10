@@ -5,22 +5,22 @@
 
 ## 输入
 
-Markdown 源字符串；options：`enableLegacyEqualsBreak`（旧版 `===` 分页兼容，默认关闭）、`markdownIt`（可选注入实例）。
+Markdown 源字符串；options：`markdownIt`（可选注入实例）。
 
 ## 输出
 
 `createCardDocument()` → CardDocument：
 - `blocks[]`：每个块含 id/parentId/type/level/ordered/taskList/calloutType/sourceStart/sourceEnd（1-based，含 frontmatter 行号）/disposition（render|omit|marker）/omitReason/highRisk/images/items 等；
 - `frontmatter`：范围 + 简单字段抽取（title/author/date/description）；
-- `paginationMarkers`：独立块级 `<!-- card:break -->` 的 1-based 行位置（连写按出现次数展开）；
+- `paginationMarkers`：手动分页指令（独立成行的 `===` 或块级 `<!-- card:break -->`）的 1-based 行位置（连写按出现次数展开）；
 - `diagnostics[]` / `omissionSummary`：互斥主要原因计数（codeBlock/mermaid/gif/blockFormula/inlineFormula/unsupportedEmbed）；
 - `meta`：hasRenderableContent / onlyCoverCandidate。
 
 ## 边界（一期规则，源自规划 §4.1/§4.2）
 
 - 代码块、Mermaid、GIF、块级公式默认省略并计数；行内公式所在段/列表项整块省略并标记高风险。
-- 分页指令只在「独立块级」HTML 注释块上生效；frontmatter、围栏代码、行内代码中的同串不触发；不做全局正则替换。
-- `---` 保持分割线语义；`===` 默认保持 Setext 标题语义，开启兼容后仅 Setext 位置的独立 `===` 行转为分页符（1:1 行替换，行号不变）。
+- 分页指令只在「独立块级」位置生效：独立成行的 `===`（小白友好简写）或独立块级 HTML 注释 `<!-- card:break -->`；frontmatter、围栏代码、行内代码中的同串不触发；不做全局正则替换。
+- `---` 保持分割线语义；`===` 一律作分页符（Setext 两行标题在卡片模式不支持，一级标题请用 `#`）。
 - 不修改源 Markdown；所有解析基于副本。
 - 未支持的自定义 HTML / 非 图片类 wiki 嵌入 → unsupportedEmbed 诊断，不静默丢弃。
 
@@ -126,7 +126,6 @@ const OMIT_REASON_KEYS = [
  *   diagnostics: CardDiagnostic[],
  *   omissionSummary: Record<string, number> & {total: number},
  *   meta: {hasRenderableContent: boolean, onlyCoverCandidate: boolean, blockCount: number},
- *   options: {enableLegacyEqualsBreak: boolean},
  * }} CardDocument
  */
 
@@ -196,28 +195,24 @@ function scanFenceLines(lines) {
 }
 
 /**
- * 旧版 `===` 兼容：把「Setext 位置」的独立 `===` 行替换为分页注释（仅解析副本，1:1 行替换，行号不变）。
+ * `===` 分页符：正文里「独立成行的 `===`」一律替换为分页注释（仅解析副本，1:1 行替换，行号不变）。
+ * 规则对小白最简单：写 `===` 那一行就是分页；代价是 Setext 两行标题（`文字\n===`）在卡片模式
+ * 不再可用（用 `#` 一级标题代替）。frontmatter 与围栏代码内不触发。
  * @param {string[]} lines 全文行
  * @param {number} bodyStart 正文起始 0-based 行号
  * @returns {{parseLines: string[], replacedLines: Set<number>}}
  */
-function applyLegacyEqualsBreak(lines, bodyStart) {
+function applyEqualsBreaks(lines, bodyStart) {
   const parseLines = lines.slice();
   const replacedLines = new Set();
   const { inFence } = scanFenceLines(lines);
-  for (let i = Math.max(bodyStart, 1); i < lines.length; i++) {
+  for (let i = Math.max(bodyStart, 0); i < lines.length; i++) {
     if (inFence.has(i)) continue;
     if (lines[i].trim() !== "===") continue;
-    if (i - 1 < bodyStart || isBlankLine(lines[i - 1])) continue;
-    // 仅替换独立成行的 `===`（Setext 位置）；下一行若是表格/列表延续等结构则不动（保持保守）
     parseLines[i] = "<!-- card:break -->";
     replacedLines.add(i);
   }
   return { parseLines, replacedLines };
-}
-
-function isBlankLine(line) {
-  return !line || !line.trim();
 }
 
 /**
@@ -282,12 +277,11 @@ function collectImages(parseLines, relStart, relEnd, bodyOffset = 0) {
 /**
  * 创建卡片内容账本。
  * @param {string} markdown
- * @param {{enableLegacyEqualsBreak?: boolean, markdownIt?: unknown}} [options]
+ * @param {{markdownIt?: unknown}} [options]
  * @returns {CardDocument}
  */
 export function createCardDocument(markdown, options = {}) {
   const source = String(markdown ?? "");
-  const enableLegacyEqualsBreak = options.enableLegacyEqualsBreak === true;
   const lines = source.split(/\r?\n/);
 
   const fmRange = detectFrontmatterRange(lines);
@@ -301,9 +295,7 @@ export function createCardDocument(markdown, options = {}) {
     : null;
   const bodyStart = fmRange ? fmRange.endLine + 1 : 0;
 
-  const { parseLines } = enableLegacyEqualsBreak
-    ? applyLegacyEqualsBreak(lines, bodyStart)
-    : { parseLines: lines.slice(), replacedLines: new Set() };
+  const { parseLines } = applyEqualsBreaks(lines, bodyStart);
 
   const md = /** @type {any} */ (
     options.markdownIt || new MarkdownIt({ html: true, breaks: true, linkify: false })
@@ -713,6 +705,5 @@ export function createCardDocument(markdown, options = {}) {
     diagnostics,
     omissionSummary,
     meta: { hasRenderableContent, onlyCoverCandidate, blockCount: blocks.length },
-    options: { enableLegacyEqualsBreak },
   };
 }

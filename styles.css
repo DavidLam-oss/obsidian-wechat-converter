@@ -3146,6 +3146,7 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 .icard-preview-pages {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 14px;
   align-content: flex-start;
 }
@@ -3210,6 +3211,242 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   font-size: 12px;
   color: var(--text-muted);
   max-width: 420px;
+}
+
+/* —— B03 诊断区（省略/资源失败明细 + 确认闭环）—— */
+
+.icard-preview-chip.is-info {
+  background: var(--background-modifier-hover);
+  color: var(--text-muted);
+}
+
+.icard-preview-diagnostics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-secondary);
+}
+
+.icard-preview-diagnostics-toggle {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.icard-preview-diagnostics-toggle:hover {
+  background: var(--background-modifier-border);
+}
+
+.icard-preview-diagnostics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.icard-preview-diagnostic-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.icard-preview-diagnostic-type {
+  flex: 0 0 auto;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: rgba(255, 179, 0, 0.16);
+  color: var(--text-warning, #8a6d00);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.icard-preview-diagnostic-type.is-high-risk {
+  background: rgba(224, 62, 62, 0.14);
+  color: var(--text-error, #b3261e);
+}
+
+.icard-preview-diagnostic-excerpt {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icard-preview-diagnostic-locate {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-normal);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.icard-preview-diagnostic-locate:hover {
+  background: var(--background-modifier-hover);
+}
+
+.icard-preview-omission-confirm {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 5px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent, #fff);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.icard-preview-omission-confirm:hover {
+  filter: brightness(1.08);
+}
+
+.icard-preview-omission-confirmed {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 全文省略空态 */
+.icard-preview-empty.is-all-omitted {
+  align-items: flex-start;
+  text-align: left;
+  padding: 24px 12px 8px;
+}
+/*
+## 核心功能
+
+图片卡片排版设置浮层样式（B03）。作用域 icard-settings- 前缀，仅作用于
+卡片模式设置浮层（.apple-settings-card-wrapper），不污染文章/贴图设置。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 新增选择器必须以 icard-settings- 前缀作用域，避免污染宿主 UI。
+- 沿用 Obsidian 宿主变量（--background-* / --text-*），不覆盖宿主配色。
+*/
+
+/* 选项按钮组（主题 / 比例） */
+.icard-settings-option-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.icard-settings-option {
+  padding: 5px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.icard-settings-option:hover {
+  background: var(--background-modifier-hover);
+}
+
+.icard-settings-option.active {
+  border-color: var(--interactive-accent);
+  color: var(--interactive-accent);
+  font-weight: 600;
+}
+
+.icard-settings-note {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* 数值步进行（字号 / 行高 / 边距） */
+.icard-settings-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.icard-settings-stepper-label {
+  flex: 1 1 auto;
+  font-size: 12px;
+  color: var(--text-normal);
+}
+
+.icard-settings-stepper-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.icard-settings-stepper-btn:hover:not(:disabled) {
+  background: var(--background-modifier-hover);
+}
+
+.icard-settings-stepper-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.icard-settings-stepper-value {
+  min-width: 52px;
+  text-align: center;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-normal);
+}
+
+/* 旧版分页兼容开关 */
+.icard-settings-toggle-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.icard-settings-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-normal);
+  cursor: pointer;
+}
+
+.icard-settings-toggle-label input[type='checkbox'] {
+  margin: 0;
+}
+
+/* 恢复默认 */
+.icard-settings-reset {
+  padding: 5px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.icard-settings-reset:hover {
+  background: var(--background-modifier-hover);
 }
 /*
 ## 核心功能

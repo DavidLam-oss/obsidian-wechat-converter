@@ -162,7 +162,7 @@ describe("card-document × 样本账本（expected.json）", () => {
     expect(mermaidBlocks[0].omitReason).toBe(OmitReason.MERMAID);
   });
 
-  it("s6-pagination（默认配置）：独立块级标记生效，围栏/行内伪标记不触发，Setext/hr 语义保持", () => {
+  it("s6-pagination（默认配置）：独立标记生效，围栏/行内伪标记不触发，=== 即分页符", () => {
     const doc = parse("s6-pagination.md");
     const spec = expected.samples["s6-pagination.md"];
     expect(doc.paginationMarkers.map((m) => m.line)).toEqual(spec.expectMarkerLines);
@@ -174,22 +174,18 @@ describe("card-document × 样本账本（expected.json）", () => {
     expect(doc.blocks.some((b) => b.sourceStart === 23 && b.type === "codeBlock")).toBe(true);
     // hr 保留
     expect(doc.blocks.find((b) => b.type === "hr").sourceStart).toBe(35);
-    // Setext 标题保留（=== 不是分页符）
-    const setext = doc.blocks.find((b) => b.sourceStart === 41);
-    expect(setext.type).toBe("heading");
+    // Setext 位置的 === 也是分页符：L42 成为标记，L41 降级为普通段
+    expect(doc.paginationMarkers.some((m) => m.line === 42)).toBe(true);
+    expect(doc.blocks.find((b) => b.sourceStart === 41).type).toBe("paragraph");
     // 分页标记之间的内容段保留（无内容丢失）
     expect(doc.blocks.find((b) => b.sourceStart === 7).disposition).toBe("render");
     expect(doc.blocks.find((b) => b.sourceStart === 48).disposition).toBe("render");
   });
 
-  it("s6-pagination（开启 === 兼容）：Setext 位置的 === 变为分页符，标记数 +1", () => {
-    const doc = parse("s6-pagination.md", { enableLegacyEqualsBreak: true });
-    expect(doc.options.enableLegacyEqualsBreak).toBe(true);
-    expect(doc.paginationMarkers).toHaveLength(5);
-    // L42 的 === 成为分页标记，L41 不再是 heading 而是普通段
-    expect(doc.paginationMarkers.some((m) => m.line === 42)).toBe(true);
-    const prevBlock = doc.blocks.find((b) => b.sourceStart === 41);
-    expect(prevBlock.type).toBe("paragraph");
+  it("=== 分页符：空行包围的独立 === 同样生效（小白最常用写法）", () => {
+    const doc = createCardDocument("# 标题\n\n第一页内容\n\n===\n\n第二页内容\n");
+    expect(doc.paginationMarkers.map((m) => m.line)).toEqual([5]);
+    expect(doc.blocks.some((b) => b.type === "paginationMarker" && b.sourceStart === 5)).toBe(true);
   });
 
   it("s7-long-cover：frontmatter 范围与字段、正文不受影响", () => {
