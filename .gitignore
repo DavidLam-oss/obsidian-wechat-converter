@@ -48,3 +48,7 @@ lib/mathjax-plugin.js
 .openprd/knowledge/drafts/
 .openprd/knowledge/review-signals.jsonl
 .openprd/growth/preferences.local.json
+
+# Local assistant / tool working dirs (memory logs, review boards, screenshots)
+.workbuddy/
+.qoder/
