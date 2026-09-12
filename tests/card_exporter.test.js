@@ -326,12 +326,8 @@ describe("逐页顺序与结果结构", () => {
     expect(pngWrites).toHaveLength(2);
     expect(pngWrites[0].endsWith("card-001.png")).toBe(true);
     expect(pngWrites[1].endsWith("card-002.png")).toBe(true);
-    const manifestRaw = await fakeFs.readText(outcome.manifestPath);
-    const manifest = JSON.parse(manifestRaw);
-    expect(manifest.pages[0].width).toBe(750);
-    expect(manifest.pages[0].height).toBe(1000);
-    expect(manifest.pages[1].width).toBe(1125);
-    expect(manifest.pages[1].height).toBe(1500);
+    // 尺寸取自 PNG 头，落到任务结果上（干净批次不写清单，见下方「写盘足迹」用例）
+    expect(outcome.results.map((r) => [r.width, r.height])).toEqual([[750, 1000], [1125, 1500]]);
     // 选中导出保留正文页号：只导第 2 页时文件名仍为 card-002.png
     const onlySecond = /** @type {any} */ (await exporter.exportCards(exportInput(ctx, {
       pages: [{ pageId: "page-2", ordinal: 2 }],
@@ -417,9 +413,8 @@ describe("进度回调与写盘足迹（B05 进度反馈 / §6.1 不在 vault �
     const touched = [...fakeFs.calls.created, ...fakeFs.calls.written];
     expect(touched.some((p) => p.includes(".tmp"))).toBe(false);
     expect(touched.every((p) => p.endsWith(".png") || p.endsWith(EXPORT_MANIFEST_NAME))).toBe(true);
-    // 清单按页更新：首份 + 每页一次 + 收尾一次，全部为同一路径的覆盖写
+    // 干净批次不落清单（2026-09-12 策略）：全部成功时一次清单写入都没有
     const manifestWrites = fakeFs.calls.written.filter((p) => p.endsWith(EXPORT_MANIFEST_NAME));
-    expect(new Set(manifestWrites).size).toBe(1);
-    expect(manifestWrites.length).toBe(5);
+    expect(manifestWrites).toEqual([]);
   });
 });

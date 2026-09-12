@@ -2,9 +2,9 @@
 ## 核心功能
 
 卡片导出编排服务（B04，§5.4/§6.1/§6.2）：输出资格再校验（快照/版本/省略确认/选择/预算）、
-安全批次目录创建（冲突重生成 ≤5 次）、逐页「捕获 → PNG 核验 → 排他写盘 → 落账 → 清单更新」、
-取消检查点（不中断已启动页）、清单失败的部分成功语义（首份失败不写图；逐页失败暂停可修复续跑；
-最终失败标记 manifestPending）、同快照失败页重试与清单单独重试。
+安全批次目录创建（冲突重生成 ≤5 次）、逐页「捕获 → PNG 核验 → 排他写盘 → 落账」、
+取消检查点（不中断已启动页）、失败批次的清单记录与修复续跑、同快照失败页重试与清单单独重试。
+清单**只在批次出现失败页时才落盘**（干净批次不留文件，见下方「关键语义」）。
 
 ## 输入
 
@@ -26,8 +26,11 @@
 
 ## 关键语义（§6.1/§6.2）
 
-- 首份空清单创建失败 → 不写任何图片，任务 failed。
-- 逐页清单更新失败 → 保留已存图片与内存记录、停止后续页（paused-manifest），不报整批成功。
+- **清单只在失败页出现时落盘**（2026-09-12 定）：全部成功或用户取消的批次**不写** export-manifest.json；
+  第一个 failed 页出现时启用落盘，此后每次图片落盘后与收尾各写一次。理由：清单的价值只在
+  「哪几页没导成、为什么」；干净批次写出去的是零信息量噪声，普通用户打开目录只会困惑。
+- 清单写入失败 → 保留已存图片与内存记录、停止后续页（paused-manifest），不报整批成功；
+  收尾写入失败标记 manifestPending（此时必然已有失败页，记录确实有价值）。
 - 取消后不再调度下一页；已启动页写入成功仍计入已保存，不删除已存文件伪装取消更早。
 - 批次内 createBinaryExclusive 遇非本任务同名文件 → 立即停止整批，不覆盖/改名/删除。
 - 已成功 PNG 不可变；清单是本任务拥有的可更新文件，直接覆盖写（批次归属由批次目录创建语义保证）。
@@ -177,6 +180,13 @@ export function createCardExporter(deps) {
     let manifestHealthy = true;
     /** 首份空清单是否成功落盘过：决定「最终清单失败」是否算 manifestPending（未开始 ≠ 记录未完成） */
     let manifestEverWritten = false;
+    /**
+     * 本次批次是否需要清单落盘（2026-09-12 定，David）：**干净批次不留文件**。
+     * 清单只在「有页没导成」时才有信息价值（哪几页失败、为什么）；全部成功时它是零信息量的噪声，
+     * 普通用户打开导出目录只会困惑。因此不再在任务开始、每页成功时写盘——
+     * 由 patchPage 在首个 failed 页出现时置位；下载失败/取消的批次不落清单。
+     */
+    let manifestPersistRequested = false;
     /** 已收尾但最终清单写失败：retryManifest 修复成功后需再 finalize 更新任务状态 */
     let needsFinalSettle = false;
 
@@ -211,6 +221,8 @@ export function createCardExporter(deps) {
       const entry = manifestState ? manifestState.pages.find((p) => p.pageId === pageId) : null;
       if (!entry) return;
       Object.assign(entry, patch);
+      // 失败页一出现，清单才开始有意义（任何失败路径都必须走 patchPage，故此处收口）
+      if (patch.status === 'failed') manifestPersistRequested = true;
     }
 
     function manifestPayload() {
@@ -252,10 +264,12 @@ export function createCardExporter(deps) {
      * 清单更新：直接覆盖写本任务拥有的清单文件（批次归属由批次目录的创建语义保证）。
      * 刻意不用「临时文件 + 改名/删除」：vault 内的瞬时文件会被同步类插件当作新增/删除事件
      * 同步到远端，删除远端并不存在的记录时服务端会返回错误（用户可见的错误弹窗）。
-     * @returns {Promise<{ ok: boolean, reason?: string, detail?: string }>}
+     * @returns {Promise<{ ok: boolean, reason?: string, detail?: string, skipped?: boolean }>}
      */
-    async function updateManifest() {
+    async function updateManifest(options = {}) {
       if (!manifestState) return { ok: false, reason: 'manifest-state-missing' };
+      // 干净批次不落盘：没有失败页时清单是本任务内部的进度账本，写出去只是噪声（见 manifestPersistRequested）
+      if (!manifestPersistRequested && options.force !== true) return { ok: true, skipped: true };
       const payload = manifestPayload();
       if (!payload) return { ok: false, reason: 'manifest-state-missing' };
       const bytes = new TextEncoder().encode(JSON.stringify(payload, null, 2));
@@ -571,13 +585,8 @@ export function createCardExporter(deps) {
       });
       remaining = orderedPages.map((p) => ({ pageId: p.pageId, ordinal: Math.floor(p.ordinal) }));
 
-      // 首份空清单：失败则不开始写图片（§6.1）
-      const initialManifest = await updateManifest();
-      if (!initialManifest.ok) {
-        for (const page of remaining) patchPage(page.pageId, { status: 'skipped' });
-        remaining = [];
-        return await finalize({});
-      }
+      // 刻意不再写「首份空清单」：批次目录已创建成功，该位置可写这件事已经成立；
+      // 而清单要到出现失败页才有内容，任务一开始就落一份空账本只是给用户留垃圾（2026-09-12 策略）。
       phase = 'running';
       emitProgress('begin');
       const loopResult = await runPageLoop();
@@ -604,7 +613,8 @@ export function createCardExporter(deps) {
     async function retryManifest() {
       if (!manifestState) return { ok: false, reason: 'no-batch' };
       if (phase === 'running') return { ok: false, reason: 'export-in-progress' };
-      const update = await updateManifest();
+      // 用户显式动作（「重试结果记录」）：按用户意图真写一次，不受「干净批次不落盘」的策略约束
+      const update = await updateManifest({ force: true });
       if (!update.ok) return { ok: false, reason: update.reason || 'manifest-write-failed' };
       if (phase === 'paused-manifest' && remaining.length === 0) {
         const outcome = await finalize({});
