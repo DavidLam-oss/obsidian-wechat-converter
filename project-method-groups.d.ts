@@ -203,6 +203,15 @@ type CardPreviewMethodsContract = Pick<
     | 'disposeCardPreview'
 >;
 
+type CardPageSelectionMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'getCardPageSelection'
+    | 'resolveCardSelectionSession'
+    | 'toggleCardPageSelection'
+    | 'applyCardPageSelection'
+    | 'syncCardPageSelectionDom'
+>;
+
 type CardSettingsMethodsContract = Pick<
     AppleStyleViewContract,
     | 'buildCardSettingsPanel'
@@ -244,6 +253,7 @@ type CardExportModalViewMethodsContract = Pick<
     AppleStyleViewContract,
     | 'renderCardExportModal'
     | 'renderCardExportForm'
+    | 'resolveCardExportScope'
     | 'renderCardExportPreparing'
     | 'renderCardExportJob'
     | 'renderCardExportPages'

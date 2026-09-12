@@ -25,7 +25,7 @@
   - 快照：`freezeSnapshot({ plan, resources, ... })` → 深拷贝冻结 + retain 资源，
     快照不受后续调用方原地修改污染；`retainSnapshot/releaseSnapshot/getSnapshot`；
     超过 MAX_RECENT_SNAPSHOTS 淘汰最旧并释放其资源。
-  - 选择/省略确认：`setSelection/getValidSelection`（版本不符返回 null → 调用方默认恢复全部并提示）；
+  - 选择/省略确认：`setSelection` / `clearSelection` / `getValidSelection`（版本不符返回 null → 调用方默认恢复全部并提示）；
     `confirmOmissions/isOmissionConfirmed`（确认不能跨版本复用）。
   - 导出任务：`beginExportJob`（单会话同时只允许一个运行中任务，任务持有快照引用）；
     `shouldStartNextPage`（仅 running 为 true，取消后不再调度下一页）；
@@ -146,6 +146,7 @@ function toLayoutKey(versions) {
  *   freezeSnapshot(input: { plan?: unknown, resources?: CardReleasableLike | null, meta?: Record<string, unknown> }): CardSnapshotLike,
  *   retainSnapshot(id: string): boolean, releaseSnapshot(id: string): void, getSnapshot(id: string): CardSnapshotLike | null,
  *   setSelection(pageIds: string[]): void,
+ *   clearSelection(): void,
  *   getValidSelection(): { pageIds: string[], layoutKey: string } | null,
  *   confirmOmissions(diagnosticVersion: string): void,
  *   isOmissionConfirmed(diagnosticVersion: string): boolean,
@@ -412,6 +413,17 @@ export function createNoteCardSession(options = {}) {
     setSelection(pageIds) {
       if (disposed) return;
       selection = { pageIds: [...pageIds], layoutKey: currentLayoutKey() };
+    },
+
+    /**
+     * 清空选择（回到「未选择 → 导出全部」语义）。
+     * 与 `setSelection([])` 的区别：这里保持「非 null 选择必含 ≥1 页」的不变量，
+     * 避免空数组被资格检查判成 empty-selection 而堵住「全部」导出。
+     * @returns {void}
+     */
+    clearSelection() {
+      if (disposed) return;
+      selection = null;
     },
 
     /**

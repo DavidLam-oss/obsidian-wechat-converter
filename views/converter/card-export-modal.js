@@ -18,7 +18,7 @@ AppleStyleView 实例（app / 会话 / 预览负载）与用户交互（开始 /
 导出 `cardExportMethods`（由 AppleStyleView 组装）：
 - `openCardExportModal()`：打开或恢复弹窗（恢复运行中任务 / 待查看结果；不新建重复任务）；
 - `closeCardExportModal()`：仅关展示层，任务存活；
-- `startCardExport()`：冻结合格快照 → 建任务 → 逐页输出 → 进度刷新；
+- `startCardExport()`：按导出范围（全部 / 预览勾选的页）冻结合格快照 → 建任务 → 逐页输出 → 进度刷新；
 - `startNewCardExport()`：结果已读后回到表单（允许换倍率/目录再导一批，不新开任务窗口）；
 - `cancelCardExport()` / `retryCardExportFailedPages()` / `retryCardExportManifest()`；
 - `handleCardExportProgress()`：接收导出器进度事件并驱动重绘。
@@ -40,6 +40,8 @@ AppleStyleView 实例（app / 会话 / 预览负载）与用户交互（开始 /
 - 弹窗不决定任务存活（§6.2）：关闭 / 换篇 / 换模式不得取消任务；只有显式取消或视图 dispose 才停止。
 - 重开必须复用原任务（禁止第二个任务），由会话 beginExportJob 的单任务语义兜底。
 - 一切关闭路径（关闭按钮 / Escape / 遮罩）都必须汇入 modal.onClose，避免两套清理逻辑分叉。
+- 导出范围由预览勾选推导（`resolveCardExportScope`，实现在 card-export-modal-view）：
+  'selected' 只在勾选非空时带页 id；空选绝不改判成全部，直接不建任务，由表单禁用态兜底。
 - 进度只反映导出器上报的事实（onProgress / 会话任务），本层不得自行猜测进度。
 - 样式在 styles/card-export.css（icard-export- 前缀），新增选择器不得污染宿主 UI。
 */
@@ -151,9 +153,17 @@ async startCardExport() {
     this.renderCardExportModal();
     return;
   }
+  // 导出范围：'all' 不带页 id；'selected' 用预览里的勾选集合（空选兜底：不建任务，表单本已禁用按钮）
+  const scope = this.resolveCardExportScope();
+  const pageIds = scope === 'selected' ? this.getCardPageSelection() : null;
+  if (scope === 'selected' && !pageIds) {
+    this.renderCardExportModal();
+    return;
+  }
   const collected = this.collectCardExportInput({
     rootPath: selfRecord.cardExportRootPath || DEFAULT_CARD_EXPORT_ROOT,
     scale: selfRecord.cardExportScale || DEFAULT_CARD_EXPORT_SCALE,
+    pageIds,
   });
   if (!collected || collected.ok !== true) {
     this.renderCardExportModal();
@@ -206,7 +216,8 @@ async startCardExport() {
 ,
 
 /**
- * 结果页「再次导出」：标记本次结果已读 → 回到导出表单（保留上次的倍率与目录选择）。
+ * 结果页「再次导出」：标记本次结果已读 → 回到导出表单（保留上次的倍率与目录选择；
+ * 导出范围回到「跟随预览勾选」，因为用户可能已改过勾选）。
  * 不删除已导出的批次目录，也不复用上一次的任务。
  */
 startNewCardExport() {
@@ -217,6 +228,7 @@ startNewCardExport() {
   selfRecord.cardExportProgress = null;
   selfRecord.cardExportPagesExpanded = false;
   selfRecord.cardExportScrollTop = 0;
+  selfRecord.cardExportScope = null;
   this.renderCardExportModal();
 }
 ,
@@ -268,6 +280,7 @@ disposeCardExportModal() {
   selfRecord.cardExportProgress = null;
   selfRecord.cardExportPagesExpanded = false;
   selfRecord.cardExportScrollTop = 0;
+  selfRecord.cardExportScope = null;
   const modal = selfRecord.cardExportModal;
   if (modal) {
     selfRecord.cardExportModal = null;

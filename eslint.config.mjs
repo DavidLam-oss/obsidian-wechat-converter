@@ -218,6 +218,7 @@ export default [
       "views/converter/card-export-bridge.js",
       "views/converter/card-export-modal.js",
       "views/converter/card-export-modal-view.js",
+      "views/converter/card-page-selection.js",
       "views/converter/clipboard.js",
       "views/converter/core.js",
       "views/converter/style-panel.js",

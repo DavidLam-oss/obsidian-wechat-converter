@@ -1,12 +1,35 @@
 /*
 ## 核心功能
 
-图片卡片预览/实验样式分片（A03 离屏容器 + B02 预览 UI）。卡片成品页样式由主题 token 动态生成（services/card-themes.js），不进本分片。
+图片卡片预览/实验样式分片（A03 离屏容器 + B02 预览 UI + B05 页勾选控件）。
+卡片成品页样式由主题 token 动态生成（services/card-themes.js），不进本分片。
+
+## 输入
+
+接收 Obsidian 主题变量（--background-primary / --background-modifier-* / --text-* /
+--interactive-accent 等）与项目苹果配色 token（--apple-success / --apple-warning / --apple-error）。
+
+## 输出
+
+输出预览外壳的布局与状态表现：摘要条与 chip、缩放控制、缩略页容器、
+页勾选控件（.icard-preview-page-check）与选中态（.icard-preview-page-item.is-selected）、
+空态/失败态/诊断区（含深色主题适配）。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+预览 DOM 由 views/converter/card-preview.js 与 card-page-selection.js 产出。
+
+## 依赖
+
+依赖 Obsidian 主题变量与 styles/base.css 的苹果 token；不依赖其它分片的类名。
 
 ## 维护规则
 
 - 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
 - 新增选择器必须以 icard- 前缀作用域，避免污染宿主 UI。
+- 勾选控件必须常驻可见（不能只在 hover 出现）：它是「只导出选中页」的唯一入口。
+- 勾选态同时改 outline 与控件本体（色盲友好：不只靠颜色，勾选控件有实心/空心差异）。
 */
 
 /* 离屏捕获容器：参与布局但不可见、不可交互（禁止 display:none，见规划 §5.1） */
@@ -142,6 +165,56 @@
   background: rgba(0, 0, 0, 0.45);
   color: #fff;
   pointer-events: none;
+}
+
+/* 页勾选控件（B05）：独立于「点击定位」，左上角常驻，勾选态用强调色实心 + 对勾。
+   尺寸与内缩刻意压在 22px 内——卡片正文默认从 pagePadding(28px) 起排，控件不会压到正文。 */
+.icard-preview-page-check {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.28);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  color: transparent;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.icard-preview-page-check:hover {
+  border-color: var(--interactive-accent);
+}
+
+.icard-preview-page-check:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+.icard-preview-page-check.is-checked {
+  border-color: transparent;
+  background: var(--interactive-accent);
+  color: #fff;
+}
+
+.icard-preview-page-check-mark {
+  width: 8px;
+  height: 4.5px;
+  border-left: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg) translate(0.5px, -1px);
+}
+
+.icard-preview-chip.is-selection {
+  background: color-mix(in srgb, var(--interactive-accent) 14%, transparent);
+  color: var(--text-accent);
 }
 
 /* 空态 / 失败态 / 移动端说明态 */

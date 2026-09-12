@@ -1,21 +1,22 @@
 /*
 ## 核心功能
 
-图片卡片导出弹窗的 DOM 渲染层（B05 视觉重构）：四类视图——可开始表单、准备中、
-任务进度（状态区 + 进度条 + 逐页明细折叠）、结果（状态区 + 结果卡片 + 操作）。
+图片卡片导出弹窗的 DOM 渲染层（B05 视觉重构）：四类视图——可开始表单（来源/尺寸摘要 +
+导出范围 + 倍率 + 目录）、准备中、任务进度（状态区 + 进度条 + 逐页明细折叠）、
+结果（状态区 + 结果卡片 + 操作）。
 渲染只读会话任务与导出器进度事件，不持有任务生命周期。
 
 ## 输入
 
-AppleStyleView 实例（会话任务、预览负载、倍率/目录选择、资源摘要、批次信息）与
-导出器进度事件；DOM 选择器以 icard-export- 前缀作用域。
+AppleStyleView 实例（会话任务、预览负载与页勾选、倍率/目录/导出范围选择、资源摘要、
+批次信息）与导出器进度事件；DOM 选择器以 icard-export- 前缀作用域。
 
 ## 输出
 
 导出 `cardExportModalViewMethods`（由 AppleStyleView 组装）：`renderCardExportModal`、
 `renderCardExportForm`、`renderCardExportPreparing`、`renderCardExportJob`、
-`renderCardExportPages`、`renderCardExportResultLinks`，以及文案映射
-`EXPORT_STATE_LABELS` / `EXPORT_PAGE_LABELS` / `formatExportReason`。
+`renderCardExportPages`、`renderCardExportResultLinks`、`resolveCardExportScope`，
+以及文案映射 `EXPORT_STATE_LABELS` / `EXPORT_PAGE_LABELS` / `formatExportReason`。
 
 ## 定位
 
@@ -31,6 +32,9 @@ card-export-modal.js，导出规则在 services/card-exporter.js。
 ## 维护规则
 
 - 修改视图结构后同步更新本文件说明书，并检查 views/converter 的 README 是否仍准确。
+- 导出范围只有「全部 / 选中 N 页」两项：未勾选任何页时「选中」项禁用并说明原因，
+  绝不静默改成全部（那会让用户以为导的是选中页）；默认值跟随预览勾选。
+- 逐页明细的「第 N 页」取自 pageId 的原始页序：子集导出不得把 page-3 显示成第 1 页。
 - 颜色只用于「异常」与「当前进行中的那一行」：正常完成行必须保持中性（禁止整列铺成功色底）。
 - 同一事实只说一次：完成态的「已完成张数」写在状态区，不再在进度条与列表里重复。
 - 图标一律经 applyIcon 注入且必须配有文字（图标在测试替身与旧版 Obsidian 下可能为空）。
@@ -168,15 +172,36 @@ renderCardExportModal() {
 ,
 
 /**
- * 可开始表单：来源/范围/尺寸摘要 → 倍率分段控件 → 输出目录 → 省略摘要 → 开始。
+ * 解析本次导出范围：'all'（全部页）| 'selected'（仅预览中勾选的页）。
+ * 用户未显式选择过时跟随预览勾选（勾选非空 → 选中）；一旦显式选择就尊重用户，
+ * 即使选择因排版更新失效也不静默改回全部——由表单显示禁用态与原因。
+ * @returns {'all' | 'selected'}
+ */
+resolveCardExportScope() {
+  const explicit = /** @type {any} */ (this).cardExportScope;
+  if (explicit === 'all' || explicit === 'selected') return explicit;
+  return this.getCardPageSelection() ? 'selected' : 'all';
+}
+,
+
+/**
+ * 可开始表单：来源/尺寸摘要 → 导出范围 + 倍率分段控件 → 输出目录 → 省略摘要 → 开始。
  * 资格不满足时给出原因，不显示可点击的开始按钮。
+ * 导出范围默认跟随预览勾选；「选中」在未勾选任何页时禁用并说明，绝不静默改成全部。
  * @param {any} body
  */
 renderCardExportForm(body) {
   const selfRecord = /** @type {any} */ (this);
+  const scope = this.resolveCardExportScope();
+  const selection = this.getCardPageSelection();
+  const selectionCount = Array.isArray(selection) ? selection.length : 0;
+  const emptySelection = scope === 'selected' && selectionCount === 0;
+
   const collected = this.collectCardExportInput({
     rootPath: selfRecord.cardExportRootPath || DEFAULT_CARD_EXPORT_ROOT,
     scale: selfRecord.cardExportScale || DEFAULT_CARD_EXPORT_SCALE,
+    // 「全部」不带页 id（null 由桥接层展开全部）；空集同样走 null，不制造第三种状态
+    pageIds: scope === 'selected' && selectionCount > 0 ? selection : null,
   });
 
   if (!collected || collected.ok !== true) {
@@ -195,7 +220,7 @@ renderCardExportForm(body) {
   const outcome = selfRecord.cardPreviewOutcome || {};
   const scale = Number(selfRecord.cardExportScale || DEFAULT_CARD_EXPORT_SCALE);
   const size = collected.size || { width: 0, height: 0 };
-  const pageCount = Array.isArray(collected.selectedPageIds) ? collected.selectedPageIds.length : 0;
+  const totalPages = Number(outcome.pageCount || 0);
 
   const info = body.createEl('div', { cls: 'icard-export-info' });
   /** @param {string} label @param {string} value @param {string} [title] */
@@ -208,12 +233,56 @@ renderCardExportForm(body) {
   // 完整路径留给需要核对的人，放悬停提示即可。
   const sourcePath = String(outcome.sourcePath || '').trim();
   addRow('来源', noteDisplayName(sourcePath), sourcePath || '当前笔记');
-  addRow('范围', `全部 ${pageCount} 页`);
+  // 范围不在摘要里重复说：下方分段控件已经写了「全部 N 页 / 选中 N 页」。
   // 「尺寸」说人话：直接给每张图的像素。比例与倍率都隐含在像素里，
   // 且倍率在下方分段控件已展示，按「同一事实只说一次」不重复。
   addRow('尺寸', `每张 ${Math.round(size.width * scale)} × ${Math.round(size.height * scale)} 像素`);
 
   body.createEl('div', { cls: 'icard-export-divider' });
+
+  // —— 导出范围（默认跟随预览勾选；空选时「选中」禁用并说明）——
+  const scopeField = body.createEl('div', { cls: 'icard-export-field is-scope' });
+  const scopeRow = scopeField.createEl('div', { cls: 'icard-export-field-row' });
+  scopeRow.createEl('span', { cls: 'icard-export-field-label', text: '导出范围' });
+  const scopeSegmented = scopeRow.createEl('div', {
+    cls: 'icard-export-segmented',
+    attr: { role: 'group', 'aria-label': '导出范围' },
+  });
+  for (const option of [
+    { value: 'all', label: `全部 ${totalPages} 页`, disabled: false },
+    { value: 'selected', label: `选中 ${selectionCount} 页`, disabled: selectionCount === 0 },
+  ]) {
+    const active = option.value === scope;
+    /** @type {Record<string, string>} */
+    const attrs = {
+      type: 'button',
+      'data-scope': option.value,
+      'aria-pressed': active ? 'true' : 'false',
+    };
+    if (option.disabled) {
+      attrs['aria-disabled'] = 'true';
+      attrs.title = '预览中尚未勾选任何页';
+    }
+    const btn = scopeSegmented.createEl('button', {
+      cls: `icard-export-scope-btn${active ? ' is-active' : ''}${option.disabled ? ' is-disabled' : ''}`,
+      text: option.label,
+      attr: attrs,
+    });
+    btn.addEventListener('click', () => {
+      if (option.disabled) return;
+      selfRecord.cardExportScope = option.value;
+      this.renderCardExportModal();
+    });
+  }
+  if (selectionCount === 0) {
+    // 空集两种来路分别说清楚：从没勾过 / 勾过又被排版更新清掉
+    scopeField.createEl('p', {
+      cls: 'icard-export-field-hint is-scope',
+      text: selfRecord.cardExportScope === 'selected'
+        ? '之前的勾选已随排版更新失效，请在预览中重新勾选，或改为「全部」'
+        : '在卡片预览里勾选页面后，可只导出勾选的页',
+    });
+  }
 
   const scaleField = body.createEl('div', { cls: 'icard-export-field' });
   scaleField.createEl('span', { cls: 'icard-export-field-label', text: '导出倍率' });
@@ -260,12 +329,15 @@ renderCardExportForm(body) {
   });
 
   const footer = body.createEl('div', { cls: 'icard-export-footer' });
+  // 「选中」但一页未勾：按钮禁用（原因已在上方范围控件旁说明），点击无动作
   const startBtn = footer.createEl('button', {
-    cls: 'icard-export-start mod-cta',
+    cls: `icard-export-start mod-cta${emptySelection ? ' is-disabled' : ''}`,
     text: '开始导出',
-    attr: { type: 'button' },
+    attr: emptySelection
+      ? { type: 'button', disabled: 'true', title: '请先在卡片预览中勾选页面，或把范围改为「全部」' }
+      : { type: 'button' },
   });
-  startBtn.addEventListener('click', () => { void this.startCardExport(); });
+  if (!emptySelection) startBtn.addEventListener('click', () => { void this.startCardExport(); });
 }
 ,
 
@@ -446,10 +518,13 @@ renderCardExportPages(body, input) {
   pageIds.forEach((pageId, index) => {
     const result = resultByPage.get(pageId);
     const status = result ? result.status : 'pending';
-    // 当前正在渲染的页（进度事件的 current 与页序对齐）
-    const isCurrent = running && status === 'pending' && currentOrdinal > 0 && index === currentOrdinal - 1;
+    // 页号取 pageId 的原始页序：子集导出时 page-3 必须显示「第 3 页」，
+    // 不能按批次内序号显示成「第 1 页」（否则与预览里的页号对不上）。
+    const ordinal = pageOrdinal(pageId, index + 1);
+    // 当前正在渲染的页（进度事件的 current 就是原始页序，与 ordinal 对齐）
+    const isCurrent = running && status === 'pending' && currentOrdinal > 0 && ordinal === currentOrdinal;
     const row = list.createEl('div', { cls: `icard-export-page-row is-${isCurrent ? 'rendering' : status}` });
-    row.createEl('span', { cls: 'icard-export-page-name', text: `第 ${index + 1} 页` });
+    row.createEl('span', { cls: 'icard-export-page-name', text: `第 ${ordinal} 页` });
     row.createEl('span', {
       cls: 'icard-export-page-state',
       text: isCurrent ? '渲染中…' : (EXPORT_PAGE_LABELS[status] || status),
@@ -600,6 +675,16 @@ function pageChipTone({ running, failed, canceled }) {
   if (running) return 'accent';
   if (canceled > 0) return 'muted';
   return 'success';
+}
+
+/**
+ * 页号（1-based）：取自 pageId（`page-N`），非法 id 回落批次内序号。
+ * 子集导出必须用原始页序，否则「第 N 页」会与预览里的页号对不上。
+ * @param {string} pageId @param {number} fallback
+ */
+function pageOrdinal(pageId, fallback) {
+  const match = /^page-(\d+)$/.exec(String(pageId || ''));
+  return match ? Number(match[1]) : fallback;
 }
 
 /**

@@ -31,6 +31,7 @@ import { settingsPanelMethods } from './converter/settings-panel.js';
 import { panelShellMethods } from './converter/panel-shell.js';
 import { stickerPreviewMethods } from './converter/sticker-preview.js';
 import { cardPreviewMethods } from './converter/card-preview.js';
+import { cardPageSelectionMethods } from './converter/card-page-selection.js';
 import { cardSettingsMethods } from './converter/card-settings.js';
 import { cardExportBridgeMethods } from './converter/card-export-bridge.js';
 import { cardExportMethods } from './converter/card-export-modal.js';
@@ -312,6 +313,7 @@ Object.assign(
   panelShellMethods,
   stickerPreviewMethods,
   cardPreviewMethods,
+  cardPageSelectionMethods,
   cardSettingsMethods,
   cardExportBridgeMethods,
   cardExportMethods,

@@ -5,8 +5,9 @@
 onClose）、后台继续、重开复用原任务（不建第二任务）、显式取消 vs 关闭弹窗的区别、
 清单失败恢复、失败页重试、视图释放清理、进度反馈（准备中 / 逐页渲染中的事件驱动重绘）、
 完成态与失败态的视觉规则（状态区色调、明细折叠、失败着色）、结果定位（打开所在文件夹 /
-失败降级为复制路径 / 无能力时不渲染入口），以及导出接线层（fs 适配器 create-only 语义、
-不提供 remove、绝对路径解析、入参组装）。
+失败降级为复制路径 / 无能力时不渲染入口）、导出范围（全部 / 选中 N 页：默认跟随预览勾选、
+空选禁用不静默改成全部、子集导出按原始页序显示），以及导出接线层（fs 适配器 create-only
+语义、不提供 remove、绝对路径解析、入参组装）。
 
 ## 输入
 
@@ -127,9 +128,12 @@ describe('AppleStyleView - Card Export Modal (B05)', () => {
     });
     // 来源只说笔记名；vault 相对路径只作悬停提示，不进正文
     expect(rows[0]).toEqual({ label: '来源', value: 'a', title: 'notes/a.md' });
-    expect(rows[1]).toEqual({ label: '范围', value: '全部 2 页', title: '全部 2 页' });
+    // 范围不在摘要里重复：由「导出范围」分段控件表达（全部 N 页 / 选中 N 页）
+    expect(rows).toHaveLength(2);
+    expect([...modal.contentEl.querySelectorAll('.icard-export-scope-btn')].map((btn) => btn.textContent))
+      .toEqual(['全部 2 页', '选中 0 页']);
     // 尺寸说人话：不再堆「3:4 · 2x · 750 × 1000 px」这类术语
-    expect(rows[2]).toEqual({ label: '尺寸', value: '每张 750 × 1000 像素', title: '每张 750 × 1000 像素' });
+    expect(rows[1]).toEqual({ label: '尺寸', value: '每张 750 × 1000 像素', title: '每张 750 × 1000 像素' });
   });
 
   it('关闭弹窗仅关展示层：任务继续（closeExportModal 被调用，Modal 引用清空）', () => {
@@ -363,9 +367,12 @@ describe('AppleStyleView - Card Export Modal (B05)', () => {
     const again = overlay.querySelector('.icard-export-again');
     expect(again).not.toBeNull();
 
+    // 已显式选过导出范围：再次导出应回到「跟随预览勾选」，不沿用上一批的范围
+    view.cardExportScope = 'all';
     again.dispatchEvent(new window.Event('click'));
 
     // 回到表单：出现开始按钮与倍率选择，结果状态区消失
+    expect(view.cardExportScope).toBeNull();
     expect(overlay.querySelector('.icard-export-start')).not.toBeNull();
     expect(overlay.querySelector('.icard-export-scale-btn')).not.toBeNull();
     expect(overlay.querySelector('.icard-export-status')).toBeNull();
@@ -670,5 +677,113 @@ describe('Card export bridge - fs adapter (B05/§6.1)', () => {
     expect(outcome.ok).toBe(false);
     expect(outcome.absPath).toBe('/vault/卡片导出/a');
     expect(outcome.reason).toBe('reveal-unavailable');
+  });
+});
+
+describe('AppleStyleView - Card Export Scope (B05 全部 / 选中)', () => {
+  let AppleStyleView;
+
+  beforeEach(() => {
+    vi.resetModules();
+    const obsidianMock = require('obsidian');
+    obsidianMock.requestUrl = vi.fn().mockResolvedValue({ json: {}, status: 200 });
+    AppleStyleView = loadInputModule().AppleStyleView;
+  });
+
+  /** 可观测的导出控制器替身（记录 exportCards 入参） */
+  function stubController(view, payload) {
+    const exportCards = vi.fn().mockResolvedValue({
+      status: 'completed', manifestPending: false,
+      summary: { total: 1, saved: 1, failed: 0, canceled: 0, skipped: 0 }, results: [],
+    });
+    view.createCardExportController = vi.fn(() => ({ exportCards, getBatchInfo: () => payload || null }));
+    return exportCards;
+  }
+
+  it('范围控件默认跟随预览勾选：未勾选时「选中」禁用并说明', () => {
+    const view = readyView(AppleStyleView);
+    view.openCardExportModal();
+    let overlay = view.cardExportModal.contentEl;
+
+    let btns = [...overlay.querySelectorAll('.icard-export-scope-btn')];
+    expect(btns.map((b) => b.textContent)).toEqual(['全部 2 页', '选中 0 页']);
+    expect(btns[0].classList.contains('is-active')).toBe(true);
+    expect(btns[1].classList.contains('is-disabled')).toBe(true);
+    expect(overlay.querySelector('.icard-export-field-hint.is-scope')?.textContent)
+      .toBe('在卡片预览里勾选页面后，可只导出勾选的页');
+
+    // 勾选 1 页后重开：默认切到「选中 1 页」且可选
+    view.applyCardPageSelection(['page-2']);
+    view.renderCardExportModal();
+    overlay = view.cardExportModal.contentEl;
+    btns = [...overlay.querySelectorAll('.icard-export-scope-btn')];
+    expect(btns.map((b) => b.textContent)).toEqual(['全部 2 页', '选中 1 页']);
+    expect(btns[1].classList.contains('is-active')).toBe(true);
+    expect(btns[1].classList.contains('is-disabled')).toBe(false);
+    expect(overlay.querySelector('.icard-export-start').hasAttribute('disabled')).toBe(false);
+    expect(overlay.querySelector('.icard-export-field-hint.is-scope')).toBeNull();
+  });
+
+  it('范围可显式切换回「全部」：切回后不导出选中子集', async () => {
+    const view = readyView(AppleStyleView);
+    view.app = { vault: { configDir: '.obsidian' } };
+    const exportCards = stubController(view);
+    view.applyCardPageSelection(['page-2']);
+    view.openCardExportModal();
+
+    const overlay = view.cardExportModal.contentEl;
+    const allBtn = [...overlay.querySelectorAll('.icard-export-scope-btn')][0];
+    allBtn.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    expect(view.cardExportScope).toBe('all');
+
+    await view.startCardExport();
+    expect(exportCards.mock.calls[0][0].pages).toHaveLength(2);
+  });
+
+  it('startCardExport：范围「选中」只导出勾选的页（原始页序）', async () => {
+    const view = readyView(AppleStyleView);
+    view.app = { vault: { configDir: '.obsidian' } };
+    const exportCards = stubController(view);
+    view.applyCardPageSelection(['page-2']);
+
+    await view.startCardExport();
+    expect(exportCards.mock.calls[0][0].pages).toEqual([{ pageId: 'page-2', ordinal: 2 }]);
+  });
+
+  it('范围「选中」但一页未勾：开始按钮禁用、不建任务（不静默改成全部）', async () => {
+    const view = readyView(AppleStyleView);
+    view.app = { vault: { configDir: '.obsidian' } };
+    const exportCards = stubController(view);
+    // 用户显式选了「选中」，随后勾选随排版更新失效
+    view.cardExportScope = 'selected';
+
+    view.openCardExportModal();
+    const overlay = view.cardExportModal.contentEl;
+    expect(overlay.querySelector('.icard-export-start').hasAttribute('disabled')).toBe(true);
+    expect(overlay.querySelector('.icard-export-scope-btn.is-active.is-disabled')).not.toBeNull();
+    expect(overlay.querySelector('.icard-export-field-hint.is-scope')?.textContent)
+      .toContain('已随排版更新失效');
+
+    await view.startCardExport();
+    expect(view.createCardExportController).not.toHaveBeenCalled();
+    expect(exportCards).not.toHaveBeenCalled();
+  });
+
+  it('子集导出：逐页明细用原始页序，进行中页与进度事件按页序对齐', () => {
+    const view = readyView(AppleStyleView);
+    const { session, snapshot } = withSession(view, 4);
+    const began = session.beginExportJob({ snapshotId: snapshot.snapshotId, pageIds: ['page-3', 'page-4'], scale: 2 });
+    session.recordPageResult(began.job.jobId, 'page-3', { status: 'saved', width: 750, height: 1000 });
+
+    view.openCardExportModal();
+    const overlay = view.cardExportModal.contentEl;
+    expect([...overlay.querySelectorAll('.icard-export-page-name')].map((el) => el.textContent))
+      .toEqual(['第 3 页', '第 4 页']);
+
+    // 进度事件的 current 是原始页序（page-4 → 4），据此高亮正在渲染的那一行
+    view.handleCardExportProgress({ stage: 'page', total: 2, settled: 1, saved: 1, failed: 0, current: 4 });
+    const rendering = overlay.querySelectorAll('.icard-export-page-row.is-rendering');
+    expect(rendering).toHaveLength(1);
+    expect(rendering[0].querySelector('.icard-export-page-name')?.textContent).toBe('第 4 页');
   });
 });

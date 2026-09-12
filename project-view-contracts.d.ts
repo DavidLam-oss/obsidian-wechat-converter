@@ -376,6 +376,8 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     cardExportProgress: Record<string, unknown> | null;
     /** 卡片导出：逐页明细是否被用户手动展开（跨重绘保留） */
     cardExportPagesExpanded: boolean;
+    /** 卡片导出：用户显式选择的导出范围（'all' / 'selected'；null = 跟随预览勾选） */
+    cardExportScope: 'all' | 'selected' | null;
     /** 卡片导出：弹窗内容区滚动位置（进度事件重绘后还原） */
     cardExportScrollTop: number;
     /** 卡片导出：本批导出控制器（含 getBatchInfo / getResourceSummary / disposeResources） */
@@ -400,7 +402,8 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     cardPreviewLastOutcome: unknown;
     cardPreviewOutcome: unknown;
     cardPreviewShell: ObsidianElementLike | null;
-    cardSelectedPageIndex: number;
+    /** 卡片预览：上次渲染时的勾选页数（版本 bump 后据此提示「页选择已重置为全部」） */
+    cardPreviewSelectedCount: number;
     /** 卡片预览：按笔记记录的正文内容 hash（变化 → bumpContent） */
     cardContentHashes: Map<string, string>;
     /** 卡片预览：会话级资源累计预算（§5.5） */
@@ -425,6 +428,16 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     renderCardMobileNotice(): void;
     renderCardFailureState(outcome: unknown): void;
     renderCardPreviewDom(): ObsidianElementLike | undefined;
+    /** 当前有效页勾选（版本失效/空集 → null，调用方回落「全部」） */
+    getCardPageSelection(): string[] | null;
+    /** 勾选读写与源定位共用的会话（无预览输入返回 null） */
+    resolveCardSelectionSession(): unknown;
+    /** 切换单页勾选（多选） */
+    toggleCardPageSelection(pageId: string): void;
+    /** 写入页勾选（多选；空集走 clearSelection 回落「全部」） */
+    applyCardPageSelection(pageIds: string[]): void;
+    /** 按当前选择刷新预览勾选态与摘要 chip（不重建缩略页） */
+    syncCardPageSelectionDom(): void;
     /** 版本安全源定位：结果过期时不跳转编辑器 */
     locateCardPageSource(pageIndex: number): void;
     /** 源定位共用入口（行号 1-based；B03 从页定位与诊断定位共用） */
@@ -467,6 +480,8 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     closeCardExportModal(): void;
     /** 卡片导出：弹窗应展示的状态（job / result / none） */
     resolveCardExportView(): { kind: string, job?: unknown };
+    /** 卡片导出：本次导出范围（'all' 全部页 / 'selected' 仅预览勾选页；未显式选择时跟随预览勾选） */
+    resolveCardExportScope(): 'all' | 'selected';
     /** 卡片导出：按会话任务状态重绘弹窗 */
     renderCardExportModal(): void;
     /** 卡片导出：准备中视图（点击开始后、任务建立与图片内联完成之前） */

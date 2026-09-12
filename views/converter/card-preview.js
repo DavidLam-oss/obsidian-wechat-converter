@@ -3,12 +3,13 @@
 
 图片卡片预览视图（B02）：卡片模式的第三预览入口。绑定 B01 会话层（card-session），
 把当前笔记正文走「解析 → 资源就绪 → 测量分页 → 页面装配」管线生成页计划，
-以缩放缩略图形式展示，并提供摘要、空态、警告、过期（stale）状态、页选择与版本安全的源定位。
+以缩放缩略图形式展示，并提供摘要、空态、警告、过期（stale）状态、页级勾选（多选，
+供「选中页」导出）与版本安全的源定位。
 
 ## 输入
 
 AppleStyleView 实例状态（previewMode/previewContainer/app 等）、当前笔记 Markdown、
-用户交互（页点击、缩放、模式切换）。
+用户交互（页勾选、页点击定位、缩放、模式切换）。
 
 ## 输出
 
@@ -18,11 +19,15 @@ AppleStyleView 实例状态（previewMode/previewContainer/app 等）、当前�
 - 模式操作显隐集中在 panel-shell.js 的 `applyModeActionVisibility()`；
 - `setCardPreviewZoom()` / `adjustCardPreviewZoom()`：仅改变展示缩放，不改分页（§4.3）；
 - `locateCardPageSource(pageIndex)`：版本安全源定位（陈旧结果不跳转）；
+- 页勾选（多选）的读写与摘要 chip 在 **card-page-selection.js** 的独立方法组
+  （`getCardPageSelection` / `applyCardPageSelection` / `toggleCardPageSelection` 等），
+  本文件只负责在缩略页上渲染勾选控件并调用它；
 - `disposeCardPreview()`：视图关闭时释放会话与资源。
 
 ## 定位
 
-位于 views/converter/，卡片预览编排；解析/分页/资源/会话分别委托 services/。
+位于 views/converter/，卡片预览编排；解析/分页/资源/会话分别委托 services/，
+页勾选拆到 card-page-selection.js（按职责拆分，避免本文件越过 800 行软警告线）。
 排版管线集中在 `runCardLayoutPipeline`（测试可注入替身）。
 
 ## 依赖
@@ -34,6 +39,9 @@ AppleStyleView 实例状态（previewMode/previewContainer/app 等）、当前�
 
 - 修改逻辑后同步更新本文件说明书，并检查所属目录 README 是否仍准确。
 - 预览 DOM 选择器以 icard- 前缀作用域（styles/card-preview.css 分片）。
+- **勾选与定位必须分离**（规划 §3.1）：点页面本体只做源定位，选择集合只由左上角勾选控件改写。
+- 选择写进会话（非空用 `setSelection`、清空用 `clearSelection`）：任一版本 bump 后由会话自动失效
+  → 回落「全部」并在摘要提示，不得把旧页号对应到新内容（§5.2）。
 - 导出/复制入口在 B04/B05/C03 接入前保持禁用或不展示，不得提前放行。
 - 排版设置已在 B03 接入（会话归一化：card-settings-model.js）；主题/比例仍仅已验证值，C01 扩展。
 */
@@ -90,7 +98,7 @@ const OMISSION_LABELS = {
  *   cardPreviewLastOutcome?: Record<string, any> | null,
  *   cardPreviewOutcome?: Record<string, any> | null,
  *   cardPreviewShell?: ObsidianElementLike | null,
- *   cardSelectedPageIndex?: number,
+ *   cardPreviewSelectedCount?: number,
  *   cardRenderedLayoutKey?: string,
  *   cardContentHashes?: Map<string, string>,
  *   cardResourceBudget?: import('../../services/card-resources.js').CardResourceSession | null
@@ -405,13 +413,13 @@ renderCardPreviewDom() {
     return undefined;
   }
 
-  // B03：上一渲染版本之后发生过 bump（正文/设置/主题）且当时有页选中 → 选择已失效，提示并重置
+  // B03/B05：上一渲染版本之后发生过 bump（正文/设置/主题）且当时有页勾选 → 选择已失效，提示并回落全部
   const selfRec = cardStateOf(this);
   const prevRenderedKey = String(selfRec.cardRenderedLayoutKey || '');
   const selectionResetNotice = Boolean(
-    prevRenderedKey && prevRenderedKey !== String(outcome.layoutKey) && Number(selfRec.cardSelectedPageIndex || 0) > 0,
+    prevRenderedKey && prevRenderedKey !== String(outcome.layoutKey) && Number(selfRec.cardPreviewSelectedCount || 0) > 0,
   );
-  if (selectionResetNotice) selfRec.cardSelectedPageIndex = 0;
+  if (selectionResetNotice) selfRec.cardPreviewSelectedCount = 0;
 
   const container = this.previewContainer;
   if (!container) return undefined;
@@ -425,6 +433,8 @@ renderCardPreviewDom() {
   const summary = shell.createEl('div', { cls: 'icard-preview-summary' });
   const pageCount = Number(outcome?.pageCount || 0);
   summary.createEl('span', { cls: 'icard-preview-summary-count', text: `共 ${pageCount} 页` });
+  // 勾选摘要：文案与显隐由 syncCardPageSelectionDom 按当前选择渲染
+  summary.createEl('span', { cls: 'icard-preview-chip is-selection hidden' });
   if (state.stale) {
     summary.createEl('span', { cls: 'icard-preview-summary-stale', text: '正文已更新，正在重新排版…' });
   }
@@ -480,13 +490,16 @@ renderCardPreviewDom() {
   const zoomIn = zoomBar.createEl('button', { cls: 'icard-preview-zoom-btn', attr: { 'aria-label': '放大预览' }, text: '+' });
   zoomIn.addEventListener('click', () => this.adjustCardPreviewZoom(1));
 
-  // —— 缩略页 ——
+  // —— 缩略页（每页带独立勾选控件）——
   const pagesWrap = shell.createEl('div', { cls: 'icard-preview-pages' });
   const pages = Array.isArray(outcome?.pages) ? outcome.pages : [];
   const size = RATIO_PRESETS['3:4'];
+  const checkedIds = new Set(this.getCardPageSelection() || []);
   pages.forEach((pageEl, index) => {
+    const pageId = `page-${index + 1}`;
+    const checked = checkedIds.has(pageId);
     const item = pagesWrap.createEl('div', {
-      cls: 'icard-preview-page-item',
+      cls: `icard-preview-page-item${checked ? ' is-selected' : ''}`,
       attr: { 'data-page-index': String(index + 1) },
     });
     item.dataset.pageWidth = String(size.width);
@@ -494,22 +507,34 @@ renderCardPreviewDom() {
     if (pageEl instanceof HTMLElement) {
       item.appendChild(pageEl);
     }
+    // 独立勾选控件（规划 §3.1）：选择与定位是两个互不干扰的单页操作。
+    // 勾选控件自带 stopPropagation —— 勾选不得顺带把编辑器光标跳走。
+    const check = item.createEl('button', {
+      cls: `icard-preview-page-check${checked ? ' is-checked' : ''}`,
+      attr: {
+        type: 'button',
+        'data-page-id': pageId,
+        'aria-pressed': checked ? 'true' : 'false',
+        'aria-label': `选择第 ${index + 1} 页`,
+        title: `勾选第 ${index + 1} 页（导出时可只导出勾选的页）`,
+      },
+    });
+    check.createEl('span', { cls: 'icard-preview-page-check-mark' });
+    check.addEventListener('click', (event) => {
+      event.stopPropagation();
+      this.toggleCardPageSelection(pageId);
+    });
     const badge = item.createEl('div', { cls: 'icard-preview-page-badge', text: `第 ${index + 1} 页` });
     badge.setAttribute('data-icard-badge', '1');
     item.addEventListener('click', () => {
-      // 点击 = 选中并尝试源定位（版本安全）
-      pagesWrap.querySelectorAll('.icard-preview-page-item.is-selected').forEach((sel) => {
-        (/** @type {HTMLElement} */ (sel)).classList.remove('is-selected');
-      });
-      item.classList.add('is-selected');
-      cardStateOf(this).cardSelectedPageIndex = index + 1;
-      session.setSelection([`page-${index + 1}`]);
+      // 点击本体 = 只做版本安全的源定位；选择集合只由勾选控件改写
       this.locateCardPageSource(index + 1);
     });
   });
   // —— 省略/资源诊断区（可展开、可定位、可确认；B03 ③④）——
   this.renderCardDiagnosticArea(shell, outcome, session);
   selfRec.cardRenderedLayoutKey = String(outcome.layoutKey);
+  this.syncCardPageSelectionDom();
   this.maybeAutoFitCardPreviewZoom(Number(size.width));
   this.applyCardPreviewZoom();
   return /** @type {ObsidianElementLike} */ (/** @type {unknown} */ (shell));
@@ -686,7 +711,7 @@ disposeCardPreview() {
   selfRecord.cardPreviewRunnerNoteId = '';
   selfRecord.cardPreviewOutcome = null;
   selfRecord.cardPreviewShell = null;
-  selfRecord.cardSelectedPageIndex = 0;
+  selfRecord.cardPreviewSelectedCount = 0;
   selfRecord.cardPreviewZoomUserSet = false;
   selfRecord.cardRenderedLayoutKey = '';
   if (selfRecord.cardSessionRegistry) {
