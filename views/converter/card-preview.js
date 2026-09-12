@@ -16,6 +16,8 @@ AppleStyleView 实例状态（previewMode/previewContainer/app 等）、当前�
 输出 `cardPreviewMethods`，由 AppleStyleView 统一组装：
 - `renderCardPreview()`：卡片模式渲染入口（convertCurrent 分支调用）；
 - `scheduleCardPreviewUpdate()`：编辑合并入口（300ms 停顿后排版，§5.6）；
+  合并只调度排版，「正文已过期」的提示由 `markCardPreviewStaleNow()` 在事件到达即给出
+  （会话 markPreviewStale + 摘要条 stale 提示同步刷新，§5.6 ≤250ms）；
 - 模式操作显隐集中在 panel-shell.js 的 `applyModeActionVisibility()`；
 - `setCardPreviewZoom()` / `adjustCardPreviewZoom()`：仅改变展示缩放，不改分页（§4.3）；
 - `locateCardPageSource(pageIndex)`：版本安全源定位（陈旧结果不跳转）；
@@ -192,16 +194,41 @@ applyCardPreviewZoom() {
 
 /**
  * 编辑合并入口：编辑器事件频繁触发时只保留最后一次（§5.6「连续输入合并旧请求而非累积队列」）。
+ * 合并只调度排版；「已过期」的反馈在事件到达即给出（markCardPreviewStaleNow，§5.6 ≤250ms）。
  */
 scheduleCardPreviewUpdate() {
   const selfRecord = cardStateOf(this);
   if (selfRecord.cardPreviewMergeTimer) {
     window.clearTimeout(selfRecord.cardPreviewMergeTimer);
   }
+  this.markCardPreviewStaleNow();
   selfRecord.cardPreviewMergeTimer = window.setTimeout(() => {
     selfRecord.cardPreviewMergeTimer = null;
     void this.renderCardPreview();
   }, CARD_PREVIEW_EDIT_MERGE_MS);
+}
+,
+
+/**
+ * 编辑事件到达即置 stale（§5.6：事件→标记 ≤250ms）：
+ * 会话 markPreviewStale + 摘要条提示同步刷新，不等待合并窗口、不重绘缩略图。
+ * 无旧结果（首渲染前）或当前无预览壳时为 no-op；合并渲染完成后由整树重绘自然摘除提示。
+ */
+markCardPreviewStaleNow() {
+  const selfRecord = cardStateOf(this);
+  const sourceKey = String(selfRecord.cardPreviewPendingInput?.sourcePathKey || '');
+  if (!sourceKey || typeof this.getCardSessions !== 'function') return;
+  const session = /** @type {any} */ (
+    /** @type {any} */ (this.getCardSessions()).getSession(sourceKey)
+  );
+  if (!session || typeof session.markPreviewStale !== 'function') return;
+  session.markPreviewStale();
+  if (!session.getPreviewState().stale) return;
+  const summary = selfRecord.cardPreviewShell?.querySelector('.icard-preview-summary') || null;
+  if (!summary || summary.querySelector('.icard-preview-summary-stale')) return;
+  const marker = summary.createEl('span', { cls: 'icard-preview-summary-stale', text: '正文已更新，正在重新排版…' });
+  const count = summary.querySelector('.icard-preview-summary-count');
+  if (count) summary.insertBefore(marker, count.nextSibling);
 }
 ,
 

@@ -392,6 +392,33 @@ describe('AppleStyleView - Card Page Selection (B05)', () => {
     expect(chip().classList.contains('hidden')).toBe(true);
   });
 
+  it('编辑事件到达即标记 stale（§5.6 ≤250ms）：提示即时出现，不等 300ms 合并', async () => {
+    vi.useFakeTimers();
+    try {
+      const view = twoPageView();
+      await view.renderCardPreview();
+      const session = view.getCardSessions().getSession('notes/a.md');
+      expect(session.getPreviewState()).toMatchObject({ state: 'ready', stale: false });
+
+      // 编辑事件：不推进定时器，标记应已即时出现（会话状态 + 摘要条提示）
+      view.scheduleCardPreviewUpdate();
+      expect(session.getPreviewState()).toMatchObject({ state: 'updating', stale: true });
+      const marker = () => view.previewContainer.querySelector('.icard-preview-summary-stale');
+      expect(marker()?.textContent).toBe('正文已更新，正在重新排版…');
+
+      // 连续编辑不重复插入提示
+      view.scheduleCardPreviewUpdate();
+      expect(view.previewContainer.querySelectorAll('.icard-preview-summary-stale')).toHaveLength(1);
+
+      // 合并窗口后排版完成 → 状态回 ready，提示随整树重绘摘除
+      await vi.advanceTimersByTimeAsync(310);
+      expect(session.getPreviewState()).toMatchObject({ state: 'ready', stale: false });
+      expect(marker()).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('版本 bump 使勾选失效：回落全部并在摘要提示', async () => {
     const view = twoPageView();
     await view.renderCardPreview();

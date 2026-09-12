@@ -156,6 +156,30 @@ describe("版本键与预览身份校验", () => {
     expect(session.getPreviewState()).toMatchObject({ state: "ready", hasOmissions: true });
   });
 
+  it("markPreviewStale：编辑事件到达即置 stale；无结果时 no-op；在途旧排版不再回写 ready", () => {
+    const session = createNoteCardSession({ sourcePath: "a.md" });
+
+    // 无结果（首渲染前）：不产生虚假的 updating
+    session.markPreviewStale();
+    expect(session.getPreviewState()).toMatchObject({ state: "idle", hasResult: false, stale: false });
+
+    // 有旧结果：事件到达即 stale（§5.6 ≤250ms 的会话侧保证）
+    session.settlePreviewUpdate(session.beginPreviewUpdate(), { ok: true });
+    expect(session.getPreviewState()).toMatchObject({ state: "ready", stale: false });
+    session.markPreviewStale();
+    expect(session.getPreviewState()).toMatchObject({ state: "updating", hasResult: true, stale: true });
+
+    // 合并等待窗口内完成的旧内容排版被作废：不短暂回写 ready 吞掉提示
+    const inFlight = session.beginPreviewUpdate(); // 模拟 markStale 前已启动的旧排版（seq 落后）
+    session.markPreviewStale();
+    expect(session.settlePreviewUpdate(inFlight, { ok: true })).toMatchObject({ applied: false, reason: "superseded" });
+    expect(session.getPreviewState()).toMatchObject({ state: "updating", stale: true });
+
+    // 合并后的新排版落账 → 回到 ready
+    session.settlePreviewUpdate(session.beginPreviewUpdate(), { ok: true });
+    expect(session.getPreviewState()).toMatchObject({ state: "ready", stale: false });
+  });
+
   it("settle 在会话销毁后被拒", () => {
     const session = createNoteCardSession({ sourcePath: "a.md" });
     const token = session.beginPreviewUpdate();

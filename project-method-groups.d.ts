@@ -189,6 +189,7 @@ type CardPreviewMethodsContract = Pick<
     | 'getCardSessions'
     | 'renderCardPreview'
     | 'scheduleCardPreviewUpdate'
+    | 'markCardPreviewStaleNow'
     | 'resolveCardMarkdownSource'
     | 'runCardLayoutPipeline'
     | 'getCardPreviewZoom'

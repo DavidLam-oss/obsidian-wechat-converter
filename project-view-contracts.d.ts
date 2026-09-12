@@ -412,6 +412,8 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     renderCardPreview(): Promise<ObsidianElementLike | undefined>;
     /** 编辑合并入口：连续输入只保留最后一次（§5.6） */
     scheduleCardPreviewUpdate(): void;
+    /** 编辑事件到达即置 stale 并刷新摘要条提示（§5.6 事件→标记 ≤250ms；不重绘缩略图） */
+    markCardPreviewStaleNow(): void;
     resolveCardMarkdownSource(): Promise<{ ok: boolean, markdown?: string, sourcePath?: string } | null>;
     /** 排版管线：解析 → 资源就绪 → 字体 → 测量分页装配（测试可注入替身） */
     runCardLayoutPipeline(ctx: { layoutKey: string, isStale: () => boolean }): Promise<Record<string, unknown>>;

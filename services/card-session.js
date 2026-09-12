@@ -21,6 +21,7 @@
     变化检测委托 card-settings-model.js；值实际变化才 bumpConfig（选择/确认随之失效）。
   - 预览：`beginPreviewUpdate()` → token（{seq, layoutKey}）；`settlePreviewUpdate(token, outcome)`
     仅在 token 仍为最新且版本未变时生效（晚到结果丢弃）；`cancelPreviewUpdate()`；
+    `markPreviewStale()`（编辑事件到达即置 stale 并作废在途旧排版，§5.6 ≤250ms 标记）；
     `getPreviewState()`（idle/updating/ready/failed + stale 旧预览暂留标记）。
   - 快照：`freezeSnapshot({ plan, resources, ... })` → 深拷贝冻结 + retain 资源，
     快照不受后续调用方原地修改污染；`retainSnapshot/releaseSnapshot/getSnapshot`；
@@ -142,6 +143,7 @@ function toLayoutKey(versions) {
  *   beginPreviewUpdate(): { seq: number, layoutKey: string } | null,
  *   settlePreviewUpdate(token: { seq: number, layoutKey: string } | null, outcome: Record<string, unknown>): { applied: boolean, reason?: string },
  *   cancelPreviewUpdate(): void,
+ *   markPreviewStale(): void,
  *   getPreviewState(): { state: CardPreviewState, layoutKey: string | null, stale: boolean, hasOmissions: boolean, hasResult: boolean },
  *   freezeSnapshot(input: { plan?: unknown, resources?: CardReleasableLike | null, meta?: Record<string, unknown> }): CardSnapshotLike,
  *   retainSnapshot(id: string): boolean, releaseSnapshot(id: string): void, getSnapshot(id: string): CardSnapshotLike | null,
@@ -323,6 +325,18 @@ export function createNoteCardSession(options = {}) {
       if (disposed) return;
       previewSeq += 1;
       previewState = previewHasResult ? "ready" : "idle";
+    },
+
+    /**
+     * 编辑事件到达即标记「旧结果已过期」（§5.6：事件→标记 ≤250ms）。
+     * 仅在已有旧结果时生效（stale 语义）；首渲染前保持 idle，由首次渲染自然接管。
+     * 同时前移 seq：合并等待窗口内完成的旧内容排版不再短暂回写 ready（避免 stale 提示被吞）。
+     * @returns {void}
+     */
+    markPreviewStale() {
+      if (disposed || !previewHasResult) return;
+      previewSeq += 1;
+      previewState = "updating";
     },
 
     /** @returns {{ state: CardPreviewState, layoutKey: string | null, stale: boolean, hasOmissions: boolean, hasResult: boolean }} */
