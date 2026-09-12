@@ -38,8 +38,8 @@ B04 导出服务必须调用本模块的资格检查，而不是依赖弹窗按�
 
 import { hasCardTheme } from './card-themes.js';
 
-/** 一期已验证主题（C01 前仅清晰笔记；§B03「先仅暴露阶段 A 已验证值」） */
-export const VERIFIED_CARD_THEME_IDS = /** @type {const} */ (["clear-notes"]);
+/** 一期已验证主题（C01①：三套齐备，视觉验收随 David 迭代式评审进行） */
+export const VERIFIED_CARD_THEME_IDS = /** @type {const} */ (["clear-notes", "paper-notes", "dark-take"]);
 
 /** 一期已验证比例（C01 前仅 3:4） */
 export const VERIFIED_CARD_RATIOS = /** @type {const} */ (["3:4"]);

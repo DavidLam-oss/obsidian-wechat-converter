@@ -1,7 +1,7 @@
 /*
 ## 核心功能
 
-图片卡片主题（A03：仅「清晰笔记」；C01 补齐三套）。提供主题 token 与卡片页面 scoped CSS 构建，主题颜色/字体全部显式定义，不随 Obsidian 深浅色漂移。
+图片卡片主题（C01①：三套齐备）。提供主题 token 与卡片页面 scoped CSS 构建，主题颜色/字体全部显式定义，不随 Obsidian 深浅色漂移。
 
 ## 输入
 
@@ -22,7 +22,7 @@
 ## 维护规则
 
 - 修改逻辑后同步更新本文件说明书，并检查 services 的文件夹 README 是否仍准确。
-- 一期三主题：clear-notes（清晰笔记，默认）/ paper-notes（纸页随笔，C01）/ dark-take（深色观点，C01）。
+- 三主题（§3.3「主题不是三种底色」）：clear-notes（清晰笔记，默认）/ paper-notes（纸页随笔：暖纸底 + 衬线标题 + 编辑式引用）/ dark-take（深色观点：强标题尺度 + 少量强调色）。差异 = token + THEME_CSS_EXTRAS 专属规则，新增主题必须同时在两处定义，且不得使用宿主主题变量。
 */
 
 export const CARD_THEME_IDS = /** @type {const} */ (["clear-notes", "paper-notes", "dark-take"]);
@@ -40,6 +40,7 @@ export const CARD_PAGE_HEIGHT_3_4 = 500;
  *   tokens: {
  *     fontFamily: string,
  *     fontFamilyMono: string,
+ *     headingFontFamily?: string,
  *     background: string,
  *     textColor: string,
  *     textColorSecondary: string,
@@ -78,6 +79,51 @@ const THEMES = {
     },
     coverStyle: "left-aligned",
   },
+  "paper-notes": {
+    id: "paper-notes",
+    name: "纸页随笔",
+    tokens: {
+      fontFamily:
+        '-apple-system, "SF Pro Text", "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif',
+      fontFamilyMono:
+        '"SF Mono", "JetBrains Mono", Menlo, Consolas, "PingFang SC", monospace',
+      // 衬线标题（§3.3 纸页随笔：暖纸底、衬线标题与克制正文、编辑式段落节奏）
+      headingFontFamily:
+        'Georgia, "Times New Roman", "Songti SC", "Noto Serif SC", "SimSun", serif',
+      background: "#faf6ef",
+      textColor: "#3d3529",
+      textColorSecondary: "#8a7f6d",
+      accentColor: "#9a3b26",
+      borderColor: "#e2d9c8",
+      codeBackground: "#f1ead9",
+      quoteBackground: "transparent",
+      headingWeight: "600",
+      pagePadding: 30,
+      contentGap: 18,
+    },
+    coverStyle: "masthead",
+  },
+  "dark-take": {
+    id: "dark-take",
+    name: "深色观点",
+    tokens: {
+      fontFamily:
+        '-apple-system, "SF Pro Text", "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif',
+      fontFamilyMono:
+        '"SF Mono", "JetBrains Mono", Menlo, Consolas, "PingFang SC", monospace',
+      background: "#14161a",
+      textColor: "#e8eaed",
+      textColorSecondary: "#9aa0a6",
+      accentColor: "#e8a33d",
+      borderColor: "#2a2e35",
+      codeBackground: "#1d2026",
+      quoteBackground: "#1d2026",
+      headingWeight: "800",
+      pagePadding: 30,
+      contentGap: 18,
+    },
+    coverStyle: "statement",
+  },
 };
 
 /**
@@ -108,6 +154,44 @@ export function hasCardTheme(id) {
  */
 
 /**
+ * 主题专属 CSS extras（§3.3「主题不是三种底色」）：在共享模板之上叠加排版差异。
+ * 仅允许使用主题 token 的字面量颜色/字体，禁止宿主主题变量。
+ * @type {Record<string, string>}
+ */
+const THEME_CSS_EXTRAS = {
+  "paper-notes": `
+.icard-content h1, .icard-content h2, .icard-content h3,
+.icard-content h4, .icard-content h5, .icard-content h6 {
+  font-family: ${THEMES["paper-notes"].tokens.headingFontFamily};
+  letter-spacing: 0.3px;
+}
+.icard-content h1 { font-size: 21px; }
+.icard-content p { letter-spacing: 0.2px; }
+/* 编辑式引用：去底色，仅留细线与次级色，靠缩进表达层级 */
+.icard-content blockquote {
+  border-left: 2px solid ${THEMES["paper-notes"].tokens.accentColor};
+  border-radius: 0;
+  padding: 2px 0 2px 14px;
+  color: ${THEMES["paper-notes"].tokens.textColorSecondary};
+}
+.icard-content blockquote .icard-callout-title { font-weight: 600; }
+.icard-content hr { border-top: 1px solid ${THEMES["paper-notes"].tokens.borderColor}; }
+`,
+  "dark-take": `
+/* 强标题尺度：h1 放大、层级对比拉开 */
+.icard-content h1 { font-size: 24px; letter-spacing: 0.2px; }
+.icard-content h2 { font-size: 20px; }
+.icard-content h3 { font-size: 18px; }
+.icard-content h4, .icard-content h5, .icard-content h6 { font-size: 15.5px; }
+/* 少量强调色：引用边线、callout 标题、任务勾选；正文不染色 */
+.icard-content blockquote { border-left: 2px solid ${THEMES["dark-take"].tokens.accentColor}; }
+.icard-content a { color: ${THEMES["dark-take"].tokens.accentColor}; }
+.icard-content th { background: ${THEMES["dark-take"].tokens.codeBackground}; }
+.icard-content img { border-radius: 8px; }
+`,
+};
+
+/**
  * 构建主题 scoped CSS。所有选择器以 .icard 开头；颜色/字体全部来自 token，禁止宿主主题变量。
  * typography（B03）仅覆盖正文字号/行高与页面内边距；标题层级、页脚、表格字号保持固定，
  * 避免小字号下标题反向小于正文等失衡（归一化钳制在 card-settings-model.js）。
@@ -125,7 +209,7 @@ export function buildCardPageCss(theme, typography = {}) {
   const liLine = lh !== null ? `${lh}` : "1.65";
   // 引用/callout 正文比主字号小半档，保持视觉层级
   const quoteSize = fs !== null ? `${Math.max(10, fs - 0.5)}px` : "13.5px";
-  return `
+  const base = `
 .icard {
   font-family: ${t.fontFamily};
   color: ${t.textColor};
@@ -149,6 +233,7 @@ export function buildCardPageCss(theme, typography = {}) {
 .icard-content h1, .icard-content h2, .icard-content h3,
 .icard-content h4, .icard-content h5, .icard-content h6 {
   color: ${t.textColor};
+  font-family: ${t.headingFontFamily || t.fontFamily};
   font-weight: ${t.headingWeight};
   line-height: 1.35;
   margin: 0;
@@ -276,4 +361,5 @@ export function buildCardPageCss(theme, typography = {}) {
 }
 .icard-footer .icard-page-num { font-variant-numeric: tabular-nums; }
 `;
+  return base + (THEME_CSS_EXTRAS[theme.id] || "");
 }

@@ -37,11 +37,12 @@ const SAMPLE = [
 const theme = getCardTheme(DEFAULT_CARD_THEME_ID);
 
 describe("card-themes", () => {
-  it("三主题 id 已声明；一期仅清晰笔记可用，未知 id 回落默认", () => {
+  it("三主题 id 已声明且全部可用（C01①）；未知 id 回落默认", () => {
     expect(CARD_THEME_IDS).toEqual(["clear-notes", "paper-notes", "dark-take"]);
     expect(hasCardTheme("clear-notes")).toBe(true);
-    expect(hasCardTheme("paper-notes")).toBe(false);
-    expect(getCardTheme("paper-notes").id).toBe(DEFAULT_CARD_THEME_ID);
+    expect(hasCardTheme("paper-notes")).toBe(true);
+    expect(hasCardTheme("dark-take")).toBe(true);
+    expect(getCardTheme("not-exist").id).toBe(DEFAULT_CARD_THEME_ID);
     expect(getCardTheme("clear-notes").name).toBe("清晰笔记");
   });
 
