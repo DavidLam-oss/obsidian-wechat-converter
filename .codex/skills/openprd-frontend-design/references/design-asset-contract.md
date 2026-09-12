@@ -2,7 +2,7 @@
 adapter=codex
 source=openprd-frontend-design:reference:design-asset-contract.md
 version=0.1.19
-checksum=bfae777d344d8f2e
+checksum=5392b14899b93948
 -->
 
 # 设计资产合同
@@ -12,6 +12,8 @@ checksum=bfae777d344d8f2e
 让“做界面”先有事实源和资产源，而不是先堆样式。
 
 ## 最小合同
+
+先填写 `.openprd/design/active/task-scope.md`。active 顶层文件只代表当前 task scope；旧任务方向、截图和材质只有被当前 scope 显式引用时才能参与判断，不能静默继承。
 
 每个前端体验任务，先明确这几类信息是否存在：
 
@@ -34,6 +36,8 @@ checksum=bfae777d344d8f2e
 - 没有品牌或参考图约束时，默认使用紫白渐变、蓝紫光晕、玻璃卡、白底卡片堆叠或通用 SaaS hero。
 - 把 Inter、Roboto、Arial 或 system-ui 当成默认审美答案；如果确实需要中性字体，要说明它服务于密度、系统一致性或可访问性。
 - 用动效、渐变、纹理、阴影或装饰覆盖事实、素材、任务路径缺口。
+- 仅凭参考截图推断源位图已经烘焙圆角、边框或阴影。
+- 混用 `transparent-cutout` 与 `opaque-full-bleed-tile` 的四角验证；前者要求透明角，后者要求 full-bleed 不透明角且图片内不得再烘焙 UI 容器。
 
 ## 完成标准
 

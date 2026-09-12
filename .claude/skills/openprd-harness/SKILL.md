@@ -7,7 +7,7 @@ description: 驱动 OpenPrd 工作区完成 clarify、synthesize、diagram、fre
 adapter=claude
 source=openprd-harness
 version=0.1.19
-checksum=e8d51687f2bed843
+checksum=cdcb38885442e2d7
 -->
 
 # OpenPrd Harness
@@ -24,7 +24,7 @@ checksum=e8d51687f2bed843
 4. 面对规划、分析、架构评审、“怎么改”或“会动哪些文件”类请求，保持只读并基于代码、文档和状态回答。
 4a. 代码搜索先限定在当前任务相关源码、测试和 change/task 文件；不要 repo-wide 搜 `.openprd/quality/reports/`、`.openprd/harness/` 或 `.openprd/learning/`。质量报告只在需要审阅就绪证据时按最新报告路径显式读取，历史报告不能混进源码排查。
 5. 需要完整工作流细节时，运行 `openprd status .` 和 `openprd next .`。
-5a. `openprd init/setup/update/doctor` 可能会把 Context7、DeepWiki 这类非阻断式增强能力写进 `.openprd/harness/install-manifest.json` 的 `optionalCapabilities`。把它当成软建议：初始化、诊断和当前任务都不因它失败；只有当当前任务会明显受益时，才在后续建议里解释能力价值、附官方文档 / GitHub 链接，并视情况提出可代为补配置。
+5a. `openprd init/setup/update/doctor` 可能会把 Context7、DeepWiki、CodeGraph 这类非阻断式增强能力写进 `.openprd/harness/install-manifest.json` 的 `optionalCapabilities`。把它当成软建议：初始化、诊断和当前任务都不因它失败；只有当当前任务会明显受益时，才在后续建议里解释能力价值、附官方文档 / GitHub 链接，并视情况提出可代为补配置。CodeGraph 即使被发现也只说明可配置或有索引标记；当前项目的图事实仍需当前会话真实查询并导入经校验的 evidence。
 5b. `openprd run . --context` 会返回 `runtimeEnvironment`。先按 `.openprd/harness/runtime-environment.json` 和 manifest 的 `platformCapabilityPacks` 判断当前对话是在 Codex、Claude Code 还是 Cursor，再启用对应能力；Codex Image 2、Computer Use、Codex-owned browser window、`openprd canvas` 对话画布和 Codex Agent 前台线程接力都必须有当前 surface 或 thread/session 证据，不能只凭 Codex CLI 或配置文件存在来启用。
 5. 涉及最佳实践、benchmark、对标、参考产品、prompt engineering、Agent harness、context engineering、图标资源、CLI 或 skill 体系设计时，先使用 `$openprd-benchmark-router`。
 6. 先用 `$openprd-requirement-intake` 做需求类型语义分流：直接处理(L0)可直接处理并事后说明，不打开正式 PRD/review/change/tasks；现有功能优化(L1)给对话内 mini-plan 后执行，默认不生成正式 PRD/change/tasks；只有新功能/新流程方案(L2)在改代码前必须先走需求入口：`openprd clarify .` 会生成需求入口自省，并只在对话内输出澄清摘要或简短清单；正式 HTML 评审留给后续 review。若当前问题本质上还在判断值不值得做、先找谁验证、能不能先手工交付，就先补“创业验证透镜”，不要急着把方案写成既定需求。

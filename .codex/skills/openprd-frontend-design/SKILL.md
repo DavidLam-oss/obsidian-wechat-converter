@@ -7,7 +7,7 @@ description: OpenPrd 前端设计框架 skill：为界面、页面、视觉、�
 adapter=codex
 source=openprd-frontend-design
 version=0.1.19
-checksum=c1dce7f1b79de34b
+checksum=5f733d8fb2e302e8
 -->
 
 # OpenPrd Frontend Design
@@ -42,6 +42,7 @@ checksum=c1dce7f1b79de34b
 如果本轮已经进入实现准备，再读：
 
 - `.openprd/design/active/facts-sheet.md`
+- `.openprd/design/active/task-scope.md`
 - `.openprd/design/active/asset-spec.md`
 - `.openprd/design/active/image-preflight.md`
 - `.openprd/design/active/direction-plan.md`
@@ -53,7 +54,7 @@ checksum=c1dce7f1b79de34b
 2. 选一个 `lens`，明确这次界面的视觉判断角度。
 3. 写清本次审美立意：页面解决什么问题、服务谁、气质要偏哪一端、受什么技术/可访问性约束、用户第一眼应该记住什么。
 4. 选一个 `theme`、一个 `layout skeleton` 和一个 `recipe`，并说明它们如何服务上面的审美立意。
-5. 如果页面会写具体产品事实，先补 `facts-sheet.md`。
+5. 先补 `task-scope.md`；active 顶层合同只服务当前任务，旧任务方向只有被当前 scope 显式引用时才能采用。页面会写具体产品事实时，再补 `facts-sheet.md`。
 6. 如果页面依赖品牌素材、产品图、界面图、图库或插图，先补 `asset-spec.md`，并记录字体、色彩、动效、背景/表面这些审美资产。
 7. 如果这类页面没有真实图片就会空心，先补 `image-preflight.md`。
 8. 如果用户还没有给参考方向，先补 `direction-plan.md`，明确 3 个异源方向；每个方向都要有不同审美主张和记忆点。
@@ -179,6 +180,7 @@ checksum=c1dce7f1b79de34b
 - 这份 skill 发生在实现前，用来约束“先决定怎么做”。
 - `imagegen` 仍然负责出候选效果图。
 - logo、icon、avatar、badge、贴纸、空态插画、单物件 UI 位图等开发素材，如果后续要接入 UI 并需要透明背景，默认走一条完整的图标资产链路：先出 3 个差异足够大的独立素材候选方向，全部使用纯 `#00ff00` 绿幕、无文字、无 UI 容器、主体居中且留足裁切边距；用户选定前不写项目文件。选定后先用源图顺序或 contact sheet 确认选中图，再保留绿幕源图、抠透明 PNG/WebP、裁切居中、导出 384px 或多尺寸资产，并按真实入口位置分别调显示比例。接入后同步写回 `.openprd/design/active/asset-spec.md` 和 `selected-direction.md`，记录选中方向、资产路径、接入位置和验证结果。
+- 单物件位图接入前必须显式选择 `transparent-cutout` 或 `opaque-full-bleed-tile`。参考截图不能单独证明源像素已烘焙圆角；UI 容器圆角、边框和阴影默认由消费组件负责。cutout 验证透明四角，full-bleed 验证不透明四角、无白边、无图片内圆角卡片，两种合同不可混用。
 - `openprd visual-prepare` 负责把整板、多对象或网格参考图整理成可实现的 reference-set。
 - `openprd visual-compare` 负责实现后的视觉证据，而不是替代这份设计前置判断。
 - `visual-compare` 每次都会返回 `chatEmbed` markdown；生成证据板后必须把 `![视觉证据: ...](路径)` 直接嵌入最终回复，让证据在对话流里可见，不要只报告文件路径。`openprd dev-check` 触达界面文件且最近 24 小时没有证据板时会输出视觉证据提醒，收口前按提醒补齐。

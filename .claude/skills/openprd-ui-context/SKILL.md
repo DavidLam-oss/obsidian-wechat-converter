@@ -1,13 +1,13 @@
 ---
 name: openprd-ui-context
-description: OpenPrd UI Context skill：区分 greenfield、brownfield 与局部修正，基于已确认 PRD、可选 CodeGraph 和本地证据提出专业 UI/UX 方向，并在用户确认后编译 PRODUCT.md、DESIGN.md 和 Impeccable handoff。
+description: OpenPrd UI Context skill：区分 greenfield、brownfield 与局部修正；greenfield 基于已确认 PRD，brownfield 基于本地证据和可验证的当前项目 CodeGraph 查询摘要提出专业 UI/UX 方向，并在用户确认后编译 PRODUCT.md、DESIGN.md 和 Impeccable handoff。
 ---
 
 <!-- OPENPRD:GENERATED
 adapter=claude
 source=openprd-ui-context
 version=0.1.19
-checksum=041d61f5688d9b05
+checksum=cf9aa54ddfa57108
 -->
 
 # OpenPrd UI Context
@@ -23,7 +23,7 @@ checksum=041d61f5688d9b05
 
 ## 核心原则
 
-1. CodeGraph 只在 brownfield 中作为可选代码事实输入；不可用时回退本地扫描并标记 evidence-gap。
+1. CodeGraph 只在 brownfield 中作为可选代码事实输入；静态 marker、依赖、环境变量或别的项目索引都不等于当前会话已读图。
 2. greenfield 从已确认 PRD/review 生成 `planned UI topology`；永远不要称它为 CodeGraph 或现有代码事实。
 3. 先做产品设计、UX 架构与审美判断，再请用户确认少量高价值变量。
 4. 三个方向必须在生成逻辑、信息组织、密度、素材策略、交互哲学或视觉气质上真正不同。
@@ -43,10 +43,35 @@ openprd ui-context . --mode auto --json
 读取 `.openprd/design/ui-context/context.json`。按模式继续：
 
 - `greenfield`：读取 [greenfield.md](references/greenfield.md)，从已冻结 PRD/review 编译计划页面、入口、流程、状态、复用组件和数据角色。
-- `brownfield`：读取 [brownfield.md](references/brownfield.md)，查询可用 CodeGraph，并补路由、组件、CSS/tokens、状态、资产和 blast radius 扫描。
+- `brownfield`：读取 [brownfield.md](references/brownfield.md)，先补路由、组件、CSS/tokens、状态、资产和 blast radius 的本地扫描；只有当前会话确有连接的 CodeGraph 且当前项目已索引时，再执行真实图查询并导入可验证摘要。
 - `local-fix`：复用已有 PRODUCT.md、DESIGN.md 和 active design artifacts，不重开完整方向评审。
 
 每条关键结论都保留：`source`、`confidence`、`conflicts`、`open questions`。事实优先级与冲突处理见 [evidence-policy.md](references/evidence-policy.md)。
+
+### 1a. Brownfield 的 CodeGraph 证据路径
+
+`CodeGraph` 是可选增强，不是安装门禁。不要让 OpenPrd 自动安装未知 runtime，也不要把别的仓库的 `.codegraph` 数据复用到当前项目。
+
+当且仅当当前会话确实能调用图工具，并确认当前项目已经完成索引时：
+
+```bash
+openprd ui-context . --mode brownfield --codegraph-plan --json
+```
+
+读取 `.openprd/design/ui-context/codegraph-query-plan.json`，在已连接的图工具中完成其中五类查询。Agent 只整理相对文件路径、短摘要、有限边关系和未解析边，不保存原始响应、原始代码、绝对路径或凭据。随后导入：
+
+```bash
+openprd ui-context . --mode brownfield --codegraph-evidence <evidence.json> --json
+```
+
+导入会校验当前项目根指纹、源码快照、查询计划和 14 天时效；通过后才会写入 `.openprd/design/ui-context/codegraph-evidence.json`，并将 `context.json` 的 `codeGraph.status` 标为 `query-evidence-ready`。四种状态含义：
+
+provider-neutral 入口只能校验证据的结构、项目绑定、源码快照、计划和时效；`session.connected: true` 是 Agent 的查询证明，不是 OpenPrd 对第三方 runtime 原始响应的独立证明。Agent 只能在真实查询完成后生成这份摘要，绝不能用配置、marker 或推断填充它。
+
+- `runtime-unavailable`：未发现当前项目的 runtime/config 证据，继续本地扫描。
+- `runtime-available-session-unconnected`：发现可配置的 runtime 或 index marker，但当前会话没有已验证查询，继续本地扫描。
+- `session-connected-project-unindexed`：已验证当前会话连接，但项目尚未索引；不能写图事实。
+- `query-evidence-ready`：当前项目、当前计划和查询摘要全部校验通过；可作为 brownfield 的一层事实输入。
 
 ### 2. 做专业设计判断
 

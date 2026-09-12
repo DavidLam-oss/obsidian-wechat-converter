@@ -7,7 +7,7 @@ description: OpenPrd 入口路由 skill：先判断当前任务该读哪个 skil
 adapter=claude
 source=openprd-router
 version=0.1.19
-checksum=952b675fce2a5dcf
+checksum=e7961fc3494360ba
 -->
 
 # OpenPrd Router
@@ -36,6 +36,7 @@ checksum=952b675fce2a5dcf
 - 最佳实践、benchmark、公开 GitHub 仓库、第三方技术事实、prompt/context engineering：`$openprd-benchmark-router`
 - `docs/basic/`、文件说明书、文件夹 README、文档标准：`$openprd-standards`
 - 就绪验证、EVO 门禁、HTML 质量评估报告、项目经验沉淀：`$openprd-quality`
+- task/change/release/workspace 阶段收尾、六面事实同步、历史归档和清理候选：`$openprd-closeout`
 - 架构图、产品流程图、解释型 SVG、可视化评审、大界面改动效果图方案评审：`$openprd-diagram-review` 与 `$openprd-harness`
 - 长时间只读挖掘、参考项目持续调研、requirements/specs/tasks 补全：`$openprd-discovery-loop`
 - 学习包、归档阅读器、知识整理：`$openprd-learning-review`

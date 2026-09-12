@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "schema": "openprd.visual-review.v1",
+  "generatedAt": "2026-07-28 17:05:00",
+  "mode": "verification-board",
+  "locale": "zh-CN",
+  "outputPath": ".openprd/visual-evidence/custom-css-verification-board.jpg",
+  "format": "jpg",
+  "boardSource": ".openprd/visual-evidence/custom-css-verification-board.json",
+  "title": "自定义 CSS 设置端到端验收",
+  "route": "重载 Wechat Converter，打开微信设置并滚动到自定义 CSS 区域",
+  "layout": {
+    "columns": 1,
+    "cardWidth": 720,
+    "rowCount": 1
+  },
+  "items": [
+    {
+      "index": 1,
+      "label": "Obsidian 实际运行状态",
+      "subtitle": "轻量指南、即时状态、CSS 文本框与笔记来源入口",
+      "level": "",
+      "levelLabel": "",
+      "verdict": "通过",
+      "metrics": [
+        {
+          "label": "视觉层级",
+          "value": "指南为普通文本链接，没有抢占主操作"
+        },
+        {
+          "label": "状态反馈",
+          "value": "当前来源与自动更新状态紧邻开关显示"
+        },
+        {
+          "label": "滚动稳定性",
+          "value": "停留 2.5 秒后仍保持在自定义 CSS 区域"
+        }
+      ],
+      "notes": "验收时临时启用自定义 CSS，截图后已恢复用户原有关闭状态。",
+      "media": [
+        {
+          "path": "/Users/davidlin/.codex/visualizations/2026/07/28/019fa6b8-c06f-76c0-8eb5-edbac927941c/custom-css-settings-after.png",
+          "label": "自定义 CSS 设置",
+          "original": {
+            "width": 1024,
+            "height": 768,
+            "format": "png"
+          },
+          "rendered": {
+            "width": 720,
+            "height": 540
+          }
+        }
+      ]
+    }
+  ],
+  "canvas": {
+    "width": 768,
+    "height": 780
+  }
+}

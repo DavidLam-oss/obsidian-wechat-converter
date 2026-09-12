@@ -2,7 +2,7 @@
 adapter=codex
 source=codex-hooks
 version=0.1.19
-checksum=cfc52a4ca9d45da1
+checksum=fb7d9459a4cc156f
 */
 
 import fs from 'node:fs';
@@ -3630,7 +3630,7 @@ function uiContextWorkflowMessage(intent = null) {
   }
   return [
     'OpenPrd UI Context 工作流:',
-    '新界面、结构性 UI 改造、设计系统或 Impeccable handoff：先读取 `$openprd-ui-context`，运行 `openprd ui-context . --mode auto`。greenfield 从已确认 PRD/review 编译 planned UI topology；brownfield 使用可选 CodeGraph 加本地确定性扫描。planned topology 不得冒充 CodeGraph 或现有代码事实。',
+    '新界面、结构性 UI 改造、设计系统或 Impeccable handoff：先读取 `$openprd-ui-context`，运行 `openprd ui-context . --mode auto`。greenfield 从已确认 PRD/review 编译 planned UI topology；brownfield 先做本地确定性扫描。只有当前会话连接了 CodeGraph、当前项目也已索引时，才运行 `openprd ui-context . --codegraph-plan`，执行真实查询后用 `--codegraph-evidence <file>` 导入绑定当前项目和查询计划的结构化摘要。静态 marker、未验证配置或别的项目图都不得冒充已读取的 CodeGraph 事实。',
     '中间 skill 负责产品设计、UX 架构、专业审美判断和三个异源方向；用户只确认方向、明暗、密度、品牌强度、动效与参考约束等高价值变量。',
     '方向确认后运行 `openprd ui-context . --direction <1|2|3> --source user-confirmed`。UI Context skill 负责基于专业判断编译 PRODUCT.md、DESIGN.md 和 active design artifacts；Host API 负责证据、确认、lint 与 handoff，不生成平庸模板。已有合同冲突时显式使用 `--contract-decision preserve|merge|refresh`，禁止静默覆盖。`openprd ui-context . --check` 通过后才交给 Impeccable；局部低风险修正走 `--mode local-fix` 复用已有冻结上下文。',
   ].join('\n');
@@ -4194,7 +4194,10 @@ function closeoutVerificationReminder(root, turnState, stopIntent) {
     missing.push('本轮 task-scoped Markdown / HTML 测试报告');
   }
   if (missing.length === 0) {
-    return null;
+    return [
+      'OpenPrd 的项目级验证证据已经齐备。',
+      '如果当前 task/change 确实进入阶段收尾，请先运行只读的 `openprd closeout . --preview` 查看六面事实、归档和清理候选；Stop hook 不会自动 apply 或 cleanup。',
+    ].join('\n');
   }
   return [
     'OpenPrd 在本轮收工回顾里发现项目级收口证据还没补齐。',

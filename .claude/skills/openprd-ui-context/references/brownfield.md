@@ -2,14 +2,30 @@
 adapter=claude
 source=openprd-ui-context:reference:brownfield.md
 version=0.1.19
-checksum=34415c473c32b46f
+checksum=de3a297fd087b8e0
 -->
 
 # Brownfield Path
 
 ## CodeGraph 是可选输入
 
-发现 CodeGraph 可用时，查询并记录实际命令、索引时间和来源；未执行查询时不得写“已读取 CodeGraph”。建议查询：
+CodeGraph 只为当前 brownfield 项目提供附加代码事实，不是 UI Context 的真相来源，更不替代产品、UX 或审美判断。
+
+先运行本地扫描。只有当前会话实际有可调用的 CodeGraph 工具、并确认当前项目已完成索引时，才生成并执行查询计划：
+
+```bash
+openprd ui-context . --mode brownfield --codegraph-plan --json
+```
+
+读取 `.openprd/design/ui-context/codegraph-query-plan.json`，在图工具里实际查询后，整理为结构化 evidence，再导入：
+
+```bash
+openprd ui-context . --mode brownfield --codegraph-evidence <evidence.json> --json
+```
+
+导入只接受绑定当前项目 root/source fingerprint、当前 query-plan fingerprint 和新鲜 `queriedAt` 的摘要。不得把其他项目的 `.codegraph`、静态配置、环境变量、依赖声明或“运行过 daemon”的日志当作当前项目已查询的图事实。不得保存 provider 原始响应、绝对路径、原始代码或密钥。
+
+计划固定覆盖：
 
 - routes and entry points
 - component ownership and reuse
@@ -18,7 +34,12 @@ checksum=34415c473c32b46f
 - change blast radius
 - dynamically discovered or unresolved edges
 
-CodeGraph 不可用、未索引或查询失败时继续本地扫描，并标记 `evidence-gap: codegraph-unavailable`。
+状态与处理：
+
+- `runtime-unavailable`：继续本地扫描，记录 `evidence-gap: codegraph-runtime-unavailable`。
+- `runtime-available-session-unconnected`：继续本地扫描，记录 `evidence-gap: codegraph-session-unconnected`；不要说“已读取 CodeGraph”。
+- `session-connected-project-unindexed`：记录索引缺口，不从图推导关系。
+- `query-evidence-ready`：可消费 `.openprd/design/ui-context/codegraph-evidence.json` 的相对路径、摘要、边关系与 unresolved edges，同时保留本地扫描和代码审阅。
 
 ## 确定性本地扫描
 

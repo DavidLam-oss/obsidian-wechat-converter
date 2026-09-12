@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "kind": "openprd.codegraph-query-plan",
+  "project": {
+    "version": 1,
+    "rootFingerprint": "3ff7e6b5a42f6d5d0f58dfe4b54004bf8bd93b11dacb26ca65df399b5607c458",
+    "sourceFingerprint": "3811b30eedd14a0f1ae4993519b852836485af9e521ec39a33feb3f06b5c73fd",
+    "fingerprint": "7d19d59ffa583ca27dfe002960676801dc4b208422cd10eda685aa43820bbffb"
+  },
+  "queries": [
+    {
+      "id": "routes-and-entry-points",
+      "goal": "Identify routes, UI entry points, shells, and the ownership boundary that reaches them.",
+      "output": [
+        "summary",
+        "sourceFiles",
+        "edges"
+      ]
+    },
+    {
+      "id": "component-ownership-and-reuse",
+      "goal": "Identify component ownership, reuse paths, and design-system or shared UI boundaries.",
+      "output": [
+        "summary",
+        "sourceFiles",
+        "edges"
+      ]
+    },
+    {
+      "id": "state-and-data-dependencies",
+      "goal": "Identify user-visible state, data sources, mutations, and dependency directions.",
+      "output": [
+        "summary",
+        "sourceFiles",
+        "edges"
+      ]
+    },
+    {
+      "id": "call-paths-and-blast-radius",
+      "goal": "Trace the relevant call/dependency paths and likely change blast radius for the proposed UI work.",
+      "output": [
+        "summary",
+        "sourceFiles",
+        "edges"
+      ]
+    },
+    {
+      "id": "unresolved-and-dynamic-edges",
+      "goal": "Record dynamic, generated, unresolved, or runtime-only edges that should not be inferred as facts.",
+      "output": [
+        "summary",
+        "sourceFiles",
+        "edges"
+      ]
+    }
+  ],
+  "safety": {
+    "store": [
+      "summaries",
+      "relative source files",
+      "bounded graph edges",
+      "unresolved-edge summaries"
+    ],
+    "neverStore": [
+      "absolute paths",
+      "raw source code",
+      "provider raw responses",
+      "credentials"
+    ]
+  },
+  "fingerprint": "a9110cb3b5585bb1b8707b04c06984c958922b53c9327e1d104f5a5aadd2253a"
+}
