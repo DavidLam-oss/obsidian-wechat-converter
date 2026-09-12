@@ -1086,6 +1086,10 @@ async onClose() {
   if (typeof this.disposeCardPreview === 'function') {
     this.disposeCardPreview();
   }
+  // 卡片导出弹窗 DOM 与键盘监听随视图释放（B05；任务生命周期由会话 dispose 负责）
+  if (typeof this.disposeCardExportModal === 'function') {
+    this.disposeCardExportModal();
+  }
   this.previewContainer?.empty();
   this.closeTransientPanels();
   this.aiLayoutBtn = null;

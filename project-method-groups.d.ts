@@ -203,6 +203,53 @@ type CardPreviewMethodsContract = Pick<
     | 'disposeCardPreview'
 >;
 
+type CardSettingsMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'buildCardSettingsPanel'
+    | 'renderCardSettingsValues'
+    | 'applyCardLayoutSetting'
+    | 'resetCardLayoutSettings'
+    | 'getCardSettingsSession'
+    | 'getCurrentCardLayoutSettings'
+>;
+
+type CardExportBridgeMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'buildCardExportFsAdapter'
+    | 'prepareCardExportResources'
+    | 'createCardCaptureCallback'
+    | 'collectCardExportInput'
+    | 'createCardExportController'
+    | 'resolveCardExportAbsPath'
+    | 'canRevealCardExportOutput'
+    | 'revealCardExportOutput'
+>;
+
+type CardExportMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'getCardExportSession'
+    | 'openCardExportModal'
+    | 'closeCardExportModal'
+    | 'resolveCardExportView'
+    | 'handleCardExportProgress'
+    | 'startCardExport'
+    | 'startNewCardExport'
+    | 'cancelCardExport'
+    | 'retryCardExportFailedPages'
+    | 'retryCardExportManifest'
+    | 'disposeCardExportModal'
+>;
+
+type CardExportModalViewMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'renderCardExportModal'
+    | 'renderCardExportForm'
+    | 'renderCardExportPreparing'
+    | 'renderCardExportJob'
+    | 'renderCardExportPages'
+    | 'renderCardExportResultLinks'
+>;
+
 type StickerPreviewMethodsContract = Pick<
     AppleStyleViewContract,
     | 'getStickerUiState'

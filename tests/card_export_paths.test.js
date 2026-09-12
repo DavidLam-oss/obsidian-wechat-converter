@@ -61,16 +61,22 @@ describe("shortSourceKey / buildNoteDirName", () => {
     expect(a).toMatch(/^[0-9a-z]{6}$/);
   });
 
-  it("笔记目录名 = 安全名-短标识；同名不同路径不落同一目录", () => {
+  it("笔记目录名 = 净化后的笔记名，人可读且不带哈希/随机后缀", () => {
     const one = buildNoteDirName("notes/我的笔记.md");
-    const two = buildNoteDirName("archive/我的笔记.md");
-    expect(one.dirName).toBe(`我的笔记-${one.noteKey}`);
-    expect(one.dirName).not.toBe(two.dirName);
+    expect(one.dirName).toBe("我的笔记");
+    expect(one.noteKey).toMatch(/^[0-9a-z]{6}$/);
+    expect(one.dirName).not.toContain(one.noteKey);
   });
 
-  it("净化后为空的笔记名回落中性占位（短标识仍区分）", () => {
-    const one = buildNoteDirName("notes/CON.md");
-    expect(one.dirName).toBe(`note-${one.noteKey}`);
+  it("同名不同路径共享同一分组目录；短标识仍可区分来源（供诊断）", () => {
+    const one = buildNoteDirName("notes/我的笔记.md");
+    const two = buildNoteDirName("archive/我的笔记.md");
+    expect(one.dirName).toBe(two.dirName);
+    expect(one.noteKey).not.toBe(two.noteKey);
+  });
+
+  it("净化后为空的笔记名回落中性占位", () => {
+    expect(buildNoteDirName("notes/CON.md").dirName).toBe("note");
   });
 });
 
@@ -135,18 +141,20 @@ describe("validateExportRoot", () => {
 });
 
 describe("buildBatchDirName / imageFileName", () => {
-  it("批次名 = 本地时间戳-批次标识（冒号已替换）", () => {
-    const name = buildBatchDirName({
-      now: () => new Date(2026, 8, 10, 22, 30, 5),
-      batchId: "ab12cd",
-    });
-    expect(name).toBe("2026-09-10T22-30-05-ab12cd");
+  it("批次名 = 本地时间戳，人可读且冒号已替换为连字符", () => {
+    const name = buildBatchDirName({ now: () => new Date(2026, 8, 10, 22, 30, 5) });
+    expect(name).toBe("2026-09-10 22-30-05");
     expect(name.includes(":")).toBe(false);
   });
 
-  it("批次标识非法字符被剥离，空值回落 batch", () => {
-    expect(buildBatchDirName({ batchId: "a:b/c" })).toContain("abc");
-    expect(buildBatchDirName({ batchId: "***" })).toContain("batch");
+  it("同秒冲突按 attempt 追加序号，保持唯一且绝不覆盖", () => {
+    const at = () => new Date(2026, 8, 10, 22, 30, 5);
+    expect(buildBatchDirName({ now: at, attempt: 0 })).toBe("2026-09-10 22-30-05");
+    expect(buildBatchDirName({ now: at, attempt: 1 })).toBe("2026-09-10 22-30-05-2");
+    expect(buildBatchDirName({ now: at, attempt: 3 })).toBe("2026-09-10 22-30-05-4");
+    // 非法/负值 attempt 回落基础名
+    expect(buildBatchDirName({ now: at, attempt: -1 })).toBe("2026-09-10 22-30-05");
+    expect(buildBatchDirName({ now: at })).toBe("2026-09-10 22-30-05");
   });
 
   it("正文图片名按 1-based 页号补零，编号可不连续", () => {

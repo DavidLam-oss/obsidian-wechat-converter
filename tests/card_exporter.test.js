@@ -25,8 +25,7 @@ function makePngBytes(width, height) {
 /**
  * 可注入故障的 vault 适配器替身。
  * @param {{
- *   failTmpCreateFrom?: number,       // 第 N 次起 tmp 排他创建失败（清单更新失败注入点）
- *   failManifestOverwriteFrom?: number, // 第 N 次起覆盖写清单失败（最终清单失败注入点）
+ *   failManifestOverwriteFrom?: number, // 第 N 次起覆盖写清单失败（清单更新失败注入点）
  *   failCreateFor?: (path: string) => boolean, // 图片排他创建 io 失败注入
  *   conflictFor?: (path: string) => boolean,   // 图片排他创建冲突注入（非本任务同名文件）
  *   redirectRealpath?: (path: string) => boolean, // realpath 重定向注入
@@ -37,7 +36,6 @@ function makePngBytes(width, height) {
 function createFakeFs(options = {}) {
   const files = new Map();
   const calls = { created: [], written: [], removed: [], mkdirs: [] };
-  let tmpCreates = 0;
   let manifestOverwrites = 0;
   return {
     files,
@@ -50,12 +48,6 @@ function createFakeFs(options = {}) {
     },
     async createBinaryExclusive(p, bytes) {
       calls.created.push(p);
-      if (p.includes(`${EXPORT_MANIFEST_NAME}.tmp`)) {
-        tmpCreates += 1;
-        if (options.failTmpCreateFrom && tmpCreates >= options.failTmpCreateFrom) {
-          return { ok: false, reason: "io", message: "EACCES: tmp write /Users/vault denied" };
-        }
-      }
       if (options.conflictFor && options.conflictFor(p)) return { ok: false, reason: "conflict" };
       if (options.failCreateFor && options.failCreateFor(p)) {
         return { ok: false, reason: "io", message: "EIO: write /Users/vault failed" };
@@ -107,12 +99,10 @@ function sessionWithSnapshot(options = {}) {
 
 /** @param {ReturnType<sessionWithSnapshot>} ctx */
 function buildExporter(ctx, fakeFs, capturePageBytes, extra = {}) {
-  let batchCounter = 0;
   return createCardExporter({
     session: ctx.session,
     fs: fakeFs,
     capturePageBytes: capturePageBytes || (async () => ({ bytes: makePngBytes(750, 1000) })),
-    nextBatchId: () => extra.batchId || `b${(batchCounter += 1)}`,
     now: () => new Date(2026, 8, 10, 22, 30, 0),
     ...extra,
   });
@@ -369,5 +359,67 @@ describe("逐页顺序与结果结构", () => {
     expect(first.status).toBe("completed");
     expect(second.status).toBe("completed");
     expect(first.batchDir).not.toBe(second.batchDir);
+  });
+});
+
+describe("进度回调与写盘足迹（B05 进度反馈 / §6.1 不在 vault 留瞬时文件）", () => {
+  it("onProgress 依 begin → page（含当前页号）→ done 上报，计数以清单为准", async () => {
+    const ctx = sessionWithSnapshot({ pageCount: 3 });
+    const fakeFs = createFakeFs();
+    /** @type {any[]} */
+    const events = [];
+    const exporter = buildExporter(ctx, fakeFs, undefined, { onProgress: (e) => events.push(e) });
+    const outcome = /** @type {any} */ (await exporter.exportCards(exportInput(ctx)));
+    expect(outcome.status).toBe("completed");
+
+    expect(events[0]).toMatchObject({ stage: "begin", total: 3, settled: 0, saved: 0, failed: 0 });
+    const pageEvents = events.filter((e) => e.stage === "page");
+    expect(pageEvents.map((e) => e.current)).toEqual([1, 2, 3]);
+    // 页首事件：前序页已定页
+    expect(pageEvents[2]).toMatchObject({ settled: 2, saved: 2 });
+    expect(events[events.length - 1]).toMatchObject({ stage: "done", total: 3, settled: 3, saved: 3, failed: 0 });
+  });
+
+  it("失败页同样计入进度与任务结果（进度与结果页同源）", async () => {
+    const ctx = sessionWithSnapshot({ pageCount: 2 });
+    const fakeFs = createFakeFs();
+    /** @type {any[]} */
+    const events = [];
+    const exporter = buildExporter(ctx, fakeFs, async ({ ordinal }) => {
+      if (ordinal === 1) throw new Error("capture boom");
+      return { bytes: makePngBytes(750, 1000) };
+    }, { onProgress: (e) => events.push(e) });
+    await exporter.exportCards(exportInput(ctx));
+
+    const done = events[events.length - 1];
+    expect(done).toMatchObject({ stage: "done", settled: 2, saved: 1, failed: 1 });
+    const job = /** @type {any} */ (ctx.session.getLastJob());
+    expect(job.results.map((r) => `${r.pageId}:${r.status}`).sort()).toEqual(["page-1:failed", "page-2:saved"]);
+  });
+
+  it("进度回调抛错不影响导出结果", async () => {
+    const ctx = sessionWithSnapshot({ pageCount: 2 });
+    const exporter = buildExporter(ctx, createFakeFs(), undefined, {
+      onProgress: () => { throw new Error("view boom"); },
+    });
+    const outcome = /** @type {any} */ (await exporter.exportCards(exportInput(ctx)));
+    expect(outcome.status).toBe("completed");
+  });
+
+  it("导出全程不在 vault 创建/删除临时文件（避免同步类插件的删除事件）", async () => {
+    const ctx = sessionWithSnapshot({ pageCount: 3 });
+    const fakeFs = createFakeFs();
+    const exporter = buildExporter(ctx, fakeFs);
+    await exporter.exportCards(exportInput(ctx));
+
+    // 不产生任何删除；产物只有图片与清单，无 .tmp 瞬时文件
+    expect(fakeFs.calls.removed).toEqual([]);
+    const touched = [...fakeFs.calls.created, ...fakeFs.calls.written];
+    expect(touched.some((p) => p.includes(".tmp"))).toBe(false);
+    expect(touched.every((p) => p.endsWith(".png") || p.endsWith(EXPORT_MANIFEST_NAME))).toBe(true);
+    // 清单按页更新：首份 + 每页一次 + 收尾一次，全部为同一路径的覆盖写
+    const manifestWrites = fakeFs.calls.written.filter((p) => p.endsWith(EXPORT_MANIFEST_NAME));
+    expect(new Set(manifestWrites).size).toBe(1);
+    expect(manifestWrites.length).toBe(5);
   });
 });

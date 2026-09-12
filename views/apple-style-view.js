@@ -32,6 +32,9 @@ import { panelShellMethods } from './converter/panel-shell.js';
 import { stickerPreviewMethods } from './converter/sticker-preview.js';
 import { cardPreviewMethods } from './converter/card-preview.js';
 import { cardSettingsMethods } from './converter/card-settings.js';
+import { cardExportBridgeMethods } from './converter/card-export-bridge.js';
+import { cardExportMethods } from './converter/card-export-modal.js';
+import { cardExportModalViewMethods } from './converter/card-export-modal-view.js';
 import { aiLayoutPanelMethods } from './converter/ai-layout-panel.js';
 import { aiLayoutDebugMethods } from './converter/ai-layout-debug.js';
 import { clipboardMethods } from './converter/clipboard.js';
@@ -310,6 +313,9 @@ Object.assign(
   stickerPreviewMethods,
   cardPreviewMethods,
   cardSettingsMethods,
+  cardExportBridgeMethods,
+  cardExportMethods,
+  cardExportModalViewMethods,
   aiLayoutPanelMethods,
   aiLayoutDebugMethods,
   clipboardMethods,

@@ -8,10 +8,12 @@
 
 ## 输入
 
-`createCardExporter({ fs, nextBatchId, now, capturePageBytes })`：
-- `fs` 适配器（vault 相对路径，全部注入以保证可测试）：`exists/mkdir/readText/writeBinary/remove/
+`createCardExporter({ fs, now, capturePageBytes, onProgress })`：
+- `fs` 适配器（vault 相对路径，全部注入以保证可测试）：`exists/mkdir/readText/writeBinary/
   createBinaryExclusive（create-only，绝不覆盖）/realpath（无法验证返回 null → 拒绝输出）`。
 - `capturePageBytes({ pageId, ordinal })`：调用方注入的离屏重渲 + 捕获回调（本层无 DOM）。
+- `onProgress(event)`（可选）：`{ stage: "begin"|"page"|"done", total, settled, saved, failed, current? }`，
+  供上层刷新导出进度 UI；回调抛错被吞掉，不影响导出语义。
 - `exportCards(input)`：session、snapshotId、sourcePath、rootPath、configDir、scale、pageSize、
   pages（{pageId, ordinal}）、omissionTotal。
 
@@ -28,7 +30,11 @@
 - 逐页清单更新失败 → 保留已存图片与内存记录、停止后续页（paused-manifest），不报整批成功。
 - 取消后不再调度下一页；已启动页写入成功仍计入已保存，不删除已存文件伪装取消更早。
 - 批次内 createBinaryExclusive 遇非本任务同名文件 → 立即停止整批，不覆盖/改名/删除。
-- 已成功 PNG 不可变；清单是本任务拥有的可更新文件，覆盖前核验批次归属。
+- 已成功 PNG 不可变；清单是本任务拥有的可更新文件，直接覆盖写（批次归属由批次目录创建语义保证）。
+- **导出全程不在 vault 内创建或删除任何临时文件**：瞬时文件会触发同步类插件（Obsidian Sync /
+  fast-note-sync 等）的文件事件，删除同步到远端时可能报「记录不存在」并弹错误提示；
+  因此清单更新采用直接覆盖写，不采用「写临时文件再改名/删除」的写法。新增写盘能力须遵守这条。
+- 每页到达终态（saved/failed/canceled）均落账到任务，供进度 UI 与结果页读取；未尝试的 skipped 页不落账。
 - realpath 无法验证（能力不可验证）或祖先重定向出 vault 根 → 拒绝该位置。
 
 ## 定位
@@ -97,18 +103,17 @@ export const CARD_EXPORT_LIMITS = Object.freeze({
  *     mkdir(path: string): Promise<void>,
  *     createBinaryExclusive(path: string, bytes: Uint8Array): Promise<{ ok: boolean, reason?: string, message?: string }>,
  *     writeBinary(path: string, bytes: Uint8Array): Promise<void>,
- *     remove(path: string): Promise<void>,
  *     readText(path: string): Promise<string>,
  *     realpath(path: string): Promise<string | null>,
  *   },
- *   nextBatchId?: () => string,
  *   now?: () => Date,
  *   capturePageBytes: (input: { pageId: string, ordinal: number }) => Promise<{ bytes: Uint8Array }>,
+ *   onProgress?: (event: { stage: "begin"|"page"|"done", total: number, settled: number, saved: number, failed: number, current?: number }) => void,
  * }} deps
  */
 export function createCardExporter(deps) {
   const { session, fs, capturePageBytes } = deps;
-  const nextBatchId = deps.nextBatchId || (() => Math.random().toString(36).slice(2, 8));
+  const onProgress = typeof deps.onProgress === 'function' ? deps.onProgress : null;
   const now = deps.now || (() => new Date());
 
   /**
@@ -197,7 +202,6 @@ export function createCardExporter(deps) {
         scale: input.scale,
         createdAt: now().toISOString(),
         updatedAt: now().toISOString(),
-        tmpSeq: 0,
         pages,
       };
     }
@@ -245,46 +249,65 @@ export function createCardExporter(deps) {
     }
 
     /**
-     * 清单安全更新：tmp 排他创建 → 覆盖自己的最终清单（批次归属已由创建语义保证）→ 清理 tmp。
+     * 清单更新：直接覆盖写本任务拥有的清单文件（批次归属由批次目录的创建语义保证）。
+     * 刻意不用「临时文件 + 改名/删除」：vault 内的瞬时文件会被同步类插件当作新增/删除事件
+     * 同步到远端，删除远端并不存在的记录时服务端会返回错误（用户可见的错误弹窗）。
      * @returns {Promise<{ ok: boolean, reason?: string, detail?: string }>}
      */
     async function updateManifest() {
       if (!manifestState) return { ok: false, reason: 'manifest-state-missing' };
       const payload = manifestPayload();
       if (!payload) return { ok: false, reason: 'manifest-state-missing' };
-      manifestState.tmpSeq += 1;
-      const tmpPath = `${manifestState.manifestPath}.tmp-${manifestState.tmpSeq}`;
       const bytes = new TextEncoder().encode(JSON.stringify(payload, null, 2));
-      try {
-        const created = await fs.createBinaryExclusive(tmpPath, bytes);
-        if (!created.ok) {
-          manifestHealthy = false;
-          return { ok: false, reason: 'manifest-write-failed', detail: sanitizeExportMessage(created.message || 'tmp create failed') };
-        }
-      } catch (error) {
-        manifestHealthy = false;
-        return { ok: false, reason: 'manifest-write-failed', detail: sanitizeExportMessage(error instanceof Error ? error.message : String(error)) };
-      }
       try {
         await fs.writeBinary(manifestState.manifestPath, bytes);
       } catch (error) {
         manifestHealthy = false;
-        await discardTmp(tmpPath);
         return { ok: false, reason: 'manifest-write-failed', detail: sanitizeExportMessage(error instanceof Error ? error.message : String(error)) };
       }
-      await discardTmp(tmpPath);
       manifestHealthy = true;
       manifestEverWritten = true;
       return { ok: true };
     }
 
-    /** @param {string} tmpPath @returns {Promise<void>} */
-    async function discardTmp(tmpPath) {
-      try {
-        await fs.remove(tmpPath); // 仅清理本任务自己创建的 tmp（§6.1）
-      } catch {
-        // 清理失败不阻塞主流程；tmp 命名唯一不会与后续冲突
+    /** 进度计数（以清单为权威来源）：settled 为已定页数（saved/failed/canceled/skipped） */
+    function progressCounts() {
+      const pages = manifestState ? manifestState.pages : [];
+      let settled = 0;
+      let saved = 0;
+      let failed = 0;
+      for (const page of pages) {
+        if (page.status === 'pending') continue;
+        settled += 1;
+        if (page.status === 'saved') saved += 1;
+        else if (page.status === 'failed') failed += 1;
       }
+      return { total: pages.length, settled, saved, failed };
+    }
+
+    /**
+     * 进度回调（展示层可选接入）：回调自身抛错不得影响导出语义。
+     * @param {"begin"|"page"|"done"} stage
+     * @param {{ current?: number }} [extra]
+     */
+    function emitProgress(stage, extra = {}) {
+      if (!onProgress) return;
+      try {
+        onProgress({ stage, ...progressCounts(), ...extra });
+      } catch {
+        // 展示层异常不影响导出结果，忽略
+      }
+    }
+
+    /**
+     * 单页终态落账（saved/failed/canceled 统一进入任务）：进度 UI 与结果页读同一份记录；
+     * 未尝试的 skipped 页不落账，避免与「失败」混淆。
+     * @param {string} pageId
+     * @param {{ status: "saved"|"failed"|"canceled", bytes?: number, width?: number, height?: number, reason?: string }} result
+     */
+    function recordResult(pageId, result) {
+      if (!jobId) return;
+      session.recordPageResult(jobId, pageId, result);
     }
 
     /** @returns {{ total: number, saved: number, failed: number, canceled: number, skipped: number }} */
@@ -330,6 +353,7 @@ export function createCardExporter(deps) {
       }
       phase = 'done';
       runActive = false;
+      emitProgress('done');
       return {
         status,
         manifestPending,
@@ -343,16 +367,21 @@ export function createCardExporter(deps) {
 
     /**
      * 逐页循环：取消检查点 → 捕获 → PNG 核验 → realpath 核验 → 排他写盘 → 落账 → 清单更新。
+     * 页首发出进度事件（含当前页号，供「正在渲染第 N 页」）；每页进入终态即落账到任务。
      * @returns {Promise<{ pausedManifest: boolean, stopReason?: string }>}
      */
     async function runPageLoop() {
       while (remaining.length > 0) {
         if (jobId && !session.shouldStartNextPage(jobId)) {
-          for (const page of remaining) patchPage(page.pageId, { status: 'canceled' });
+          for (const page of remaining) {
+            patchPage(page.pageId, { status: 'canceled' });
+            recordResult(page.pageId, { status: 'canceled' });
+          }
           remaining = [];
           return { pausedManifest: false };
         }
         const page = /** @type {{ pageId: string, ordinal: number }} */ (remaining.shift());
+        emitProgress('page', { current: page.ordinal });
         /** @type {{ bytes: Uint8Array }} */
         let captured;
         try {
@@ -363,6 +392,7 @@ export function createCardExporter(deps) {
             reason: 'capture-failed',
             detail: sanitizeExportMessage(error instanceof Error ? error.message : String(error)),
           });
+          recordResult(page.pageId, { status: 'failed', reason: 'capture-failed' });
           continue;
         }
         /** @type {{ width: number, height: number }} */
@@ -371,6 +401,7 @@ export function createCardExporter(deps) {
           size = readPngSize(captured.bytes);
         } catch {
           patchPage(page.pageId, { status: 'failed', reason: 'capture-invalid', detail: '非 PNG 输出' });
+          recordResult(page.pageId, { status: 'failed', reason: 'capture-invalid' });
           continue;
         }
         const fileName = imageFileName(page.ordinal);
@@ -378,6 +409,7 @@ export function createCardExporter(deps) {
         const security = await verifyPathInsideRoot(imagePath);
         if (!security.ok) {
           patchPage(page.pageId, { status: 'failed', reason: security.reason || 'path-redirect' });
+          recordResult(page.pageId, { status: 'failed', reason: security.reason || 'path-redirect' });
           for (const rest of remaining) patchPage(rest.pageId, { status: 'skipped' });
           remaining = [];
           return { pausedManifest: false, stopReason: security.reason || 'path-redirect' };
@@ -387,6 +419,7 @@ export function createCardExporter(deps) {
           if (write.reason === 'conflict') {
             // 非本任务创建的同名文件：立即停止整批，不覆盖、改名认领或删除（§6.1）
             patchPage(page.pageId, { status: 'failed', reason: 'path-conflict' });
+            recordResult(page.pageId, { status: 'failed', reason: 'path-conflict' });
             for (const rest of remaining) patchPage(rest.pageId, { status: 'skipped' });
             remaining = [];
             return { pausedManifest: false, stopReason: 'path-conflict' };
@@ -396,6 +429,7 @@ export function createCardExporter(deps) {
             reason: 'write-failed',
             detail: sanitizeExportMessage(write.message || 'binary create failed'),
           });
+          recordResult(page.pageId, { status: 'failed', reason: 'write-failed' });
           continue;
         }
         patchPage(page.pageId, {
@@ -404,14 +438,12 @@ export function createCardExporter(deps) {
           width: size.width,
           height: size.height,
         });
-        if (jobId) {
-          session.recordPageResult(jobId, page.pageId, {
-            status: 'saved',
-            bytes: captured.bytes.byteLength,
-            width: size.width,
-            height: size.height,
-          });
-        }
+        recordResult(page.pageId, {
+          status: 'saved',
+          bytes: captured.bytes.byteLength,
+          width: size.width,
+          height: size.height,
+        });
         const manifestUpdate = await updateManifest();
         if (!manifestUpdate.ok) {
           // 已存图片与内存记录保留；停止后续页，等待清单修复（§6.1 部分成功语义）
@@ -479,15 +511,17 @@ export function createCardExporter(deps) {
       const root = rootCheck.root;
       runActive = true;
 
-      // 批次目录：冲突重生成批次标识，最多 5 次（§6.1）
+      // 批次目录：`<笔记名>/<本地时间戳>`；同一秒重复导出时追加序号，最多 5 次（§6.1）
+      // 时间戳在循环外冻结，保证冲突重试期间名字前缀稳定（同一批只差序号）。
       const noteDir = buildNoteDirName(input.sourcePath).dirName;
+      const batchDate = now();
       /** @type {string | null} */
       let batchDir = null;
       /** @type {string | null} */
       let batchId = null;
       for (let attempt = 0; attempt < MAX_BATCH_DIR_ATTEMPTS; attempt += 1) {
-        const candidateId = nextBatchId();
-        const candidate = `${root}/${noteDir}/${buildBatchDirName({ now, batchId: candidateId })}`;
+        const candidateId = buildBatchDirName({ now: () => batchDate, attempt });
+        const candidate = `${root}/${noteDir}/${candidateId}`;
         if (await fs.exists(candidate)) continue;
         batchDir = candidate;
         batchId = candidateId;
@@ -545,6 +579,7 @@ export function createCardExporter(deps) {
         return await finalize({});
       }
       phase = 'running';
+      emitProgress('begin');
       const loopResult = await runPageLoop();
       if (loopResult.pausedManifest) {
         phase = 'paused-manifest';
@@ -592,6 +627,7 @@ export function createCardExporter(deps) {
         if (!repair.ok) return { ok: false, reason: 'manifest-unhealthy' };
       }
       phase = 'running';
+      emitProgress('begin');
       const loopResult = await runPageLoop();
       if (loopResult.pausedManifest) {
         phase = 'paused-manifest';
@@ -654,6 +690,7 @@ export function createCardExporter(deps) {
       }
       remaining = failedPages.map((p) => ({ pageId: p.pageId, ordinal: p.ordinal }));
       phase = 'running';
+      emitProgress('begin');
       const loopResult = await runPageLoop();
       if (loopResult.pausedManifest) {
         phase = 'paused-manifest';

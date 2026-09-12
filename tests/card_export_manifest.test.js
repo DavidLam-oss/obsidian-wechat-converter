@@ -22,13 +22,12 @@ function makePngBytes(width, height) {
 }
 
 /**
- * 清单故障注入替身。
- * @param {{ failTmpCreateFrom?: number, failTmpCreateUntil?: number, failManifestOverwriteFrom?: number, failManifestOverwriteUntil?: number }} [options]
+ * 清单故障注入替身（清单更新即覆盖写 export-manifest.json，按写入次序计数）。
+ * @param {{ failManifestOverwriteFrom?: number, failManifestOverwriteUntil?: number }} [options]
  */
 function createFakeFs(options = {}) {
   const files = new Map();
   const calls = { created: [], written: [], removed: [], mkdirs: [] };
-  let tmpCreates = 0;
   let manifestOverwrites = 0;
   return {
     files,
@@ -37,14 +36,6 @@ function createFakeFs(options = {}) {
     async mkdir(p) { calls.mkdirs.push(p); files.set(p, { type: "dir" }); },
     async createBinaryExclusive(p, bytes) {
       calls.created.push(p);
-      if (p.includes(`${EXPORT_MANIFEST_NAME}.tmp`)) {
-        tmpCreates += 1;
-        const inFailRange = tmpCreates >= options.failTmpCreateFrom &&
-          (!options.failTmpCreateUntil || tmpCreates <= options.failTmpCreateUntil);
-        if (inFailRange) {
-          return { ok: false, reason: "io", message: "EACCES: tmp write /Users/vault denied" };
-        }
-      }
       if (files.has(p)) return { ok: false, reason: "conflict" };
       files.set(p, { type: "file", bytes: Uint8Array.from(bytes) });
       return { ok: true };
@@ -84,12 +75,10 @@ function sessionWithSnapshot(pageCount = 3) {
 }
 
 function buildExporter(ctx, fakeFs, capturePageBytes) {
-  let batchCounter = 0;
   return createCardExporter({
     session: ctx.session,
     fs: fakeFs,
     capturePageBytes: capturePageBytes || (async () => ({ bytes: makePngBytes(750, 1000) })),
-    nextBatchId: () => `m${(batchCounter += 1)}`,
     now: () => new Date(2026, 8, 10, 22, 30, 0),
   });
 }
@@ -108,9 +97,9 @@ function exportInput(ctx, extra = {}) {
 }
 
 describe("清单：首份空清单失败 → 不开始写图片", () => {
-  it("tmp 排他创建失败即失败收尾，任何图片都未写入", async () => {
+  it("首份清单写入失败即失败收尾，任何图片都未写入", async () => {
     const ctx = sessionWithSnapshot(3);
-    const fakeFs = createFakeFs({ failTmpCreateFrom: 1 });
+    const fakeFs = createFakeFs({ failManifestOverwriteFrom: 1 });
     const exporter = buildExporter(ctx, fakeFs);
     const outcome = /** @type {any} */ (await exporter.exportCards(exportInput(ctx)));
     expect(outcome.status).toBe("failed");
@@ -125,8 +114,8 @@ describe("清单：首份空清单失败 → 不开始写图片", () => {
 describe("清单：逐页更新失败 → 部分成功 + 可修复续跑", () => {
   it("图片保留、停止后续页、报 paused-manifest；修复清单后 resume 续跑不重捕已存页", async () => {
     const ctx = sessionWithSnapshot(3);
-    // 仅第 3 次 tmp 创建失败（p2 的清单更新）：首份(1)+p1(2) 成功，p2(3) 失败，之后恢复
-    const fakeFs = createFakeFs({ failTmpCreateFrom: 3, failTmpCreateUntil: 3 });
+    // 仅第 3 次清单写入失败（p2 的清单更新）：首份(1)+p1(2) 成功，p2(3) 失败，之后恢复
+    const fakeFs = createFakeFs({ failManifestOverwriteFrom: 3, failManifestOverwriteUntil: 3 });
     /** @type {string[]} */
     const capturedPages = [];
     const exporter = buildExporter(ctx, fakeFs, async ({ ordinal }) => {
@@ -155,7 +144,7 @@ describe("清单：逐页更新失败 → 部分成功 + 可修复续跑", () =>
 
   it("清单重试失败仍可再次重试；resume 仅在修复后允许", async () => {
     const ctx = sessionWithSnapshot(2);
-    const fakeFs = createFakeFs({ failTmpCreateFrom: 3 });
+    const fakeFs = createFakeFs({ failManifestOverwriteFrom: 3 });
     const exporter = buildExporter(ctx, fakeFs);
     const paused = /** @type {any} */ (await exporter.exportCards(exportInput(ctx)));
     expect(paused.status).toBe("paused-manifest");

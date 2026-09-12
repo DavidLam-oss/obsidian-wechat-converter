@@ -1,7 +1,9 @@
 /*
 ## 核心功能
 
-卡片图片/字体资源就绪层：解析 local/wiki/相对/受控远程图片来源，做 MIME、编码体积与解码像素校验；提供有超时、可取消的图片与字体等待；以「冻结快照 + 引用计数」管理所有权，预览与导出可持有同一份资源，最后一个持有者释放时回收。
+卡片图片/字体资源就绪层：解析 local/wiki/相对/受控远程图片来源，做 MIME、编码体积与解码像素校验，
+并把已加载的字节**内联为 data: URL**（捕获引擎不重新取图，避免跨域图片被占位图顶替）；提供有超时、
+可取消的图片与字体等待；以「冻结快照 + 引用计数」管理所有权，预览与导出可持有同一份资源，最后一个持有者释放时回收。
 
 ## 输入
 
@@ -14,21 +16,24 @@
 - 常量 `CARD_IMAGE_TIMEOUT_MS` 等预算值（§5.5/§5.6 初始值）。
 - `resolveCardImageSource(ref, ctx)`：ref → {src, mime, vaultPath} | null。
 - `createCardResourcePool(...)`：`prepare()` 返回冻结的 CardResourceSnapshot（images/诊断/hasBlockingFailures），含 `retain()/release()` 引用计数；`waitForFonts()` 返回 {status:"ok"|"timeout"}。
-- `createSnapshotResolver(snapshot)`：ref → 可渲染 src | null，接入 assembleCardPage 的 resolveImageSrc。
+- `createSnapshotResolver(snapshot)`：ref → 可渲染 src | null（预览用，保留原始资源地址）。
+- `createInlineSnapshotResolver(snapshot)`：ref → 内联 data: URL | 原始 src | null（捕获/导出用，避免截图引擎跨域取图失败）。
 - `createCardResourceSession()`：会话级累计字节预算。
 
 ## 定位
 
 位于 services/，属于卡片导出的资源层；不存全局 Base64，不触碰文章渲染链路。资源句柄经 `resources` 参数进入 `assembleCardPage`。
+2026-09 拆分：默认 IO 加载器（fetch/解码/内联/字体等待）→ `card-resource-loaders.js`（本模块只留预算、诊断与快照语义）。
 
 ## 依赖
 
-`./path-utils.js`、`./image-source-utils.js`、`./dom-utils.js`；运行环境 window/AbortSignal（可注入替换）。
+`./path-utils.js`、`./image-source-utils.js`、`./card-resource-loaders.js`；运行环境 window/AbortSignal（加载器可整体注入替换）。
 
 ## 维护规则
 
 - 修改逻辑后同步更新本文件说明书，并检查 services 的文件夹 README 是否仍准确。
 - 预算与超时常量改动须同步规划 §5.5/§5.6 的记录要求（原值/新值/原因）。
+- 新增 IO 能力放 `card-resource-loaders.js`，业务规则（预算/诊断/冻结）留本模块。
 */
 
 import { normalizeVaultPath } from "./path-utils.js";
@@ -37,7 +42,7 @@ import {
   safeDecodeUriText,
   getVaultRelativePathFromLocalPath,
 } from "./image-source-utils.js";
-import { getObsidianRequestUrl } from "./obsidian-compat.js";
+import { abortError, createDefaultLoaders } from "./card-resource-loaders.js";
 
 /** 单张图片获取与解码上限（不含排队，§5.6） */
 export const CARD_IMAGE_TIMEOUT_MS = 15000;
@@ -70,7 +75,8 @@ export const CARD_LOAD_CONCURRENCY = 3;
  * @property {number} bytes 编码体积
  * @property {number} width 解码宽
  * @property {number} height 解码高
- * @property {string} [vaultPath] vault 内路径（本地资源）
+ * @property {string} vaultPath vault 内路径（本地资源；无则为空串）
+ * @property {string} dataUrl 内联 data: URL（捕获/导出路径使用，截图引擎不重新取图）
  */
 
 /**
@@ -107,6 +113,7 @@ export const CARD_LOAD_CONCURRENCY = 3;
  * @typedef {object} CardResourceLoaders 可注入加载器（默认用活动窗口实现；测试注入替身）
  * @property {(src: string, signal: AbortSignal) => Promise<{ blob: Blob }>} fetchBlob
  * @property {(src: string, signal: AbortSignal) => Promise<{ width: number, height: number }>} decodeImage
+ * @property {(blob: Blob) => Promise<string>} blobToDataUrl 已加载字节 → 内联 data: URL（捕获路径）
  * @property {(doc: Document, signal: AbortSignal) => Promise<"ok">} waitFonts
  */
 
@@ -247,113 +254,6 @@ export function resolveCardImageSource(refEntry, ctx = {}) {
   const resolved = resolveVaultImage(ctx.app || null, ctx.sourcePath || "", ref);
   if (!resolved) return null;
   return { state: "ready", src: resolved.src, mime: resolved.mime, vaultPath: resolved.vaultPath };
-}
-
-/**
- * 默认加载器：基于活动窗口（支持 popout window 的 Document）。
- * @returns {CardResourceLoaders}
- */
-function createDefaultLoaders() {
-  return {
-    /**
-     * 远程 http(s) 优先走 Obsidian requestUrl（主进程转发，不受渲染进程 CORS 限制；
-     * 参考 Export Img remote-images 的做法），失败或不可用时回退标准 fetch。
-     * requestUrl 不支持 AbortSignal，取消语义由外层「晚到结果丢弃」兜底（§5.6）。
-     * @param {string} src
-     * @param {AbortSignal} signal
-     * @returns {Promise<{ blob: Blob }>}
-     */
-    async fetchBlob(src, signal) {
-      if (/^https?:\/\//i.test(src)) {
-        try {
-          const requestUrl = getObsidianRequestUrl();
-          if (typeof requestUrl === "function") {
-            const response = await requestUrl({ url: src, throw: false });
-            if (response && response.status >= 200 && response.status < 300) {
-              const buffer = /** @type {ArrayBufferLike} */ (response.arrayBuffer);
-              const mime = String(response.headers?.["content-type"] || "").split(";")[0] || "image/png";
-              return { blob: new Blob([/** @type {BlobPart} */ (buffer)], { type: mime }) };
-            }
-            throw new Error(`HTTP ${response?.status ?? "unknown"}（requestUrl）`);
-          }
-        } catch (error) {
-          if (signal.aborted) throw abortError();
-          // 回退 fetch（可能因 CORS 失败，届时进入显式资源失败诊断）
-          void error;
-        }
-      }
-      const response = await fetch(src, { signal });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const blob = await response.blob();
-      return { blob };
-    },
-    /**
-     * @param {string} src
-     * @param {AbortSignal} signal
-     * @returns {Promise<{ width: number, height: number }>}
-     */
-    decodeImage(src, signal) {
-      return new Promise((resolve, reject) => {
-        const image = new Image();
-        const onAbort = () => {
-          image.src = "";
-          reject(abortError());
-        };
-        if (signal.aborted) {
-          reject(abortError());
-          return;
-        }
-        signal.addEventListener("abort", onAbort, { once: true });
-        image.onload = () => {
-          signal.removeEventListener("abort", onAbort);
-          resolve({ width: image.naturalWidth, height: image.naturalHeight });
-        };
-        image.onerror = () => {
-          signal.removeEventListener("abort", onAbort);
-          reject(new Error("图片解码失败"));
-        };
-        image.src = src;
-      });
-    },
-    /**
-     * @param {Document} doc
-     * @param {AbortSignal} signal
-     * @returns {Promise<"ok">}
-     */
-    waitFonts(doc, signal) {
-      return new Promise((resolve, reject) => {
-        // Document.fonts 在部分 TS lib 中缺失，经 any 中转后按最小接口断言（双 cast 规避 no-unsafe-assignment）
-        const docLike = /** @type {{ fonts?: { ready?: Promise<unknown> } }} */ (
-          /** @type {unknown} */ (doc)
-        );
-        const fonts = docLike.fonts;
-        if (!fonts || typeof fonts.ready?.then !== "function") {
-          resolve("ok");
-          return;
-        }
-        fonts.ready.then(
-          () => {
-            if (!signal.aborted) resolve("ok");
-          },
-          () => {
-            if (!signal.aborted) resolve("ok"); // 字体查询失败按可用字体继续
-          }
-        );
-        signal.addEventListener(
-          "abort",
-          () => reject(abortError()),
-          { once: true }
-        );
-      });
-    },
-  };
-}
-
-/** @returns {Error} */
-function abortError() {
-  const error = new Error("Aborted");
-  error.name = "AbortError";
-  return error;
 }
 
 /**
@@ -523,6 +423,18 @@ export function createCardResourcePool(options = {}) {
               reason: `会话累计资源超过 ${session.maxBytes}`,
             };
           }
+          /** 内联为 data URL：捕获引擎不再取图，规避跨域取图失败被占位图顶替（成片丢图） */
+          /** @type {string} */
+          let dataUrl = "";
+          try {
+            dataUrl = await loaders.blobToDataUrl(blob);
+          } catch (error) {
+            return {
+              status: /** @type {CardResourceStatus} */ ("error"),
+              refEntry,
+              reason: error instanceof Error ? error.message : "图片无法内联为 data URL",
+            };
+          }
           /** @type {CardResourceImageEntry} */
           const entry = {
             ref: refEntry.ref,
@@ -531,8 +443,9 @@ export function createCardResourcePool(options = {}) {
             bytes,
             width: decode.width,
             height: decode.height,
+            vaultPath: resolved.vaultPath || "",
+            dataUrl,
           };
-          if (resolved.vaultPath) entry.vaultPath = resolved.vaultPath;
           return { status: /** @type {CardResourceStatus} */ ("ok"), refEntry, entry };
         } catch (error) {
           clearTimeout(perImageTimer);
@@ -644,5 +557,19 @@ export function createSnapshotResolver(snapshot) {
   return (ref) => {
     const entry = snapshot && snapshot.images[ref];
     return entry ? entry.src : null;
+  };
+}
+
+/**
+ * 从快照构造**捕获/导出**用的 resolveImageSrc：优先返回内联 data: URL（截图引擎对 data: 跳过取图），
+ * 无内联结果时退回原始 src。只有就绪资源才返回，其余 null（渲染器跳过）。
+ * @param {CardResourceSnapshot | null | undefined} snapshot
+ * @returns {(ref: string) => string | null}
+ */
+export function createInlineSnapshotResolver(snapshot) {
+  return (ref) => {
+    const entry = snapshot && snapshot.images[ref];
+    if (!entry) return null;
+    return entry.dataUrl || entry.src || null;
   };
 }

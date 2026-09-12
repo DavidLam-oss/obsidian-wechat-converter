@@ -3359,6 +3359,723 @@ apple-btn-row/apple-btn-size，分节间距由 apple-setting-section 统一。
 /*
 ## 核心功能
 
+图片卡片导出弹窗样式分片（B05 视觉重构）。选择器统一 icard-export- 前缀，避免污染宿主 UI。
+外壳是 Obsidian 原生 Modal（.modal.icard-export-modal），内嵌内容在 .icard-export-content。
+
+## 输入
+
+接收 Obsidian 主题变量（--background-primary / --text-normal / --interactive-accent 等）
+与项目苹果配色 token（--apple-success / --apple-warning / --apple-error / --apple-radius-*）。
+
+## 输出
+
+输出导出弹窗的布局、层级、配色与状态表现（含深色主题与移动端全屏适配）。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+结构对应 views/converter/card-export-modal-view.js 的渲染方法。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、项目 base.css 的 --apple-* token、以及渲染层的 class 命名。
+
+## 维护规则
+
+- 配色规则（不得回退）：颜色只表达两件事——**异常**（失败 / 警告）与**当前进行中的那一行**。
+  正常完成的行必须保持中性（透明底 + 分隔线）；禁止整列铺成功色底（旧版 is-saved 绿底已移除）。
+- 同一事实只说一次：完成态的「已保存张数」在状态区，进度条只在进行中出现。
+- 按钮层级：页脚主操作（完成）用 mod-cta，次级操作（再次导出 / 取消）用默认样式。
+- 修改样式后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+*/
+
+/* ========================================
+   弹窗外壳（Obsidian 原生 Modal）
+   ======================================== */
+.modal.icard-export-modal {
+  width: min(520px, 92vw);
+  max-width: min(520px, 92vw);
+  border-radius: var(--apple-radius-lg, 12px);
+}
+
+.is-mobile .modal.icard-export-modal {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 0;
+}
+
+.modal.icard-export-modal .modal-content {
+  padding: 0;
+}
+
+.icard-export-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--apple-spacing-md, 16px);
+  min-height: 168px;
+  padding: 4px 20px 20px;
+}
+
+.icard-export-content button {
+  padding: 5px 14px;
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-normal);
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--apple-radius-md, 8px);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.icard-export-content button:hover {
+  background: var(--background-modifier-hover);
+}
+
+.icard-export-content button.mod-cta {
+  color: var(--text-on-accent, #fff);
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+}
+
+.icard-export-content button.mod-cta:hover {
+  background: var(--interactive-accent-hover, var(--interactive-accent));
+}
+
+.icard-export-content button.is-disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.icard-export-content .svg-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ========================================
+   状态区（hero）：完成 / 进行中 / 失败
+   ======================================== */
+.icard-export-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.icard-export-status-mark {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  color: var(--text-muted);
+  background: var(--background-secondary);
+  border-radius: 50%;
+}
+
+.icard-export-status.is-success .icard-export-status-mark {
+  color: var(--apple-success, #34c759);
+  background: rgba(52, 199, 89, 0.14);
+}
+
+.icard-export-status.is-warning .icard-export-status-mark {
+  color: var(--apple-warning, #ff9500);
+  background: rgba(255, 149, 0, 0.14);
+}
+
+.icard-export-status.is-error .icard-export-status-mark {
+  color: var(--apple-error, #ff3b30);
+  background: rgba(255, 59, 48, 0.13);
+}
+
+.icard-export-status.is-accent .icard-export-status-mark {
+  color: var(--interactive-accent);
+}
+
+.theme-dark .icard-export-status.is-success .icard-export-status-mark {
+  color: #30d158;
+  background: rgba(48, 209, 88, 0.18);
+}
+
+.theme-dark .icard-export-status.is-warning .icard-export-status-mark {
+  color: #ffb340;
+  background: rgba(255, 179, 64, 0.18);
+}
+
+.theme-dark .icard-export-status.is-error .icard-export-status-mark {
+  color: #ff7b72;
+  background: rgba(255, 123, 114, 0.18);
+}
+
+.icard-export-status-mark .svg-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.icard-export-status-text {
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.icard-export-status-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-normal);
+}
+
+.icard-export-status-desc {
+  margin-top: 3px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.icard-export-hint {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--text-faint);
+}
+
+/* ========================================
+   进度（仅进行中展示）
+   ======================================== */
+.icard-export-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icard-export-progress-track {
+  flex: 1 1 auto;
+  height: 6px;
+  overflow: hidden;
+  background: var(--background-modifier-border);
+  border-radius: 999px;
+}
+
+.icard-export-progress-bar {
+  height: 100%;
+  background: var(--interactive-accent);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.icard-export-progress-label {
+  flex: 0 0 auto;
+  min-width: 36px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* 旋转指示器（随宿主主题取强调色） */
+.icard-export-spinner {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--background-modifier-border);
+  border-top-color: var(--interactive-accent);
+  border-radius: 50%;
+  animation: icard-export-spin 0.8s linear infinite;
+}
+
+@keyframes icard-export-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================
+   逐页明细（默认折叠；进行中或存在失败页时展开）
+   ======================================== */
+.icard-export-pages-details {
+  padding-top: 10px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.icard-export-pages-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-normal);
+  list-style: none;
+  cursor: pointer;
+}
+
+.icard-export-pages-summary::-webkit-details-marker {
+  display: none;
+}
+
+.icard-export-pages-caret {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--text-faint);
+  transition: transform 0.15s ease;
+}
+
+.icard-export-pages-details[open] .icard-export-pages-caret {
+  transform: rotate(90deg);
+}
+
+.icard-export-pages-caret .svg-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.icard-export-pages-label {
+  flex: 1 1 auto;
+}
+
+/* 统一尺寸的说明：只说一次，放在摘要里，不逐行重复 */
+.icard-export-pages-size-note {
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+}
+
+.icard-export-pages {
+  display: flex;
+  flex-direction: column;
+  max-height: 240px;
+  margin-top: 8px;
+  overflow-y: auto;
+}
+
+/* 正常行保持中性：只用分隔线建立节奏，不铺背景色 */
+.icard-export-page-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 6px;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.icard-export-page-row:last-child {
+  border-bottom: none;
+}
+
+/* 当前正在渲染的那一行：唯一的强调色落点 */
+.icard-export-page-row.is-rendering {
+  background: var(--background-secondary);
+  border-bottom-color: transparent;
+  border-radius: 6px;
+}
+
+.icard-export-page-row.is-rendering .icard-export-page-state {
+  font-weight: 600;
+  color: var(--interactive-accent);
+}
+
+/* 失败行：语义色只落在这一行 */
+.icard-export-page-row.is-failed {
+  background: rgba(255, 59, 48, 0.08);
+  border-bottom-color: transparent;
+  border-radius: 6px;
+}
+
+.icard-export-page-row.is-failed .icard-export-page-name,
+.icard-export-page-row.is-failed .icard-export-page-state,
+.icard-export-page-row.is-failed .icard-export-page-reason {
+  color: var(--apple-error, #ff3b30);
+}
+
+.theme-dark .icard-export-page-row.is-failed .icard-export-page-name,
+.theme-dark .icard-export-page-row.is-failed .icard-export-page-state,
+.theme-dark .icard-export-page-row.is-failed .icard-export-page-reason {
+  color: #ff7b72;
+}
+
+.icard-export-page-name {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-normal);
+}
+
+.icard-export-page-state {
+  flex: 1 1 auto;
+  color: var(--text-muted);
+}
+
+.icard-export-page-reason,
+.icard-export-page-size {
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+}
+
+/* 状态徽标（明细摘要右侧） */
+.icard-export-chip {
+  flex: 0 0 auto;
+  padding: 2px 9px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--background-secondary);
+  border-radius: 999px;
+}
+
+.icard-export-chip.is-success {
+  color: #2a8c46;
+  background: rgba(52, 199, 89, 0.14);
+}
+
+.icard-export-chip.is-warning {
+  color: #9a6400;
+  background: rgba(255, 149, 0, 0.16);
+}
+
+.icard-export-chip.is-error {
+  color: #c0392b;
+  background: rgba(255, 59, 48, 0.13);
+}
+
+.icard-export-chip.is-accent {
+  color: var(--interactive-accent);
+}
+
+.theme-dark .icard-export-chip.is-success { color: #5fd97e; }
+.theme-dark .icard-export-chip.is-warning { color: #ffb340; }
+.theme-dark .icard-export-chip.is-error { color: #ff7b72; }
+
+/* ========================================
+   结果卡片（表头：标签 + 操作；路径独占整行、过长换行）
+   ======================================== */
+.icard-export-result {
+  padding: 10px 12px;
+  background: var(--background-secondary);
+  border-radius: var(--apple-radius-md, 8px);
+}
+
+.icard-export-result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 26px;
+}
+
+.icard-export-result-label {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* 路径必须能被看全：占满整行，过长时换行（不用省略号，否则用户永远看不到要去的目录）。
+   换行优先发生在目录分隔符处（渲染层插入了 <wbr>），单个超长目录名才允许词内断开。 */
+.icard-export-result-path {
+  margin-top: 2px;
+  font-family: var(--apple-font-code, var(--font-monospace));
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-normal);
+  overflow-wrap: break-word;
+  word-break: normal;
+  /* 避免末行只剩一个短片段（孤立词）；不支持的版本会忽略，不影响可读性。 */
+  text-wrap: pretty;
+}
+
+.icard-export-result-copy {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.icard-export-result-copy:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.icard-export-result-copy.is-copied {
+  color: var(--apple-success, #34c759);
+}
+
+.icard-export-result-copy .svg-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.icard-export-result-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.icard-export-result-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px;
+  color: var(--text-normal);
+  font-size: 12px;
+  background: var(--background-modifier-border);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.icard-export-result-open:hover {
+  background: var(--background-modifier-hover);
+}
+
+.icard-export-result-open .svg-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.icard-export-result-hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.icard-export-result-hint:empty {
+  display: none;
+}
+
+/* ========================================
+   表单（摘要 / 倍率 / 目录 / 省略提示）
+   ======================================== */
+.icard-export-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.icard-export-info-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.icard-export-info-label {
+  flex: 0 0 44px;
+  color: var(--text-muted);
+}
+
+.icard-export-info-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-normal);
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icard-export-divider {
+  height: 1px;
+  background: var(--background-modifier-border);
+}
+
+.icard-export-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.icard-export-field.is-stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.icard-export-field-label {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.icard-export-field-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* 倍率：分段控件（轨道内一枚高亮胶囊），不是三枚浮空圆角按钮 */
+.icard-export-segmented {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: 2px;
+  background: var(--background-secondary);
+  border-radius: 999px;
+}
+
+.icard-export-scale-btn {
+  min-width: 46px;
+  padding: 5px 12px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.icard-export-scale-btn:hover {
+  color: var(--text-normal);
+}
+
+.icard-export-scale-btn.is-active {
+  color: var(--text-normal);
+  background: var(--background-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
+}
+
+.theme-dark .icard-export-scale-btn.is-active {
+  background: var(--background-modifier-hover);
+}
+
+.icard-export-root-input {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-normal);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--apple-radius-md, 8px);
+}
+
+.icard-export-root-input:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb, 0, 113, 227), 0.18);
+}
+
+/* ========================================
+   提示条（省略摘要 / 图片加载失败 / 未就绪）
+   ======================================== */
+.icard-export-note,
+.icard-export-omission {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  background: var(--background-secondary);
+  border-radius: var(--apple-radius-md, 8px);
+}
+
+.icard-export-note.is-warning,
+.icard-export-omission.is-warning {
+  color: var(--text-normal);
+  background: rgba(255, 149, 0, 0.13);
+}
+
+.icard-export-note-icon,
+.icard-export-omission-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--text-faint);
+}
+
+.icard-export-note.is-warning .icard-export-note-icon,
+.icard-export-omission.is-warning .icard-export-omission-icon {
+  color: var(--apple-warning, #ff9500);
+}
+
+.icard-export-note-icon .svg-icon,
+.icard-export-omission-icon .svg-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.icard-export-note-text,
+.icard-export-omission-text {
+  min-width: 0;
+}
+
+.icard-export-notice {
+  padding: 12px 14px;
+  background: var(--background-secondary);
+  border-radius: var(--apple-radius-md, 8px);
+}
+
+.icard-export-notice.is-error {
+  background: rgba(255, 59, 48, 0.1);
+}
+
+.icard-export-notice-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.icard-export-notice-desc {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* ========================================
+   操作区与页脚
+   ======================================== */
+.icard-export-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icard-export-actions button {
+  flex: 1 1 0;
+}
+
+.icard-export-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+/* 进行中页脚的左侧提示：解释「关闭 ≠ 取消」，避免用户不敢关窗 */
+.icard-export-footer-hint {
+  margin-right: auto;
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icard-export-spinner {
+    animation: none;
+  }
+
+  .icard-export-progress-bar,
+  .icard-export-pages-caret,
+  .icard-export-scale-btn {
+    transition: none;
+  }
+}
+/*
+## 核心功能
+
 插件设置页的分组、标签和表单样式
 
 ## 输入

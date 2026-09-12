@@ -366,8 +366,24 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     switchPreviewMode(mode: string): void;
     /** 卡片模式：模式胶囊第三个按钮（B02） */
     btnCardMode: ObsidianElementLike | null;
-    /** 卡片模式导出入口（B04/B05 接入前禁用展示） */
+    /** 卡片模式导出入口（B04/B05：打开导出弹窗） */
     cardExportBtn: ObsidianElementLike | null;
+    /** 卡片导出：Obsidian 原生 Modal 实例（关闭仅销毁展示层，任务在会话里续跑） */
+    cardExportModal: unknown;
+    /** 卡片导出：准备中阶段标记（resources = 图片下载内联中；null = 无） */
+    cardExportStage: string | null;
+    /** 卡片导出：最近一次导出器进度事件（驱动状态区与逐页明细） */
+    cardExportProgress: Record<string, unknown> | null;
+    /** 卡片导出：逐页明细是否被用户手动展开（跨重绘保留） */
+    cardExportPagesExpanded: boolean;
+    /** 卡片导出：弹窗内容区滚动位置（进度事件重绘后还原） */
+    cardExportScrollTop: number;
+    /** 卡片导出：本批导出控制器（含 getBatchInfo / getResourceSummary / disposeResources） */
+    cardExportController: unknown;
+    /** 卡片导出：本批图片加载摘要（未加载成功的图片会被跳过并提示） */
+    cardExportResourceSummary: Record<string, unknown> | null;
+    /** 卡片导出：最近一批的批次目录与清单路径（结果定位用） */
+    cardExportLastBatchInfo: Record<string, unknown> | null;
     /** 发布与分发按钮引用（集中控制模式显隐，B02 ①） */
     publishBtn: ObsidianElementLike | null;
     /** 卡片预览：按笔记隔离的会话注册表（B01，懒建） */
@@ -429,6 +445,60 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     getCurrentCardLayoutSettings(): Record<string, unknown>;
     /** 视图关闭：销毁会话注册表与合并计时器 */
     disposeCardPreview(): void;
+    /** 卡片导出接线：vault fs 适配器（create-only + realpath 校验，§6.1） */
+    buildCardExportFsAdapter(): Record<string, (...args: unknown[]) => Promise<unknown>>;
+    /** 卡片导出接线：每批共享的图片资源快照（内联 data: URL；ensure/summary/release） */
+    prepareCardExportResources(input: Record<string, unknown>): {
+      ensure(): Promise<unknown>;
+      summary(): Record<string, unknown> | null;
+      release(): void;
+    };
+    /** 卡片导出接线：逐页离屏重渲 + 捕获回调（B04 capturePageBytes） */
+    createCardCaptureCallback(input: Record<string, unknown>): Promise<{ bytes: Uint8Array }>;
+    /** 卡片导出接线：组装 exportCards 入参（含资格预检与页范围） */
+    collectCardExportInput(options: Record<string, unknown>): Record<string, unknown>;
+    /** 卡片导出接线：创建导出控制器（接 session + fs + 捕获） */
+    createCardExportController(session: unknown, context: Record<string, unknown>): unknown;
+    /** 卡片导出：当前笔记会话（无会话返回 null） */
+    getCardExportSession(): unknown;
+    /** 卡片导出：打开或恢复弹窗（运行中任务 / 待查看结果，不新建重复任务） */
+    openCardExportModal(): void;
+    /** 卡片导出：关闭弹窗（仅展示层，任务后台继续） */
+    closeCardExportModal(): void;
+    /** 卡片导出：弹窗应展示的状态（job / result / none） */
+    resolveCardExportView(): { kind: string, job?: unknown };
+    /** 卡片导出：按会话任务状态重绘弹窗 */
+    renderCardExportModal(): void;
+    /** 卡片导出：准备中视图（点击开始后、任务建立与图片内联完成之前） */
+    renderCardExportPreparing(body: ObsidianElementLike, stage: string): void;
+    /** 卡片导出：接收导出器进度事件并刷新弹窗（preparing/begin/page/done） */
+    handleCardExportProgress(event: Record<string, unknown>): void;
+    /** 卡片导出：可开始表单（摘要 / 倍率 / 目录 / 开始） */
+    renderCardExportForm(body: ObsidianElementLike): void;
+    /** 卡片导出：任务进度与结果视图（状态区 / 告警 / 结果卡片 / 进度 / 操作） */
+    renderCardExportJob(body: ObsidianElementLike, job: unknown): void;
+    /** 卡片导出：逐页明细（默认折叠；进行中或存在失败页时展开） */
+    renderCardExportPages(body: ObsidianElementLike, input: Record<string, unknown>): void;
+    /** 卡片导出：结果定位（输出目录单行省略 + 在文件管理器中打开 / 复制路径 / 清单文件名） */
+    renderCardExportResultLinks(body: ObsidianElementLike): void;
+    /** 卡片导出：把 vault 相对路径解析成系统绝对路径（不可解析返回 null） */
+    resolveCardExportAbsPath(vaultRelativePath: string): string | null;
+    /** 卡片导出：当前环境是否支持在系统文件管理器中定位输出目录 */
+    canRevealCardExportOutput(): boolean;
+    /** 卡片导出：在系统文件管理器中选中批次目录 */
+    revealCardExportOutput(vaultRelativePath: string): { ok: boolean, absPath: string | null, reason?: string };
+    /** 卡片导出：开始导出（冻结快照 → 建任务 → 逐页输出） */
+    startCardExport(): Promise<void>;
+    /** 卡片导出：结果已读后回到表单，允许换倍率/目录再导一批 */
+    startNewCardExport(): void;
+    /** 卡片导出：显式取消（关闭弹窗不取消） */
+    cancelCardExport(): void;
+    /** 卡片导出：同快照重试失败页 */
+    retryCardExportFailedPages(): Promise<void>;
+    /** 卡片导出：清单单独重试（结果记录收尾） */
+    retryCardExportManifest(): Promise<void>;
+    /** 卡片导出：视图释放（移除弹窗 DOM 与监听） */
+    disposeCardExportModal(): void;
     /** 读取/初始化某个笔记的贴图交互状态（排序与排除项） */
     getStickerUiState(filePath: string): StickerUiStateLike;
     removeStickerImageItem(filePath: string, item: StickerImageItemLike, index: number): void;

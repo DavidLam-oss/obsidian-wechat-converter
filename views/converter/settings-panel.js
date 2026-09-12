@@ -33,7 +33,6 @@ import {
   getEventTargetValue,
   getImageSwipeCommandCopy,
   isMobileClient,
-  Notice,
 } from '../apple-style-view-shared.js';
 
 /**
@@ -146,11 +145,10 @@ createSettingsPanel(container) {
     this.copyBtn = null;
   }
 
-  // [卡片导出] 按钮（仅卡片模式显示；B04/B05 接入前禁用并说明原因）
-  const cardExportBtn = createIconBtn('download', '图片卡片导出（即将开放，当前版本仅支持预览）', () => {
-    new Notice('图片卡片导出即将开放，当前版本仅支持预览');
+  // [卡片导出] 按钮（仅卡片模式显示；B05 接入导出弹窗）
+  const cardExportBtn = createIconBtn('download', '图片卡片导出', () => {
+    if (typeof this.openCardExportModal === 'function') this.openCardExportModal();
   });
-  cardExportBtn.addClass('is-disabled');
   cardExportBtn.addClass('hidden');
   this.cardExportBtn = cardExportBtn;
 

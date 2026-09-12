@@ -9,9 +9,9 @@
 - `sanitizeFileSegment(raw, options)`：净化目录/文件名段（非法字符、Windows 保留名、尾随点/空格、长度）。
 - `validateExportRoot(rootPath, { configDir })`：校验导出根目录配置（空回落默认；非法配置拒绝而非静默修改）。
 - `isReservedOutputPath(path, configDir)`：保留目录判断（保留目录 + `.` 开头段，大小写等价）。
-- `shortSourceKey(sourcePath)`：源路径短标识（区分同名笔记，非安全凭证）。
-- `buildNoteDirName(sourcePath)`：`<安全笔记名>-<短标识>`。
-- `buildBatchDirName({ now, batchId })`：`<本地时间戳>-<批次标识>`（冒号等非法字符已替换）。
+- `shortSourceKey(sourcePath)`：源路径短标识（供诊断与测试区分同名来源；不进入目录名）。
+- `buildNoteDirName(sourcePath)`：笔记分组目录名 = `<安全笔记名>`。
+- `buildBatchDirName({ now, attempt })`：`<YYYY-MM-DD HH-mm-ss>`，同秒冲突追加 `-2`、`-3`。
 - `imageFileName(ordinal)`：`card-001.png`（正文页号 1-based，编号可不连续）。
 - `sanitizeExportMessage(message)`：剥离错误信息中的绝对路径样式片段（不泄露宿主敏感路径）。
 
@@ -25,7 +25,9 @@
 - 拒绝实际 configDir（含用户自定义位置）、`.obsidian`、`.trash`、`.git` 及其子目录；
   额外拒绝任何以 `.` 开头的目录段；保留判断按路径段 + 小写等价，不用字符串前缀。
 - 文件名净化覆盖 Windows 保留名、非法字符、控制字符、尾随点/空格与长度上限；
-  清理后为空回落中性占位名；不同来源经短标识保证不落同一批次。
+  清理后为空回落中性占位名。
+- 目录名一律人可读：笔记分组用净化后的笔记名，批次用本地时间戳；不引入随机/哈希后缀。
+  批次目录名必须唯一（同秒冲突追加序号），保证不同来源、不同次导出永不落入同一批次目录。
 
 ## 定位
 
@@ -40,7 +42,8 @@ fs.realpath 适配器完成）。
 ## 维护规则
 
 - 修改逻辑后同步更新本文件说明书，并检查 services 的文件夹 README 是否仍准确。
-- 安全规则变更须同步 `tests/card_export_paths.test.js` 用例与规划 §6.1。
+- 目录命名不得再引入随机串或哈希后缀（用户看不懂）；需要区分来源时写在清单数据里，
+  不要写进路径。安全规则变更须同步 `tests/card_export_paths.test.js` 与规划 §6.1。
 */
 
 import { isAbsolutePathLike, normalizeVaultPath } from './path-utils.js';
@@ -87,7 +90,8 @@ export function sanitizeFileSegment(raw, options = {}) {
 }
 
 /**
- * 源路径短标识：djb2 变体 → base36（6 位），只为区分同名来源，非安全凭证。
+ * 源路径短标识：djb2 变体 → base36（6 位）。仅为诊断与测试提供「同名不同来源」的
+ * 稳定可读标识（例如清单排查时区分两条同路径名）；**不再进入目录名**，避免用户看不懂。
  * @param {string} sourcePath
  * @returns {string}
  */
@@ -151,7 +155,10 @@ export function validateExportRoot(rootPath, context = {}) {
 }
 
 /**
- * 笔记目录名：`<安全笔记名>-<短标识>`（短标识保证不同来源不落同一批次）。
+ * 笔记分组目录名：`<安全笔记名>`（人可读）。
+ * 同一篇笔记的多次导出都归到这一个目录下，再按批次子目录区分；同名笔记共享同一分组，
+ * 来源区分由每批清单里的 `sourcePath` 承担——目录名不再塞哈希后缀。
+ * `noteKey` 仍随返回值提供，供诊断/测试使用。
  * @param {string} sourcePath
  * @returns {{ dirName: string, noteSegment: string, noteKey: string }}
  */
@@ -161,21 +168,22 @@ export function buildNoteDirName(sourcePath) {
   const withoutExt = base.replace(/\.[^.]+$/, '');
   const noteSegment = sanitizeFileSegment(withoutExt);
   const noteKey = shortSourceKey(path);
-  return { dirName: `${noteSegment}-${noteKey}`, noteSegment, noteKey };
+  return { dirName: noteSegment, noteSegment, noteKey };
 }
 
 /**
- * 批次目录名：`<本地时间戳>-<批次标识>`；时间戳形如 `2026-09-10T22-30-05`（冒号已替换，Windows 安全）。
- * @param {{ now?: () => Date, batchId: string }} input
+ * 批次目录名：`<YYYY-MM-DD HH-mm-ss>`（本地时间；冒号已替换为 `-`，Windows 安全）。
+ * 同一秒内重复导出时由 `attempt` 追加 `-2`、`-3`…，既保持人可读，又保证绝不覆盖旧结果。
+ * @param {{ now?: () => Date, attempt?: number }} [input]
  * @returns {string}
  */
-export function buildBatchDirName(input) {
+export function buildBatchDirName(input = {}) {
   const date = typeof input.now === 'function' ? input.now() : new Date();
   const pad = (n) => String(n).padStart(2, '0');
   const stamp = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
-    `T${pad(date.getHours())}-${pad(date.getMinutes())}-${pad(date.getSeconds())}`;
-  const batchId = String(input.batchId || '').replace(/[^a-zA-Z0-9-]/g, '').slice(0, 12) || 'batch';
-  return `${stamp}-${batchId}`;
+    ` ${pad(date.getHours())}-${pad(date.getMinutes())}-${pad(date.getSeconds())}`;
+  const attempt = Math.max(0, Math.floor(Number(input.attempt) || 0));
+  return attempt === 0 ? stamp : `${stamp}-${attempt + 1}`;
 }
 
 /**

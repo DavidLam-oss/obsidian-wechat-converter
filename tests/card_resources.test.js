@@ -9,6 +9,7 @@ import {
   CARD_MAX_IMAGE_PIXELS,
   createCardResourcePool,
   createCardResourceSession,
+  createInlineSnapshotResolver,
   createSnapshotResolver,
   resolveCardImageSource,
 } from "../services/card-resources.js";
@@ -387,6 +388,38 @@ describe("createSnapshotResolver 与 assembleCardPage 接入", () => {
     const img = page.querySelector("img");
     expect(img).not.toBeNull();
     expect(img?.getAttribute("src")).toBe("app://local/assets/sample.png");
+    snap.release();
+  });
+});
+
+describe("内联 data URL（捕获路径不能被跨域取图打断）", () => {
+  it("成功加载：entry 带内联 dataUrl；预览 resolver 保留原始地址，捕获 resolver 返回内联值", async () => {
+    const pool = createCardResourcePool({ app: makeApp({ "a.png": true }), loaders: makeLoaders({}) });
+    const snap = await pool.prepare([{ ref: "a.png", kind: "local" }]);
+    const entry = snap.images["a.png"];
+    expect(entry).toBeTruthy();
+    expect(entry.dataUrl.startsWith("data:image/png;base64,")).toBe(true);
+    // 预览：原始资源地址（不因内联改变既有渲染行为）
+    expect(createSnapshotResolver(snap)("a.png")).toBe("app://local/a.png");
+    // 捕获：内联 data URL（截图引擎对 data: 跳过取图 → 不会被占位图顶替）
+    expect(createInlineSnapshotResolver(snap)("a.png")).toBe(entry.dataUrl);
+    expect(createInlineSnapshotResolver(snap)("nope.png")).toBeNull();
+    snap.release();
+  });
+
+  it("内联失败 → error 诊断并计入阻断（不静默少图）", async () => {
+    const pool = createCardResourcePool({
+      app: makeApp({ "a.png": true }),
+      loaders: makeLoaders({
+        blobToDataUrl: async () => {
+          throw new Error("图片无法内联为 data URL");
+        },
+      }),
+    });
+    const snap = await pool.prepare([{ ref: "a.png", kind: "local" }]);
+    expect(snap.images["a.png"]).toBeUndefined();
+    expect(snap.hasBlockingFailures).toBe(true);
+    expect(snap.diagnostics[0]).toMatchObject({ status: "error", ref: "a.png" });
     snap.release();
   });
 });
