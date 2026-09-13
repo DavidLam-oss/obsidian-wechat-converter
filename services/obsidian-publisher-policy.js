@@ -46,7 +46,7 @@ const LICENSE_WORKER_URLS = [
 ];
 const POLICY_REQUEST_TIMEOUT_MS = 10000;
 const POLICY_GRACE_SECONDS = 24 * 60 * 60;
-const FALLBACK_FREE_DAILY_PLATFORM_QUOTA = 1;
+const FALLBACK_FREE_DAILY_PLATFORM_QUOTA = 3;
 const DEFAULT_PRO_UPGRADE_URL = 'https://xiaoweibox.top/obsidian-publisher/pro';
 const DEFAULT_EXTENSION_UPGRADE_URL = 'https://xiaoweibox.top/obsidian-publisher/download';
 const DEFAULT_OBSIDIAN_PLUGIN_UPGRADE_URL = 'obsidian://show-plugin?id=wechat-converter';
