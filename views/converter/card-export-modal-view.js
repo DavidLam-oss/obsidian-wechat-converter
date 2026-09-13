@@ -53,6 +53,7 @@ card-export-modal.js，导出规则在 services/card-exporter.js。
 
 import { getObsidianSetIcon } from '../apple-style-view-shared.js';
 import { CARD_EXPORT_SCALES, DEFAULT_CARD_EXPORT_ROOT, DEFAULT_CARD_EXPORT_SCALE } from './card-export-bridge.js';
+import { computeCardPixelSize } from '../../services/card-render-capture.js';
 
 /** 导出任务状态 → 中文标签 */
 const EXPORT_STATE_LABELS = {
@@ -248,7 +249,9 @@ renderCardExportForm(body) {
   // 范围不在摘要里重复说：下方分段控件已经写了「全部 N 页 / 选中 N 页」。
   // 「尺寸」说人话：直接给每张图的像素。比例与倍率都隐含在像素里，
   // 且倍率在下方分段控件已展示，按「同一事实只说一次」不重复。
-  addRow('尺寸', `每张 ${Math.round(size.width * scale)} × ${Math.round(size.height * scale)} 像素`);
+  // 像素口径统一走 computeCardPixelSize（§4.3），与导出预算/PNG 核验一致。
+  const pixelSize = computeCardPixelSize(size, scale);
+  addRow('尺寸', `每张 ${pixelSize.width} × ${pixelSize.height} 像素`);
 
   body.createEl('div', { cls: 'icard-export-divider' });
 

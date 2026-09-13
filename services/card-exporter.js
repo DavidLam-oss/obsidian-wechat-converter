@@ -68,7 +68,7 @@ import {
   sanitizeExportMessage,
   validateExportRoot,
 } from './card-export-paths.js';
-import { readPngSize } from './card-render-capture.js';
+import { readPngSize, computeCardPixelSize } from './card-render-capture.js';
 
 /** 导出预算（§5.5 初始值；C04 复核校准） */
 export const CARD_EXPORT_LIMITS = Object.freeze({
@@ -492,13 +492,14 @@ export function createCardExporter(deps) {
         seenIds.add(page.pageId);
         seenOrdinals.add(ordinal);
       }
-      // 页数与总像素预算（§5.5）
+      // 页数与总像素预算（§5.5；像素口径统一走 computeCardPixelSize，§4.3）
       if (pages.length > CARD_EXPORT_LIMITS.MAX_PAGES_PER_BATCH) return { ok: false, reason: 'budget-pages' };
       const scale = Number(input.scale) || 2;
       const width = Number(input.pageSize?.width) || 0;
       const height = Number(input.pageSize?.height) || 0;
       if (!(width > 0) || !(height > 0)) return { ok: false, reason: 'page-size-missing' };
-      const perPagePixels = Math.ceil(width * scale) * Math.ceil(height * scale);
+      const pixelSize = computeCardPixelSize({ width, height }, scale);
+      const perPagePixels = pixelSize.width * pixelSize.height;
       if (perPagePixels * pages.length > CARD_EXPORT_LIMITS.MAX_TOTAL_OUTPUT_PIXELS) {
         return { ok: false, reason: 'budget-pixels' };
       }

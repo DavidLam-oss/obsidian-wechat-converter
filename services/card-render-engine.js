@@ -62,6 +62,7 @@ export {
   CAPTURE_LIBRARY_IDS,
   DEFAULT_CAPTURE_TIMEOUT_MS,
   capturePage,
+  computeCardPixelSize,
   getCaptureSlotState,
   resetCaptureSlotForTests,
   readPngSize,

@@ -33,13 +33,20 @@ describe("normalizeCardLayoutSettings：归一化", () => {
     );
   });
 
-  it("主题白名单：未验证主题回落 base；比例同理", () => {
+  it("主题白名单：未验证主题回落 base；比例同理（C01② 后白名单为 3:4/3:5/9:16）", () => {
     const next = normalizeCardLayoutSettings({
       themeId: "not-a-theme",
-      ratioId: "9:16",
+      ratioId: "16:9",
     });
     expect(next.themeId).toBe(DEFAULT_CARD_LAYOUT_SETTINGS.themeId);
     expect(next.ratioId).toBe(DEFAULT_CARD_LAYOUT_SETTINGS.ratioId);
+  });
+
+  it("比例白名单：三档已验证比例均被接受", () => {
+    for (const ratioId of ["3:4", "3:5", "9:16"]) {
+      const next = normalizeCardLayoutSettings({ ratioId });
+      expect(next.ratioId).toBe(ratioId);
+    }
   });
 
   it("数值越界钳制到边界", () => {

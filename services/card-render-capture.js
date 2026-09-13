@@ -12,7 +12,7 @@ PNG 头部尺寸解析（测试核对用）。
 
 ## 输出
 
-PNG Blob；槽位状态 { busy, queued }。
+PNG Blob；槽位状态 { busy, queued }；`computeCardPixelSize`（§4.3 倍率取整唯一口径）。
 
 ## 关键约束（§5.6 捕获槽）
 
@@ -38,6 +38,22 @@ PNG Blob；槽位状态 { busy, queued }。
 /** 捕获引擎白名单（A06 选型定案：仅 modern-screenshot；snapdom 因真实内容页 URI malformed 落选移除） */
 export const CAPTURE_LIBRARY_IDS = /** @type {const} */ (["modern-screenshot"]);
 export const DEFAULT_CAPTURE_TIMEOUT_MS = 15000;
+
+/**
+ * 逻辑尺寸 × 导出倍率 → 最终像素尺寸（规划 §4.3 统一取整口径：Math.round）。
+ * 导出预算（card-exporter）、导出弹窗尺寸摘要、PNG 实际尺寸核验共用，
+ * 不得再各自 ceil/round 造成口径漂移。非法倍率按 1 处理。
+ * @param {{ width: number, height: number }} size 逻辑尺寸（RATIO_PRESETS 值）
+ * @param {number} scale 导出倍率（1/2/3）
+ * @returns {{ width: number, height: number }}
+ */
+export function computeCardPixelSize(size, scale) {
+  const s = Number(scale) > 0 ? Number(scale) : 1;
+  return {
+    width: Math.round(Number(size.width) * s),
+    height: Math.round(Number(size.height) * s),
+  };
+}
 
 /**
  * @template T

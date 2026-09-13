@@ -62,7 +62,7 @@ describe('卡片全局默认：设置层归一化（C02）', () => {
       clientId: 'c1',
       cardDefaults: {
         themeId: 'nope',
-        ratioId: '9:16',
+        ratioId: '16:9',
         fontSize: 999,
         lineHeight: 'abc',
         pagePadding: -5,
@@ -178,8 +178,8 @@ describe('设置页「卡片」页签（C02③）', () => {
     return containerEl;
   }
 
-  it('渲染主题三选（当前项高亮）与各设置项说明', () => {
-    const tab = makeTab({ themeId: 'paper-notes' });
+  it('渲染主题三选与比例三选（当前项高亮）与各设置项说明', () => {
+    const tab = makeTab({ themeId: 'paper-notes', ratioId: '9:16' });
     const containerEl = renderTab(tab);
 
     expect(containerEl.textContent).toContain('图片卡片全局默认');
@@ -191,6 +191,19 @@ describe('设置页「卡片」页签（C02③）', () => {
     expect(themeButtons.map((b) => b.text)).toEqual(['清晰笔记', '纸页随笔', '深色观点']);
     expect(themeButtons.find((b) => b.text === '纸页随笔').cta).toBe(true);
     expect(themeButtons.find((b) => b.text === '清晰笔记').cta).toBeFalsy();
+    const ratioButtons = buttons.filter((b) => ['3:4 竖版', '3:5 长竖版', '9:16 全屏竖版'].includes(b.text));
+    expect(ratioButtons.map((b) => b.text)).toEqual(['3:4 竖版', '3:5 长竖版', '9:16 全屏竖版']);
+    expect(ratioButtons.find((b) => b.text === '9:16 全屏竖版').cta).toBe(true);
+    expect(ratioButtons.find((b) => b.text === '3:4 竖版').cta).toBeFalsy();
+  });
+
+  it('点击比例按钮 → 写入 cardDefaults 并持久化', async () => {
+    const tab = makeTab();
+    renderTab(tab);
+    const tall = globalThis.__obsidianButtonRegistry.find((b) => b.text === '3:5 长竖版');
+    await tall.clickHandler();
+    expect(tab.plugin.settings.cardDefaults.ratioId).toBe('3:5');
+    expect(tab.plugin.saveSettings).toHaveBeenCalled();
   });
 
   it('点击主题按钮 → 写入 cardDefaults 并持久化', async () => {

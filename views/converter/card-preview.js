@@ -387,7 +387,7 @@ renderCardEmptyState() {
   empty.createEl('div', { cls: 'icard-preview-empty-title', text: '暂无可排版的卡片内容' });
   empty.createEl('div', {
     cls: 'icard-preview-empty-desc',
-    text: '请打开一篇 Markdown 笔记并输入正文；卡片将按 3:4 比例自动分页。',
+    text: '请打开一篇 Markdown 笔记并输入正文；卡片将按所选比例自动分页。',
   });
 }
 ,
@@ -528,7 +528,7 @@ renderCardPreviewDom() {
   // —— 缩略页（每页带独立勾选控件）——
   const pagesWrap = shell.createEl('div', { cls: 'icard-preview-pages' });
   const pages = Array.isArray(outcome?.pages) ? outcome.pages : [];
-  const size = RATIO_PRESETS['3:4'];
+  const size = RATIO_PRESETS[String(outcome?.settings?.ratioId || '3:4')] || RATIO_PRESETS['3:4'];
   const checkedIds = new Set(this.getCardPageSelection() || []);
   pages.forEach((pageEl, index) => {
     const pageId = `page-${index + 1}`;

@@ -2,7 +2,7 @@
 ## 核心功能
 
 实现插件设置页中的「卡片」tab（C02）：图片卡片**全局默认**的配置界面——
-默认主题、默认排版（字号/行高/页面边距）、默认导出目录，以及恢复内置默认。
+默认主题、默认比例、默认排版（字号/行高/页面边距）、默认导出目录，以及恢复内置默认。
 默认值只作为**新会话/新导出的初值**；当前笔记会话内调整不写回，也不被批量覆盖。
 
 ## 输入
@@ -18,7 +18,7 @@
 ## 定位
 
 位于 views/settings/，设置 UI 层；排版项边界来自 services/card-settings-model.js。
-一期比例仅 3:4（VERIFIED_CARD_RATIOS 未扩展），页签中如实说明、不放假控件。
+默认主题（C01①）与默认比例（C01②）均为三选按钮；封面/页码/水印待 C01③。
 
 ## 依赖
 
@@ -39,6 +39,8 @@ import { normalizeVaultPath } from '../../services/path-utils.js';
 import { DEFAULT_EXPORT_ROOT } from '../../services/card-export-paths.js';
 import {
   CARD_LAYOUT_LIMITS,
+  CARD_RATIO_LABELS,
+  VERIFIED_CARD_RATIOS,
   VERIFIED_CARD_THEME_IDS,
   normalizeCardLayoutSettings,
 } from '../../services/card-settings-model.js';
@@ -98,10 +100,22 @@ export function renderCardSettingsTab(tab, containerEl, options = {}) {
     });
   }
 
-  // —— 默认比例 ——（一期仅 3:4 已验证；C01 扩展后随 VERIFIED_CARD_RATIOS 放开）
-  new Setting(containerEl)
+  // —— 默认比例 ——（C01②：三档已验证比例，按钮样式与默认主题一致）
+  const ratioSetting = new Setting(containerEl)
     .setName('默认比例')
-    .setDesc(`当前可用：${'3:4'}（一期验证范围；更多比例随后续版本开放）。`);
+    .setDesc('新建笔记会话时使用的卡片比例。');
+  for (const ratioId of VERIFIED_CARD_RATIOS) {
+    ratioSetting.addButton((button) => {
+      if (ratioId === settings.ratioId) button.setCta();
+      return button
+        .setButtonText(CARD_RATIO_LABELS[ratioId] || ratioId)
+        .onClick(async () => {
+          settings.ratioId = ratioId;
+          await plugin.saveSettings();
+          renderCardSettingsTab(tab, containerEl, options);
+        });
+    });
+  }
 
   // —— 排版滑块 ——
   /** @param {string} name @param {string} desc @param {{ min: number, max: number, step: number, default: number }} limit @param {'fontSize'|'lineHeight'|'pagePadding'} key */

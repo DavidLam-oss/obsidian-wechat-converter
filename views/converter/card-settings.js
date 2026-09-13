@@ -4,8 +4,8 @@
 图片卡片排版设置视图（B03）：卡片模式设置浮层（sliders 图标打开的第三 wrapper）。
 控件风格与文章模式对齐：数值项用 apple-slider 滑块、选项用 apple-btn 胶囊按钮、
 共用同一 createSection 分节结构（间距/留白由 style-panel.css 的 apple-setting-section 统一）。
-暴露一期已生效的排版项：正文字号、行高、页面边距；主题/比例仅展示阶段 A
-已验证值（C01 扩展）。所有调整走会话归一化（card-settings-model.js），
+暴露一期已生效的排版项：正文字号、行高、页面边距；主题三选（C01①）、比例三选（C01②）。
+所有调整走会话归一化（card-settings-model.js），
 值实际变化 → bumpConfig → 新版本排版；不直接修改完成快照、不修改源
 Markdown、不影响其他笔记会话。
 
@@ -47,7 +47,9 @@ styles/style-controls.css（apple-slider）分片，自有样式仅剩 styles/ca
 
 import {
   CARD_LAYOUT_LIMITS,
+  CARD_RATIO_LABELS,
   DEFAULT_CARD_LAYOUT_SETTINGS,
+  VERIFIED_CARD_RATIOS,
   VERIFIED_CARD_THEME_IDS,
 } from '../../services/card-settings-model.js';
 import { getCardTheme } from '../../services/card-themes.js';
@@ -103,7 +105,7 @@ buildCardSettingsPanel() {
   });
   cardSettingsStateOf(this).cardSettingsRefs = refs;
 
-  // —— 主题（一期仅已验证值；C01 扩展三主题）——
+  // —— 主题（C01①：三套已验证主题）——
   this.createSection(wrapper, '主题', (section) => {
     const grid = section.createEl('div', { cls: 'apple-btn-row' });
     refs.themeGrid = grid;
@@ -116,26 +118,21 @@ buildCardSettingsPanel() {
       });
       btn.addEventListener('click', () => { this.applyCardLayoutSetting('themeId', themeId); });
     }
-    section.createEl('div', {
-      cls: 'icard-settings-note',
-      text: '更多主题将在后续版本开放。',
-    });
   });
 
-  // —— 比例（一期仅 3:4；C01 扩展 3:5 / 9:16）——
+  // —— 比例（C01②：三档已验证比例；标签口径来自 CARD_RATIO_LABELS）——
   this.createSection(wrapper, '比例', (section) => {
     const grid = section.createEl('div', { cls: 'apple-btn-row' });
     refs.ratioGrid = grid;
-    const btn = grid.createEl('button', {
-      cls: 'apple-btn-size',
-      text: '3:4 竖版',
-      attr: { 'data-value': '3:4', 'title': '3:4 竖版' },
-    });
-    btn.addEventListener('click', () => { this.applyCardLayoutSetting('ratioId', '3:4'); });
-    section.createEl('div', {
-      cls: 'icard-settings-note',
-      text: '更多比例（3:5、9:16）将在后续版本开放。',
-    });
+    for (const ratioId of VERIFIED_CARD_RATIOS) {
+      const label = CARD_RATIO_LABELS[ratioId] || ratioId;
+      const btn = grid.createEl('button', {
+        cls: 'apple-btn-size',
+        text: label,
+        attr: { 'data-value': ratioId, 'title': label },
+      });
+      btn.addEventListener('click', () => { this.applyCardLayoutSetting('ratioId', ratioId); });
+    }
   });
 
   // —— 排版数值项（与文章模式同款滑块；分节结构与 apple-setting-section 一致）——

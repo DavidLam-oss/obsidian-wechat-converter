@@ -13,7 +13,7 @@
 
 ## 输出
 
-- `DEFAULT_CARD_LAYOUT_SETTINGS` / `CARD_LAYOUT_LIMITS` / `VERIFIED_CARD_THEME_IDS` / `VERIFIED_CARD_RATIOS`。
+- `DEFAULT_CARD_LAYOUT_SETTINGS` / `CARD_LAYOUT_LIMITS` / `VERIFIED_CARD_THEME_IDS` / `VERIFIED_CARD_RATIOS` / `CARD_RATIO_LABELS`。
 - `normalizeCardLayoutSettings(partial?, base?)` → 全量归一化设置（不含未知 key）。
 - `createCardLayoutSettingsState(...)` → `{ get, apply, reset }`；apply/reset 返回
   `{ changed, settings, layoutKey? }`，值未变化不触发 onChanged（不空转 bump）。
@@ -32,7 +32,7 @@ B04 导出服务必须调用本模块的资格检查，而不是依赖弹窗按�
 ## 维护规则
 
 - 修改逻辑后同步更新本文件说明书，并检查 services 的文件夹 README 是否仍准确。
-- 主题/比例白名单在 C01 接入新主题、3:5/9:16 后同步扩展；不得提前放行未验证值。
+- 主题/比例白名单：C01① 已接入三主题、C01② 已接入三比例；后续新增值须先过实机验证再扩白名单。
 - blocker 代码是跨模块契约：变更须同步 B04 导出服务与 card_diagnostics_flow.test.js。
 */
 
@@ -41,8 +41,15 @@ import { hasCardTheme } from './card-themes.js';
 /** 一期已验证主题（C01①：三套齐备，视觉验收随 David 迭代式评审进行） */
 export const VERIFIED_CARD_THEME_IDS = /** @type {const} */ (["clear-notes", "paper-notes", "dark-take"]);
 
-/** 一期已验证比例（C01 前仅 3:4） */
-export const VERIFIED_CARD_RATIOS = /** @type {const} */ (["3:4"]);
+/** 一期已验证比例（C01②：3:4 / 3:5 / 9:16 三档齐备；渲染尺寸见 RATIO_PRESETS） */
+export const VERIFIED_CARD_RATIOS = /** @type {const} */ (["3:4", "3:5", "9:16"]);
+
+/** 比例 → UI 展示名（设置浮层与设置页签共用，避免两处各写一份文案） */
+export const CARD_RATIO_LABELS = /** @type {const} */ ({
+  "3:4": "3:4 竖版",
+  "3:5": "3:5 长竖版",
+  "9:16": "9:16 全屏竖版",
+});
 
 /** 数值项边界（含默认值与步进；步进供 UI stepper 使用） */
 export const CARD_LAYOUT_LIMITS = {
