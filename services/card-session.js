@@ -7,7 +7,8 @@
 
 ## 输入
 
-- `createCardSessionRegistry()`：无参数；每个转换器视图一个注册表。
+- `createCardSessionRegistry({ getLayoutDefaults? })`：每个转换器视图一个；`getLayoutDefaults`
+  仅在新会话创建时取排版初值（C02 全局默认，缺省内置默认）。
 - `registry.getSession(sourcePath)`：按笔记路径取/建会话。
 - `createNoteCardSession({ sourcePath })`：也可独立创建（测试用）。
 - `createPreviewRunner(session, runLayout)`：编排预览异步任务（runLayout 为注入的排版函数）。
@@ -172,7 +173,9 @@ function toLayoutKey(versions) {
 
 /**
  * 创建单笔记卡片会话（纯状态机，无 DOM/Obsidian 依赖）。
- * @param {{ sourcePath?: string }} [options]
+ * @param {{ sourcePath?: string, layoutDefaults?: import('./card-settings-model.js').CardLayoutSettings | Record<string, unknown> | null }} [options]
+ *   `layoutDefaults`：会话创建时的排版初值（C02 全局默认；缺省用内置默认）。
+ *   会话内调整只改本会话，不写回全局；全局默认变化也不影响已创建会话。
  * @returns {CardNoteSessionLike}
  */
 export function createNoteCardSession(options = {}) {
@@ -183,8 +186,11 @@ export function createNoteCardSession(options = {}) {
   const versions = { content: 1, config: 1, theme: 1, resource: 1 };
   let disposed = false;
 
-  // —— 排版设置（B03）：值实际变化 → bumpConfig（选择/省略确认自动失效）——
-  const layoutSettings = createCardLayoutSettingsState({ onChanged: () => bump("config") });
+  // —— 排版设置（B03；C02：初值来自会话创建时的全局默认）——
+  const layoutSettings = createCardLayoutSettingsState({
+    onChanged: () => bump("config"),
+    defaults: options.layoutDefaults || undefined,
+  });
 
   // —— 预览状态 ——
   /** @type {CardPreviewState} */
@@ -621,11 +627,18 @@ export function createPreviewRunner(session, runLayout) {
  */
 
 /**
+ * 创建会话注册表（每个转换器视图一个，§5.4）。
+ * @param {{ getLayoutDefaults?: () => import('./card-settings-model.js').CardLayoutSettings | Record<string, unknown> | null }} [options]
+ *   `getLayoutDefaults`：**仅在新会话创建时**调用一次取排版初值（C02 全局默认）。
+ *   返回非法值时由会话内归一化回落内置默认；已存在会话不受其后续变化影响。
  * @returns {CardSessionRegistryLike}
  */
-export function createCardSessionRegistry() {
+export function createCardSessionRegistry(options = {}) {
   /** @type {Map<string, CardNoteSessionLike>} */
   const sessions = new Map();
+  const getLayoutDefaults = typeof options.getLayoutDefaults === "function"
+    ? options.getLayoutDefaults
+    : null;
 
   return {
     /**
@@ -635,7 +648,10 @@ export function createCardSessionRegistry() {
     getSession(sourcePath) {
       let session = sessions.get(sourcePath);
       if (!session) {
-        session = createNoteCardSession({ sourcePath });
+        session = createNoteCardSession({
+          sourcePath,
+          layoutDefaults: getLayoutDefaults ? getLayoutDefaults() : undefined,
+        });
         sessions.set(sourcePath, session);
       }
       return session;

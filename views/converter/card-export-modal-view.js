@@ -135,6 +135,18 @@ function noteDisplayName(sourcePath) {
 /** @type {CardExportModalViewMethodsContract & ThisType<AppleStyleViewContract>} */
 export const cardExportModalViewMethods = {
 /**
+ * 导出根目录解析：用户本次弹窗输入优先；否则取全局默认（C02 cardDefaults.exportRoot）；
+ * 都没有回落内置默认。深度校验（保留目录/绝对路径拒绝）仍由导出执行层把守。
+ * @returns {string}
+ */
+resolveCardExportRootDefault() {
+  const selfRecord = /** @type {any} */ (this);
+  if (selfRecord.cardExportRootPath) return String(selfRecord.cardExportRootPath);
+  const raw = selfRecord.plugin?.settings?.cardDefaults?.exportRoot;
+  if (typeof raw === 'string' && raw.trim()) return raw.trim();
+  return DEFAULT_CARD_EXPORT_ROOT;
+},
+/**
  * 重绘弹窗内容：按会话任务状态分派到表单 / 准备中 / 任务视图。
  * 滚动位置跨重绘保留——进度事件会频繁触发重绘，不应把用户弹回顶部。
  */
@@ -198,7 +210,7 @@ renderCardExportForm(body) {
   const emptySelection = scope === 'selected' && selectionCount === 0;
 
   const collected = this.collectCardExportInput({
-    rootPath: selfRecord.cardExportRootPath || DEFAULT_CARD_EXPORT_ROOT,
+    rootPath: this.resolveCardExportRootDefault(),
     scale: selfRecord.cardExportScale || DEFAULT_CARD_EXPORT_SCALE,
     // 「全部」不带页 id（null 由桥接层展开全部）；空集同样走 null，不制造第三种状态
     pageIds: scope === 'selected' && selectionCount > 0 ? selection : null,
@@ -313,7 +325,7 @@ renderCardExportForm(body) {
     cls: 'icard-export-root-input',
     attr: { id: 'icard-export-root-input', type: 'text', spellcheck: 'false', placeholder: DEFAULT_CARD_EXPORT_ROOT },
   }));
-  rootInput.value = String(selfRecord.cardExportRootPath || DEFAULT_CARD_EXPORT_ROOT);
+  rootInput.value = this.resolveCardExportRootDefault();
   rootInput.addEventListener('change', () => {
     selfRecord.cardExportRootPath = String(rootInput.value || DEFAULT_CARD_EXPORT_ROOT).trim() || DEFAULT_CARD_EXPORT_ROOT;
     this.renderCardExportModal();

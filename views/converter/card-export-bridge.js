@@ -42,7 +42,7 @@ AppleStyleView 实例（app / 会话 / 当前渲染负载）与用户在弹窗�
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument -- reason: 视图方法组跨模块动态组合（同 card-preview），Obsidian app.vault 与 renderCardPages 产物以 unknown 持有，运行时语义由 B04 契约测试 + card_export_flow 约束 */
 
 import { createCardExporter } from '../../services/card-exporter.js';
-import { EXPORT_MANIFEST_NAME } from '../../services/card-export-paths.js';
+import { DEFAULT_EXPORT_ROOT, EXPORT_MANIFEST_NAME } from '../../services/card-export-paths.js';
 import { createCardDocument } from '../../services/card-document.js';
 import {
   createCardResourcePool,
@@ -57,8 +57,8 @@ import { loadCommonJsDependency } from '../../services/obsidian-compat.js';
 export const CARD_EXPORT_SCALES = /** @type {const} */ ([1, 2, 3]);
 /** 默认导出倍率 */
 export const DEFAULT_CARD_EXPORT_SCALE = 2;
-/** 导出默认输出目录（vault 相对；可在弹窗内改） */
-export const DEFAULT_CARD_EXPORT_ROOT = '卡片导出';
+/** 导出默认输出目录（vault 相对；C02 全局默认可覆盖初始值；单一事实在 card-export-paths.js） */
+export const DEFAULT_CARD_EXPORT_ROOT = DEFAULT_EXPORT_ROOT;
 
 /**
  * @typedef {{

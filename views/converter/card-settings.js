@@ -20,7 +20,8 @@ this.cardSettingsWrapper（settings-panel.js 创建的浮层容器）、
 - `buildCardSettingsPanel()`：一次性构建浮层 DOM（createSettingsPanel 时调用）；
 - `renderCardSettingsValues()`：打开浮层/设置变化后同步当前值（active 态、滑块位置与数值）；
 - `applyCardLayoutSetting(key, value)`：归一化应用单项设置，变化后触发重排版；
-- `resetCardLayoutSettings()`：恢复当前默认（B03 为内置默认，C02 接全局默认）；
+- `resetCardLayoutSettings()`：恢复默认（C02：即本会话创建时注入的全局默认；仅影响本篇，
+  全局默认本身在设置页「卡片」页签维护）；
 - `getCardSettingsSession()`：当前笔记会话（无会话返回 null，UI 显示默认值）。
 
 ## 定位
@@ -171,7 +172,7 @@ buildCardSettingsPanel() {
     const resetBtn = section.createEl('button', {
       cls: 'apple-btn-size',
       text: '恢复默认排版',
-      attr: { 'title': '恢复当前默认排版设置（仅影响本篇）' },
+      attr: { 'title': '恢复为本会话创建时的全局默认排版（仅影响本篇；全局默认在设置页「卡片」页签修改）' },
     });
     resetBtn.addEventListener('click', () => { this.resetCardLayoutSettings(); });
   });

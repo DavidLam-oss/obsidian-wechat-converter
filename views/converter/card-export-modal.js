@@ -49,7 +49,7 @@ AppleStyleView 实例（app / 会话 / 预览负载）与用户交互（开始 /
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument -- reason: 视图方法组跨模块动态组合（同 card-preview），会话/任务/负载以 unknown 持有，运行时语义由 card_export_flow 与 B01/B04 契约约束 */
 
 import { createObsidianModal } from '../apple-style-view-shared.js';
-import { DEFAULT_CARD_EXPORT_ROOT, DEFAULT_CARD_EXPORT_SCALE } from './card-export-bridge.js';
+import { DEFAULT_CARD_EXPORT_SCALE } from './card-export-bridge.js';
 import { formatExportReason } from './card-export-modal-view.js';
 
 /** @type {CardExportMethodsContract & ThisType<AppleStyleViewContract>} */
@@ -161,7 +161,7 @@ async startCardExport() {
     return;
   }
   const collected = this.collectCardExportInput({
-    rootPath: selfRecord.cardExportRootPath || DEFAULT_CARD_EXPORT_ROOT,
+    rootPath: this.resolveCardExportRootDefault(),
     scale: selfRecord.cardExportScale || DEFAULT_CARD_EXPORT_SCALE,
     pageIds,
   });

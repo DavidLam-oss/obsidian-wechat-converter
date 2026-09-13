@@ -234,6 +234,7 @@ export default [
       "views/publish-modal/wechat-sync-modal.js",
       "views/settings/apple-style-setting-tab.js",
       "views/settings/ai-section.js",
+      "views/settings/card-tab.js",
       "views/settings/confirm-modal.js",
       "views/settings/feishu-tab.js",
       "views/settings/settings-tab-shell.js",

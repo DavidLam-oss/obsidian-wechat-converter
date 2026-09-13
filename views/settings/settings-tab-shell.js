@@ -31,6 +31,7 @@ import {
   getObsidianSetIcon,
   obsidianApi,
   renderAboutSettingsTab,
+  renderCardSettingsTab,
   renderFeishuSettingsTab,
   renderMultiPlatformSettingsTab,
 } from '../apple-style-view-shared.js';
@@ -150,6 +151,7 @@ const settingsTabShellMethods = {
     const multiTab = tabBar.createDiv({ cls: 'apple-settings-tab apple-settings-tab-multi' });
     multiTab.createSpan({ text: MULTI_PLATFORM_TAB_LABEL, cls: 'apple-settings-tab-label' });
     const feishuTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '飞书' });
+    const cardTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '卡片' });
     const aboutTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '关于' });
 
     const wechatContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
@@ -157,62 +159,40 @@ const settingsTabShellMethods = {
     multiContent.setCssStyles({ display: 'none' });
     const feishuContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
     feishuContent.setCssStyles({ display: 'none' });
+    const cardContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
+    cardContent.setCssStyles({ display: 'none' });
     const aboutContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
     aboutContent.setCssStyles({ display: 'none' });
 
-    wechatTab.onclick = () => {
-      this._activeSettingsTab = 'wechat';
-      wechatTab.addClass('active');
-      feishuTab.removeClass('active');
-      multiTab.removeClass('active');
-      aboutTab.removeClass('active');
-      wechatContent.setCssStyles({ display: '' });
-      feishuContent.setCssStyles({ display: 'none' });
-      multiContent.setCssStyles({ display: 'none' });
-      aboutContent.setCssStyles({ display: 'none' });
-    };
-    feishuTab.onclick = () => {
-      this._activeSettingsTab = 'feishu';
-      feishuTab.addClass('active');
-      wechatTab.removeClass('active');
-      multiTab.removeClass('active');
-      aboutTab.removeClass('active');
-      wechatContent.setCssStyles({ display: 'none' });
-      feishuContent.setCssStyles({ display: '' });
-      multiContent.setCssStyles({ display: 'none' });
-      aboutContent.setCssStyles({ display: 'none' });
-      renderFeishuSettingsTab(this, feishuContent, { obsidianApi });
-    };
-    multiTab.onclick = () => {
-      this._activeSettingsTab = 'multi';
-      multiTab.addClass('active');
-      wechatTab.removeClass('active');
-      feishuTab.removeClass('active');
-      aboutTab.removeClass('active');
-      wechatContent.setCssStyles({ display: 'none' });
-      feishuContent.setCssStyles({ display: 'none' });
-      multiContent.setCssStyles({ display: '' });
-      aboutContent.setCssStyles({ display: 'none' });
-    };
-    aboutTab.onclick = () => {
-      this._activeSettingsTab = 'about';
-      aboutTab.addClass('active');
-      wechatTab.removeClass('active');
-      feishuTab.removeClass('active');
-      multiTab.removeClass('active');
-      wechatContent.setCssStyles({ display: 'none' });
-      feishuContent.setCssStyles({ display: 'none' });
-      multiContent.setCssStyles({ display: 'none' });
-      aboutContent.setCssStyles({ display: '' });
-      renderAboutSettingsTab(this, aboutContent);
-    };
+    /**
+     * 设置页签定义（C02 新增「卡片」；key 与 _activeSettingsTab 持久化值一致）。
+     * @typedef {{ tab: ObsidianElementLike, content: ObsidianElementLike, key: 'wechat'|'multi'|'feishu'|'card'|'about' }} SettingsTabDef
+     */
 
-    if (this._activeSettingsTab === 'feishu') {
-      feishuTab.onclick();
-    } else if (this._activeSettingsTab === 'multi') {
-      multiTab.onclick();
-    } else if (this._activeSettingsTab === 'about') {
-      aboutTab.onclick();
+    /** @type {SettingsTabDef[]} */
+    const tabDefs = [
+      { tab: wechatTab, content: wechatContent, key: 'wechat' },
+      { tab: multiTab, content: multiContent, key: 'multi' },
+      { tab: feishuTab, content: feishuContent, key: 'feishu' },
+      { tab: cardTab, content: cardContent, key: 'card' },
+      { tab: aboutTab, content: aboutContent, key: 'about' },
+    ];
+    for (const def of tabDefs) {
+      def.tab.onclick = () => {
+        for (const d of tabDefs) {
+          d.tab.toggleClass('active', d.tab === def.tab);
+          d.content.setCssStyles({ display: d.tab === def.tab ? '' : 'none' });
+        }
+        this._activeSettingsTab = def.key;
+        if (def.key === 'feishu') renderFeishuSettingsTab(this, feishuContent, { obsidianApi });
+        if (def.key === 'card') renderCardSettingsTab(this, cardContent, { obsidianApi });
+        if (def.key === 'about') renderAboutSettingsTab(this, aboutContent);
+      };
+    }
+
+    const initialDef = tabDefs.find((def) => def.key === this._activeSettingsTab);
+    if (initialDef && initialDef.key !== 'wechat') {
+      initialDef.tab.onclick();
     }
 
     this.renderWechatSettingsTab(wechatContent);

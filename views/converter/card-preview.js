@@ -120,9 +120,17 @@ export const cardPreviewMethods = {
 getCardSessions() {
   const selfRecord = cardStateOf(this);
   if (!selfRecord.cardSessionRegistry) {
-    selfRecord.cardSessionRegistry = createCardSessionRegistry();
+    selfRecord.cardSessionRegistry = createCardSessionRegistry({
+      // C02：全局默认仅在新会话创建时读取；会话内调整不写回，已存在会话不受后续变化影响
+      getLayoutDefaults: () => {
+        const defaults = /** @type {Record<string, unknown> | undefined} */ (
+          /** @type {any} */ (this).plugin?.settings?.cardDefaults
+        );
+        return defaults && typeof defaults === 'object' ? defaults : undefined;
+      },
+    });
   }
-  return selfRecord.cardSessionRegistry;
+  return /** @type {import('../../services/card-session.js').CardSessionRegistryLike} */ (selfRecord.cardSessionRegistry);
 }
 ,
 
