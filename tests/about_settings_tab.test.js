@@ -30,13 +30,17 @@ import { renderAboutSettingsTab } from '../views/settings/about-tab.js';
 import { SPONSORS } from '../services/sponsors-data.js';
 
 describe('Settings - About Tab & Sponsor Hall of Fame', () => {
-  it('SPONSORS data contains the first sponsor record', () => {
-    expect(SPONSORS.length).toBeGreaterThanOrEqual(1);
+  it('SPONSORS data contains sponsor records including first sponsor and Tony', () => {
+    expect(SPONSORS.length).toBeGreaterThanOrEqual(2);
     const first = SPONSORS[0];
     expect(first.name).toBe('*哥');
     expect(first.tag).toBe('首位支持者');
     expect(first.message).toBe('公众号排版助手真不错');
     expect(first.date).toBe('2026-09');
+
+    const tony = SPONSORS.find((s) => s.name === 'Tony');
+    expect(tony).toBeDefined();
+    expect(tony?.date).toBe('2026-09-08');
   });
 
   it('renders about tab with dynamic version and title', () => {
@@ -132,5 +136,14 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
 
     const firstMsg = containerEl.querySelector('.apple-settings-fame-item-message');
     expect(firstMsg?.textContent).toContain('公众号排版助手真不错');
+
+    // 检查交流讨论群模块
+    const communityCard = containerEl.querySelector('.apple-settings-community-card');
+    expect(communityCard).not.toBeNull();
+    expect(communityCard?.textContent).toContain('linauwawa');
+    expect(communityCard?.textContent).toContain('400 人');
+
+    const copyBtn = containerEl.querySelector('.apple-settings-community-copy-btn');
+    expect(copyBtn?.textContent).toBe('复制微信号');
   });
 });

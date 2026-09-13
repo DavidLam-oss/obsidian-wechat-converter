@@ -227,7 +227,45 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
     item.createSpan({ text: sponsor.date, cls: 'apple-settings-fame-item-date' });
   });
 
-  // 4. 关于作者
+  // 4. 交流讨论群
+  const communitySection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
+
+  const communityHeader = communitySection.createDiv({ cls: 'apple-settings-about-section-header' });
+  const communityIcon = communityHeader.createSpan({ cls: 'apple-settings-about-section-icon' });
+  attachIcon(communityIcon, 'users');
+  communityHeader.createSpan({ text: '交流讨论群' });
+
+  const communityCard = communitySection.createDiv({ cls: 'apple-settings-community-card' });
+  communityCard.createEl('p', {
+    text: '为了方便大家交流技术写作与多平台排版心得、探讨新功能与反馈使用问题，作者创建了「Obsidian 发布助手」用户交流群。',
+  });
+  communityCard.createEl('p', {
+    text: '目前社群成员已超过 400 人，受微信规则限制已无法通过扫描群二维码直接加入。如果您想入群交流，欢迎添加作者个人微信（备注「入群」），作者将手动拉您进群：',
+  });
+
+  const wechatRow = communityCard.createDiv({ cls: 'apple-settings-community-wechat-row' });
+  wechatRow.createSpan({ text: '作者微信号：' });
+  wechatRow.createEl('code', { text: 'linauwawa' });
+
+  const copyBtn = wechatRow.createEl('button', {
+    text: '复制微信号',
+    cls: 'apple-settings-community-copy-btn',
+  });
+  copyBtn.onclick = async () => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText('linauwawa');
+      }
+      copyBtn.textContent = '已复制';
+      setTimeout(() => {
+        copyBtn.textContent = '复制微信号';
+      }, 2000);
+    } catch {
+      // ignore clipboard error
+    }
+  };
+
+  // 5. 关于作者
   const authorSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
 
   const authorHeader = authorSection.createDiv({ cls: 'apple-settings-about-section-header' });
