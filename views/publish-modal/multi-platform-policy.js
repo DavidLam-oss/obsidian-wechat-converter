@@ -42,7 +42,7 @@ import {
   normalizePolicyQuota,
 } from '../../services/obsidian-publisher-policy.js';
 
-const FREE_DAILY_PLATFORM_QUOTA = 1;
+const FREE_DAILY_PLATFORM_QUOTA = 3;
 
 function isRecord(value) {
   return !!value && typeof value === 'object' && !Array.isArray(value);

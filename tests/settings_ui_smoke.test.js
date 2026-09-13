@@ -509,7 +509,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
 
     const panel = tab.containerEl.querySelector('.wechat-multiplatform-onboarding:not(.is-pro)');
     expect(panel?.textContent).not.toContain('上次连接时识别为 Pro');
-    expect(panel?.textContent).toContain('免费版每天 1 个平台额度');
+    expect(panel?.textContent).toContain('免费版每天 3 个平台额度');
     expect(panel?.textContent).not.toContain('多平台发布已解锁');
     expect(panel?.textContent).not.toContain('不再受免费版每日平台数量限制');
   });
