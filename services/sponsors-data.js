@@ -42,4 +42,8 @@ export const SPONSORS = [
     message: '公众号排版助手真不错',
     date: '2026-09',
   },
+  {
+    name: 'Tony',
+    date: '2026-09-08',
+  },
 ];
