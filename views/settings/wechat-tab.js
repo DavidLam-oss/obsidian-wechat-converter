@@ -330,8 +330,6 @@ const wechatSettingsMethods = {
       });
     }
 
-    this.renderAiSettingsSection(containerEl);
-
     // 高级设置
     new Setting(containerEl)
       .setName('高级设置')

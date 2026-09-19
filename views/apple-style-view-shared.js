@@ -72,6 +72,11 @@ export {
   normalizeLayoutSelection,
   getArticleLayoutSelectionState,
   resolveAiProvider,
+  resolveImageAiProvider,
+  listTextAiProviders,
+  listImageAiProviders,
+  DEFAULT_IMAGE_MODELS,
+  COMMON_AI_PRESETS,
   deriveArticleLayoutStateForSelection,
   normalizeArticleLayoutState,
   normalizeArticleLayoutCacheEntry,
@@ -158,6 +163,9 @@ export {
 export {
   renderCardSettingsTab,
 } from './settings/card-tab.js';
+export {
+  renderAiSettingsTab,
+} from './settings/ai-tab.js';
 export {
   renderAboutSettingsTab,
 } from './settings/about-tab.js';

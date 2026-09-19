@@ -113,16 +113,58 @@ const AI_PROVIDER_KIND_DEFAULTS = {
   [AI_PROVIDER_KINDS.OPENAI_COMPATIBLE]: {
     baseUrl: 'https://api.openai.com/v1',
     model: 'gpt-4.1-mini',
+    imageModel: 'dall-e-3',
   },
   [AI_PROVIDER_KINDS.GEMINI]: {
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
     model: 'gemini-2.5-flash',
+    imageModel: 'imagen-3.0-generate-002',
   },
   [AI_PROVIDER_KINDS.ANTHROPIC]: {
     baseUrl: 'https://api.anthropic.com/v1',
     model: 'claude-3-5-haiku-latest',
+    imageModel: '',
   },
 };
+
+const DEFAULT_IMAGE_MODELS = {
+  [AI_PROVIDER_KINDS.OPENAI_COMPATIBLE]: 'dall-e-3',
+  [AI_PROVIDER_KINDS.GEMINI]: 'imagen-3.0-generate-002',
+  [AI_PROVIDER_KINDS.ANTHROPIC]: '',
+};
+
+const COMMON_AI_PRESETS = [
+  {
+    id: 'siliconflow',
+    label: 'SiliconFlow (硅基流动 - 推荐生图/文本)',
+    kind: AI_PROVIDER_KINDS.OPENAI_COMPATIBLE,
+    baseUrl: 'https://api.siliconflow.cn/v1',
+    textModel: 'deepseek-ai/DeepSeek-V3',
+    imageModel: 'black-forest-labs/FLUX.1-schnell',
+    supportsText: true,
+    supportsImage: true,
+  },
+  {
+    id: 'openai',
+    label: 'OpenAI 官方',
+    kind: AI_PROVIDER_KINDS.OPENAI_COMPATIBLE,
+    baseUrl: 'https://api.openai.com/v1',
+    textModel: 'gpt-4.1-mini',
+    imageModel: 'dall-e-3',
+    supportsText: true,
+    supportsImage: true,
+  },
+  {
+    id: 'deepseek',
+    label: 'DeepSeek 官方 (仅文本)',
+    kind: AI_PROVIDER_KINDS.OPENAI_COMPATIBLE,
+    baseUrl: 'https://api.deepseek.com',
+    textModel: 'deepseek-chat',
+    imageModel: '',
+    supportsText: true,
+    supportsImage: false,
+  },
+];
 
 export {
   AI_LAYOUT_SCHEMA_VERSION,
@@ -156,4 +198,6 @@ export {
   AI_WECHAT_SAFE_STYLE_PRIMITIVES,
   AI_STYLE_PACKS,
   AI_PROVIDER_KIND_DEFAULTS,
+  DEFAULT_IMAGE_MODELS,
+  COMMON_AI_PRESETS,
 };

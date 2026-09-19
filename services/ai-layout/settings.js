@@ -47,6 +47,9 @@ function createDefaultAiSettings() {
   return {
     enabled: true,
     defaultProviderId: '',
+    defaultImageProviderId: '',
+    cardCoverImageStyle: '3d-clay',
+    cardCoverMode: 'mixed',
     defaultLayoutFamily: AI_LAYOUT_SELECTION_AUTO,
     defaultColorPalette: AI_LAYOUT_SELECTION_AUTO,
     customColor: '#7c3aed',
@@ -80,11 +83,25 @@ function normalizeAiSettings(raw = {}) {
     defaultProviderId = '';
   }
 
+  let defaultImageProviderId = typeof source.defaultImageProviderId === 'string' ? source.defaultImageProviderId : defaults.defaultImageProviderId;
+  if (defaultImageProviderId && !providers.some((provider) => provider.id === defaultImageProviderId && provider.enabled !== false && provider.supportsImage === true)) {
+    defaultImageProviderId = '';
+  }
+
+  const cardCoverImageStyle = typeof source.cardCoverImageStyle === 'string' && source.cardCoverImageStyle.trim()
+    ? source.cardCoverImageStyle.trim()
+    : defaults.cardCoverImageStyle;
+
+  const cardCoverMode = source.cardCoverMode === 'full-bleed' ? 'full-bleed' : 'mixed';
+
   return {
     enabled: Object.prototype.hasOwnProperty.call(source, 'enabled')
       ? source.enabled === true
       : defaults.enabled,
     defaultProviderId,
+    defaultImageProviderId,
+    cardCoverImageStyle,
+    cardCoverMode,
     defaultLayoutFamily: normalizeLayoutFamily(source.defaultLayoutFamily, AI_LAYOUT_SELECTION_AUTO),
     defaultColorPalette: normalizeColorPalette(
       source.defaultColorPalette ?? source.defaultStylePack,

@@ -31,6 +31,7 @@ import {
   getObsidianSetIcon,
   obsidianApi,
   renderAboutSettingsTab,
+  renderAiSettingsTab,
   renderCardSettingsTab,
   renderFeishuSettingsTab,
   renderMultiPlatformSettingsTab,
@@ -152,6 +153,7 @@ const settingsTabShellMethods = {
     multiTab.createSpan({ text: MULTI_PLATFORM_TAB_LABEL, cls: 'apple-settings-tab-label' });
     const feishuTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '飞书' });
     const cardTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '卡片' });
+    const aiTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: 'AI 服务' });
     const aboutTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '关于' });
 
     const wechatContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
@@ -161,12 +163,14 @@ const settingsTabShellMethods = {
     feishuContent.setCssStyles({ display: 'none' });
     const cardContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
     cardContent.setCssStyles({ display: 'none' });
+    const aiContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
+    aiContent.setCssStyles({ display: 'none' });
     const aboutContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
     aboutContent.setCssStyles({ display: 'none' });
 
     /**
-     * 设置页签定义（C02 新增「卡片」；key 与 _activeSettingsTab 持久化值一致）。
-     * @typedef {{ tab: ObsidianElementLike, content: ObsidianElementLike, key: 'wechat'|'multi'|'feishu'|'card'|'about' }} SettingsTabDef
+     * 设置页签定义（key 与 _activeSettingsTab 持久化值一致）。
+     * @typedef {{ tab: ObsidianElementLike, content: ObsidianElementLike, key: 'wechat'|'multi'|'feishu'|'card'|'ai'|'about' }} SettingsTabDef
      */
 
     /** @type {SettingsTabDef[]} */
@@ -175,6 +179,7 @@ const settingsTabShellMethods = {
       { tab: multiTab, content: multiContent, key: 'multi' },
       { tab: feishuTab, content: feishuContent, key: 'feishu' },
       { tab: cardTab, content: cardContent, key: 'card' },
+      { tab: aiTab, content: aiContent, key: 'ai' },
       { tab: aboutTab, content: aboutContent, key: 'about' },
     ];
     for (const def of tabDefs) {
@@ -186,6 +191,7 @@ const settingsTabShellMethods = {
         this._activeSettingsTab = def.key;
         if (def.key === 'feishu') renderFeishuSettingsTab(this, feishuContent, { obsidianApi });
         if (def.key === 'card') renderCardSettingsTab(this, cardContent, { obsidianApi });
+        if (def.key === 'ai') renderAiSettingsTab(this, aiContent, { obsidianApi });
         if (def.key === 'about') renderAboutSettingsTab(this, aboutContent);
       };
     }

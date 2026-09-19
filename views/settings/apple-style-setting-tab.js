@@ -33,7 +33,7 @@ import {
 } from '../apple-style-view-shared.js';
 import { settingsTabShellMethods } from './settings-tab-shell.js';
 import { wechatSettingsMethods } from './wechat-tab.js';
-import { aiSettingsMethods } from './ai-section.js';
+import { aiSettingsMethods } from './ai-tab.js';
 import { wechatAccountModalMethods } from './wechat-account-modal.js';
 import { confirmModalMethods } from './confirm-modal.js';
 

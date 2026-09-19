@@ -43,7 +43,7 @@ this.cardSettingsWrapper（settings-panel.js 创建的面板容器）、
 - 所有卡片设置统一收敛在侧边栏面板，不在全局插件设置重复添加排版表单。
 */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return -- reason: AppleStyleView 方法组跨模块动态组合，会话等合同字段以 unknown 持有 */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: AppleStyleView 方法组跨模块动态组合，会话等合同字段以 unknown 持有 */
 
 import {
   CARD_LAYOUT_LIMITS,
@@ -54,6 +54,17 @@ import {
   VERIFIED_CARD_THEME_IDS,
 } from '../../services/card-settings-model.js';
 import { getCardTheme } from '../../services/card-themes.js';
+import {
+  AI_CARD_COVER_STYLES,
+  resolveCardCoverPrompt,
+  generateCardCoverImage,
+} from '../../services/card-ai-image.js';
+import {
+  resolveImageAiProvider,
+  isAiProviderRunnable,
+} from '../../services/ai-layout/providers.js';
+import { Notice } from '../apple-style-view-shared.js';
+import { getObsidianRequestUrl } from '../../services/obsidian-compat.js';
 
 /**
  * 卡片设置视图状态（d.ts 合同以 unknown 持有，这里给运行时访问形状）。
@@ -73,6 +84,13 @@ import { getCardTheme } from '../../services/card-themes.js';
  *     coverToggleBtn?: ObsidianElementLike | null,
  *     coverFieldsWrap?: ObsidianElementLike | null,
  *     coverInputs?: Record<string, HTMLInputElement>,
+ *     coverModeSelect?: HTMLSelectElement | null,
+ *     coverStyleSelect?: HTMLSelectElement | null,
+ *     coverPromptInput?: HTMLTextAreaElement | null,
+ *     coverGenerateBtn?: HTMLButtonElement | null,
+ *     coverImagePreviewWrap?: ObsidianElementLike | null,
+ *     coverImageThumb?: HTMLImageElement | null,
+ *     coverImageRemoveBtn?: HTMLButtonElement | null,
  *   } | null,
  * }} CardSettingsViewStateLike
  */
@@ -289,6 +307,137 @@ buildCardSettingsPanel() {
   addCoverInput('date', '日期', 'YYYY-MM-DD（无法解析则不显示）');
   addCoverInput('excerpt', '摘要', '取 frontmatter description，可改');
 
+  // 封面配图 / AI 生图
+  const aiCoverGroup = fieldsWrap.createDiv({ cls: 'icard-settings-cover-ai-group' });
+
+  // 1. 呈现形态选择
+  const modeRow = aiCoverGroup.createEl('label', { cls: 'icard-settings-cover-row' });
+  modeRow.createEl('span', { cls: 'icard-settings-cover-label', text: '呈现' });
+  const modeSelect = /** @type {HTMLSelectElement} */ (
+    /** @type {unknown} */ (modeRow.createEl('select', { cls: 'icard-settings-select' }))
+  );
+  modeSelect.createEl('option', { value: 'mixed', text: '图文混排（背景配图 + 文字排版）' });
+  modeSelect.createEl('option', { value: 'full-bleed', text: '纯全图海报（纯 AI 画面，整页铺满）' });
+  modeSelect.addEventListener('change', () => {
+    this.applyCardCoverField('coverMode', modeSelect.value);
+  });
+  refs.coverModeSelect = modeSelect;
+
+  // 2. 风格选择
+  const styleRow = aiCoverGroup.createEl('label', { cls: 'icard-settings-cover-row' });
+  styleRow.createEl('span', { cls: 'icard-settings-cover-label', text: '风格' });
+  const styleSelect = /** @type {HTMLSelectElement} */ (
+    /** @type {unknown} */ (styleRow.createEl('select', { cls: 'icard-settings-select' }))
+  );
+  for (const style of AI_CARD_COVER_STYLES) {
+    styleSelect.createEl('option', { value: style.id, text: `${style.name} · ${style.description}` });
+  }
+  styleSelect.addEventListener('change', () => {
+    this.applyCardCoverField('coverImageStyle', styleSelect.value);
+    const session = /** @type {any} */ (this.getCardSettingsSession());
+    const fields = session && typeof session.getCoverFields === 'function'
+      ? session.getCoverFields()
+      : { title: '', excerpt: '' };
+    const autoPrompt = resolveCardCoverPrompt({
+      styleId: styleSelect.value,
+      title: fields.title,
+      excerpt: fields.excerpt,
+    });
+    this.applyCardCoverField('coverPrompt', autoPrompt);
+    if (refs.coverPromptInput) {
+      refs.coverPromptInput.value = autoPrompt;
+    }
+  });
+  refs.coverStyleSelect = styleSelect;
+
+  // 3. 提示词多行文本域
+  const promptRow = aiCoverGroup.createDiv({ cls: 'icard-settings-cover-prompt-row' });
+  promptRow.createEl('span', { cls: 'icard-settings-cover-label', text: '生图 Prompt' });
+  const promptInput = /** @type {HTMLTextAreaElement} */ (
+    /** @type {unknown} */ (promptRow.createEl('textarea', {
+      cls: 'icard-settings-prompt-area',
+      attr: { placeholder: '生图提示词，支持根据标题/摘要自动填充或手动微调' },
+    }))
+  );
+  promptInput.addEventListener('change', () => {
+    this.applyCardCoverField('coverPrompt', promptInput.value);
+  });
+  refs.coverPromptInput = promptInput;
+
+  // 4. 生图按钮
+  const genActionRow = aiCoverGroup.createDiv({ cls: 'icard-settings-cover-actions' });
+  const genBtn = genActionRow.createEl('button', {
+    cls: 'apple-btn-size',
+    text: '🎨 AI 生成封面图',
+    attr: { type: 'button', title: '使用配置的生图模型根据 Prompt 生成封面图片' },
+  });
+  refs.coverGenerateBtn = genBtn;
+
+  genBtn.addEventListener('click', async () => {
+    const aiSettings = (/** @type {any} */ (this.plugin))?.settings?.ai;
+    const provider = resolveImageAiProvider(aiSettings, aiSettings?.defaultImageProviderId);
+    if (!provider || !isAiProviderRunnable(provider, 'image')) {
+      new Notice('未配置可用的生图 AI Provider，请前往插件设置【AI 服务】进行配置');
+      return;
+    }
+
+    const session = /** @type {any} */ (this.getCardSettingsSession());
+    const fields = session && typeof session.getCoverFields === 'function'
+      ? session.getCoverFields()
+      : { title: '', excerpt: '', coverPrompt: '', coverImageStyle: '3d-clay' };
+
+    const promptText = (fields.coverPrompt || promptInput.value || '').trim() || resolveCardCoverPrompt({
+      styleId: fields.coverImageStyle || '3d-clay',
+      title: fields.title,
+      excerpt: fields.excerpt,
+    });
+
+    const currentLayout = this.getCurrentCardLayoutSettings();
+    const ratio = currentLayout.ratioId || '3:4';
+
+    genBtn.disabled = true;
+    const originalText = genBtn.textContent || '🎨 AI 生成封面图';
+    genBtn.textContent = '🎨 正在生图中...';
+
+    try {
+      const dataUrl = await generateCardCoverImage({
+        provider,
+        prompt: promptText,
+        aspectRatio: ratio,
+        requestUrl: getObsidianRequestUrl(),
+      });
+      this.applyCardCoverField('coverImage', dataUrl);
+      new Notice('封面图生成成功！已应用到卡片封面');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      new Notice(`生图失败: ${msg}`);
+    } finally {
+      genBtn.disabled = false;
+      genBtn.textContent = originalText;
+    }
+  });
+
+  // 5. 封面图片缩略图预览与移除
+  const previewBox = aiCoverGroup.createDiv({ cls: 'icard-settings-cover-preview-box hidden' });
+  refs.coverImagePreviewWrap = previewBox;
+
+  const thumbImg = /** @type {HTMLImageElement} */ (
+    /** @type {unknown} */ (previewBox.createEl('img', { cls: 'icard-settings-cover-thumb' }))
+  );
+  refs.coverImageThumb = thumbImg;
+
+  const infoCol = previewBox.createDiv({ cls: 'icard-settings-cover-info' });
+  infoCol.createEl('span', { text: '已启用封面配图', cls: 'icard-settings-note' });
+  const removeImgBtn = infoCol.createEl('button', {
+    cls: 'apple-btn-size',
+    text: '移除配图',
+    attr: { type: 'button', title: '移除已生成的配图，恢复主题默认纯色/渐变封面' },
+  });
+  refs.coverImageRemoveBtn = removeImgBtn;
+  removeImgBtn.addEventListener('click', () => {
+    this.applyCardCoverField('coverImage', '');
+  });
+
   const refillSection = fieldsWrap.createDiv({ cls: 'icard-settings-cover-actions' });
   const refillBtn = refillSection.createEl('button', {
     cls: 'apple-btn-size',
@@ -469,6 +618,26 @@ renderCardSettingsValues() {
       for (const [key, input] of Object.entries(refs.coverInputs || {})) {
         if (document.activeElement === input) continue;
         input.value = String(/** @type {Record<string, string>} */ (fields)[key] || '');
+      }
+      if (refs.coverModeSelect) {
+        refs.coverModeSelect.value = fields.coverMode || 'mixed';
+      }
+      if (refs.coverStyleSelect) {
+        refs.coverStyleSelect.value = fields.coverImageStyle || '3d-clay';
+      }
+      if (refs.coverPromptInput && document.activeElement !== refs.coverPromptInput) {
+        refs.coverPromptInput.value = fields.coverPrompt || resolveCardCoverPrompt({
+          styleId: fields.coverImageStyle || '3d-clay',
+          title: fields.title,
+          excerpt: fields.excerpt,
+        });
+      }
+      if (refs.coverImagePreviewWrap) {
+        const hasImage = Boolean(fields.coverImage);
+        refs.coverImagePreviewWrap.classList.toggle('hidden', !hasImage);
+        if (hasImage && refs.coverImageThumb) {
+          refs.coverImageThumb.src = fields.coverImage;
+        }
       }
     }
   }

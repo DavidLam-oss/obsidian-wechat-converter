@@ -120,8 +120,9 @@ function makePlugin(settingsOverrides = {}) {
   };
 }
 
-function renderTab(plugin) {
+function renderTab(plugin, activeTab = 'wechat') {
   const tab = new AppleStyleSettingTab(plugin.app, plugin);
+  tab._activeSettingsTab = activeTab;
   tab.containerEl = createObsidianLikeElement('div');
   tab.renderSettingsContent();
   return tab;
@@ -356,7 +357,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
         articleLayoutsByPath: {},
       },
     });
-    const tab = renderTab(plugin);
+    const tab = renderTab(plugin, 'ai');
     const deleteButton = Array.from(tab.containerEl.querySelectorAll('button'))
       .find((button) => button.textContent === '删除');
     expect(deleteButton).toBeDefined();
@@ -392,7 +393,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
         articleLayoutsByPath: {},
       },
     });
-    const tab = renderTab(plugin);
+    const tab = renderTab(plugin, 'ai');
     const deleteButton = Array.from(tab.containerEl.querySelectorAll('button'))
       .find((button) => button.textContent === '删除');
 
@@ -429,7 +430,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
         },
       },
     });
-    renderTab(plugin);
+    renderTab(plugin, 'ai');
     const clearButton = globalThis.__obsidianButtonRegistry.find((button) => button.text === '清空缓存');
     expect(clearButton).toBeDefined();
     expect(clearButton.destructive).toBe(true);
@@ -965,5 +966,56 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     } }));
     const body = tab.containerEl.querySelector('.wechat-bridge-status-body');
     expect(body.querySelector('.wechat-bridge-browser-icon')).not.toBeNull();
+  });
+});
+
+// 回归守卫：settings.cardDefaults（全局默认：主题/比例/排版/导出根目录）的唯一写入入口是
+// 设置页「卡片」页签。该页签一旦被摘掉，这些默认值会「生效但不可改」——这里锁死它必须存在。
+describe('卡片页签全局默认入口（回归守卫）', () => {
+  beforeEach(() => {
+    globalThis.__obsidianSettingNamesRegistry = [];
+    globalThis.__obsidianButtonRegistry = [];
+  });
+
+  it('设置页保留「卡片」页签，并可从页签写回全局默认', () => {
+    const plugin = makePlugin({
+      cardDefaults: {
+        themeId: 'simple-white',
+        ratioId: '3:4',
+        fontSize: 14,
+        lineHeight: 1.7,
+        pagePadding: 28,
+        coverEnabled: true,
+        pageNumberEnabled: true,
+        watermarkText: '内部资料',
+        exportRoot: '卡片导出',
+      },
+    });
+
+    renderTab(plugin, 'card');
+
+    // 页签内容确实被渲染（renderCardSettingsTab 跑过）
+    expect(globalThis.__obsidianSettingNamesRegistry).toEqual(
+      expect.arrayContaining(['默认主题', '默认比例', '默认导出目录', '恢复内置默认'])
+    );
+
+    // 渲染过程不得丢掉 C01③ 引入的全局默认键，也不得改写用户已配置的值
+    const defaults = plugin.settings.cardDefaults;
+    expect(defaults).toMatchObject({
+      themeId: 'simple-white',
+      ratioId: '3:4',
+      fontSize: 14,
+      lineHeight: 1.7,
+      pagePadding: 28,
+      coverEnabled: true,
+      pageNumberEnabled: true,
+      watermarkText: '内部资料',
+      exportRoot: '卡片导出',
+    });
+
+    // 「恢复内置默认」仍然可达（全局作用域重置入口）
+    const resetButton = globalThis.__obsidianButtonRegistry
+      .find((button) => button.text === '恢复内置默认');
+    expect(resetButton).toBeDefined();
   });
 });
