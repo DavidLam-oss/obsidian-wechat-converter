@@ -41,7 +41,9 @@ AppleStyleView 实例（app / 会话 / 当前渲染负载）与用户在弹窗�
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument -- reason: 视图方法组跨模块动态组合（同 card-preview），Obsidian app.vault 与 renderCardPages 产物以 unknown 持有，运行时语义由 B04 契约测试 + card_export_flow 约束 */
 
+import { Notice } from '../apple-style-view-shared.js';
 import { createCardExporter } from '../../services/card-exporter.js';
+import { copySingleCardImage } from '../../services/card-clipboard.js';
 import { DEFAULT_EXPORT_ROOT, EXPORT_MANIFEST_NAME, COVER_EXPORT_FILE_NAME } from '../../services/card-export-paths.js';
 import { createCardDocument } from '../../services/card-document.js';
 import { deriveCoverFields, isCoverUsable } from '../../services/card-cover-model.js';
@@ -523,6 +525,88 @@ revealCardExportOutput(vaultRelativePath) {
     return { ok: true, absPath };
   } catch {
     return { ok: false, absPath, reason: 'reveal-failed' };
+  }
+}
+,
+
+/**
+ * 单张卡片复制（C03）：资格检查 → 纯内存 PNG 捕获 → 写入系统剪贴板（零磁盘写入）。
+ * @param {string} pageId 'cover' | 'page-1' | etc.
+ * @param {HTMLElement} [buttonEl]
+ * @returns {Promise<{ ok: boolean, reason?: string, message?: string }>}
+ */
+async copyCardPageImage(pageId, buttonEl) {
+  const session = typeof this.getCardSettingsSession === 'function' ? this.getCardSettingsSession() : null;
+  const outcome = /** @type {any} */ (this).cardRenderOutcome || /** @type {any} */ (this).cardPreviewOutcome;
+  if (!session || !outcome) {
+    new Notice('当前没有可复制的卡片');
+    return { ok: false, reason: 'no-session', message: '当前没有可复制的卡片' };
+  }
+  const isCover = pageId === 'cover';
+  const ordinal = isCover ? 0 : (Number(String(pageId || '').replace(/^page-/, '')) || 1);
+
+  if (buttonEl) {
+    buttonEl.classList.add('is-copying');
+    buttonEl.setAttribute('disabled', 'true');
+  }
+
+  const input = /** @type {any} */ (this).cardPreviewPendingInput;
+  const resources = this.prepareCardExportResources({
+    markdown: String(input?.markdown || ''),
+    sourcePath: String(input?.sourcePath || ''),
+  });
+
+  try {
+    const result = await copySingleCardImage({
+      session,
+      pageId,
+      ordinal,
+      outcome,
+      scale: DEFAULT_CARD_EXPORT_SCALE,
+      capturePageBytes: (cap) => this.createCardCaptureCallback({
+        pageId: cap.pageId,
+        ordinal: cap.ordinal,
+        settings: outcome.settings || {},
+        markdown: String(input?.markdown || ''),
+        sourcePath: String(input?.sourcePath || ''),
+        scale: cap.scale || DEFAULT_CARD_EXPORT_SCALE,
+        resources,
+        coverFields: typeof session.getCoverFields === 'function' ? session.getCoverFields() : null,
+      }),
+    });
+
+    if (result.ok) {
+      new Notice('卡片图片已复制到剪贴板');
+      if (buttonEl) {
+        buttonEl.classList.remove('is-copying');
+        buttonEl.classList.add('is-copied');
+        window.setTimeout(() => {
+          buttonEl.classList.remove('is-copied');
+          buttonEl.removeAttribute('disabled');
+        }, 1500);
+      }
+      return result;
+    } else {
+      const msg = result.reason === 'omissions-unconfirmed'
+        ? '存在未进入卡片的内容，请先在下方确认接受省略'
+        : (result.message || '复制失败，请使用右上角导出保存图片');
+      new Notice(msg);
+      if (buttonEl) {
+        buttonEl.classList.remove('is-copying');
+        buttonEl.removeAttribute('disabled');
+      }
+      return result;
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    new Notice(`复制失败：${message}`);
+    if (buttonEl) {
+      buttonEl.classList.remove('is-copying');
+      buttonEl.removeAttribute('disabled');
+    }
+    return { ok: false, reason: 'exception', message };
+  } finally {
+    resources.release();
   }
 }
 ,

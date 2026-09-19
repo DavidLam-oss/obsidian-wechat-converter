@@ -515,6 +515,8 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     canRevealCardExportOutput(): boolean;
     /** 卡片导出：在系统文件管理器中选中批次目录 */
     revealCardExportOutput(vaultRelativePath: string): { ok: boolean, absPath: string | null, reason?: string };
+    /** 卡片导出：单张复制到系统剪贴板（C03：零磁盘写入） */
+    copyCardPageImage(pageId: string, buttonEl?: ObsidianElementLike | null): Promise<{ ok: boolean, reason?: string, message?: string }>;
     /** 卡片导出：开始导出（冻结快照 → 建任务 → 逐页输出） */
     startCardExport(): Promise<void>;
     /** 卡片导出：结果已读后回到表单，允许换倍率/目录再导一批 */

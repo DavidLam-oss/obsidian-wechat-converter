@@ -598,6 +598,24 @@ renderCardPreviewDom() {
       event.stopPropagation();
       this.toggleCardPageSelection(pageId);
     });
+    // 单张复制控件（规划 C03）：点击将当前单张卡片以 PNG 写入系统剪贴板（零磁盘写入）。
+    // 带有 stopPropagation，防止触发源定位光标跳转。
+    const copyBtn = item.createEl('button', {
+      cls: 'icard-preview-page-copy',
+      attr: {
+        type: 'button',
+        'data-page-id': pageId,
+        'aria-label': `复制${badge}到剪贴板`,
+        title: `复制${badge}到剪贴板`,
+      },
+    });
+    copyBtn.createEl('span', { cls: 'icard-preview-page-copy-icon' });
+    copyBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (typeof this.copyCardPageImage === 'function') {
+        void this.copyCardPageImage(pageId, copyBtn);
+      }
+    });
     const badgeEl = item.createEl('div', { cls: 'icard-preview-page-badge', text: badge });
     badgeEl.setAttribute('data-icard-badge', '1');
     if (onOpen) {

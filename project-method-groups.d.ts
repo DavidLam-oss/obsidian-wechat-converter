@@ -243,6 +243,7 @@ type CardExportBridgeMethodsContract = Pick<
     | 'resolveCardExportAbsPath'
     | 'canRevealCardExportOutput'
     | 'revealCardExportOutput'
+    | 'copyCardPageImage'
 >;
 
 type CardExportMethodsContract = Pick<
