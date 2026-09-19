@@ -50,7 +50,7 @@ describe('卡片全局默认：设置层归一化（C02）', () => {
       fontSize: 14,
       lineHeight: 1.7,
       pagePadding: 28,
-      coverEnabled: false,
+      coverEnabled: true,
       pageNumberEnabled: true,
       watermarkText: '',
       exportRoot: '卡片导出',
@@ -76,7 +76,7 @@ describe('卡片全局默认：设置层归一化（C02）', () => {
       fontSize: 18,
       lineHeight: 1.7,
       pagePadding: 16,
-      coverEnabled: false,
+      coverEnabled: true,
       pageNumberEnabled: true,
       watermarkText: '',
       exportRoot: 'abs/path',
@@ -93,7 +93,7 @@ describe('卡片全局默认：设置层归一化（C02）', () => {
         watermarkText: '  内部\n资料  ',
       },
     });
-    expect(settings.cardDefaults.coverEnabled).toBe(false); // 非布尔回落默认
+    expect(settings.cardDefaults.coverEnabled).toBe(true); // 非布尔回落默认（C01③ 起默认为开启）
     expect(settings.cardDefaults.pageNumberEnabled).toBe(false);
     expect(settings.cardDefaults.watermarkText).toBe('内部 资料');
     const { settings: keep } = normalizeLoadedSettings({
@@ -106,12 +106,40 @@ describe('卡片全局默认：设置层归一化（C02）', () => {
 
   it('已合法的 cardDefaults 不标记迁移；缺失时补默认', () => {
     const valid = createDefaultCardSettings();
-    const ok = normalizeLoadedSettings({ clientId: 'c1', cardDefaults: { ...valid } });
+    // 迁移标记已落库（首次加载会写一次），这份齐备的配置不该再被判为需要迁移
+    const ok = normalizeLoadedSettings({
+      clientId: 'c1', cardDefaults: { ...valid }, cardCoverDefaultMigrated: true,
+    });
     expect(ok.settings.cardDefaults).toEqual(valid);
     expect(ok.didMigrate).toBe(false);
 
     const filled = normalizeLoadedSettings({ clientId: 'c1' });
     expect(filled.settings.cardDefaults).toEqual(createDefaultCardSettings());
+  });
+
+  it('C01③ 遗留迁移（一次性）：旧默认的封面关闭会被翻正，且不重复执行', () => {
+    const first = normalizeLoadedSettings({
+      clientId: 'c1',
+      cardDefaults: { ...createDefaultCardSettings(), coverEnabled: false },
+    });
+    expect(first.settings.cardDefaults.coverEnabled).toBe(true);
+    expect(first.settings.cardCoverDefaultMigrated).toBe(true);
+    expect(first.didMigrate).toBe(true);
+
+    // 标记已落库：用户之后主动关掉全局封面不会被再次翻正
+    const second = normalizeLoadedSettings({
+      clientId: 'c1',
+      cardDefaults: { ...createDefaultCardSettings(), coverEnabled: false },
+      cardCoverDefaultMigrated: true,
+    });
+    expect(second.settings.cardDefaults.coverEnabled).toBe(false);
+
+    // 未配置 / 已开启封面的装机不该因为这条迁移被多写一次盘
+    expect(normalizeLoadedSettings({ clientId: 'c1' }).didMigrate).toBe(false);
+    expect(normalizeLoadedSettings({
+      clientId: 'c1',
+      cardDefaults: { ...createDefaultCardSettings(), coverEnabled: true },
+    }).didMigrate).toBe(false);
   });
 
   it('cardDefaults 为非对象时回落默认；不触碰其他设置键', () => {

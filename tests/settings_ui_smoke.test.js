@@ -996,7 +996,12 @@ describe('卡片页签全局默认入口（回归守卫）', () => {
 
     // 页签内容确实被渲染（renderCardSettingsTab 跑过）
     expect(globalThis.__obsidianSettingNamesRegistry).toEqual(
-      expect.arrayContaining(['默认主题', '默认比例', '默认导出目录', '恢复内置默认'])
+      expect.arrayContaining([
+        '默认主题', '默认比例', '默认导出目录',
+        // C01③ 三键的全局入口
+        '默认启用封面', '默认显示正文页码', '默认水印文案',
+        '恢复内置默认',
+      ])
     );
 
     // 渲染过程不得丢掉 C01③ 引入的全局默认键，也不得改写用户已配置的值

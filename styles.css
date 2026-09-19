@@ -3506,7 +3506,8 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 
 图片卡片排版设置浮层的自有样式（B03）。控件本体已与文章模式对齐：
 滑块复用 style-controls.css 的 apple-slider，按钮复用 style-panel.css 的
-apple-btn-row/apple-btn-size，分节间距由 apple-setting-section 统一。
+apple-btn-row/apple-btn-size；分节间距由本文件的
+  `.apple-settings-card-wrapper .apple-setting-section` 覆盖块对齐文章模式设置面板。
 本分片只保留卡片设置特有的少量样式。作用域 icard-settings- 前缀，
 仅作用于卡片模式设置浮层（.apple-settings-card-wrapper），不污染文章/贴图设置。
 
@@ -3570,6 +3571,7 @@ apple-btn-row/apple-btn-size，分节间距由 apple-setting-section 统一。
   margin-bottom: 6px;
   border-bottom: 1px solid var(--background-modifier-border);
 }
+
 .icard-settings-subtabs {
   display: flex;
   gap: 8px;
@@ -3634,6 +3636,27 @@ apple-btn-row/apple-btn-size，分节间距由 apple-setting-section 统一。
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+/* —— 分节间距对齐文章模式设置面板 ——
+   文章模式的「分节留白 + 细分隔线」来自 `.apple-settings-details .apple-setting-section`
+   （见 styles/style-panel.css）：padding 12px + 顶部 1px 细线 + gap 8px。卡片浮层的分节
+   不在 .apple-settings-details 内，只吃到 .apple-setting-section 的基础规则（仅 flex + gap:8px），
+   于是各分节之间没有任何留白、视觉上糊成一片。这里复用同一套口径。 */
+.apple-settings-card-wrapper:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+}
+
+.apple-settings-card-wrapper .apple-setting-section {
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid color-mix(in srgb, var(--background-modifier-border) 82%, transparent);
+}
+
+.apple-settings-card-wrapper .apple-setting-section:first-child {
+  border-top: none;
+  padding-top: 0;
 }
 /*
 ## 核心功能

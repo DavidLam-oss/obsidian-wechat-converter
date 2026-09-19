@@ -77,9 +77,9 @@ function generateFallbackId() {
 }
 
 /**
- * 图片卡片全局默认（C02）：排版五项 + 导出根目录。
+ * 图片卡片全局默认（C02）：排版八项（含 C01③ 封面/页码/水印）+ 导出根目录。
  * 会话创建时读取一次；会话内调整不写回；设置页修改只影响之后新建的会话与导出。
- * @typedef {{ themeId: string, ratioId: string, fontSize: number, lineHeight: number, pagePadding: number, exportRoot: string }} CardGlobalDefaults
+ * @typedef {{ themeId: string, ratioId: string, fontSize: number, lineHeight: number, pagePadding: number, coverEnabled: boolean, pageNumberEnabled: boolean, watermarkText: string, exportRoot: string }} CardGlobalDefaults
  * @returns {CardGlobalDefaults}
  */
 export function createDefaultCardSettings() {
@@ -260,6 +260,19 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
     if (JSON.stringify(normalizedRawCard) !== JSON.stringify(rawCardDefaults)) {
       didMigrate = true;
     }
+  }
+
+  // C01③ 遗留迁移（一次性）：封面默认由「关闭」改为「开启」。旧版本的封面默认没有任何全局
+  // 配置入口（当时「卡片」页签不含该项、侧栏开关只写会话态），所以 data.json 里的
+  // coverEnabled:false 只可能来自旧默认值，翻正不会覆盖用户真实选择。
+  // 标记只为「不重复翻正」而存在：只有在真的翻正时才触发写盘（避免无谓的 save 副作用）；
+  // 未翻正时标记留在内存里，会随用户后续任意一次保存落库。
+  if (settings.cardCoverDefaultMigrated !== true) {
+    if (settings.cardDefaults.coverEnabled === false) {
+      settings.cardDefaults.coverEnabled = true;
+      didMigrate = true;
+    }
+    settings.cardCoverDefaultMigrated = true;
   }
 
   const deprecatedRenderKeys = [

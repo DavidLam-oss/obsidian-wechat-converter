@@ -4,6 +4,8 @@
 实现插件设置页中的「卡片」tab（C02）：图片卡片**全局默认**的配置界面——
 默认主题、默认比例、默认排版（字号/行高/页面边距）、默认导出目录，以及恢复内置默认。
 默认值只作为**新会话/新导出的初值**；当前笔记会话内调整不写回，也不被批量覆盖。
+C01③ 起本页签同时承载输出元素三键（封面 / 正文页码 / 水印）的全局默认——
+这三项此前只有会话级入口，全局默认无从配置。
 
 ## 输入
 
@@ -18,7 +20,7 @@
 ## 定位
 
 位于 views/settings/，设置 UI 层；排版项边界来自 services/card-settings-model.js。
-默认主题（C01①）与默认比例（C01②）均为三选按钮；封面/页码/水印待 C01③。
+默认主题（C01①）与默认比例（C01②）均为三选按钮；封面/页码/水印（C01③）为开关与文本框。
 
 ## 依赖
 
@@ -40,6 +42,7 @@ import { DEFAULT_EXPORT_ROOT } from '../../services/card-export-paths.js';
 import {
   CARD_LAYOUT_LIMITS,
   CARD_RATIO_LABELS,
+  CARD_WATERMARK_SOFT_LIMIT,
   VERIFIED_CARD_RATIOS,
   VERIFIED_CARD_THEME_IDS,
   normalizeCardLayoutSettings,
@@ -77,7 +80,7 @@ export function renderCardSettingsTab(tab, containerEl, options = {}) {
   if (typeof tab.renderSettingsTabIntro === 'function') {
     tab.renderSettingsTabIntro(
       containerEl,
-      '配置图片卡片的默认主题、排版与导出目录。仅作为新笔记会话和新导出的初始值，当前笔记里已调整的排版保持不变。'
+      '配置图片卡片的默认主题、排版、封面/页码/水印与导出目录。仅作为新笔记会话和新导出的初始值，当前笔记里已调整的排版保持不变。'
     );
   }
 
@@ -146,6 +149,42 @@ export function renderCardSettingsTab(tab, containerEl, options = {}) {
       .setValue(settings.exportRoot)
       .onChange(async (value) => {
         settings.exportRoot = normalizeVaultPath(value) || DEFAULT_EXPORT_ROOT;
+        await plugin.saveSettings();
+      })
+    );
+
+  // —— 输出元素默认（C01③ 三键：封面 / 正文页码 / 水印）——
+  // 语义与侧栏「封面设置」一致：这里只决定新会话的初值，不覆盖当前会话。
+  new Setting(containerEl)
+    .setName('默认启用封面')
+    .setDesc('新建笔记会话时是否默认生成封面页（封面不计入正文页码）。')
+    .addToggle((toggle) => toggle
+      .setValue(settings.coverEnabled)
+      .onChange(async (value) => {
+        settings.coverEnabled = Boolean(value);
+        await plugin.saveSettings();
+      })
+    );
+
+  new Setting(containerEl)
+    .setName('默认显示正文页码')
+    .setDesc('新建笔记会话时是否在正文页脚显示页码。')
+    .addToggle((toggle) => toggle
+      .setValue(settings.pageNumberEnabled)
+      .onChange(async (value) => {
+        settings.pageNumberEnabled = Boolean(value);
+        await plugin.saveSettings();
+      })
+    );
+
+  new Setting(containerEl)
+    .setName('默认水印文案')
+    .setDesc(`留空表示不加水印（软上限 ${CARD_WATERMARK_SOFT_LIMIT} 字，超出不截断）。`)
+    .addText((text) => text
+      .setPlaceholder('例如：内部资料')
+      .setValue(settings.watermarkText)
+      .onChange(async (value) => {
+        settings.watermarkText = String(value ?? '').trim();
         await plugin.saveSettings();
       })
     );

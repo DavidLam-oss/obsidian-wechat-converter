@@ -71,14 +71,16 @@ export const CARD_WATERMARK_SOFT_LIMIT = 24;
 /** @typedef {{ themeId: string, ratioId: string, fontSize: number, lineHeight: number, pagePadding: number, coverEnabled: boolean, pageNumberEnabled: boolean, watermarkText: string }} CardLayoutSettings */
 
 /** B03 默认排版设置（与阶段 A 实测值一致；C02 全局默认接入后由其覆盖初始值）。
- *  C01③ 增加输出元素三项：封面默认关闭、正文页码默认开启、水印默认关闭且文案为空（§3.2）。 */
+ *  C01③ 增加输出元素三项：封面默认开启、正文页码默认开启、水印默认关闭且文案为空。
+ *  封面默认开启的理由：卡片导出面向小红书等「笔记」形态，发出去基本都希望带封面；
+ *  不想带封面时在侧栏「封面设置」里关掉即可（全局默认同样可改）。 */
 export const DEFAULT_CARD_LAYOUT_SETTINGS = /** @type {CardLayoutSettings} */ ({
   themeId: DEFAULT_CARD_THEME_ID,
   ratioId: "3:4",
   fontSize: CARD_LAYOUT_LIMITS.fontSize.default,
   lineHeight: CARD_LAYOUT_LIMITS.lineHeight.default,
   pagePadding: CARD_LAYOUT_LIMITS.pagePadding.default,
-  coverEnabled: false,
+  coverEnabled: true,
   pageNumberEnabled: true,
   watermarkText: "",
 });
