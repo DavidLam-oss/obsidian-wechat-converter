@@ -52,6 +52,7 @@ export const CALLOUT_PAD_VERTICAL = 20;
  * @param {import('./card-themes.js').CardTheme} [options.theme]
  * @param {{width: number, height: number}} [options.size]
  * @param {Document} [options.document]
+ * @param {boolean} [options.pageNumberEnabled] 页码开关（C01③；关 = 探针不含页脚，可用内容高度相应变大）
  * @param {number} [options.contentHeight]
  * @returns {number}
  */
@@ -67,17 +68,24 @@ export function measureContentHeight(options = {}) {
       doc: /** @type {any} */ ({ blocks: [], paginationMarkers: [] }),
       document: ownerDoc,
       size,
+      pageNumberEnabled: options.pageNumberEnabled !== false,
     });
     offscreen.container.append(probe);
     const footer = probe.querySelector(".icard-footer");
-    const probeStyle = ownerDoc.defaultView && ownerDoc.defaultView.getComputedStyle
-      ? ownerDoc.defaultView.getComputedStyle(probe)
-      : null;
-    const padTop = parseFloat((probeStyle && probeStyle.paddingTop) || "") || 0;
-    const padBottom = parseFloat((probeStyle && probeStyle.paddingBottom) || "") || 0;
+    const styleOf = (el) => (ownerDoc.defaultView && ownerDoc.defaultView.getComputedStyle
+      ? ownerDoc.defaultView.getComputedStyle(/** @type {Element} */ (el))
+      : null);
+    const verticalPadding = (style) => {
+      if (!style) return 0;
+      return (parseFloat(style.paddingTop || "") || 0) + (parseFloat(style.paddingBottom || "") || 0);
+    };
+    // 双层卡骨架：page 外框（固定 14px）+ content 内卡自身 padding（pagePadding 语义）
+    const pagePad = verticalPadding(styleOf(probe));
+    const contentEl = probe.querySelector(".icard-content");
+    const contentPad = contentEl ? verticalPadding(styleOf(contentEl)) : 0;
     const footerEl = /** @type {HTMLElement|null} */ (footer);
     const footerH = footerEl ? footerEl.offsetHeight : 0;
-    return Math.max(1, size.height - padTop - padBottom - footerH);
+    return Math.max(1, size.height - pagePad - contentPad - footerH);
   } finally {
     offscreen.detach();
   }

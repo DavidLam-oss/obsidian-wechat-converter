@@ -20,6 +20,8 @@
     `currentLayoutKey()` = `c{content}.k{config}.t{theme}.r{resource}`。
   - 排版设置（B03）：`getLayoutSettings/applyLayoutSettings/resetLayoutSettings`，归一化与
     变化检测委托 card-settings-model.js；值实际变化才 bumpConfig（选择/确认随之失效）。
+  - 封面字段（C01③）：`setCoverSeed`（随内容刷新，不 bump）→ `getCoverFields`（dirty 取用户值
+    否则 seed）→ `applyCoverFields`/`resetCoverFields`（编辑冻结/重新填入，实际变化才 bumpConfig）。
   - 预览：`beginPreviewUpdate()` → token（{seq, layoutKey}）；`settlePreviewUpdate(token, outcome)`
     仅在 token 仍为最新且版本未变时生效（晚到结果丢弃）；`cancelPreviewUpdate()`；
     `markPreviewStale()`（编辑事件到达即置 stale 并作废在途旧排版，§5.6 ≤250ms 标记）；
@@ -55,6 +57,10 @@
 */
 
 import { createCardLayoutSettingsState } from './card-settings-model.js';
+import {
+  EMPTY_COVER_FIELDS,
+  normalizeCoverFields,
+} from './card-cover-model.js';
 import { createExportJobState } from './card-export-job.js';
 
 /** 快照缓存上限（§5.3：缓存只覆盖当前会话及有限近期版本） */
@@ -141,6 +147,11 @@ function toLayoutKey(versions) {
  *   getLayoutSettings(): import('./card-settings-model.js').CardLayoutSettings,
  *   applyLayoutSettings(partial: Partial<import('./card-settings-model.js').CardLayoutSettings> | Record<string, unknown>): { changed: boolean, settings: import('./card-settings-model.js').CardLayoutSettings, layoutKey?: string },
  *   resetLayoutSettings(): { changed: boolean, settings: import('./card-settings-model.js').CardLayoutSettings, layoutKey?: string },
+ *   setCoverSeed(fields: Partial<import('./card-cover-model.js').CardCoverFields> | Record<string, unknown>): void,
+ *   getCoverFields(): import('./card-cover-model.js').CardCoverFields,
+ *   isCoverFieldsDirty(): boolean,
+ *   applyCoverFields(partial: Partial<import('./card-cover-model.js').CardCoverFields> | Record<string, unknown>): { changed: boolean, fields: import('./card-cover-model.js').CardCoverFields },
+ *   resetCoverFields(): { changed: boolean, fields: import('./card-cover-model.js').CardCoverFields },
  *   beginPreviewUpdate(): { seq: number, layoutKey: string } | null,
  *   settlePreviewUpdate(token: { seq: number, layoutKey: string } | null, outcome: Record<string, unknown>): { applied: boolean, reason?: string },
  *   cancelPreviewUpdate(): void,
@@ -191,6 +202,12 @@ export function createNoteCardSession(options = {}) {
     onChanged: () => bump("config"),
     defaults: options.layoutDefaults || undefined,
   });
+
+  // —— 封面字段（C01③）：seed 随笔记内容刷新；用户编辑后冻结（dirty），不被刷新覆盖 ——
+  /** @type {import('./card-cover-model.js').CardCoverFields} */
+  let coverSeed = { ...EMPTY_COVER_FIELDS };
+  /** @type {import('./card-cover-model.js').CardCoverFields | null} null = 跟随 seed */
+  let coverOverride = null;
 
   // —— 预览状态 ——
   /** @type {CardPreviewState} */
@@ -294,6 +311,61 @@ export function createNoteCardSession(options = {}) {
     /** 恢复当前默认设置（B03 为内置默认；C02 接全局默认后由其提供基准）。 */
     resetLayoutSettings() {
       return layoutSettings.reset();
+    },
+
+    // —— 封面字段（C01③；归一化委托 card-cover-model.js）——
+
+    /**
+     * 更新封面初值（视图在每次拿到新 Markdown 后调用）。**不 bump**：
+     * 内容变化已由 bumpContent 承担；且 dirty 时 seed 变化不生效、不触发任何重排。
+     * @param {Partial<import('./card-cover-model.js').CardCoverFields> | Record<string, unknown>} fields
+     */
+    setCoverSeed(fields) {
+      coverSeed = normalizeCoverFields(fields, coverSeed);
+    },
+
+    /** @returns {import('./card-cover-model.js').CardCoverFields} 当前生效字段（dirty 取用户值，否则取 seed） */
+    getCoverFields() {
+      return coverOverride ? { ...coverOverride } : { ...coverSeed };
+    },
+
+    /** @returns {boolean} 用户是否已手工编辑封面字段（编辑后不被内容刷新覆盖） */
+    isCoverFieldsDirty() {
+      return coverOverride !== null;
+    },
+
+    /**
+     * 应用用户编辑：合并归一化后写 override 并标记 dirty；实际变化才 bumpConfig
+     * （封面页内容变化 → 快照版本失效，选择/省略确认随之失效）。
+     * @param {Partial<import('./card-cover-model.js').CardCoverFields> | Record<string, unknown>} partial
+     * @returns {{ changed: boolean, fields: import('./card-cover-model.js').CardCoverFields }}
+     */
+    applyCoverFields(partial) {
+      if (disposed) return { changed: false, fields: this.getCoverFields() };
+      const current = this.getCoverFields();
+      const merged = normalizeCoverFields(partial, current);
+      const changed = ["title", "author", "date", "excerpt"].some((key) =>
+        /** @type {Record<string, string>} */ (merged)[key] !== /** @type {Record<string, string>} */ (current)[key]);
+      if (changed) {
+        coverOverride = merged;
+        bump("config");
+      }
+      return { changed, fields: this.getCoverFields() };
+    },
+
+    /**
+     * 「按当前笔记重新填入」：清掉用户编辑回到 seed 跟随；字段实际变化才 bumpConfig。
+     * @returns {{ changed: boolean, fields: import('./card-cover-model.js').CardCoverFields }}
+     */
+    resetCoverFields() {
+      if (disposed) return { changed: false, fields: this.getCoverFields() };
+      const current = this.getCoverFields();
+      coverOverride = null;
+      const next = this.getCoverFields();
+      const changed = ["title", "author", "date", "excerpt"].some((key) =>
+        /** @type {Record<string, string>} */ (next)[key] !== /** @type {Record<string, string>} */ (current)[key]);
+      if (changed) bump("config");
+      return { changed, fields: next };
     },
 
     // —— 预览 ——

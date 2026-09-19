@@ -196,6 +196,9 @@ export function imageFileName(ordinal) {
   return `card-${String(index).padStart(3, '0')}.png`;
 }
 
+/** 封面图片文件名（C01③，规划 §5.2：封面为 cover.png，正文为 card-00N.png） */
+export const COVER_EXPORT_FILE_NAME = 'cover.png';
+
 /**
  * 剥离错误信息中的绝对路径样式片段（`/...`、`X:\...`、`\\srv\...`），避免泄露宿主敏感路径（§6.2）。
  * @param {string} message

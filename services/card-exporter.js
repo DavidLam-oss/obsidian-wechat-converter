@@ -60,6 +60,7 @@ sanitizeExportMessage/EXPORT_MANIFEST_NAME/MAX_BATCH_DIR_ATTEMPTS）、
 */
 
 import {
+  COVER_EXPORT_FILE_NAME,
   EXPORT_MANIFEST_NAME,
   MAX_BATCH_DIR_ATTEMPTS,
   buildBatchDirName,
@@ -199,7 +200,7 @@ export function createCardExporter(deps) {
       const pages = input.pages.map((page) => ({
         pageId: page.pageId,
         ordinal: page.ordinal,
-        fileName: imageFileName(page.ordinal),
+        fileName: (/** @type {{fileName?: string}} */ (page)).fileName || imageFileName(page.ordinal),
         status: 'pending',
       }));
       return {
@@ -418,7 +419,7 @@ export function createCardExporter(deps) {
           recordResult(page.pageId, { status: 'failed', reason: 'capture-invalid' });
           continue;
         }
-        const fileName = imageFileName(page.ordinal);
+        const fileName = (/** @type {{fileName?: string}} */ (page)).fileName || imageFileName(page.ordinal);
         const imagePath = manifestState ? `${manifestState.batchDir}/${fileName}` : '';
         const security = await verifyPathInsideRoot(imagePath);
         if (!security.ok) {
@@ -487,7 +488,10 @@ export function createCardExporter(deps) {
       const seenOrdinals = new Set();
       for (const page of pages) {
         const ordinal = Math.floor(Number(page?.ordinal));
-        if (!page?.pageId || !Number.isFinite(ordinal) || ordinal < 1) return { ok: false, reason: 'page-invalid' };
+        // 封面页（C01③）固定 pageId='cover'、ordinal=0、fileName='cover.png'；正文页仍要求 ordinal ≥ 1
+        const isCover = String(page?.pageId) === 'cover';
+        if (!page?.pageId || !Number.isFinite(ordinal) || (!isCover && ordinal < 1)) return { ok: false, reason: 'page-invalid' };
+        if (isCover && String(page.fileName || '') !== COVER_EXPORT_FILE_NAME) return { ok: false, reason: 'page-invalid' };
         if (seenIds.has(page.pageId) || seenOrdinals.has(ordinal)) return { ok: false, reason: 'page-duplicate' };
         seenIds.add(page.pageId);
         seenOrdinals.add(ordinal);
@@ -498,7 +502,8 @@ export function createCardExporter(deps) {
       const width = Number(input.pageSize?.width) || 0;
       const height = Number(input.pageSize?.height) || 0;
       if (!(width > 0) || !(height > 0)) return { ok: false, reason: 'page-size-missing' };
-      const pixelSize = computeCardPixelSize({ width, height }, scale);
+      // 整个 pageSize（含 heightExact）交给统一取整口径（§4.3）
+      const pixelSize = computeCardPixelSize(/** @type {{ width: number, height: number, heightExact?: number }} */ (input.pageSize), scale);
       const perPagePixels = pixelSize.width * pixelSize.height;
       if (perPagePixels * pages.length > CARD_EXPORT_LIMITS.MAX_TOTAL_OUTPUT_PIXELS) {
         return { ok: false, reason: 'budget-pixels' };
@@ -584,7 +589,8 @@ export function createCardExporter(deps) {
         snapshotId: String(input.snapshotId), layoutKey: snapshot.layoutKey,
         scale, pages: orderedPages,
       });
-      remaining = orderedPages.map((p) => ({ pageId: p.pageId, ordinal: Math.floor(p.ordinal) }));
+      // fileName 一并带入队列（C01③ 封面页 cover.png 不走 imageFileName 回落）
+      remaining = orderedPages.map((p) => ({ pageId: p.pageId, ordinal: Math.floor(p.ordinal), fileName: (/** @type {{fileName?: string}} */ (p)).fileName }));
 
       // 刻意不再写「首份空清单」：批次目录已创建成功，该位置可写这件事已经成立；
       // 而清单要到出现失败页才有内容，任务一开始就落一份空账本只是给用户留垃圾（2026-09-12 策略）。

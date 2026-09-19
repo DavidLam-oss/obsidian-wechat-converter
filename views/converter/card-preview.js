@@ -62,7 +62,8 @@ import {
   createSnapshotResolver,
 } from '../../services/card-resources.js';
 import { renderCardPages, RATIO_PRESETS } from '../../services/card-render-engine.js';
-import { getCardTheme } from '../../services/card-themes.js';
+import { DEFAULT_CARD_THEME_ID, getCardTheme } from '../../services/card-themes.js';
+import { deriveCoverFields, isCoverUsable } from '../../services/card-cover-model.js';
 import {
   createCardSessionRegistry,
   createPreviewRunner,
@@ -76,15 +77,8 @@ export const CARD_PREVIEW_ZOOM_MAX = 1;
 export const CARD_PREVIEW_ZOOM_STEP = 0.15;
 export const CARD_PREVIEW_ZOOM_DEFAULT = 0.6;
 
-/** 省略原因 → 用户可读标签（§4.1 一期口径） */
-const OMISSION_LABELS = {
-  codeBlock: '代码块',
-  mermaid: 'Mermaid 图',
-  gif: 'GIF 动图',
-  blockFormula: '块级公式',
-  inlineFormula: '行内公式',
-  unsupportedEmbed: '未支持嵌入',
-};
+/** 省略原因 → 用户可读标签（§4.1 一期口径）；单一事实在 card-preview-diagnostics.js */
+import { OMISSION_LABELS } from './card-preview-diagnostics.js';
 
 /**
  * 卡片视图状态（d.ts 合同以 unknown 持有，这里给运行时访问形状）。
@@ -259,7 +253,16 @@ async renderCardPreview() {
 
   const source = await this.resolveCardMarkdownSource();
   if (selfRecord.cardPreviewGeneration !== generation) return undefined;
-  if (!source || !source.ok || !String(source.markdown || '').trim()) {
+  // 空正文 + 封面开启（C01③）→ 继续走管线渲染「仅封面」；否则维持空态
+  const coverOnlyWanted = (() => {
+    if (!source || !source.ok || !String(source.sourcePath || '').trim()) return false;
+    if (String(source.markdown || '').trim()) return false;
+    const current = typeof (/** @type {any} */ (this).getCurrentCardLayoutSettings) === 'function'
+      ? /** @type {any} */ (this).getCurrentCardLayoutSettings()
+      : null;
+    return current?.coverEnabled === true;
+  })();
+  if (!source || !source.ok || (!String(source.markdown || '').trim() && !coverOnlyWanted)) {
     this.renderCardEmptyState();
     return undefined;
   }
@@ -289,6 +292,8 @@ async renderCardPreview() {
       return outcome;
     });
   }
+  // 封面初值（C01③）：随内容刷新；用户编辑过（dirty）时会话内自动忽略 seed
+  session.setCoverSeed(deriveCoverFields({ markdown, sourcePath }));
   selfRecord.cardPreviewPendingInput = { markdown, sourcePath, sourcePathKey: sourcePath };
 
   const settled = await selfRecord.cardPreviewRunner.schedule();
@@ -322,7 +327,7 @@ async runCardLayoutPipeline(ctx) {
   // B03：排版设置来自会话（归一化后），调整设置 → bumpConfig → 新版本重排
   const settings = typeof (/** @type {any} */ (this).getCurrentCardLayoutSettings) === 'function'
     ? /** @type {any} */ (this).getCurrentCardLayoutSettings()
-    : { themeId: 'clear-notes', ratioId: '3:4', fontSize: 14, lineHeight: 1.7, pagePadding: 28 };
+    : { themeId: DEFAULT_CARD_THEME_ID, ratioId: '3:4', fontSize: 14, lineHeight: 1.7, pagePadding: 28 };
   const cardDoc = createCardDocument(String(input.markdown || ''));
 
   const imageRefs = [];
@@ -344,13 +349,20 @@ async runCardLayoutPipeline(ctx) {
   if (ctx.isStale()) return { ok: false, stale: true };
 
   // settings 已经过会话归一化（白名单主题/比例、钳制数值），直接取用
-  const theme = getCardTheme(String(settings.themeId || 'clear-notes'));
+  const theme = getCardTheme(String(settings.themeId || DEFAULT_CARD_THEME_ID));
   const size = RATIO_PRESETS[String(settings.ratioId || '3:4')] || RATIO_PRESETS['3:4'];
   const typography = {
     fontSize: Number(settings.fontSize),
     lineHeight: Number(settings.lineHeight),
     pagePadding: Number(settings.pagePadding),
   };
+  // —— C01③ 输出元素：封面（会话字段）、页码开关、水印文案 ——
+  const coverSession = typeof (/** @type {any} */ (this).getCardSettingsSession) === 'function'
+    ? /** @type {any} */ (this).getCardSettingsSession()
+    : null;
+  const coverFields = settings.coverEnabled === true && coverSession
+    ? /** @type {import('../../services/card-cover-model.js').CardCoverFields} */ (coverSession.getCoverFields())
+    : null;
   const result = await renderCardPages(cardDoc, {
     theme,
     size,
@@ -358,6 +370,11 @@ async runCardLayoutPipeline(ctx) {
     resolveImageSrc: createSnapshotResolver(resources),
     resources,
     document: window.document,
+    pageNumberEnabled: settings.pageNumberEnabled !== false,
+    watermarkText: String(settings.watermarkText || ''),
+    cover: coverFields && isCoverUsable(coverFields)
+      ? { fields: /** @type {import('../../services/card-cover-model.js').CardCoverFields} */ (coverFields) }
+      : undefined,
   });
   result.detach();
 
@@ -365,6 +382,8 @@ async runCardLayoutPipeline(ctx) {
     ok: result.ok === true,
     stale: false,
     pages: result.ok ? result.pages : [],
+    coverPage: result.ok && result.coverPage ? result.coverPage : null,
+    hasCover: result.ok && result.hasCover === true,
     plan: result.plan,
     cardDoc,
     resources,
@@ -467,7 +486,11 @@ renderCardPreviewDom() {
   // —— 摘要条（B02 ③：摘要 / 警告 / 过期状态）——
   const summary = shell.createEl('div', { cls: 'icard-preview-summary' });
   const pageCount = Number(outcome?.pageCount || 0);
-  summary.createEl('span', { cls: 'icard-preview-summary-count', text: `共 ${pageCount} 页` });
+  const hasCover = outcome?.hasCover === true;
+  summary.createEl('span', {
+    cls: 'icard-preview-summary-count',
+    text: hasCover ? `封面 1 张 · 正文 ${pageCount} 张` : `共 ${pageCount} 页`,
+  });
   // 勾选摘要：文案与显隐由 syncCardPageSelectionDom 按当前选择渲染
   summary.createEl('span', { cls: 'icard-preview-chip is-selection hidden' });
   if (state.stale) {
@@ -500,6 +523,22 @@ renderCardPreviewDom() {
       text: '部分图片未能加载，导出前需处理',
     });
   }
+  // 水印超宽（C01③）：不阻断输出，但显式提示（不静默截断）
+  const watermarkOverflow = Array.isArray(outcome?.diagnostics) &&
+    outcome.diagnostics.some((/** @type {any} */ d) => d?.reason === 'watermark-overflow');
+  if (watermarkOverflow) {
+    summary.createEl('span', {
+      cls: 'icard-preview-chip is-warning',
+      text: '水印过长，可能被页边裁切，建议缩短',
+    });
+  }
+  // —— 封面入口（直通侧边栏面板的「封面设置」子 Tab）——
+  const coverBtn = summary.createEl('button', {
+    cls: `icard-preview-cover-btn${hasCover ? ' is-active' : ''}`,
+    text: hasCover ? '封面 · 开' : '封面',
+    attr: { type: 'button', 'aria-label': '封面设置', 'title': '封面开关与标题/作者/日期/摘要（侧边栏面板）' },
+  });
+  coverBtn.addEventListener('click', () => { this.openCardSettingsTab('cover'); });
 
   // —— 全文省略空态（§B03 ⑤：正文全部未进入卡片时不产空白卡，逐条可定位）——
   if (pageCount === 0 && omissionTotal > 0) {
@@ -525,17 +564,17 @@ renderCardPreviewDom() {
   const zoomIn = zoomBar.createEl('button', { cls: 'icard-preview-zoom-btn', attr: { 'aria-label': '放大预览' }, text: '+' });
   zoomIn.addEventListener('click', () => this.adjustCardPreviewZoom(1));
 
-  // —— 缩略页（每页带独立勾选控件）——
+  // —— 缩略页（每页带独立勾选控件；封面在列首、不编号，C01③）——
   const pagesWrap = shell.createEl('div', { cls: 'icard-preview-pages' });
   const pages = Array.isArray(outcome?.pages) ? outcome.pages : [];
   const size = RATIO_PRESETS[String(outcome?.settings?.ratioId || '3:4')] || RATIO_PRESETS['3:4'];
   const checkedIds = new Set(this.getCardPageSelection() || []);
-  pages.forEach((pageEl, index) => {
-    const pageId = `page-${index + 1}`;
+  /** @param {HTMLElement | null} pageEl @param {string} pageId @param {string} badge @param {string} ariaLabel @param {(() => void) | null} onOpen */
+  const renderPageThumb = (pageEl, pageId, badge, ariaLabel, onOpen) => {
     const checked = checkedIds.has(pageId);
     const item = pagesWrap.createEl('div', {
       cls: `icard-preview-page-item${checked ? ' is-selected' : ''}`,
-      attr: { 'data-page-index': String(index + 1) },
+      attr: { 'data-page-id': pageId },
     });
     item.dataset.pageWidth = String(size.width);
     item.dataset.pageHeight = String(size.height);
@@ -550,8 +589,8 @@ renderCardPreviewDom() {
         type: 'button',
         'data-page-id': pageId,
         'aria-pressed': checked ? 'true' : 'false',
-        'aria-label': `选择第 ${index + 1} 页`,
-        title: `勾选第 ${index + 1} 页（导出时可只导出勾选的页）`,
+        'aria-label': ariaLabel,
+        title: `勾选${badge}（导出时可只导出勾选的页）`,
       },
     });
     check.createEl('span', { cls: 'icard-preview-page-check-mark' });
@@ -559,12 +598,27 @@ renderCardPreviewDom() {
       event.stopPropagation();
       this.toggleCardPageSelection(pageId);
     });
-    const badge = item.createEl('div', { cls: 'icard-preview-page-badge', text: `第 ${index + 1} 页` });
-    badge.setAttribute('data-icard-badge', '1');
-    item.addEventListener('click', () => {
-      // 点击本体 = 只做版本安全的源定位；选择集合只由勾选控件改写
-      this.locateCardPageSource(index + 1);
-    });
+    const badgeEl = item.createEl('div', { cls: 'icard-preview-page-badge', text: badge });
+    badgeEl.setAttribute('data-icard-badge', '1');
+    if (onOpen) {
+      item.addEventListener('click', () => {
+        // 点击本体 = 只做版本安全的源定位；选择集合只由勾选控件改写
+        onOpen();
+      });
+    }
+    return item;
+  };
+  if (outcome?.coverPage instanceof HTMLElement) {
+    renderPageThumb(outcome.coverPage, 'cover', '封面', '选择封面', null);
+  }
+  pages.forEach((pageEl, index) => {
+    renderPageThumb(
+      pageEl instanceof HTMLElement ? pageEl : null,
+      `page-${index + 1}`,
+      `第 ${index + 1} 页`,
+      `选择第 ${index + 1} 页`,
+      () => this.locateCardPageSource(index + 1),
+    );
   });
   // —— 省略/资源诊断区（可展开、可定位、可确认；B03 ③④）——
   this.renderCardDiagnosticArea(shell, outcome, session);
@@ -573,105 +627,6 @@ renderCardPreviewDom() {
   this.maybeAutoFitCardPreviewZoom(Number(size.width));
   this.applyCardPreviewZoom();
   return /** @type {ObsidianElementLike} */ (/** @type {unknown} */ (shell));
-}
-,
-
-/**
- * 省略/资源诊断区（B03）：可展开明细（类型 + 摘录 + 定位原文）、
- * 绑定版本的省略确认操作（bump 后自动失效，由会话保证）。
- * @param {ObsidianElementLike} shell
- * @param {Record<string, any>} outcome
- * @param {import('../../services/card-session.js').CardNoteSessionLike} session
- */
-renderCardDiagnosticArea(shell, outcome, session) {
-  const omissionTotal = Number(outcome?.omissionSummary?.total || 0);
-  const resourceBlocking = outcome?.resources?.hasBlockingFailures === true;
-  if (!omissionTotal && !resourceBlocking) return;
-
-  const area = shell.createEl('div', { cls: 'icard-preview-diagnostics' });
-  const toggle = area.createEl('button', {
-    cls: 'icard-preview-diagnostics-toggle',
-    text: '查看未进入卡片的内容',
-    attr: { 'aria-expanded': 'false', 'title': '展开省略明细' },
-  });
-  const list = area.createEl('div', { cls: 'icard-preview-diagnostics-list hidden' });
-  toggle.addEventListener('click', () => {
-    const hidden = list.classList.toggle('hidden');
-    toggle.setAttribute('aria-expanded', hidden ? 'false' : 'true');
-    toggle.textContent = hidden ? '查看未进入卡片的内容' : '收起明细';
-  });
-
-  const blocks = Array.isArray(outcome?.cardDoc?.blocks) ? outcome.cardDoc.blocks : [];
-  const diagnostics = Array.isArray(outcome?.diagnostics) ? outcome.diagnostics : [];
-  for (const diag of diagnostics) {
-    const block = blocks.find((b) => b && b.id === diag?.blockId);
-    const excerpt = String(block?.text || diag?.detail || '').replace(/\s+/g, ' ').trim().slice(0, 80);
-    this.appendCardDiagnosticRow(area, list, {
-      kind: OMISSION_LABELS[String(diag?.reason || '')] || String(diag?.reason || '未进入卡片'),
-      excerpt,
-      sourceStart: Number(diag?.sourceStart || 0),
-      highRisk: diag?.highRisk === true,
-    });
-  }
-  if (resourceBlocking) {
-    const failed = Array.isArray(outcome?.resources?.failures) ? outcome.resources.failures : [];
-    for (const failure of failed.slice(0, 20)) {
-      this.appendCardDiagnosticRow(area, list, {
-        kind: '图片加载失败',
-        excerpt: String(failure?.ref || failure?.message || ''),
-        sourceStart: Number(failure?.sourceStart || 0),
-        highRisk: false,
-      });
-    }
-  }
-
-  if (omissionTotal > 0) {
-    // 确认绑定本次渲染版本（layoutKey 已含正文+设置+主题+资源）：任一 bump 后自动失效
-    const diagnosticVersion = String(outcome?.layoutKey || '');
-    if (session.isOmissionConfirmed(diagnosticVersion)) {
-      area.createEl('div', {
-        cls: 'icard-preview-omission-confirmed',
-        text: '已确认接受本次省略（内容或设置更新后需重新确认）',
-      });
-    } else {
-      const confirmBtn = area.createEl('button', {
-        cls: 'icard-preview-omission-confirm',
-        text: '已知悉以上内容不会进入卡片，接受本次省略',
-        attr: { 'title': '确认后才能导出；正文或排版设置变化后需重新确认' },
-      });
-      confirmBtn.addEventListener('click', () => {
-        session.confirmOmissions(diagnosticVersion);
-        this.renderCardPreviewDom();
-      });
-    }
-  }
-}
-,
-
-/**
- * 诊断明细行：类型 + 摘录 +（可定位时）定位按钮。
- * @param {ObsidianElementLike} area
- * @param {ObsidianElementLike} list
- * @param {{ kind: string, excerpt: string, sourceStart: number, highRisk: boolean }} item
- */
-appendCardDiagnosticRow(area, list, item) {
-  const row = list.createEl('div', { cls: 'icard-preview-diagnostic-row' });
-  row.createEl('span', {
-    cls: `icard-preview-diagnostic-type${item.highRisk ? ' is-high-risk' : ''}`,
-    text: item.kind,
-  });
-  row.createEl('span', {
-    cls: 'icard-preview-diagnostic-excerpt',
-    text: item.excerpt || '（无文本摘录）',
-  });
-  if (item.sourceStart >= 1) {
-    const locateBtn = row.createEl('button', {
-      cls: 'icard-preview-diagnostic-locate',
-      text: '定位',
-      attr: { 'aria-label': `定位到原文第 ${item.sourceStart} 行`, 'title': '在编辑器中定位原文' },
-    });
-    locateBtn.addEventListener('click', () => this.locateCardSourceLine(item.sourceStart));
-  }
 }
 ,
 

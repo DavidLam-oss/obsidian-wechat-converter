@@ -50,13 +50,14 @@ import {
   mapManualBreaks,
   verifyPagePlan,
 } from "./card-pagination.js";
-import { assembleCardPageFromPlan, attachOffscreenContainer, ensurePageStyle, withCardTypography } from "./card-render-assembly.js";
+import { assembleCardPageFromPlan, assembleCardCoverPage, attachOffscreenContainer, ensurePageStyle, withCardTypography } from "./card-render-assembly.js";
+import { isCoverUsable } from "./card-cover-model.js";
 import { measureCardDocument, measureContentHeight } from "./card-render-measure.js";
 import { debugLayoutLog, debugLayoutLogFail, debugLayoutLogOverflow, debugLayoutLogResources } from "./card-render-debug.js";
 
 // —— 门面 re-export：消费方统一从 card-render-engine.js 导入 ——
 
-export { RATIO_PRESETS, assembleCardPage, assembleCardPageFromPlan, ensurePageStyle, attachOffscreenContainer, withCardTypography } from "./card-render-assembly.js";
+export { RATIO_PRESETS, assembleCardPage, assembleCardPageFromPlan, assembleCardCoverPage, ensurePageStyle, attachOffscreenContainer, withCardTypography } from "./card-render-assembly.js";
 export { CALLOUT_PAD_VERTICAL, measureContentHeight, measureCardDocument } from "./card-render-measure.js";
 export {
   CAPTURE_LIBRARY_IDS,
@@ -88,10 +89,13 @@ export const LAYOUT_OVERFLOW_SLACK = 4;
  * @param {import('./card-resources.js').CardResourceSnapshot} [options.resources]
  * @param {Document} [options.document]
  * @param {import('./card-themes.js').CardTypography} [options.typography] B03 排版覆盖（字号/行高/边距）
+ * @param {boolean} [options.pageNumberEnabled] 正文页码开关（C01③；默认开；封面永不编号）
+ * @param {string} [options.watermarkText] 水印文案（C01③；空 = 不渲染；超宽产诊断）
+ * @param {{ fields: import('./card-cover-model.js').CardCoverFields }} [options.cover] 文字封面（C01③；title 非空才生效）
  * @param {number} [options.contentHeight] 覆盖自动测算的可用内容高度（测试/覆盖入口）
  * @param {(cardDoc: any, options: any) => any} [options.measureFn] 测量注入（测试用；默认真实 DOM 测量）
  * @param {number} [options.maxRounds] 布局轮次上限（默认且至多 LAYOUT_ROUND_BUDGET）
- * @returns {Promise<{ok: boolean, pages: HTMLElement[], plan: import('./card-pagination.js').CardPagePlan, diagnostics: Array<import('./card-pagination.js').PlanDiagnostic>, rounds: number, detach: () => void}>}
+ * @returns {Promise<{ok: boolean, pages: HTMLElement[], coverPage: HTMLElement|null, hasCover: boolean, plan: import('./card-pagination.js').CardPagePlan, diagnostics: Array<import('./card-pagination.js').PlanDiagnostic>, rounds: number, detach: () => void}>}
  */
 export async function renderCardPages(cardDoc, options = {}) {
   const ownerDoc = options.document || window.document;
@@ -114,6 +118,8 @@ export async function renderCardPages(cardDoc, options = {}) {
     return {
       ok: false,
       pages: [],
+      coverPage: null,
+      hasCover: false,
       plan: /** @type {import('./card-pagination.js').CardPagePlan} */ ({ ok: false, pages: [], diagnostics }),
       diagnostics,
       rounds,
@@ -123,9 +129,10 @@ export async function renderCardPages(cardDoc, options = {}) {
 
   try {
     ensurePageStyle(theme, ownerDoc, typography);
+    const pageNumberEnabled = options.pageNumberEnabled !== false;
     let contentHeight = typeof options.contentHeight === "number"
       ? options.contentHeight
-      : measureContentHeight({ theme, size, document: ownerDoc });
+      : measureContentHeight({ theme, size, document: ownerDoc, pageNumberEnabled });
     debugLayoutLogResources(options.resources);
 
     for (let round = 1; round <= maxRounds; round += 1) {
@@ -163,6 +170,8 @@ export async function renderCardPages(cardDoc, options = {}) {
         document: ownerDoc,
         pageCount: plan.pages.length,
         contentHeight,
+        pageNumberEnabled,
+        watermarkText: options.watermarkText || "",
       }));
       for (const p of pages) offscreen.container.append(p);
 
@@ -175,7 +184,48 @@ export async function renderCardPages(cardDoc, options = {}) {
       }
       debugLayoutLogOverflow(round, worst, contentHeight, LAYOUT_OVERFLOW_SLACK);
       if (worst <= 0) {
-        return { ok: true, pages, plan, diagnostics: [], rounds: round, detach: offscreen.detach };
+        // —— 封面（C01③）：正文核验通过后装配，标题非空才生效 ——
+        let coverPage = null;
+        if (options.cover && isCoverUsable(options.cover.fields)) {
+          coverPage = assembleCardCoverPage({
+            theme,
+            fields: options.cover.fields,
+            size,
+            watermarkText: options.watermarkText || "",
+            document: ownerDoc,
+          });
+          offscreen.container.append(coverPage);
+          const coverBody = coverPage.querySelector(".icard-cover-body");
+          if (coverBody && coverBody.scrollHeight - coverBody.clientHeight > LAYOUT_OVERFLOW_SLACK) {
+            offscreen.detach();
+            return fail([{
+              blockId: "",
+              reason: "cover-overflow",
+              message: "封面内容超出画布（标题或摘要过长）。请缩短封面字段，或在设置中调整排版后重试。",
+            }], round);
+          }
+        }
+        // —— 水印超宽核验（C01③）：不截断、不阻断，产显式诊断提示缩短 ——
+        const watermarkDiagnostics = [];
+        const probe = pages[0] || coverPage;
+        const watermarkEl = probe ? probe.querySelector(".icard-watermark") : null;
+        if (watermarkEl && watermarkEl.scrollWidth > watermarkEl.clientWidth) {
+          watermarkDiagnostics.push({
+            blockId: "",
+            reason: "watermark-overflow",
+            message: "水印文案可能超出页宽被裁切，建议缩短水印文案。",
+          });
+        }
+        return {
+          ok: true,
+          pages,
+          coverPage,
+          hasCover: coverPage !== null,
+          plan,
+          diagnostics: [...watermarkDiagnostics],
+          rounds: round,
+          detach: offscreen.detach,
+        };
       }
       for (const p of pages) p.remove();
       contentHeight = Math.max(1, contentHeight - worst - LAYOUT_OVERFLOW_SLACK);

@@ -61,6 +61,7 @@ import {
   isMobileClient,
   generateId,
 } from './views/apple-style-view-shared.js';
+import { drainCaptureQueue } from './services/card-render-capture.js';
 
 const CUSTOM_CSS_PREVIEW_REFRESH_DELAY_MS = 650;
 
@@ -480,6 +481,24 @@ class AppleStylePlugin extends Plugin {
       await this._wechatSyncBridgeService.stop().catch((error) => {
         console.warn('停止浏览器插件连接失败:', error);
       });
+    }
+    // 释放卡片捕获排队与视图生命周期资源（§5.4「关闭视图/卸载插件时取消未完成工作」）
+    drainCaptureQueue('plugin-unloaded');
+    try {
+      const leaves = this.app?.workspace?.getLeavesOfType?.(APPLE_STYLE_VIEW) || [];
+      /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- 视图动态解构与卡片资源释放 */
+      for (const leaf of leaves) {
+        const view = /** @type {any} */ (leaf?.view);
+        if (view && typeof view.disposeCardPreview === 'function') {
+          view.disposeCardPreview();
+        }
+        if (view && typeof view.disposeCardExportModal === 'function') {
+          view.disposeCardExportModal();
+        }
+      }
+      /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
+    } catch {
+      // 容错：工作区可能正在卸载或已清理
     }
     console.debug('📝 Obsidian 发布助手已卸载');
   }

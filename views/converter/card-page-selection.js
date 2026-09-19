@@ -94,13 +94,19 @@ toggleCardPageSelection(pageId) {
  * @param {string[]} pageIds
  */
 applyCardPageSelection(pageIds) {
-  // 规范化：去重 + 按页序升序（会话与导出都按页序消费）
+  // 规范化：去重 + 按页序升序（会话与导出都按页序消费；封面页 id 固定为 `cover`，排在最前）
   const ordinals = new Set();
+  let hasCover = false;
   for (const id of Array.isArray(pageIds) ? pageIds : []) {
+    if (String(id || '') === 'cover') {
+      hasCover = true;
+      continue;
+    }
     const match = /^page-(\d+)$/.exec(String(id || ''));
     if (match) ordinals.add(Number(match[1]));
   }
   const ids = [...ordinals].sort((a, b) => a - b).map((n) => `page-${n}`);
+  if (hasCover) ids.unshift('cover');
 
   const session = /** @type {any} */ (this.resolveCardSelectionSession());
   if (session) {
@@ -125,7 +131,7 @@ syncCardPageSelectionDom() {
   const set = new Set(selected || []);
   shell.querySelectorAll('.icard-preview-page-item').forEach((item) => {
     const el = /** @type {HTMLElement} */ (item);
-    const checked = set.has(`page-${el.dataset.pageIndex || ''}`);
+    const checked = set.has(String(el.dataset.pageId || ''));
     el.classList.toggle('is-selected', checked);
     const check = el.querySelector('.icard-preview-page-check');
     if (check) {

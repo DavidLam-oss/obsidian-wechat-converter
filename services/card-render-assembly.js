@@ -36,11 +36,15 @@ import { CARD_PAGE_WIDTH, CARD_PAGE_HEIGHT_3_4, buildCardPageCss } from "./card-
 import { renderBlockContent, renderBlockElement, renderCalloutBlock } from "./card-render-profile.js";
 import { createSnapshotResolver } from "./card-resources.js";
 
-/** 比例 → 逻辑尺寸（规划 §4.3：统一由比例计算，最终像素 = 逻辑 × 倍率后取整） */
+/**
+ * 比例 → 逻辑尺寸（规划 §4.3：统一由比例计算，最终像素 = 原始逻辑值 × 倍率后取整）。
+ * `height` 为取整后的 CSS 布局高度；`heightExact` 保留未取整原始值（如 9:16 = 666.67），
+ * 供 computeCardPixelSize 计算 PNG 像素（§4.3：9:16 2× = 750×1333，先乘后取整）。
+ */
 export const RATIO_PRESETS = /** @type {const} */ ({
-  "3:4": { width: CARD_PAGE_WIDTH, height: CARD_PAGE_HEIGHT_3_4 },
-  "3:5": { width: CARD_PAGE_WIDTH, height: Math.round((CARD_PAGE_WIDTH * 5) / 3) },
-  "9:16": { width: CARD_PAGE_WIDTH, height: Math.round((CARD_PAGE_WIDTH * 16) / 9) },
+  "3:4": { width: CARD_PAGE_WIDTH, height: CARD_PAGE_HEIGHT_3_4, heightExact: CARD_PAGE_WIDTH * 4 / 3 },
+  "3:5": { width: CARD_PAGE_WIDTH, height: Math.round((CARD_PAGE_WIDTH * 5) / 3), heightExact: CARD_PAGE_WIDTH * 5 / 3 },
+  "9:16": { width: CARD_PAGE_WIDTH, height: Math.round((CARD_PAGE_WIDTH * 16) / 9), heightExact: CARD_PAGE_WIDTH * 16 / 9 },
 });
 
 /**
@@ -63,29 +67,45 @@ function createPageShell(ownerDoc, size, pageIndex) {
 }
 
 /**
- * 构建页脚（页码）。
+ * 构建页脚条（red-note 式）：左页码、右水印。
+ * 页码关且水印为空 → 不渲染页脚；页码关但有水印 → 仅渲染右对齐水印。
+ * 水印超宽由布局核验诊断提示缩短，不在此截断（CSS overflow:hidden 仅保护版式）。
  * @param {Document} ownerDoc
  * @param {number} pageNumber 1-based
  * @param {number} pageCount
- * @returns {HTMLElement}
+ * @param {boolean} [enabled] 页码开关（C01③；封面不编号）
+ * @param {string} [watermarkText] 水印文案（空 = 不渲染）
+ * @returns {HTMLElement|null}
  */
-function buildPageFooter(ownerDoc, pageNumber, pageCount) {
+function buildPageFooter(ownerDoc, pageNumber, pageCount, enabled = true, watermarkText = "") {
+  const watermark = String(watermarkText || "").trim();
+  if (!enabled && !watermark) return null;
   const footer = ownerDoc.createElement("div");
   footer.className = "icard-footer";
-  const pageNum = ownerDoc.createElement("span");
-  pageNum.className = "icard-page-num";
-  pageNum.textContent = `${pageNumber} / ${pageCount}`;
-  footer.append(pageNum);
+  if (enabled) {
+    const pageNum = ownerDoc.createElement("span");
+    pageNum.className = "icard-page-num";
+    pageNum.textContent = `${pageNumber} / ${pageCount}`;
+    footer.append(pageNum);
+  }
+  if (watermark) {
+    const wm = ownerDoc.createElement("span");
+    wm.className = "icard-watermark";
+    wm.textContent = watermark;
+    footer.append(wm);
+  }
   return footer;
 }
 
 /**
- * 页面装配：主题样式 + 内容 + 页脚（页码）。
+ * 页面装配：主题样式 + 内容 + 页脚条（左页码右水印，均可关）。
  * @param {object} args
  * @param {import('./card-themes.js').CardTheme} args.theme CardTheme
  * @param {import('./card-document.js').CardDocument} args.doc CardDocument
  * @param {number} [args.pageNumber] 1-based（正文页）
  * @param {number} [args.pageCount]
+ * @param {boolean} [args.pageNumberEnabled] 正文页码开关（C01③；默认开）
+ * @param {string} [args.watermarkText] 水印文案（C01③；空 = 不渲染）
  * @param {(ref: string) => string | null} [args.resolveImageSrc]
  * @param {import('./card-resources.js').CardResourceSnapshot} [args.resources] 资源快照句柄；未显式传 resolveImageSrc 时由快照构造
  * @param {Document} [args.document]
@@ -96,6 +116,7 @@ export function assembleCardPage(args) {
   const ownerDoc = args.document || window.document;
   const size = args.size || { width: CARD_PAGE_WIDTH, height: CARD_PAGE_HEIGHT_3_4 };
   const resolveImageSrc = args.resolveImageSrc || (args.resources ? createSnapshotResolver(args.resources) : undefined);
+  const pageNumberEnabled = args.pageNumberEnabled !== false;
 
   const { page, content } = createPageShell(ownerDoc, size, args.pageNumber || 1);
   const { fragment } = renderBlockContent(args.doc, {
@@ -103,7 +124,8 @@ export function assembleCardPage(args) {
     doc: ownerDoc,
   });
   content.append(fragment);
-  page.append(buildPageFooter(ownerDoc, args.pageNumber || 1, args.pageCount || 1));
+  const footer = buildPageFooter(ownerDoc, args.pageNumber || 1, args.pageCount || 1, pageNumberEnabled, args.watermarkText);
+  if (footer) page.append(footer);
 
   return page;
 }
@@ -170,6 +192,8 @@ export function attachOffscreenContainer(ownerDoc) {
  * @param {object} args
  * @param {import('./card-themes.js').CardTheme} args.theme
  * @param {{width?: number, height?: number}} [args.size]
+ * @param {boolean} [args.pageNumberEnabled] 正文页码开关（C01③；默认开）
+ * @param {string} [args.watermarkText] 水印文案（C01③；空 = 不渲染）
  * @param {(ref: string) => string | null} [args.resolveImageSrc]
  * @param {import('./card-resources.js').CardResourceSnapshot} [args.resources] 资源快照句柄；未显式传 resolveImageSrc 时由快照构造
  * @param {Document} [args.document]
@@ -233,6 +257,85 @@ export function assembleCardPageFromPlan(cardDoc, planPage, items, args) {
   if (typeof args.contentHeight === "number") {
     page.style.setProperty("--icard-content-height", `${Math.round(args.contentHeight)}px`);
   }
-  page.append(buildPageFooter(ownerDoc, planPage.index, args.pageCount || planPage.index));
+  const footer = buildPageFooter(ownerDoc, planPage.index, args.pageCount || planPage.index, args.pageNumberEnabled !== false, args.watermarkText);
+  if (footer) page.append(footer);
+  return page;
+}
+
+/**
+ * 封面页装配（C01③）：主题配套文字封面（coverStyle 三式），无页脚、不编号。
+ * 空字段段落整体省略（kicker/meta 只在至少一项有值时渲染）。
+ * 水印不单独渲染覆盖层——并入底部 meta 行（作者 · 水印）。
+ * @param {object} args
+ * @param {import('./card-themes.js').CardTheme} args.theme
+ * @param {import('./card-cover-model.js').CardCoverFields} args.fields 封面四字段（title 必非空，由调用方保证）
+ * @param {{width?: number, height?: number}} [args.size]
+ * @param {string} [args.watermarkText] 非空时并入封面底部 meta 行
+ * @param {Document} [args.document]
+ * @returns {HTMLElement} `.icard-page.icard-cover` 根元素
+ */
+export function assembleCardCoverPage(args) {
+  const ownerDoc = args.document || window.document;
+  const size = args.size || { width: CARD_PAGE_WIDTH, height: CARD_PAGE_HEIGHT_3_4 };
+  const theme = args.theme;
+  const fields = args.fields;
+  const page = ownerDoc.createElement("div");
+  page.className = `icard icard-page icard-cover icard-cover--${theme.coverStyle}`;
+  page.style.setProperty("--icard-page-width", `${size.width}px`);
+  page.style.setProperty("--icard-page-height", `${size.height}px`);
+  page.setAttribute("data-icard-cover", "true");
+
+  if (fields.coverImage) {
+    if (fields.coverMode === "full-bleed") {
+      page.classList.add("icard-cover--full-bleed");
+      const img = ownerDoc.createElement("img");
+      img.className = "icard-cover-full-bleed-img";
+      img.src = fields.coverImage;
+      img.alt = fields.title || "Cover";
+      page.append(img);
+      return page;
+    }
+
+    page.classList.add("icard-cover--has-image");
+    const bg = ownerDoc.createElement("div");
+    bg.className = "icard-cover-bg";
+    bg.style.setProperty("background-image", `url("${fields.coverImage}")`);
+    page.append(bg);
+
+    const overlay = ownerDoc.createElement("div");
+    overlay.className = "icard-cover-overlay";
+    page.append(overlay);
+  }
+
+  const body = ownerDoc.createElement("div");
+  body.className = "icard-cover-body";
+
+  // 单一事实只说一次：kicker（顶部）= 日期；meta（置底）= 作者。
+  // 两者都来自 cover-model 归一化字段，空值段落整体省略。
+  const kicker = ownerDoc.createElement("div");
+  kicker.className = "icard-cover-kicker";
+  kicker.textContent = fields.date || "";
+  if (kicker.textContent) body.append(kicker);
+
+  const title = ownerDoc.createElement("div");
+  title.className = "icard-cover-title";
+  title.textContent = fields.title;
+  body.append(title);
+
+  if (fields.excerpt) {
+    const excerpt = ownerDoc.createElement("div");
+    excerpt.className = "icard-cover-excerpt";
+    excerpt.textContent = fields.excerpt;
+    body.append(excerpt);
+  }
+
+  // 封面底部一行兼署名与水印（David 2026-09-13：作者与水印不分行，合并展示）；
+  // 正文页水印仍是独立覆盖层。任一为空则只显示另一项，都空则整段省略。
+  const meta = ownerDoc.createElement("div");
+  meta.className = "icard-cover-meta";
+  meta.textContent = [fields.author, args.watermarkText].filter(Boolean).join(" · ");
+  if (meta.textContent) body.append(meta);
+
+  page.append(body);
   return page;
 }

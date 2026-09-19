@@ -37,13 +37,13 @@ const SAMPLE = [
 const theme = getCardTheme(DEFAULT_CARD_THEME_ID);
 
 describe("card-themes", () => {
-  it("三主题 id 已声明且全部可用（C01①）；未知 id 回落默认", () => {
-    expect(CARD_THEME_IDS).toEqual(["clear-notes", "paper-notes", "dark-take"]);
-    expect(hasCardTheme("clear-notes")).toBe(true);
-    expect(hasCardTheme("paper-notes")).toBe(true);
-    expect(hasCardTheme("dark-take")).toBe(true);
+  it("六主题 id 已声明且全部可用（red-note 照搬）；未知 id 回落默认", () => {
+    expect(CARD_THEME_IDS).toEqual([
+      "simple-white", "gradient-blue", "dark-gold", "neon-purple", "forest-green", "rose-gold",
+    ]);
+    for (const id of CARD_THEME_IDS) expect(hasCardTheme(id)).toBe(true);
     expect(getCardTheme("not-exist").id).toBe(DEFAULT_CARD_THEME_ID);
-    expect(getCardTheme("clear-notes").name).toBe("清晰笔记");
+    expect(getCardTheme("simple-white").name).toBe("极简白");
   });
 
   it("页面 CSS 全部显式颜色且以 .icard 作用域开头，无宿主主题变量", () => {
@@ -120,10 +120,11 @@ describe("card-render-engine 页面装配", () => {
     expect(img.getAttribute("src")).toBe("data:image/png;base64,AAA");
   });
 
-  it("比例预设：3:4 / 3:5 / 9:16 逻辑尺寸", () => {
-    expect(RATIO_PRESETS["3:4"]).toEqual({ width: 375, height: 500 });
-    expect(RATIO_PRESETS["3:5"]).toEqual({ width: 375, height: 625 });
-    expect(RATIO_PRESETS["9:16"]).toEqual({ width: 375, height: 667 });
+  it("比例预设：3:4 / 3:5 / 9:16 逻辑尺寸（heightExact 供倍率取整）", () => {
+    expect(RATIO_PRESETS["3:4"]).toMatchObject({ width: 375, height: 500 });
+    expect(RATIO_PRESETS["3:5"]).toMatchObject({ width: 375, height: 625 });
+    expect(RATIO_PRESETS["9:16"]).toMatchObject({ width: 375, height: 667 });
+    expect(RATIO_PRESETS["9:16"].heightExact).toBeCloseTo(666.67, 1);
   });
 
   it("任务项：勾选框渲染且 [x]/[ ] 文本前缀被剥离", () => {

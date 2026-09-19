@@ -28,7 +28,7 @@ import {
 } from "../services/card-render-engine.js";
 import { createLayoutItems, verifyPagePlan } from "../services/card-pagination.js";
 
-const THEME = getCardTheme("clear-notes");
+const THEME = getCardTheme("simple-white");
 
 /** 按内容查找顶层段落块 */
 function paraByContent(doc, snippet) {
@@ -362,11 +362,11 @@ describe("图片等比缩入与测量基建", () => {
     expect(document.querySelector("[data-icard-offscreen]")).toBeNull();
   });
 
-  it("measureContentHeight：显式覆盖直接返回；jsdom 按主题内边距扣减（页脚高度 jsdom 为 0）", () => {
+  it("measureContentHeight：显式覆盖直接返回；jsdom 按外框+内卡 padding 扣减（页脚高度 jsdom 为 0）", () => {
     expect(measureContentHeight({ contentHeight: 123 })).toBe(123);
     const auto = measureContentHeight({ theme: THEME, size: { width: 375, height: 500 }, document: document });
-    // jsdom getComputedStyle 解析 .icard-page padding（主题 pagePadding），页脚 offsetHeight 为 0
-    expect(auto).toBe(500 - 2 * THEME.tokens.pagePadding);
+    // 双层卡骨架：page 外框固定 14px ×2 + content 内卡 padding（pagePadding）×2；页脚 offsetHeight jsdom 为 0
+    expect(auto).toBe(500 - 2 * 14 - 2 * THEME.tokens.pagePadding);
   });
 
   it("renderCardPages 真实测量（jsdom 烟雾）：零高度全部装入单页", async () => {

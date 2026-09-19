@@ -213,12 +213,22 @@ type CardPageSelectionMethodsContract = Pick<
     | 'syncCardPageSelectionDom'
 >;
 
+type CardPreviewDiagnosticsMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'renderCardDiagnosticArea'
+    | 'appendCardDiagnosticRow'
+>;
+
 type CardSettingsMethodsContract = Pick<
     AppleStyleViewContract,
     | 'buildCardSettingsPanel'
     | 'renderCardSettingsValues'
+    | 'switchCardSettingsSubTab'
+    | 'openCardSettingsTab'
     | 'applyCardLayoutSetting'
     | 'resetCardLayoutSettings'
+    | 'applyCardCoverField'
+    | 'resetCardCoverFields'
     | 'getCardSettingsSession'
     | 'getCurrentCardLayoutSettings'
 >;

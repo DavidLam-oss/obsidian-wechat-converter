@@ -446,6 +446,8 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     locateCardSourceLine(lineNumber: number): void;
     /** 省略/资源诊断区：可展开明细 + 绑定版本的确认操作（B03） */
     renderCardDiagnosticArea(shell: ObsidianElementLike, outcome: Record<string, unknown>, session: unknown): void;
+    /** 诊断明细行：类型 + 摘录 +（可定位时）定位按钮（B03，自 card-preview 拆出） */
+    appendCardDiagnosticRow(area: ObsidianElementLike, list: ObsidianElementLike, item: { kind: string, excerpt: string, sourceStart: number, highRisk: boolean }): void;
     /** 卡片设置浮层：一次性构建 DOM（createSettingsPanel 调用） */
     buildCardSettingsPanel(): void;
     /** 卡片设置浮层：同步显示值（active 态/滑块位置与数值） */
@@ -458,6 +460,13 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     getCardSettingsSession(): unknown;
     /** 卡片设置：当前生效设置（无会话时为默认值） */
     getCurrentCardLayoutSettings(): Record<string, unknown>;
+    /** 封面字段（C01③）：应用用户编辑（会话 applyCoverFields；实际变化 → bumpConfig → 重排版） */
+    applyCardCoverField(key: string, value: unknown): void;
+    /** 封面字段（C01③）：按当前笔记重新填入（清手工编辑，回 seed 跟随） */
+    /** 侧边栏卡片设置：切换子 Tab（'token' | 'cover'） */
+    switchCardSettingsSubTab(subTab: 'token' | 'cover'): void;
+    /** 侧边栏卡片设置：打开面板并聚焦到指定子 Tab（供预览区等入口直通） */
+    openCardSettingsTab(tabName?: 'token' | 'cover'): void;
     /** 视图关闭：销毁会话注册表与合并计时器 */
     disposeCardPreview(): void;
     /** 卡片导出接线：vault fs 适配器（create-only + realpath 校验，§6.1） */

@@ -9,10 +9,10 @@ import { RATIO_PRESETS, computeCardPixelSize } from '../services/card-render-eng
 import { createCardLayoutSettingsState } from '../services/card-settings-model.js';
 
 describe('三比例逻辑尺寸（C01②）', () => {
-  it('3:4 / 3:5 / 9:16 三档齐备，宽度统一 375，高度按比例取整', () => {
-    expect(RATIO_PRESETS['3:4']).toEqual({ width: 375, height: 500 });
-    expect(RATIO_PRESETS['3:5']).toEqual({ width: 375, height: 625 });
-    expect(RATIO_PRESETS['9:16']).toEqual({ width: 375, height: 667 });
+  it('3:4 / 3:5 / 9:16 三档齐备，宽度统一 375，高度按比例取整并保留 heightExact', () => {
+    expect(RATIO_PRESETS['3:4']).toMatchObject({ width: 375, height: 500 });
+    expect(RATIO_PRESETS['3:5']).toMatchObject({ width: 375, height: 625 });
+    expect(RATIO_PRESETS['9:16']).toMatchObject({ width: 375, height: 667, heightExact: 375 * 16 / 9 });
   });
 });
 
@@ -24,10 +24,16 @@ describe('computeCardPixelSize（§4.3 唯一取整口径）', () => {
     expect(computeCardPixelSize(size, 3)).toEqual({ width: 1125, height: 1500 });
   });
 
-  it('3:5 与 9:16 的倍率结果', () => {
+  it('3:5 与 9:16 的倍率结果（§4.3：先按未取整原始高度乘倍率再取整）', () => {
     expect(computeCardPixelSize(RATIO_PRESETS['3:5'], 2)).toEqual({ width: 750, height: 1250 });
-    expect(computeCardPixelSize(RATIO_PRESETS['9:16'], 2)).toEqual({ width: 750, height: 1334 });
-    expect(computeCardPixelSize(RATIO_PRESETS['9:16'], 3)).toEqual({ width: 1125, height: 2001 });
+    expect(computeCardPixelSize(RATIO_PRESETS['3:5'], 3)).toEqual({ width: 1125, height: 1875 });
+    // 9:16 原始高度 666.67：2× = 1333（非 667×2=1334），3× = 2000（非 2001）
+    expect(computeCardPixelSize(RATIO_PRESETS['9:16'], 2)).toEqual({ width: 750, height: 1333 });
+    expect(computeCardPixelSize(RATIO_PRESETS['9:16'], 3)).toEqual({ width: 1125, height: 2000 });
+  });
+
+  it('无 heightExact 的普通尺寸对象按 height 计算（向后兼容）', () => {
+    expect(computeCardPixelSize({ width: 375, height: 667 }, 2)).toEqual({ width: 750, height: 1334 });
   });
 
   it('非整数逻辑尺寸按 Math.round 取整（与 ceil 口径区分）', () => {

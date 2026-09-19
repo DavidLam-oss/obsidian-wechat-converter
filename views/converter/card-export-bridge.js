@@ -42,15 +42,16 @@ AppleStyleView 实例（app / 会话 / 当前渲染负载）与用户在弹窗�
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument -- reason: 视图方法组跨模块动态组合（同 card-preview），Obsidian app.vault 与 renderCardPages 产物以 unknown 持有，运行时语义由 B04 契约测试 + card_export_flow 约束 */
 
 import { createCardExporter } from '../../services/card-exporter.js';
-import { DEFAULT_EXPORT_ROOT, EXPORT_MANIFEST_NAME } from '../../services/card-export-paths.js';
+import { DEFAULT_EXPORT_ROOT, EXPORT_MANIFEST_NAME, COVER_EXPORT_FILE_NAME } from '../../services/card-export-paths.js';
 import { createCardDocument } from '../../services/card-document.js';
+import { deriveCoverFields, isCoverUsable } from '../../services/card-cover-model.js';
 import {
   createCardResourcePool,
   createCardResourceSession,
   createInlineSnapshotResolver,
 } from '../../services/card-resources.js';
 import { renderCardPages, RATIO_PRESETS, capturePage, CAPTURE_LIBRARY_IDS } from '../../services/card-render-engine.js';
-import { getCardTheme } from '../../services/card-themes.js';
+import { DEFAULT_CARD_THEME_ID, getCardTheme } from '../../services/card-themes.js';
 import { loadCommonJsDependency } from '../../services/obsidian-compat.js';
 
 /** 导出倍率白名单（§5.5；C01 扩展比例时同步） */
@@ -286,18 +287,30 @@ prepareCardExportResources(input) {
  * }} input
  */
 async createCardCaptureCallback(input) {
+  if ((typeof input.isCanceled === 'function' && input.isCanceled()) || input.signal?.aborted) {
+    const error = new Error('export canceled before capture');
+    error.name = 'AbortError';
+    throw error;
+  }
   const settings = input.settings || {};
   const markdown = String(input.markdown || '');
   const resources = await input.resources.ensure();
+  const isCover = String(input.pageId || '') === 'cover';
 
   const cardDoc = createCardDocument(markdown);
-  const theme = getCardTheme(String(settings.themeId || 'clear-notes'));
+  const theme = getCardTheme(String(settings.themeId || DEFAULT_CARD_THEME_ID));
   const size = RATIO_PRESETS[String(settings.ratioId || '3:4')] || RATIO_PRESETS['3:4'];
   const typography = {
     fontSize: Number(settings.fontSize),
     lineHeight: Number(settings.lineHeight),
     pagePadding: Number(settings.pagePadding),
   };
+  // 封面字段：优先取会话当前值（含用户编辑）；无会话时按内容派生（C01③）
+  const coverFields = settings.coverEnabled === true
+    ? (input.coverFields && typeof input.coverFields === 'object'
+        ? input.coverFields
+        : deriveCoverFields({ markdown, sourcePath: String(input.sourcePath || '') }))
+    : null;
 
   const result = await renderCardPages(cardDoc, {
     theme,
@@ -306,19 +319,30 @@ async createCardCaptureCallback(input) {
     resolveImageSrc: createInlineSnapshotResolver(resources),
     resources,
     document: window.document,
+    pageNumberEnabled: settings.pageNumberEnabled !== false,
+    watermarkText: String(settings.watermarkText || ''),
+    cover: coverFields && isCoverUsable(coverFields) ? { fields: coverFields } : undefined,
   });
 
   try {
+    if ((typeof input.isCanceled === 'function' && input.isCanceled()) || input.signal?.aborted) {
+      const error = new Error('export canceled before capture');
+      error.name = 'AbortError';
+      throw error;
+    }
     if (!result.ok || !Array.isArray(result.pages)) {
       throw new Error('card layout failed during export');
     }
-    const target = result.pages[Number(input.ordinal) - 1];
+    const target = isCover
+      ? result.coverPage
+      : result.pages[Number(input.ordinal) - 1];
     if (!(target instanceof HTMLElement)) {
-      throw new Error(`page not found: ordinal ${input.ordinal}`);
+      throw new Error(isCover ? 'cover page not rendered' : `page not found: ordinal ${input.ordinal}`);
     }
     const blob = await capturePage(target, {
       library: CAPTURE_LIBRARY_IDS[0],
       pixelRatio: Number(input.scale) || DEFAULT_CARD_EXPORT_SCALE,
+      signal: input.signal,
     });
     const bytes = new Uint8Array(await blob.arrayBuffer());
     return { bytes };
@@ -338,22 +362,32 @@ collectCardExportInput(options = {}) {
   const outcome = selfRecord.cardPreviewOutcome;
   const session = typeof this.getCardSettingsSession === 'function' ? this.getCardSettingsSession() : null;
   if (!outcome || !session) return { ok: false, reason: 'not-ready' };
-  if (!Array.isArray(outcome.pages) || outcome.pages.length === 0) return { ok: false, reason: 'no-pages' };
+  const hasCover = outcome?.hasCover === true && outcome?.coverPage instanceof HTMLElement;
+  if (!Array.isArray(outcome.pages) || outcome.pages.length === 0) {
+    // 正文全空但封面有效（C01③）：允许「仅导出封面」
+    if (!hasCover) return { ok: false, reason: 'no-pages' };
+  }
 
   const settings = typeof this.getCurrentCardLayoutSettings === 'function'
     ? this.getCurrentCardLayoutSettings()
     : {};
   const size = RATIO_PRESETS[String(settings.ratioId || '3:4')] || RATIO_PRESETS['3:4'];
   const pageCount = Number(outcome.pageCount || outcome.pages.length || 0);
-  const allPageIds = Array.from({ length: pageCount }, (_, i) => `page-${i + 1}`);
+  const allPageIds = [
+    ...(hasCover ? ['cover'] : []),
+    ...Array.from({ length: pageCount }, (_, i) => `page-${i + 1}`),
+  ];
   const selected = Array.isArray(options.pageIds) && options.pageIds.length > 0
     ? options.pageIds.filter((id) => allPageIds.includes(id))
     : allPageIds;
   if (selected.length === 0) return { ok: false, reason: 'no-selection' };
 
   const pages = selected
-    .map((pageId) => ({ pageId, ordinal: Number(String(pageId).replace(/^page-/, '')) }))
-    .filter((p) => Number.isFinite(p.ordinal) && p.ordinal >= 1);
+    .map((pageId) => {
+      if (pageId === 'cover') return { pageId, ordinal: 0, fileName: COVER_EXPORT_FILE_NAME };
+      return { pageId, ordinal: Number(String(pageId).replace(/^page-/, '')) };
+    })
+    .filter((p) => p.pageId === 'cover' || (Number.isFinite(p.ordinal) && p.ordinal >= 1));
 
   const scale = CARD_EXPORT_SCALES.includes(Number(options.scale))
     ? Number(options.scale)
@@ -365,7 +399,7 @@ collectCardExportInput(options = {}) {
       rootPath: String(options.rootPath || DEFAULT_CARD_EXPORT_ROOT),
       sourcePath: String(outcome.sourcePath || ''),
       scale,
-      pageSize: { width: Number(size.width), height: Number(size.height) },
+      pageSize: { ...size },
       pages,
       omissionTotal: Number(outcome?.omissionSummary?.total || 0),
     },
@@ -411,6 +445,8 @@ createCardExportController(session, context) {
         scale: context.scale,
         resources,
         isCanceled: context.isCanceled,
+        // 封面字段取会话当前值（含用户编辑；C01③）
+        coverFields: typeof session.getCoverFields === 'function' ? session.getCoverFields() : null,
       });
     } finally {
       resourcesPrepared = true;

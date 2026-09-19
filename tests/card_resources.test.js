@@ -380,7 +380,7 @@ describe("createSnapshotResolver 与 assembleCardPage 接入", () => {
     const snap = await pool.prepare([{ ref: "assets/sample.png", kind: "local" }]);
     const doc = createCardDocument("![图](assets/sample.png)");
     const page = assembleCardPage({
-      theme: /** @type {any} */ (await import("../services/card-themes.js")).getCardTheme("clear-notes"),
+      theme: /** @type {any} */ (await import("../services/card-themes.js")).getCardTheme("simple-white"),
       doc,
       resources: snap,
       document: window.document,

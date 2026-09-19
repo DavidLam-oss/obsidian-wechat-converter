@@ -22,14 +22,17 @@ describe("normalizeCardLayoutSettings：归一化", () => {
 
   it("未知 key 不进入结果，保留的 key 齐全", () => {
     const next = normalizeCardLayoutSettings({
-      themeId: "clear-notes",
+      themeId: "simple-white",
       ratioId: "3:4",
       fontSize: 15,
       hacked: "x",
       another: 42,
     });
     expect(Object.keys(next).sort()).toEqual(
-      ["fontSize", "lineHeight", "pagePadding", "ratioId", "themeId"].sort(),
+      [
+        "coverEnabled", "fontSize", "lineHeight", "pageNumberEnabled",
+        "pagePadding", "ratioId", "themeId", "watermarkText",
+      ].sort(),
     );
   });
 

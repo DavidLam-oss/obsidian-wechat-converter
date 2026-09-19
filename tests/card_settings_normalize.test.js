@@ -28,10 +28,9 @@
 - 不在此测深度路径校验（保留目录拒绝属 card_export_paths.test.js）。
 */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
-const obsidian = require('obsidian');
-const { __applyExtensions: applyExtensions } = obsidian;
+require('obsidian');
 const { loadInputModule } = require('./helpers/input-module.cjs');
 
 const {
@@ -41,17 +40,19 @@ const {
 } = await import('../services/plugin-settings.js');
 const { createCardSessionRegistry } = await import('../services/card-session.js');
 const { DEFAULT_CARD_LAYOUT_SETTINGS } = await import('../services/card-settings-model.js');
-const { renderCardSettingsTab } = await import('../views/settings/card-tab.js');
 const { AppleStyleView } = loadInputModule();
 
 describe('卡片全局默认：设置层归一化（C02）', () => {
-  it('默认值 = 内置排版默认 + 默认导出目录', () => {
+  it('默认值 = 内置排版默认（含 C01③ 三键）+ 默认导出目录', () => {
     expect(createDefaultCardSettings()).toEqual({
-      themeId: 'clear-notes',
+      themeId: 'simple-white',
       ratioId: '3:4',
       fontSize: 14,
       lineHeight: 1.7,
       pagePadding: 28,
+      coverEnabled: false,
+      pageNumberEnabled: true,
+      watermarkText: '',
       exportRoot: '卡片导出',
     });
     expect(createDefaultSettings().cardDefaults).toEqual(createDefaultCardSettings());
@@ -70,14 +71,37 @@ describe('卡片全局默认：设置层归一化（C02）', () => {
       },
     });
     expect(settings.cardDefaults).toEqual({
-      themeId: 'clear-notes',
+      themeId: 'simple-white',
       ratioId: '3:4',
       fontSize: 18,
       lineHeight: 1.7,
       pagePadding: 16,
+      coverEnabled: false,
+      pageNumberEnabled: true,
+      watermarkText: '',
       exportRoot: 'abs/path',
     });
     expect(didMigrate).toBe(true);
+  });
+
+  it('封面/页码/水印默认（C01③）：布尔回落、水印 trim 清洗不截断', () => {
+    const { settings } = normalizeLoadedSettings({
+      clientId: 'c1',
+      cardDefaults: {
+        coverEnabled: 'yes',
+        pageNumberEnabled: false,
+        watermarkText: '  内部\n资料  ',
+      },
+    });
+    expect(settings.cardDefaults.coverEnabled).toBe(false); // 非布尔回落默认
+    expect(settings.cardDefaults.pageNumberEnabled).toBe(false);
+    expect(settings.cardDefaults.watermarkText).toBe('内部 资料');
+    const { settings: keep } = normalizeLoadedSettings({
+      clientId: 'c1',
+      cardDefaults: { coverEnabled: true, pageNumberEnabled: true, watermarkText: '长'.repeat(60) },
+    });
+    expect(keep.cardDefaults.coverEnabled).toBe(true);
+    expect(keep.cardDefaults.watermarkText).toBe('长'.repeat(60)); // 不静默截断
   });
 
   it('已合法的 cardDefaults 不标记迁移；缺失时补默认', () => {
@@ -106,43 +130,43 @@ describe('卡片全局默认：设置层归一化（C02）', () => {
 describe('卡片全局默认：会话创建注入（C02④）', () => {
   it('新会话读取注入默认；非法值回落内置默认', () => {
     const registry = createCardSessionRegistry({
-      getLayoutDefaults: () => ({ themeId: 'paper-notes', fontSize: 16 }),
+      getLayoutDefaults: () => ({ themeId: 'gradient-blue', fontSize: 16 }),
     });
     expect(registry.getSession('a.md').getLayoutSettings()).toEqual({
       ...DEFAULT_CARD_LAYOUT_SETTINGS,
-      themeId: 'paper-notes',
+      themeId: 'gradient-blue',
       fontSize: 16,
     });
 
     const bad = createCardSessionRegistry({ getLayoutDefaults: () => ({ themeId: 'nope' }) });
-    expect(bad.getSession('b.md').getLayoutSettings().themeId).toBe('clear-notes');
+    expect(bad.getSession('b.md').getLayoutSettings().themeId).toBe('simple-white');
 
     const plain = createCardSessionRegistry();
     expect(plain.getSession('c.md').getLayoutSettings()).toEqual(DEFAULT_CARD_LAYOUT_SETTINGS);
   });
 
   it('已调整会话保持不变；之后新建的会话才读取新默认', () => {
-    let defaults = { themeId: 'paper-notes' };
+    let defaults = { themeId: 'gradient-blue' };
     const registry = createCardSessionRegistry({ getLayoutDefaults: () => defaults });
 
     const session = registry.getSession('a.md');
     session.applyLayoutSettings({ fontSize: 18 });
     expect(session.getLayoutSettings().fontSize).toBe(18);
 
-    defaults = { themeId: 'dark-take', fontSize: 12 };
-    expect(session.getLayoutSettings()).toMatchObject({ themeId: 'paper-notes', fontSize: 18 });
+    defaults = { themeId: 'neon-purple', fontSize: 12 };
+    expect(session.getLayoutSettings()).toMatchObject({ themeId: 'gradient-blue', fontSize: 18 });
     expect(registry.getSession('b.md').getLayoutSettings()).toMatchObject({
-      themeId: 'dark-take',
+      themeId: 'neon-purple',
       fontSize: 12,
     });
   });
 
   it('视图从 plugin.settings.cardDefaults 取默认；无配置时用内置默认', () => {
     const view = new AppleStyleView(null, {
-      settings: { cardDefaults: { themeId: 'dark-take', fontSize: 18 } },
+      settings: { cardDefaults: { themeId: 'neon-purple', fontSize: 18 } },
     });
     expect(view.getCardSessions().getSession('x.md').getLayoutSettings()).toMatchObject({
-      themeId: 'dark-take',
+      themeId: 'neon-purple',
       fontSize: 18,
     });
 
@@ -150,77 +174,5 @@ describe('卡片全局默认：会话创建注入（C02④）', () => {
     expect(bare.getCardSessions().getSession('y.md').getLayoutSettings()).toEqual(
       DEFAULT_CARD_LAYOUT_SETTINGS,
     );
-  });
-});
-
-describe('设置页「卡片」页签（C02③）', () => {
-  beforeEach(() => {
-    globalThis.__obsidianSettingNamesRegistry = [];
-    globalThis.__obsidianSettingDescriptionsRegistry = [];
-    globalThis.__obsidianSettingInstancesRegistry = [];
-    globalThis.__obsidianButtonRegistry = [];
-  });
-
-  function makeTab(cardOverrides = {}) {
-    return {
-      renderSettingsTabIntro: vi.fn(),
-      plugin: {
-        settings: { cardDefaults: { ...createDefaultCardSettings(), ...cardOverrides } },
-        saveSettings: vi.fn(async () => undefined),
-        obsidianApi: obsidian,
-      },
-    };
-  }
-
-  function renderTab(tab) {
-    const containerEl = applyExtensions(document.createElement('div'));
-    renderCardSettingsTab(tab, containerEl, { obsidianApi: obsidian });
-    return containerEl;
-  }
-
-  it('渲染主题三选与比例三选（当前项高亮）与各设置项说明', () => {
-    const tab = makeTab({ themeId: 'paper-notes', ratioId: '9:16' });
-    const containerEl = renderTab(tab);
-
-    expect(containerEl.textContent).toContain('图片卡片全局默认');
-    expect(globalThis.__obsidianSettingNamesRegistry).toEqual(
-      expect.arrayContaining(['默认主题', '默认比例', '正文字号', '行高', '页面边距', '默认导出目录', '恢复内置默认']),
-    );
-    const buttons = globalThis.__obsidianButtonRegistry;
-    const themeButtons = buttons.filter((b) => ['清晰笔记', '纸页随笔', '深色观点'].includes(b.text));
-    expect(themeButtons.map((b) => b.text)).toEqual(['清晰笔记', '纸页随笔', '深色观点']);
-    expect(themeButtons.find((b) => b.text === '纸页随笔').cta).toBe(true);
-    expect(themeButtons.find((b) => b.text === '清晰笔记').cta).toBeFalsy();
-    const ratioButtons = buttons.filter((b) => ['3:4 竖版', '3:5 长竖版', '9:16 全屏竖版'].includes(b.text));
-    expect(ratioButtons.map((b) => b.text)).toEqual(['3:4 竖版', '3:5 长竖版', '9:16 全屏竖版']);
-    expect(ratioButtons.find((b) => b.text === '9:16 全屏竖版').cta).toBe(true);
-    expect(ratioButtons.find((b) => b.text === '3:4 竖版').cta).toBeFalsy();
-  });
-
-  it('点击比例按钮 → 写入 cardDefaults 并持久化', async () => {
-    const tab = makeTab();
-    renderTab(tab);
-    const tall = globalThis.__obsidianButtonRegistry.find((b) => b.text === '3:5 长竖版');
-    await tall.clickHandler();
-    expect(tab.plugin.settings.cardDefaults.ratioId).toBe('3:5');
-    expect(tab.plugin.saveSettings).toHaveBeenCalled();
-  });
-
-  it('点击主题按钮 → 写入 cardDefaults 并持久化', async () => {
-    const tab = makeTab();
-    renderTab(tab);
-    const dark = globalThis.__obsidianButtonRegistry.find((b) => b.text === '深色观点');
-    await dark.clickHandler();
-    expect(tab.plugin.settings.cardDefaults.themeId).toBe('dark-take');
-    expect(tab.plugin.saveSettings).toHaveBeenCalled();
-  });
-
-  it('恢复内置默认：只重置 cardDefaults 全局作用域', async () => {
-    const tab = makeTab({ themeId: 'dark-take', fontSize: 18, exportRoot: 'my/cards' });
-    renderTab(tab);
-    const reset = globalThis.__obsidianButtonRegistry.find((b) => b.text === '恢复内置默认');
-    await reset.clickHandler();
-    expect(tab.plugin.settings.cardDefaults).toEqual(createDefaultCardSettings());
-    expect(tab.plugin.saveSettings).toHaveBeenCalled();
   });
 });

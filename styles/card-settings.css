@@ -23,9 +23,60 @@ apple-btn-row/apple-btn-size，分节间距由 apple-setting-section 统一。
   font-variant-numeric: tabular-nums;
 }
 
-/* 选项说明文案（主题/比例下的「后续版本开放」提示） */
+/* 选项说明文案（水印软上限等提示） */
 .icard-settings-note {
   margin-top: 6px;
   font-size: 11px;
   color: var(--text-muted);
+}
+
+/* 文本输入（封面字段 / 水印文案；C01③） */
+.icard-settings-text {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 6px;
+  padding: 5px 8px;
+  font-size: 12.5px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+.icard-settings-text:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+/* 封面字段行（label + 输入，C01③） */
+.icard-settings-cover-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.icard-settings-cover-row .icard-settings-text { margin-top: 0; flex: 1 1 auto; }
+.icard-settings-cover-label {
+  flex: 0 0 34px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* —— 侧边栏双子 Tab 导航（排版 Token vs 封面设置）—— */
+.icard-settings-nav {
+  padding-bottom: 10px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.icard-settings-subtabs {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.icard-settings-subtabs .apple-btn-size {
+  flex: 1 1 0;
+  text-align: center;
+  justify-content: center;
+}
+.icard-settings-cover-actions {
+  margin-top: 10px;
 }

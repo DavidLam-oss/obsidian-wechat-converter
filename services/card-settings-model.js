@@ -4,6 +4,8 @@
 图片卡片排版设置模型（B03）：设置归一化、按笔记会话持有的设置状态机、
 统一输出资格检查。归一化只接受一期已验证的选项（主题/比例白名单），
 数值项钳制到安全范围；设置变化由会话映射为 bumpConfig（选择与省略确认自动失效）。
+C01③：设置含输出元素三项——封面开关（coverEnabled）、正文页码开关（pageNumberEnabled）、
+水印文案（watermarkText，只清洗不截断，超长由渲染核验显式诊断）。
 
 ## 输入
 
@@ -36,10 +38,15 @@ B04 导出服务必须调用本模块的资格检查，而不是依赖弹窗按�
 - blocker 代码是跨模块契约：变更须同步 B04 导出服务与 card_diagnostics_flow.test.js。
 */
 
-import { hasCardTheme } from './card-themes.js';
+import {
+  CARD_THEME_ID_ALIASES,
+  CARD_THEME_IDS,
+  DEFAULT_CARD_THEME_ID,
+  hasCardTheme,
+} from './card-themes.js';
 
-/** 一期已验证主题（C01①：三套齐备，视觉验收随 David 迭代式评审进行） */
-export const VERIFIED_CARD_THEME_IDS = /** @type {const} */ (["clear-notes", "paper-notes", "dark-take"]);
+/** 一期已验证主题（2026-09-13 照搬 red-note 六套；旧 id 经 CARD_THEME_ID_ALIASES 静默迁移） */
+export const VERIFIED_CARD_THEME_IDS = CARD_THEME_IDS;
 
 /** 一期已验证比例（C01②：3:4 / 3:5 / 9:16 三档齐备；渲染尺寸见 RATIO_PRESETS） */
 export const VERIFIED_CARD_RATIOS = /** @type {const} */ (["3:4", "3:5", "9:16"]);
@@ -58,15 +65,22 @@ export const CARD_LAYOUT_LIMITS = {
   pagePadding: { min: 16, max: 48, step: 2, default: 28 },
 };
 
-/** @typedef {{ themeId: string, ratioId: string, fontSize: number, lineHeight: number, pagePadding: number }} CardLayoutSettings */
+/** 水印建议长度（软提示口径）：超过时渲染层给出「可能超出页宽」的显式诊断，不静默截断 */
+export const CARD_WATERMARK_SOFT_LIMIT = 24;
 
-/** B03 默认排版设置（与阶段 A 实测值一致；C02 全局默认接入后由其覆盖初始值） */
+/** @typedef {{ themeId: string, ratioId: string, fontSize: number, lineHeight: number, pagePadding: number, coverEnabled: boolean, pageNumberEnabled: boolean, watermarkText: string }} CardLayoutSettings */
+
+/** B03 默认排版设置（与阶段 A 实测值一致；C02 全局默认接入后由其覆盖初始值）。
+ *  C01③ 增加输出元素三项：封面默认关闭、正文页码默认开启、水印默认关闭且文案为空（§3.2）。 */
 export const DEFAULT_CARD_LAYOUT_SETTINGS = /** @type {CardLayoutSettings} */ ({
-  themeId: "clear-notes",
+  themeId: DEFAULT_CARD_THEME_ID,
   ratioId: "3:4",
   fontSize: CARD_LAYOUT_LIMITS.fontSize.default,
   lineHeight: CARD_LAYOUT_LIMITS.lineHeight.default,
   pagePadding: CARD_LAYOUT_LIMITS.pagePadding.default,
+  coverEnabled: false,
+  pageNumberEnabled: true,
+  watermarkText: "",
 });
 
 /**
@@ -87,6 +101,20 @@ function clampNumber(value, limit, baseValue, oneDecimal = false) {
 }
 
 /**
+ * 水印文案归一化：trim + 去控制字符；**不按长度截断**（§C01④「长水印不静默截断」），
+ * 超长由渲染核验给出显式诊断（CARD_WATERMARK_SOFT_LIMIT 仅作提示口径）。
+ * @param {unknown} value
+ * @param {string} baseValue
+ * @returns {string}
+ */
+function normalizeWatermarkText(value, baseValue) {
+  if (typeof value !== "string") return baseValue;
+  // 去控制字符（保留空格以便词间分隔），收拢换行为空格
+  const cleaned = value.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+  return cleaned;
+}
+
+/**
  * 全量归一化排版设置：未知 key 不进入结果；非法/越界值回落或钳制。
  * @param {Partial<CardLayoutSettings> | Record<string, unknown>} [partial]
  * @param {CardLayoutSettings} [base] 归一化失败的回落基准
@@ -94,9 +122,14 @@ function clampNumber(value, limit, baseValue, oneDecimal = false) {
  */
 export function normalizeCardLayoutSettings(partial = {}, base = DEFAULT_CARD_LAYOUT_SETTINGS) {
   const src = partial && typeof partial === "object" ? partial : {};
-  const themeId = typeof src.themeId === "string" &&
-    VERIFIED_CARD_THEME_IDS.includes(src.themeId) && hasCardTheme(src.themeId)
-    ? src.themeId
+  const rawThemeId = typeof src.themeId === "string" ? src.themeId : "";
+  // 旧三主题 id 静默迁移到 red-note 对应主题；未知/非法回落基准
+  /** @type {string} */
+  const mappedThemeId = CARD_THEME_ID_ALIASES[rawThemeId] || rawThemeId;
+  const verifiedThemeIds = /** @type {readonly string[]} */ (VERIFIED_CARD_THEME_IDS);
+  const themeId = mappedThemeId &&
+    verifiedThemeIds.includes(mappedThemeId) && hasCardTheme(mappedThemeId)
+    ? mappedThemeId
     : base.themeId;
   const ratioId = typeof src.ratioId === "string" && VERIFIED_CARD_RATIOS.includes(src.ratioId)
     ? src.ratioId
@@ -107,6 +140,11 @@ export function normalizeCardLayoutSettings(partial = {}, base = DEFAULT_CARD_LA
     fontSize: clampNumber(src.fontSize, CARD_LAYOUT_LIMITS.fontSize, base.fontSize),
     lineHeight: clampNumber(src.lineHeight, CARD_LAYOUT_LIMITS.lineHeight, base.lineHeight, true),
     pagePadding: clampNumber(src.pagePadding, CARD_LAYOUT_LIMITS.pagePadding, base.pagePadding),
+    coverEnabled: typeof src.coverEnabled === "boolean" ? src.coverEnabled : base.coverEnabled,
+    pageNumberEnabled: typeof src.pageNumberEnabled === "boolean"
+      ? src.pageNumberEnabled
+      : base.pageNumberEnabled,
+    watermarkText: normalizeWatermarkText(src.watermarkText, base.watermarkText),
   };
 }
 
@@ -121,7 +159,10 @@ function settingsDiffer(a, b) {
     a.ratioId !== b.ratioId ||
     a.fontSize !== b.fontSize ||
     a.lineHeight !== b.lineHeight ||
-    a.pagePadding !== b.pagePadding;
+    a.pagePadding !== b.pagePadding ||
+    a.coverEnabled !== b.coverEnabled ||
+    a.pageNumberEnabled !== b.pageNumberEnabled ||
+    a.watermarkText !== b.watermarkText;
 }
 
 /**
@@ -177,6 +218,7 @@ export function createCardLayoutSettingsState(options = {}) {
  *   hasResult: boolean,
  *   planOk: boolean,
  *   pageCount: number,
+ *   hasCover?: boolean,
  *   diagnosticVersion: string,
  *   omissionTotal: number,
  *   resourceBlockingFailures: boolean,
@@ -195,7 +237,8 @@ export function checkCardOutputEligibility(session, input) {
     blockers.push({ code: "layout-failed", message: "卡片排版失败，无法输出" });
     return { eligible: false, blockers };
   }
-  if (!(input.pageCount > 0)) {
+  // 正文为零页但有有效封面（C01③）→ 允许「仅导出封面」，不再判 empty-content
+  if (!(input.pageCount > 0) && input.hasCover !== true) {
     blockers.push({ code: "empty-content", message: "没有可输出的正文页" });
     return { eligible: false, blockers };
   }
