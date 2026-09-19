@@ -136,6 +136,30 @@ describe('AppleStyleView - Card Export Modal (B05)', () => {
     expect(rows[1]).toEqual({ label: '尺寸', value: '每张 750 × 1000 像素', title: '每张 750 × 1000 像素' });
   });
 
+  // 2026-09-19：输出目录不单设配置项（插件设置与侧栏都不放）。
+  // 内置默认「卡片导出」；用户在弹窗里改了即记住，下次预填。
+  it('输出目录改了即记住：写回默认并成为下次预填（内置默认「卡片导出」）', () => {
+    const view = readyView(AppleStyleView);
+    view.plugin.settings.cardDefaults = { exportRoot: '卡片导出' };
+    view.plugin.saveSettings = vi.fn().mockResolvedValue(undefined);
+
+    view.openCardExportModal();
+    const input = view.cardExportModal.contentEl.querySelector('.icard-export-root-input');
+    expect(input.value).toBe('卡片导出');
+
+    input.value = '我的导出/卡片';
+    input.dispatchEvent(new Event('change'));
+
+    expect(view.plugin.settings.cardDefaults.exportRoot).toBe('我的导出/卡片');
+    expect(view.plugin.saveSettings).toHaveBeenCalledTimes(1);
+
+    // 清掉本次实例态后重绘（等价于下次打开弹窗）：预填上次记住的目录
+    view.cardExportRootPath = null;
+    view.renderCardExportModal();
+    expect(view.cardExportModal.contentEl.querySelector('.icard-export-root-input').value)
+      .toBe('我的导出/卡片');
+  });
+
   it('关闭弹窗仅关展示层：任务继续（closeExportModal 被调用，Modal 引用清空）', () => {
     const view = readyView(AppleStyleView);
     withSession(view);

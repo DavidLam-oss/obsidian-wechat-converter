@@ -46,6 +46,8 @@ card-export-modal.js，导出规则在 services/card-exporter.js。
 - 面向普通用户：正文只显示 vault 相对目录，绝对路径只进 title 悬停提示；不展示内部产物文件名。
 - 逐页明细默认折叠：自动展开（进行中 / 有失败页）不得被记成用户意图，否则完成后会粘滞在展开态。
 - 尺寸一致时只在摘要处说一次，不逐行重复；尺寸有差异时才逐行显示。
+- 输出目录不单设配置项（2026-09-19 David 定）：内置默认「卡片导出」，用户在弹窗内的改动
+  经 `rememberCardExportRoot` 记住为下次默认；不在插件设置或侧栏另开一处输入。
 - 样式在 styles/card-export.css（icard-export- 前缀），新增选择器不得污染宿主 UI。
 */
 
@@ -136,8 +138,8 @@ function noteDisplayName(sourcePath) {
 /** @type {CardExportModalViewMethodsContract & ThisType<AppleStyleViewContract>} */
 export const cardExportModalViewMethods = {
 /**
- * 导出根目录解析：用户本次弹窗输入优先；否则取全局默认（C02 cardDefaults.exportRoot）；
- * 都没有回落内置默认。深度校验（保留目录/绝对路径拒绝）仍由导出执行层把守。
+ * 导出根目录解析：用户本次弹窗输入优先；否则取上次记住的目录（cardDefaults.exportRoot）；
+ * 都没有回落内置默认「卡片导出」。深度校验（保留目录/绝对路径拒绝）仍由导出执行层把守。
  * @returns {string}
  */
 resolveCardExportRootDefault() {
@@ -146,6 +148,23 @@ resolveCardExportRootDefault() {
   const raw = selfRecord.plugin?.settings?.cardDefaults?.exportRoot;
   if (typeof raw === 'string' && raw.trim()) return raw.trim();
   return DEFAULT_CARD_EXPORT_ROOT;
+},
+
+/**
+ * 记住本次填写的输出目录，作为下次弹窗的预填值（2026-09-19：导出目录不单设配置项，
+ * 用户想改就在弹窗里改，改了即成为默认）。
+ * 与侧栏排版设置共用 cardDefaults 容器，但只写 exportRoot 一个键。
+ * @param {string} root 已归一化的 vault 相对路径
+ */
+rememberCardExportRoot(root) {
+  const plugin = /** @type {any} */ (this).plugin;
+  if (!plugin || !plugin.settings) return;
+  const current = plugin.settings.cardDefaults && typeof plugin.settings.cardDefaults === 'object'
+    ? plugin.settings.cardDefaults
+    : {};
+  if (current.exportRoot === root) return;
+  plugin.settings.cardDefaults = { ...current, exportRoot: root };
+  if (typeof plugin.saveSettings === 'function') void plugin.saveSettings();
 },
 /**
  * 重绘弹窗内容：按会话任务状态分派到表单 / 准备中 / 任务视图。
@@ -330,7 +349,10 @@ renderCardExportForm(body) {
   }));
   rootInput.value = this.resolveCardExportRootDefault();
   rootInput.addEventListener('change', () => {
-    selfRecord.cardExportRootPath = String(rootInput.value || DEFAULT_CARD_EXPORT_ROOT).trim() || DEFAULT_CARD_EXPORT_ROOT;
+    const nextRoot = String(rootInput.value || DEFAULT_CARD_EXPORT_ROOT).trim() || DEFAULT_CARD_EXPORT_ROOT;
+    selfRecord.cardExportRootPath = nextRoot;
+    // 改了即记住：下次打开弹窗（含重启后）预填这个目录
+    this.rememberCardExportRoot(nextRoot);
     this.renderCardExportModal();
   });
   rootField.createEl('p', { cls: 'icard-export-field-hint', text: '相对 vault 根目录，导出时会自动建立子目录' });

@@ -2,17 +2,19 @@
 ## 核心功能
 
 图片卡片全局默认（C02）的归一化与会话接线测试：设置层 cardDefaults 的默认值/迁移兼容、
-注册表按会话创建注入默认、视图从 plugin.settings 取默认、设置页「卡片」页签渲染与保存。
+注册表按会话创建注入默认、视图从 plugin.settings 取默认。
+（2026-09-19：设置页「卡片」页签已摘除——默认值的写入路径改为转换器侧栏「调完即存」
+与导出弹窗的目录记忆；前者断言在 card_sidebar_settings.test.js，后者在 card_export_flow.test.js。）
 
 ## 输入
 
-被测模块（plugin-settings / card-session / card-tab / AppleStyleView）、mock 的 Obsidian
+被测模块（plugin-settings / card-session / AppleStyleView）、mock 的 Obsidian
 环境与受控 plugin 桩。
 
 ## 输出
 
 输出自动化断言：非法枚举回落、越界钳制、exportRoot 归一化、无关键不受影响、
-新会话读新默认而已调整会话保持、页签操作持久化。
+新会话读新默认而已调整会话保持。
 
 ## 定位
 

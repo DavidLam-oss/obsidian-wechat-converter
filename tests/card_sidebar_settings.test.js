@@ -259,7 +259,7 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(view.renderCardPreview).toHaveBeenCalled();
     });
 
-    it("点击恢复默认排版按钮调用 resetLayoutSettings 并重排版", () => {
+    it("点击恢复默认排版回到内置出厂值并重排版", () => {
       session.applyLayoutSettings({ fontSize: 18, themeId: "dark-gold" });
       expect(session.getLayoutSettings().fontSize).toBe(18);
 
@@ -311,6 +311,68 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(session.getCoverFields().title).toBe("测试标题");
       expect(view.cardSettingsRefs.coverInputs.title.value).toBe("测试标题");
       expect(view.renderCardPreview).toHaveBeenCalled();
+    });
+  });
+
+  // 2026-09-19：设置页的「卡片」页签被摘除，侧栏成为全局默认的唯一配置入口。
+  // 排版项「调完即存」；封面字段属笔记级不落默认；导出目录不在此面板（走导出弹窗记忆）。
+  describe("侧栏即全局默认（设置页卡片页签已摘除）", () => {
+    let session;
+
+    beforeEach(() => {
+      const testPath = "test-note.md";
+      view.cardPreviewPendingInput = { sourcePathKey: testPath };
+      session = view.getCardSessions().getSession(testPath);
+      view.renderCardSettingsValues();
+    });
+
+    it("调整排版同时写回全局默认，并经节流只落盘一次", () => {
+      vi.useFakeTimers();
+      try {
+        view.plugin.saveSettings = vi.fn().mockResolvedValue(undefined);
+        const themeBtn = view.cardSettingsWrapper.querySelector('button[data-value="neon-purple"]');
+        themeBtn.click();
+
+        expect(session.getLayoutSettings().themeId).toBe("neon-purple");
+        expect(view.plugin.settings.cardDefaults.themeId).toBe("neon-purple");
+        // 节流窗口内不写盘：滑块连续拖动（多次 input）只落一次
+        expect(view.plugin.saveSettings).not.toHaveBeenCalled();
+
+        vi.advanceTimersByTime(400);
+        expect(view.plugin.saveSettings).toHaveBeenCalledTimes(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("尚无会话（未排版过）时调整项也记入全局默认", () => {
+      view.cardPreviewPendingInput = null;
+      expect(view.getCardSettingsSession()).toBeNull();
+
+      view.applyCardLayoutSetting("fontSize", 18);
+      expect(view.plugin.settings.cardDefaults.fontSize).toBe(18);
+    });
+
+    it("封面字段属笔记级，不写回全局默认", () => {
+      view.applyCardCoverField("title", "改过的标题");
+
+      expect(session.getCoverFields().title).toBe("改过的标题");
+      expect(view.plugin.settings.cardDefaults.title).toBeUndefined();
+      expect(view.plugin.settings.cardDefaults.coverImage).toBeUndefined();
+      expect(view.plugin.settings.cardDefaults.coverPrompt).toBeUndefined();
+    });
+
+    it("恢复默认排版回到内置出厂值，并同步写回全局默认", () => {
+      view.applyCardLayoutSetting("fontSize", 18);
+      view.applyCardLayoutSetting("themeId", "neon-purple");
+      expect(view.plugin.settings.cardDefaults.fontSize).toBe(18);
+
+      view.resetCardLayoutSettings();
+
+      expect(session.getLayoutSettings().fontSize).toBe(14);
+      expect(session.getLayoutSettings().themeId).toBe("simple-white");
+      expect(view.plugin.settings.cardDefaults.fontSize).toBe(14);
+      expect(view.plugin.settings.cardDefaults.themeId).toBe("simple-white");
     });
   });
 });

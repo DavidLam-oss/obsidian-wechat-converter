@@ -969,58 +969,35 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
   });
 });
 
-// 回归守卫：settings.cardDefaults（全局默认：主题/比例/排版/导出根目录）的唯一写入入口是
-// 设置页「卡片」页签。该页签一旦被摘掉，这些默认值会「生效但不可改」——这里锁死它必须存在。
-describe('卡片页签全局默认入口（回归守卫）', () => {
+// 回归守卫（2026-09-19，方向反转）：图片卡片的全部配置收敛在转换器侧边栏面板
+// （「排版 Token / 封面设置」），全局偏好设置**不再**提供「卡片」页签。
+// 页签若被重新加回，会出现两处入口、默认值写入路径分叉——这里锁死它不该存在。
+describe('设置页不提供卡片页签（回归守卫）', () => {
   beforeEach(() => {
     globalThis.__obsidianSettingNamesRegistry = [];
     globalThis.__obsidianButtonRegistry = [];
   });
 
-  it('设置页保留「卡片」页签，并可从页签写回全局默认', () => {
-    const plugin = makePlugin({
-      cardDefaults: {
-        themeId: 'simple-white',
-        ratioId: '3:4',
-        fontSize: 14,
-        lineHeight: 1.7,
-        pagePadding: 28,
-        coverEnabled: true,
-        pageNumberEnabled: true,
-        watermarkText: '内部资料',
-        exportRoot: '卡片导出',
-      },
-    });
+  it('页签列表不含「卡片」，卡片全局表单不再渲染', () => {
+    const plugin = makePlugin();
+    const tab = renderTab(plugin, 'wechat');
 
-    renderTab(plugin, 'card');
+    const labels = Array.from(tab.containerEl.querySelectorAll('.apple-settings-tab'))
+      .map((el) => el.textContent);
+    expect(labels).toEqual(expect.arrayContaining(['微信', '飞书', 'AI 服务', '关于']));
+    expect(labels).not.toContain('卡片');
 
-    // 页签内容确实被渲染（renderCardSettingsTab 跑过）
-    expect(globalThis.__obsidianSettingNamesRegistry).toEqual(
-      expect.arrayContaining([
-        '默认主题', '默认比例', '默认导出目录',
-        // C01③ 三键的全局入口
-        '默认启用封面', '默认显示正文页码', '默认水印文案',
-        '恢复内置默认',
-      ])
-    );
+    // 只属于卡片页签的表单名不得再出现在设置页（侧栏才是它们的入口）
+    expect(globalThis.__obsidianSettingNamesRegistry).not.toContain('默认主题');
+    expect(globalThis.__obsidianSettingNamesRegistry).not.toContain('默认导出目录');
+  });
 
-    // 渲染过程不得丢掉 C01③ 引入的全局默认键，也不得改写用户已配置的值
-    const defaults = plugin.settings.cardDefaults;
-    expect(defaults).toMatchObject({
-      themeId: 'simple-white',
-      ratioId: '3:4',
-      fontSize: 14,
-      lineHeight: 1.7,
-      pagePadding: 28,
-      coverEnabled: true,
-      pageNumberEnabled: true,
-      watermarkText: '内部资料',
-      exportRoot: '卡片导出',
-    });
-
-    // 「恢复内置默认」仍然可达（全局作用域重置入口）
-    const resetButton = globalThis.__obsidianButtonRegistry
-      .find((button) => button.text === '恢复内置默认');
-    expect(resetButton).toBeDefined();
+  it('历史遗留的 "card" 活跃页签回落微信，不停在空白内容区', () => {
+    const plugin = makePlugin();
+    const tab = new AppleStyleSettingTab(plugin.app, plugin);
+    tab._activeSettingsTab = 'card';
+    tab.containerEl = createObsidianLikeElement('div');
+    tab.renderSettingsContent();
+    expect(tab._activeSettingsTab).toBe('wechat');
   });
 });

@@ -161,9 +161,6 @@ export {
   renderFeishuSettingsTab,
 } from './settings/feishu-tab.js';
 export {
-  renderCardSettingsTab,
-} from './settings/card-tab.js';
-export {
   renderAiSettingsTab,
 } from './settings/ai-tab.js';
 export {

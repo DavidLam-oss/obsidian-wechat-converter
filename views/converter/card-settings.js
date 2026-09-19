@@ -3,12 +3,18 @@
 
 图片卡片排版与封面设置视图（B03 / C02 重构）：卡片模式设置面板（sliders 图标呼出的侧边栏面板）。
 采用所见即所得（WYSIWYG）架构（2026-09-13 David 定调）：
-- 设置全量收敛至侧边栏面板，彻底废除全局偏好设置中的冗余页签；
+- 设置全量收敛至侧边栏面板，全局偏好设置中不设卡片页签（2026-09-19 David 再次确认）；
 - 面板头部划分为两种形式的双子 Tab：
   1. 「排版 Token」：主题六选、比例三选、正文页码、水印文案、字号/行高/边距滑块、恢复默认排版；
-  2. 「封面设置」：封面启用开关、标题/作者/日期/摘要编辑、按当前笔记重新填入（后续 C06 配图在此扩展）。
+  2. 「封面设置」：封面启用开关、标题/作者/日期/摘要编辑、按当前笔记重新填入（C06 配图在此扩展）。
 - 预览区「封面」芯片按钮直通本面板并自动切到封面子 Tab，废弃独立的居中 Modal。
-所有调整均走当前笔记会话隔离，不串篇、不污染其他模式。
+
+设置的作用域（2026-09-19 定稿）：
+- 排版/输出元素（主题、比例、字号、行高、边距、封面开关、正文页码、水印）**调完即存为默认**——
+  既作用于当前笔记会话，也写回 `plugin.settings.cardDefaults`，新建会话继承；
+- 封面字段（标题/作者/日期/摘要/配图）随笔记内容走，属会话级，**不写回全局默认**；
+- 导出目录不在此面板配置：内置默认「卡片导出」，用户在导出弹窗内的改动被记住为下次默认
+  （见 card-export-modal-view.js 的 rememberCardExportRoot）。
 
 ## 输入
 
@@ -22,8 +28,9 @@ this.cardSettingsWrapper（settings-panel.js 创建的面板容器）、
 - `renderCardSettingsValues()`：打开面板或会话设置变化后同步当前值；
 - `switchCardSettingsSubTab(subTab)`：在「排版 Token」和「封面设置」之间切换；
 - `openCardSettingsTab(tabName)`：直通打开面板并聚焦到指定子 Tab；
-- `applyCardLayoutSetting(key, value)`：应用排版设置，触发重排版；
-- `resetCardLayoutSettings()`：恢复当前会话默认排版；
+- `applyCardLayoutSetting(key, value)`：应用排版设置（写会话 + 写回全局默认），触发重排版；
+- `persistCardLayoutDefaults(partial)`：把归一化后的排版值写回 `plugin.settings.cardDefaults`（落盘节流）；
+- `resetCardLayoutSettings()`：恢复内置出厂排版（写会话 + 写回全局默认）；
 - `applyCardCoverField(key, value)`：应用封面字段编辑；
 - `resetCardCoverFields()`：按当前笔记重新填入封面字段；
 - `getCardSettingsSession()`：获取当前笔记会话。
@@ -40,7 +47,13 @@ this.cardSettingsWrapper（settings-panel.js 创建的面板容器）、
 ## 维护规则
 
 - 严格遵守单文件 800 行软线规范。
-- 所有卡片设置统一收敛在侧边栏面板，不在全局插件设置重复添加排版表单。
+- 所有卡片设置统一收敛在侧边栏面板，不在全局插件设置重复添加排版表单
+  （设置页只保留「微信 / 多平台 / 飞书 / AI 服务 / 关于」，卡片页签已摘除）。
+- 新增排版项时：先在 card-settings-model.js 扩展模型与限额，再在 buildCardSettingsPanel 加控件。
+  持久化的键集合由 `normalizeCardLayoutSettings` 决定——只有它输出的字段会写回 cardDefaults；
+  封面字段（标题/作者/日期/摘要/配图）按设计不进该函数，因而只停留在会话级。
+- 「恢复默认排版」的语义是**内置出厂值**（DEFAULT_CARD_LAYOUT_SETTINGS），不是「当前全局默认」；
+  否则侧栏本身即默认面板，重置会成为空操作。
 */
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: AppleStyleView 方法组跨模块动态组合，会话等合同字段以 unknown 持有 */
@@ -52,6 +65,7 @@ import {
   DEFAULT_CARD_LAYOUT_SETTINGS,
   VERIFIED_CARD_RATIOS,
   VERIFIED_CARD_THEME_IDS,
+  normalizeCardLayoutSettings,
 } from '../../services/card-settings-model.js';
 import { getCardTheme } from '../../services/card-themes.js';
 import {
@@ -92,6 +106,7 @@ import { getObsidianRequestUrl } from '../../services/obsidian-compat.js';
  *     coverImageThumb?: HTMLImageElement | null,
  *     coverImageRemoveBtn?: HTMLButtonElement | null,
  *   } | null,
+ *   cardDefaultsSaveTimer?: ReturnType<typeof setTimeout> | null,
  * }} CardSettingsViewStateLike
  */
 
@@ -109,6 +124,9 @@ const SLIDER_FORMAT = {
   lineHeight: (v) => `${v}`,
   pagePadding: (v) => `${v}px`,
 };
+
+/** 全局默认落盘节流（ms）：滑块 input 会连续触发，合并成一次 saveSettings */
+const CARD_DEFAULTS_SAVE_DELAY = 400;
 
 /** @type {CardSettingsMethodsContract & ThisType<AppleStyleViewContract>} */
 export const cardSettingsMethods = {
@@ -259,12 +277,12 @@ buildCardSettingsPanel() {
     });
   }
 
-  // 恢复默认
+  // 恢复默认（内置出厂值；同时保存为全局默认）
   this.createSection(tokenSection, '其他', (section) => {
     const resetBtn = section.createEl('button', {
       cls: 'apple-btn-size',
       text: '恢复默认排版',
-      attr: { 'title': '恢复为内置默认排版（仅影响本篇）' },
+      attr: { 'title': '恢复为内置出厂排版，并保存为全局默认；其他笔记已生成的卡片不受影响' },
     });
     resetBtn.addEventListener('click', () => { this.resetCardLayoutSettings(); });
   });
@@ -499,11 +517,50 @@ getCurrentCardLayoutSettings() {
 ,
 
 /**
+ * 把排版设置写回全局默认（2026-09-19：侧栏是唯一配置入口，「调完即存」）。
+ * 值经 `normalizeCardLayoutSettings` 归一化——该函数的输出即持久化白名单；
+ * 封面字段不在其中（属笔记级），因此只停留在会话。
+ * 展开 current 以保留 exportRoot 等非排版键（导出目录由导出弹窗记忆）。
+ * @param {Record<string, unknown>} partial
+ */
+persistCardLayoutDefaults(partial) {
+  const plugin = /** @type {any} */ (this).plugin;
+  if (!plugin || !plugin.settings) return;
+  const current = plugin.settings.cardDefaults && typeof plugin.settings.cardDefaults === 'object'
+    ? plugin.settings.cardDefaults
+    : {};
+  plugin.settings.cardDefaults = {
+    ...current,
+    ...normalizeCardLayoutSettings({ ...current, ...partial }),
+  };
+  this.scheduleCardDefaultsSave();
+}
+,
+
+/** 合并短时间内的多次默认变更，只落盘一次（滑块拖动不会每次都写盘） */
+scheduleCardDefaultsSave() {
+  const plugin = /** @type {any} */ (this).plugin;
+  // 无持久化能力（测试替身 / 极简宿主）时不排定时器，避免留下悬挂回调
+  if (!plugin || typeof plugin.saveSettings !== 'function') return;
+  const selfRecord = cardSettingsStateOf(this);
+  if (selfRecord.cardDefaultsSaveTimer) clearTimeout(selfRecord.cardDefaultsSaveTimer);
+  selfRecord.cardDefaultsSaveTimer = setTimeout(() => {
+    selfRecord.cardDefaultsSaveTimer = null;
+    const host = /** @type {any} */ (this).plugin;
+    if (host && typeof host.saveSettings === 'function') void host.saveSettings();
+  }, CARD_DEFAULTS_SAVE_DELAY);
+}
+,
+
+/**
  * 应用单项设置：归一化 + 变化检测在会话内完成；值实际变化才 bumpConfig 并重排版。
+ * 2026-09-19：同时写回全局默认——即使尚无会话（未排版过），这次选择也应当被记住。
  * @param {string} key
  * @param {unknown} value
  */
 applyCardLayoutSetting(key, value) {
+  this.persistCardLayoutDefaults({ [key]: value });
+
   const session = /** @type {any} */ (this.getCardSettingsSession());
   if (!session || typeof session.applyLayoutSettings !== 'function') {
     // 尚无会话（未排版过）：仅刷新显示，不产生版本变化
@@ -519,14 +576,21 @@ applyCardLayoutSetting(key, value) {
 }
 ,
 
-/** 恢复当前默认（值已是默认时不产生版本变化） */
+/**
+ * 恢复内置出厂排版（2026-09-19 语义调整）。
+ * 侧栏本身即默认配置面板，若沿用会话的 resetLayoutSettings（基准＝当前全局默认），
+ * 重置会成为空操作；因此显式传出厂值，并同样写回全局默认。
+ */
 resetCardLayoutSettings() {
+  const builtin = { ...DEFAULT_CARD_LAYOUT_SETTINGS };
+  this.persistCardLayoutDefaults(builtin);
+
   const session = /** @type {any} */ (this.getCardSettingsSession());
-  if (!session || typeof session.resetLayoutSettings !== 'function') {
+  if (!session || typeof session.applyLayoutSettings !== 'function') {
     this.renderCardSettingsValues();
     return;
   }
-  const result = session.resetLayoutSettings();
+  const result = session.applyLayoutSettings(builtin);
   this.renderCardSettingsValues();
   if (result.changed) void this.renderCardPreview();
 }

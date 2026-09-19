@@ -493,8 +493,10 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     resolveCardExportView(): { kind: string, job?: unknown };
     /** 卡片导出：本次导出范围（'all' 全部页 / 'selected' 仅预览勾选页；未显式选择时跟随预览勾选） */
     resolveCardExportScope(): 'all' | 'selected';
-    /** 卡片导出：解析输出目录（会话输入 > 全局默认 cardDefaults.exportRoot > 内置默认，C02） */
+    /** 卡片导出：解析输出目录（本次弹窗输入 > 上次记住的目录 cardDefaults.exportRoot > 内置默认，C02） */
     resolveCardExportRootDefault(): string;
+    /** 卡片导出：记住弹窗内填写的输出目录，作为下次预填的默认（2026-09-19：不单设配置项） */
+    rememberCardExportRoot(root: string): void;
     /** 卡片导出：按会话任务状态重绘弹窗 */
     renderCardExportModal(): void;
     /** 卡片导出：准备中视图（点击开始后、任务建立与图片内联完成之前） */

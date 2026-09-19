@@ -267,6 +267,7 @@ type CardExportModalViewMethodsContract = Pick<
     | 'renderCardExportForm'
     | 'resolveCardExportScope'
     | 'resolveCardExportRootDefault'
+    | 'rememberCardExportRoot'
     | 'renderCardExportPreparing'
     | 'renderCardExportJob'
     | 'renderCardExportPages'

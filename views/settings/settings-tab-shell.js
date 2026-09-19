@@ -32,7 +32,6 @@ import {
   obsidianApi,
   renderAboutSettingsTab,
   renderAiSettingsTab,
-  renderCardSettingsTab,
   renderFeishuSettingsTab,
   renderMultiPlatformSettingsTab,
 } from '../apple-style-view-shared.js';
@@ -152,7 +151,6 @@ const settingsTabShellMethods = {
     const multiTab = tabBar.createDiv({ cls: 'apple-settings-tab apple-settings-tab-multi' });
     multiTab.createSpan({ text: MULTI_PLATFORM_TAB_LABEL, cls: 'apple-settings-tab-label' });
     const feishuTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '飞书' });
-    const cardTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '卡片' });
     const aiTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: 'AI 服务' });
     const aboutTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '关于' });
 
@@ -161,8 +159,6 @@ const settingsTabShellMethods = {
     multiContent.setCssStyles({ display: 'none' });
     const feishuContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
     feishuContent.setCssStyles({ display: 'none' });
-    const cardContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
-    cardContent.setCssStyles({ display: 'none' });
     const aiContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
     aiContent.setCssStyles({ display: 'none' });
     const aboutContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
@@ -170,7 +166,9 @@ const settingsTabShellMethods = {
 
     /**
      * 设置页签定义（key 与 _activeSettingsTab 持久化值一致）。
-     * @typedef {{ tab: ObsidianElementLike, content: ObsidianElementLike, key: 'wechat'|'multi'|'feishu'|'card'|'ai'|'about' }} SettingsTabDef
+     * 卡片设置不在此处：图片卡片的全部配置收敛在转换器侧边栏面板
+     * （侧栏「排版 Token / 封面设置」），全局偏好设置不重复提供表单。
+     * @typedef {{ tab: ObsidianElementLike, content: ObsidianElementLike, key: 'wechat'|'multi'|'feishu'|'ai'|'about' }} SettingsTabDef
      */
 
     /** @type {SettingsTabDef[]} */
@@ -178,7 +176,6 @@ const settingsTabShellMethods = {
       { tab: wechatTab, content: wechatContent, key: 'wechat' },
       { tab: multiTab, content: multiContent, key: 'multi' },
       { tab: feishuTab, content: feishuContent, key: 'feishu' },
-      { tab: cardTab, content: cardContent, key: 'card' },
       { tab: aiTab, content: aiContent, key: 'ai' },
       { tab: aboutTab, content: aboutContent, key: 'about' },
     ];
@@ -190,13 +187,14 @@ const settingsTabShellMethods = {
         }
         this._activeSettingsTab = def.key;
         if (def.key === 'feishu') renderFeishuSettingsTab(this, feishuContent, { obsidianApi });
-        if (def.key === 'card') renderCardSettingsTab(this, cardContent, { obsidianApi });
         if (def.key === 'ai') renderAiSettingsTab(this, aiContent, { obsidianApi });
         if (def.key === 'about') renderAboutSettingsTab(this, aboutContent);
       };
     }
 
+    // 已摘除的页签 key（如卡片页签移除前遗留的 'card'）回落微信，避免停在空白内容区
     const initialDef = tabDefs.find((def) => def.key === this._activeSettingsTab);
+    if (!initialDef) this._activeSettingsTab = 'wechat';
     if (initialDef && initialDef.key !== 'wechat') {
       initialDef.tab.onclick();
     }
