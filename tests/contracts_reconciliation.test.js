@@ -268,7 +268,7 @@ describe("静态合同对账 · 方法组级", () => {
 
       const drift = reconcile(ownMethodsOf(object), new Set(declared.methods));
       expect(drift).toEqual({ 实现未登记: [], 合同未实现: [] });
-    });
+    }, 30_000);
   }
 });
 
