@@ -165,3 +165,98 @@ describe('预览模式切换：在途文章渲染不得覆盖新模式预览', (
     expect(view.lastResolvedMarkdown).toBe('# 标题\n\n正文');
   });
 });
+
+/** 会话 mock：满足 createPreviewRunner 与 renderCardPreview 的最小接口 */
+function makeCardSessionMock() {
+  return {
+    noteId: 'n1',
+    bumpContent: vi.fn(),
+    setCoverSeed: vi.fn(),
+    markPreviewStale: vi.fn(),
+    getPreviewState: vi.fn(() => ({ stale: false })),
+    beginPreviewUpdate: vi.fn(() => ({ layoutKey: 'k1' })),
+    settlePreviewUpdate: vi.fn(() => ({ applied: true })),
+  };
+}
+
+/** 让真实 renderCardPreview 停在受控的排版管线上（管线慢路径：等资源/字体/分页） */
+function gateCardPipeline(view, AppleStyleView) {
+  // makeView 把 renderCardPreview 换成了假壳 mock；本组用例必须走真实方法
+  view.renderCardPreview = AppleStyleView.prototype.renderCardPreview.bind(view);
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  view.resolveCardMarkdownSource = vi.fn(async () => ({ ok: true, markdown: '# 标题\n\n正文', sourcePath: 'a.md' }));
+  view.getCurrentCardLayoutSettings = vi.fn(() => ({
+    themeId: 'simple-white', ratioId: '3:4', fontSize: 14, lineHeight: 1.7, pagePadding: 28, coverEnabled: false,
+  }));
+  view.getCardSessions = vi.fn(() => ({ getSession: () => makeCardSessionMock() }));
+  view.runCardLayoutPipeline = vi.fn(async () => {
+    await gate;
+    return {
+      ok: true, pages: [], coverPage: null, hasCover: false, pageCount: 0,
+      layoutKey: 'k1', sourcePath: 'a.md', diagnostics: [], omissionSummary: { total: 0 },
+    };
+  });
+  view.renderCardPreviewDom = vi.fn(() => {
+    view.previewContainer.empty();
+    view.previewContainer.createEl('div', { cls: 'icard-preview-shell', text: '卡片预览' });
+    return null;
+  });
+  return () => release();
+}
+
+describe('预览模式切换：在途卡片渲染不得覆盖新模式预览', () => {
+  let AppleStyleView;
+
+  beforeEach(() => {
+    vi.resetModules();
+    const obsidianMock = require('obsidian');
+    obsidianMock.requestUrl = vi.fn().mockResolvedValue({ json: {}, status: 200 });
+    obsidianMock.setIcon = () => {};
+    AppleStyleView = loadInputModule().AppleStyleView;
+  });
+
+  it('切到贴图模式后，先前的卡片渲染落地时不覆盖贴图预览', async () => {
+    const view = makeView(AppleStyleView);
+    const release = gateCardPipeline(view, AppleStyleView);
+    const inFlight = view.renderCardPreview();
+    await new Promise((r) => setTimeout(r, 5));
+
+    view.switchPreviewMode('sticker');
+    await new Promise((r) => setTimeout(r, 20));
+    expect(view.previewContainer.querySelector('.apple-sticker-preview-wrapper')).toBeTruthy();
+
+    // 放行在途的卡片渲染——预览模式已不是 card，不得落地
+    release();
+    await inFlight;
+    expect(view.renderCardPreviewDom).not.toHaveBeenCalled();
+    expect(view.previewContainer.querySelector('.icard-preview-shell')).toBeNull();
+    expect(view.previewContainer.querySelector('.apple-sticker-preview-wrapper')).toBeTruthy();
+  });
+
+  it('非卡片模式下，在途卡片渲染落地时不得写入预览', async () => {
+    const view = makeView(AppleStyleView);
+    view.previewMode = 'sticker';
+    const release = gateCardPipeline(view, AppleStyleView);
+    const inFlight = view.renderCardPreview();
+    await new Promise((r) => setTimeout(r, 5));
+
+    release();
+    await inFlight;
+    expect(view.renderCardPreviewDom).not.toHaveBeenCalled();
+    expect(view.previewContainer.querySelector('.icard-preview-shell')).toBeNull();
+  });
+
+  it('仍在卡片模式时，卡片渲染照常落地（守卫不过度拦截）', async () => {
+    const view = makeView(AppleStyleView);
+    view.previewMode = 'card';
+    const release = gateCardPipeline(view, AppleStyleView);
+    const inFlight = view.renderCardPreview();
+    await new Promise((r) => setTimeout(r, 5));
+
+    release();
+    await inFlight;
+    expect(view.renderCardPreviewDom).toHaveBeenCalledTimes(1);
+    expect(view.previewContainer.querySelector('.icard-preview-shell')).toBeTruthy();
+  });
+});

@@ -250,7 +250,9 @@ async renderCardPreview() {
   }
 
   const source = await this.resolveCardMarkdownSource();
-  if (selfRecord.cardPreviewGeneration !== generation) return undefined;
+  // 落地守卫（与 convertCurrent 同款两道）：①仍是这一轮渲染；②用户没在渲染途中切走模式。
+  // 卡片是慢路径（等资源/字体/分页），切到贴图/文章后落地会把新模式的预览顶掉。
+  if (selfRecord.cardPreviewGeneration !== generation || (this.previewMode || 'article') !== 'card') return undefined;
   // 空正文 + 封面开启（C01③）→ 继续走管线渲染「仅封面」；否则维持空态
   const coverOnlyWanted = (() => {
     if (!source || !source.ok || !String(source.sourcePath || '').trim()) return false;
@@ -295,7 +297,7 @@ async renderCardPreview() {
   selfRecord.cardPreviewPendingInput = { markdown, sourcePath, sourcePathKey: sourcePath };
 
   const settled = await selfRecord.cardPreviewRunner.schedule();
-  if (selfRecord.cardPreviewGeneration !== generation) return undefined;
+  if (selfRecord.cardPreviewGeneration !== generation || (this.previewMode || 'article') !== 'card') return undefined;
   if (!settled || !settled.applied) return undefined;
   selfRecord.cardPreviewOutcome = selfRecord.cardPreviewLastOutcome || null;
   return this.renderCardPreviewDom();
