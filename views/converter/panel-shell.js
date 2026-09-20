@@ -215,9 +215,9 @@ switchPreviewMode(mode) {
   this.applyModeActionVisibility();
 
   if (mode === 'sticker') {
-    this.renderStickerPreview();
+    this.runModeRenderWithDiagnostics('贴图', this.renderStickerPreview(), 8000);
   } else if (mode === 'card') {
-    void this.renderCardPreview();
+    this.runModeRenderWithDiagnostics('卡片', this.renderCardPreview(), 20000);
   } else {
     this.convertCurrent(true);
   }
@@ -227,6 +227,58 @@ switchPreviewMode(mode) {
     const h = /** @type {HTMLElement} */ (headerEl).offsetHeight || 80;
     this.containerEl.style.setProperty('--apple-header-height', h + 'px');
   }
+}
+,
+
+/**
+ * 模式渲染的兜底观察器：贴图/卡片渲染是异步慢路径，抛错若无人接住就是
+ * 「静默失败——模式选了、预览没变」。这里把两类异常变成可见症状：
+ * ① promise 拒绝 → 预览区直接显示错误内容（同时 console.error 留全栈）；
+ * ② 超时仍未落地 → 显示超时提示（识别「数据构建挂起」场景）。
+ * @param {string} label 模式名（用于错误文案）
+ * @param {unknown} renderPromise 模式渲染 promise
+ * @param {number} timeoutMs 看门狗超时
+ */
+runModeRenderWithDiagnostics(label, renderPromise, timeoutMs) {
+  let settled = false;
+  Promise.resolve(renderPromise)
+    .catch((error) => {
+      console.error(`[wechat-converter] ${label}渲染失败:`, error);
+      if (this.previewContainer && !settled) {
+        this.showModeRenderFailure(label, error instanceof Error ? error : new Error(String(error)));
+      }
+    })
+    .finally(() => { settled = true; });
+  window.setTimeout(() => {
+    if (!settled && this.previewMode !== 'article' && this.previewContainer) {
+      console.error(`[wechat-converter] ${label}渲染超过 ${Math.round(timeoutMs / 1000)}s 未落地（可能在数据构建处挂起）`);
+      this.showModeRenderFailure(label, new Error(`渲染超过 ${Math.round(timeoutMs / 1000)} 秒仍未完成，可能是数据构建卡住。请把开发者控制台里 [wechat-converter] 开头的输出发给开发者。`));
+    }
+  }, timeoutMs);
+}
+,
+
+/**
+ * 在预览区渲染可见的错误面板（只读诊断，不影响导出链路）。
+ * @param {string} label 模式名
+ * @param {Error} error 渲染错误
+ */
+showModeRenderFailure(label, error) {
+  if (!this.previewContainer) return;
+  this.previewContainer.empty();
+  const failure = this.previewContainer.createEl('div', { cls: 'icard-preview-empty is-failure' });
+  failure.createEl('div', {
+    cls: 'icard-preview-empty-title',
+    text: `${label}模式渲染失败`,
+  });
+  failure.createEl('div', {
+    cls: 'icard-preview-empty-desc',
+    text: error.message || String(error),
+  });
+  failure.createEl('div', {
+    cls: 'icard-preview-empty-desc',
+    text: '请打开开发者控制台（Ctrl/Cmd+Shift+I），把 [wechat-converter] 开头的红色输出发给开发者。',
+  });
 }
 ,
 

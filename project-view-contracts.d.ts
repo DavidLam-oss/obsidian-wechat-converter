@@ -326,6 +326,19 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     /** 是否在贴图文案中插入 [配图 N] 序号 */
     insertStickerImageIndex: boolean;
     switchPreviewMode(mode: string): void;
+    /**
+     * 模式渲染的兜底观察器：拒绝时在预览区显示可见错误面板，超时未落地同样提示。
+     * @param {string} label 模式名（用于错误文案）
+     * @param {unknown} renderPromise 模式渲染 promise
+     * @param {number} timeoutMs 看门狗超时毫秒数
+     */
+    runModeRenderWithDiagnostics(label: string, renderPromise: unknown, timeoutMs: number): void;
+    /**
+     * 在预览区渲染可见的错误面板（诊断用，不影响导出链路）。
+     * @param {string} label 模式名
+     * @param {Error} error 渲染错误
+     */
+    showModeRenderFailure(label: string, error: Error): void;
     toggleSettingsPanel(): void;
     saveTimeout: number;
     /**

@@ -183,6 +183,8 @@ type PanelShellMethodsContract = Pick<
     | 'closeTransientPanels'
     | 'toggleSettingsPanel'
     | 'switchPreviewMode'
+    | 'runModeRenderWithDiagnostics'
+    | 'showModeRenderFailure'
     | 'applyModeActionVisibility'
     | 'updateSettingsButtonLabel'
 >;
