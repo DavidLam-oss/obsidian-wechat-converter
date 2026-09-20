@@ -189,6 +189,12 @@ switchPreviewMode(mode) {
   if (mode !== 'article' && mode !== 'sticker' && mode !== 'card') return;
   this.previewMode = mode;
 
+  // 作废在途的文章渲染（convertCurrent 的提交守卫读这两个值）。
+  // 不作废的话：文章模式的渲染较慢，用户切到贴图/卡片后它才落地，
+  // 会把新模式的预览覆盖回文章排版——表现为「模式选了，预览没变」。
+  this.renderGeneration = (Number(this.renderGeneration) || 0) + 1;
+  this.setPreviewLoading(false);
+
   const articleBtn = /** @type {unknown} */ (this.btnArticleMode);
   const stickerBtn = /** @type {unknown} */ (this.btnStickerMode);
   const cardBtn = /** @type {unknown} */ (this.btnCardMode);

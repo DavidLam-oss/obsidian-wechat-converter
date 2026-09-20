@@ -663,6 +663,7 @@ async refreshCustomCssPreview() {
     || baseHtml !== this.baseRenderedHtml
     || articleSourceHash !== this.lastResolvedSourceHash
     || this.aiPreviewApplied
+    || (this.previewMode || 'article') !== 'article'
   ) {
     return false;
   }
@@ -953,7 +954,10 @@ async convertCurrent(silent = false, options = {}) {
     const baseHtml = await this.renderMarkdownForPreview(markdown, sourcePath);
     const html = await this.deriveNativePreviewHtml(baseHtml);
 
-    if (generation !== this.renderGeneration) return;
+    // 提交守卫有两道：①仍是最新一轮文章渲染；②用户没有在渲染途中切到贴图/卡片模式。
+    // 少了第二道，一次在途的文章渲染落地时会把新模式的预览覆盖回文章排版——
+    // 贴图模式尤其明显：它的渲染是快路径，先画出来，随后被慢一步的文章结果压掉。
+    if (generation !== this.renderGeneration || (this.previewMode || 'article') !== 'article') return;
 
     // 只有渲染成功并且仍是最新一轮渲染时，才提交当前文章源。
     // 这样切换文章时 AI 面板不会在渲染中途用临时 hash 误判缓存状态。
@@ -1001,7 +1005,8 @@ async convertCurrent(silent = false, options = {}) {
 
   } catch (error) {
     console.error('转换失败:', error);
-    if (generation !== this.renderGeneration) return;
+    // 失败态同样是「文章模式的呈现」，切到贴图/卡片后不得再落地（否则预览被渲染失败占位符顶掉）。
+    if (generation !== this.renderGeneration || (this.previewMode || 'article') !== 'article') return;
 
     this.currentHtml = null;
     this.baseRenderedHtml = null;
