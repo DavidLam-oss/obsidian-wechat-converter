@@ -78,8 +78,12 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(coverTabBtn).toBeTruthy();
       expect(tokenTabBtn.textContent).toBe("排版 Token");
       expect(coverTabBtn.textContent).toBe("封面设置");
-      expect(tokenTabBtn.classList.contains("active")).toBe(true);
-      expect(coverTabBtn.classList.contains("active")).toBe(false);
+      // 分段控件用 is-active + aria-pressed 表达位置；不再复用 apple-btn-size 的 active，
+      // 避免与下方主题/比例/页码的「值被选中」在视觉上撞车。
+      expect(tokenTabBtn.classList.contains("is-active")).toBe(true);
+      expect(coverTabBtn.classList.contains("is-active")).toBe(false);
+      expect(tokenTabBtn.getAttribute("aria-pressed")).toBe("true");
+      expect(coverTabBtn.getAttribute("aria-pressed")).toBe("false");
 
       const tokenSection = cardWrapper.querySelector(".icard-settings-subpanel-token");
       const coverSection = cardWrapper.querySelector(".icard-settings-subpanel-cover");
@@ -107,17 +111,35 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
         .filter((v) => ["3:4", "3:5", "9:16"].includes(v));
       expect(ratioValues).toHaveLength(3);
 
-      // 页码按钮
-      const pageBtn = tokenSection.querySelector('button[data-value="pageNumberEnabled"]');
-      expect(pageBtn).toBeTruthy();
+      // 正文页码：开关（说明在左、开关在右），不再是「页码 · 已开启」按钮
+      const pageRow = tokenSection.querySelector(".icard-settings-toggle-row");
+      expect(pageRow).toBeTruthy();
+      expect(pageRow.querySelector(".icard-settings-toggle-label").textContent).toBe("页脚显示页码");
+      // 说明只保留「封面是例外」这一条（页码格式在右侧预览里可见）
+      expect(pageRow.querySelector(".icard-settings-toggle-desc").textContent).toBe("封面页不编号");
+      const pageToggle = pageRow.querySelector("input.apple-toggle-input");
+      expect(pageToggle).toBeTruthy();
+      expect(pageToggle.checked).toBe(true);
+      // 开关自带状态表达 → 不再回显「已开启 / 已关闭」文案
+      expect(pageRow.textContent).not.toContain("已开启");
 
       // 水印输入框
       const watermarkInput = tokenSection.querySelector("input.icard-settings-text");
       expect(watermarkInput).toBeTruthy();
 
-      // 滑块（字号、行高、边距）
-      const sliders = tokenSection.querySelectorAll("input.apple-slider");
+      // 滑块（字号、行高、边距）——折叠在「字号与间距」里，默认收起
+      const tuneGroup = tokenSection.querySelector("details.icard-settings-tune");
+      expect(tuneGroup).toBeTruthy();
+      expect(tuneGroup.open).toBe(false);
+      expect(tuneGroup.querySelector(".apple-settings-summary").textContent).toContain("字号与间距");
+
+      const sliders = tuneGroup.querySelectorAll("input.apple-slider");
       expect(sliders.length).toBe(3);
+
+      // 摘要回显当前值：不展开也知道现状
+      expect(tuneGroup.querySelector(".icard-settings-tune-values").textContent).toMatch(
+        /^字号 \d+px · 行高 [\d.]+ · 边距 \d+px$/
+      );
 
       // 不设「恢复默认排版」按钮：换主题即取默认（2026-09-20 与文章模式对齐）
       const resetBtn = Array.from(tokenSection.querySelectorAll("button")).find(
@@ -149,7 +171,7 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
   });
 
   describe("子 Tab 切换（switchCardSettingsSubTab）与直通打开（openCardSettingsTab）", () => {
-    it("switchCardSettingsSubTab 能够在 token 与 cover 之间互相切换并更新 active / hidden 类", () => {
+    it("switchCardSettingsSubTab 能够在 token 与 cover 之间互相切换并更新 is-active / hidden 类", () => {
       const cardWrapper = view.cardSettingsWrapper;
       const tokenTabBtn = cardWrapper.querySelector('button[data-tab="token"]');
       const coverTabBtn = cardWrapper.querySelector('button[data-tab="cover"]');
@@ -159,16 +181,18 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       // 切换到 cover
       view.switchCardSettingsSubTab("cover");
       expect(view.activeCardSubTab).toBe("cover");
-      expect(tokenTabBtn.classList.contains("active")).toBe(false);
-      expect(coverTabBtn.classList.contains("active")).toBe(true);
+      expect(tokenTabBtn.classList.contains("is-active")).toBe(false);
+      expect(coverTabBtn.classList.contains("is-active")).toBe(true);
+      expect(tokenTabBtn.getAttribute("aria-pressed")).toBe("false");
+      expect(coverTabBtn.getAttribute("aria-pressed")).toBe("true");
       expect(tokenSection.classList.contains("hidden")).toBe(true);
       expect(coverSection.classList.contains("hidden")).toBe(false);
 
       // 切换回 token
       view.switchCardSettingsSubTab("token");
       expect(view.activeCardSubTab).toBe("token");
-      expect(tokenTabBtn.classList.contains("active")).toBe(true);
-      expect(coverTabBtn.classList.contains("active")).toBe(false);
+      expect(tokenTabBtn.classList.contains("is-active")).toBe(true);
+      expect(coverTabBtn.classList.contains("is-active")).toBe(false);
       expect(tokenSection.classList.contains("hidden")).toBe(false);
       expect(coverSection.classList.contains("hidden")).toBe(true);
     });
@@ -228,18 +252,28 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(ratioBtn.classList.contains("active")).toBe(true);
     });
 
-    it("点击页码按钮切换开关状态并更新文案与状态", () => {
-      const pageBtn = view.cardSettingsRefs.pageToggleBtn;
-      expect(pageBtn.textContent).toContain("已开启");
+    it("切换页码开关更新 pageNumberEnabled 并重排版", () => {
+      const checkbox = view.cardSettingsRefs.pageToggleInput;
+      expect(checkbox.checked).toBe(true);
 
-      pageBtn.click();
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new Event("change"));
       expect(session.getLayoutSettings().pageNumberEnabled).toBe(false);
-      expect(pageBtn.textContent).toContain("已关闭");
       expect(view.renderCardPreview).toHaveBeenCalled();
 
-      pageBtn.click();
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new Event("change"));
       expect(session.getLayoutSettings().pageNumberEnabled).toBe(true);
-      expect(pageBtn.textContent).toContain("已开启");
+    });
+
+    it("点击开关行（非开关本体）同样能切换页码", () => {
+      const label = view.cardSettingsWrapper.querySelector(
+        ".icard-settings-toggle-row .icard-settings-toggle-label"
+      );
+      label.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(session.getLayoutSettings().pageNumberEnabled).toBe(false);
+      expect(view.cardSettingsRefs.pageToggleInput.checked).toBe(false);
     });
 
     it("修改水印输入框更新 watermarkText 并重排版", () => {
@@ -292,24 +326,35 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(session.getLayoutSettings().pagePadding).toBe(defaults.pagePadding);
     });
 
-    it("点击封面开关更新 coverEnabled 并显隐封面字段表单", () => {
-      const coverBtn = view.cardSettingsRefs.coverToggleBtn;
+    it("切换封面开关更新 coverEnabled 并显隐封面字段表单", () => {
+      const coverToggle = view.cardSettingsRefs.coverToggleInput;
       const fieldsWrap = view.cardSettingsRefs.coverFieldsWrap;
 
       expect(session.getLayoutSettings().coverEnabled).toBe(false);
-      expect(coverBtn.textContent).toContain("已关闭");
+      expect(coverToggle.checked).toBe(false);
       expect(fieldsWrap.classList.contains("hidden")).toBe(true);
 
       // 开启封面
-      coverBtn.click();
+      coverToggle.checked = true;
+      coverToggle.dispatchEvent(new Event("change"));
       expect(session.getLayoutSettings().coverEnabled).toBe(true);
-      expect(coverBtn.textContent).toContain("已开启");
       expect(fieldsWrap.classList.contains("hidden")).toBe(false);
       expect(view.renderCardPreview).toHaveBeenCalled();
 
       // 表单字段回显笔记初值
       expect(view.cardSettingsRefs.coverInputs.title.value).toBe("测试标题");
       expect(view.cardSettingsRefs.coverInputs.author.value).toBe("测试作者");
+    });
+
+    it("点击封面开关行（非开关本体）同样能切换封面", () => {
+      const row = view.cardSettingsWrapper.querySelector(".icard-settings-subpanel-cover .icard-settings-toggle-row");
+      expect(row).toBeTruthy();
+
+      row.click();
+      expect(session.getLayoutSettings().coverEnabled).toBe(true);
+
+      row.click();
+      expect(session.getLayoutSettings().coverEnabled).toBe(false);
     });
 
     it("修改封面字段（标题/摘要）调用 applyCoverFields 并触发重排版", () => {

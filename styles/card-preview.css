@@ -53,7 +53,15 @@
   box-sizing: border-box;
 }
 
-/* 摘要条：页数 / 过期提示 / 省略与资源警告 */
+/* 顶部工具条：左「状态」、右「操作」同排成组 */
+.icard-preview-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 状态区：页数 / 过期提示 / 省略与资源警告 */
 .icard-preview-summary {
   display: flex;
   flex-wrap: wrap;
@@ -61,25 +69,40 @@
   gap: 6px;
   font-size: 12px;
   color: var(--text-muted);
+  min-width: 0;
 }
 
-/* 封面设置入口（摘要条右缘；封面 Modal 的开关态高亮） */
-.icard-preview-cover-btn {
+/* 操作区（贴右缘）：缩放分段 + 封面设置入口 */
+.icard-preview-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* 封面设置入口：只负责「一步跳到封面设置」。
+   封面开没开由侧栏那枚开关表达（同一事实只说一次），所以这里不用状态文案。 */
+.icard-preview-cover-entry {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
   border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
   background: transparent;
   color: var(--text-muted);
   box-shadow: none;
-  font-size: 11.5px;
-  padding: 2px 10px;
-  border-radius: 999px;
   cursor: pointer;
 }
-.icard-preview-cover-btn:hover { color: var(--text-normal); }
-.icard-preview-cover-btn.is-active {
+.icard-preview-cover-entry:hover { color: var(--text-normal); }
+.icard-preview-cover-entry.is-active {
   border-color: var(--interactive-accent);
   color: var(--interactive-accent);
 }
+.icard-preview-cover-entry svg { width: 14px; height: 14px; }
 
 .icard-preview-summary-count {
   font-weight: 600;
@@ -115,53 +138,87 @@
   color: var(--text-error, #b3261e);
 }
 
-/* 缩放控制（仅展示层） */
+/* 缩放控制（仅展示层）：灰轨道 + 两端按钮的分段胶囊，
+   与预览区「模式胶囊」、侧栏子 Tab 同一套语汇 */
 .icard-preview-zoombar {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--background-modifier-hover);
   font-size: 12px;
   color: var(--text-muted);
 }
 
+.icard-preview-zoom-percent {
+  min-width: 36px;
+  text-align: center;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
 .icard-preview-zoom-btn {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 6px;
-  border: 1px solid var(--background-modifier-border);
-  background: var(--background-secondary);
-  color: var(--text-normal);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  box-shadow: none;
   cursor: pointer;
+  font-size: 13px;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .icard-preview-zoom-btn:hover {
-  background: var(--background-modifier-hover);
+  background: var(--background-primary);
+  color: var(--text-normal);
 }
 
-/* 缩略页列表：page-item 外壳承载缩放尺寸，内部 .icard-page transform 缩放 */
+/* 缩略页列表：page-item 外壳承载缩放尺寸，内部 .icard-page transform 缩放。
+   「画板」底：卡片直接贴在预览容器同色底上会糊成一片；给页区一圈画板色 +
+   内边距，卡片才能「浮」出来。⚠️ 不能用 --background-secondary——亮色下它（≈#f6f6f6）
+   与 simple-white 封面底 token（#f3f4f6）几乎同色，封面会融进背景；
+   改用 modifier-border（亮 ≈#e0e0e0 / 暗 ≈#333），与亮暗两系主题底都拉得开。 */
 .icard-preview-pages {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 14px;
+  gap: 16px;
   align-content: flex-start;
+  padding: 16px 16px 20px;
+  border-radius: 12px;
+  background: var(--background-modifier-border);
 }
 
 .icard-preview-page-item {
   position: relative;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
+  /* 双层阴影：近处一圈细的定边缘，远处一层大而散的给「纸片浮起」的厚度 */
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 10px 24px -12px rgba(0, 0, 0, 0.28);
   cursor: pointer;
   outline: 2px solid transparent;
   outline-offset: 2px;
-  transition: outline-color 120ms ease;
+  transition:
+    outline-color 120ms ease,
+    transform 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .icard-preview-page-item:hover {
   outline-color: var(--background-modifier-border-hover);
+  transform: translateY(-2px);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 16px 32px -12px rgba(0, 0, 0, 0.32);
 }
 
 .icard-preview-page-item.is-selected {
@@ -172,15 +229,22 @@
   transform-origin: top left;
 }
 
+/* 页码徽章贴右上角，不贴右下：卡片页脚的页脚条本身就是「左页码 / 右水印」，
+   徽章原先落位 `right/bottom: 6px` 会正好压在水印上（用户 2026-09-20 反馈）。
+   右上角同时避开页脚左侧的页码，两块「第几页」的信息也不再互相遮挡。 */
 .icard-preview-page-badge {
   position: absolute;
   right: 6px;
-  bottom: 6px;
-  padding: 1px 7px;
+  top: 6px;
+  padding: 2px 8px;
   border-radius: 8px;
   font-size: 10px;
-  background: rgba(0, 0, 0, 0.45);
+  /* 毛玻璃片：半透黑 + 模糊，比平涂黑底少一点「调试标」感（徽章只在预览 DOM，不进导出图） */
+  background: rgba(20, 20, 22, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   color: #fff;
+  letter-spacing: 0.3px;
   pointer-events: none;
 }
 

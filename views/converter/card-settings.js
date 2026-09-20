@@ -96,10 +96,11 @@ import { getObsidianRequestUrl } from '../../services/obsidian-compat.js';
  *     coverSection?: ObsidianElementLike | null,
  *     themeGrid?: ObsidianElementLike | null,
  *     ratioGrid?: ObsidianElementLike | null,
- *     pageToggleBtn?: ObsidianElementLike | null,
+ *     pageToggleInput?: HTMLInputElement | null,
  *     watermarkInput?: HTMLInputElement | null,
+ *     tuneValuesEl?: ObsidianElementLike | null,
  *     sliders?: Record<string, { input: HTMLInputElement, valueEl: ObsidianElementLike }>,
- *     coverToggleBtn?: ObsidianElementLike | null,
+ *     coverToggleInput?: HTMLInputElement | null,
  *     coverFieldsWrap?: ObsidianElementLike | null,
  *     coverInputs?: Record<string, HTMLInputElement>,
  *     coverModeSelect?: HTMLSelectElement | null,
@@ -151,17 +152,20 @@ buildCardSettingsPanel() {
   wrapper.empty();
 
   // —— 1. 顶部双 Tab 导航（分段胶囊：排版 Token vs 封面设置）——
+  // 用「灰轨道 + 白胶囊」的分段控件，而不是 apple-btn-size 的蓝底选中态：后者与下面的
+  // 主题/比例/页码是同一个类，选中态长得一模一样，页面里出现三处「蓝色选中」就分不清
+  // 哪个是「我在哪个页签」、哪个是「这个值被选中了」。蓝色留给取值，导航只表达位置。
   const navWrap = wrapper.createEl('div', { cls: 'icard-settings-nav' });
-  const navRow = navWrap.createEl('div', { cls: 'apple-btn-row icard-settings-subtabs' });
+  const navRow = navWrap.createEl('div', { cls: 'icard-settings-segmented' });
   const tokenTabBtn = navRow.createEl('button', {
-    cls: 'apple-btn-size active',
+    cls: 'icard-settings-segment is-active',
     text: '排版 Token',
-    attr: { type: 'button', 'data-tab': 'token', 'title': '主题、比例、字号、边距、页脚排版参数' },
+    attr: { type: 'button', 'data-tab': 'token', 'aria-pressed': 'true', 'title': '主题、比例、字号、边距、页脚排版参数' },
   });
   const coverTabBtn = navRow.createEl('button', {
-    cls: 'apple-btn-size',
+    cls: 'icard-settings-segment',
     text: '封面设置',
-    attr: { type: 'button', 'data-tab': 'cover', 'title': '封面开关、主标题、作者、日期与摘要' },
+    attr: { type: 'button', 'data-tab': 'cover', 'aria-pressed': 'false', 'title': '封面开关、主标题、作者、日期与摘要' },
   });
 
   tokenTabBtn.addEventListener('click', () => { this.switchCardSettingsSubTab('token'); });
@@ -178,10 +182,11 @@ buildCardSettingsPanel() {
     coverSection,
     themeGrid: null,
     ratioGrid: null,
-    pageToggleBtn: null,
+    pageToggleInput: null,
     watermarkInput: null,
+    tuneValuesEl: null,
     sliders: {},
-    coverToggleBtn: null,
+    coverToggleInput: null,
     coverFieldsWrap: null,
     coverInputs: {},
   });
@@ -219,17 +224,33 @@ buildCardSettingsPanel() {
     }
   });
 
-  // 正文页码
+  // 正文页码：开关（与文章模式「正文标点标准化」、贴图模式「配图序号」同一套 .apple-toggle 语汇）。
+  // 原来是一个「页码 · 已开启 / 已关闭」按钮——状态塞在文案里，且和主题/比例的长得一样，
+  // 看不出「这是个开关」。开关自带状态表达，就不必再回显一次。
   this.createSection(tokenSection, '正文页码', (section) => {
-    const pageBtn = section.createEl('button', {
-      cls: 'apple-btn-size',
-      text: '页码',
-      attr: { 'data-value': 'pageNumberEnabled', 'title': '正文页脚左侧显示「第 N 页 / 共 M 页」；封面不编号' },
+    const row = section.createEl('div', { cls: 'icard-settings-toggle-row' });
+    const copy = row.createEl('div', { cls: 'icard-settings-toggle-copy' });
+    copy.createEl('span', { cls: 'icard-settings-toggle-label', text: '页脚显示页码' });
+    // 页码格式（1 / 16）在右侧预览里直接看得到，说明只留「封面是例外」这一条
+    copy.createEl('span', { cls: 'icard-settings-toggle-desc', text: '封面页不编号' });
+
+    // 外层用 div 而非 label：label 会把点击再次转派给 input，和下面的整行点击叠加成「点一下翻两次」
+    const toggle = row.createEl('div', { cls: 'apple-toggle' });
+    const checkbox = /** @type {HTMLInputElement} */ (
+      /** @type {unknown} */ (toggle.createEl('input', { type: 'checkbox', cls: 'apple-toggle-input' }))
+    );
+    toggle.createEl('span', { cls: 'apple-toggle-slider' });
+    refs.pageToggleInput = checkbox;
+
+    checkbox.addEventListener('change', () => {
+      this.applyCardLayoutSetting('pageNumberEnabled', checkbox.checked);
     });
-    refs.pageToggleBtn = pageBtn;
-    pageBtn.addEventListener('click', () => {
-      const current = this.getCurrentCardLayoutSettings();
-      this.applyCardLayoutSetting('pageNumberEnabled', !(current.pageNumberEnabled !== false));
+    // 整行可点（与贴图模式「配图序号」同一口径），不必去戳那枚 40px 的开关
+    row.addEventListener('click', (e) => {
+      if (e.target === checkbox) return;
+      e.preventDefault();
+      checkbox.checked = !checkbox.checked;
+      checkbox.dispatchEvent(new Event('change'));
     });
   });
 
@@ -248,18 +269,26 @@ buildCardSettingsPanel() {
     });
     section.createEl('div', {
       cls: 'icard-settings-note',
-      text: `文案显示在每页底部页脚右侧；建议不超过 ${CARD_WATERMARK_SOFT_LIMIT} 字，过长会提示而非裁切。`,
+      text: `每页页脚右侧；封面上与「作者」并入同一行，两者文案相同则只显示一次。建议不超过 ${CARD_WATERMARK_SOFT_LIMIT} 字。`,
     });
   });
 
-  // 滑块
+  // 滑块（折叠，默认收起）：日常调的是主题与比例，字号 / 行高 / 边距属偶尔微调，
+  // 常驻三个滑块会把「选主题」这个主操作压下去。与文章模式的「排版间距」同款：
+  // 摘要在右侧回显当前值，不展开也知道现状。
   const sliderRows = [
     { key: 'fontSize', label: '正文字号' },
     { key: 'lineHeight', label: '行高' },
     { key: 'pagePadding', label: '页面边距' },
   ];
+  const tuneGroup = tokenSection.createEl('details', { cls: 'apple-settings-details icard-settings-tune' });
+  const tuneSummary = tuneGroup.createEl('summary', { cls: 'apple-settings-summary' });
+  tuneSummary.createEl('span', { text: '字号与间距' });
+  refs.tuneValuesEl = tuneSummary.createEl('span', { cls: 'icard-settings-tune-values' });
+  const tuneArea = tuneGroup.createDiv({ cls: 'apple-settings-area apple-settings-advanced-area' });
+
   for (const row of sliderRows) {
-    this.createSection(tokenSection, row.label, (section) => {
+    this.createSection(tuneArea, row.label, (section) => {
       const limit = /** @type {Record<string, {min: number, max: number, step: number} | undefined>} */ (CARD_LAYOUT_LIMITS)[row.key];
       if (!limit) return;
       const container = section.createEl('div', { cls: 'apple-slider-container' });
@@ -282,16 +311,30 @@ buildCardSettingsPanel() {
   }
 
   // ========== 子 Tab 2：封面设置 ==========
-  this.createSection(coverSection, '封面启用', (section) => {
-    const toggleBtn = section.createEl('button', {
-      cls: 'apple-btn-size',
-      text: '封面',
-      attr: { type: 'button', 'title': '开启后卡片以一张主题配套的文字封面开头（不编号）' },
+  // 封面启用：与「正文页码」同一套开关语汇——状态由开关本体表达，
+  // 不再写成「封面 · 已开启」的按钮（状态塞在文案里，还长得跟下方的值选中态一样）。
+  this.createSection(coverSection, '封面页', (section) => {
+    const row = section.createEl('div', { cls: 'icard-settings-toggle-row' });
+    const copy = row.createEl('div', { cls: 'icard-settings-toggle-copy' });
+    copy.createEl('span', { cls: 'icard-settings-toggle-label', text: '生成封面页' });
+    copy.createEl('span', { cls: 'icard-settings-toggle-desc', text: '置于首张，不参与编号' });
+
+    // 外层用 div 而非 label：label 会把点击再次转派给 input，和下面的整行点击叠加成「点一下翻两次」
+    const toggle = row.createEl('div', { cls: 'apple-toggle' });
+    const checkbox = /** @type {HTMLInputElement} */ (
+      /** @type {unknown} */ (toggle.createEl('input', { type: 'checkbox', cls: 'apple-toggle-input' }))
+    );
+    toggle.createEl('span', { cls: 'apple-toggle-slider' });
+    refs.coverToggleInput = checkbox;
+
+    checkbox.addEventListener('change', () => {
+      this.applyCardLayoutSetting('coverEnabled', checkbox.checked);
     });
-    refs.coverToggleBtn = toggleBtn;
-    toggleBtn.addEventListener('click', () => {
-      const current = this.getCurrentCardLayoutSettings();
-      this.applyCardLayoutSetting('coverEnabled', !(current.coverEnabled === true));
+    row.addEventListener('click', (e) => {
+      if (e.target === checkbox) return;
+      e.preventDefault();
+      checkbox.checked = !checkbox.checked;
+      checkbox.dispatchEvent(new Event('change'));
     });
   });
 
@@ -478,8 +521,15 @@ switchCardSettingsSubTab(subTab) {
   state.activeCardSubTab = subTab;
   const refs = state.cardSettingsRefs;
   if (!refs) return;
-  if (refs.tokenTabBtn) refs.tokenTabBtn.classList.toggle('active', subTab === 'token');
-  if (refs.coverTabBtn) refs.coverTabBtn.classList.toggle('active', subTab === 'cover');
+  /** @param {ObsidianElementLike | null | undefined} btn @param {boolean} on */
+  const syncSegment = (btn, on) => {
+    if (!btn) return;
+    const el = /** @type {HTMLElement} */ (btn);
+    el.classList.toggle('is-active', on);
+    el.setAttribute('aria-pressed', String(on));
+  };
+  syncSegment(refs.tokenTabBtn, subTab === 'token');
+  syncSegment(refs.coverTabBtn, subTab === 'cover');
   if (refs.tokenSection) refs.tokenSection.classList.toggle('hidden', subTab !== 'token');
   if (refs.coverSection) refs.coverSection.classList.toggle('hidden', subTab !== 'cover');
   this.renderCardSettingsValues();
@@ -648,11 +698,9 @@ renderCardSettingsValues() {
       );
     });
   }
-  if (refs.pageToggleBtn) {
-    const pageOn = settings.pageNumberEnabled !== false;
-    const btn = /** @type {HTMLElement} */ (refs.pageToggleBtn);
-    btn.classList.toggle('active', pageOn);
-    btn.textContent = pageOn ? '页码 · 已开启' : '页码 · 已关闭';
+  if (refs.pageToggleInput) {
+    // 缺省视为开启（与旧按钮口径一致：pageNumberEnabled !== false）
+    refs.pageToggleInput.checked = settings.pageNumberEnabled !== false;
   }
   if (refs.watermarkInput && document.activeElement !== refs.watermarkInput) {
     refs.watermarkInput.value = String(settings.watermarkText || '');
@@ -663,13 +711,20 @@ renderCardSettingsValues() {
     const formatter = /** @type {Record<string, (v: number) => string>} */ (SLIDER_FORMAT)[key];
     ui.valueEl.textContent = formatter ? formatter(value) : String(value);
   }
+  // 折叠摘要回显当前值：不展开也知道字号/行高/边距现在是多少
+  if (refs.tuneValuesEl) {
+    const fmt = (key, raw) => {
+      const formatter = /** @type {Record<string, (v: number) => string>} */ (SLIDER_FORMAT)[key];
+      return formatter ? formatter(Number(raw)) : String(raw);
+    };
+    /** @type {HTMLElement} */ (refs.tuneValuesEl).textContent =
+      `字号 ${fmt('fontSize', settings.fontSize)} · 行高 ${fmt('lineHeight', settings.lineHeight)} · 边距 ${fmt('pagePadding', settings.pagePadding)}`;
+  }
 
   // —— 2. 封面设置同步 ——
-  if (refs.coverToggleBtn) {
+  if (refs.coverToggleInput) {
     const coverOn = settings.coverEnabled === true;
-    const btn = /** @type {HTMLElement} */ (refs.coverToggleBtn);
-    btn.classList.toggle('active', coverOn);
-    btn.textContent = coverOn ? '封面 · 已开启' : '封面 · 已关闭';
+    refs.coverToggleInput.checked = coverOn;
     if (refs.coverFieldsWrap) {
       refs.coverFieldsWrap.classList.toggle('hidden', !coverOn);
     }

@@ -39,6 +39,27 @@ describe('assembleCardCoverPage（DOM 装配）', () => {
     expect(page.querySelector('.icard-cover-meta')).toBeNull();
     expect(page.querySelector('.icard-cover-kicker')).toBeNull();
   });
+
+  it('封面 meta 行：作者与水印内容不同则都显示，相同则去重（常见的同名署名）', () => {
+    const base = { theme: THEME, size: SIZE, document: document };
+    const fields = (author) => ({ title: 'T', author, date: '', excerpt: '' });
+
+    // 不同内容：两者语义不同（署名 vs 页面标记），都展示
+    const both = assembleCardCoverPage({ ...base, fields: fields('David'), watermarkText: '内部资料' });
+    expect(both.querySelector('.icard-cover-meta')?.textContent).toBe('David · 内部资料');
+
+    // 相同内容：只显示一次，不连写成「David · David」
+    const same = assembleCardCoverPage({ ...base, fields: fields('David'), watermarkText: 'David' });
+    expect(same.querySelector('.icard-cover-meta')?.textContent).toBe('David');
+
+    // 前后空白不同不影响去重判定
+    const padded = assembleCardCoverPage({ ...base, fields: fields('David'), watermarkText: '  David  ' });
+    expect(padded.querySelector('.icard-cover-meta')?.textContent).toBe('David');
+
+    // 只填水印
+    const onlyWatermark = assembleCardCoverPage({ ...base, fields: fields(''), watermarkText: '内部资料' });
+    expect(onlyWatermark.querySelector('.icard-cover-meta')?.textContent).toBe('内部资料');
+  });
 });
 
 describe('renderCardPages × 封面/页码/水印（C01③）', () => {

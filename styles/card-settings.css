@@ -5,7 +5,8 @@
 滑块复用 style-controls.css 的 apple-slider，按钮复用 style-panel.css 的
 apple-btn-row/apple-btn-size；分节间距由本文件的
   `.apple-settings-card-wrapper .apple-setting-section` 覆盖块对齐文章模式设置面板。
-子 Tab 导航（.icard-settings-nav）置顶吸顶，见该块的注释。
+子 Tab 导航（.icard-settings-nav）置顶吸顶，其上的分段控件 .icard-settings-segmented
+用「灰轨道 + 白胶囊」把导航与取值区分开，见该块的注释。
 本分片只保留卡片设置特有的少量样式。作用域 icard-settings- 前缀，
 仅作用于卡片模式设置浮层（.apple-settings-card-wrapper），不污染文章/贴图设置。
 
@@ -14,6 +15,9 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 - 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
 - 新增选择器必须以 icard-settings- 前缀作用域，避免污染宿主 UI。
 - 沿用 Obsidian 宿主变量（--background-* / --text-* / --apple-*），不覆盖宿主配色。
+- 给 button 写样式要提防宿主全局规则 `button:not(.clickable-icon)`（特异性 0-1-1）：
+  单个类选择器（0-1-0）盖不住它的 background-color / box-shadow，需加前缀凑到 0-2-0，
+  并写成 background-color / box-shadow 长写（简写与长写在层叠里是逐条属性比对的）。
 */
 
 /* 滑块数值标签（右对齐，与文章模式「页面两侧留白」同款口径） */
@@ -76,12 +80,16 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   z-index: 6;
   margin: -24px 0 6px;
   padding: 24px 0 10px;
-  background: rgba(255, 255, 255, 0.94);
+  /* 必须**完全不透明**：吸顶之后下方内容会从它背后滑过，94% 白时下一节的「主题」
+     小标题会透出一缕灰字，看着像导航里多了一行莫名其妙的小字。
+     取色与浮层本身对齐（.apple-settings-overlay 是 rgba(255,255,255,.72) + 磨砂，
+     暗色是 rgba(30,30,30,.8)），所以这里用同色系的实色。 */
+  background: #ffffff;
   border-bottom: 1px solid var(--background-modifier-border);
 }
 
 .theme-dark .icard-settings-nav {
-  background: rgba(30, 30, 30, 0.94);
+  background: #1e1e1e;
 }
 
 /* 移动端浮层的上内边距是 12px，抵消量同步 */
@@ -90,18 +98,130 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   padding-top: 12px;
 }
 
-.icard-settings-subtabs {
+/* —— 子 Tab 分段控件（排版 Token vs 封面设置）——
+   沿用预览区「模式胶囊」（.apple-preview-mode-segment）的同一套语汇：灰轨道 + 白色胶囊。
+   不用 .apple-btn-size 的蓝底选中态，是因为蓝色在本页已经被用来表达「这个值被选中」
+   （主题、比例、页码三处），导航再占一次就分不清「我在哪个页签」和「选了哪个值」。
+   蓝色只留给取值，导航只表达位置。
+   轨道撑满整行，两个分段各占一半；高度与下方 .apple-btn-size 对齐（约 30px）。 */
+.icard-settings-segmented {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
   width: 100%;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
 }
-.icard-settings-subtabs .apple-btn-size {
+
+.theme-dark .icard-settings-segmented {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ⚠️ 选择器必须带 .icard-settings-segmented 前缀（凑到 0-2-0）。
+   宿主有一条全局规则：button:not(.clickable-icon) { background-color: var(--interactive-normal);
+   box-shadow: var(--input-shadow); }，特异性 0-**1-1**，**高于**单个类选择器（0-1-0）。
+   亮色默认主题里 --interactive-normal 就是白，于是「未选中」也被刷成白底 + 宿主投影，
+   和选中的白胶囊一模一样 —— 选中态等于不存在（2026-09-20 真机复现）。
+   另外这里用 background-color / box-shadow 长写，别只写 background 简写：
+   简写与长写在层叠里是**逐条属性**比特异性的，写简写并不能一并盖掉宿主的长写。 */
+.icard-settings-segmented .icard-settings-segment {
   flex: 1 1 0;
-  text-align: center;
-  justify-content: center;
+  min-width: 0;
+  height: 28px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
+
+.icard-settings-segmented .icard-settings-segment:hover {
+  color: var(--text-normal);
+  background-color: rgba(0, 0, 0, 0.045);
+}
+
+.theme-dark .icard-settings-segmented .icard-settings-segment:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* 选中段：亮色是「白胶囊浮在灰轨道上」，暗色改成提亮胶囊（整段铺白在暗色里太扎眼）。
+   底色差 + 描边 + 投影三层一起给，少一层在深色主题里就会被吃掉。 */
+.icard-settings-segmented .icard-settings-segment.is-active {
+  color: var(--text-normal);
+  font-weight: 600;
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+.theme-dark .icard-settings-segmented .icard-settings-segment.is-active {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* 折叠摘要右侧的当前值回显（字号 / 行高 / 边距），与文章模式「排版间距」摘要同款口径 */
+.icard-settings-tune-values {
+  margin-left: auto;
+  margin-right: 8px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--apple-secondary, var(--text-muted));
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 折叠区是「排版 Token」页签的最后一节。上面各节靠 .apple-setting-section 的 padding 收尾，
+   而 details 自带 margin-bottom:16px，和浮层自身的下内边距叠起来会多出一截，所以归零。
+   ⚠️ 不要在这里补 padding「留呼吸」：details 有自己的背景色（比摘要浅），收起时那点 padding
+   会渲染成摘要下面的一条白框（2026-09-20 真机复现）。底部呼吸交给浮层的内边距。 */
+.apple-settings-card-wrapper .icard-settings-tune {
+  margin-bottom: 0;
+}
+
 .icard-settings-cover-actions {
   margin-top: 10px;
+}
+
+/* 开关行（正文页码）：左侧说明 + 右侧 .apple-toggle 开关，整行可点。
+   与贴图模式「配图序号」（.apple-sticker-toggle-*）同一套口径，只是作用域换成卡片前缀。 */
+.icard-settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  cursor: pointer;
+  user-select: none;
+}
+
+.icard-settings-toggle-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.icard-settings-toggle-label {
+  font-size: 12px;
+  color: var(--text-normal);
+}
+
+.icard-settings-toggle-desc {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-muted);
 }
 
 /* AI 封面控件与提示词域 */

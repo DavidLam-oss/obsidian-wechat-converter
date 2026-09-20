@@ -98,6 +98,30 @@ function buildPageFooter(ownerDoc, pageNumber, pageCount, enabled = true, waterm
 }
 
 /**
+ * 封面底部 meta 行：作者与水印合并展示（David 2026-09-13：不分行），**但内容相同时只显示一次**。
+ *
+ * 两者语义不同——作者是封面署名，水印是页面级标记（正文每页页脚右侧也有一份）——
+ * 所以内容不同时都该出现；而把同一个名字连写两遍没有任何信息量，
+ * 用户把两处都填成自己的名字又是最常见用法，因此这里按文案去重。
+ * @param {unknown} author
+ * @param {unknown} watermark
+ * @returns {string}
+ */
+function joinCoverMeta(author, watermark) {
+  /** @type {Set<string>} */
+  const seen = new Set();
+  /** @type {string[]} */
+  const parts = [];
+  for (const raw of [author, watermark]) {
+    const text = String(raw || "").trim();
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    parts.push(text);
+  }
+  return parts.join(" · ");
+}
+
+/**
  * 页面装配：主题样式 + 内容 + 页脚条（左页码右水印，均可关）。
  * @param {object} args
  * @param {import('./card-themes.js').CardTheme} args.theme CardTheme
@@ -330,10 +354,11 @@ export function assembleCardCoverPage(args) {
   }
 
   // 封面底部一行兼署名与水印（David 2026-09-13：作者与水印不分行，合并展示）；
-  // 正文页水印仍是独立覆盖层。任一为空则只显示另一项，都空则整段省略。
+  // 正文页水印另在页脚右侧展示。任一为空则只显示另一项，都空则整段省略；
+  // 两者内容相同（最常见的「两处都填自己名字」）按文案去重，不连写两遍。
   const meta = ownerDoc.createElement("div");
   meta.className = "icard-cover-meta";
-  meta.textContent = [fields.author, args.watermarkText].filter(Boolean).join(" · ");
+  meta.textContent = joinCoverMeta(fields.author, args.watermarkText);
   if (meta.textContent) body.append(meta);
 
   page.append(body);

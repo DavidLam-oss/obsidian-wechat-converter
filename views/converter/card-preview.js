@@ -66,6 +66,7 @@ import {
   createCardSessionRegistry,
   createPreviewRunner,
 } from '../../services/card-session.js';
+import { getObsidianSetIcon } from '../../services/obsidian-compat.js';
 
 /** 编辑合并：停止输入 300ms 后启动排版（§5.6） */
 export const CARD_PREVIEW_EDIT_MERGE_MS = 300;
@@ -473,8 +474,10 @@ renderCardPreviewDom() {
   const shell = /** @type {ObsidianElementLike} */ (/** @type {unknown} */ (container.createEl('div', { cls: 'icard-preview-shell' })));
   cardStateOf(this).cardPreviewShell = shell;
 
-  // —— 摘要条（B02 ③：摘要 / 警告 / 过期状态）——
-  const summary = shell.createEl('div', { cls: 'icard-preview-summary' });
+  // —— 顶部工具条：左「状态与警告」、右「视图操作」，同排成组（原先摘要与缩放各占一行，右缘两行参差）——
+  const toolbar = shell.createEl('div', { cls: 'icard-preview-toolbar' });
+  const summary = toolbar.createEl('div', { cls: 'icard-preview-summary' });
+  const tools = toolbar.createEl('div', { cls: 'icard-preview-tools' });
   const pageCount = Number(outcome?.pageCount || 0);
   const hasCover = outcome?.hasCover === true;
   summary.createEl('span', {
@@ -514,13 +517,7 @@ renderCardPreviewDom() {
       text: '水印过长，可能被页边裁切，建议缩短',
     });
   }
-  // —— 封面入口（直通侧边栏面板的「封面设置」子 Tab）——
-  const coverBtn = summary.createEl('button', {
-    cls: `icard-preview-cover-btn${hasCover ? ' is-active' : ''}`,
-    text: hasCover ? '封面 · 开' : '封面',
-    attr: { type: 'button', 'aria-label': '封面设置', 'title': '封面开关与标题/作者/日期/摘要（侧边栏面板）' },
-  });
-  coverBtn.addEventListener('click', () => { this.openCardSettingsTab('cover'); });
+  // 封面入口与缩放控件一起在工具条右缘创建（见下方 zoomBar 之后）。
 
   // —— 全文省略空态（§B03 ⑤：正文全部未进入卡片时不产空白卡，逐条可定位）——
   if (pageCount === 0 && omissionTotal > 0) {
@@ -538,13 +535,24 @@ renderCardPreviewDom() {
     return /** @type {ObsidianElementLike} */ (/** @type {unknown} */ (shell));
   }
 
-  // —— 缩放控制（仅展示层）——
-  const zoomBar = shell.createEl('div', { cls: 'icard-preview-zoombar' });
+  // —— 缩放控制（仅展示层）：分段胶囊，与模式胶囊、侧栏子 Tab 同一套语汇 ——
+  const zoomBar = tools.createEl('div', { cls: 'icard-preview-zoombar' });
   const zoomOut = zoomBar.createEl('button', { cls: 'icard-preview-zoom-btn', attr: { 'aria-label': '缩小预览' }, text: '−' });
   zoomOut.addEventListener('click', () => this.adjustCardPreviewZoom(-1));
   zoomBar.createEl('span', { cls: 'icard-preview-zoom-percent', text: `${Math.round(this.getCardPreviewZoom() * 100)}%` });
   const zoomIn = zoomBar.createEl('button', { cls: 'icard-preview-zoom-btn', attr: { 'aria-label': '放大预览' }, text: '+' });
   zoomIn.addEventListener('click', () => this.adjustCardPreviewZoom(1));
+
+  // —— 封面设置入口（直通侧边栏面板的「封面设置」子 Tab）——
+  // 做成图标而非「封面 · 开」：封面开没开由侧栏那枚开关表达（同一事实只说一次），
+  // 这里只负责「一步跳到封面设置」；高亮仍跟随封面开关态，便于判断当前是否带封面。
+  const setIcon = getObsidianSetIcon();
+  const coverBtn = tools.createEl('button', {
+    cls: `icard-preview-cover-entry${hasCover ? ' is-active' : ''}`,
+    attr: { type: 'button', 'aria-label': '封面设置', 'title': '封面开关与标题/作者/日期/摘要（侧边栏面板）' },
+  });
+  if (typeof setIcon === 'function') setIcon(coverBtn, 'image');
+  coverBtn.addEventListener('click', () => { this.openCardSettingsTab('cover'); });
 
   // —— 缩略页（封面在列首、不编号，C01③）——
   // 2026-09-20：不再挂勾选与复制控件。点页面本体就只做源定位（版本安全，见 locateCardPageSource）。
