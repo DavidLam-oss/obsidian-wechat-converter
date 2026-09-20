@@ -43,8 +43,9 @@ describe('AppleStyleView native render + lifecycle', () => {
     expect(view.getDisplayText()).toBe('Obsidian 发布助手');
   });
 
-  it('onOpen should render the recent Markdown file even when the new sidebar is active', async () => {
+  it('onOpen should keep the landing placeholder until a markdown note is clicked', async () => {
     vi.useFakeTimers();
+    let activeLeafHandler;
     const recentFile = {
       path: 'notes/first-open.md',
       basename: 'first-open',
@@ -59,7 +60,10 @@ describe('AppleStyleView native render + lifecycle', () => {
       workspace: {
         getActiveViewOfType: vi.fn(() => null),
         getActiveFile: vi.fn(() => recentFile),
-        on: vi.fn(() => ({ eventName: 'registered' })),
+        on: vi.fn((eventName, handler) => {
+          if (eventName === 'active-leaf-change') activeLeafHandler = handler;
+          return { eventName };
+        }),
       },
       vault: {
         read: vi.fn(async () => '# first open'),
@@ -73,19 +77,57 @@ describe('AppleStyleView native render + lifecycle', () => {
       view.docTitleText = container.createDiv({ text: '未选择文档' });
     });
     vi.spyOn(view, 'renderMarkdownForPreview').mockResolvedValue('<section><p>first open</p></section>');
+    vi.spyOn(view, 'registerScrollSync').mockImplementation(() => {});
 
     await view.onOpen();
 
+    // 打开后保留 Landing 占位页，只做状态识别，不渲染
+    expect(view.landingGateActive).toBe(true);
     expect(view.lastActiveFile).toBe(recentFile);
     expect(view.docTitleText.textContent).toBe('first-open');
     expect(view.currentHtml).toBeNull();
+    expect(view.previewContainer.querySelector('.apple-placeholder')).toBeTruthy();
 
+    // 不再有打开时的 500ms 自动转换
     await vi.advanceTimersByTimeAsync(500);
+    expect(view.currentHtml).toBeNull();
+    expect(view.previewContainer.querySelector('.apple-placeholder')).toBeTruthy();
+
+    // 焦点切到非笔记 leaf（如本侧栏）不解除门控：回落链路不触发渲染
+    await activeLeafHandler({ view: { getViewType: () => 'apple-style-converter' } });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(view.landingGateActive).toBe(true);
+    expect(view.currentHtml).toBeNull();
+
+    // 布局归位期补发的笔记 leaf 事件（无真实用户交互）同样不解除门控
+    await activeLeafHandler({
+      view: {
+        getViewType: () => 'markdown',
+        file: recentFile,
+        editor: { getValue: () => '# first open' },
+      },
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(view.landingGateActive).toBe(true);
+    expect(view.currentHtml).toBeNull();
+
+    // 用户真实交互（点击笔记 = 指针按下）→ 再切到笔记 leaf → 解除门控并渲染
+    document.dispatchEvent(new Event('pointerdown'));
+    await activeLeafHandler({
+      view: {
+        getViewType: () => 'markdown',
+        file: recentFile,
+        editor: { getValue: () => '# first open' },
+      },
+    });
+    await vi.advanceTimersByTimeAsync(0);
     await vi.waitFor(() => {
       expect(view.currentHtml).toContain('first open');
     });
 
-    expect(view.app.vault.read).toHaveBeenCalledWith(recentFile);
+    expect(view.landingGateActive).toBe(false);
+    // leaf 点击路径带编辑器实时内容渲染（sourceOverride），不读 vault 缓存
+    expect(view.renderMarkdownForPreview).toHaveBeenCalledWith('# first open', 'notes/first-open.md');
     expect(view.previewContainer.classList.contains('apple-has-content')).toBe(true);
   });
 
@@ -320,6 +362,28 @@ describe('AppleStyleView native render + lifecycle', () => {
     frames.shift()();
 
     expect(view.previewContainer.scrollTop).toBe(450);
+  });
+
+  it('onResize should not auto-render while the landing gate is active', async () => {
+    vi.useFakeTimers();
+    const view = new AppleStyleView(null, { settings: {} });
+    view.previewContainer = createObsidianLikeElement();
+    view.containerEl = createObsidianLikeElement();
+    // offsetParent 在 jsdom 是只读 getter，用 defineProperty 模拟「视图可见」
+    Object.defineProperty(view.containerEl, 'offsetParent', { value: {} });
+    const convertSpy = vi.spyOn(view, 'convertCurrent').mockResolvedValue();
+
+    // 门控期间（占位页展示中）：resize 不触发渲染
+    view.landingGateActive = true;
+    view.onResize();
+    await vi.advanceTimersByTimeAsync(300);
+    expect(convertSpy).not.toHaveBeenCalled();
+
+    // 门控解除后：resize 照旧 300ms 防抖渲染
+    view.landingGateActive = false;
+    view.onResize();
+    await vi.advanceTimersByTimeAsync(300);
+    expect(convertSpy).toHaveBeenCalledTimes(1);
   });
 
   it('scheduleActiveLeafRender should debounce and call convertCurrent with loading options', async () => {

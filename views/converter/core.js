@@ -117,6 +117,21 @@ async onOpen() {
   }
 
   this.setPlaceholder();
+  // 占位页（Landing Page）要承载引导信息，不能被打开时的自动渲染顶掉：
+  // 挂上门控，保留到用户真正点开一篇笔记为止（见 active-leaf-change 处理器）。
+  // 解除门控还要求一次真实用户交互（指针/键盘）：侧栏展开触发布局归位，
+  // Obsidian 可能补发 leaf 事件或 onResize，纯自动事件一律不放行。
+  this.landingGateActive = true;
+  this.landingGateUserInteracted = false;
+  if (this.landingPointerArmListener) {
+    document.removeEventListener('pointerdown', this.landingPointerArmListener, true);
+    document.removeEventListener('keydown', this.landingPointerArmListener, true);
+  }
+  this.landingPointerArmListener = () => {
+    this.landingGateUserInteracted = true;
+  };
+  document.addEventListener('pointerdown', this.landingPointerArmListener, true);
+  document.addEventListener('keydown', this.landingPointerArmListener, true);
 
   // 加载依赖
   await this.loadDependencies();
@@ -150,22 +165,6 @@ async onOpen() {
   // 初始化同步滚动
   const activeView = initialContext.view;
   if (activeView) this.registerScrollSync(activeView);
-
-  // 自动转换当前文档
-  window.setTimeout(async () => {
-    const currentContext = resolveMarkdownContext({
-      app: this.app,
-      lastActiveFile: this.lastActiveFile,
-      MarkdownViewType: MarkdownView,
-    });
-    if (currentContext.file) {
-      this.lastActiveFile = currentContext.file;
-      this.updateCurrentDoc();
-    }
-    if (currentContext.file && this.converter) {
-      await this.convertCurrent(true);
-    }
-  }, 500);
 }
 ,
 
@@ -189,7 +188,16 @@ registerActiveFileChange() {
         }
       }
       if (context.file && this.converter) {
-        this.scheduleActiveLeafRender(activeView);
+        // Landing 门控：占位页保留到用户真正点开一篇笔记为止。
+        // 双条件解除：①事件 leaf 是 Markdown 视图（= 点了笔记，而非侧栏
+        // 抢焦点/布局归位的自动事件回落）；②此前有过真实用户交互
+        // （指针按下或键盘按键，覆盖快捷键切换笔记的场景）。
+        if (eventView && this.landingGateUserInteracted) {
+          this.landingGateActive = false;
+        }
+        if (!this.landingGateActive) {
+          this.scheduleActiveLeafRender(activeView);
+        }
       }
       this.updateCurrentDoc();
 
@@ -1045,6 +1053,10 @@ onResize() {
   // 检查是否可见 (以防万一)
   if (!this.containerEl.offsetParent) return;
 
+  // Landing 门控期间忽略 resize：侧栏展开/布局归位会触发视图 resize，
+  // 不能让这次自动渲染把占位页顶掉；用户点开笔记后行为照旧。
+  if (this.landingGateActive) return;
+
   this.resizeTimeout = window.setTimeout(() => {
     this.convertCurrent(true);
   }, 300);
@@ -1068,6 +1080,14 @@ async onClose() {
     window.clearTimeout(this.aiLayoutStaleSuppressTimer);
     this.aiLayoutStaleSuppressTimer = null;
   }
+  // Landing 门控的臂动监听随视图关闭一并摘除
+  if (this.landingPointerArmListener) {
+    document.removeEventListener('pointerdown', this.landingPointerArmListener, true);
+    document.removeEventListener('keydown', this.landingPointerArmListener, true);
+    this.landingPointerArmListener = null;
+  }
+  this.landingGateActive = false;
+  this.landingGateUserInteracted = false;
   this.customCssRefreshGeneration = (this.customCssRefreshGeneration || 0) + 1;
   this._customCssLastValidBySource.clear();
   this.setPreviewLoading(false);

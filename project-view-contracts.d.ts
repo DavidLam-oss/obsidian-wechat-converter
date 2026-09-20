@@ -124,6 +124,12 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     sidePaddingPreviewTimer: number | null;
     /** @type {number | null} */
     resizeTimeout: number | null;
+    /** Landing 门控：占位页保留到用户真实点击一篇笔记为止 */
+    landingGateActive: boolean;
+    /** 门控解除要求一次真实用户交互（指针按下或键盘按键） */
+    landingGateUserInteracted: boolean;
+    /** @type {((ev: Event) => void) | null} */
+    landingPointerArmListener: ((ev: Event) => void) | null;
     /** @type {string} */
     lastResolvedMarkdown: string;
     /** @type {string} */

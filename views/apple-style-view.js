@@ -65,6 +65,23 @@ class AppleStyleView extends ItemView {
     this.lastActiveFile = null;
     /** @type {'article' | 'sticker'} */
     this.previewMode = 'article';
+    /**
+     * Landing 门控：每次 onOpen 置 true，占位页（Landing Page）保留到用户
+     * 真正点开一篇 Markdown 笔记（active-leaf-change 带回笔记 leaf）为止。
+     * 没有它，焦点切到侧栏触发的 leaf 事件会经 getActiveFile 回落立刻渲染，
+     * 占位页一闪而过。用户点击笔记或任何主动渲染后解除。
+     * @type {boolean}
+     */
+    this.landingGateActive = false;
+    /**
+     * 门控解除要求「真实用户交互」：Obsidian 在侧栏展开/布局归位时会补发
+     * leaf 事件或 resize，纯自动事件不允许清门控顶掉占位页；
+     * 指针按下或键盘按键（含快捷键切换笔记）即视为真实用户交互。
+     * @type {boolean}
+     */
+    this.landingGateUserInteracted = false;
+    /** @type {(() => void) | null} */
+    this.landingPointerArmListener = null;
     /** @type {StickerPreviewDataLike | null} */
     this.previewStickerData = null;
     /** @type {boolean} */
