@@ -694,6 +694,7 @@ export function showEditAiProviderModal(tab, provider) {
 
 /**
  * 混入 AppleStyleSettingTab 原型的兼容方法对象
+ * @type {AiSettingsMethodsContract & ThisType<AppleStyleSettingTabContract>}
  */
 export const aiSettingsMethods = {
   renderAiSettingsSection(containerEl) {

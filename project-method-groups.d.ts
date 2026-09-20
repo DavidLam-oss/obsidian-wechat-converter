@@ -156,6 +156,8 @@ type CoreMethodsContract = Pick<
     | 'onResize'
     | 'onClose'
     | 'simpleHash'
+    | 'deriveNativePreviewHtml'
+    | 'refreshCustomCssPreview'
 >;
 
 type SettingsPanelMethodsContract = Pick<
@@ -182,6 +184,7 @@ type PanelShellMethodsContract = Pick<
     | 'toggleSettingsPanel'
     | 'switchPreviewMode'
     | 'applyModeActionVisibility'
+    | 'updateSettingsButtonLabel'
 >;
 
 type CardPreviewMethodsContract = Pick<
@@ -196,12 +199,14 @@ type CardPreviewMethodsContract = Pick<
     | 'setCardPreviewZoom'
     | 'adjustCardPreviewZoom'
     | 'applyCardPreviewZoom'
+    | 'maybeAutoFitCardPreviewZoom'
     | 'renderCardEmptyState'
     | 'renderCardMobileNotice'
     | 'renderCardFailureState'
     | 'renderCardPreviewDom'
     | 'locateCardPageSource'
     | 'disposeCardPreview'
+    | 'locateCardSourceLine'
 >;
 
 type CardPageSelectionMethodsContract = Pick<
@@ -228,6 +233,8 @@ type CardSettingsMethodsContract = Pick<
     | 'applyCardLayoutSetting'
     | 'applyCardLayoutSettings'
     | 'applyCardTheme'
+    | 'persistCardLayoutDefaults'
+    | 'scheduleCardDefaultsSave'
     | 'applyCardCoverField'
     | 'resetCardCoverFields'
     | 'getCardSettingsSession'
@@ -349,6 +356,7 @@ type WechatPreviewExportMethodsContract = Pick<
     | 'openExternalUrl'
     | 'openPublisherProPage'
     | 'openPublisherGuidePage'
+    | 'resolveArticleHtmlSource'
 >;
 
 type WechatSyncActionMethodsContract = Pick<
@@ -365,6 +373,7 @@ type WechatSyncModalMethodsContract = Pick<
 type AiSettingsMethodsContract = Pick<
     AppleStyleSettingTabContract,
     | 'renderAiSettingsSection'
+    | 'renderAiSettingsTab'
     | 'showEditAiProviderModal'
 >;
 
@@ -375,7 +384,6 @@ type ConfirmModalMethodsContract = Pick<
 
 type SettingsTabShellMethodsContract = Pick<
     AppleStyleSettingTabContract,
-    | 'getSettingDefinitions'
     | 'renderGitHubStarBanner'
     | 'renderSettingsTabIntro'
     | 'renderSettingsContent'

@@ -424,6 +424,11 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     setCardPreviewZoom(zoom: number): void;
     adjustCardPreviewZoom(direction: number): void;
     applyCardPreviewZoom(): void;
+    /**
+     * 首次渲染（用户未手动调过缩放）时按容器宽度自适应：取不产生横向滚动的最大缩放。
+     * @param {number} pageWidth 页面自然宽度（px）
+     */
+    maybeAutoFitCardPreviewZoom(pageWidth: number): void;
     renderCardEmptyState(): void;
     renderCardMobileNotice(): void;
     renderCardFailureState(outcome: unknown): void;
@@ -456,6 +461,14 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     applyCardLayoutSettings(partial: Record<string, unknown>): void;
     /** 卡片设置：切主题 = 切到该主题的默认排版（「恢复默认」的唯一入口，无独立重置按钮） */
     applyCardTheme(themeId: string): void;
+    /**
+     * 卡片设置：把归一化后的排版值写回全局默认（2026-09-19 起侧栏是唯一配置入口，调完即存）。
+     * `normalizeCardLayoutSettings` 的输出即持久化白名单；封面字段属笔记级，不落默认。
+     * @param {Record<string, unknown>} partial
+     */
+    persistCardLayoutDefaults(partial: Record<string, unknown>): void;
+    /** 卡片设置：合并短时间内的多次默认变更，只落盘一次（滑块拖动不每次写盘） */
+    scheduleCardDefaultsSave(): void;
     /** 卡片设置：当前笔记会话（无会话返回 null） */
     getCardSettingsSession(): unknown;
     /** 卡片设置：当前生效设置（无会话时为默认值） */
