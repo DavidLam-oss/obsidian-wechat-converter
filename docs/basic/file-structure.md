@@ -9,7 +9,14 @@
 - `input.js`: 插件生命周期、视图注册、设置 UI、预览面板和顶层发布动作。
 - `converter.js`: Markdown 到微信友好 HTML 的转换核心，包括 sanitizer、callout、图片、代码块和输出 shaping。
 - `project-types.js`: JavaScript 源码共用的全局 JSDoc 类型入口，仅参与静态分析，不产生运行时代码。
-- `project-view-contracts.d.ts`、`project-view-method-contracts.d.ts`、`project-method-groups.d.ts`: 拆分后的视图状态、方法和方法组静态合同，通过接口合并保持模块边界类型一致。
+- `project-*.d.ts`: 按域拆分的静态合同，同名 `interface` 靠 TypeScript 声明合并成同一个合同，方法顺序与所在文件无关；只参与静态分析、不产生运行时代码。
+  - `project-view-contracts.d.ts`: 视图状态字段、生命周期与设置面板外壳；
+  - `project-view-contracts-card.d.ts`: 图片卡片（预览/设置/导出）；
+  - `project-view-contracts-publish.d.ts`: 微信贴图提取、发布元数据、路径工具与目录清洗；
+  - `project-view-contracts-ai.d.ts`: AI 排版面板；
+  - `project-view-method-contracts.d.ts`: 渲染/复制/同步/AI 动作与设置页合同；
+  - `project-method-groups.d.ts`: 各方法组模块的 `Pick` 合同（模块 ↔ 合同的接线）；
+  - 合同与实现的一致性由 `tests/contracts_reconciliation.test.js` 机器守卫（挂 `npm test`）。
 - `services/`: 渲染管线、动态依赖加载、Obsidian 原生渲染、路径处理、微信/飞书/多平台同步，以及图片卡片导出全链路服务：
   - `card-document.js`: 卡片分块、分页指令识别（`<!-- card:break -->`）与诊断；
   - `card-pagination.js`: 真实 DOM 测量的装箱页计划、孤行回退与标题联排；

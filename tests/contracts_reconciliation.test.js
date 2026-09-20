@@ -25,7 +25,7 @@
 
 本文件只管**方法名的双向对齐**。以下三类漂移它看不见，别把绿当成万能：
 
-- **签名写错**：只比名字，不比参数/返回类型。视图合同被拆成两份文件，同名方法在 TS 里
+- **签名写错**：只比名字，不比参数/返回类型。视图合同被拆成多份文件，同名方法在 TS 里
   合并成**重载**而非冲突，故跨文件签名不一致静默通过。
 - **陈旧属性声明**：视图合同里 139 条属性声明不在受检范围（只解析 4 空格缩进的 `name(`）。
 - **类型名不存在**：如把 `ObsidianElementLike` 拼错，本文件不报。全量 `tsc` 能抓，但它不在
@@ -36,7 +36,7 @@
 
 ## 输入
 
-接收三份合同文件与 `views/` 下全部方法组模块；运行时不写盘、无副作用。
+接收根目录下全部 `project-*.d.ts` 合同与 `views/` 下全部方法组模块；运行时不写盘、无副作用。
 
 ## 输出
 
@@ -49,7 +49,7 @@
 ## 依赖
 
 关键依赖：`views/apple-style-view.js`、`views/settings/apple-style-setting-tab.js`
-（取装配后的真实原型）与三份 `project-*.d.ts`。
+（取装配后的真实原型）与根目录下的 `project-*.d.ts` 合同簇。
 
 ## 维护规则
 
@@ -67,10 +67,26 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const GROUP_CONTRACTS_FILE = "project-method-groups.d.ts";
-const VIEW_CONTRACTS_FILES = [
-  "project-view-contracts.d.ts",
-  "project-view-method-contracts.d.ts",
-];
+
+/**
+ * 视图合同文件：根目录下除方法组合同以外的全部 `project-*.d.ts`。
+ * 按前缀扫描而不是写死清单——合同按域拆文件时不必回来改这里。原先那份手写清单本身
+ * 就是一处会漂移的账目：2026-09-20 把 888 行的 `project-view-contracts.d.ts` 拆成
+ * 四份域名文件时，清单不改就会静默漏掉新文件的全部方法。
+ */
+function listViewContractsFiles() {
+  return fs
+    .readdirSync(ROOT)
+    .filter(
+      (name) =>
+        name.startsWith("project-") &&
+        name.endsWith(".d.ts") &&
+        name !== GROUP_CONTRACTS_FILE,
+    )
+    .sort();
+}
+
+const VIEW_CONTRACTS_FILES = listViewContractsFiles();
 
 /**
  * 合同声明了、但没有实现也非宿主基类提供的方法白名单。
@@ -117,7 +133,7 @@ function parseGroupContracts() {
 }
 
 /**
- * 类合同的方法名。视图合同被拆成两份文件，同名 interface 走 TS 接口合并语义 → 取并集。
+ * 类合同的方法名。视图合同按域拆成多份文件，同名 interface 走 TS 接口合并语义 → 取并集。
  * 只认 4 空格缩进、同行的 `name(` 声明，属性（`name:`）不计。
  * @returns {Map<string, Set<string>>}
  */
