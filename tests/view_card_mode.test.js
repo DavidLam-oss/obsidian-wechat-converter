@@ -2,7 +2,7 @@
 ## 核心功能
 
 验证 AppleStyleView 卡片模式（第三模式）的接入行为：模式矩阵、操作按钮显隐、
-预览状态（空/失败/就绪/移动端）、B01 会话绑定、版本安全源定位、缩放与编辑合并，
+预览状态（空/失败/就绪/移动端）、B01 会话绑定、版本安全源定位、自适应缩放与编辑合并，
 以及页选择的会话持有与版本失效回落（缩略图自 2026-09-20 起不挂任何覆盖控件，
 挑页改在导出弹窗的「自选页」清单）。
 
@@ -234,12 +234,19 @@ describe('AppleStyleView - Card Mode (B02)', () => {
     }
   });
 
-  it('缩放控制：钳制在范围内且不影响页计划', () => {
+  it('缩放始终自适应：每次渲染按容器宽度重算，无手动控件（2026-09-20 David）', () => {
     const view = new AppleStyleView({ view: null }, { settings: { wechatAccounts: [] } });
-    view.setCardPreviewZoom(1.5);
-    expect(view.getCardPreviewZoom()).toBeLessThanOrEqual(1);
-    view.setCardPreviewZoom(0.01);
-    expect(view.getCardPreviewZoom()).toBeGreaterThanOrEqual(0.35);
+    // 无手动缩放方法（控件已整体移除）
+    expect(typeof view.setCardPreviewZoom).toBe('undefined');
+    expect(typeof view.adjustCardPreviewZoom).toBe('undefined');
+    // 侧栏宽 431 → 可用 375 → 375/375 = 100%（钳制上限内）
+    view.cardPreviewShell = { clientWidth: 431 };
+    view.maybeAutoFitCardPreviewZoom(375);
+    expect(view.getCardPreviewZoom()).toBeCloseTo(1);
+    // 侧栏变窄 → 每次渲染重算，取不产生横向滚动的最大缩放
+    view.cardPreviewShell = { clientWidth: 231 };
+    view.maybeAutoFitCardPreviewZoom(375);
+    expect(view.getCardPreviewZoom()).toBeCloseTo(175 / 375, 5);
   });
 
   it('源定位版本安全：结果过期后不跳转编辑器；版本一致才定位', async () => {

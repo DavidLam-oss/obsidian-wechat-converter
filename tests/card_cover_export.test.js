@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest';
 
-/* 导出链路 × 封面（C01③）：page.fileName 覆盖文件名（cover.png）、封面 ordinal=0 合法性。 */
+/* 导出链路 × 封面（C01③）：page.fileName 覆盖文件名（card-000.png）、封面 ordinal=0 合法性。 */
 
 import { createNoteCardSession } from "../services/card-session.js";
 import { createCardExporter } from "../services/card-exporter.js";
@@ -60,7 +60,7 @@ function exportInput(ctx, pages, extra = {}) {
 }
 
 describe("导出 × 封面（C01③）", () => {
-  it("封面页写 cover.png，正文页写 card-001.png", async () => {
+  it("封面页写 card-000.png，正文页写 card-001.png", async () => {
     const ctx = sessionWithSnapshot(1);
     const fakeFs = createFakeFs();
     const exporter = createCardExporter({
@@ -70,16 +70,18 @@ describe("导出 × 封面（C01③）", () => {
       now: () => new Date(2026, 8, 13, 9, 0, 0),
     });
     const outcome = /** @type {any} */ (await exporter.exportCards(exportInput(ctx, [
-      { pageId: "cover", ordinal: 0, fileName: "cover.png" },
+      { pageId: "cover", ordinal: 0, fileName: "card-000.png" },
       { pageId: "page-1", ordinal: 1 },
     ])));
     expect(outcome.status).toBe("completed");
     const names = [...fakeFs.files.keys()].filter((p) => p.endsWith(".png")).map((p) => p.split("/").pop());
-    expect(names).toContain("cover.png");
+    expect(names).toContain("card-000.png");
     expect(names).toContain("card-001.png");
+    // 命名意图：整套导出按文件名排序时封面自然在第一位（card-000.png < card-001.png）
+    expect([...names].sort()[0]).toBe("card-000.png");
   });
 
-  it("封面页 fileName 不是 cover.png → page-invalid 拒绝", async () => {
+  it("封面页 fileName 不是 card-000.png → page-invalid 拒绝", async () => {
     const ctx = sessionWithSnapshot(1);
     const fakeFs = createFakeFs();
     const exporter = createCardExporter({

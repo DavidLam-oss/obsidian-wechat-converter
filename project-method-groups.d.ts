@@ -198,8 +198,6 @@ type CardPreviewMethodsContract = Pick<
     | 'resolveCardMarkdownSource'
     | 'runCardLayoutPipeline'
     | 'getCardPreviewZoom'
-    | 'setCardPreviewZoom'
-    | 'adjustCardPreviewZoom'
     | 'applyCardPreviewZoom'
     | 'maybeAutoFitCardPreviewZoom'
     | 'renderCardEmptyState'

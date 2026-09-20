@@ -87,11 +87,9 @@ interface AppleStyleViewContract {
     updateSettingsButtonLabel(): void;
     getCardSessions(): unknown;
     getCardPreviewZoom(): number;
-    setCardPreviewZoom(zoom: number): void;
-    adjustCardPreviewZoom(direction: number): void;
     applyCardPreviewZoom(): void;
     /**
-     * 首次渲染（用户未手动调过缩放）时按容器宽度自适应：取不产生横向滚动的最大缩放。
+     * 每次渲染按容器宽度自适应：取不产生横向滚动的最大缩放（无手动缩放控件）。
      * @param {number} pageWidth 页面自然宽度（px）
      */
     maybeAutoFitCardPreviewZoom(pageWidth: number): void;

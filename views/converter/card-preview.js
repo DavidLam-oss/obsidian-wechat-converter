@@ -10,7 +10,7 @@
 ## 输入
 
 AppleStyleView 实例状态（previewMode/previewContainer/app 等）、当前笔记 Markdown、
-用户交互（页勾选、页点击定位、缩放、模式切换）。
+用户交互（页点击定位、模式切换）。
 
 ## 输出
 
@@ -20,7 +20,8 @@ AppleStyleView 实例状态（previewMode/previewContainer/app 等）、当前�
   合并只调度排版，「正文已过期」的提示由 `markCardPreviewStaleNow()` 在事件到达即给出
   （会话 markPreviewStale + 摘要条 stale 提示同步刷新，§5.6 ≤250ms）；
 - 模式操作显隐集中在 panel-shell.js 的 `applyModeActionVisibility()`；
-- `setCardPreviewZoom()` / `adjustCardPreviewZoom()`：仅改变展示缩放，不改分页（§4.3）；
+- 预览缩放无手动控件（2026-09-20 David）：每次渲染按容器宽度自适应
+  （`maybeAutoFitCardPreviewZoom`，§4.3 仍不改分页）；
 - `locateCardPageSource(pageIndex)`：版本安全源定位（陈旧结果不跳转）；
 - `disposeCardPreview()`：视图关闭时释放会话与资源。
 
@@ -42,6 +43,9 @@ AppleStyleView 实例状态（previewMode/previewContainer/app 等）、当前�
 - 缩略图只承载「页面本体 + 页号徽标 + 点击定位」（2026-09-20 David）：
   不再挂勾选控件（不好看、且默认就该导全部）与复制按钮（平台不接受粘贴图片）。
   「导出哪些页」的选择由导出弹窗驱动，读写落在 card-page-selection.js。
+- 预览工具条不放缩放控件与封面入口图标（2026-09-20 David）：
+  缩放始终按容器自适应（手动调到 100% 会把内容裁出可视区，且没有保留价值）；
+  封面与否直接看预览缩略图，封面设置从侧栏子 Tab 进。
 - 点页面本体只做源定位；版本安全由 `locateCardPageSource` 的 layoutKey 比对保证（§5.2）。
 - 排版设置已在 B03 接入（会话归一化：card-settings-model.js）；主题/比例仍仅已验证值，C01 扩展。
 */
@@ -66,14 +70,12 @@ import {
   createCardSessionRegistry,
   createPreviewRunner,
 } from '../../services/card-session.js';
-import { getObsidianSetIcon } from '../../services/obsidian-compat.js';
 
 /** 编辑合并：停止输入 300ms 后启动排版（§5.6） */
 export const CARD_PREVIEW_EDIT_MERGE_MS = 300;
-/** 预览缩放范围（仅展示层） */
+/** 预览缩放范围（仅展示层；无手动控件，始终按容器宽度自适应） */
 export const CARD_PREVIEW_ZOOM_MIN = 0.35;
 export const CARD_PREVIEW_ZOOM_MAX = 1;
-export const CARD_PREVIEW_ZOOM_STEP = 0.15;
 export const CARD_PREVIEW_ZOOM_DEFAULT = 0.6;
 
 /** 省略原因 → 用户可读标签（§4.1 一期口径）；单一事实在 card-preview-diagnostics.js */
@@ -84,7 +86,6 @@ import { OMISSION_LABELS } from './card-preview-diagnostics.js';
  * @typedef {{
  *   cardSessionRegistry?: import('../../services/card-session.js').CardSessionRegistryLike | null,
  *   cardPreviewZoom?: number,
- *   cardPreviewZoomUserSet?: boolean,
  *   cardPreviewMergeTimer?: number | null,
  *   cardPreviewGeneration?: number,
  *   cardPreviewRunner?: { schedule(): Promise<{ applied: boolean, reason?: string } | null> } | null,
@@ -126,7 +127,7 @@ getCardSessions() {
 }
 ,
 
-/** @returns {number} 当前预览缩放（仅展示层；未手动调整时按容器宽度自适应） */
+/** @returns {number} 当前预览缩放（仅展示层；由渲染时的容器宽度自适应决定） */
 getCardPreviewZoom() {
   const selfRecord = cardStateOf(this);
   const zoom = typeof selfRecord.cardPreviewZoom === 'number' ? selfRecord.cardPreviewZoom : CARD_PREVIEW_ZOOM_DEFAULT;
@@ -134,30 +135,14 @@ getCardPreviewZoom() {
 }
 ,
 
-/** @param {number} zoom */
-setCardPreviewZoom(zoom) {
-  const clamped = Math.min(CARD_PREVIEW_ZOOM_MAX, Math.max(CARD_PREVIEW_ZOOM_MIN, zoom));
-  const selfRecord = cardStateOf(this);
-  selfRecord.cardPreviewZoom = clamped;
-  selfRecord.cardPreviewZoomUserSet = true;
-  this.applyCardPreviewZoom();
-}
-,
-
-/** @param {number} direction +1 放大 / -1 缩小 */
-adjustCardPreviewZoom(direction) {
-  this.setCardPreviewZoom(this.getCardPreviewZoom() + direction * CARD_PREVIEW_ZOOM_STEP);
-}
-,
-
 /**
- * 首次渲染（用户未手动调过缩放）时按容器宽度自适应：取不产生横向滚动的最大缩放。
- * 375px 卡片在侧栏 100% 会溢出，固定默认值要么太小要么溢出，自适应是两全解。
+ * 每次渲染按容器宽度自适应：取不产生横向滚动的最大缩放。
+ * 375px 卡片在侧栏 100% 会溢出，手动缩放没有保留价值（2026-09-20 David 移除控件），
+ * 每次渲染重算可同时覆盖「换笔记」「侧栏宽度变化」两种场景。
  * @param {number} pageWidth 页面自然宽度（px）
  */
 maybeAutoFitCardPreviewZoom(pageWidth) {
   const selfRecord = cardStateOf(this);
-  if (selfRecord.cardPreviewZoomUserSet) return;
   const shell = selfRecord.cardPreviewShell;
   // 可用宽 = 预览壳宽 − 外壳左右内边距(12×2) − 画板左右内边距(16×2)；少扣会让行宽溢出画板、缩略图非必要换行。
   const available = shell
@@ -477,10 +462,9 @@ renderCardPreviewDom() {
   const shell = /** @type {ObsidianElementLike} */ (/** @type {unknown} */ (container.createEl('div', { cls: 'icard-preview-shell' })));
   cardStateOf(this).cardPreviewShell = shell;
 
-  // —— 顶部工具条：左「状态与警告」、右「视图操作」，同排成组（原先摘要与缩放各占一行，右缘两行参差）——
+  // —— 顶部工具条：状态与警告摘要（缩放/封面等右缘操作已移除，见下方 2026-09-20 注）——
   const toolbar = shell.createEl('div', { cls: 'icard-preview-toolbar' });
   const summary = toolbar.createEl('div', { cls: 'icard-preview-summary' });
-  const tools = toolbar.createEl('div', { cls: 'icard-preview-tools' });
   const pageCount = Number(outcome?.pageCount || 0);
   const hasCover = outcome?.hasCover === true;
   summary.createEl('span', {
@@ -520,7 +504,6 @@ renderCardPreviewDom() {
       text: '水印过长，可能被页边裁切，建议缩短',
     });
   }
-  // 封面入口与缩放控件一起在工具条右缘创建（见下方 zoomBar 之后）。
 
   // —— 全文省略空态（§B03 ⑤：正文全部未进入卡片时不产空白卡，逐条可定位）——
   if (pageCount === 0 && omissionTotal > 0) {
@@ -538,24 +521,8 @@ renderCardPreviewDom() {
     return /** @type {ObsidianElementLike} */ (/** @type {unknown} */ (shell));
   }
 
-  // —— 缩放控制（仅展示层）：分段胶囊，与模式胶囊、侧栏子 Tab 同一套语汇 ——
-  const zoomBar = tools.createEl('div', { cls: 'icard-preview-zoombar' });
-  const zoomOut = zoomBar.createEl('button', { cls: 'icard-preview-zoom-btn', attr: { 'aria-label': '缩小预览' }, text: '−' });
-  zoomOut.addEventListener('click', () => this.adjustCardPreviewZoom(-1));
-  zoomBar.createEl('span', { cls: 'icard-preview-zoom-percent', text: `${Math.round(this.getCardPreviewZoom() * 100)}%` });
-  const zoomIn = zoomBar.createEl('button', { cls: 'icard-preview-zoom-btn', attr: { 'aria-label': '放大预览' }, text: '+' });
-  zoomIn.addEventListener('click', () => this.adjustCardPreviewZoom(1));
-
-  // —— 封面设置入口（直通侧边栏面板的「封面设置」子 Tab）——
-  // 做成图标而非「封面 · 开」：封面开没开由侧栏那枚开关表达（同一事实只说一次），
-  // 这里只负责「一步跳到封面设置」；高亮仍跟随封面开关态，便于判断当前是否带封面。
-  const setIcon = getObsidianSetIcon();
-  const coverBtn = tools.createEl('button', {
-    cls: `icard-preview-cover-entry${hasCover ? ' is-active' : ''}`,
-    attr: { type: 'button', 'aria-label': '封面设置', 'title': '封面开关与标题/作者/日期/摘要（侧边栏面板）' },
-  });
-  if (typeof setIcon === 'function') setIcon(coverBtn, 'image');
-  coverBtn.addEventListener('click', () => { this.openCardSettingsTab('cover'); });
+  // 2026-09-20：缩放控件与封面入口图标已移除——缩放始终按容器自适应（见 maybeAutoFitCardPreviewZoom），
+  // 封面与否直接看缩略图；封面设置从侧栏「封面设置」子 Tab 进。
 
   // —— 缩略页（封面在列首、不编号，C01③）——
   // 2026-09-20：不再挂勾选与复制控件。点页面本体就只做源定位（版本安全，见 locateCardPageSource）。
@@ -671,7 +638,6 @@ disposeCardPreview() {
   selfRecord.cardPreviewRunnerNoteId = '';
   selfRecord.cardPreviewOutcome = null;
   selfRecord.cardPreviewShell = null;
-  selfRecord.cardPreviewZoomUserSet = false;
   selfRecord.cardRenderedLayoutKey = '';
   if (selfRecord.cardSessionRegistry) {
     selfRecord.cardSessionRegistry.disposeAll();

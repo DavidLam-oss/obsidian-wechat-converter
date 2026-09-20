@@ -196,8 +196,12 @@ export function imageFileName(ordinal) {
   return `card-${String(index).padStart(3, '0')}.png`;
 }
 
-/** 封面图片文件名（C01③，规划 §5.2：封面为 cover.png，正文为 card-00N.png） */
-export const COVER_EXPORT_FILE_NAME = 'cover.png';
+/**
+ * 封面图片文件名（2026-09-20 起：`card-000.png`，正文为 `card-001.png` 等）。
+ * 命名意图：与正文同前缀家族（David 定），`card-000.png` 按字典序排在 `card-001.png` 之前，
+ * 整套导出按文件名排序时封面自然处于第一位，直接按顺序上传小红书/公众号贴图即为正确顺序。
+ */
+export const COVER_EXPORT_FILE_NAME = 'card-000.png';
 
 /**
  * 剥离错误信息中的绝对路径样式片段（`/...`、`X:\...`、`\\srv\...`），避免泄露宿主敏感路径（§6.2）。
