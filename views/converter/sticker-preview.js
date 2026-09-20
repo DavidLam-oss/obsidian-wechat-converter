@@ -132,8 +132,11 @@ resolveStickerImageSrc(src, sourcePath) {
   const getResourcePathRaw = ('getResourcePath' in vault) ? vault.getResourcePath : null;
   if (typeof getResourcePathRaw !== 'function') return raw;
 
-  const getResourcePath = /** @type {(file: unknown) => unknown} */ (getResourcePathRaw);
-  const resolved = getResourcePath(linkFile);
+  // ⚠️ 必须以 vault 为 this 调用：Obsidian 的 Vault#getResourcePath 内部读
+  // this.adapter，摘下来裸调用会抛 "Cannot read properties of undefined
+  // (reading 'adapter')"，进而让整条贴图渲染静默失败（2026-09-20 晚间线上实锤）。
+  const getResourcePath = /** @type {(this: unknown, file: unknown) => unknown} */ (getResourcePathRaw);
+  const resolved = getResourcePath.call(this.app.vault, linkFile);
   return typeof resolved === 'string' && resolved ? resolved : raw;
 }
 ,
