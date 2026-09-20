@@ -22,10 +22,16 @@ AppleStyleView 实例（app / 会话 / 当前渲染负载）与用户在弹窗�
 - `canRevealCardExportOutput()`：当前环境能否在系统文件管理器中定位目录（桌面端且有 electron shell）。
 - `revealCardExportOutput(vaultRelativePath)`：在访达 / 资源管理器中选中该批次目录，返回 `{ ok, absPath, reason? }`。
 
+模块级导出：
+- `listCardExportPageIds(outcome)`：本次可导出的页全集（封面在前 + page-1..N）。
+  导出入参组装与导出弹窗的自选页清单**共用本函数**，避免两处口径漂移
+  （清单里勾得到、导出时被过滤掉的静默少页）。
+- `CARD_EXPORT_SCALES` / `DEFAULT_CARD_EXPORT_SCALE` / `DEFAULT_CARD_EXPORT_ROOT`：共享常量。
+
 ## 定位
 
 位于 views/converter/，视图与服务之间的接线层；不含业务规则（路径安全/清单/部分成功语义在 services）。
-拆出本文件避免 core.js 膨胀，且导出相关的 Obsidian 能力访问集中一处便于 C03 复用（剪贴板/目录定位）。
+拆出本文件避免 core.js 膨胀，且导出相关的 Obsidian 能力访问集中一处便于复用（目录定位等）。
 
 ## 依赖
 
@@ -41,9 +47,7 @@ AppleStyleView 实例（app / 会话 / 当前渲染负载）与用户在弹窗�
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument -- reason: 视图方法组跨模块动态组合（同 card-preview），Obsidian app.vault 与 renderCardPages 产物以 unknown 持有，运行时语义由 B04 契约测试 + card_export_flow 约束 */
 
-import { Notice } from '../apple-style-view-shared.js';
 import { createCardExporter } from '../../services/card-exporter.js';
-import { copySingleCardImage } from '../../services/card-clipboard.js';
 import { DEFAULT_EXPORT_ROOT, EXPORT_MANIFEST_NAME, COVER_EXPORT_FILE_NAME } from '../../services/card-export-paths.js';
 import { createCardDocument } from '../../services/card-document.js';
 import { deriveCoverFields, isCoverUsable } from '../../services/card-cover-model.js';
@@ -62,6 +66,25 @@ export const CARD_EXPORT_SCALES = /** @type {const} */ ([1, 2, 3]);
 export const DEFAULT_CARD_EXPORT_SCALE = 2;
 /** 导出默认输出目录（vault 相对；C02 全局默认可覆盖初始值；单一事实在 card-export-paths.js） */
 export const DEFAULT_CARD_EXPORT_ROOT = DEFAULT_EXPORT_ROOT;
+
+/**
+ * 本次可导出的页全集：封面在前 + page-1..N（导出的唯一页序口径）。
+ * 导出入参组装（`collectCardExportInput`）与导出弹窗的自选页清单**共用本函数**：
+ * 两处各写一份判定就会出现「清单里勾得到、导出时被过滤掉」的静默少页。
+ * 封面是否成立必须与导出一致——只看 hasCover 还不够，捕获需要真实的 coverPage 元素。
+ * @param {any} outcome 卡片预览负载
+ * @returns {string[]}
+ */
+export function listCardExportPageIds(outcome) {
+  const safe = outcome && typeof outcome === 'object' ? outcome : {};
+  const hasCover = safe.hasCover === true && safe.coverPage instanceof HTMLElement;
+  const pages = Array.isArray(safe.pages) ? safe.pages : [];
+  const pageCount = Number(safe.pageCount || pages.length || 0);
+  return [
+    ...(hasCover ? ['cover'] : []),
+    ...Array.from({ length: pageCount }, (_, i) => `page-${i + 1}`),
+  ];
+}
 
 /**
  * @typedef {{
@@ -374,11 +397,8 @@ collectCardExportInput(options = {}) {
     ? this.getCurrentCardLayoutSettings()
     : {};
   const size = RATIO_PRESETS[String(settings.ratioId || '3:4')] || RATIO_PRESETS['3:4'];
-  const pageCount = Number(outcome.pageCount || outcome.pages.length || 0);
-  const allPageIds = [
-    ...(hasCover ? ['cover'] : []),
-    ...Array.from({ length: pageCount }, (_, i) => `page-${i + 1}`),
-  ];
+  // 页全集与导出弹窗的自选清单共用同一份判定（避免两处口径漂移）
+  const allPageIds = listCardExportPageIds(outcome);
   const selected = Array.isArray(options.pageIds) && options.pageIds.length > 0
     ? options.pageIds.filter((id) => allPageIds.includes(id))
     : allPageIds;
@@ -529,87 +549,6 @@ revealCardExportOutput(vaultRelativePath) {
 }
 ,
 
-/**
- * 单张卡片复制（C03）：资格检查 → 纯内存 PNG 捕获 → 写入系统剪贴板（零磁盘写入）。
- * @param {string} pageId 'cover' | 'page-1' | etc.
- * @param {HTMLElement} [buttonEl]
- * @returns {Promise<{ ok: boolean, reason?: string, message?: string }>}
- */
-async copyCardPageImage(pageId, buttonEl) {
-  const session = typeof this.getCardSettingsSession === 'function' ? this.getCardSettingsSession() : null;
-  const outcome = /** @type {any} */ (this).cardRenderOutcome || /** @type {any} */ (this).cardPreviewOutcome;
-  if (!session || !outcome) {
-    new Notice('当前没有可复制的卡片');
-    return { ok: false, reason: 'no-session', message: '当前没有可复制的卡片' };
-  }
-  const isCover = pageId === 'cover';
-  const ordinal = isCover ? 0 : (Number(String(pageId || '').replace(/^page-/, '')) || 1);
-
-  if (buttonEl) {
-    buttonEl.classList.add('is-copying');
-    buttonEl.setAttribute('disabled', 'true');
-  }
-
-  const input = /** @type {any} */ (this).cardPreviewPendingInput;
-  const resources = this.prepareCardExportResources({
-    markdown: String(input?.markdown || ''),
-    sourcePath: String(input?.sourcePath || ''),
-  });
-
-  try {
-    const result = await copySingleCardImage({
-      session,
-      pageId,
-      ordinal,
-      outcome,
-      scale: DEFAULT_CARD_EXPORT_SCALE,
-      capturePageBytes: (cap) => this.createCardCaptureCallback({
-        pageId: cap.pageId,
-        ordinal: cap.ordinal,
-        settings: outcome.settings || {},
-        markdown: String(input?.markdown || ''),
-        sourcePath: String(input?.sourcePath || ''),
-        scale: cap.scale || DEFAULT_CARD_EXPORT_SCALE,
-        resources,
-        coverFields: typeof session.getCoverFields === 'function' ? session.getCoverFields() : null,
-      }),
-    });
-
-    if (result.ok) {
-      new Notice('卡片图片已复制到剪贴板');
-      if (buttonEl) {
-        buttonEl.classList.remove('is-copying');
-        buttonEl.classList.add('is-copied');
-        window.setTimeout(() => {
-          buttonEl.classList.remove('is-copied');
-          buttonEl.removeAttribute('disabled');
-        }, 1500);
-      }
-      return result;
-    } else {
-      const msg = result.reason === 'omissions-unconfirmed'
-        ? '存在未进入卡片的内容，请先在下方确认接受省略'
-        : (result.message || '复制失败，请使用右上角导出保存图片');
-      new Notice(msg);
-      if (buttonEl) {
-        buttonEl.classList.remove('is-copying');
-        buttonEl.removeAttribute('disabled');
-      }
-      return result;
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    new Notice(`复制失败：${message}`);
-    if (buttonEl) {
-      buttonEl.classList.remove('is-copying');
-      buttonEl.removeAttribute('disabled');
-    }
-    return { ok: false, reason: 'exception', message };
-  } finally {
-    resources.release();
-  }
-}
-,
 };
 
 /** @type {{ showItemInFolder(path: string): void } | null | undefined} */

@@ -2,14 +2,15 @@
 ## 核心功能
 
 图片卡片导出弹窗的 DOM 渲染层（B05 视觉重构）：四类视图——可开始表单（来源/尺寸摘要 +
-导出范围 + 倍率 + 目录）、准备中、任务进度（状态区 + 进度条 + 逐页明细折叠）、
+导出范围 + 自选页清单 + 倍率 + 目录）、准备中、任务进度（状态区 + 进度条 + 逐页明细折叠）、
 结果（状态区 + 结果卡片 + 操作）。
 渲染只读会话任务与导出器进度事件，不持有任务生命周期。
 
 ## 输入
 
-AppleStyleView 实例（会话任务、预览负载与页勾选、倍率/目录/导出范围选择、资源摘要、
+AppleStyleView 实例（会话任务、预览负载、倍率/目录/导出范围选择、资源摘要、
 批次信息）与导出器进度事件；DOM 选择器以 icard-export- 前缀作用域。
+「导出哪些页」的选择存在会话里（读写入口与清单渲染见 card-page-selection.js），本层只调用。
 
 ## 输出
 
@@ -25,15 +26,19 @@ card-export-modal.js，导出规则在 services/card-exporter.js。
 
 ## 依赖
 
-`./card-export-bridge.js`（CARD_EXPORT_SCALES / 默认目录与倍率）、
+`./card-export-bridge.js`（CARD_EXPORT_SCALES / 默认目录与倍率 / `listCardExportPageIds`）、
 `../apple-style-view-shared.js`（getObsidianSetIcon）；
 `formatExportReason` 由本模块导出，card-export-modal.js 复用（避免循环依赖）。
 
 ## 维护规则
 
 - 修改视图结构后同步更新本文件说明书，并检查 views/converter 的 README 是否仍准确。
-- 导出范围只有「全部 / 选中 N 页」两项：未勾选任何页时「选中」项禁用并说明原因，
-  绝不静默改成全部（那会让用户以为导的是选中页）；默认值跟随预览勾选。
+- 导出范围只有「全部 N 页 / 自选页」两项，默认「全部」（2026-09-20 David 定：预览缩略图
+  不再挂勾选控件，要挑页就在本弹窗里挑）。自选清单只在「自选页」态展开，行内切换即写回会话；
+  一页未选时禁用开始按钮并就地说明，绝不静默改成全部（那会让用户以为导的是他选的那几页）。
+- 自选清单的页全集一律取 card-export-bridge 的 `listCardExportPageIds`（与
+  `collectCardExportInput` 同源），不得在本层另写一份判定——否则会出现
+  「清单里勾得到、导出时被过滤掉」的静默少页。
 - 逐页明细的「第 N 页」取自 pageId 的原始页序：子集导出不得把 page-3 显示成第 1 页。
 - 颜色只用于「异常」与「当前进行中的那一行」：正常完成行必须保持中性（禁止整列铺成功色底）。
 - 同一事实只说一次：完成态的「已完成张数」写在状态区，不再在进度条与列表里重复。
@@ -54,7 +59,12 @@ card-export-modal.js，导出规则在 services/card-exporter.js。
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument -- reason: 视图方法组跨模块动态组合（同 card-preview），Obsidian DOM 扩展方法与会话/任务负载以 unknown/any 持有，运行时语义由 card_export_flow 与 B01/B04 契约约束 */
 
 import { getObsidianSetIcon } from '../apple-style-view-shared.js';
-import { CARD_EXPORT_SCALES, DEFAULT_CARD_EXPORT_ROOT, DEFAULT_CARD_EXPORT_SCALE } from './card-export-bridge.js';
+import {
+  CARD_EXPORT_SCALES,
+  DEFAULT_CARD_EXPORT_ROOT,
+  DEFAULT_CARD_EXPORT_SCALE,
+  listCardExportPageIds,
+} from './card-export-bridge.js';
 import { computeCardPixelSize } from '../../services/card-render-capture.js';
 
 /** 导出任务状态 → 中文标签 */
@@ -204,29 +214,31 @@ renderCardExportModal() {
 ,
 
 /**
- * 解析本次导出范围：'all'（全部页）| 'selected'（仅预览中勾选的页）。
- * 用户未显式选择过时跟随预览勾选（勾选非空 → 选中）；一旦显式选择就尊重用户，
- * 即使选择因排版更新失效也不静默改回全部——由表单显示禁用态与原因。
+ * 解析本次导出范围：'all'（全部页，默认）| 'selected'（仅自选页）。
+ * 默认「全部」：预览缩略图自 2026-09-20 起不再挂勾选控件，是否自选只由用户在本弹窗里
+ * 显式点击决定。一旦选过就尊重用户——即使会话选择因版本 bump 失效也不静默改回全部，
+ * 由表单的禁用态与原因说明兜底。
  * @returns {'all' | 'selected'}
  */
 resolveCardExportScope() {
-  const explicit = /** @type {any} */ (this).cardExportScope;
-  if (explicit === 'all' || explicit === 'selected') return explicit;
-  return this.getCardPageSelection() ? 'selected' : 'all';
+  return /** @type {any} */ (this).cardExportScope === 'selected' ? 'selected' : 'all';
 }
 ,
 
 /**
- * 可开始表单：来源/尺寸摘要 → 导出范围 + 倍率分段控件 → 输出目录 → 省略摘要 → 开始。
- * 资格不满足时给出原因，不显示可点击的开始按钮。
- * 导出范围默认跟随预览勾选；「选中」在未勾选任何页时禁用并说明，绝不静默改成全部。
+ * 可开始表单：来源/尺寸摘要 → 导出范围（全部 / 自选页 + 自选清单）→ 倍率 → 输出目录
+ * → 省略摘要 → 开始。资格不满足时给出原因，不显示可点击的开始按钮。
+ * 导出范围默认「全部」；「自选页」一页未选时禁用开始按钮并就地说明，绝不静默改成全部。
  * @param {any} body
  */
 renderCardExportForm(body) {
   const selfRecord = /** @type {any} */ (this);
   const scope = this.resolveCardExportScope();
-  const selection = this.getCardPageSelection();
-  const selectionCount = Array.isArray(selection) ? selection.length : 0;
+  // 页全集与导出入参组装共用同一份判定（card-export-bridge 的 listCardExportPageIds）；
+  // 会话里可能残留已失效的旧页号，先按全集过滤掉。
+  const allPageIds = listCardExportPageIds(selfRecord.cardPreviewOutcome);
+  const selection = (this.getCardPageSelection() || []).filter((id) => allPageIds.includes(id));
+  const selectionCount = selection.length;
   const emptySelection = scope === 'selected' && selectionCount === 0;
 
   const collected = this.collectCardExportInput({
@@ -252,7 +264,6 @@ renderCardExportForm(body) {
   const outcome = selfRecord.cardPreviewOutcome || {};
   const scale = Number(selfRecord.cardExportScale || DEFAULT_CARD_EXPORT_SCALE);
   const size = collected.size || { width: 0, height: 0 };
-  const totalPages = Number(outcome.pageCount || 0);
 
   const info = body.createEl('div', { cls: 'icard-export-info' });
   /** @param {string} label @param {string} value @param {string} [title] */
@@ -274,7 +285,7 @@ renderCardExportForm(body) {
 
   body.createEl('div', { cls: 'icard-export-divider' });
 
-  // —— 导出范围（默认跟随预览勾选；空选时「选中」禁用并说明）——
+  // —— 导出范围：默认「全部」；「自选页」在本弹窗内展开清单挑页 ——
   const scopeField = body.createEl('div', { cls: 'icard-export-field is-scope' });
   const scopeRow = scopeField.createEl('div', { cls: 'icard-export-field-row' });
   scopeRow.createEl('span', { cls: 'icard-export-field-label', text: '导出范围' });
@@ -283,38 +294,31 @@ renderCardExportForm(body) {
     attr: { role: 'group', 'aria-label': '导出范围' },
   });
   for (const option of [
-    { value: 'all', label: `全部 ${totalPages} 页`, disabled: false },
-    { value: 'selected', label: `选中 ${selectionCount} 页`, disabled: selectionCount === 0 },
+    { value: 'all', label: `全部 ${allPageIds.length} 页` },
+    { value: 'selected', label: '自选页' },
   ]) {
     const active = option.value === scope;
-    /** @type {Record<string, string>} */
-    const attrs = {
-      type: 'button',
-      'data-scope': option.value,
-      'aria-pressed': active ? 'true' : 'false',
-    };
-    if (option.disabled) {
-      attrs['aria-disabled'] = 'true';
-      attrs.title = '预览中尚未勾选任何页';
-    }
     const btn = scopeSegmented.createEl('button', {
-      cls: `icard-export-scope-btn${active ? ' is-active' : ''}${option.disabled ? ' is-disabled' : ''}`,
+      cls: `icard-export-scope-btn${active ? ' is-active' : ''}`,
       text: option.label,
-      attr: attrs,
+      attr: { type: 'button', 'data-scope': option.value, 'aria-pressed': active ? 'true' : 'false' },
     });
     btn.addEventListener('click', () => {
-      if (option.disabled) return;
       selfRecord.cardExportScope = option.value;
+      // 首次进入「自选页」以全集为起点（已有有效选择则不动）：用户只需取消不要的页，
+      // 而不是先点一次「全选」才能开始——否则一进来就是一页未选的死路。
+      if (option.value === 'selected' && selectionCount === 0) this.applyCardPageSelection([...allPageIds]);
       this.renderCardExportModal();
     });
   }
-  if (selectionCount === 0) {
-    // 空集两种来路分别说清楚：从没勾过 / 勾过又被排版更新清掉
-    scopeField.createEl('p', {
-      cls: 'icard-export-field-hint is-scope',
-      text: selfRecord.cardExportScope === 'selected'
-        ? '之前的勾选已随排版更新失效，请在预览中重新勾选，或改为「全部」'
-        : '在卡片预览里勾选页面后，可只导出勾选的页',
+  if (scope === 'selected') {
+    // 清单渲染与选择读写同属 card-page-selection.js 的子域；本层只接线与重绘
+    this.renderCardExportPicker(scopeField, {
+      pageIds: allPageIds,
+      selected: new Set(selection),
+      onToggle: (pageId) => { this.toggleCardPageSelection(pageId); this.renderCardExportModal(); },
+      onSelectAll: () => { this.applyCardPageSelection([...allPageIds]); this.renderCardExportModal(); },
+      onClear: () => { this.applyCardPageSelection([]); this.renderCardExportModal(); },
     });
   }
 
@@ -366,12 +370,12 @@ renderCardExportForm(body) {
   });
 
   const footer = body.createEl('div', { cls: 'icard-export-footer' });
-  // 「选中」但一页未勾：按钮禁用（原因已在上方范围控件旁说明），点击无动作
+  // 「自选页」但一页未勾：按钮禁用（原因已写在清单里），点击无动作
   const startBtn = footer.createEl('button', {
     cls: `icard-export-start mod-cta${emptySelection ? ' is-disabled' : ''}`,
     text: '开始导出',
     attr: emptySelection
-      ? { type: 'button', disabled: 'true', title: '请先在卡片预览中勾选页面，或把范围改为「全部」' }
+      ? { type: 'button', disabled: 'true', title: '请至少选择一页，或把范围改为「全部」' }
       : { type: 'button' },
   });
   if (!emptySelection) startBtn.addEventListener('click', () => { void this.startCardExport(); });

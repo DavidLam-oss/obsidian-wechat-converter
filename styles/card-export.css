@@ -28,6 +28,8 @@
   正常完成的行必须保持中性（透明底 + 分隔线）；禁止整列铺成功色底（旧版 is-saved 绿底已移除）。
 - 同一事实只说一次：完成态的「已保存张数」在状态区，进度条只在进行中出现。
 - 按钮层级：页脚主操作（完成）用 mod-cta，次级操作（再次导出 / 取消）用默认样式。
+- 挑页只在弹窗里（2026-09-20）：预览缩略图不挂覆盖控件，自选清单的选择器一律
+  icard-export-picker- 前缀；清单限高内滚，不把「倍率 / 目录 / 开始」挤出视野。
 - 修改样式后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
 */
 
@@ -590,7 +592,7 @@
   background: var(--background-modifier-hover);
 }
 
-/* 导出范围：与倍率同款分段控件，标签更长（「全部 N 页 / 选中 N 页」） */
+/* 导出范围：与倍率同款分段控件，标签更长（「全部 N 页 / 自选页」） */
 .icard-export-scope-btn {
   min-width: 78px;
   padding: 5px 12px;
@@ -619,14 +621,7 @@
   background: var(--background-modifier-hover);
 }
 
-/* 未勾选任何页：「选中」不可用（保持可读，但不给可点暗示） */
-.icard-export-scope-btn.is-disabled,
-.icard-export-scope-btn.is-disabled:hover {
-  color: var(--text-faint);
-  cursor: not-allowed;
-}
-
-/* 范围字段：标签行 + 说明行（说明只在空选时出现，无说明时不产生多余间距） */
+/* 范围字段：标签行 +（「自选页」时的）自选清单 */
 .icard-export-field.is-scope {
   flex-direction: column;
   align-items: stretch;
@@ -640,8 +635,117 @@
   gap: 12px;
 }
 
-.icard-export-field-hint.is-scope {
-  line-height: 1.5;
+/* 自选页清单（2026-09-20）：挑页从预览缩略图移到这里。
+   行是整行可点的按钮而非原生 checkbox——状态由 is-on 与 aria-pressed 双表达；
+   一页未选时计数处就地说明（is-empty），不把问题留到开始按钮的禁用提示里。 */
+.icard-export-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+  background: var(--background-secondary);
+}
+
+.icard-export-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.icard-export-picker-count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.icard-export-picker-count.is-empty {
+  color: var(--apple-warning, #ff9500);
+}
+
+.icard-export-picker-quick {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
+.icard-export-picker-quick-btn {
+  padding: 3px 10px;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 999px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.icard-export-picker-quick-btn:hover {
+  color: var(--text-normal);
+  border-color: var(--interactive-accent);
+}
+
+/* 清单限高内滚：页数多时不能把「倍率 / 目录 / 开始」挤出视野 */
+.icard-export-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 208px;
+  overflow-y: auto;
+}
+
+.icard-export-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-normal);
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.icard-export-picker-row:hover {
+  background: var(--background-modifier-hover);
+}
+
+.icard-export-picker-row:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: -2px;
+}
+
+.icard-export-picker-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: transparent;
+  border: 1.5px solid var(--background-modifier-border);
+  border-radius: 5px;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.icard-export-picker-row.is-on .icard-export-picker-mark {
+  color: var(--text-on-accent, #fff);
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+}
+
+.icard-export-picker-mark .svg-icon {
+  width: 12px;
+  height: 12px;
 }
 
 .icard-export-root-input {

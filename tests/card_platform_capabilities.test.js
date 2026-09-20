@@ -4,45 +4,25 @@
 小红书卡片平台能力隔离与移动端降级验证（C04）：
 1. 移动端环境（isMobileClient 为 true）严格展示说明态并阻断排版管线；
 2. 移动端环境下原文章与贴图模式完全正常运行、不受卡片影响；
-3. 桌面端剪贴板能力降级（无 Web Clipboard 与 Electron 兜底时优雅返回 unsupported）；
-4. 访达/文件管理器定位（shell 不可用时优雅返回 reveal-unavailable）；
-5. 插件加载/卸载在无 Electron 环境下零异常运行。
+3. 访达/文件管理器定位（shell 不可用时优雅返回 reveal-unavailable）；
+4. 插件加载/卸载在无 Electron 环境下零异常运行。
+
+单张卡片复制已在 2026-09-20 移除（缩略图不再挂覆盖控件，挑页改在导出弹窗），
+其剪贴板能力检测断言随 services/card-clipboard.js 一并删除。
 
 ## 维护规则
 
 - 保持单文件在 800 行软限制以内。
-- 契约对齐 services/card-clipboard.js、views/converter/card-preview.js、card-export-bridge.js。
+- 契约对齐 views/converter/card-preview.js、card-export-bridge.js。
 */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import {
-  canCopyImageToClipboard,
-  writeImageBlobToClipboard,
-} from "../services/card-clipboard.js";
+import { describe, it, expect, vi } from "vitest";
 import { isMobileClient } from "../views/apple-style-view-shared.js";
 
 const { loadInputModule } = require("./helpers/input-module.cjs");
 const { createObsidianLikeElement } = require("./helpers/obsidian-dom.js");
 
 describe("C04 平台能力隔离与降级验证", () => {
-  let originalNavigatorClipboard;
-  let originalClipboardItem;
-
-  beforeEach(() => {
-    originalNavigatorClipboard = globalThis.navigator?.clipboard;
-    originalClipboardItem = globalThis.ClipboardItem;
-  });
-
-  afterEach(() => {
-    if (originalNavigatorClipboard !== undefined) {
-      Object.defineProperty(globalThis.navigator, "clipboard", {
-        value: originalNavigatorClipboard,
-        configurable: true,
-      });
-    }
-    globalThis.ClipboardItem = originalClipboardItem;
-  });
-
   describe("移动端能力判断与排版隔离（isMobileClient）", () => {
     it("app.isMobile 为 true 时判定为移动端客户端", () => {
       const mockApp = { isMobile: true };
@@ -89,33 +69,6 @@ describe("C04 平台能力隔离与降级验证", () => {
       const markdown = createImageSwipeCalloutMarkdown("image-swipe", "![[img1.png|图1]]\n![[img2.png|图2]]");
       expect(markdown).toContain("图1");
       expect(markdown).toContain("图2");
-    });
-  });
-
-  describe("剪贴板环境检测与降级容错（services/card-clipboard.js）", () => {
-    it("既无 Web ClipboardItem 又无 Electron 时 canCopyImageToClipboard 返回 false", () => {
-      delete globalThis.ClipboardItem;
-      Object.defineProperty(globalThis.navigator, "clipboard", {
-        value: undefined,
-        configurable: true,
-      });
-
-      expect(canCopyImageToClipboard()).toBe(false);
-    });
-
-    it("无剪贴板能力时 writeImageBlobToClipboard 优雅返回 unsupported，不抛出异常", async () => {
-      delete globalThis.ClipboardItem;
-      Object.defineProperty(globalThis.navigator, "clipboard", {
-        value: undefined,
-        configurable: true,
-      });
-
-      const blob = new Blob(["fake-png"], { type: "image/png" });
-      const result = await writeImageBlobToClipboard(blob);
-
-      expect(result.ok).toBe(false);
-      expect(result.reason).toBe("clipboard-unsupported");
-      expect(result.message).toContain("当前环境不支持直接写入图片到剪贴板");
     });
   });
 

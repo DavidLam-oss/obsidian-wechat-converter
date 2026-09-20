@@ -3,7 +3,8 @@
 
 验证 AppleStyleView 卡片模式（第三模式）的接入行为：模式矩阵、操作按钮显隐、
 预览状态（空/失败/就绪/移动端）、B01 会话绑定、版本安全源定位、缩放与编辑合并，
-以及 B05 的页级勾选（多选、勾选/定位分离、版本 bump 失效回落全部）。
+以及页选择的会话持有与版本失效回落（缩略图自 2026-09-20 起不挂任何覆盖控件，
+挑页改在导出弹窗的「自选页」清单）。
 
 ## 输入
 
@@ -332,64 +333,46 @@ describe('AppleStyleView - Card Page Selection (B05)', () => {
     return view;
   }
 
-  /** 冒泡点击（勾选控件的 stopPropagation 才有意义） */
+  /** 冒泡点击（模拟真实点击：验证页面本体的源定位不被覆盖控件拦截） */
   function clickBubbling(el) {
     el.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
   }
 
-  it('勾选控件独立于「点击定位」：可多选、可取消，点击本体不改选择', async () => {
+  it('预览缩略图不挂覆盖控件：点击页面本体只做源定位，不改任何选择', async () => {
     const view = twoPageView();
     const editor = { setCursor: vi.fn(), scrollIntoView: vi.fn() };
     view.app = { workspace: { getActiveViewOfType: vi.fn().mockReturnValue({ editor }) } };
     await view.renderCardPreview();
 
-    const checks = view.previewContainer.querySelectorAll('.icard-preview-page-check');
-    expect(checks).toHaveLength(2);
-    const session = view.getCardSessions().getSession('notes/a.md');
+    // 勾选与单张复制都已移出缩略图（2026-09-20）：挑页改在导出弹窗的「自选页」清单
+    expect(view.previewContainer.querySelectorAll('.icard-preview-page-check')).toHaveLength(0);
+    expect(view.previewContainer.querySelectorAll('.icard-preview-page-copy')).toHaveLength(0);
+    expect(view.previewContainer.querySelector('.icard-preview-chip.is-selection')).toBeNull();
 
-    // 勾选写进会话；勾选动作不得顺带把编辑器光标跳走（stopPropagation）
-    clickBubbling(checks[0]);
-    expect(view.getCardPageSelection()).toEqual(['page-1']);
-    expect(session.getValidSelection()?.pageIds).toEqual(['page-1']);
-    expect(editor.setCursor).not.toHaveBeenCalled();
-    expect(checks[0].classList.contains('is-checked')).toBe(true);
-    expect(checks[0].getAttribute('aria-pressed')).toBe('true');
-
-    // 多选（规范化为页序升序）
-    clickBubbling(checks[1]);
-    expect(view.getCardPageSelection()).toEqual(['page-1', 'page-2']);
-    expect(view.previewContainer.querySelectorAll('.icard-preview-page-item.is-selected')).toHaveLength(2);
-
-    // 取消其中一页
-    clickBubbling(checks[1]);
-    expect(view.getCardPageSelection()).toEqual(['page-1']);
-
-    // 点击页面本体 = 只做版本安全的源定位，不动选择集合
     const items = view.previewContainer.querySelectorAll('.icard-preview-page-item');
+    expect(items).toHaveLength(2);
     clickBubbling(items[1]);
-    expect(view.getCardPageSelection()).toEqual(['page-1']);
     expect(editor.setCursor).toHaveBeenCalledWith({ line: 8, ch: 0 });
-
-    // 全部取消 → 会话选择清空（null = 未勾选，回落「全部」），不留「空选中」状态
-    clickBubbling(checks[0]);
-    expect(view.getCardPageSelection()).toBeNull();
-    expect(session.getValidSelection()).toBeNull();
-    expect(view.cardPreviewSelectedCount).toBe(0);
   });
 
-  it('摘要 chip 显示已勾选页数', async () => {
+  it('页选择仍由会话持有：预览不渲染选择态，选择读写照常生效', async () => {
     const view = twoPageView();
     await view.renderCardPreview();
-    const chip = () => view.previewContainer.querySelector('.icard-preview-chip.is-selection');
-    expect(chip().classList.contains('hidden')).toBe(true);
+    const session = view.getCardSessions().getSession('notes/a.md');
 
+    // 多选（规范化为页序升序）
     view.applyCardPageSelection(['page-2', 'page-1']);
     expect(view.getCardPageSelection()).toEqual(['page-1', 'page-2']);
-    expect(chip().classList.contains('hidden')).toBe(false);
-    expect(chip().textContent).toBe('已勾选 2 页 · 导出时可只导这些页');
+    expect(session.getValidSelection()?.pageIds).toEqual(['page-1', 'page-2']);
 
+    // 重绘预览不产生选择类覆盖控件（选择只在导出弹窗里表达）
+    await view.renderCardPreview();
+    expect(view.previewContainer.querySelectorAll('.icard-preview-page-item.is-selected')).toHaveLength(0);
+
+    // 全部取消 → 会话选择清空（null = 未自选，回落「全部」），不留「空选中」状态
     view.applyCardPageSelection([]);
-    expect(chip().classList.contains('hidden')).toBe(true);
+    expect(view.getCardPageSelection()).toBeNull();
+    expect(session.getValidSelection()).toBeNull();
   });
 
   it('编辑事件到达即标记 stale（§5.6 ≤250ms）：提示即时出现，不等 300ms 合并', async () => {
@@ -419,20 +402,15 @@ describe('AppleStyleView - Card Page Selection (B05)', () => {
     }
   });
 
-  it('版本 bump 使勾选失效：回落全部并在摘要提示', async () => {
+  it('版本 bump 使页选择失效：回落全部（§5.2 不把旧页号对应新内容）', async () => {
     const view = twoPageView();
     await view.renderCardPreview();
     view.applyCardPageSelection(['page-1']);
     expect(view.getCardPageSelection()).toEqual(['page-1']);
 
-    // 正文变化 → bumpContent → 会话选择自动失效（§5.2 不把旧页号对应新内容）
+    // 正文变化 → bumpContent → 会话选择自动失效
     const session = view.getCardSessions().getSession('notes/a.md');
     session.bumpContent();
     expect(view.getCardPageSelection()).toBeNull();
-
-    await view.renderCardPreview();
-    expect(view.previewContainer.textContent).toContain('页选择已重置为全部');
-    expect(view.previewContainer.querySelectorAll('.icard-preview-page-item.is-selected')).toHaveLength(0);
-    expect(view.previewContainer.querySelector('.icard-preview-chip.is-selection').classList.contains('hidden')).toBe(true);
   });
 });

@@ -402,8 +402,6 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     cardPreviewLastOutcome: unknown;
     cardPreviewOutcome: unknown;
     cardPreviewShell: ObsidianElementLike | null;
-    /** 卡片预览：上次渲染时的勾选页数（版本 bump 后据此提示「页选择已重置为全部」） */
-    cardPreviewSelectedCount: number;
     /** 卡片预览：按笔记记录的正文内容 hash（变化 → bumpContent） */
     cardContentHashes: Map<string, string>;
     /** 卡片预览：会话级资源累计预算（§5.5） */
@@ -430,16 +428,16 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     renderCardMobileNotice(): void;
     renderCardFailureState(outcome: unknown): void;
     renderCardPreviewDom(): ObsidianElementLike | undefined;
-    /** 当前有效页勾选（版本失效/空集 → null，调用方回落「全部」） */
+    /** 当前有效页选择（版本失效/空集 → null，调用方回落「全部」）；有选择即「已自选」 */
     getCardPageSelection(): string[] | null;
-    /** 勾选读写与源定位共用的会话（无预览输入返回 null） */
+    /** 选择读写与源定位共用的会话（无预览输入返回 null） */
     resolveCardSelectionSession(): unknown;
-    /** 切换单页勾选（多选） */
+    /** 切换单页选择（多选） */
     toggleCardPageSelection(pageId: string): void;
-    /** 写入页勾选（多选；空集走 clearSelection 回落「全部」） */
+    /** 写入页选择（多选；空集走 clearSelection 回落「全部」） */
     applyCardPageSelection(pageIds: string[]): void;
-    /** 按当前选择刷新预览勾选态与摘要 chip（不重建缩略页） */
-    syncCardPageSelectionDom(): void;
+    /** 渲染导出弹窗内的「自选页」清单（纯展示；变更经回调写回会话后由调用方重绘） */
+    renderCardExportPicker(container: ObsidianElementLike, options: { pageIds: string[], selected: Set<string>, onToggle: (pageId: string) => void, onSelectAll: () => void, onClear: () => void }): void;
     /** 版本安全源定位：结果过期时不跳转编辑器 */
     locateCardPageSource(pageIndex: number): void;
     /** 源定位共用入口（行号 1-based；B03 从页定位与诊断定位共用） */
@@ -494,7 +492,7 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     closeCardExportModal(): void;
     /** 卡片导出：弹窗应展示的状态（job / result / none） */
     resolveCardExportView(): { kind: string, job?: unknown };
-    /** 卡片导出：本次导出范围（'all' 全部页 / 'selected' 仅预览勾选页；未显式选择时跟随预览勾选） */
+    /** 卡片导出：本次导出范围（'all' 全部页，默认 / 'selected' 弹窗清单里的自选页） */
     resolveCardExportScope(): 'all' | 'selected';
     /** 卡片导出：解析输出目录（本次弹窗输入 > 上次记住的目录 cardDefaults.exportRoot > 内置默认，C02） */
     resolveCardExportRootDefault(): string;
@@ -520,8 +518,6 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     canRevealCardExportOutput(): boolean;
     /** 卡片导出：在系统文件管理器中选中批次目录 */
     revealCardExportOutput(vaultRelativePath: string): { ok: boolean, absPath: string | null, reason?: string };
-    /** 卡片导出：单张复制到系统剪贴板（C03：零磁盘写入） */
-    copyCardPageImage(pageId: string, buttonEl?: ObsidianElementLike | null): Promise<{ ok: boolean, reason?: string, message?: string }>;
     /** 卡片导出：开始导出（冻结快照 → 建任务 → 逐页输出） */
     startCardExport(): Promise<void>;
     /** 卡片导出：结果已读后回到表单，允许换倍率/目录再导一批 */

@@ -210,7 +210,7 @@ type CardPageSelectionMethodsContract = Pick<
     | 'resolveCardSelectionSession'
     | 'toggleCardPageSelection'
     | 'applyCardPageSelection'
-    | 'syncCardPageSelectionDom'
+    | 'renderCardExportPicker'
 >;
 
 type CardPreviewDiagnosticsMethodsContract = Pick<
@@ -244,7 +244,6 @@ type CardExportBridgeMethodsContract = Pick<
     | 'resolveCardExportAbsPath'
     | 'canRevealCardExportOutput'
     | 'revealCardExportOutput'
-    | 'copyCardPageImage'
 >;
 
 type CardExportMethodsContract = Pick<

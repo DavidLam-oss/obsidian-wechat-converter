@@ -5,8 +5,9 @@
 onClose）、后台继续、重开复用原任务（不建第二任务）、显式取消 vs 关闭弹窗的区别、
 清单失败恢复、失败页重试、视图释放清理、进度反馈（准备中 / 逐页渲染中的事件驱动重绘）、
 完成态与失败态的视觉规则（状态区色调、明细折叠、失败着色）、结果定位（打开所在文件夹 /
-失败降级为复制路径 / 无能力时不渲染入口）、导出范围（全部 / 选中 N 页：默认跟随预览勾选、
-空选禁用不静默改成全部、子集导出按原始页序显示），以及导出接线层（fs 适配器 create-only
+失败降级为复制路径 / 无能力时不渲染入口）、导出范围（全部 / 自选页：默认全部、
+自选清单在弹窗内展开、一页未选禁用不静默改成全部、子集导出按原始页序显示、
+页全集与导出口径同源），以及导出接线层（fs 适配器 create-only
 语义、不提供 remove、绝对路径解析、入参组装）。
 
 ## 输入
@@ -128,10 +129,12 @@ describe('AppleStyleView - Card Export Modal (B05)', () => {
     });
     // 来源只说笔记名；vault 相对路径只作悬停提示，不进正文
     expect(rows[0]).toEqual({ label: '来源', value: 'a', title: 'notes/a.md' });
-    // 范围不在摘要里重复：由「导出范围」分段控件表达（全部 N 页 / 选中 N 页）
+    // 范围不在摘要里重复：由「导出范围」分段控件表达（全部 N 页 / 自选页）
     expect(rows).toHaveLength(2);
     expect([...modal.contentEl.querySelectorAll('.icard-export-scope-btn')].map((btn) => btn.textContent))
-      .toEqual(['全部 2 页', '选中 0 页']);
+      .toEqual(['全部 2 页', '自选页']);
+    // 默认「全部」：自选清单不展开
+    expect(modal.contentEl.querySelector('.icard-export-picker')).toBeNull();
     // 尺寸说人话：不再堆「3:4 · 2x · 750 × 1000 px」这类术语
     expect(rows[1]).toEqual({ label: '尺寸', value: '每张 750 × 1000 像素', title: '每张 750 × 1000 像素' });
   });
@@ -704,7 +707,7 @@ describe('Card export bridge - fs adapter (B05/§6.1)', () => {
   });
 });
 
-describe('AppleStyleView - Card Export Scope (B05 全部 / 选中)', () => {
+describe('AppleStyleView - Card Export Scope (B05 全部 / 自选页)', () => {
   let AppleStyleView;
 
   beforeEach(() => {
@@ -724,73 +727,133 @@ describe('AppleStyleView - Card Export Scope (B05 全部 / 选中)', () => {
     return exportCards;
   }
 
-  it('范围控件默认跟随预览勾选：未勾选时「选中」禁用并说明', () => {
+  /** 点一下元素（走真实 click 事件，验证接线而非直接调方法） */
+  function click(el) {
+    el.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  }
+
+  /** 把弹窗范围切到「自选页」，返回重绘后的弹窗根 */
+  function switchToSelected(view) {
+    click([...view.cardExportModal.contentEl.querySelectorAll('.icard-export-scope-btn')][1]);
+    return view.cardExportModal.contentEl;
+  }
+
+  /** 弹窗内容里所有自选清单快捷按钮的文案 */
+  function quickLabels(overlay) {
+    return [...overlay.querySelectorAll('.icard-export-picker-quick-btn')].map((b) => b.textContent);
+  }
+
+  it('范围默认「全部」：清单收起，不因会话残留选择而改判', () => {
     const view = readyView(AppleStyleView);
-    view.openCardExportModal();
-    let overlay = view.cardExportModal.contentEl;
-
-    let btns = [...overlay.querySelectorAll('.icard-export-scope-btn')];
-    expect(btns.map((b) => b.textContent)).toEqual(['全部 2 页', '选中 0 页']);
-    expect(btns[0].classList.contains('is-active')).toBe(true);
-    expect(btns[1].classList.contains('is-disabled')).toBe(true);
-    expect(overlay.querySelector('.icard-export-field-hint.is-scope')?.textContent)
-      .toBe('在卡片预览里勾选页面后，可只导出勾选的页');
-
-    // 勾选 1 页后重开：默认切到「选中 1 页」且可选
-    view.applyCardPageSelection(['page-2']);
-    view.renderCardExportModal();
-    overlay = view.cardExportModal.contentEl;
-    btns = [...overlay.querySelectorAll('.icard-export-scope-btn')];
-    expect(btns.map((b) => b.textContent)).toEqual(['全部 2 页', '选中 1 页']);
-    expect(btns[1].classList.contains('is-active')).toBe(true);
-    expect(btns[1].classList.contains('is-disabled')).toBe(false);
-    expect(overlay.querySelector('.icard-export-start').hasAttribute('disabled')).toBe(false);
-    expect(overlay.querySelector('.icard-export-field-hint.is-scope')).toBeNull();
-  });
-
-  it('范围可显式切换回「全部」：切回后不导出选中子集', async () => {
-    const view = readyView(AppleStyleView);
-    view.app = { vault: { configDir: '.obsidian' } };
-    const exportCards = stubController(view);
+    // 会话里残留一个选择也不该把默认范围改成「自选页」（默认就是导全部）
     view.applyCardPageSelection(['page-2']);
     view.openCardExportModal();
-
     const overlay = view.cardExportModal.contentEl;
-    const allBtn = [...overlay.querySelectorAll('.icard-export-scope-btn')][0];
-    allBtn.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
-    expect(view.cardExportScope).toBe('all');
 
-    await view.startCardExport();
-    expect(exportCards.mock.calls[0][0].pages).toHaveLength(2);
+    const btns = [...overlay.querySelectorAll('.icard-export-scope-btn')];
+    expect(btns.map((b) => b.textContent)).toEqual(['全部 2 页', '自选页']);
+    expect(btns[0].classList.contains('is-active')).toBe(true);
+    // 清单只在「自选页」态渲染
+    expect(overlay.querySelector('.icard-export-picker')).toBeNull();
+    expect(overlay.querySelector('.icard-export-start').hasAttribute('disabled')).toBe(false);
   });
 
-  it('startCardExport：范围「选中」只导出勾选的页（原始页序）', async () => {
+  it('切到「自选页」以全集为起点：清单展开、行内切换写回会话', () => {
+    const view = readyView(AppleStyleView);
+    view.openCardExportModal();
+    let overlay = switchToSelected(view);
+
+    expect(view.cardExportScope).toBe('selected');
+    // 首次进入以全集为起点，避免「一进来就一页未选」的死路
+    expect(view.getCardPageSelection()).toEqual(['page-1', 'page-2']);
+
+    const rows = [...overlay.querySelectorAll('.icard-export-picker-row')];
+    expect(rows.map((r) => r.querySelector('.icard-export-picker-name').textContent)).toEqual(['第 1 页', '第 2 页']);
+    expect(rows.every((r) => r.classList.contains('is-on'))).toBe(true);
+    expect(overlay.querySelector('.icard-export-picker-count').textContent).toBe('已选 2 页');
+    // 全选此刻无事可做 → 不渲染无效按钮
+    expect(quickLabels(overlay)).toEqual(['清空']);
+
+    // 行内点击即取消该页（写回会话 + 重绘）
+    click(rows[1]);
+    overlay = view.cardExportModal.contentEl;
+    expect(view.getCardPageSelection()).toEqual(['page-1']);
+    expect(overlay.querySelector('.icard-export-picker-count').textContent).toBe('已选 1 页');
+    expect([...overlay.querySelectorAll('.icard-export-picker-row')].map((r) => r.getAttribute('aria-pressed')))
+      .toEqual(['true', 'false']);
+  });
+
+  it('清单「清空」→「全选」往返；清空时禁用开始按钮并不建任务（不静默改成全部）', async () => {
     const view = readyView(AppleStyleView);
     view.app = { vault: { configDir: '.obsidian' } };
     const exportCards = stubController(view);
+    view.openCardExportModal();
+    switchToSelected(view);
+
+    click([...view.cardExportModal.contentEl.querySelectorAll('.icard-export-picker-quick-btn')]
+      .find((b) => b.textContent === '清空'));
+
+    let overlay = view.cardExportModal.contentEl;
+    expect(view.getCardPageSelection()).toBeNull();
+    const count = overlay.querySelector('.icard-export-picker-count');
+    expect(count.textContent).toBe('尚未选择任何页');
+    expect(count.classList.contains('is-empty')).toBe(true);
+    expect(overlay.querySelector('.icard-export-start').hasAttribute('disabled')).toBe(true);
+    // 一页未选时唯一有意义的快捷操作是「全选」
+    expect(quickLabels(overlay)).toEqual(['全选']);
+
+    // 不建任务，也不偷偷改成全部
+    await view.startCardExport();
+    expect(view.createCardExportController).not.toHaveBeenCalled();
+    expect(exportCards).not.toHaveBeenCalled();
+
+    // 「全选」一键回到全部页
+    click([...overlay.querySelectorAll('.icard-export-picker-quick-btn')].find((b) => b.textContent === '全选'));
+    overlay = view.cardExportModal.contentEl;
+    expect(view.getCardPageSelection()).toEqual(['page-1', 'page-2']);
+    expect(overlay.querySelector('.icard-export-start').hasAttribute('disabled')).toBe(false);
+  });
+
+  it('startCardExport：范围「自选页」只导出选中的页（原始页序）', async () => {
+    const view = readyView(AppleStyleView);
+    view.app = { vault: { configDir: '.obsidian' } };
+    const exportCards = stubController(view);
+    view.cardExportScope = 'selected';
     view.applyCardPageSelection(['page-2']);
 
     await view.startCardExport();
     expect(exportCards.mock.calls[0][0].pages).toEqual([{ pageId: 'page-2', ordinal: 2 }]);
   });
 
-  it('范围「选中」但一页未勾：开始按钮禁用、不建任务（不静默改成全部）', async () => {
+  it('startCardExport：范围「全部」时即使会话里有选择也导出全部页', async () => {
     const view = readyView(AppleStyleView);
     view.app = { vault: { configDir: '.obsidian' } };
     const exportCards = stubController(view);
-    // 用户显式选了「选中」，随后勾选随排版更新失效
-    view.cardExportScope = 'selected';
-
-    view.openCardExportModal();
-    const overlay = view.cardExportModal.contentEl;
-    expect(overlay.querySelector('.icard-export-start').hasAttribute('disabled')).toBe(true);
-    expect(overlay.querySelector('.icard-export-scope-btn.is-active.is-disabled')).not.toBeNull();
-    expect(overlay.querySelector('.icard-export-field-hint.is-scope')?.textContent)
-      .toContain('已随排版更新失效');
+    view.applyCardPageSelection(['page-2']);
 
     await view.startCardExport();
-    expect(view.createCardExportController).not.toHaveBeenCalled();
-    expect(exportCards).not.toHaveBeenCalled();
+    expect(view.resolveCardExportScope()).toBe('all');
+    expect(exportCards.mock.calls[0][0].pages).toHaveLength(2);
+  });
+
+  it('页全集与导出口径同源：封面成立时清单与导出都含封面', () => {
+    const view = readyView(AppleStyleView);
+    view.cardPreviewOutcome = {
+      ...view.cardPreviewOutcome,
+      hasCover: true,
+      coverPage: document.createElement('div'),
+    };
+
+    const collected = view.collectCardExportInput({});
+    expect(collected.input.pages.map((p) => p.pageId)).toEqual(['cover', 'page-1', 'page-2']);
+
+    view.openCardExportModal();
+    // 清单默认收起；切到「自选页」后逐行列出（封面在首行）
+    expect(view.cardExportModal.contentEl.querySelectorAll('.icard-export-picker-row')).toHaveLength(0);
+    const overlay = switchToSelected(view);
+    expect([...overlay.querySelectorAll('.icard-export-picker-name')].map((n) => n.textContent))
+      .toEqual(['封面', '第 1 页', '第 2 页']);
+    expect(overlay.querySelector('.icard-export-scope-btn.is-active').textContent).toBe('自选页');
   });
 
   it('子集导出：逐页明细用原始页序，进行中页与进度事件按页序对齐', () => {

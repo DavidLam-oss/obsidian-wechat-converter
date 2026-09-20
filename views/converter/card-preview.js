@@ -3,8 +3,9 @@
 
 图片卡片预览视图（B02）：卡片模式的第三预览入口。绑定 B01 会话层（card-session），
 把当前笔记正文走「解析 → 资源就绪 → 测量分页 → 页面装配」管线生成页计划，
-以缩放缩略图形式展示，并提供摘要、空态、警告、过期（stale）状态、页级勾选（多选，
-供「选中页」导出）与版本安全的源定位。
+以缩放缩略图形式展示，并提供摘要、空态、警告、过期（stale）状态与版本安全的源定位。
+缩略图本身不挂任何控件（2026-09-20）：「导出哪些页」的选择搬到了导出弹窗，
+复制图到剪贴板则整体退役（各平台都不接受粘贴图片，还是要上传文件）。
 
 ## 输入
 
@@ -21,15 +22,12 @@ AppleStyleView 实例状态（previewMode/previewContainer/app 等）、当前�
 - 模式操作显隐集中在 panel-shell.js 的 `applyModeActionVisibility()`；
 - `setCardPreviewZoom()` / `adjustCardPreviewZoom()`：仅改变展示缩放，不改分页（§4.3）；
 - `locateCardPageSource(pageIndex)`：版本安全源定位（陈旧结果不跳转）；
-- 页勾选（多选）的读写与摘要 chip 在 **card-page-selection.js** 的独立方法组
-  （`getCardPageSelection` / `applyCardPageSelection` / `toggleCardPageSelection` 等），
-  本文件只负责在缩略页上渲染勾选控件并调用它；
 - `disposeCardPreview()`：视图关闭时释放会话与资源。
 
 ## 定位
 
 位于 views/converter/，卡片预览编排；解析/分页/资源/会话分别委托 services/，
-页勾选拆到 card-page-selection.js（按职责拆分，避免本文件越过 800 行软警告线）。
+导出页选择拆到 card-page-selection.js（按职责拆分，避免本文件越过 800 行软警告线）。
 排版管线集中在 `runCardLayoutPipeline`（测试可注入替身）。
 
 ## 依赖
@@ -41,10 +39,10 @@ AppleStyleView 实例状态（previewMode/previewContainer/app 等）、当前�
 
 - 修改逻辑后同步更新本文件说明书，并检查所属目录 README 是否仍准确。
 - 预览 DOM 选择器以 icard- 前缀作用域（styles/card-preview.css 分片）。
-- **勾选与定位必须分离**（规划 §3.1）：点页面本体只做源定位，选择集合只由左上角勾选控件改写。
-- 选择写进会话（非空用 `setSelection`、清空用 `clearSelection`）：任一版本 bump 后由会话自动失效
-  → 回落「全部」并在摘要提示，不得把旧页号对应到新内容（§5.2）。
-- 导出/复制入口在 B04/B05/C03 接入前保持禁用或不展示，不得提前放行。
+- 缩略图只承载「页面本体 + 页号徽标 + 点击定位」（2026-09-20 David）：
+  不再挂勾选控件（不好看、且默认就该导全部）与复制按钮（平台不接受粘贴图片）。
+  「导出哪些页」的选择由导出弹窗驱动，读写落在 card-page-selection.js。
+- 点页面本体只做源定位；版本安全由 `locateCardPageSource` 的 layoutKey 比对保证（§5.2）。
 - 排版设置已在 B03 接入（会话归一化：card-settings-model.js）；主题/比例仍仅已验证值，C01 扩展。
 */
 
@@ -94,7 +92,6 @@ import { OMISSION_LABELS } from './card-preview-diagnostics.js';
  *   cardPreviewLastOutcome?: Record<string, any> | null,
  *   cardPreviewOutcome?: Record<string, any> | null,
  *   cardPreviewShell?: ObsidianElementLike | null,
- *   cardPreviewSelectedCount?: number,
  *   cardRenderedLayoutKey?: string,
  *   cardContentHashes?: Map<string, string>,
  *   cardResourceBudget?: import('../../services/card-resources.js').CardResourceSession | null
@@ -467,14 +464,7 @@ renderCardPreviewDom() {
     return undefined;
   }
 
-  // B03/B05：上一渲染版本之后发生过 bump（正文/设置/主题）且当时有页勾选 → 选择已失效，提示并回落全部
   const selfRec = cardStateOf(this);
-  const prevRenderedKey = String(selfRec.cardRenderedLayoutKey || '');
-  const selectionResetNotice = Boolean(
-    prevRenderedKey && prevRenderedKey !== String(outcome.layoutKey) && Number(selfRec.cardPreviewSelectedCount || 0) > 0,
-  );
-  if (selectionResetNotice) selfRec.cardPreviewSelectedCount = 0;
-
   const container = this.previewContainer;
   if (!container) return undefined;
   container.empty();
@@ -491,16 +481,8 @@ renderCardPreviewDom() {
     cls: 'icard-preview-summary-count',
     text: hasCover ? `封面 1 张 · 正文 ${pageCount} 张` : `共 ${pageCount} 页`,
   });
-  // 勾选摘要：文案与显隐由 syncCardPageSelectionDom 按当前选择渲染
-  summary.createEl('span', { cls: 'icard-preview-chip is-selection hidden' });
   if (state.stale) {
     summary.createEl('span', { cls: 'icard-preview-summary-stale', text: '正文已更新，正在重新排版…' });
-  }
-  if (selectionResetNotice) {
-    summary.createEl('span', {
-      cls: 'icard-preview-chip is-info',
-      text: '排版已更新，页选择已重置为全部',
-    });
   }
   const omissionTotal = Number(outcome?.omissionSummary?.total || 0);
   if (omissionTotal > 0) {
@@ -564,16 +546,15 @@ renderCardPreviewDom() {
   const zoomIn = zoomBar.createEl('button', { cls: 'icard-preview-zoom-btn', attr: { 'aria-label': '放大预览' }, text: '+' });
   zoomIn.addEventListener('click', () => this.adjustCardPreviewZoom(1));
 
-  // —— 缩略页（每页带独立勾选控件；封面在列首、不编号，C01③）——
+  // —— 缩略页（封面在列首、不编号，C01③）——
+  // 2026-09-20：不再挂勾选与复制控件。点页面本体就只做源定位（版本安全，见 locateCardPageSource）。
   const pagesWrap = shell.createEl('div', { cls: 'icard-preview-pages' });
   const pages = Array.isArray(outcome?.pages) ? outcome.pages : [];
   const size = RATIO_PRESETS[String(outcome?.settings?.ratioId || '3:4')] || RATIO_PRESETS['3:4'];
-  const checkedIds = new Set(this.getCardPageSelection() || []);
-  /** @param {HTMLElement | null} pageEl @param {string} pageId @param {string} badge @param {string} ariaLabel @param {(() => void) | null} onOpen */
-  const renderPageThumb = (pageEl, pageId, badge, ariaLabel, onOpen) => {
-    const checked = checkedIds.has(pageId);
+  /** @param {HTMLElement | null} pageEl @param {string} pageId @param {string} badge @param {(() => void) | null} onOpen */
+  const renderPageThumb = (pageEl, pageId, badge, onOpen) => {
     const item = pagesWrap.createEl('div', {
-      cls: `icard-preview-page-item${checked ? ' is-selected' : ''}`,
+      cls: 'icard-preview-page-item',
       attr: { 'data-page-id': pageId },
     });
     item.dataset.pageWidth = String(size.width);
@@ -581,67 +562,27 @@ renderCardPreviewDom() {
     if (pageEl instanceof HTMLElement) {
       item.appendChild(pageEl);
     }
-    // 独立勾选控件（规划 §3.1）：选择与定位是两个互不干扰的单页操作。
-    // 勾选控件自带 stopPropagation —— 勾选不得顺带把编辑器光标跳走。
-    const check = item.createEl('button', {
-      cls: `icard-preview-page-check${checked ? ' is-checked' : ''}`,
-      attr: {
-        type: 'button',
-        'data-page-id': pageId,
-        'aria-pressed': checked ? 'true' : 'false',
-        'aria-label': ariaLabel,
-        title: `勾选${badge}（导出时可只导出勾选的页）`,
-      },
-    });
-    check.createEl('span', { cls: 'icard-preview-page-check-mark' });
-    check.addEventListener('click', (event) => {
-      event.stopPropagation();
-      this.toggleCardPageSelection(pageId);
-    });
-    // 单张复制控件（规划 C03）：点击将当前单张卡片以 PNG 写入系统剪贴板（零磁盘写入）。
-    // 带有 stopPropagation，防止触发源定位光标跳转。
-    const copyBtn = item.createEl('button', {
-      cls: 'icard-preview-page-copy',
-      attr: {
-        type: 'button',
-        'data-page-id': pageId,
-        'aria-label': `复制${badge}到剪贴板`,
-        title: `复制${badge}到剪贴板`,
-      },
-    });
-    copyBtn.createEl('span', { cls: 'icard-preview-page-copy-icon' });
-    copyBtn.addEventListener('click', (event) => {
-      event.stopPropagation();
-      if (typeof this.copyCardPageImage === 'function') {
-        void this.copyCardPageImage(pageId, copyBtn);
-      }
-    });
     const badgeEl = item.createEl('div', { cls: 'icard-preview-page-badge', text: badge });
     badgeEl.setAttribute('data-icard-badge', '1');
     if (onOpen) {
-      item.addEventListener('click', () => {
-        // 点击本体 = 只做版本安全的源定位；选择集合只由勾选控件改写
-        onOpen();
-      });
+      item.addEventListener('click', () => { onOpen(); });
     }
     return item;
   };
   if (outcome?.coverPage instanceof HTMLElement) {
-    renderPageThumb(outcome.coverPage, 'cover', '封面', '选择封面', null);
+    renderPageThumb(outcome.coverPage, 'cover', '封面', null);
   }
   pages.forEach((pageEl, index) => {
     renderPageThumb(
       pageEl instanceof HTMLElement ? pageEl : null,
       `page-${index + 1}`,
       `第 ${index + 1} 页`,
-      `选择第 ${index + 1} 页`,
       () => this.locateCardPageSource(index + 1),
     );
   });
   // —— 省略/资源诊断区（可展开、可定位、可确认；B03 ③④）——
   this.renderCardDiagnosticArea(shell, outcome, session);
   selfRec.cardRenderedLayoutKey = String(outcome.layoutKey);
-  this.syncCardPageSelectionDom();
   this.maybeAutoFitCardPreviewZoom(Number(size.width));
   this.applyCardPreviewZoom();
   return /** @type {ObsidianElementLike} */ (/** @type {unknown} */ (shell));
@@ -719,7 +660,6 @@ disposeCardPreview() {
   selfRecord.cardPreviewRunnerNoteId = '';
   selfRecord.cardPreviewOutcome = null;
   selfRecord.cardPreviewShell = null;
-  selfRecord.cardPreviewSelectedCount = 0;
   selfRecord.cardPreviewZoomUserSet = false;
   selfRecord.cardRenderedLayoutKey = '';
   if (selfRecord.cardSessionRegistry) {

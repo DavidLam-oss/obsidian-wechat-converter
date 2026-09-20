@@ -3043,7 +3043,7 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 /*
 ## 核心功能
 
-图片卡片预览/实验样式分片（A03 离屏容器 + B02 预览 UI + B05 页勾选控件）。
+图片卡片预览/实验样式分片（A03 离屏容器 + B02 预览 UI）。
 卡片成品页样式由主题 token 动态生成（services/card-themes.js），不进本分片。
 
 ## 输入
@@ -3054,13 +3054,12 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 ## 输出
 
 输出预览外壳的布局与状态表现：摘要条与 chip、缩放控制、缩略页容器、
-页勾选控件（.icard-preview-page-check）与选中态（.icard-preview-page-item.is-selected）、
 空态/失败态/诊断区（含深色主题适配）。
 
 ## 定位
 
 位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
-预览 DOM 由 views/converter/card-preview.js 与 card-page-selection.js 产出。
+预览 DOM 由 views/converter/card-preview.js 产出；选页清单归导出弹窗（card-page-selection.js）。
 
 ## 依赖
 
@@ -3070,8 +3069,8 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 
 - 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
 - 新增选择器必须以 icard- 前缀作用域，避免污染宿主 UI。
-- 勾选控件必须常驻可见（不能只在 hover 出现）：它是「只导出选中页」的唯一入口。
-- 勾选态同时改 outline 与控件本体（色盲友好：不只靠颜色，勾选控件有实心/空心差异）。
+- 缩略图不挂任何覆盖控件（2026-09-20 David 定）：左上勾选与右上复制都已移出，
+  挑页改在导出弹窗的「自选页」清单（styles/card-export.css 的 icard-export-picker-）。
 */
 
 /* 离屏捕获容器：参与布局但不可见、不可交互（禁止 display:none，见规划 §5.1） */
@@ -3225,141 +3224,6 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   background: rgba(0, 0, 0, 0.45);
   color: #fff;
   pointer-events: none;
-}
-
-/* 页勾选控件（B05）：独立于「点击定位」，左上角常驻，勾选态用强调色实心 + 对勾。
-   尺寸与内缩刻意压在 22px 内——卡片正文默认从 pagePadding(28px) 起排，控件不会压到正文。 */
-.icard-preview-page-check {
-  position: absolute;
-  left: 4px;
-  top: 4px;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  border: 1px solid rgba(0, 0, 0, 0.28);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-  color: transparent;
-  cursor: pointer;
-  transition: background-color 120ms ease, border-color 120ms ease;
-}
-
-.icard-preview-page-check:hover {
-  border-color: var(--interactive-accent);
-}
-
-.icard-preview-page-check:focus-visible {
-  outline: 2px solid var(--interactive-accent);
-  outline-offset: 2px;
-}
-
-.icard-preview-page-check.is-checked {
-  border-color: transparent;
-  background: var(--interactive-accent);
-  color: #fff;
-}
-
-.icard-preview-page-check-mark {
-  width: 8px;
-  height: 4.5px;
-  border-left: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: rotate(-45deg) translate(0.5px, -1px);
-}
-
-/* 单张复制按钮（C03）：右上角常驻/悬浮微型按钮 */
-.icard-preview-page-copy {
-  position: absolute;
-  right: 4px;
-  top: 4px;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: 1px solid rgba(0, 0, 0, 0.22);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
-  color: var(--text-muted);
-  cursor: pointer;
-  opacity: 0.82;
-  transition: opacity 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;
-}
-
-.icard-preview-page-item:hover .icard-preview-page-copy {
-  opacity: 1;
-}
-
-.icard-preview-page-copy:hover {
-  border-color: var(--interactive-accent);
-  color: var(--interactive-accent);
-  background: #fff;
-}
-
-.icard-preview-page-copy:focus-visible {
-  outline: 2px solid var(--interactive-accent);
-  outline-offset: 2px;
-}
-
-.icard-preview-page-copy-icon {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border: 1.5px solid currentColor;
-  border-radius: 2px;
-  position: relative;
-}
-
-.icard-preview-page-copy-icon::after {
-  content: '';
-  position: absolute;
-  left: 2px;
-  top: -4px;
-  width: 8px;
-  height: 8px;
-  border-top: 1.5px solid currentColor;
-  border-right: 1.5px solid currentColor;
-  border-radius: 1px;
-}
-
-.icard-preview-page-copy.is-copying {
-  opacity: 0.6;
-  cursor: wait;
-  pointer-events: none;
-}
-
-.icard-preview-page-copy.is-copied {
-  border-color: transparent;
-  background: #10b981;
-  color: #fff;
-  opacity: 1;
-}
-
-.icard-preview-page-copy.is-copied .icard-preview-page-copy-icon {
-  width: 8px;
-  height: 4.5px;
-  border: none;
-  border-left: 1.5px solid #fff;
-  border-bottom: 1.5px solid #fff;
-  border-radius: 0;
-  transform: rotate(-45deg) translate(0.5px, -1px);
-}
-
-.icard-preview-page-copy.is-copied .icard-preview-page-copy-icon::after {
-  display: none;
-}
-
-.icard-preview-chip.is-selection {
-  background: color-mix(in srgb, var(--interactive-accent) 14%, transparent);
-  color: var(--text-accent);
 }
 
 /* 空态 / 失败态 / 移动端说明态 */
@@ -3709,6 +3573,8 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   正常完成的行必须保持中性（透明底 + 分隔线）；禁止整列铺成功色底（旧版 is-saved 绿底已移除）。
 - 同一事实只说一次：完成态的「已保存张数」在状态区，进度条只在进行中出现。
 - 按钮层级：页脚主操作（完成）用 mod-cta，次级操作（再次导出 / 取消）用默认样式。
+- 挑页只在弹窗里（2026-09-20）：预览缩略图不挂覆盖控件，自选清单的选择器一律
+  icard-export-picker- 前缀；清单限高内滚，不把「倍率 / 目录 / 开始」挤出视野。
 - 修改样式后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
 */
 
@@ -4271,7 +4137,7 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   background: var(--background-modifier-hover);
 }
 
-/* 导出范围：与倍率同款分段控件，标签更长（「全部 N 页 / 选中 N 页」） */
+/* 导出范围：与倍率同款分段控件，标签更长（「全部 N 页 / 自选页」） */
 .icard-export-scope-btn {
   min-width: 78px;
   padding: 5px 12px;
@@ -4300,14 +4166,7 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   background: var(--background-modifier-hover);
 }
 
-/* 未勾选任何页：「选中」不可用（保持可读，但不给可点暗示） */
-.icard-export-scope-btn.is-disabled,
-.icard-export-scope-btn.is-disabled:hover {
-  color: var(--text-faint);
-  cursor: not-allowed;
-}
-
-/* 范围字段：标签行 + 说明行（说明只在空选时出现，无说明时不产生多余间距） */
+/* 范围字段：标签行 +（「自选页」时的）自选清单 */
 .icard-export-field.is-scope {
   flex-direction: column;
   align-items: stretch;
@@ -4321,8 +4180,117 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   gap: 12px;
 }
 
-.icard-export-field-hint.is-scope {
-  line-height: 1.5;
+/* 自选页清单（2026-09-20）：挑页从预览缩略图移到这里。
+   行是整行可点的按钮而非原生 checkbox——状态由 is-on 与 aria-pressed 双表达；
+   一页未选时计数处就地说明（is-empty），不把问题留到开始按钮的禁用提示里。 */
+.icard-export-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+  background: var(--background-secondary);
+}
+
+.icard-export-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.icard-export-picker-count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.icard-export-picker-count.is-empty {
+  color: var(--apple-warning, #ff9500);
+}
+
+.icard-export-picker-quick {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
+.icard-export-picker-quick-btn {
+  padding: 3px 10px;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 999px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.icard-export-picker-quick-btn:hover {
+  color: var(--text-normal);
+  border-color: var(--interactive-accent);
+}
+
+/* 清单限高内滚：页数多时不能把「倍率 / 目录 / 开始」挤出视野 */
+.icard-export-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 208px;
+  overflow-y: auto;
+}
+
+.icard-export-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-normal);
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.icard-export-picker-row:hover {
+  background: var(--background-modifier-hover);
+}
+
+.icard-export-picker-row:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: -2px;
+}
+
+.icard-export-picker-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: transparent;
+  border: 1.5px solid var(--background-modifier-border);
+  border-radius: 5px;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.icard-export-picker-row.is-on .icard-export-picker-mark {
+  color: var(--text-on-accent, #fff);
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+}
+
+.icard-export-picker-mark .svg-icon {
+  width: 12px;
+  height: 12px;
 }
 
 .icard-export-root-input {
