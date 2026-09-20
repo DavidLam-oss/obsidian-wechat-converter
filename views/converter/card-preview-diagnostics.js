@@ -1,26 +1,27 @@
 /*
 ## 核心功能
 
-卡片预览的「省略/资源诊断区」方法组（B03 ③④；2026-09-13 自 card-preview.js 拆出——
-该文件因 C01③ 封面接入越过 800 行软警告线，按「按职责拆模块」拆分，先例同 card-page-selection）。
-可展开明细（类型 + 摘录 + 定位原文）+ 绑定版本的省略确认操作（bump 后自动失效，由会话保证）。
+卡片预览的「省略/资源明细区」方法组（原 B03 ③④诊断区；2026-09-20 David 简化：
+就绪态顶部 chips 已说明省略概况，底部明细 + 「已知悉」确认属重复信息且确认
+本不改变排版结果，整块移除并连带去掉导出前的省略确认闸门）。
+本模块现在只服务「正文全部未进入卡片」的空态：那里明细是唯一的信息来源。
+可展开明细（类型 + 摘录 + 定位原文）。
 
 ## 输入
 
-AppleStyleView 实例（预览 shell、会话、源定位方法）与最近一次排版 outcome
+AppleStyleView 实例（预览 shell、源定位方法）与最近一次排版 outcome
 （omissionSummary / cardDoc.blocks / diagnostics / resources.failures）。
 
 ## 输出
 
 导出 `cardPreviewDiagnosticsMethods`（由 AppleStyleView 统一组装）：
-- `renderCardDiagnosticArea(shell, outcome, session)`：渲染诊断区（无省略且无资源失败时不渲染）；
+- `renderCardDiagnosticArea(shell, outcome)`：渲染可展开明细（无省略且无资源失败时不渲染）；
 - `appendCardDiagnosticRow(area, list, item)`：单条明细行（类型 + 摘录 + 可定位按钮）。
 另导出 `OMISSION_LABELS`（省略原因 → 用户可读标签，预览摘要 chip 复用）。
 
 ## 定位
 
-位于 views/converter/，卡片预览的诊断子域；渲染与编排在 card-preview.js，
-省略确认的版本绑定语义由 services/card-session.js 保证。
+位于 views/converter/，卡片预览的诊断子域；渲染与编排在 card-preview.js。
 
 ## 依赖
 
@@ -30,7 +31,8 @@ AppleStyleView 实例（预览 shell、会话、源定位方法）与最近一�
 ## 维护规则
 
 - 修改逻辑后同步更新本文件说明书，并检查 views/converter 的 README 是否仍准确。
-- 省略确认必须绑定本次渲染版本（layoutKey），任一 bump 后确认自动失效——不得缓存到本模块。
+- 省略不阻断导出（2026-09-20 David 定）：预览 chips + 导出弹窗提示各说一次即止，
+  不得再加「确认后才能导出」类闸门。
 - 自动展开明细不记为用户意图（§5.5 弹窗与视觉规则），折叠是默认态。
 */
 
@@ -49,13 +51,11 @@ export const OMISSION_LABELS = {
 /** @type {CardPreviewDiagnosticsMethodsContract & ThisType<AppleStyleViewContract>} */
 export const cardPreviewDiagnosticsMethods = {
 /**
- * 省略/资源诊断区（B03）：可展开明细（类型 + 摘录 + 定位原文）、
- * 绑定版本的省略确认操作（bump 后自动失效，由会话保证）。
+ * 省略/资源明细区（仅「正文全部未进入卡片」空态使用）：可展开明细（类型 + 摘录 + 定位原文）。
  * @param {ObsidianElementLike} shell
  * @param {Record<string, any>} outcome
- * @param {import('../../services/card-session.js').CardNoteSessionLike} session
  */
-renderCardDiagnosticArea(shell, outcome, session) {
+renderCardDiagnosticArea(shell, outcome) {
   const omissionTotal = Number(outcome?.omissionSummary?.total || 0);
   const resourceBlocking = outcome?.resources?.hasBlockingFailures === true;
   if (!omissionTotal && !resourceBlocking) return;
@@ -93,27 +93,6 @@ renderCardDiagnosticArea(shell, outcome, session) {
         excerpt: String(failure?.ref || failure?.message || ''),
         sourceStart: Number(failure?.sourceStart || 0),
         highRisk: false,
-      });
-    }
-  }
-
-  if (omissionTotal > 0) {
-    // 确认绑定本次渲染版本（layoutKey 已含正文+设置+主题+资源）：任一 bump 后自动失效
-    const diagnosticVersion = String(outcome?.layoutKey || '');
-    if (session.isOmissionConfirmed(diagnosticVersion)) {
-      area.createEl('div', {
-        cls: 'icard-preview-omission-confirmed',
-        text: '已确认接受本次省略（内容或设置更新后需重新确认）',
-      });
-    } else {
-      const confirmBtn = area.createEl('button', {
-        cls: 'icard-preview-omission-confirm',
-        text: '已知悉以上内容不会进入卡片，接受本次省略',
-        attr: { 'title': '确认后才能导出；正文或排版设置变化后需重新确认' },
-      });
-      confirmBtn.addEventListener('click', () => {
-        session.confirmOmissions(diagnosticVersion);
-        this.renderCardPreviewDom();
       });
     }
   }

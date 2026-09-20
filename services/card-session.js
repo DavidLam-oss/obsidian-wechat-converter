@@ -3,7 +3,7 @@
 
 图片卡片会话层（B01）：按笔记隔离的会话注册表 + 单笔记会话状态机。
 管理内容/配置/主题/资源四元版本键、排版设置（B03）、预览任务状态、不可变冻结快照、
-页选择与省略确认的版本绑定；导出任务生命周期委托 card-export-job.js（任务存活状态与弹窗显示状态分离）。
+页选择的版本绑定；导出任务生命周期委托 card-export-job.js（任务存活状态与弹窗显示状态分离）。
 
 ## 输入
 
@@ -16,10 +16,10 @@
 ## 输出
 
 - 注册表：`getSession/has/renameNote/removeNote/disposeAll/listSessions`。- 会话（createNoteCardSession 产出）：
-  - 版本：`bumpContent/bumpConfig/bumpTheme/bumpResource`（任一 bump 使选择与省略确认失效）；
+  - 版本：`bumpContent/bumpConfig/bumpTheme/bumpResource`（任一 bump 使页选择失效）；
     `currentLayoutKey()` = `c{content}.k{config}.t{theme}.r{resource}`。
   - 排版设置（B03）：`getLayoutSettings/applyLayoutSettings`，归一化与
-    变化检测委托 card-settings-model.js；值实际变化才 bumpConfig（选择/确认随之失效）。
+    变化检测委托 card-settings-model.js；值实际变化才 bumpConfig（页选择随之失效）。
     无重置方法：默认值随主题（换主题即取默认），视图不需要单独的重置口子。
   - 封面字段（C01③）：`setCoverSeed`（随内容刷新，不 bump）→ `getCoverFields`（dirty 取用户值
     否则 seed）→ `applyCoverFields`/`resetCoverFields`（编辑冻结/重新填入，实际变化才 bumpConfig）。
@@ -30,8 +30,7 @@
   - 快照：`freezeSnapshot({ plan, resources, ... })` → 深拷贝冻结 + retain 资源，
     快照不受后续调用方原地修改污染；`retainSnapshot/releaseSnapshot/getSnapshot`；
     超过 MAX_RECENT_SNAPSHOTS 淘汰最旧并释放其资源。
-  - 选择/省略确认：`setSelection` / `clearSelection` / `getValidSelection`（版本不符返回 null → 调用方默认恢复全部并提示）；
-    `confirmOmissions/isOmissionConfirmed`（确认不能跨版本复用）。
+  - 选择/省略（省略不阻断导出，2026-09-20 David 定）：`setSelection` / `clearSelection` / `getValidSelection`（版本不符返回 null → 调用方默认恢复全部并提示）。
   - 导出任务：`beginExportJob`（单会话同时只允许一个运行中任务，任务持有快照引用）；
     `shouldStartNextPage`（仅 running 为 true，取消后不再调度下一页）；
     `recordPageResult`（running/canceling 均接受——写入已启动后取消仍计入已保存，§6.2）；
@@ -162,8 +161,6 @@ function toLayoutKey(versions) {
  *   setSelection(pageIds: string[]): void,
  *   clearSelection(): void,
  *   getValidSelection(): { pageIds: string[], layoutKey: string } | null,
- *   confirmOmissions(diagnosticVersion: string): void,
- *   isOmissionConfirmed(diagnosticVersion: string): boolean,
  *   beginExportJob(input: { snapshotId: string, pageIds: string[], scale: number }): { ok: boolean, reason?: string, job?: import('./card-export-job.js').CardExportJobView },
  *   shouldStartNextPage(jobId: string): boolean,
  *   recordPageResult(jobId: string, pageId: string, result: Omit<import('./card-export-job.js').CardExportPageResult, "snapshotId">): { applied: boolean },
@@ -218,11 +215,9 @@ export function createNoteCardSession(options = {}) {
   /** @type {string | null} 结果产出时的 layoutKey（bump 后保留旧值供 UI 判断过期） */
   let previewResultKey = null;
 
-  // —— 选择与省略确认（绑定 layoutKey，任一版本变化即失效）——
+  // —— 页选择（绑定 layoutKey，任一版本变化即失效）——
   /** @type {{ pageIds: string[], layoutKey: string } | null} */
   let selection = null;
-  /** @type {{ diagnosticVersion: string, layoutKey: string } | null} */
-  let omissionConfirm = null;
 
   // —— 快照缓存（插入序 = 创建序）——
   /** @type {Map<string, { data: CardSnapshotLike, resources: CardReleasableLike | null }>} */
@@ -240,18 +235,17 @@ export function createNoteCardSession(options = {}) {
     return toLayoutKey(versions);
   }
 
-  /**
-   * 任一版本 bump 后：选择与省略确认自动失效（§5.4 / B03「更新后自动失效」）。
-   * @param {keyof CardVersionSet} key
-   * @returns {string}
-   */
-  function bump(key) {
-    if (disposed) return currentLayoutKey();
-    versions[key] += 1;
-    selection = null;
-    omissionConfirm = null;
-    return currentLayoutKey();
-  }
+    /**
+     * 任一版本 bump 后：页选择自动失效（§5.4）。
+     * @param {keyof CardVersionSet} key
+     * @returns {string}
+     */
+    function bump(key) {
+      if (disposed) return currentLayoutKey();
+      versions[key] += 1;
+      selection = null;
+      return currentLayoutKey();
+    }
 
   /**
    * 释放并移除快照；资源由最后一个持有者（本会话内即此处）释放。
@@ -331,7 +325,7 @@ export function createNoteCardSession(options = {}) {
 
     /**
      * 应用用户编辑：合并归一化后写 override 并标记 dirty；实际变化才 bumpConfig
-     * （封面页内容变化 → 快照版本失效，选择/省略确认随之失效）。
+     * （封面页内容变化 → 快照版本失效，页选择随之失效）。
      * @param {Partial<import('./card-cover-model.js').CardCoverFields> | Record<string, unknown>} partial
      * @returns {{ changed: boolean, fields: import('./card-cover-model.js').CardCoverFields }}
      */
@@ -494,7 +488,7 @@ export function createNoteCardSession(options = {}) {
       return entry ? entry.data : null;
     },
 
-    // —— 选择与省略确认 ——
+    // —— 页选择 ——
 
     /** @param {string[]} pageIds */
     setSelection(pageIds) {
@@ -520,25 +514,6 @@ export function createNoteCardSession(options = {}) {
     getValidSelection() {
       if (!selection || selection.layoutKey !== currentLayoutKey()) return null;
       return { pageIds: [...selection.pageIds], layoutKey: selection.layoutKey };
-    },
-
-    /**
-     * 省略确认绑定当前版本与诊断版本；跨版本不得复用（完成标准）。
-     * @param {string} diagnosticVersion
-     */
-    confirmOmissions(diagnosticVersion) {
-      if (disposed) return;
-      omissionConfirm = { diagnosticVersion, layoutKey: currentLayoutKey() };
-    },
-
-    /**
-     * @param {string} diagnosticVersion
-     * @returns {boolean}
-     */
-    isOmissionConfirmed(diagnosticVersion) {
-      if (!omissionConfirm) return false;
-      if (omissionConfirm.layoutKey !== currentLayoutKey()) return false;
-      return omissionConfirm.diagnosticVersion === diagnosticVersion;
     },
 
     // —— 导出任务（生命周期状态机委托 card-export-job.js）——
@@ -644,7 +619,6 @@ export function createNoteCardSession(options = {}) {
       previewHasOmissions = false;
       previewState = "idle";
       selection = null;
-      omissionConfirm = null;
     },
   };
 }

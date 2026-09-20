@@ -21,7 +21,8 @@ C01③：设置含输出元素三项——封面开关（coverEnabled）、正�
 - `createCardLayoutSettingsState(...)` → `{ get, apply }`；apply 返回
   `{ changed, settings, layoutKey? }`，值未变化不触发 onChanged（不空转 bump）。
 - `checkCardOutputEligibility(...)` → `{ eligible, blockers }`；blocker 互斥归主因：
-  no-result / layout-failed / empty-content / omissions-unconfirmed / empty-selection / resource-failure。
+  no-result / layout-failed / empty-content / empty-selection / resource-failure。
+  省略不阻断输出（2026-09-20 David 定：预览 chips 已提示，确认闸门退役）。
 
 ## 定位
 
@@ -232,20 +233,18 @@ export function createCardLayoutSettingsState(options = {}) {
 
 /**
  * 输出资格 blocker 代码（跨模块契约，见文件头维护规则）。
- * @typedef {"no-result"|"layout-failed"|"empty-content"|"omissions-unconfirmed"|"empty-selection"|"resource-failure"} CardOutputBlockerCode
+ * @typedef {"no-result"|"layout-failed"|"empty-content"|"empty-selection"|"resource-failure"} CardOutputBlockerCode
  */
 
 /**
- * 统一输出资格检查（§B03 完成标准）：导出服务/复制入口在输出前必须调用；
- * 布局失败与空内容不可被「接受省略」绕过（blocker 与确认状态独立判定）。
+ * 统一输出资格检查：导出服务/复制入口在输出前必须调用；
+ * 布局失败与空内容是硬阻断。省略不阻断（chips/弹窗提示各一次，无确认闸门）。
  * @param {import('./card-session.js').CardNoteSessionLike} session
  * @param {{
  *   hasResult: boolean,
  *   planOk: boolean,
  *   pageCount: number,
  *   hasCover?: boolean,
- *   diagnosticVersion: string,
- *   omissionTotal: number,
  *   resourceBlockingFailures: boolean,
  * }} input
  * @returns {{ eligible: boolean, blockers: Array<{ code: CardOutputBlockerCode, message: string }> }}
@@ -266,9 +265,6 @@ export function checkCardOutputEligibility(session, input) {
   if (!(input.pageCount > 0) && input.hasCover !== true) {
     blockers.push({ code: "empty-content", message: "没有可输出的正文页" });
     return { eligible: false, blockers };
-  }
-  if (input.omissionTotal > 0 && !session.isOmissionConfirmed(String(input.diagnosticVersion || ""))) {
-    blockers.push({ code: "omissions-unconfirmed", message: "存在未进入卡片的内容，需先确认接受本次省略" });
   }
   const selection = typeof session.getValidSelection === "function" ? session.getValidSelection() : null;
   if (selection && selection.pageIds.length === 0) {

@@ -142,9 +142,8 @@ describe("createCardLayoutSettingsState：状态机", () => {
 
 describe("checkCardOutputEligibility：统一输出资格", () => {
   /** @returns {any} */
-  function fakeSession({ omissionConfirmed = false, selectionPageIds = null } = {}) {
+  function fakeSession({ selectionPageIds = null } = {}) {
     return {
-      isOmissionConfirmed: (version) => omissionConfirmed && version === "v-ok",
       getValidSelection: () =>
         selectionPageIds === null ? null : { pageIds: [...selectionPageIds], layoutKey: "k" },
     };
@@ -154,8 +153,6 @@ describe("checkCardOutputEligibility：统一输出资格", () => {
     hasResult: true,
     planOk: true,
     pageCount: 3,
-    diagnosticVersion: "v-ok",
-    omissionTotal: 0,
     resourceBlockingFailures: false,
   };
 
@@ -172,8 +169,8 @@ describe("checkCardOutputEligibility：统一输出资格", () => {
     expect(r.blockers[0].code).toBe("no-result");
   });
 
-  it("布局失败 → layout-failed 硬阻断（不受省略确认影响）", () => {
-    const r = checkCardOutputEligibility(fakeSession({ omissionConfirmed: true }), {
+  it("布局失败 → layout-failed 硬阻断", () => {
+    const r = checkCardOutputEligibility(fakeSession(), {
       ...okInput,
       planOk: false,
     });
@@ -186,14 +183,10 @@ describe("checkCardOutputEligibility：统一输出资格", () => {
     expect(r.blockers.map((b) => b.code)).toEqual(["empty-content"]);
   });
 
-  it("有省略未确认 → omissions-unconfirmed；确认后消除", () => {
-    const unconfirmed = checkCardOutputEligibility(fakeSession(), { ...okInput, omissionTotal: 2 });
-    expect(unconfirmed.blockers.map((b) => b.code)).toEqual(["omissions-unconfirmed"]);
-    const confirmed = checkCardOutputEligibility(fakeSession({ omissionConfirmed: true }), {
-      ...okInput,
-      omissionTotal: 2,
-    });
-    expect(confirmed.eligible).toBe(true);
+  it("有省略不阻断导出（确认闸门已退役，2026-09-20 David）", () => {
+    const r = checkCardOutputEligibility(fakeSession(), { ...okInput, omissionTotal: 2 });
+    expect(r.eligible).toBe(true);
+    expect(r.blockers).toEqual([]);
   });
 
   it("有选择但为空 → empty-selection；无选择（全部页）不阻断", () => {
@@ -206,14 +199,5 @@ describe("checkCardOutputEligibility：统一输出资格", () => {
   it("资源阻断 → resource-failure", () => {
     const r = checkCardOutputEligibility(fakeSession(), { ...okInput, resourceBlockingFailures: true });
     expect(r.blockers.map((b) => b.code)).toEqual(["resource-failure"]);
-  });
-
-  it("省略未确认 + 资源失败可叠加", () => {
-    const r = checkCardOutputEligibility(fakeSession(), {
-      ...okInput,
-      omissionTotal: 1,
-      resourceBlockingFailures: true,
-    });
-    expect(r.blockers.map((b) => b.code).sort()).toEqual(["omissions-unconfirmed", "resource-failure"]);
   });
 });

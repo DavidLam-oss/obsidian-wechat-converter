@@ -516,7 +516,7 @@ renderCardPreviewDom() {
       cls: 'icard-preview-empty-desc',
       text: '下方列出了每一条未进入卡片的内容及其在原文中的位置；修改笔记后可重新排版。当前状态无法导出。',
     });
-    this.renderCardDiagnosticArea(shell, outcome, session);
+    this.renderCardDiagnosticArea(shell, outcome);
     selfRec.cardRenderedLayoutKey = String(outcome.layoutKey);
     return /** @type {ObsidianElementLike} */ (/** @type {unknown} */ (shell));
   }
@@ -558,8 +558,9 @@ renderCardPreviewDom() {
       () => this.locateCardPageSource(index + 1),
     );
   });
-  // —— 省略/资源诊断区（可展开、可定位、可确认；B03 ③④）——
-  this.renderCardDiagnosticArea(shell, outcome, session);
+  // 就绪态不再渲染底部诊断区（2026-09-20 David）：顶部 chips 已说明省略概况，
+  // 「已知悉…接受本次省略」不改变排版结果、只挡导出，属重复流程，已整块退役。
+  // 明细列表仅保留在「正文全部未进入卡片」空态（那里它是唯一信息源）。
   selfRec.cardRenderedLayoutKey = String(outcome.layoutKey);
   this.maybeAutoFitCardPreviewZoom(Number(size.width));
   this.applyCardPreviewZoom();

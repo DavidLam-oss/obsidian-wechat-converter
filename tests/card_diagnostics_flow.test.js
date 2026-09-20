@@ -1,11 +1,11 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
 
-/* 省略确认闭环与会话设置联动测试（B03）：
-   排版设置变化 → bumpConfig → layoutKey 变化 → 页选择与省略确认自动失效；
-   确认绑定渲染版本（diagnosticVersion = layoutKey），跨版本不复用；
+/* 排版设置与会话设置联动测试（B03）：
+   排版设置变化 → bumpConfig → layoutKey 变化 → 页选择自动失效；
    设置归一化经会话透传（白名单主题不提前放行）。
    「恢复默认」= 切主题回默认排版（会话无 resetLayoutSettings，2026-09-20）。
+   省略确认闭环已随「确认闸门退役」移除（2026-09-20 David：省略不阻断导出）。
    纯会话层，无 UI、无 DOM。 */
 
 import { createCardSessionRegistry } from "../services/card-session.js";
@@ -93,25 +93,7 @@ describe("排版设置 ↔ 版本联动", () => {
   });
 });
 
-describe("省略确认闭环", () => {
-  it("确认绑定当前版本：同版本可查，bump 后失效", () => {
-    const session = newSession();
-    const key1 = session.currentLayoutKey();
-    session.confirmOmissions(key1);
-    expect(session.isOmissionConfirmed(key1)).toBe(true);
-
-    session.applyLayoutSettings({ fontSize: 17 });
-    expect(session.isOmissionConfirmed(key1)).toBe(false);
-  });
-
-  it("diagnosticVersion 与 layoutKey 双重校验：版本一致但诊断串不同 → 不算已确认", () => {
-    const session = newSession();
-    session.confirmOmissions("wrong-version");
-    expect(session.isOmissionConfirmed("wrong-version")).toBe(true);
-    expect(session.isOmissionConfirmed(session.currentLayoutKey())).toBe(false);
-    expect(session.isOmissionConfirmed("another")).toBe(false);
-  });
-
+describe("页选择的版本绑定", () => {
   it("页选择随设置变化失效（§B03：调整排版 → 重新选择）", () => {
     const session = newSession();
     session.setSelection(["page-1", "page-2"]);
@@ -123,40 +105,5 @@ describe("省略确认闭环", () => {
     // 新版本重新选择有效
     session.setSelection(["page-3"]);
     expect(session.getValidSelection()?.layoutKey).toBe(session.currentLayoutKey());
-  });
-
-  it("正文 bump 同样使确认失效（双通道互不覆盖）", () => {
-    const session = newSession();
-    const key1 = session.currentLayoutKey();
-    session.confirmOmissions(key1);
-    session.bumpContent();
-    expect(session.isOmissionConfirmed(key1)).toBe(false);
-  });
-
-  it("确认 → 再确认（新版本）→ 再失效 的完整闭环", () => {
-    const session = newSession();
-    // v1：有省略，确认
-    const v1 = session.currentLayoutKey();
-    session.confirmOmissions(v1);
-    expect(session.isOmissionConfirmed(v1)).toBe(true);
-    // v2：调设置后需重新确认
-    session.applyLayoutSettings({ lineHeight: 2.0 });
-    const v2 = session.currentLayoutKey();
-    expect(session.isOmissionConfirmed(v1)).toBe(false);
-    session.confirmOmissions(v2);
-    expect(session.isOmissionConfirmed(v2)).toBe(true);
-    expect(session.isOmissionConfirmed(v1)).toBe(false);
-    // v3：再改正文，又失效
-    session.bumpContent();
-    expect(session.isOmissionConfirmed(v2)).toBe(false);
-  });
-
-  it("dispose 后确认查询安全返回 false", () => {
-    const registry = createCardSessionRegistry();
-    const session = registry.getSession("notes/tmp.md");
-    const key = session.currentLayoutKey();
-    session.confirmOmissions(key);
-    registry.disposeAll();
-    expect(session.isOmissionConfirmed(key)).toBe(false);
   });
 });

@@ -291,20 +291,6 @@ describe("选择与省略确认的版本绑定", () => {
     session.bumpResource();
     expect(session.getValidSelection()).toBeNull();
   });
-
-  it("已确认省略不能跨版本复用", () => {
-    const session = createNoteCardSession({ sourcePath: "a.md" });
-    session.confirmOmissions("diag-v1");
-    expect(session.isOmissionConfirmed("diag-v1")).toBe(true);
-    session.bumpContent(); // 编辑正文
-    expect(session.isOmissionConfirmed("diag-v1")).toBe(false);
-  });
-
-  it("诊断版本不匹配的确认同样视为无效", () => {
-    const session = createNoteCardSession({ sourcePath: "a.md" });
-    session.confirmOmissions("diag-v1");
-    expect(session.isOmissionConfirmed("diag-v2")).toBe(false);
-  });
 });
 
 describe("导出任务生命周期", () => {

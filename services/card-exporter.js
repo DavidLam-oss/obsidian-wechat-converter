@@ -15,7 +15,7 @@
 - `onProgress(event)`（可选）：`{ stage: "begin"|"page"|"done", total, settled, saved, failed, current? }`，
   供上层刷新导出进度 UI；回调抛错被吞掉，不影响导出语义。
 - `exportCards(input)`：session、snapshotId、sourcePath、rootPath、configDir、scale、pageSize、
-  pages（{pageId, ordinal}）、omissionTotal。
+  pages（{pageId, ordinal}）。省略不阻断导出（2026-09-20 David 定，确认闸门已退役）。
 
 ## 输出
 
@@ -474,7 +474,7 @@ export function createCardExporter(deps) {
      * @param {{
      *   rootPath: string, configDir?: string, snapshotId: string, sourcePath: string,
      *   scale: number, pageSize: { width: number, height: number },
-     *   pages: Array<{ pageId: string, ordinal: number }>, omissionTotal?: number,
+     *   pages: Array<{ pageId: string, ordinal: number }>,
      * }} input
      * @returns {Promise<CardExportOutcome | { ok: false, reason: string }>}
      */
@@ -512,11 +512,6 @@ export function createCardExporter(deps) {
       const snapshot = session.getSnapshot(String(input.snapshotId || ''));
       if (!snapshot) return { ok: false, reason: 'snapshot-missing' };
       if (snapshot.layoutKey !== session.currentLayoutKey()) return { ok: false, reason: 'version-changed' };
-      // 省略确认（B03 闭环；有省略未确认不可输出）
-      const omissionTotal = Number(input.omissionTotal) || 0;
-      if (omissionTotal > 0 && !session.isOmissionConfirmed(snapshot.layoutKey)) {
-        return { ok: false, reason: 'omission-unconfirmed' };
-      }
       // 计划页数边界（ ordinal 不得超出快照页计划）
       const planPages = snapshot.plan && typeof snapshot.plan === 'object'
         ? /** @type {{ pages?: unknown[] }} */ (snapshot.plan).pages

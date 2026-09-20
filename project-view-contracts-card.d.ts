@@ -112,7 +112,8 @@ interface AppleStyleViewContract {
     /** 源定位共用入口（行号 1-based；B03 从页定位与诊断定位共用） */
     locateCardSourceLine(lineNumber: number): void;
     /** 省略/资源诊断区：可展开明细 + 绑定版本的确认操作（B03） */
-    renderCardDiagnosticArea(shell: ObsidianElementLike, outcome: Record<string, unknown>, session: unknown): void;
+    /** 可展开明细（仅「正文全部未进入卡片」空态；就绪态不再渲染诊断区） */
+    renderCardDiagnosticArea(shell: ObsidianElementLike, outcome: Record<string, unknown>): void;
     /** 诊断明细行：类型 + 摘录 +（可定位时）定位按钮（B03，自 card-preview 拆出） */
     appendCardDiagnosticRow(area: ObsidianElementLike, list: ObsidianElementLike, item: { kind: string, excerpt: string, sourceStart: number, highRisk: boolean }): void;
     /** 卡片设置浮层：一次性构建 DOM（createSettingsPanel 调用） */

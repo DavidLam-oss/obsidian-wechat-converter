@@ -137,12 +137,9 @@ describe("导出资格再校验（§5.4 出口防线）", () => {
     expect(result).toEqual({ ok: false, reason: "version-changed" });
   });
 
-  it("有省略未确认 → omission-unconfirmed；确认后放行", async () => {
+  it("有省略不再阻断导出（确认闸门已退役，2026-09-20 David）", async () => {
     const ctx = sessionWithSnapshot();
     const exporter = buildExporter(ctx, createFakeFs());
-    const blocked = await exporter.exportCards(exportInput(ctx, { omissionTotal: 2 }));
-    expect(blocked).toEqual({ ok: false, reason: "omission-unconfirmed" });
-    ctx.session.confirmOmissions(ctx.snapshot.layoutKey);
     const okRun = await exporter.exportCards(exportInput(ctx, { omissionTotal: 2 }));
     expect(okRun.status).toBe("completed");
   });

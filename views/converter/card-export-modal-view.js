@@ -366,7 +366,7 @@ renderCardExportForm(body) {
   applyIcon(note.createEl('span', { cls: 'icard-export-note-icon' }), omissionTotal > 0 ? 'alert-triangle' : 'check');
   note.createEl('span', {
     cls: 'icard-export-note-text',
-    text: omissionTotal > 0 ? `${omissionTotal} 处内容未进入卡片（已在预览确认）` : '全部内容都将进入卡片',
+    text: omissionTotal > 0 ? `${omissionTotal} 处内容未进入卡片，导出结果不含这些内容` : '全部内容都将进入卡片',
   });
 
   const footer = body.createEl('div', { cls: 'icard-export-footer' });
