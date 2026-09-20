@@ -51,9 +51,15 @@
   height: 100%;
   overflow: auto;
   box-sizing: border-box;
+  /* 隐藏滚动条：滚动条从预览顶部划到缩略图旁边，观感很差；
+     隐藏后滚轮/触控板滚动不受影响（微信工具的网页式滚动同款处理）。 */
+  scrollbar-width: none;
+}
+.icard-preview-shell::-webkit-scrollbar {
+  display: none;
 }
 
-/* 顶部工具条：左「状态」、右「操作」同排成组 */
+/* 顶部工具条：状态摘要行（缩放/封面等右缘操作已移除，2026-09-20 David 定） */
 .icard-preview-toolbar {
   display: flex;
   align-items: center;
@@ -71,38 +77,6 @@
   color: var(--text-muted);
   min-width: 0;
 }
-
-/* 操作区（贴右缘）：缩放分段 + 封面设置入口 */
-.icard-preview-tools {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-/* 封面设置入口：只负责「一步跳到封面设置」。
-   封面开没开由侧栏那枚开关表达（同一事实只说一次），所以这里不用状态文案。 */
-.icard-preview-cover-entry {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--text-muted);
-  box-shadow: none;
-  cursor: pointer;
-}
-.icard-preview-cover-entry:hover { color: var(--text-normal); }
-.icard-preview-cover-entry.is-active {
-  border-color: var(--interactive-accent);
-  color: var(--interactive-accent);
-}
-.icard-preview-cover-entry svg { width: 14px; height: 14px; }
 
 .icard-preview-summary-count {
   font-weight: 600;
@@ -138,66 +112,43 @@
   color: var(--text-error, #b3261e);
 }
 
-/* 缩放控制（仅展示层）：灰轨道 + 两端按钮的分段胶囊，
-   与预览区「模式胶囊」、侧栏子 Tab 同一套语汇 */
-.icard-preview-zoombar {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px;
-  border-radius: 8px;
-  background: var(--background-modifier-hover);
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.icard-preview-zoom-percent {
-  min-width: 36px;
-  text-align: center;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
-}
-
-.icard-preview-zoom-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  box-shadow: none;
-  cursor: pointer;
-  font-size: 13px;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.icard-preview-zoom-btn:hover {
-  background: var(--background-primary);
-  color: var(--text-normal);
-}
-
 /* 缩略页列表：page-item 外壳承载缩放尺寸，内部 .icard-page transform 缩放。
-   「画板」底：卡片直接贴在预览容器同色底上会糊成一片；给页区一圈画板色 +
-   内边距，卡片才能「浮」出来。⚠️ 不能用 --background-secondary——亮色下它（≈#f6f6f6）
-   与 simple-white 封面底 token（#f3f4f6）几乎同色，封面会融进背景；
-   改用 modifier-border（亮 ≈#e0e0e0 / 暗 ≈#333），与亮暗两系主题底都拉得开。 */
+   「画板」底左右下三边出血铺满预览区（负外边距抵消外壳 12px 内边距），卡片浮在画板上；
+   顶部用正边距与工具栏拉开呼吸空间（此前 -12px 顶出血会把画布直接顶到工具栏上）。
+   画板语言对齐 WeChat tool 的图纸画布：浅灰底 + 细网格线纹理。
+   布局用 block + margin:auto 居中，不用 flex 居中——flex 的 center 在内容比
+   容器宽时两侧均匀溢出，滚动条够不着左半边（100% 缩放时表现为「右侧被剪切」）；
+   block + auto 边距在放得下时居中、放不下时自动贴左并完整可滚，任何内核版本都成立。
+   ⚠️ 底色两个约束：不能太浅（--background-secondary ≈#f6f6f6 与 simple-white 封面底
+   #f3f4f6 同色，封面融进背景），也不能太深（纯 modifier-border ≈#e0e0e0 灰得发闷，
+   David 2026-09-20 反馈）。用 color-mix 取中间调：亮色 55% border + 45% primary ≈#f1f1f1，
+   比封面底深一档、又不再发灰；暗色保持接近 modifier-border 的深底（暗色卡片需要深画布衬托）。 */
 .icard-preview-pages {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
-  align-content: flex-start;
-  padding: 16px 16px 20px;
-  border-radius: 12px;
-  background: var(--background-modifier-border);
+  margin: 10px -12px -12px;
+  padding: 36px 24px 28px;
+  background-color: color-mix(in srgb, var(--background-modifier-border) 55%, var(--background-primary));
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.theme-dark .icard-preview-pages {
+  background-color: color-mix(in srgb, var(--background-modifier-border) 82%, var(--background-primary));
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+/* 画板下面还有诊断区时收回底部出血，避免诊断区贴死画板边缘 */
+.icard-preview-pages:has(~ .icard-preview-diagnostics) {
+  margin: 10px -12px 0;
+  border-radius: 0 0 12px 12px;
 }
 
 .icard-preview-page-item {
   position: relative;
+  margin: 0 auto 24px;
   border-radius: 8px;
   overflow: hidden;
   /* 双层阴影：近处一圈细的定边缘，远处一层大而散的给「纸片浮起」的厚度 */
@@ -215,7 +166,8 @@
 
 .icard-preview-page-item:hover {
   outline-color: var(--background-modifier-border-hover);
-  transform: translateY(-2px);
+  /* 对齐 WeChat tool 的 hover 手感：原尺寸微放大（scale 1.01），不位移 */
+  transform: scale(1.012);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.08),
     0 16px 32px -12px rgba(0, 0, 0, 0.32);
@@ -239,11 +191,14 @@
   padding: 2px 8px;
   border-radius: 8px;
   font-size: 10px;
-  /* 毛玻璃片：半透黑 + 模糊，比平涂黑底少一点「调试标」感（徽章只在预览 DOM，不进导出图） */
-  background: rgba(20, 20, 22, 0.55);
+  /* 白磨砂小片：跟卡片的纸质观感同语言；固定白底配固定深字，不随宿主主题翻转
+     （徽章只在预览 DOM，不进导出图）。深灰平涂版在浅色卡片上像调试标，已废弃。 */
+  background: rgba(255, 255, 255, 0.86);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  color: #fff;
+  color: #3a3a3c;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   letter-spacing: 0.3px;
   pointer-events: none;
 }

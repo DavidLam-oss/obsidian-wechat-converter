@@ -159,8 +159,9 @@ maybeAutoFitCardPreviewZoom(pageWidth) {
   const selfRecord = cardStateOf(this);
   if (selfRecord.cardPreviewZoomUserSet) return;
   const shell = selfRecord.cardPreviewShell;
+  // 可用宽 = 预览壳宽 − 外壳左右内边距(12×2) − 画板左右内边距(16×2)；少扣会让行宽溢出画板、缩略图非必要换行。
   const available = shell
-    ? /** @type {HTMLElement} */ (/** @type {unknown} */ (shell)).clientWidth - 24
+    ? /** @type {HTMLElement} */ (/** @type {unknown} */ (shell)).clientWidth - 56
     : 0;
   if (!pageWidth || available < CARD_PREVIEW_ZOOM_MIN * pageWidth) return;
   selfRecord.cardPreviewZoom = Math.min(

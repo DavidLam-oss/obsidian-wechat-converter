@@ -76,7 +76,10 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
    这里不用 backdrop-filter：浮层已经有一层，嵌套的模糊会随滚动逐帧重算，不值当。 */
 .icard-settings-nav {
   position: sticky;
-  top: 0;
+  /* ⚠️ 必须是负值：sticky 的吸附基准是滚动容器的**内边距盒**（浮层 padding-top 24px），
+     top:0 会把导航钉在可见顶边下方 24px，滚动内容从这条缝里透出来（评审实测 bleed=24px）。
+     top:-24px 正好抵消，吸附时贴住可见顶边；负上外边距继续负责静止时的位置抵消。 */
+  top: -24px;
   z-index: 6;
   margin: -24px 0 6px;
   padding: 24px 0 10px;
@@ -96,6 +99,7 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 .apple-converter-container.apple-converter-mobile .icard-settings-nav {
   margin-top: -12px;
   padding-top: 12px;
+  top: -12px;
 }
 
 /* —— 子 Tab 分段控件（排版 Token vs 封面设置）——
