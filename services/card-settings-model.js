@@ -16,8 +16,9 @@ C01③：设置含输出元素三项——封面开关（coverEnabled）、正�
 ## 输出
 
 - `DEFAULT_CARD_LAYOUT_SETTINGS` / `CARD_LAYOUT_LIMITS` / `VERIFIED_CARD_THEME_IDS` / `VERIFIED_CARD_RATIOS` / `CARD_RATIO_LABELS`。
+- `getCardThemeDefaultTypography(themeId)` → 主题自带的默认排版（换主题即取默认，取代重置按钮）。
 - `normalizeCardLayoutSettings(partial?, base?)` → 全量归一化设置（不含未知 key）。
-- `createCardLayoutSettingsState(...)` → `{ get, apply, reset }`；apply/reset 返回
+- `createCardLayoutSettingsState(...)` → `{ get, apply }`；apply 返回
   `{ changed, settings, layoutKey? }`，值未变化不触发 onChanged（不空转 bump）。
 - `checkCardOutputEligibility(...)` → `{ eligible, blockers }`；blocker 互斥归主因：
   no-result / layout-failed / empty-content / omissions-unconfirmed / empty-selection / resource-failure。
@@ -42,6 +43,7 @@ import {
   CARD_THEME_ID_ALIASES,
   CARD_THEME_IDS,
   DEFAULT_CARD_THEME_ID,
+  getCardTheme,
   hasCardTheme,
 } from './card-themes.js';
 
@@ -84,6 +86,27 @@ export const DEFAULT_CARD_LAYOUT_SETTINGS = /** @type {CardLayoutSettings} */ ({
   pageNumberEnabled: true,
   watermarkText: "",
 });
+
+/**
+ * 主题自带的默认排版（2026-09-20）。
+ * 卡片侧栏不再提供「恢复默认排版」按钮——与文章模式同一心智：换主题就是取默认值，
+ * 在 A 主题下改乱了，去 B 再回 A，即回到 A 的默认（没有需要单独点一下的重置口子）。
+ * 字号/行高各主题一致（主题只决定配色的浓淡，不决定正文字号）；
+ * 页面留白随主题 token，主题若自带别的内边距则自动跟随。
+ * @param {string} themeId
+ * @returns {{ fontSize: number, lineHeight: number, pagePadding: number }}
+ */
+export function getCardThemeDefaultTypography(themeId) {
+  const theme = getCardTheme(String(themeId || DEFAULT_CARD_THEME_ID));
+  const themePadding = Number(theme?.tokens?.pagePadding);
+  return {
+    fontSize: CARD_LAYOUT_LIMITS.fontSize.default,
+    lineHeight: CARD_LAYOUT_LIMITS.lineHeight.default,
+    pagePadding: Number.isFinite(themePadding) && themePadding > 0
+      ? themePadding
+      : CARD_LAYOUT_LIMITS.pagePadding.default,
+  };
+}
 
 /**
  * 数值项归一化：非法回落 base，合法值钳制到边界；lineHeight 保留 1 位小数。
@@ -169,12 +192,13 @@ function settingsDiffer(a, b) {
 
 /**
  * 创建按会话持有的设置状态机（card-session 内嵌使用）。
- * apply/reset 只在值实际变化时触发 onChanged（返回值透传为 layoutKey），不空转 bump。
+ * apply 只在值实际变化时触发 onChanged（返回值透传为 layoutKey），不空转 bump。
+ * 不提供 reset：默认值来自主题（见 getCardThemeDefaultTypography），
+ * 调用方「换主题」时把整套默认排版一并 apply 进来即可。
  * @param {{ onChanged?: () => string | void, defaults?: CardLayoutSettings }} [options]
  * @returns {{
  *   get(): CardLayoutSettings,
  *   apply(partial: Partial<CardLayoutSettings> | Record<string, unknown>): { changed: boolean, settings: CardLayoutSettings, layoutKey?: string },
- *   reset(): { changed: boolean, settings: CardLayoutSettings, layoutKey?: string },
  * }}
  */
 export function createCardLayoutSettingsState(options = {}) {
@@ -203,7 +227,6 @@ export function createCardLayoutSettingsState(options = {}) {
   return {
     get: () => ({ ...current }),
     apply,
-    reset: () => apply({ ...DEFAULT_CARD_LAYOUT_SETTINGS, ...(options.defaults || {}) }),
   };
 }
 

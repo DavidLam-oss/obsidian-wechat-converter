@@ -5,7 +5,8 @@
 验证卡片设置全量收敛至侧边栏面板（sliders 图标呼出），并具备清晰的双子 Tab（排版 Token 与 封面设置）：
 1. 面板结构完整性（顶部双子 Tab、排版 Token 节、封面设置节）；
 2. 子 Tab 切换（switchCardSettingsSubTab）与直通打开（openCardSettingsTab）；
-3. 排版 Token 设置绑定（主题六选、比例三选、页码开关、水印、字号/行高/边距滑块、恢复默认）；
+3. 排版 Token 设置绑定（主题六选、比例三选、页码开关、水印、字号/行高/边距滑块；
+   「恢复默认」= 切主题回该主题默认排版，面板不设独立重置按钮）；
 4. 封面设置绑定（封面启用开关、字段编辑 title/author/date/excerpt、按当前笔记重新填入）；
 5. 会话级隔离与响应式重排版（renderCardPreview 触发）。
 
@@ -16,6 +17,7 @@
 */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { getCardThemeDefaultTypography } from "../services/card-settings-model.js";
 
 const { loadInputModule } = require("./helpers/input-module.cjs");
 const { createObsidianLikeElement } = require("./helpers/obsidian-dom.js");
@@ -117,11 +119,11 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       const sliders = tokenSection.querySelectorAll("input.apple-slider");
       expect(sliders.length).toBe(3);
 
-      // 恢复默认排版按钮
+      // 不设「恢复默认排版」按钮：换主题即取默认（2026-09-20 与文章模式对齐）
       const resetBtn = Array.from(tokenSection.querySelectorAll("button")).find(
         (b) => b.textContent === "恢复默认排版"
       );
-      expect(resetBtn).toBeTruthy();
+      expect(resetBtn).toBeUndefined();
     });
 
     it("封面设置面板包含封面开关、四字段输入与按当前笔记重新填入", () => {
@@ -259,14 +261,35 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(view.renderCardPreview).toHaveBeenCalled();
     });
 
-    it("点击恢复默认排版回到内置出厂值并重排版", () => {
-      session.applyLayoutSettings({ fontSize: 18, themeId: "dark-gold" });
+    it("选主题连同该主题的默认排版一起应用并重排版", () => {
+      session.applyLayoutSettings({ fontSize: 18, lineHeight: 2.1, pagePadding: 46 });
       expect(session.getLayoutSettings().fontSize).toBe(18);
 
-      view.resetCardLayoutSettings();
-      expect(session.getLayoutSettings().fontSize).toBe(14);
-      expect(session.getLayoutSettings().themeId).toBe("simple-white");
+      const themeId = "dark-gold";
+      const defaults = getCardThemeDefaultTypography(themeId);
+      view.applyCardTheme(themeId);
+
+      expect(session.getLayoutSettings().themeId).toBe(themeId);
+      expect(session.getLayoutSettings().fontSize).toBe(defaults.fontSize);
+      expect(session.getLayoutSettings().lineHeight).toBe(defaults.lineHeight);
+      expect(session.getLayoutSettings().pagePadding).toBe(defaults.pagePadding);
       expect(view.renderCardPreview).toHaveBeenCalled();
+    });
+
+    it("A 改乱 → 去 B → 回 A 即回到 A 的默认排版（取代「恢复默认」按钮）", () => {
+      const themeId = "dark-gold";
+      const defaults = getCardThemeDefaultTypography(themeId);
+
+      view.applyCardTheme(themeId);
+      session.applyLayoutSettings({ fontSize: 18, pagePadding: 46 });
+      expect(session.getLayoutSettings().fontSize).toBe(18);
+
+      view.applyCardTheme("neon-purple");
+      view.applyCardTheme(themeId);
+
+      expect(session.getLayoutSettings().themeId).toBe(themeId);
+      expect(session.getLayoutSettings().fontSize).toBe(defaults.fontSize);
+      expect(session.getLayoutSettings().pagePadding).toBe(defaults.pagePadding);
     });
 
     it("点击封面开关更新 coverEnabled 并显隐封面字段表单", () => {
@@ -362,17 +385,20 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(view.plugin.settings.cardDefaults.coverPrompt).toBeUndefined();
     });
 
-    it("恢复默认排版回到内置出厂值，并同步写回全局默认", () => {
+    it("选主题时连同默认排版一起写回全局默认", () => {
       view.applyCardLayoutSetting("fontSize", 18);
       view.applyCardLayoutSetting("themeId", "neon-purple");
       expect(view.plugin.settings.cardDefaults.fontSize).toBe(18);
 
-      view.resetCardLayoutSettings();
+      const themeId = "dark-gold";
+      const defaults = getCardThemeDefaultTypography(themeId);
+      view.applyCardTheme(themeId);
 
-      expect(session.getLayoutSettings().fontSize).toBe(14);
-      expect(session.getLayoutSettings().themeId).toBe("simple-white");
-      expect(view.plugin.settings.cardDefaults.fontSize).toBe(14);
-      expect(view.plugin.settings.cardDefaults.themeId).toBe("simple-white");
+      expect(session.getLayoutSettings().themeId).toBe(themeId);
+      expect(session.getLayoutSettings().fontSize).toBe(defaults.fontSize);
+      expect(view.plugin.settings.cardDefaults.themeId).toBe(themeId);
+      expect(view.plugin.settings.cardDefaults.fontSize).toBe(defaults.fontSize);
+      expect(view.plugin.settings.cardDefaults.pagePadding).toBe(defaults.pagePadding);
     });
   });
 });

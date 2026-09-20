@@ -62,12 +62,15 @@ describe('会话设置状态机 × 比例（C01②）', () => {
     expect(bumps).toBe(2);
   });
 
-  it('reset 回到创建时 defaults 的比例（含全局默认注入的非默认比例）', () => {
+  it('回到创建时 defaults 的比例：显式写回同一值即还原（无独立 reset）', () => {
     const state = createCardLayoutSettingsState({
       defaults: { ratioId: '3:5' },
     });
     state.apply({ ratioId: '9:16' });
-    state.reset();
+    expect(state.get().ratioId).toBe('9:16');
+
+    // 无独立 reset：侧栏切主题时由主题默认排版一并显式写入（比例仍由用户显式选择）
+    expect(state.apply({ ratioId: '3:5' }).changed).toBe(true);
     expect(state.get().ratioId).toBe('3:5');
   });
 });

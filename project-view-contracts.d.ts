@@ -454,8 +454,10 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     renderCardSettingsValues(): void;
     /** 卡片设置：应用单项设置（值实际变化 → bumpConfig → 重排版） */
     applyCardLayoutSetting(key: string, value: unknown): void;
-    /** 卡片设置：恢复当前默认 */
-    resetCardLayoutSettings(): void;
+    /** 卡片设置：批量应用多项（值实际变化才写；避免逐项触发重排） */
+    applyCardLayoutSettings(partial: Record<string, unknown>): void;
+    /** 卡片设置：切主题 = 切到该主题的默认排版（「恢复默认」的唯一入口，无独立重置按钮） */
+    applyCardTheme(themeId: string): void;
     /** 卡片设置：当前笔记会话（无会话返回 null） */
     getCardSettingsSession(): unknown;
     /** 卡片设置：当前生效设置（无会话时为默认值） */
@@ -463,6 +465,7 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     /** 封面字段（C01③）：应用用户编辑（会话 applyCoverFields；实际变化 → bumpConfig → 重排版） */
     applyCardCoverField(key: string, value: unknown): void;
     /** 封面字段（C01③）：按当前笔记重新填入（清手工编辑，回 seed 跟随） */
+    resetCardCoverFields(): void;
     /** 侧边栏卡片设置：切换子 Tab（'token' | 'cover'） */
     switchCardSettingsSubTab(subTab: 'token' | 'cover'): void;
     /** 侧边栏卡片设置：打开面板并聚焦到指定子 Tab（供预览区等入口直通） */

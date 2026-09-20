@@ -5,7 +5,7 @@
 采用所见即所得（WYSIWYG）架构（2026-09-13 David 定调）：
 - 设置全量收敛至侧边栏面板，全局偏好设置中不设卡片页签（2026-09-19 David 再次确认）；
 - 面板头部划分为两种形式的双子 Tab：
-  1. 「排版 Token」：主题六选、比例三选、正文页码、水印文案、字号/行高/边距滑块、恢复默认排版；
+  1. 「排版 Token」：主题六选、比例三选、正文页码、水印文案、字号/行高/边距滑块；
   2. 「封面设置」：封面启用开关、标题/作者/日期/摘要编辑、按当前笔记重新填入（C06 配图在此扩展）。
 - 预览区「封面」芯片按钮直通本面板并自动切到封面子 Tab，废弃独立的居中 Modal。
 
@@ -28,9 +28,10 @@ this.cardSettingsWrapper（settings-panel.js 创建的面板容器）、
 - `renderCardSettingsValues()`：打开面板或会话设置变化后同步当前值；
 - `switchCardSettingsSubTab(subTab)`：在「排版 Token」和「封面设置」之间切换；
 - `openCardSettingsTab(tabName)`：直通打开面板并聚焦到指定子 Tab；
-- `applyCardLayoutSetting(key, value)`：应用排版设置（写会话 + 写回全局默认），触发重排版；
+- `applyCardLayoutSettings(partial)`：应用一组排版设置（写会话 + 写回全局默认），触发重排版；
+- `applyCardLayoutSetting(key, value)`：单键形式，等价于上一行的单键调用；
+- `applyCardTheme(themeId)`：选主题＝连同该主题自带的默认排版一起应用（取代已移除的重置按钮）；
 - `persistCardLayoutDefaults(partial)`：把归一化后的排版值写回 `plugin.settings.cardDefaults`（落盘节流）；
-- `resetCardLayoutSettings()`：恢复内置出厂排版（写会话 + 写回全局默认）；
 - `applyCardCoverField(key, value)`：应用封面字段编辑；
 - `resetCardCoverFields()`：按当前笔记重新填入封面字段；
 - `getCardSettingsSession()`：获取当前笔记会话。
@@ -52,8 +53,10 @@ this.cardSettingsWrapper（settings-panel.js 创建的面板容器）、
 - 新增排版项时：先在 card-settings-model.js 扩展模型与限额，再在 buildCardSettingsPanel 加控件。
   持久化的键集合由 `normalizeCardLayoutSettings` 决定——只有它输出的字段会写回 cardDefaults；
   封面字段（标题/作者/日期/摘要/配图）按设计不进该函数，因而只停留在会话级。
-- 「恢复默认排版」的语义是**内置出厂值**（DEFAULT_CARD_LAYOUT_SETTINGS），不是「当前全局默认」；
-  否则侧栏本身即默认面板，重置会成为空操作。
+- 不设「恢复默认排版」按钮（2026-09-20，与文章模式对齐）：默认值就是**主题自带的默认排版**
+  （`getCardThemeDefaultTypography`）。选主题即取该主题默认——在 A 主题下改乱了，去 B 再回 A，
+  得到的就是 A 的默认；侧栏本身已是默认面板，再放一个重置按钮只与换主题重复。
+  封面/页码/水印属输出元素（与主题无关），不随主题切换重置。
 */
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: AppleStyleView 方法组跨模块动态组合，会话等合同字段以 unknown 持有 */
@@ -65,6 +68,7 @@ import {
   DEFAULT_CARD_LAYOUT_SETTINGS,
   VERIFIED_CARD_RATIOS,
   VERIFIED_CARD_THEME_IDS,
+  getCardThemeDefaultTypography,
   normalizeCardLayoutSettings,
 } from '../../services/card-settings-model.js';
 import { getCardTheme } from '../../services/card-themes.js';
@@ -194,9 +198,9 @@ buildCardSettingsPanel() {
       const btn = grid.createEl('button', {
         cls: 'apple-btn-size',
         text: theme.name,
-        attr: { 'data-value': themeId, 'title': theme.name },
+        attr: { 'data-value': themeId, 'title': `${theme.name}（切换主题会一并恢复该主题的字号 / 行高 / 边距默认值）` },
       });
-      btn.addEventListener('click', () => { this.applyCardLayoutSetting('themeId', themeId); });
+      btn.addEventListener('click', () => { this.applyCardTheme(themeId); });
     }
   });
 
@@ -276,16 +280,6 @@ buildCardSettingsPanel() {
       refs.sliders[row.key] = { input: slider, valueEl };
     });
   }
-
-  // 恢复默认（内置出厂值；同时保存为全局默认）
-  this.createSection(tokenSection, '其他', (section) => {
-    const resetBtn = section.createEl('button', {
-      cls: 'apple-btn-size',
-      text: '恢复默认排版',
-      attr: { 'title': '恢复为内置出厂排版，并保存为全局默认；其他笔记已生成的卡片不受影响' },
-    });
-    resetBtn.addEventListener('click', () => { this.resetCardLayoutSettings(); });
-  });
 
   // ========== 子 Tab 2：封面设置 ==========
   this.createSection(coverSection, '封面启用', (section) => {
@@ -553,13 +547,13 @@ scheduleCardDefaultsSave() {
 ,
 
 /**
- * 应用单项设置：归一化 + 变化检测在会话内完成；值实际变化才 bumpConfig 并重排版。
+ * 应用一组设置：归一化 + 变化检测在会话内完成；值实际变化才 bumpConfig 并重排版。
  * 2026-09-19：同时写回全局默认——即使尚无会话（未排版过），这次选择也应当被记住。
- * @param {string} key
- * @param {unknown} value
+ * 多键形式供「选主题」使用（主题连同其默认排版一起应用）。
+ * @param {Record<string, unknown>} partial
  */
-applyCardLayoutSetting(key, value) {
-  this.persistCardLayoutDefaults({ [key]: value });
+applyCardLayoutSettings(partial) {
+  this.persistCardLayoutDefaults(partial);
 
   const session = /** @type {any} */ (this.getCardSettingsSession());
   if (!session || typeof session.applyLayoutSettings !== 'function') {
@@ -567,7 +561,7 @@ applyCardLayoutSetting(key, value) {
     this.renderCardSettingsValues();
     return;
   }
-  const result = session.applyLayoutSettings({ [key]: value });
+  const result = session.applyLayoutSettings(partial);
   this.renderCardSettingsValues();
   if (result.changed) {
     // bumpConfig 已使页选择与省略确认失效；用新版本重新排版
@@ -577,22 +571,27 @@ applyCardLayoutSetting(key, value) {
 ,
 
 /**
- * 恢复内置出厂排版（2026-09-19 语义调整）。
- * 侧栏本身即默认配置面板，若沿用会话的 resetLayoutSettings（基准＝当前全局默认），
- * 重置会成为空操作；因此显式传出厂值，并同样写回全局默认。
+ * 应用单项设置（`applyCardLayoutSettings` 的单键形式）。
+ * @param {string} key
+ * @param {unknown} value
  */
-resetCardLayoutSettings() {
-  const builtin = { ...DEFAULT_CARD_LAYOUT_SETTINGS };
-  this.persistCardLayoutDefaults(builtin);
+applyCardLayoutSetting(key, value) {
+  this.applyCardLayoutSettings({ [key]: value });
+}
+,
 
-  const session = /** @type {any} */ (this.getCardSettingsSession());
-  if (!session || typeof session.applyLayoutSettings !== 'function') {
-    this.renderCardSettingsValues();
-    return;
-  }
-  const result = session.applyLayoutSettings(builtin);
-  this.renderCardSettingsValues();
-  if (result.changed) void this.renderCardPreview();
+/**
+ * 选主题（2026-09-20）：连同该主题自带的默认排版一起应用。
+ * 与文章模式同一心智——没有「恢复默认排版」按钮，换主题即取默认：
+ * 在 A 主题下改乱了，去 B 再回 A，得到的就是 A 的默认排版。
+ * 封面 / 页码 / 水印属输出元素（与主题无关），不随主题切换重置。
+ * @param {string} themeId
+ */
+applyCardTheme(themeId) {
+  this.applyCardLayoutSettings({
+    themeId,
+    ...getCardThemeDefaultTypography(themeId),
+  });
 }
 ,
 

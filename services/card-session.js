@@ -18,8 +18,9 @@
 - 注册表：`getSession/has/renameNote/removeNote/disposeAll/listSessions`。- 会话（createNoteCardSession 产出）：
   - 版本：`bumpContent/bumpConfig/bumpTheme/bumpResource`（任一 bump 使选择与省略确认失效）；
     `currentLayoutKey()` = `c{content}.k{config}.t{theme}.r{resource}`。
-  - 排版设置（B03）：`getLayoutSettings/applyLayoutSettings/resetLayoutSettings`，归一化与
+  - 排版设置（B03）：`getLayoutSettings/applyLayoutSettings`，归一化与
     变化检测委托 card-settings-model.js；值实际变化才 bumpConfig（选择/确认随之失效）。
+    无重置方法：默认值随主题（换主题即取默认），视图不需要单独的重置口子。
   - 封面字段（C01③）：`setCoverSeed`（随内容刷新，不 bump）→ `getCoverFields`（dirty 取用户值
     否则 seed）→ `applyCoverFields`/`resetCoverFields`（编辑冻结/重新填入，实际变化才 bumpConfig）。
   - 预览：`beginPreviewUpdate()` → token（{seq, layoutKey}）；`settlePreviewUpdate(token, outcome)`
@@ -146,7 +147,6 @@ function toLayoutKey(versions) {
  *   bumpContent(): string, bumpConfig(): string, bumpTheme(): string, bumpResource(): string,
  *   getLayoutSettings(): import('./card-settings-model.js').CardLayoutSettings,
  *   applyLayoutSettings(partial: Partial<import('./card-settings-model.js').CardLayoutSettings> | Record<string, unknown>): { changed: boolean, settings: import('./card-settings-model.js').CardLayoutSettings, layoutKey?: string },
- *   resetLayoutSettings(): { changed: boolean, settings: import('./card-settings-model.js').CardLayoutSettings, layoutKey?: string },
  *   setCoverSeed(fields: Partial<import('./card-cover-model.js').CardCoverFields> | Record<string, unknown>): void,
  *   getCoverFields(): import('./card-cover-model.js').CardCoverFields,
  *   isCoverFieldsDirty(): boolean,
@@ -306,11 +306,6 @@ export function createNoteCardSession(options = {}) {
      */
     applyLayoutSettings(partial) {
       return layoutSettings.apply(partial);
-    },
-
-    /** 恢复当前默认设置（B03 为内置默认；C02 接全局默认后由其提供基准）。 */
-    resetLayoutSettings() {
-      return layoutSettings.reset();
     },
 
     // —— 封面字段（C01③；归一化委托 card-cover-model.js）——

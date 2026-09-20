@@ -13,6 +13,7 @@ import {
   normalizeCardLayoutSettings,
   createCardLayoutSettingsState,
   checkCardOutputEligibility,
+  getCardThemeDefaultTypography,
 } from "../services/card-settings-model.js";
 
 describe("normalizeCardLayoutSettings：归一化", () => {
@@ -110,16 +111,24 @@ describe("createCardLayoutSettingsState：状态机", () => {
     expect(bumps).toBe(0);
   });
 
-  it("reset 恢复默认：有变化时触发 onChanged，无变化时不触发", () => {
+  it("换主题即取默认：显式写入主题默认排版回到默认值（状态机不提供 reset）", () => {
     let bumps = 0;
     const state = createCardLayoutSettingsState({ onChanged: () => { bumps += 1; return "k"; } });
     state.apply({ fontSize: 18, pagePadding: 40 });
-    const reset = state.reset();
-    expect(reset.changed).toBe(true);
-    expect(reset.settings).toEqual(DEFAULT_CARD_LAYOUT_SETTINGS);
+    expect(bumps).toBe(1);
+
+    // 无独立 reset：默认值来自主题，由调用方（card-settings 的 applyCardTheme）显式写入
+    const themeDefaults = getCardThemeDefaultTypography(DEFAULT_CARD_LAYOUT_SETTINGS.themeId);
+    const back = state.apply(themeDefaults);
+    expect(back.changed).toBe(true);
+    expect(back.settings.fontSize).toBe(DEFAULT_CARD_LAYOUT_SETTINGS.fontSize);
+    expect(back.settings.lineHeight).toBe(DEFAULT_CARD_LAYOUT_SETTINGS.lineHeight);
+    expect(back.settings.pagePadding).toBe(DEFAULT_CARD_LAYOUT_SETTINGS.pagePadding);
     expect(bumps).toBe(2);
-    const resetAgain = state.reset();
-    expect(resetAgain.changed).toBe(false);
+
+    // 同值重放不 bump
+    const again = state.apply(themeDefaults);
+    expect(again.changed).toBe(false);
     expect(bumps).toBe(2);
   });
 
