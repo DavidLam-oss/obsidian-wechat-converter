@@ -309,6 +309,9 @@ export function assembleCardCoverPage(args) {
   page.style.setProperty("--icard-page-height", `${size.height}px`);
   page.setAttribute("data-icard-cover", "true");
 
+  const isAdaptive = Boolean(fields.coverImage && (fields.coverMode === 'adaptive' || !fields.coverMode));
+  const style = theme.coverStyle || 'magazine';
+
   if (fields.coverImage) {
     if (fields.coverMode === "full-bleed") {
       page.classList.add("icard-cover--full-bleed");
@@ -320,15 +323,40 @@ export function assembleCardCoverPage(args) {
       return page;
     }
 
-    page.classList.add("icard-cover--has-image");
-    const bg = ownerDoc.createElement("div");
-    bg.className = "icard-cover-bg";
-    bg.style.setProperty("background-image", `url("${fields.coverImage}")`);
-    page.append(bg);
+    if (fields.coverMode === "mixed") {
+      page.classList.add("icard-cover--has-image");
+      const bg = ownerDoc.createElement("div");
+      bg.className = "icard-cover-bg";
+      bg.style.setProperty("background-image", `url("${fields.coverImage}")`);
+      page.append(bg);
 
-    const overlay = ownerDoc.createElement("div");
-    overlay.className = "icard-cover-overlay";
-    page.append(overlay);
+      const overlay = ownerDoc.createElement("div");
+      overlay.className = "icard-cover-overlay";
+      page.append(overlay);
+    } else {
+      // adaptive 自适应模式
+      page.classList.add("icard-cover--adaptive");
+      if (style === "magazine") {
+        const hero = ownerDoc.createElement("div");
+        hero.className = "icard-cover-hero";
+        const heroImg = ownerDoc.createElement("img");
+        heroImg.className = "icard-cover-hero-img";
+        heroImg.src = fields.coverImage;
+        heroImg.alt = fields.title || "Cover Hero";
+        hero.append(heroImg);
+        page.append(hero);
+      } else if (style === "neon") {
+        page.classList.add("icard-cover--has-image");
+        const bg = ownerDoc.createElement("div");
+        bg.className = "icard-cover-bg";
+        bg.style.setProperty("background-image", `url("${fields.coverImage}")`);
+        page.append(bg);
+
+        const cyberOverlay = ownerDoc.createElement("div");
+        cyberOverlay.className = "icard-cover-cyber-overlay";
+        page.append(cyberOverlay);
+      }
+    }
   }
 
   const body = ownerDoc.createElement("div");
@@ -340,6 +368,29 @@ export function assembleCardCoverPage(args) {
   kicker.className = "icard-cover-kicker";
   kicker.textContent = fields.date || "";
   if (kicker.textContent) body.append(kicker);
+
+  // 自适应模式下，centered 与 luxury 在 kicker 下方、title 上方置入相框
+  if (isAdaptive) {
+    if (style === "centered") {
+      const frame = ownerDoc.createElement("div");
+      frame.className = "icard-cover-frame";
+      const frameImg = ownerDoc.createElement("img");
+      frameImg.className = "icard-cover-frame-img";
+      frameImg.src = fields.coverImage;
+      frameImg.alt = fields.title || "Cover Frame";
+      frame.append(frameImg);
+      body.append(frame);
+    } else if (style === "luxury") {
+      const arch = ownerDoc.createElement("div");
+      arch.className = "icard-cover-arch";
+      const archImg = ownerDoc.createElement("img");
+      archImg.className = "icard-cover-arch-img";
+      archImg.src = fields.coverImage;
+      archImg.alt = fields.title || "Cover Arch";
+      arch.append(archImg);
+      body.append(arch);
+    }
+  }
 
   const title = ownerDoc.createElement("div");
   title.className = "icard-cover-title";

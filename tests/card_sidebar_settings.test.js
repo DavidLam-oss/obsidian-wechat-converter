@@ -268,10 +268,9 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       // ② 「字号与间距」固定收起（对应文章模式的高级选项）
       expect(refs.tuneGroup.open).toBe(false);
 
-      // ③ 「封面画面」交还「跟随数据」的默认态：手动开合标记被清掉，
-      //    当前无配图 → 重新按默认展开
+      // ③ 「封面画面」进阶 AI 生图默认保持收起（平铺摄影/本地为主力），手动开合标记被清掉
       expect(refs.coverAiUserToggled).toBe(false);
-      expect(refs.coverAiDetails.open).toBe(true);
+      expect(refs.coverAiDetails.open).toBe(false);
 
       // ④ 取值不受影响（复位不等于悄悄改用户设置）
       expect(view.getCurrentCardLayoutSettings()).toEqual(settingsBefore);
@@ -473,14 +472,14 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       view.renderCardSettingsValues();
       const coverPanel = view.cardSettingsWrapper.querySelector(".icard-settings-subpanel-cover");
 
-      // 两节：封面页（开关）+ 封面文案；「封面画面」是独立的折叠组
+      // 三节：封面页（开关）+ 封面画面 + 封面文案
       const labels = Array.from(coverPanel.querySelectorAll(".apple-setting-section"))
         .map((s) => s.querySelector(".apple-setting-label")?.textContent);
-      expect(labels).toEqual(["封面页", "封面文案"]);
+      expect(labels).toEqual(["封面页", "封面画面", "封面文案"]);
 
       const aiDetails = coverPanel.querySelector("details.icard-settings-cover-ai");
       expect(aiDetails).toBeTruthy();
-      expect(aiDetails.querySelector("summary")?.textContent).toContain("封面画面");
+      expect(aiDetails.querySelector("summary")?.textContent).toContain("AI 生图进阶设置");
 
       // 作者 + 日期 上下两行（2026-09-21 真机回归：320px 下并排两列摆不下，已撤回）
       const copySection = Array.from(coverPanel.querySelectorAll(".apple-setting-section"))
@@ -504,22 +503,22 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       const echo = view.cardSettingsRefs.coverGroupEcho;
       const details = view.cardSettingsRefs.coverAiDetails;
 
-      // 无配图：摘要写明当前风格与呈现，且默认展开（首次必然要用生图）
+      // 无配图：摘要写明当前风格与呈现，且 AI 生图默认收起（突出上方摄影/本地工具条）
       expect(echo.textContent).toContain("3D 粘土质感");
-      expect(echo.textContent).toContain("图文混排");
+      expect(echo.textContent).toContain("主题自适应版式");
       expect(echo.textContent).toContain("无配图");
-      expect(details.open).toBe(true);
+      expect(details.open).toBe(false);
 
       // 换风格 → 摘要即时跟着变
       view.cardSettingsRefs.coverStyleSelect.value = "minimal-vector";
       view.cardSettingsRefs.coverStyleSelect.dispatchEvent(new Event("change"));
       expect(view.cardSettingsRefs.coverGroupEcho.textContent).toContain("扁平矢量插画");
 
-      // 用户手动收起后，后续同步不再擅自展开（避免「刚展开又被代码收起来」）
-      details.open = false;
+      // 用户手动展开后，后续同步不再擅自收起（避免「刚展开又被代码收起来」）
+      details.open = true;
       details.dispatchEvent(new Event("toggle"));
       view.renderCardSettingsValues();
-      expect(details.open).toBe(false);
+      expect(details.open).toBe(true);
     });
 
     it("点击封面开关行（非开关本体）同样能切换封面", () => {

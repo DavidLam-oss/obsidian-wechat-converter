@@ -137,6 +137,46 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 }
 .apple-settings-card-wrapper .icard-settings-cover-remove:hover { color: var(--text-normal); }
 
+/* 封面图源操作工具行（🎲 随机摄影 / 🔍 Unsplash / 🖼️ 笔记/本地） */
+.icard-settings-cover-tools {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.apple-settings-card-wrapper .icard-settings-cover-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 30px;
+  padding: 0 4px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.apple-settings-card-wrapper .icard-settings-cover-btn:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--apple-accent);
+}
+
+.apple-settings-card-wrapper .icard-settings-cover-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* —— 侧边栏双子 Tab 导航（排版 Token vs 封面设置）——
    置顶吸顶：面板内容长（六个主题 + 三个滑块 + 整套封面表单），滚下去之后就不知道
    自己在哪个子 Tab 下面了，所以让导航跟着滚。

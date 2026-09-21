@@ -73,16 +73,10 @@ import {
 } from '../../services/card-settings-model.js';
 import { getCardTheme } from '../../services/card-themes.js';
 import {
-  AI_CARD_COVER_STYLES,
-  resolveCardCoverPrompt,
-  generateCardCoverImage,
-} from '../../services/card-ai-image.js';
-import {
-  resolveImageAiProvider,
-  isAiProviderRunnable,
-} from '../../services/ai-layout/providers.js';
-import { Notice } from '../apple-style-view-shared.js';
-import { getObsidianRequestUrl } from '../../services/obsidian-compat.js';
+  buildCardCoverSettingsSubpanel,
+  renderCardCoverValues,
+  renderCardCoverGroupEcho,
+} from './card-cover-settings.js';
 
 /**
  * 卡片设置视图状态（d.ts 合同以 unknown 持有，这里给运行时访问形状）。
@@ -110,6 +104,7 @@ import { getObsidianRequestUrl } from '../../services/obsidian-compat.js';
  *     coverModeSelect?: HTMLSelectElement | null,
  *     coverStyleSelect?: HTMLSelectElement | null,
  *     coverPromptInput?: HTMLTextAreaElement | null,
+ *     coverKeywordsInput?: HTMLInputElement | null,
  *     coverGenerateBtn?: HTMLButtonElement | null,
  *     coverImagePreviewWrap?: ObsidianElementLike | null,
  *     coverImagePreviewName?: ObsidianElementLike | null,
@@ -134,12 +129,6 @@ const SLIDER_FORMAT = {
   fontSize: (v) => `${v}px`,
   lineHeight: (v) => `${v}`,
   pagePadding: (v) => `${v}px`,
-};
-
-/** 封面呈现形态的用户可读标签：下拉选项与折叠摘要回显共用同一份，避免两处文案漂移 */
-const COVER_MODE_LABELS = {
-  mixed: '图文混排',
-  'full-bleed': '纯全图海报',
 };
 
 /** 全局默认落盘节流（ms）：滑块 input 会连续触发，合并成一次 saveSettings */
@@ -325,241 +314,8 @@ buildCardSettingsPanel() {
     });
   }
 
-  // ========== 子 Tab 2：封面设置 ==========
-  // 封面启用：与「正文页码」同一套开关语汇——状态由开关本体表达，
-  // 不再写成「封面 · 已开启」的按钮（状态塞在文案里，还长得跟下方的值选中态一样）。
-  this.createSection(coverSection, '封面页', (section) => {
-    const row = section.createEl('div', { cls: 'icard-settings-toggle-row' });
-    const copy = row.createEl('div', { cls: 'icard-settings-toggle-copy' });
-    copy.createEl('span', { cls: 'icard-settings-toggle-label', text: '启用封面页' });
-
-    // 外层用 div 而非 label：label 会把点击再次转派给 input，和下面的整行点击叠加成「点一下翻两次」
-    const toggle = row.createEl('div', { cls: 'apple-toggle' });
-    const checkbox = /** @type {HTMLInputElement} */ (
-      /** @type {unknown} */ (toggle.createEl('input', { type: 'checkbox', cls: 'apple-toggle-input' }))
-    );
-    toggle.createEl('span', { cls: 'apple-toggle-slider' });
-    refs.coverToggleInput = checkbox;
-
-    checkbox.addEventListener('change', () => {
-      this.applyCardLayoutSetting('coverEnabled', checkbox.checked);
-    });
-    row.addEventListener('click', (e) => {
-      if (e.target === checkbox) return;
-      e.preventDefault();
-      checkbox.checked = !checkbox.checked;
-      checkbox.dispatchEvent(new Event('change'));
-    });
-  });
-
-  // —— 封面文案 / 封面画面（2026-09-21 David）——
-  // 原来 9 个控件全塞在一个无样式的裸容器里（icard-settings-cover-fields / -ai-group /
-  // -prompt-row 三个类在全部样式分片中零定义），所以没有分组、没有分隔线、控件权重齐平。
-  // 现在拆成两节：文案是高频编辑项常驻；画面（AI 相关）收进折叠组，摘要回显当前状态。
-  // 规划与取舍见 docs/plans/2026-09-21-cover-settings-redesign.md。
-  refs.coverFieldsHidden = [];
-
-  const coverCopySection = this.createSection(coverSection, '封面文案', (content) => {
-    /**
-     * 字段行 = label 包住「标签 + 输入框」，点标签即聚焦输入框（沿用原语义）。
-     * placeholder 保持短：输入框只有一行宽，长提示会被硬裁（无省略号），
-     * 更完整的说明放 title 悬停看。
-     * @param {ObsidianElementLike} parent @param {string} key @param {string} label
-     * @param {string} placeholder @param {string} [hint]
-     */
-    const addCoverInput = (parent, key, label, placeholder, hint) => {
-      const row = parent.createEl('label', { cls: 'icard-settings-cover-row' });
-      row.createEl('span', { cls: 'icard-settings-cover-label', text: label });
-      const input = /** @type {HTMLInputElement} */ (
-        /** @type {unknown} */ (row.createEl('input', {
-          type: 'text',
-          cls: 'icard-settings-text',
-          attr: { placeholder, 'data-cover-key': key, title: hint || placeholder },
-        }))
-      );
-      input.addEventListener('change', () => {
-        this.applyCardCoverField(key, input.value);
-      });
-      refs.coverInputs[key] = input;
-    };
-
-    addCoverInput(content, 'title', '标题', '文章标题');
-    addCoverInput(content, 'author', '作者', '作者名称');
-    addCoverInput(content, 'date', '日期', 'YYYY-MM-DD');
-    addCoverInput(content, 'excerpt', '摘要', '文章摘要');
-
-    // 「重新填入」是低频补救动作，不该和主操作抢重量 → 文字按钮
-    const refillBtn = content.createEl('button', {
-      cls: 'icard-settings-cover-link',
-      text: '按当前笔记重新填入',
-      attr: { type: 'button', title: '丢弃手工修改，恢复为当前笔记 frontmatter / 文件名派生的初值' },
-    });
-    refillBtn.addEventListener('click', () => {
-      this.resetCardCoverFields();
-    });
-  });
-  refs.coverFieldsHidden.push(coverCopySection);
-
-  // —— 封面画面（AI 相关，低频）：折叠组，摘要回显「风格 · 呈现 · 配图状态」——
-  // 折叠默认态跟随数据（见 renderCardSettingsValues）：无配图默认展开（首次必然要用生图），
-  // 已有配图默认收起；用户手动开合过之后代码不再改动，避免「刚展开又被收起来」。
-  const aiDetails = /** @type {HTMLDetailsElement} */ (
-    /** @type {unknown} */ (coverSection.createEl('details', {
-      cls: 'apple-settings-details icard-settings-cover-ai',
-    }))
-  );
-  refs.coverAiDetails = aiDetails;
-  const aiSummary = aiDetails.createEl('summary', { cls: 'apple-settings-summary' });
-  aiSummary.createEl('span', { text: '封面画面' });
-  refs.coverGroupEcho = aiSummary.createEl('span', { cls: 'icard-settings-tune-values' });
-  aiDetails.addEventListener('toggle', () => {
-    refs.coverAiUserToggled = true;
-  });
-  refs.coverFieldsHidden.push(aiDetails);
-
-  const aiCoverGroup = aiDetails.createDiv({ cls: 'apple-settings-area icard-settings-cover-ai-area' });
-
-  // 1. 呈现形态选择
-  const modeRow = aiCoverGroup.createEl('label', { cls: 'icard-settings-cover-row' });
-  modeRow.createEl('span', { cls: 'icard-settings-cover-label', text: '呈现' });
-  const modeSelect = /** @type {HTMLSelectElement} */ (
-    /** @type {unknown} */ (modeRow.createEl('select', { cls: 'icard-settings-select' }))
-  );
-  modeSelect.createEl('option', { value: 'mixed', text: `${COVER_MODE_LABELS.mixed}（背景配图 + 文字排版）` });
-  modeSelect.createEl('option', { value: 'full-bleed', text: `${COVER_MODE_LABELS['full-bleed']}（纯 AI 画面，整页铺满）` });
-  modeSelect.addEventListener('change', () => {
-    this.applyCardCoverField('coverMode', modeSelect.value);
-  });
-  refs.coverModeSelect = modeSelect;
-
-  // 2. 风格选择
-  const styleRow = aiCoverGroup.createEl('label', { cls: 'icard-settings-cover-row' });
-  styleRow.createEl('span', { cls: 'icard-settings-cover-label', text: '风格' });
-  const styleSelect = /** @type {HTMLSelectElement} */ (
-    /** @type {unknown} */ (styleRow.createEl('select', { cls: 'icard-settings-select' }))
-  );
-  for (const style of AI_CARD_COVER_STYLES) {
-    styleSelect.createEl('option', { value: style.id, text: `${style.name} · ${style.description}` });
-  }
-  styleSelect.addEventListener('change', () => {
-    this.applyCardCoverField('coverImageStyle', styleSelect.value);
-    const session = /** @type {any} */ (this.getCardSettingsSession());
-    const fields = session && typeof session.getCoverFields === 'function'
-      ? session.getCoverFields()
-      : { title: '', excerpt: '' };
-    const autoPrompt = resolveCardCoverPrompt({
-      styleId: styleSelect.value,
-      title: fields.title,
-      excerpt: fields.excerpt,
-    });
-    this.applyCardCoverField('coverPrompt', autoPrompt);
-    if (refs.coverPromptInput) {
-      refs.coverPromptInput.value = autoPrompt;
-    }
-  });
-  refs.coverStyleSelect = styleSelect;
-
-  // 3. 提示词多行文本域
-  const promptRow = aiCoverGroup.createDiv({ cls: 'icard-settings-cover-prompt-row' });
-  promptRow.createEl('span', { cls: 'icard-settings-cover-label', text: '画面描述' });
-  const promptInput = /** @type {HTMLTextAreaElement} */ (
-    /** @type {unknown} */ (promptRow.createEl('textarea', {
-      cls: 'icard-settings-prompt-area',
-      attr: { placeholder: '输入画面描述，或根据标题摘要自动填充...' },
-    }))
-  );
-  promptInput.addEventListener('change', () => {
-    this.applyCardCoverField('coverPrompt', promptInput.value);
-  });
-  refs.coverPromptInput = promptInput;
-
-  // 4. 生图按钮：本页**唯一的主操作**（蓝色实底）。原来是 .apple-btn-size，
-  //    和「移除配图」「重新填入」三枚长得一模一样，主操作完全被淹没。
-  const genActionRow = aiCoverGroup.createDiv({ cls: 'icard-settings-cover-actions' });
-  const genBtn = genActionRow.createEl('button', {
-    cls: 'icard-settings-cover-primary',
-    text: '🎨 AI 生成封面图',
-    attr: { type: 'button', title: '使用配置的生图模型根据 Prompt 生成封面图片' },
-  });
-  refs.coverGenerateBtn = genBtn;
-
-  genBtn.addEventListener('click', async () => {
-    const aiSettings = (/** @type {any} */ (this.plugin))?.settings?.ai;
-    const provider = resolveImageAiProvider(aiSettings, aiSettings?.defaultImageProviderId);
-    if (!provider || !isAiProviderRunnable(provider, 'image')) {
-      new Notice('未配置可用的生图 AI Provider，请前往插件设置【AI 服务】进行配置');
-      return;
-    }
-
-    const session = /** @type {any} */ (this.getCardSettingsSession());
-    const fields = session && typeof session.getCoverFields === 'function'
-      ? session.getCoverFields()
-      : { title: '', excerpt: '', coverPrompt: '', coverImageStyle: '3d-clay' };
-
-    const promptText = (fields.coverPrompt || promptInput.value || '').trim() || resolveCardCoverPrompt({
-      styleId: fields.coverImageStyle || '3d-clay',
-      title: fields.title,
-      excerpt: fields.excerpt,
-    });
-
-    const currentLayout = this.getCurrentCardLayoutSettings();
-    const ratio = currentLayout.ratioId || '3:4';
-
-    genBtn.disabled = true;
-    const originalText = genBtn.textContent || '🎨 AI 生成封面图';
-    genBtn.textContent = '🎨 正在生图中...';
-
-    try {
-      const dataUrl = await generateCardCoverImage({
-        provider,
-        prompt: promptText,
-        aspectRatio: ratio,
-        requestUrl: getObsidianRequestUrl(),
-      });
-      this.applyCardCoverField('coverImage', dataUrl);
-      new Notice('封面图生成成功！已应用到卡片封面');
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      new Notice(`生图失败: ${msg}`);
-    } finally {
-      genBtn.disabled = false;
-      genBtn.textContent = originalText;
-    }
-  });
-
-  // 5. 封面图片缩略图预览与移除
-  const previewBox = aiCoverGroup.createDiv({ cls: 'icard-settings-cover-preview-box hidden' });
-  refs.coverImagePreviewWrap = previewBox;
-
-  const thumbImg = /** @type {HTMLImageElement} */ (
-    /** @type {unknown} */ (previewBox.createEl('img', { cls: 'icard-settings-cover-thumb' }))
-  );
-  refs.coverImageThumb = thumbImg;
-
-  // 5. 配图预览卡：缩略图 + 风格名（主行）+ 尺寸/状态（次行）+ 小号「移除」。
-  //    原来只有一行「已启用封面配图」加一枚与主操作同款的按钮：信息少，还抢重量。
-  const infoCol = previewBox.createDiv({ cls: 'icard-settings-cover-info' });
-  refs.coverImagePreviewName = infoCol.createEl('span', { cls: 'icard-settings-cover-preview-name' });
-  refs.coverImagePreviewMeta = infoCol.createEl('span', { cls: 'icard-settings-note', text: '已启用' });
-  // 缩略图解码完成后补真实像素尺寸（data URL 不解码拿不到宽高）
-  thumbImg.addEventListener('load', () => {
-    const w = thumbImg.naturalWidth;
-    const h = thumbImg.naturalHeight;
-    if (w && h && refs.coverImagePreviewMeta) {
-      /** @type {HTMLElement} */ (refs.coverImagePreviewMeta).textContent = `${w} × ${h} · 已启用`;
-    }
-  });
-  // 移除按钮是预览卡的**第三个 flex 子项**，不是 info 列的子项：info 是列方向 flex，
-  // 放进去会被拉满整行，一个次要动作占掉整行宽度，与「压低权重」的初衷正好相反。
-  const removeImgBtn = previewBox.createEl('button', {
-    cls: 'icard-settings-cover-remove',
-    text: '移除',
-    attr: { type: 'button', title: '移除已生成的配图，恢复主题默认纯色/渐变封面' },
-  });
-  refs.coverImageRemoveBtn = removeImgBtn;
-  removeImgBtn.addEventListener('click', () => {
-    this.applyCardCoverField('coverImage', '');
-  });
+  // ========== 子 Tab 2：封面设置（委托独立模块 card-cover-settings.js） ==========
+  buildCardCoverSettingsSubpanel(this, coverSection, refs);
 
   this.renderCardSettingsValues();
 }
@@ -800,74 +556,20 @@ renderCardSettingsValues() {
       `字号 ${fmt('fontSize', settings.fontSize)} · 行高 ${fmt('lineHeight', settings.lineHeight)} · 边距 ${fmt('pagePadding', settings.pagePadding)}`;
   }
 
-  // —— 2. 封面设置同步 ——
-  if (refs.coverToggleInput) {
-    const coverOn = settings.coverEnabled === true;
-    refs.coverToggleInput.checked = coverOn;
-    // 关掉封面时，「封面文案」分节与「封面画面」折叠组一起收起（开关本体留在原位）
-    for (const el of refs.coverFieldsHidden || []) {
-      /** @type {HTMLElement} */ (el).classList.toggle('hidden', !coverOn);
-    }
-    if (coverOn) {
-      const session = /** @type {any} */ (this.getCardSettingsSession());
-      const fields = session && typeof session.getCoverFields === 'function'
-        ? session.getCoverFields()
-        : { title: '', author: '', date: '', excerpt: '' };
-      for (const [key, input] of Object.entries(refs.coverInputs || {})) {
-        if (document.activeElement === input) continue;
-        input.value = String(/** @type {Record<string, string>} */ (fields)[key] || '');
-      }
-      if (refs.coverModeSelect) {
-        refs.coverModeSelect.value = fields.coverMode || 'mixed';
-      }
-      if (refs.coverStyleSelect) {
-        refs.coverStyleSelect.value = fields.coverImageStyle || '3d-clay';
-      }
-      if (refs.coverPromptInput && document.activeElement !== refs.coverPromptInput) {
-        refs.coverPromptInput.value = fields.coverPrompt || resolveCardCoverPrompt({
-          styleId: fields.coverImageStyle || '3d-clay',
-          title: fields.title,
-          excerpt: fields.excerpt,
-        });
-      }
-      const hasImage = Boolean(fields.coverImage);
-      if (refs.coverImagePreviewWrap) {
-        refs.coverImagePreviewWrap.classList.toggle('hidden', !hasImage);
-        if (hasImage && refs.coverImageThumb) {
-          refs.coverImageThumb.src = fields.coverImage;
-        }
-      }
-      this.renderCardCoverGroupEcho(fields, hasImage);
-    }
-  }
+  // —— 2. 封面设置同步（委托独立模块 card-cover-settings.js） ——
+  renderCardCoverValues(this, refs, settings);
 }
 ,
 
 /**
  * 「封面画面」折叠组的摘要回显与折叠默认态。
- * 摘要是这组控件唯一的常驻可见信息——收起时也能看到当前用的风格 / 呈现 / 有无配图。
  * @param {Record<string, unknown>} fields 会话里的封面字段
  * @param {boolean} hasImage 是否已有配图
  */
 renderCardCoverGroupEcho(fields, hasImage) {
   const refs = cardSettingsStateOf(this).cardSettingsRefs;
   if (!refs) return;
-  const styleId = String(fields.coverImageStyle || '3d-clay');
-  const style = AI_CARD_COVER_STYLES.find((item) => item.id === styleId);
-  const styleName = style ? style.name : styleId;
-  const mode = COVER_MODE_LABELS[String(fields.coverMode || 'mixed')] || COVER_MODE_LABELS.mixed;
-  if (refs.coverGroupEcho) {
-    /** @type {HTMLElement} */ (refs.coverGroupEcho).textContent =
-      `${styleName} · ${mode} · ${hasImage ? '已有配图' : '无配图'}`;
-  }
-  if (refs.coverImagePreviewName) {
-    /** @type {HTMLElement} */ (refs.coverImagePreviewName).textContent = styleName;
-  }
-  // 折叠默认态跟随数据：无配图默认展开（首次必然要用生图），已有配图默认收起。
-  // 用户手动开合过就不再干预，避免「刚展开又被代码收起来」。
-  if (refs.coverAiDetails && refs.coverAiUserToggled !== true) {
-    /** @type {HTMLDetailsElement} */ (refs.coverAiDetails).open = !hasImage;
-  }
+  renderCardCoverGroupEcho(refs, fields, hasImage);
 }
 ,
 
