@@ -41,30 +41,60 @@
   z-index: -1;
 }
 
-/* —— B02 卡片预览 UI —— */
+/* 卡片模式重置外层容器 padding，使画板能够铺满整个侧边栏全宽且透明融入 */
+.apple-converter-preview:has(.icard-preview-shell),
+.apple-preview-wrapper.mode-classic .apple-converter-preview:has(.icard-preview-shell) {
+  padding: 0;
+  background: transparent;
+}
+
+/* —— B02 卡片预览 UI：全域一体化自适应 Design Studio 画布 —— */
 
 .icard-preview-shell {
+  --icard-canvas-bg: color-mix(in srgb, var(--background-secondary) 65%, var(--background-primary));
+  --icard-canvas-dot: rgba(0, 0, 0, 0.10);
+  --icard-canvas-dot-sub: rgba(0, 0, 0, 0.035);
+
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px;
   height: 100%;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   box-sizing: border-box;
   /* 隐藏滚动条：滚动条从预览顶部划到缩略图旁边，观感很差；
      隐藏后滚轮/触控板滚动不受影响（微信工具的网页式滚动同款处理）。 */
   scrollbar-width: none;
+  background-color: var(--icard-canvas-bg);
+  background-image: radial-gradient(
+    circle,
+    var(--icard-canvas-dot) 1.25px,
+    var(--icard-canvas-dot-sub) 1.55px,
+    transparent 1.85px
+  );
+  background-size: 20px 20px;
 }
 .icard-preview-shell::-webkit-scrollbar {
   display: none;
 }
 
-/* 顶部工具条：状态摘要行（缩放/封面等右缘操作已移除，2026-09-20 David 定） */
+.theme-dark .icard-preview-shell {
+  --icard-canvas-bg: color-mix(in srgb, var(--background-secondary) 85%, #000000);
+  --icard-canvas-dot: rgba(255, 255, 255, 0.095);
+  --icard-canvas-dot-sub: rgba(255, 255, 255, 0.03);
+}
+
+/* 顶部工具条：状态摘要行（通透悬浮在全域画布顶端，配以轻柔毛玻璃与细分界线） */
 .icard-preview-toolbar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
+  padding: 12px 20px 10px;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--icard-canvas-bg) 75%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid color-mix(in srgb, var(--background-modifier-border) 45%, transparent);
 }
 
 /* 状态区：页数 / 过期提示 / 省略与资源警告 */
@@ -113,68 +143,75 @@
 }
 
 /* 缩略页列表：page-item 外壳承载缩放尺寸，内部 .icard-page transform 缩放。
-   「画板」底左右下三边出血铺满预览区（负外边距抵消外壳 12px 内边距），卡片浮在画板上；
-   顶部用正边距与工具栏拉开呼吸空间（此前 -12px 顶出血会把画布直接顶到工具栏上）。
-   画板语言对齐 WeChat tool 的图纸画布：浅灰底 + 细网格线纹理。
-   布局用 block + margin:auto 居中，不用 flex 居中——flex 的 center 在内容比
-   容器宽时两侧均匀溢出，滚动条够不着左半边（100% 缩放时表现为「右侧被剪切」）；
-   block + auto 边距在放得下时居中、放不下时自动贴左并完整可滚，任何内核版本都成立。
-   ⚠️ 底色两个约束：不能太浅（--background-secondary ≈#f6f6f6 与 simple-white 封面底
-   #f3f4f6 同色，封面融进背景），也不能太深（纯 modifier-border ≈#e0e0e0 灰得发闷，
-   David 2026-09-20 反馈）。用 color-mix 取中间调：亮色 55% border + 45% primary ≈#f1f1f1，
-   比封面底深一档、又不再发灰；暗色保持接近 modifier-border 的深底（暗色卡片需要深画布衬托）。 */
+   无缝继承外壳的全域微点阵自适应画布，消除一切色块拼贴断层。
+   内部通过 padding 提供充足舒适的居中呼吸空间（左右 20px），兼顾最大化侧栏空间利用率与卡片居中感。
+   同时设置 flex: 1 0 auto，保证无论有几页卡片，画板均自然铺满视口底部，消灭断层留白。 */
 .icard-preview-pages {
-  margin: 10px -12px -12px;
-  padding: 36px 24px 28px;
-  background-color: color-mix(in srgb, var(--background-modifier-border) 55%, var(--background-primary));
-  background-image:
-    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-  background-size: 22px 22px;
+  flex: 1 0 auto;
+  margin: 0;
+  padding: 28px 20px 36px;
+  background: transparent;
 }
 
-.theme-dark .icard-preview-pages {
-  background-color: color-mix(in srgb, var(--background-modifier-border) 82%, var(--background-primary));
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-}
-
-/* 画板下面还有诊断区时收回底部出血，避免诊断区贴死画板边缘 */
+/* 画板下面还有诊断区时收回底部边距，避免诊断区贴死画板边缘 */
 .icard-preview-pages:has(~ .icard-preview-diagnostics) {
-  margin: 10px -12px 0;
+  margin: 0;
   border-radius: 0 0 12px 12px;
 }
 
 .icard-preview-page-item {
   position: relative;
   margin: 0 auto 24px;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
-  /* 双层阴影：近处一圈细的定边缘，远处一层大而散的给「纸片浮起」的厚度 */
+  /* 苹果风格多层自然阴影：1px 轻描边防融边 + 接触微阴影 + 柔和环境散景 */
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.08),
-    0 10px 24px -12px rgba(0, 0, 0, 0.28);
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 2px 6px -1px rgba(0, 0, 0, 0.06),
+    0 10px 24px -10px rgba(0, 0, 0, 0.22);
   cursor: pointer;
-  outline: 2px solid transparent;
-  outline-offset: 2px;
+  will-change: transform, box-shadow;
   transition:
-    outline-color 120ms ease,
-    transform 120ms ease,
-    box-shadow 120ms ease;
+    transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 260ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .icard-preview-page-item:hover {
-  outline-color: var(--background-modifier-border-hover);
-  /* 对齐 WeChat tool 的 hover 手感：原尺寸微放大（scale 1.01），不位移 */
-  transform: scale(1.012);
+  /* 纯 Y 轴轻盈上浮微位移：彻底避免 scale 缩放引起的文字/图片亚像素模糊与边缘抖动 */
+  transform: translateY(-4px);
+  /* 悬浮态大范围柔和弥散光影（Elevation Shadow），移除原先外扩的 2px 突兀虚框 */
   box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    0 16px 32px -12px rgba(0, 0, 0, 0.32);
+    0 0 0 1px rgba(0, 0, 0, 0.07),
+    0 6px 14px -2px rgba(0, 0, 0, 0.08),
+    0 20px 38px -10px rgba(0, 0, 0, 0.28);
+}
+
+.theme-dark .icard-preview-page-item {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 2px 6px -1px rgba(0, 0, 0, 0.2),
+    0 12px 28px -10px rgba(0, 0, 0, 0.5);
+}
+
+.theme-dark .icard-preview-page-item:hover {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 6px 16px -2px rgba(0, 0, 0, 0.3),
+    0 22px 42px -10px rgba(0, 0, 0, 0.7);
 }
 
 .icard-preview-page-item.is-selected {
-  outline-color: var(--interactive-accent);
+  box-shadow:
+    0 0 0 2px var(--interactive-accent),
+    0 6px 14px -2px rgba(0, 0, 0, 0.08),
+    0 16px 32px -8px rgba(0, 0, 0, 0.24);
+}
+
+.theme-dark .icard-preview-page-item.is-selected {
+  box-shadow:
+    0 0 0 2px var(--interactive-accent),
+    0 6px 16px -2px rgba(0, 0, 0, 0.3),
+    0 20px 38px -8px rgba(0, 0, 0, 0.65);
 }
 
 .icard-preview-page-item .icard-page {
