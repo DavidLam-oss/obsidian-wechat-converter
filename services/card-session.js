@@ -22,7 +22,8 @@
     变化检测委托 card-settings-model.js；值实际变化才 bumpConfig（页选择随之失效）。
     无重置方法：默认值随主题（换主题即取默认），视图不需要单独的重置口子。
   - 封面字段（C01③）：`setCoverSeed`（随内容刷新，不 bump）→ `getCoverFields`（dirty 取用户值
-    否则 seed）→ `applyCoverFields`/`resetCoverFields`（编辑冻结/重新填入，实际变化才 bumpConfig）。
+    否则 seed）→ `applyCoverFields`/`resetCoverFields`（编辑冻结/重新填入，实际变化才 bumpConfig；
+    变更判定覆盖 COVER_FIELD_KEYS 全集——含 AI 封面字段，见该常量的注释）。
   - 预览：`beginPreviewUpdate()` → token（{seq, layoutKey}）；`settlePreviewUpdate(token, outcome)`
     仅在 token 仍为最新且版本未变时生效（晚到结果丢弃）；`cancelPreviewUpdate()`；
     `markPreviewStale()`（编辑事件到达即置 stale 并作废在途旧排版，§5.6 ≤250ms 标记）；
@@ -62,6 +63,16 @@ import {
   normalizeCoverFields,
 } from './card-cover-model.js';
 import { createExportJobState } from './card-export-job.js';
+
+/**
+ * 封面字段全集：coverOverride 的变更判定**必须**用它，不能手写白名单。
+ * ⚠️ 2026-09-21 修：这里原本是手写的 `["title","author","date","excerpt"]`，
+ * AI 封面字段（配图 / 呈现 / 风格 / Prompt）后续加进封面模型时白名单没跟上，
+ * 于是这些字段的编辑一律 changed=false → coverOverride 不写入 →
+ * 风格选完当场弹回、AI 生成的配图当场丢失（探针实测 changed=false 且值回默认）。
+ * 从 EMPTY_COVER_FIELDS 派生可以保证「模型加字段 = 判定自动覆盖」。
+ */
+const COVER_FIELD_KEYS = Object.keys(EMPTY_COVER_FIELDS);
 
 /** 快照缓存上限（§5.3：缓存只覆盖当前会话及有限近期版本） */
 export const MAX_RECENT_SNAPSHOTS = 5;
@@ -333,7 +344,7 @@ export function createNoteCardSession(options = {}) {
       if (disposed) return { changed: false, fields: this.getCoverFields() };
       const current = this.getCoverFields();
       const merged = normalizeCoverFields(partial, current);
-      const changed = ["title", "author", "date", "excerpt"].some((key) =>
+      const changed = COVER_FIELD_KEYS.some((key) =>
         /** @type {Record<string, string>} */ (merged)[key] !== /** @type {Record<string, string>} */ (current)[key]);
       if (changed) {
         coverOverride = merged;
@@ -351,7 +362,7 @@ export function createNoteCardSession(options = {}) {
       const current = this.getCoverFields();
       coverOverride = null;
       const next = this.getCoverFields();
-      const changed = ["title", "author", "date", "excerpt"].some((key) =>
+      const changed = COVER_FIELD_KEYS.some((key) =>
         /** @type {Record<string, string>} */ (next)[key] !== /** @type {Record<string, string>} */ (current)[key]);
       if (changed) bump("config");
       return { changed, fields: next };

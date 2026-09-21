@@ -126,6 +126,45 @@ describe('会话封面字段脏标记（C01③）', () => {
     expect(r2.changed).toBe(false);
     expect(session.currentLayoutKey()).toBe(key);
   });
+
+  // 2026-09-21 回归：变更判定曾只覆盖四个文案字段，AI 封面字段的编辑静默丢失
+  // （风格选完当场弹回、生成出来的配图当场丢掉）。判定必须覆盖字段全集。
+  it('applyCoverFields 覆盖 AI 封面字段：风格 / 呈现 / 提示词 / 配图都能写入并 bumpConfig', () => {
+    for (const [key, value] of [
+      ['coverImageStyle', 'minimal-vector'],
+      ['coverMode', 'full-bleed'],
+      ['coverPrompt', 'custom prompt text'],
+      ['coverImage', 'data:image/png;base64,AAAA'],
+    ]) {
+      const session = createNoteCardSession({ sourcePath: 'a.md' });
+      const keyBefore = session.currentLayoutKey();
+      const r = session.applyCoverFields({ [key]: value });
+      expect(r.changed).toBe(true);
+      expect(session.getCoverFields()[key]).toBe(value);
+      expect(session.currentLayoutKey()).not.toBe(keyBefore);
+    }
+  });
+
+  it('AI 封面字段的编辑同样冻结：seed 再刷新不覆盖，同值重复提交不再 bump', () => {
+    const session = createNoteCardSession({ sourcePath: 'a.md' });
+    session.setCoverSeed({ title: 'v1', coverImageStyle: '3d-clay' });
+    session.applyCoverFields({ coverImageStyle: 'cyberpunk-tech' });
+    session.setCoverSeed({ title: 'v2', coverImageStyle: '3d-clay' });
+    expect(session.getCoverFields().coverImageStyle).toBe('cyberpunk-tech');
+    const r = session.applyCoverFields({ coverImageStyle: 'cyberpunk-tech' });
+    expect(r.changed).toBe(false);
+  });
+
+  it('resetCoverFields 清掉仅剩 AI 字段的覆盖时也要 bump（否则版面键不变、旧快照可复用）', () => {
+    const session = createNoteCardSession({ sourcePath: 'a.md' });
+    session.setCoverSeed({ title: 'v1' });
+    session.applyCoverFields({ coverImage: 'data:image/png;base64,AAAA' });
+    const keyBefore = session.currentLayoutKey();
+    const r = session.resetCoverFields();
+    expect(r.changed).toBe(true);
+    expect(session.getCoverFields().coverImage).toBe('');
+    expect(session.currentLayoutKey()).not.toBe(keyBefore);
+  });
 });
 
 describe('checkCardOutputEligibility：hasCover 语义（C01③）', () => {
