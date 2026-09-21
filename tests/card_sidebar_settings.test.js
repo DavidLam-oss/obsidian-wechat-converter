@@ -97,19 +97,25 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       const cardWrapper = view.cardSettingsWrapper;
       const tokenSection = cardWrapper.querySelector(".icard-settings-subpanel-token");
 
-      // 主题按钮（6 种）
-      const themeBtns = tokenSection.querySelectorAll(".apple-btn-row button[data-value]");
+      // 主题按钮（6 种，2026-09-20 起排成 2 行 × 3 列网格）
+      const themeBtns = tokenSection.querySelectorAll(".icard-grid-3 button[data-value]");
       const themeValues = Array.from(themeBtns)
         .map((b) => b.getAttribute("data-value"))
         .filter((v) => ["simple-white", "gradient-blue", "dark-gold", "neon-purple", "forest-green", "rose-gold"].includes(v));
       expect(themeValues).toHaveLength(6);
 
-      // 比例按钮（3 种）
-      const ratioBtns = tokenSection.querySelectorAll(".apple-btn-row button[data-value]");
+      // 比例按钮（3 种，2026-09-20 起为「形状示意 + 数值」卡片，文字描述降级为 title）
+      const ratioBtns = tokenSection.querySelectorAll(".icard-settings-ratios button[data-value]");
       const ratioValues = Array.from(ratioBtns)
         .map((b) => b.getAttribute("data-value"))
         .filter((v) => ["3:4", "3:5", "9:16"].includes(v));
       expect(ratioValues).toHaveLength(3);
+      // 按钮面只写数值，形状示意由 data-ratio 驱动；「竖版/长竖版」不再上按钮
+      for (const btn of ratioBtns) {
+        expect(btn.querySelector(".icard-ratio-shape")?.getAttribute("data-ratio")).toBe(btn.getAttribute("data-value"));
+        expect(btn.querySelector(".icard-ratio-text")?.textContent).toBe(btn.getAttribute("data-value"));
+        expect(btn.textContent).not.toContain("竖版");
+      }
 
       // 正文页码：开关（说明在左、开关在右），不再是「页码 · 已开启」按钮
       const pageRow = tokenSection.querySelector(".icard-settings-toggle-row");

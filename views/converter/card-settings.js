@@ -194,9 +194,9 @@ buildCardSettingsPanel() {
   cardSettingsStateOf(this).activeCardSubTab = 'token';
 
   // ========== 子 Tab 1：排版 Token 设置 ==========
-  // 主题
+  // 主题（2026-09-20 David）：2 行 × 3 列网格，单行挤 6 枚显得小气
   this.createSection(tokenSection, '主题', (section) => {
-    const grid = section.createEl('div', { cls: 'apple-btn-row' });
+    const grid = section.createEl('div', { cls: 'apple-btn-row icard-grid-3' });
     refs.themeGrid = grid;
     for (const themeId of VERIFIED_CARD_THEME_IDS) {
       const theme = getCardTheme(themeId);
@@ -209,17 +209,19 @@ buildCardSettingsPanel() {
     }
   });
 
-  // 比例
+  // 比例（2026-09-20 David）：参考微信工具的「形状示意 + 数值」卡片——
+  // 形状本身就是最直白的说明，按钮上不再写「竖版/长竖版」文字（描述降级为 hover title）
   this.createSection(tokenSection, '比例', (section) => {
-    const grid = section.createEl('div', { cls: 'apple-btn-row' });
+    const grid = section.createEl('div', { cls: 'icard-settings-ratios' });
     refs.ratioGrid = grid;
     for (const ratioId of VERIFIED_CARD_RATIOS) {
       const label = CARD_RATIO_LABELS[ratioId] || ratioId;
       const btn = grid.createEl('button', {
-        cls: 'apple-btn-size',
-        text: label,
+        cls: 'icard-ratio-option',
         attr: { 'data-value': ratioId, 'title': label },
       });
+      btn.createEl('span', { cls: 'icard-ratio-shape', attr: { 'data-ratio': ratioId } });
+      btn.createEl('span', { cls: 'icard-ratio-text', text: ratioId });
       btn.addEventListener('click', () => { this.applyCardLayoutSetting('ratioId', ratioId); });
     }
   });
@@ -691,7 +693,7 @@ renderCardSettingsValues() {
     });
   }
   if (refs.ratioGrid) {
-    refs.ratioGrid.querySelectorAll('.apple-btn-size').forEach((el) => {
+    refs.ratioGrid.querySelectorAll('.icard-ratio-option').forEach((el) => {
       (/** @type {HTMLElement} */ (el)).classList.toggle(
         'active',
         (/** @type {HTMLElement} */ (el)).dataset.value === settings.ratioId,

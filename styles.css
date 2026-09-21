@@ -3538,6 +3538,91 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
+/* 主题网格（2026-09-20 David）：2 行 × 3 列。单行挤 6 枚时每枚被压得很窄，显得小气；
+   网格铺满整行后每枚宽度一致、字号不再受挤压。 */
+.icard-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.icard-grid-3 .apple-btn-size {
+  width: 100%;
+  text-align: center;
+  padding: 7px 4px;
+  white-space: nowrap;
+}
+
+/* 比例卡片（2026-09-20 David，参考微信工具样式）：形状示意 + 数值。
+   形状即说明，「竖版/长竖版」文字降级为 hover title。
+   前缀凑 0-2-0（宿主 button:not(.clickable-icon) 是 0-1-1，单类会被盖），背景写 background-color 长写。
+   ⚠️ 必须显式写 height: auto：宿主基础 button 规则带固定 height: var(--input-height)=30px
+   且 align-items/justify-content 居中，不声明高度时内容（形状 26 + 间距 5 + 文字 12 + 内边距 16 ≈ 63px）
+   会上下双向溢出——形状顶出卡片、数值压到卡底（2026-09-20 真机复现）。 */
+.icard-settings-ratios {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.icard-settings-ratios .icard-ratio-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: auto;
+  padding: 9px 4px 7px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: normal;
+  color: var(--apple-secondary);
+  background-color: var(--apple-background);
+  border: 1px solid var(--apple-border);
+  border-radius: 8px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.icard-settings-ratios .icard-ratio-option:hover {
+  color: var(--apple-primary);
+  border-color: var(--apple-accent);
+}
+
+/* 选中态与同面板的「主题」按钮（.apple-btn-size.active）同一套语言：
+   苹果蓝底纹 + 蓝字 + 蓝描边。不用宿主 --interactive-accent——它跟随用户主题（可能偏紫），
+   与面板既有的蓝色取值语汇不一致（2026-09-20 真机反馈）。 */
+.icard-settings-ratios .icard-ratio-option.active {
+  background-color: rgba(0, 113, 227, 0.1);
+  color: var(--apple-accent);
+  border-color: rgba(0, 113, 227, 0.3);
+}
+
+/* 形状示意：等高、宽度按真实比例（aspect-ratio），一眼看出三档的高矮差异 */
+.icard-ratio-shape {
+  display: block;
+  flex: 0 0 auto;
+  height: 26px;
+  width: auto;
+  border: 1.5px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.85;
+}
+
+.icard-ratio-shape[data-ratio="3:4"] { aspect-ratio: 3 / 4; }
+.icard-ratio-shape[data-ratio="3:5"] { aspect-ratio: 3 / 5; }
+.icard-ratio-shape[data-ratio="9:16"] { aspect-ratio: 9 / 16; }
+
+.icard-ratio-text {
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
 /* 折叠摘要右侧的当前值回显（字号 / 行高 / 边距），与文章模式「排版间距」摘要同款口径 */
 .icard-settings-tune-values {
   margin-left: auto;
