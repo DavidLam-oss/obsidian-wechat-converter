@@ -153,6 +153,11 @@ interface AppleStyleViewContract {
     switchCardSettingsSubTab(subTab: 'token' | 'cover'): void;
     /** 侧边栏卡片设置：打开面板并聚焦到指定子 Tab（供预览区等入口直通） */
     openCardSettingsTab(tabName?: 'token' | 'cover'): void;
+    /**
+     * 侧边栏卡片设置：面板**视图状态**复位（子 Tab 回默认页、两个折叠组回默认开合）。
+     * 与文章模式同口径（每次打开都回默认）；只动视图，不动主题/开关/滑块/封面字段等取值。
+     */
+    resetCardSettingsPanelViewState(): void;
     /** 视图关闭：销毁会话注册表与合并计时器 */
     disposeCardPreview(): void;
     /** 卡片导出接线：vault fs 适配器（create-only + realpath 校验，§6.1） */

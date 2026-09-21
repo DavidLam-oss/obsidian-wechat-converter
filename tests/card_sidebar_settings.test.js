@@ -5,6 +5,7 @@
 验证卡片设置全量收敛至侧边栏面板（sliders 图标呼出），并具备清晰的双子 Tab（排版 Token 与 封面设置）：
 1. 面板结构完整性（顶部双子 Tab、排版 Token 节、封面设置节）；
 2. 子 Tab 切换（switchCardSettingsSubTab）与直通打开（openCardSettingsTab）；
+   面板打开时的视图状态复位（resetCardSettingsPanelViewState，与文章模式同口径）；
 3. 排版 Token 设置绑定（主题六选、比例三选、页码开关、水印、字号/行高/边距滑块；
    「恢复默认」= 切主题回该主题默认排版，面板不设独立重置按钮）；
 4. 封面设置绑定（封面启用开关、字段编辑 title/author/date/excerpt、按当前笔记重新填入）；
@@ -235,6 +236,101 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       view.openCardSettingsTab("token");
       expect(view.toggleSettingsPanel).not.toHaveBeenCalled();
       expect(view.activeCardSubTab).toBe("token");
+    });
+  });
+
+  // 2026-09-21 David：面板「打开即回默认视图」，与文章模式同一套 handling——
+  // 上次停在哪一页、开合过哪个折叠组都不跨次残留。⚠️ 复位只针对**视图状态**，
+  // 主题/开关/滑块/封面字段等取值必须原样保留。
+  describe("面板视图状态复位（resetCardSettingsPanelViewState）", () => {
+    it("子 Tab 回「排版 Token」、两个折叠组回默认开合，取值一律不动", () => {
+      const refs = view.cardSettingsRefs;
+      const wrapper = view.cardSettingsWrapper;
+
+      // 制造「上次的残留」：切到封面设置 + 展开字号与间距 + 手动收起过封面画面
+      view.switchCardSettingsSubTab("cover");
+      refs.tuneGroup.open = true;
+      refs.coverAiDetails.open = false;
+      refs.coverAiDetails.dispatchEvent(new Event("toggle"));
+      expect(refs.coverAiUserToggled).toBe(true);
+
+      const settingsBefore = view.getCurrentCardLayoutSettings();
+
+      view.resetCardSettingsPanelViewState();
+
+      // ① 子 Tab 回默认页
+      expect(view.activeCardSubTab).toBe("token");
+      expect(wrapper.querySelector('button[data-tab="token"]').classList.contains("is-active")).toBe(true);
+      expect(wrapper.querySelector('button[data-tab="cover"]').classList.contains("is-active")).toBe(false);
+      expect(wrapper.querySelector(".icard-settings-subpanel-token").classList.contains("hidden")).toBe(false);
+      expect(wrapper.querySelector(".icard-settings-subpanel-cover").classList.contains("hidden")).toBe(true);
+
+      // ② 「字号与间距」固定收起（对应文章模式的高级选项）
+      expect(refs.tuneGroup.open).toBe(false);
+
+      // ③ 「封面画面」交还「跟随数据」的默认态：手动开合标记被清掉，
+      //    当前无配图 → 重新按默认展开
+      expect(refs.coverAiUserToggled).toBe(false);
+      expect(refs.coverAiDetails.open).toBe(true);
+
+      // ④ 取值不受影响（复位不等于悄悄改用户设置）
+      expect(view.getCurrentCardLayoutSettings()).toEqual(settingsBefore);
+    });
+
+    it("resetSettingsPanelViewState：卡片模式下面板打开时同口径复位（含滚动归零）；文章模式不触碰卡片面板", () => {
+      view.settingsArea.scrollTop = 120;
+
+      view.switchCardSettingsSubTab("cover");
+      view.cardSettingsRefs.tuneGroup.open = true;
+      view.previewMode = "card";
+      view.resetSettingsPanelViewState();
+
+      expect(view.activeCardSubTab).toBe("token");
+      expect(view.cardSettingsRefs.tuneGroup.open).toBe(false);
+      expect(view.settingsArea.scrollTop).toBe(0);
+
+      // 文章模式：卡片面板不可见，复位动作不该落到卡片视图上
+      view.switchCardSettingsSubTab("cover");
+      view.previewMode = "article";
+      view.resetSettingsPanelViewState();
+      expect(view.activeCardSubTab).toBe("cover");
+    });
+
+    it("关闭后再打开（真机路径 toggleSettingsPanel）回到默认视图", () => {
+      // ⚠️ 走真方法：beforeEach 把这个方法替身成了 mock，用它断言等于自证
+      view.toggleSettingsPanel = AppleStyleView.prototype.toggleSettingsPanel.bind(view);
+      view.previewMode = "card";
+
+      // 第一次打开 → 留下残留（切封面设置 + 展开字号与间距）
+      view.toggleSettingsPanel();
+      expect(view.settingsOverlay.classList.contains("visible")).toBe(true);
+      view.switchCardSettingsSubTab("cover");
+      view.cardSettingsRefs.tuneGroup.open = true;
+
+      // 关闭
+      view.toggleSettingsPanel();
+      expect(view.settingsOverlay.classList.contains("visible")).toBe(false);
+
+      // 再次打开 → 默认视图
+      view.toggleSettingsPanel();
+      expect(view.activeCardSubTab).toBe("token");
+      expect(view.cardSettingsRefs.tuneGroup.open).toBe(false);
+    });
+
+    // 顺序守卫：复位发生在「打开」这一刻，而预览区封面芯片是**显式意图**，
+    // 必须在复位之后应用——否则点芯片会被复位拽回「排版 Token」页。
+    it("封面芯片直通打开（openCardSettingsTab）仍然停在「封面设置」页", () => {
+      view.toggleSettingsPanel = AppleStyleView.prototype.toggleSettingsPanel.bind(view);
+      view.previewMode = "card";
+      view.settingsOverlay.classList.remove("visible");
+
+      view.openCardSettingsTab("cover");
+
+      expect(view.settingsOverlay.classList.contains("visible")).toBe(true);
+      expect(view.activeCardSubTab).toBe("cover");
+      expect(
+        view.cardSettingsWrapper.querySelector(".icard-settings-subpanel-cover").classList.contains("hidden"),
+      ).toBe(false);
     });
   });
 

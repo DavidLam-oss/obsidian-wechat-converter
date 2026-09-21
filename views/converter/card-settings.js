@@ -28,6 +28,7 @@ this.cardSettingsWrapper（settings-panel.js 创建的面板容器）、
 - `renderCardSettingsValues()`：打开面板或会话设置变化后同步当前值；
 - `switchCardSettingsSubTab(subTab)`：在「排版 Token」和「封面设置」之间切换；
 - `openCardSettingsTab(tabName)`：直通打开面板并聚焦到指定子 Tab；
+- `resetCardSettingsPanelViewState()`：面板每次打开时复位**视图状态**（子 Tab / 折叠组；不动任何取值）；
 - `applyCardLayoutSettings(partial)`：应用一组排版设置（写会话 + 写回全局默认），触发重排版；
 - `applyCardLayoutSetting(key, value)`：单键形式，等价于上一行的单键调用；
 - `applyCardTheme(themeId)`：选主题＝连同该主题自带的默认排版一起应用（取代已移除的重置按钮）；
@@ -98,6 +99,7 @@ import { getObsidianRequestUrl } from '../../services/obsidian-compat.js';
  *     ratioGrid?: ObsidianElementLike | null,
  *     pageToggleInput?: HTMLInputElement | null,
  *     watermarkInput?: HTMLInputElement | null,
+ *     tuneGroup?: HTMLDetailsElement | null,
  *     tuneValuesEl?: ObsidianElementLike | null,
  *     sliders?: Record<string, { input: HTMLInputElement, valueEl: ObsidianElementLike }>,
  *     coverToggleInput?: HTMLInputElement | null,
@@ -195,6 +197,7 @@ buildCardSettingsPanel() {
     ratioGrid: null,
     pageToggleInput: null,
     watermarkInput: null,
+    tuneGroup: null,
     tuneValuesEl: null,
     sliders: {},
     coverToggleInput: null,
@@ -297,7 +300,12 @@ buildCardSettingsPanel() {
     { key: 'lineHeight', label: '行高' },
     { key: 'pagePadding', label: '页面边距' },
   ];
-  const tuneGroup = tokenSection.createEl('details', { cls: 'apple-settings-details icard-settings-tune' });
+  const tuneGroup = /** @type {HTMLDetailsElement} */ (
+    /** @type {unknown} */ (
+      tokenSection.createEl('details', { cls: 'apple-settings-details icard-settings-tune' })
+    )
+  );
+  refs.tuneGroup = tuneGroup;
   const tuneSummary = tuneGroup.createEl('summary', { cls: 'apple-settings-summary' });
   tuneSummary.createEl('span', { text: '字号与间距' });
   refs.tuneValuesEl = tuneSummary.createEl('span', { cls: 'icard-settings-tune-values' });
@@ -610,6 +618,32 @@ openCardSettingsTab(tabName = 'cover') {
     this.toggleSettingsPanel();
   }
   this.switchCardSettingsSubTab(tabName);
+}
+,
+
+/**
+ * 卡片设置面板的**视图状态**复位：子 Tab 与两处折叠组（2026-09-21 David 定）。
+ * 与文章模式同口径（panel-shell.js:resetSettingsPanelViewState）——每次打开都回到默认视图，
+ * 上次停在哪一页、开合过哪个折叠组都不跨次残留。
+ *
+ * 与「取值」的边界：主题/比例选中、开关、滑块、封面字段值都是**数据**，
+ * 存于会话与全局默认，不在此处复位（复位它们等于偷偷改用户设置）。
+ */
+resetCardSettingsPanelViewState() {
+  const state = cardSettingsStateOf(this);
+  const refs = state.cardSettingsRefs;
+
+  // ① 折叠组「字号与间距」：固定收起（对应文章模式的高级选项）。
+  if (refs?.tuneGroup) refs.tuneGroup.open = false;
+
+  // ② 折叠组「封面画面」：不强制收起，而是把控制权交还给「跟随数据」的默认态
+  //    （无配图展开 / 已有配图收起）——那才是这一组的默认，清掉「用户手动开合过」
+  //    标记即可，下一次同步自带正确开合。
+  if (refs) refs.coverAiUserToggled = false;
+
+  // ③ 子 Tab 回到首个页签「排版 Token」；
+  //    switchCardSettingsSubTab 末尾会做一次同步，顺带把 ①② 落到 DOM。
+  this.switchCardSettingsSubTab('token');
 }
 ,
 

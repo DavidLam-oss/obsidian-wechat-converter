@@ -37,6 +37,13 @@ resetSettingsPanelViewState() {
   if (advancedOptions) advancedOptions.open = false;
   if (this.settingsSpacingGroup) this.settingsSpacingGroup.open = false;
 
+  // 卡片模式：卡片面板的视图状态同口径复位（子 Tab / 两个折叠组，见 card-settings.js）。
+  // 只在卡片面板是**当前可见面板**时做——文章模式下面板里根本没有卡片控件，
+  // 复位它是白跑一趟 DOM 读写。
+  if (this.previewMode === 'card' && typeof this.resetCardSettingsPanelViewState === 'function') {
+    this.resetCardSettingsPanelViewState();
+  }
+
   const scrollTargets = [
     this.settingsOverlay,
     this.settingsArea,

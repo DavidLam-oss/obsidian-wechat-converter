@@ -231,6 +231,7 @@ type CardSettingsMethodsContract = Pick<
     | 'renderCardCoverGroupEcho'
     | 'switchCardSettingsSubTab'
     | 'openCardSettingsTab'
+    | 'resetCardSettingsPanelViewState'
     | 'applyCardLayoutSetting'
     | 'applyCardLayoutSettings'
     | 'applyCardTheme'
