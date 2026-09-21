@@ -120,6 +120,13 @@ interface AppleStyleViewContract {
     buildCardSettingsPanel(): void;
     /** 卡片设置浮层：同步显示值（active 态/滑块位置与数值） */
     renderCardSettingsValues(): void;
+    /**
+     * 「封面画面」折叠组的摘要回显与折叠默认态。
+     * 摘要是该组唯一的常驻可见信息（风格 · 呈现 · 有无配图）。
+     * @param {Record<string, unknown>} fields 会话里的封面字段
+     * @param {boolean} hasImage 是否已有配图
+     */
+    renderCardCoverGroupEcho(fields: Record<string, unknown>, hasImage: boolean): void;
     /** 卡片设置：应用单项设置（值实际变化 → bumpConfig → 重排版） */
     applyCardLayoutSetting(key: string, value: unknown): void;
     /** 卡片设置：批量应用多项（值实际变化才写；避免逐项触发重排） */

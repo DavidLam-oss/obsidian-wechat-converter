@@ -228,6 +228,7 @@ type CardSettingsMethodsContract = Pick<
     AppleStyleViewContract,
     | 'buildCardSettingsPanel'
     | 'renderCardSettingsValues'
+    | 'renderCardCoverGroupEcho'
     | 'switchCardSettingsSubTab'
     | 'openCardSettingsTab'
     | 'applyCardLayoutSetting'

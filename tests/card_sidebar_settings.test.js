@@ -158,21 +158,39 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       const cardWrapper = view.cardSettingsWrapper;
       const coverSection = cardWrapper.querySelector(".icard-settings-subpanel-cover");
 
-      // 封面开关按钮
-      const toggleBtn = coverSection.querySelector("button");
-      expect(toggleBtn).toBeTruthy();
-      expect(toggleBtn.textContent).toContain("封面");
+      // 封面开关：.apple-toggle 里的 checkbox（状态由开关本体表达，不是一枚写着
+      // 「封面 · 已开启」的按钮 —— 原来那条按钮断言靠「AI 生成封面图」文案含「封面」
+      // 侥幸通过，2026-09-21 改版后主操作文案不再含「封面」，改为直接断言开关本体）
+      const toggleInput = coverSection.querySelector(".icard-settings-toggle-row .apple-toggle-input");
+      expect(toggleInput).toBeTruthy();
 
-      // 字段输入框
+      // 字段输入框：四字段（标题 / 作者 / 日期 / 摘要，均为上下单列）
       const inputs = coverSection.querySelectorAll("input[data-cover-key]");
       const keys = Array.from(inputs).map((i) => i.getAttribute("data-cover-key"));
       expect(keys.sort()).toEqual(["author", "date", "excerpt", "title"].sort());
 
-      // 重新填入按钮
-      const refillBtn = Array.from(coverSection.querySelectorAll("button")).find(
-        (b) => b.textContent === "按当前笔记重新填入"
-      );
-      expect(refillBtn).toBeTruthy();
+      // 重新填入：低权重文字按钮（不再与主操作同款）
+      const refillBtn = coverSection.querySelector(".icard-settings-cover-link");
+      expect(refillBtn?.textContent).toBe("按当前笔记重新填入");
+    });
+
+    it("封面下拉自带箭头：background-image 不被 background 简写清空（2026-09-21 真机回归）", () => {
+      // 真机反馈「不知道这几个下拉能展开」：原生 select 外观被清掉，箭头图又被
+      // `background` 简写一并重置 → 只剩一个方框。这条守卫盯住「自绘箭头三件套」。
+      const { readFileSync } = require("node:fs");
+      const css = readFileSync("styles/card-settings.css", "utf8");
+      const block = css.match(/\.icard-settings-select\s*\{[^}]*\}/);
+      expect(block).toBeTruthy();
+      const rule = block[0];
+
+      expect(rule).toMatch(/appearance:\s*none/);
+      expect(rule).toMatch(/background-image:\s*url\(/);
+      expect(rule).toMatch(/background-position:\s*right/);
+      expect(rule).toMatch(/padding:\s*[^;]*26px/);
+      // ⚠️ 回归点：`background` 简写会把 background-image 一起重置（下拉变没箭头）
+      expect(rule).not.toMatch(/(?:^|[;\s])background\s*:/);
+      // 暗色主题要换浅色箭头，否则深底上看不见
+      expect(css).toMatch(/\.theme-dark\s+\.icard-settings-select\s*\{[^}]*background-image:\s*url\(/);
     });
   });
 
@@ -334,22 +352,78 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
 
     it("切换封面开关更新 coverEnabled 并显隐封面字段表单", () => {
       const coverToggle = view.cardSettingsRefs.coverToggleInput;
-      const fieldsWrap = view.cardSettingsRefs.coverFieldsWrap;
+      // 2026-09-21 改版：字段区不再是一个裸容器，而是「封面文案」分节 +「封面画面」折叠组
+      const fieldsHidden = view.cardSettingsRefs.coverFieldsHidden;
+      expect(fieldsHidden.length).toBe(2);
 
       expect(session.getLayoutSettings().coverEnabled).toBe(false);
       expect(coverToggle.checked).toBe(false);
-      expect(fieldsWrap.classList.contains("hidden")).toBe(true);
+      for (const el of fieldsHidden) expect(el.classList.contains("hidden")).toBe(true);
 
       // 开启封面
       coverToggle.checked = true;
       coverToggle.dispatchEvent(new Event("change"));
       expect(session.getLayoutSettings().coverEnabled).toBe(true);
-      expect(fieldsWrap.classList.contains("hidden")).toBe(false);
+      for (const el of fieldsHidden) expect(el.classList.contains("hidden")).toBe(false);
       expect(view.renderCardPreview).toHaveBeenCalled();
 
       // 表单字段回显笔记初值
       expect(view.cardSettingsRefs.coverInputs.title.value).toBe("测试标题");
       expect(view.cardSettingsRefs.coverInputs.author.value).toBe("测试作者");
+    });
+
+    it("封面设置分区：分节结构 + 主操作唯一 + 作者日期上下两行（2026-09-21 改版）", () => {
+      session.applyLayoutSettings({ coverEnabled: true });
+      view.renderCardSettingsValues();
+      const coverPanel = view.cardSettingsWrapper.querySelector(".icard-settings-subpanel-cover");
+
+      // 两节：封面页（开关）+ 封面文案；「封面画面」是独立的折叠组
+      const labels = Array.from(coverPanel.querySelectorAll(".apple-setting-section"))
+        .map((s) => s.querySelector(".apple-setting-label")?.textContent);
+      expect(labels).toEqual(["封面页", "封面文案"]);
+
+      const aiDetails = coverPanel.querySelector("details.icard-settings-cover-ai");
+      expect(aiDetails).toBeTruthy();
+      expect(aiDetails.querySelector("summary")?.textContent).toContain("封面画面");
+
+      // 作者 + 日期 上下两行（2026-09-21 真机回归：320px 下并排两列摆不下，已撤回）
+      const copySection = Array.from(coverPanel.querySelectorAll(".apple-setting-section"))
+        .find((s) => s.querySelector(".apple-setting-label")?.textContent === "封面文案");
+      expect(Array.from(copySection.querySelectorAll("input[data-cover-key]"))
+        .map((i) => i.getAttribute("data-cover-key")))
+        .toEqual(["title", "author", "date", "excerpt"]);
+      expect(coverPanel.querySelector(".icard-settings-cover-duo")).toBeNull();
+
+      // 主操作唯一：全场只有一枚蓝色实底按钮；三连同款的 .apple-btn-size 不再出现
+      expect(coverPanel.querySelectorAll(".icard-settings-cover-primary").length).toBe(1);
+      expect(coverPanel.querySelectorAll(".apple-btn-size").length).toBe(0);
+      // 「重新填入」降级为文字按钮，「移除配图」降级为小号幽灵按钮
+      expect(coverPanel.querySelector(".icard-settings-cover-link")).toBeTruthy();
+      expect(coverPanel.querySelector(".icard-settings-cover-remove")).toBeTruthy();
+    });
+
+    it("封面画面折叠组：摘要回显风格·呈现·配图状态，折叠默认态跟随有无配图", () => {
+      session.applyLayoutSettings({ coverEnabled: true });
+      view.renderCardSettingsValues();
+      const echo = view.cardSettingsRefs.coverGroupEcho;
+      const details = view.cardSettingsRefs.coverAiDetails;
+
+      // 无配图：摘要写明当前风格与呈现，且默认展开（首次必然要用生图）
+      expect(echo.textContent).toContain("3D 粘土质感");
+      expect(echo.textContent).toContain("图文混排");
+      expect(echo.textContent).toContain("无配图");
+      expect(details.open).toBe(true);
+
+      // 换风格 → 摘要即时跟着变
+      view.cardSettingsRefs.coverStyleSelect.value = "minimal-vector";
+      view.cardSettingsRefs.coverStyleSelect.dispatchEvent(new Event("change"));
+      expect(view.cardSettingsRefs.coverGroupEcho.textContent).toContain("扁平矢量插画");
+
+      // 用户手动收起后，后续同步不再擅自展开（避免「刚展开又被代码收起来」）
+      details.open = false;
+      details.dispatchEvent(new Event("toggle"));
+      view.renderCardSettingsValues();
+      expect(details.open).toBe(false);
     });
 
     it("点击封面开关行（非开关本体）同样能切换封面", () => {
