@@ -65,7 +65,6 @@ this.cardSettingsWrapper（settings-panel.js 创建的面板容器）、
 import {
   CARD_LAYOUT_LIMITS,
   CARD_RATIO_LABELS,
-  CARD_WATERMARK_SOFT_LIMIT,
   DEFAULT_CARD_LAYOUT_SETTINGS,
   VERIFIED_CARD_RATIOS,
   VERIFIED_CARD_THEME_IDS,
@@ -172,7 +171,7 @@ buildCardSettingsPanel() {
   const navRow = navWrap.createEl('div', { cls: 'icard-settings-segmented' });
   const tokenTabBtn = navRow.createEl('button', {
     cls: 'icard-settings-segment is-active',
-    text: '排版 Token',
+    text: '排版样式',
     attr: { type: 'button', 'data-tab': 'token', 'aria-pressed': 'true', 'title': '主题、比例、字号、边距、页脚排版参数' },
   });
   const coverTabBtn = navRow.createEl('button', {
@@ -243,15 +242,11 @@ buildCardSettingsPanel() {
     }
   });
 
-  // 正文页码：开关（与文章模式「正文标点标准化」、贴图模式「配图序号」同一套 .apple-toggle 语汇）。
-  // 原来是一个「页码 · 已开启 / 已关闭」按钮——状态塞在文案里，且和主题/比例的长得一样，
-  // 看不出「这是个开关」。开关自带状态表达，就不必再回显一次。
+  // 正文页码：开关自带状态表达，单行呈现
   this.createSection(tokenSection, '正文页码', (section) => {
     const row = section.createEl('div', { cls: 'icard-settings-toggle-row' });
     const copy = row.createEl('div', { cls: 'icard-settings-toggle-copy' });
-    copy.createEl('span', { cls: 'icard-settings-toggle-label', text: '页脚显示页码' });
-    // 页码格式（1 / 16）在右侧预览里直接看得到，说明只留「封面是例外」这一条
-    copy.createEl('span', { cls: 'icard-settings-toggle-desc', text: '封面页不编号' });
+    copy.createEl('span', { cls: 'icard-settings-toggle-label', text: '显示页脚页码' });
 
     // 外层用 div 而非 label：label 会把点击再次转派给 input，和下面的整行点击叠加成「点一下翻两次」
     const toggle = row.createEl('div', { cls: 'apple-toggle' });
@@ -279,16 +274,12 @@ buildCardSettingsPanel() {
       /** @type {unknown} */ (section.createEl('input', {
         type: 'text',
         cls: 'icard-settings-text',
-        attr: { placeholder: '水印文案，留空则不显示' },
+        attr: { placeholder: '水印文案（留空不显示）' },
       }))
     );
     refs.watermarkInput = watermarkInput;
     watermarkInput.addEventListener('change', () => {
       this.applyCardLayoutSetting('watermarkText', watermarkInput.value);
-    });
-    section.createEl('div', {
-      cls: 'icard-settings-note',
-      text: `每页页脚右侧；封面上与「作者」并入同一行，两者文案相同则只显示一次。建议不超过 ${CARD_WATERMARK_SOFT_LIMIT} 字。`,
     });
   });
 
@@ -340,8 +331,7 @@ buildCardSettingsPanel() {
   this.createSection(coverSection, '封面页', (section) => {
     const row = section.createEl('div', { cls: 'icard-settings-toggle-row' });
     const copy = row.createEl('div', { cls: 'icard-settings-toggle-copy' });
-    copy.createEl('span', { cls: 'icard-settings-toggle-label', text: '生成封面页' });
-    copy.createEl('span', { cls: 'icard-settings-toggle-desc', text: '置于首张，不参与编号' });
+    copy.createEl('span', { cls: 'icard-settings-toggle-label', text: '启用封面页' });
 
     // 外层用 div 而非 label：label 会把点击再次转派给 input，和下面的整行点击叠加成「点一下翻两次」
     const toggle = row.createEl('div', { cls: 'apple-toggle' });
@@ -393,13 +383,10 @@ buildCardSettingsPanel() {
       refs.coverInputs[key] = input;
     };
 
-    addCoverInput(content, 'title', '标题', '默认取 frontmatter title 或文件名');
-    // 作者/日期曾并排一行两列（省一行纵向空间），2026-09-21 真机回归后撤回：
-    // 320px 面板下两列各 ≈139px，扣掉标签列后装不下「2026-09-20」这类值，内容被硬裁。
-    // 省下来的那一行不值得换来「字段看着摆不下」，回到上下两行。
-    addCoverInput(content, 'author', '作者', '取 frontmatter author，可改');
-    addCoverInput(content, 'date', '日期', 'YYYY-MM-DD', 'YYYY-MM-DD（无法解析则不显示）');
-    addCoverInput(content, 'excerpt', '摘要', '取 frontmatter description，可改');
+    addCoverInput(content, 'title', '标题', '文章标题');
+    addCoverInput(content, 'author', '作者', '作者名称');
+    addCoverInput(content, 'date', '日期', 'YYYY-MM-DD');
+    addCoverInput(content, 'excerpt', '摘要', '文章摘要');
 
     // 「重新填入」是低频补救动作，不该和主操作抢重量 → 文字按钮
     const refillBtn = content.createEl('button', {
@@ -409,11 +396,6 @@ buildCardSettingsPanel() {
     });
     refillBtn.addEventListener('click', () => {
       this.resetCardCoverFields();
-    });
-
-    content.createEl('div', {
-      cls: 'icard-settings-note',
-      text: '手工修改后不会被正文刷新覆盖；标题/摘要过长会提示缩短，不会默默裁掉。',
     });
   });
   refs.coverFieldsHidden.push(coverCopySection);
@@ -479,11 +461,11 @@ buildCardSettingsPanel() {
 
   // 3. 提示词多行文本域
   const promptRow = aiCoverGroup.createDiv({ cls: 'icard-settings-cover-prompt-row' });
-  promptRow.createEl('span', { cls: 'icard-settings-cover-label', text: '生图 Prompt' });
+  promptRow.createEl('span', { cls: 'icard-settings-cover-label', text: '画面描述' });
   const promptInput = /** @type {HTMLTextAreaElement} */ (
     /** @type {unknown} */ (promptRow.createEl('textarea', {
       cls: 'icard-settings-prompt-area',
-      attr: { placeholder: '生图提示词，支持根据标题/摘要自动填充或手动微调' },
+      attr: { placeholder: '输入画面描述，或根据标题摘要自动填充...' },
     }))
   );
   promptInput.addEventListener('change', () => {

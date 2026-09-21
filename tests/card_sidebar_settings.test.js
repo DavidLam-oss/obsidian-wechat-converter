@@ -77,7 +77,7 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       const coverTabBtn = nav.querySelector('button[data-tab="cover"]');
       expect(tokenTabBtn).toBeTruthy();
       expect(coverTabBtn).toBeTruthy();
-      expect(tokenTabBtn.textContent).toBe("排版 Token");
+      expect(tokenTabBtn.textContent).toBe("排版样式");
       expect(coverTabBtn.textContent).toBe("封面设置");
       // 分段控件用 is-active + aria-pressed 表达位置；不再复用 apple-btn-size 的 active，
       // 避免与下方主题/比例/页码的「值被选中」在视觉上撞车。
@@ -94,7 +94,7 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(coverSection.classList.contains("hidden")).toBe(true);
     });
 
-    it("排版 Token 面板包含主题六选、比例三选、页码、水印与滑块", () => {
+    it("排版样式面板包含主题六选、比例三选、页码、水印与滑块", () => {
       const cardWrapper = view.cardSettingsWrapper;
       const tokenSection = cardWrapper.querySelector(".icard-settings-subpanel-token");
 
@@ -121,9 +121,9 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       // 正文页码：开关（说明在左、开关在右），不再是「页码 · 已开启」按钮
       const pageRow = tokenSection.querySelector(".icard-settings-toggle-row");
       expect(pageRow).toBeTruthy();
-      expect(pageRow.querySelector(".icard-settings-toggle-label").textContent).toBe("页脚显示页码");
-      // 说明只保留「封面是例外」这一条（页码格式在右侧预览里可见）
-      expect(pageRow.querySelector(".icard-settings-toggle-desc").textContent).toBe("封面页不编号");
+      expect(pageRow.querySelector(".icard-settings-toggle-label").textContent).toBe("显示页脚页码");
+      // 冗余小字已移除，保持清爽
+      expect(pageRow.querySelector(".icard-settings-toggle-desc")).toBeNull();
       const pageToggle = pageRow.querySelector("input.apple-toggle-input");
       expect(pageToggle).toBeTruthy();
       expect(pageToggle.checked).toBe(true);
