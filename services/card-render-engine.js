@@ -193,6 +193,7 @@ export async function renderCardPages(cardDoc, options = {}) {
             size,
             watermarkText: options.watermarkText || "",
             document: ownerDoc,
+            resolveImageSrc,
           });
           offscreen.container.append(coverPage);
           const coverBody = coverPage.querySelector(".icard-cover-body");

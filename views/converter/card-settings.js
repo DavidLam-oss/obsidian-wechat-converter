@@ -360,9 +360,8 @@ openCardSettingsTab(tabName = 'cover') {
 ,
 
 /**
- * 卡片设置面板的**视图状态**复位：子 Tab 与两处折叠组（2026-09-21 David 定）。
- * 与文章模式同口径（panel-shell.js:resetSettingsPanelViewState）——每次打开都回到默认视图，
- * 上次停在哪一页、开合过哪个折叠组都不跨次残留。
+ * 卡片设置面板的**视图状态**复位：折叠组复位，但子 Tab 记忆保留上一次位置（2026-09-22 David 优化）。
+ * 便于用户调完参数关闭面板看效果后，再次打开直接停留在原 Tab 继续微调。
  *
  * 与「取值」的边界：主题/比例选中、开关、滑块、封面字段值都是**数据**，
  * 存于会话与全局默认，不在此处复位（复位它们等于偷偷改用户设置）。
@@ -375,13 +374,11 @@ resetCardSettingsPanelViewState() {
   if (refs?.tuneGroup) refs.tuneGroup.open = false;
 
   // ② 折叠组「封面画面」：不强制收起，而是把控制权交还给「跟随数据」的默认态
-  //    （无配图展开 / 已有配图收起）——那才是这一组的默认，清掉「用户手动开合过」
-  //    标记即可，下一次同步自带正确开合。
   if (refs) refs.coverAiUserToggled = false;
 
-  // ③ 子 Tab 回到首个页签「排版 Token」；
-  //    switchCardSettingsSubTab 末尾会做一次同步，顺带把 ①② 落到 DOM。
-  this.switchCardSettingsSubTab('token');
+  // ③ 记忆子 Tab：保留用户上一次所处的页签（'token' 或 'cover'），再次打开直接呈现原 Tab
+  const currentTab = state.activeCardSubTab || 'token';
+  this.switchCardSettingsSubTab(currentTab);
 }
 ,
 

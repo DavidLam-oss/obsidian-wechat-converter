@@ -297,6 +297,115 @@ export function assembleCardPageFromPlan(cardDoc, planPage, items, args) {
  * @param {string} [args.watermarkText] 非空时并入封面底部 meta 行
  * @param {Document} [args.document]
  * @returns {HTMLElement} `.icard-page.icard-cover` 根元素
+/**
+ * 构建封面配图占位元素（100% 对标 WeChat Tool：极简纯净的实底居中图片图标，无冗余文字与虚线）。
+ * 遵循无 innerHTML 规范，纯 DOM 构建。
+ * @param {Document} doc
+ * @returns {HTMLElement}
+ */
+export function createCoverPlaceholder(doc) {
+  const box = doc.createElement('div');
+  box.className = 'icard-cover-placeholder';
+
+  const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'icard-cover-placeholder-icon');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('width', '52');
+  svg.setAttribute('height', '52');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '1.5');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+
+  const rect = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', '3');
+  rect.setAttribute('y', '3');
+  rect.setAttribute('width', '18');
+  rect.setAttribute('height', '18');
+  rect.setAttribute('rx', '2');
+  rect.setAttribute('ry', '2');
+  svg.append(rect);
+
+  const circle = doc.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circle.setAttribute('cx', '9');
+  circle.setAttribute('cy', '9');
+  circle.setAttribute('r', '2');
+  svg.append(circle);
+
+  const path = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', 'm21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21');
+  svg.append(path);
+
+  box.append(svg);
+  return box;
+}
+
+/**
+ * 解析并校验封面图片路径。
+ * 1. 凡是网络 URL（http/https）、data:、blob:、app: 等标准协议，直接使用；
+ * 2. 本地 vault 路径或 wiki 链接，尝试通过 resolveImageSrc 解析；
+ * 3. 若解析为空、文件不存在、或原路径无法被识别为合法有效路径，则返回空字符串，
+ *    避免在 DOM 中注入必定破损的 <img> 节点。
+ * @param {string} raw
+ * @param {((ref: string) => string | null) | undefined} resolver
+ * @returns {string}
+ */
+export function resolveCoverImageUrl(raw, resolver) {
+  const src = String(raw || '').trim();
+  if (!src) return '';
+  if (/^(https?:\/\/|data:image\/|blob:|app:\/\/)/i.test(src)) {
+    return src;
+  }
+  if (typeof resolver === 'function') {
+    const resolved = resolver(src);
+    if (resolved && typeof resolved === 'string' && resolved.trim()) {
+      return resolved.trim();
+    }
+  }
+  return '';
+}
+
+/**
+ * 创建带安全降级保护的封面图片元素。
+ * 一旦加载失败（404/网络断开等），静默替换为精致占位图，杜绝浏览器死图图标。
+ * @param {Document} doc
+ * @param {string} src
+ * @param {string} alt
+ * @param {string} className
+ * @returns {HTMLImageElement}
+ */
+function createSafeCoverImage(doc, src, alt, className) {
+  const img = doc.createElement('img');
+  img.className = className;
+  img.src = src;
+  img.alt = alt;
+  img.addEventListener('error', () => {
+    try {
+      const ph = createCoverPlaceholder(doc);
+      img.replaceWith(ph);
+    } catch {
+      // 容错忽略
+    }
+  }, { once: true });
+  return img;
+}
+
+/**
+ * 装配文字封面页（C01③）：独立 `.icard-cover` 容器，单列布局，kicker（日期）+ 标题 + 摘要 + 署名。
+ * 2026-09-22 升级：
+ * - coverMode === 'none' 时 100% 原生纯文字版面，无图且不放占位；
+ * - coverMode === 'adaptive' 时支持 6 主题自适应：有图融入相框/拱门/杂志，无图显示精致占位框（布局不坍塌）；
+ * - 纯海报（full-bleed）与底图遮罩（mixed）同样支持有图/无图占位；
+ * - resolveImageSrc 支持：本地 frontmatter 相对路径自动解析，解析失败或死图安全降级为占位图。
+ * @param {object} args
+ * @param {import('./card-themes.js').CardTheme} args.theme
+ * @param {import('./card-cover-model.js').CardCoverFields} args.fields
+ * @param {{width?: number, height?: number}} [args.size]
+ * @param {string} [args.watermarkText]
+ * @param {(ref: string) => string | null} [args.resolveImageSrc]
+ * @param {Document} [args.document]
+ * @returns {HTMLElement}
  */
 export function assembleCardCoverPage(args) {
   const ownerDoc = args.document || window.document;
@@ -309,106 +418,116 @@ export function assembleCardCoverPage(args) {
   page.style.setProperty("--icard-page-height", `${size.height}px`);
   page.setAttribute("data-icard-cover", "true");
 
-  const isAdaptive = Boolean(fields.coverImage && (fields.coverMode === 'adaptive' || !fields.coverMode));
+  const mode = fields.coverMode || 'adaptive';
   const style = theme.coverStyle || 'magazine';
+  const coverImageUrl = resolveCoverImageUrl(fields.coverImage, args.resolveImageSrc);
+  const hasImage = Boolean(coverImageUrl);
 
-  if (fields.coverImage) {
-    if (fields.coverMode === "full-bleed") {
-      page.classList.add("icard-cover--full-bleed");
-      const img = ownerDoc.createElement("img");
-      img.className = "icard-cover-full-bleed-img";
-      img.src = fields.coverImage;
-      img.alt = fields.title || "Cover";
+  // 1. 纯文字排版（mode === 'none'）：100% 原生纯文字版面，无图且不放占位
+  if (mode === 'none') {
+    // 纯文字直接走下方的 body 装配
+  } else if (mode === 'full-bleed') {
+    page.classList.add('icard-cover--full-bleed');
+    if (hasImage) {
+      const img = createSafeCoverImage(ownerDoc, coverImageUrl, fields.title || 'Cover', 'icard-cover-full-bleed-img');
       page.append(img);
-      return page;
+    } else {
+      const placeholder = createCoverPlaceholder(ownerDoc);
+      placeholder.classList.add('icard-cover-placeholder--full');
+      page.append(placeholder);
     }
+    return page;
+  } else if (mode === 'mixed') {
+    page.classList.add('icard-cover--has-image');
+    const bg = ownerDoc.createElement('div');
+    bg.className = 'icard-cover-bg';
+    if (hasImage) {
+      bg.style.setProperty('background-image', `url("${coverImageUrl}")`);
+    } else {
+      bg.classList.add('icard-cover-bg--placeholder');
+    }
+    page.append(bg);
 
-    if (fields.coverMode === "mixed") {
-      page.classList.add("icard-cover--has-image");
-      const bg = ownerDoc.createElement("div");
-      bg.className = "icard-cover-bg";
-      bg.style.setProperty("background-image", `url("${fields.coverImage}")`);
+    const overlay = ownerDoc.createElement('div');
+    overlay.className = 'icard-cover-overlay';
+    page.append(overlay);
+  } else {
+    // 2. adaptive 自适应排版（默认）：有图融入主题，无图放精致占位框（保持布局不坍塌）
+    page.classList.add('icard-cover--adaptive');
+    if (style === 'magazine') {
+      const hero = ownerDoc.createElement('div');
+      hero.className = 'icard-cover-hero';
+      if (hasImage) {
+        const heroImg = createSafeCoverImage(ownerDoc, coverImageUrl, fields.title || 'Cover Hero', 'icard-cover-hero-img');
+        hero.append(heroImg);
+      } else {
+        hero.append(createCoverPlaceholder(ownerDoc));
+      }
+      page.append(hero);
+    } else if (style === 'neon') {
+      page.classList.add('icard-cover--has-image');
+      const bg = ownerDoc.createElement('div');
+      bg.className = 'icard-cover-bg';
+      if (hasImage) {
+        bg.style.setProperty('background-image', `url("${coverImageUrl}")`);
+      } else {
+        bg.classList.add('icard-cover-bg--placeholder');
+      }
       page.append(bg);
 
-      const overlay = ownerDoc.createElement("div");
-      overlay.className = "icard-cover-overlay";
-      page.append(overlay);
-    } else {
-      // adaptive 自适应模式
-      page.classList.add("icard-cover--adaptive");
-      if (style === "magazine") {
-        const hero = ownerDoc.createElement("div");
-        hero.className = "icard-cover-hero";
-        const heroImg = ownerDoc.createElement("img");
-        heroImg.className = "icard-cover-hero-img";
-        heroImg.src = fields.coverImage;
-        heroImg.alt = fields.title || "Cover Hero";
-        hero.append(heroImg);
-        page.append(hero);
-      } else if (style === "neon") {
-        page.classList.add("icard-cover--has-image");
-        const bg = ownerDoc.createElement("div");
-        bg.className = "icard-cover-bg";
-        bg.style.setProperty("background-image", `url("${fields.coverImage}")`);
-        page.append(bg);
-
-        const cyberOverlay = ownerDoc.createElement("div");
-        cyberOverlay.className = "icard-cover-cyber-overlay";
-        page.append(cyberOverlay);
-      }
+      const cyberOverlay = ownerDoc.createElement('div');
+      cyberOverlay.className = 'icard-cover-cyber-overlay';
+      page.append(cyberOverlay);
     }
   }
 
-  const body = ownerDoc.createElement("div");
-  body.className = "icard-cover-body";
+  const body = ownerDoc.createElement('div');
+  body.className = 'icard-cover-body';
 
-  // 单一事实只说一次：kicker（顶部）= 日期；meta（置底）= 作者。
-  // 两者都来自 cover-model 归一化字段，空值段落整体省略。
-  const kicker = ownerDoc.createElement("div");
-  kicker.className = "icard-cover-kicker";
-  kicker.textContent = fields.date || "";
+  const kicker = ownerDoc.createElement('div');
+  kicker.className = 'icard-cover-kicker';
+  kicker.textContent = fields.date || '';
   if (kicker.textContent) body.append(kicker);
 
   // 自适应模式下，centered 与 luxury 在 kicker 下方、title 上方置入相框
-  if (isAdaptive) {
-    if (style === "centered") {
-      const frame = ownerDoc.createElement("div");
-      frame.className = "icard-cover-frame";
-      const frameImg = ownerDoc.createElement("img");
-      frameImg.className = "icard-cover-frame-img";
-      frameImg.src = fields.coverImage;
-      frameImg.alt = fields.title || "Cover Frame";
-      frame.append(frameImg);
+  if (mode === 'adaptive') {
+    if (style === 'centered') {
+      const frame = ownerDoc.createElement('div');
+      frame.className = 'icard-cover-frame';
+      if (hasImage) {
+        const frameImg = createSafeCoverImage(ownerDoc, coverImageUrl, fields.title || 'Cover Frame', 'icard-cover-frame-img');
+        frame.append(frameImg);
+      } else {
+        frame.append(createCoverPlaceholder(ownerDoc));
+      }
       body.append(frame);
-    } else if (style === "luxury") {
-      const arch = ownerDoc.createElement("div");
-      arch.className = "icard-cover-arch";
-      const archImg = ownerDoc.createElement("img");
-      archImg.className = "icard-cover-arch-img";
-      archImg.src = fields.coverImage;
-      archImg.alt = fields.title || "Cover Arch";
-      arch.append(archImg);
+    } else if (style === 'luxury') {
+      const arch = ownerDoc.createElement('div');
+      arch.className = 'icard-cover-arch';
+      if (hasImage) {
+        const archImg = createSafeCoverImage(ownerDoc, coverImageUrl, fields.title || 'Cover Arch', 'icard-cover-arch-img');
+        arch.append(archImg);
+      } else {
+        arch.append(createCoverPlaceholder(ownerDoc));
+      }
       body.append(arch);
     }
   }
 
-  const title = ownerDoc.createElement("div");
-  title.className = "icard-cover-title";
+  const title = ownerDoc.createElement('div');
+  title.className = 'icard-cover-title';
   title.textContent = fields.title;
   body.append(title);
 
   if (fields.excerpt) {
-    const excerpt = ownerDoc.createElement("div");
-    excerpt.className = "icard-cover-excerpt";
+    const excerpt = ownerDoc.createElement('div');
+    excerpt.className = 'icard-cover-excerpt';
     excerpt.textContent = fields.excerpt;
     body.append(excerpt);
   }
 
-  // 封面底部一行兼署名与水印（David 2026-09-13：作者与水印不分行，合并展示）；
-  // 正文页水印另在页脚右侧展示。任一为空则只显示另一项，都空则整段省略；
-  // 两者内容相同（最常见的「两处都填自己名字」）按文案去重，不连写两遍。
-  const meta = ownerDoc.createElement("div");
-  meta.className = "icard-cover-meta";
+  const meta = ownerDoc.createElement('div');
+  meta.className = 'icard-cover-meta';
   meta.textContent = joinCoverMeta(fields.author, args.watermarkText);
   if (meta.textContent) body.append(meta);
 

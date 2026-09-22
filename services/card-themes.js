@@ -663,80 +663,65 @@ export function buildCardPageCss(theme, typography = {}) {
   text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 /* 自适应封面：根据 6 主题各自的美学特征自然融入图片 */
-.icard-cover--adaptive.icard-cover--magazine {
-  padding: 16px;
-}
+.icard-cover--adaptive.icard-cover--magazine { padding: 16px; }
 .icard-cover--adaptive.icard-cover--magazine .icard-cover-hero {
-  width: 100%;
-  height: 48%;
-  max-height: 240px;
-  border-radius: 8px;
-  overflow: hidden;
-  margin-bottom: 14px;
-  flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  width: 100%; height: 48%; max-height: 240px; border-radius: 8px; overflow: hidden; margin-bottom: 14px; flex-shrink: 0; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
-.icard-cover--adaptive.icard-cover--magazine .icard-cover-hero-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.icard-cover--adaptive.icard-cover--magazine .icard-cover-title {
-  margin-top: 0;
-  font-size: 23px;
-}
+.icard-cover--adaptive.icard-cover--magazine .icard-cover-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.icard-cover--adaptive.icard-cover--magazine .icard-cover-title { margin-top: 0; font-size: 23px; }
 
 .icard-cover--adaptive.icard-cover--centered .icard-cover-frame {
-  width: 180px;
-  height: 180px;
-  margin: 8px auto 14px;
-  border-radius: 12px;
-  overflow: hidden;
-  flex-shrink: 0;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.85);
+  width: 180px; height: 180px; margin: 8px auto 14px; border-radius: 12px; overflow: hidden; flex-shrink: 0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1); border: 2px solid rgba(255, 255, 255, 0.85);
 }
-.icard-cover--adaptive.icard-cover--centered .icard-cover-frame-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.icard-cover--adaptive.icard-cover--centered .icard-cover-title {
-  margin-top: 0;
-  font-size: 23px;
-}
+.icard-cover--adaptive.icard-cover--centered .icard-cover-frame-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.icard-cover--adaptive.icard-cover--centered .icard-cover-title { margin-top: 0; font-size: 23px; }
 
 .icard-cover--adaptive.icard-cover--luxury .icard-cover-arch {
-  width: 160px;
-  height: 190px;
-  margin: 10px auto 12px;
-  border-radius: 80px 80px 8px 8px;
-  overflow: hidden;
-  flex-shrink: 0;
-  border: 1.5px solid ${t.borderColor};
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+  width: 160px; height: 190px; margin: 10px auto 12px; border-radius: 80px 80px 8px 8px; overflow: hidden; flex-shrink: 0;
+  border: 1.5px solid ${t.borderColor}; box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
 }
-.icard-cover--adaptive.icard-cover--luxury .icard-cover-arch-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.icard-cover--adaptive.icard-cover--luxury .icard-cover-title {
-  margin-top: 0;
-  font-size: 23px;
-}
+.icard-cover--adaptive.icard-cover--luxury .icard-cover-arch-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.icard-cover--adaptive.icard-cover--luxury .icard-cover-title { margin-top: 0; font-size: 23px; }
 
 .icard-cover-cyber-overlay {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0; z-index: 1;
   background: linear-gradient(180deg, rgba(2, 6, 23, 0.72) 0%, rgba(2, 6, 23, 0.9) 100%);
   background-image: linear-gradient(#ffffff0a 1px, transparent 1px), linear-gradient(90deg, #ffffff0a 1px, transparent 1px);
   background-size: 32px 32px;
-  z-index: 1;
 }
+/* 封面配图占位框（100% 对标 WeChat Tool：纯实底、无边框、无文字、仅居中 ImageIcon） */
+.icard-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: ${theme.id === 'luxury' || theme.id === 'neon' ? '#262626' : '#f3f4f6'};
+  color: ${theme.id === 'luxury' ? 'rgba(202, 138, 4, 0.5)' : (theme.id === 'neon' ? 'rgba(168, 85, 247, 0.5)' : '#d1d5db')};
+  border: none;
+  border-radius: inherit;
+  user-select: none;
+}
+.icard-cover-placeholder-icon {
+  width: 56px;
+  height: 56px;
+  display: block;
+}
+.icard-cover-frame .icard-cover-placeholder-icon,
+.icard-cover-arch .icard-cover-placeholder-icon {
+  width: 44px;
+  height: 44px;
+}
+.icard-cover-placeholder--full {
+  width: 100%;
+  height: 100%;
+}
+.icard-cover-bg--placeholder {
+  background: ${theme.id === 'luxury' || theme.id === 'neon' ? '#1f1f23' : '#f3f4f6'};
+}
+
 .icard-cover-body {
   flex: 1 1 auto;
   display: flex;

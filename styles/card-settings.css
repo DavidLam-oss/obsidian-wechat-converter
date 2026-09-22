@@ -137,6 +137,25 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 }
 .apple-settings-card-wrapper .icard-settings-cover-remove:hover { color: var(--text-normal); }
 
+/* 封面搜索与快捷图源操作工具行 */
+.icard-settings-cover-search-row {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  margin-top: 6px;
+  align-items: center;
+}
+.icard-settings-cover-search-row .icard-settings-text {
+  flex: 1 1 auto;
+  margin-top: 0;
+}
+.apple-settings-card-wrapper .icard-settings-cover-search-btn {
+  flex: 0 0 auto;
+  height: 31px;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
 /* 封面图源操作工具行（🎲 随机摄影 / 🔍 Unsplash / 🖼️ 笔记/本地） */
 .icard-settings-cover-tools {
   display: flex;
@@ -173,36 +192,24 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 }
 
 .apple-settings-card-wrapper .icard-settings-cover-btn:disabled {
-  opacity: 0.6;
-  cursor: default;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* —— 侧边栏双子 Tab 导航（排版 Token vs 封面设置）——
-   置顶吸顶：面板内容长（六个主题 + 三个滑块 + 整套封面表单），滚下去之后就不知道
-   自己在哪个子 Tab 下面了，所以让导航跟着滚。
-   负上外边距抵消 .apple-settings-overlay 的 24px 上内边距——静止时位置与原来分毫不变，
-   贴顶时也不会在上方留出一条缝（等于把浮层的上内边距挪进导航自己的 padding）。
-   背景必须接近不透明，否则滚动的内容会从按钮之间透出来。
-   这里不用 backdrop-filter：浮层已经有一层，嵌套的模糊会随滚动逐帧重算，不值当。 */
+   透明背景，无底线，纯净悬浮于画布之上。 */
 .icard-settings-nav {
   position: sticky;
-  /* ⚠️ 必须是负值：sticky 的吸附基准是滚动容器的**内边距盒**（浮层 padding-top 24px），
-     top:0 会把导航钉在可见顶边下方 24px，滚动内容从这条缝里透出来（评审实测 bleed=24px）。
-     top:-24px 正好抵消，吸附时贴住可见顶边；负上外边距继续负责静止时的位置抵消。 */
   top: -24px;
   z-index: 6;
   margin: -24px 0 6px;
   padding: 24px 0 10px;
-  /* 必须**完全不透明**：吸顶之后下方内容会从它背后滑过，94% 白时下一节的「主题」
-     小标题会透出一缕灰字，看着像导航里多了一行莫名其妙的小字。
-     取色与浮层本身对齐（.apple-settings-overlay 是 rgba(255,255,255,.72) + 磨砂，
-     暗色是 rgba(30,30,30,.8)），所以这里用同色系的实色。 */
-  background: #ffffff;
-  border-bottom: 1px solid var(--background-modifier-border);
+  background: transparent;
+  border-bottom: none;
 }
 
 .theme-dark .icard-settings-nav {
-  background: #1e1e1e;
+  background: transparent;
 }
 
 /* 移动端浮层的上内边距是 12px，抵消量同步 */

@@ -40,10 +40,11 @@
 */
 
 /** 封面字段（C01③ 文字封面 + C06 AI 封面配图） */
-/** @typedef {{ title: string, author: string, date: string, excerpt: string, coverImage?: string, coverMode?: 'adaptive' | 'mixed' | 'full-bleed', coverImageStyle?: string, coverPrompt?: string }} CardCoverFields */
+/** @typedef {{ title: string, author: string, date: string, excerpt: string, coverImage?: string, coverMode?: 'none' | 'adaptive' | 'mixed' | 'full-bleed', coverImageStyle?: string, coverPrompt?: string, coverImageSource?: string }} CardCoverFields */
 
 /** 呈现版式展示标签 */
 export const COVER_MODE_LABELS = /** @type {const} */ ({
+  none: '纯文字排版',
   adaptive: '主题自适应版式',
   mixed: '全屏意境大图',
   'full-bleed': '纯海报整页铺满',
@@ -56,7 +57,7 @@ export const EMPTY_COVER_FIELDS = /** @type {CardCoverFields} */ ({
   date: "",
   excerpt: "",
   coverImage: "",
-  coverMode: "adaptive",
+  coverMode: "none",
   coverImageStyle: "3d-clay",
   coverPrompt: "",
 });
@@ -151,11 +152,12 @@ export function deriveCoverFields(input = {}) {
     date: normalizeCoverDate(meta.date),
     excerpt,
     coverImage: String(meta.cover || meta.banner || meta.image || "").trim(),
-    coverMode: meta.coverMode === 'full-bleed' || meta.coverMode === 'mixed' || meta.coverMode === 'adaptive'
+    coverMode: meta.coverMode === 'none' || meta.coverMode === 'full-bleed' || meta.coverMode === 'mixed' || meta.coverMode === 'adaptive'
       ? meta.coverMode
-      : 'adaptive',
+      : 'none',
     coverImageStyle: String(meta.coverStyle || '3d-clay').trim(),
     coverPrompt: String(meta.coverPrompt || '').trim(),
+    coverImageSource: String(meta.coverImageSource || '').trim(),
   };
 }
 
@@ -171,10 +173,10 @@ export function normalizeCoverFields(partial = {}, base = EMPTY_COVER_FIELDS) {
   /** @param {'title'|'author'|'date'|'excerpt'} key @returns {string} */
   const pick = (key) => (typeof src[key] === "string" ? /** @type {string} */ (src[key]).trim() : base[key]);
   const resolveMode = () => {
-    if (src.coverMode === 'full-bleed' || src.coverMode === 'mixed' || src.coverMode === 'adaptive') {
+    if (src.coverMode === 'none' || src.coverMode === 'full-bleed' || src.coverMode === 'mixed' || src.coverMode === 'adaptive') {
       return src.coverMode;
     }
-    return base.coverMode || 'adaptive';
+    return base.coverMode || 'none';
   };
   return {
     title: pick("title"),
@@ -185,6 +187,7 @@ export function normalizeCoverFields(partial = {}, base = EMPTY_COVER_FIELDS) {
     coverMode: resolveMode(),
     coverImageStyle: typeof src.coverImageStyle === 'string' && src.coverImageStyle.trim() ? src.coverImageStyle.trim() : (base.coverImageStyle || '3d-clay'),
     coverPrompt: typeof src.coverPrompt === 'string' ? src.coverPrompt.trim() : (base.coverPrompt || ''),
+    coverImageSource: typeof src.coverImageSource === 'string' ? src.coverImageSource.trim() : (base.coverImageSource || ''),
   };
 }
 

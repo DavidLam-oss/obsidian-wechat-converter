@@ -243,7 +243,7 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
   // 上次停在哪一页、开合过哪个折叠组都不跨次残留。⚠️ 复位只针对**视图状态**，
   // 主题/开关/滑块/封面字段等取值必须原样保留。
   describe("面板视图状态复位（resetCardSettingsPanelViewState）", () => {
-    it("子 Tab 回「排版 Token」、两个折叠组回默认开合，取值一律不动", () => {
+    it("子 Tab 记忆保留上次位置（如留在封面设置）、两个折叠组回默认开合，取值一律不动", () => {
       const refs = view.cardSettingsRefs;
       const wrapper = view.cardSettingsWrapper;
 
@@ -258,12 +258,12 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
 
       view.resetCardSettingsPanelViewState();
 
-      // ① 子 Tab 回默认页
-      expect(view.activeCardSubTab).toBe("token");
-      expect(wrapper.querySelector('button[data-tab="token"]').classList.contains("is-active")).toBe(true);
-      expect(wrapper.querySelector('button[data-tab="cover"]').classList.contains("is-active")).toBe(false);
-      expect(wrapper.querySelector(".icard-settings-subpanel-token").classList.contains("hidden")).toBe(false);
-      expect(wrapper.querySelector(".icard-settings-subpanel-cover").classList.contains("hidden")).toBe(true);
+      // ① 子 Tab 记忆保留上次用户所处的页签（即保持在 cover，方便用户继续调整）
+      expect(view.activeCardSubTab).toBe("cover");
+      expect(wrapper.querySelector('button[data-tab="token"]').classList.contains("is-active")).toBe(false);
+      expect(wrapper.querySelector('button[data-tab="cover"]').classList.contains("is-active")).toBe(true);
+      expect(wrapper.querySelector(".icard-settings-subpanel-token").classList.contains("hidden")).toBe(true);
+      expect(wrapper.querySelector(".icard-settings-subpanel-cover").classList.contains("hidden")).toBe(false);
 
       // ② 「字号与间距」固定收起（对应文章模式的高级选项）
       expect(refs.tuneGroup.open).toBe(false);
@@ -284,7 +284,8 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       view.previewMode = "card";
       view.resetSettingsPanelViewState();
 
-      expect(view.activeCardSubTab).toBe("token");
+      // 保留当前子 Tab（保持在 cover），折叠组和滚动位置正常复位
+      expect(view.activeCardSubTab).toBe("cover");
       expect(view.cardSettingsRefs.tuneGroup.open).toBe(false);
       expect(view.settingsArea.scrollTop).toBe(0);
 
@@ -295,7 +296,7 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(view.activeCardSubTab).toBe("cover");
     });
 
-    it("关闭后再打开（真机路径 toggleSettingsPanel）回到默认视图", () => {
+    it("关闭后再打开（真机路径 toggleSettingsPanel）记忆保留上次停留的子 Tab（如留在封面设置）", () => {
       // ⚠️ 走真方法：beforeEach 把这个方法替身成了 mock，用它断言等于自证
       view.toggleSettingsPanel = AppleStyleView.prototype.toggleSettingsPanel.bind(view);
       view.previewMode = "card";
@@ -310,9 +311,9 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       view.toggleSettingsPanel();
       expect(view.settingsOverlay.classList.contains("visible")).toBe(false);
 
-      // 再次打开 → 默认视图
+      // 再次打开 → 记忆保留留在封面设置页，折叠组正常复位收起
       view.toggleSettingsPanel();
-      expect(view.activeCardSubTab).toBe("token");
+      expect(view.activeCardSubTab).toBe("cover");
       expect(view.cardSettingsRefs.tuneGroup.open).toBe(false);
     });
 
@@ -503,11 +504,16 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       const echo = view.cardSettingsRefs.coverGroupEcho;
       const details = view.cardSettingsRefs.coverAiDetails;
 
-      // 无配图：摘要写明当前风格与呈现，且 AI 生图默认收起（突出上方摄影/本地工具条）
+      // AI 折叠组仅回显自身预设风格（与实际配图解绑，避免误导），且默认收起
       expect(echo.textContent).toContain("3D 粘土质感");
-      expect(echo.textContent).toContain("主题自适应版式");
-      expect(echo.textContent).toContain("无配图");
+      expect(echo.textContent).toContain("预设风格");
       expect(details.open).toBe(false);
+
+      // 版式选项包含纯文字排版、自适应、底图和海报
+      const modeSelect = view.cardSettingsRefs.coverModeSelect;
+      const modeValues = Array.from(modeSelect.options).map((o) => o.value);
+      expect(modeValues).toContain("none");
+      expect(modeValues).toContain("adaptive");
 
       // 换风格 → 摘要即时跟着变
       view.cardSettingsRefs.coverStyleSelect.value = "minimal-vector";
