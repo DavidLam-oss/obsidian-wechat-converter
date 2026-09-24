@@ -96,14 +96,11 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
 
     renderAboutSettingsTab(mockTabInstance, containerEl);
 
-    expect(mockTabInstance.app.vault.adapter.getResourcePath).toHaveBeenNthCalledWith(
-      1,
-      '.config/obsidian/plugins/obsidian-wechat-converter/images/support-wechat.png',
-    );
-    expect(mockTabInstance.app.vault.adapter.getResourcePath).toHaveBeenNthCalledWith(
-      2,
-      '.config/obsidian/plugins/obsidian-wechat-converter/images/support-alipay.jpg',
-    );
+    // 检查赞助二维码图片直接使用内置可靠的 Base64 Data URL
+    const qrImgs = containerEl.querySelectorAll('.apple-settings-sponsor-qr-img');
+    expect(qrImgs.length).toBe(2);
+    expect(qrImgs[0].src).toContain('data:image/webp;base64,');
+    expect(qrImgs[1].src).toContain('data:image/webp;base64,');
 
     // 检查标题与版本徽章
     const titleEl = containerEl.querySelector('.apple-settings-about-title');
@@ -126,16 +123,19 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
 
     // 检查赞助鸣谢榜
     const fameItems = containerEl.querySelectorAll('.apple-settings-fame-item');
-    expect(fameItems.length).toBeGreaterThanOrEqual(1);
+    expect(fameItems.length).toBe(3);
 
-    const firstName = containerEl.querySelector('.apple-settings-fame-item-name');
-    expect(firstName?.textContent).toBe('*哥');
+    const names = Array.from(containerEl.querySelectorAll('.apple-settings-fame-item-name')).map(
+      (el) => el.textContent,
+    );
+    expect(names).toEqual(['*哥', 'Tony', '林大豆豆']);
 
-    const firstTag = containerEl.querySelector('.apple-settings-fame-item-tag');
-    expect(firstTag?.textContent).toBe('首位支持者');
-
-    const firstMsg = containerEl.querySelector('.apple-settings-fame-item-message');
-    expect(firstMsg?.textContent).toContain('公众号排版助手真不错');
+    const messages = Array.from(
+      containerEl.querySelectorAll('.apple-settings-fame-item-message'),
+    ).map((el) => el.textContent);
+    expect(messages).toContain('“公众号排版助手真不错”');
+    expect(messages).toContain('“真方便呀”');
+    expect(messages).toContain('“生命不息，折腾不止”');
 
     // 检查交流讨论群模块
     const communityCard = containerEl.querySelector('.apple-settings-community-card');

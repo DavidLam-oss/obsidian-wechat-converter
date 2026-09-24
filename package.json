@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-wechat-converter",
-	"version": "2.10.9",
+	"version": "2.10.10",
 	"description": "Obsidian plugin for WeChat articles, Feishu cloud docs, and multi-platform publishing.",
 	"main": "main.js",
 	"scripts": {
@@ -35,7 +35,7 @@
 		"style",
 		"formatter"
 	],
-	"author": "DavidLam (林小卫很行)",
+	"author": "DavidLam | 公众号：林小卫很行",
 	"license": "MIT",
 	"devDependencies": {
 		"@eslint/js": "^9.39.4",
