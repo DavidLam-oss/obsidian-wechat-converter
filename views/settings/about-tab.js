@@ -17,8 +17,7 @@
 
 ## 依赖
 
-关键依赖：`../../services/sponsors-data.js`、`../apple-style-view-shared.js`。
-
+关键依赖：`../../services/sponsors-data.js`、`../../services/sponsor-assets.js`、`../apple-style-view-shared.js`。
 ## 维护规则
 
 - 修改逻辑后同步更新本文件说明书。
@@ -34,36 +33,13 @@ import {
   getObsidianSetIcon,
 } from '../apple-style-view-shared.js';
 import { SPONSORS } from '../../services/sponsors-data.js';
+import {
+  WECHAT_SPONSOR_QR_DATA_URL,
+  ALIPAY_SPONSOR_QR_DATA_URL,
+} from '../../services/sponsor-assets.js';
 
 const DOCS_URL = 'https://github.com/DavidLam-oss/obsidian-wechat-converter/blob/main/README.md';
 const ISSUES_URL = 'https://github.com/DavidLam-oss/obsidian-wechat-converter/issues';
-
-/**
- * 解析插件内部图片的本地安全 URL，若失败则降级至 GitHub Raw URL
- * @param {AppLike} app
- * @param {PluginManifestLike | undefined} manifest
- * @param {string} relativePath
- * @returns {string}
- */
-function resolvePluginAssetUrl(app, manifest, relativePath) {
-  const fallbackUrl = `https://raw.githubusercontent.com/DavidLam-oss/obsidian-wechat-converter/main/${relativePath}`;
-  try {
-    const configDir = app.vault?.configDir;
-    const pluginDir = /** @type {string | undefined} */ (manifest?.dir)
-      || (typeof configDir === 'string' && configDir
-        ? `${configDir}/plugins/${manifest?.id || 'obsidian-wechat-converter'}`
-        : undefined);
-    if (!pluginDir) return fallbackUrl;
-    const fullPath = `${pluginDir}/${relativePath}`.replace(/\\/g, '/');
-    const adapter = /** @type {{ getResourcePath?: (path: string) => string } | undefined} */ (app.vault?.adapter);
-    if (typeof adapter?.getResourcePath === 'function') {
-      return adapter.getResourcePath(fullPath);
-    }
-  } catch {
-    // 降级使用网络资源
-  }
-  return fallbackUrl;
-}
 
 /**
  * 安全打开外部链接
@@ -102,7 +78,6 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
 
   const manifest = /** @type {PluginManifestLike | undefined} */ (tabInstance.plugin?.manifest);
   const version = manifest?.version || '2.10.6';
-  const app = /** @type {AppLike} */ (tabInstance.app);
 
   // 1. 插件名片区 (About Header - 极简原生排版，层级分明，不抢视觉焦点)
   const headerEl = containerEl.createDiv({ cls: 'apple-settings-about-header' });
@@ -170,7 +145,7 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
   const wechatCard = cardsContainer.createDiv({ cls: 'apple-settings-sponsor-card' });
   const wechatQrWrap = wechatCard.createDiv({ cls: 'apple-settings-sponsor-qr-wrapper' });
   const wechatImg = wechatQrWrap.createEl('img', { cls: 'apple-settings-sponsor-qr-img' });
-  wechatImg.src = resolvePluginAssetUrl(app, manifest, 'images/support-wechat.png');
+  wechatImg.src = WECHAT_SPONSOR_QR_DATA_URL;
   wechatImg.alt = '微信赞赏码';
   wechatCard.createDiv({ text: '微信赞赏', cls: 'apple-settings-sponsor-label' });
 
@@ -178,7 +153,7 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
   const alipayCard = cardsContainer.createDiv({ cls: 'apple-settings-sponsor-card' });
   const alipayQrWrap = alipayCard.createDiv({ cls: 'apple-settings-sponsor-qr-wrapper' });
   const alipayImg = alipayQrWrap.createEl('img', { cls: 'apple-settings-sponsor-qr-img' });
-  alipayImg.src = resolvePluginAssetUrl(app, manifest, 'images/support-alipay.jpg');
+  alipayImg.src = ALIPAY_SPONSOR_QR_DATA_URL;
   alipayImg.alt = '支付宝收款码';
   alipayCard.createDiv({ text: '支付宝', cls: 'apple-settings-sponsor-label' });
 

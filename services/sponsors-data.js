@@ -44,6 +44,12 @@ export const SPONSORS = [
   },
   {
     name: 'Tony',
+    message: '真方便呀',
     date: '2026-09-08',
+  },
+  {
+    name: '林大豆豆',
+    message: '生命不息，折腾不止',
+    date: '2026-09-24',
   },
 ];
