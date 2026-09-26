@@ -103,7 +103,7 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
       nameRow.createEl("span", { text: provider.name, cls: "wechat-account-name" });
 
       if (isTextDefault) {
-        nameRow.createEl("span", { text: "默认文本", cls: "wechat-account-badge is-default-text" });
+        nameRow.createEl("span", { text: "默认文本", cls: "wechat-account-badge" });
       }
       if (isImageDefault) {
         nameRow.createEl("span", { text: "默认生图", cls: "wechat-account-badge is-default-image" });

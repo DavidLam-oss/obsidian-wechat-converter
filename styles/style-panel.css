@@ -644,3 +644,28 @@
   border-color: var(--apple-accent);
   box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.1);
 }
+
+.apple-settings-summary-value {
+  margin-left: auto;
+  margin-right: 8px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--apple-secondary);
+}
+
+.apple-settings-inline-tip {
+  font-size: 11px;
+  color: var(--apple-secondary);
+  opacity: 0.8;
+  font-weight: 500;
+  display: block;
+}
+
+.apple-settings-inline-tip.is-spaced {
+  margin-top: 8px;
+}
+
+.apple-settings-inline-tip.is-loose {
+  opacity: 0.78;
+  line-height: 1.6;
+}

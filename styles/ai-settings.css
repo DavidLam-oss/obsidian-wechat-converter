@@ -15,12 +15,8 @@ AI Provider 配置面板与弹窗样式片段（ai-tab 与 ai-provider-modal）�
 }
 
 /* 徽标颜色变体 */
-.wechat-account-badge.is-default-text {
-  background: var(--interactive-accent, #007aff);
-}
-
 .wechat-account-badge.is-default-image {
-  background: #8b5cf6;
+  background: var(--apple-purple);
 }
 
 .wechat-account-badge.is-disabled {
@@ -28,11 +24,11 @@ AI Provider 配置面板与弹窗样式片段（ai-tab 与 ai-provider-modal）�
 }
 
 .wechat-account-badge.is-runnable {
-  background: #0f8f64;
+  background: var(--apple-success);
 }
 
 .wechat-account-badge.is-pending {
-  background: #d97706;
+  background: var(--apple-warning);
 }
 
 /* 能力徽标行与标签 */

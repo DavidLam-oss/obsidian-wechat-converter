@@ -49,6 +49,7 @@
   --apple-success: #34c759;
   --apple-warning: #ff9500;
   --apple-error: #ff3b30;
+  --apple-purple: #8b5cf6;
 
   /* 代码配色 */
   --apple-code-text: #c7254e;
@@ -94,6 +95,7 @@
   --apple-code-bg: #2d2d2d;
   --apple-code-block-bg: #1e1e1e;
   --apple-code-block-border: #333;
+  --apple-purple: #a78bfa;
 }
 
 /* ========================================

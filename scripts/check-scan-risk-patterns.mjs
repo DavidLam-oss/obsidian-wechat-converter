@@ -86,6 +86,12 @@ const RULES = [
     pattern: /\.style\.(?!setProperty\b|removeProperty\b|getPropertyValue\b|cssText\b)[A-Za-z_$][\w$]*\s=/,
   },
   {
+    id: 'no-inline-style-attr',
+    message: 'Avoid `attr: { style }` inline styles; extract to a styles/ fragment with semantic class names. (obsidianmd/no-static-styles-assignment only catches `.style.x =` assignments.)',
+    pattern: /attr:\s*\{\s*style\s*:/,
+    extensions: new Set(['.js', '.mjs', '.cjs']),
+  },
+  {
     id: 'no-native-blocking-dialog',
     message: 'Use Obsidian Modal or Notice instead of confirm(), alert(), or prompt().',
     pattern: /\b(?:confirm|alert|prompt)\s*\(/,

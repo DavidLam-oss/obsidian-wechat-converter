@@ -24,7 +24,7 @@
   - `card-render-capture.js`: 全局单捕获槽、有界 FIFO 队列（上限 100）、取消排队与底层生命周期锁；
   - `card-resources.js` / `card-resource-loaders.js`: 资源预加载、内联 data URL 与引用计数快照；
   - `card-session.js` / `card-export-job.js`: 会话状态机、排版 Token 缓存与导出任务生命周期；
-  - `card-themes.js` / `card-cover-model.js` / `card-settings-model.js`: 三套卡片主题、三式封面模型与排版设置归一化；
+  - `card-themes.js` / `card-cover-model.js` / `card-settings-model.js`: 六套卡片主题、四式封面模型与排版设置归一化；
   - `card-exporter.js` / `card-export-paths.js`: 批次路径校验、独占排他写入、进度反馈、取消重试与仅失败清单。
 - `views/`: 转换器视图、发布弹窗、设置页和共享视图工具；卡片模块包含 `card-preview.js`（卡片预览流）、`card-settings.js`（侧栏排版/封面双 Tab 设置）、`card-cover-settings.js`（封面设置折叠卡片）、`card-media-picker-modal.js`（封面配图弹窗）、`card-export-modal.js` / `card-export-modal-view.js`（导出弹窗交互与视图）、`card-export-bridge.js`（导出接线层，含 `listCardExportPageIds` 页全集口径）及 `card-page-selection.js`（页选择状态与导出弹窗「自选页」清单渲染）。
 - `styles/` 与 `styles.css`: 按职责拆分的样式源文件和生成后的插件样式入口；包含文章预览、贴图预览、卡片预览（`card-preview.css`）、卡片侧栏设置（`card-settings.css`）、卡片导出弹窗（`card-export.css`、`card-export-progress.css`）与 AI 设置（`ai-settings.css`）等独立片段。

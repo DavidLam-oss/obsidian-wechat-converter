@@ -702,3 +702,73 @@
   border-color: var(--interactive-accent);
   box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.15);
 }
+
+/* 设置页提示与中转卡片样式 */
+.wechat-settings-empty-tip {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.wechat-settings-max-tip {
+  color: var(--text-muted);
+}
+
+.wechat-proxy-card {
+  margin-top: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background-color: var(--background-primary-alt);
+  font-size: 12px;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wechat-proxy-row {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.wechat-proxy-icon {
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+
+.wechat-proxy-title {
+  color: var(--text-normal);
+  font-weight: 600;
+}
+
+.wechat-proxy-title.is-warning {
+  color: var(--text-warning);
+}
+
+.wechat-proxy-desc {
+  color: var(--text-muted);
+}
+
+.wechat-proxy-link {
+  margin-left: 6px;
+  color: var(--text-muted);
+  text-decoration: underline;
+}
+
+.owc-custom-css-warning {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--text-warning);
+  border-radius: 4px;
+  background-color: var(--background-primary-alt);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.owc-custom-css-warning-title {
+  color: var(--text-warning);
+}
+
