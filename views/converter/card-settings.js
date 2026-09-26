@@ -111,6 +111,8 @@ import {
  *     coverImagePreviewMeta?: ObsidianElementLike | null,
  *     coverImageThumb?: HTMLImageElement | null,
  *     coverImageRemoveBtn?: HTMLButtonElement | null,
+ *     coverAddImageBtn?: HTMLButtonElement | null,
+ *     coverImageToolsWrap?: ObsidianElementLike | null,
  *   } | null,
  *   cardDefaultsSaveTimer?: ReturnType<typeof setTimeout> | null,
  * }} CardSettingsViewStateLike
@@ -194,6 +196,8 @@ buildCardSettingsPanel() {
     coverAiUserToggled: false,
     coverGroupEcho: null,
     coverInputs: {},
+    coverAddImageBtn: null,
+    coverImageToolsWrap: null,
   });
   cardSettingsStateOf(this).cardSettingsRefs = refs;
   cardSettingsStateOf(this).activeCardSubTab = 'token';

@@ -83,8 +83,79 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
     });
     refs.coverModeSelect = modeSelect;
 
-    // 2.2 快捷图源操作工具行（随机摄影 / 笔记/本地，免输关键词）
-    const toolsRow = content.createDiv({ cls: 'icard-settings-cover-tools' });
+    // 2.2 「添加封面配图」快速唤起入口（仅在纯文字排版时展示）
+    const addImageBtn = content.createEl('button', {
+      cls: 'icard-settings-cover-add-btn',
+      text: '+ 添加封面配图',
+      attr: { type: 'button', title: '为封面添加配图，切换为主题自适应版式' },
+    });
+    addImageBtn.addEventListener('click', () => {
+      view.applyCardCoverField('coverMode', 'adaptive');
+    });
+    refs.coverAddImageBtn = addImageBtn;
+
+    // 2.3 封面配图工具组（非纯文字排版时渐进展开）
+    const toolsWrap = content.createDiv({ cls: 'icard-settings-cover-tools-wrap hidden' });
+    refs.coverImageToolsWrap = toolsWrap;
+
+    // 2.3.1 配图卡（已有配图时展示）
+    const previewBox = toolsWrap.createDiv({ cls: 'icard-settings-cover-preview-box hidden' });
+    refs.coverImagePreviewWrap = previewBox;
+
+    const thumbImg = /** @type {HTMLImageElement} */ (
+      /** @type {unknown} */ (previewBox.createEl('img', { cls: 'icard-settings-cover-thumb' }))
+    );
+    refs.coverImageThumb = thumbImg;
+
+    const infoCol = previewBox.createDiv({ cls: 'icard-settings-cover-info' });
+    refs.coverImagePreviewName = infoCol.createEl('span', { cls: 'icard-settings-cover-preview-name' });
+    refs.coverImagePreviewMeta = infoCol.createEl('span', { cls: 'icard-settings-note', text: '已启用' });
+    thumbImg.addEventListener('load', () => {
+      const w = thumbImg.naturalWidth;
+      const h = thumbImg.naturalHeight;
+      if (w && h && refs.coverImagePreviewMeta) {
+        refs.coverImagePreviewMeta.textContent = `${w} × ${h} · 已启用`;
+      }
+    });
+
+    const removeImgBtn = previewBox.createEl('button', {
+      cls: 'icard-settings-cover-remove',
+      text: '移除',
+      attr: { type: 'button', title: '移除封面配图并切回纯文字排版' },
+    });
+    refs.coverImageRemoveBtn = removeImgBtn;
+    removeImgBtn.addEventListener('click', () => {
+      view.applyCardCoverField('coverImage', '');
+      view.applyCardCoverField('coverImageSource', '');
+      view.applyCardCoverField('coverMode', 'none');
+    });
+
+    // 2.3.2 途径 1：搜图关键词输入框 + 搜 Unsplash 按钮（定向关键词搜索栏）
+    const searchRow = toolsWrap.createDiv({ cls: 'icard-settings-cover-search-row' });
+    const kwInput = /** @type {HTMLInputElement} */ (
+      /** @type {unknown} */ (searchRow.createEl('input', {
+        type: 'text',
+        cls: 'icard-settings-text',
+        attr: { placeholder: '输入关键词搜摄影图 (如: 极简 建筑 科技)', title: '用于 Unsplash 摄影搜索' },
+      }))
+    );
+    refs.coverKeywordsInput = kwInput;
+
+    const btnUnsplash = searchRow.createEl('button', {
+      cls: 'icard-settings-cover-btn icard-settings-cover-search-btn',
+      text: '搜索',
+      attr: { type: 'button', title: '根据关键词精准搜索 Unsplash 摄影大片' },
+    });
+
+    kwInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        btnUnsplash.click();
+      }
+    });
+
+    // 2.3.3 途径 1 & 2：快捷图源操作工具行（随机摄影 / 笔记/本地，免输关键词）
+    const toolsRow = toolsWrap.createDiv({ cls: 'icard-settings-cover-tools' });
 
     // 按钮 1：随机摄影（Picsum 零配置免关键词）
     const btnPicsum = toolsRow.createEl('button', {
@@ -119,9 +190,9 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       }
     });
 
-    // 2.3 隐藏的原生本地图片文件选择器
+    // 隐藏的原生本地图片文件选择器
     const hiddenFileInput = /** @type {HTMLInputElement} */ (
-      /** @type {unknown} */ (content.createEl('input', {
+      /** @type {unknown} */ (toolsWrap.createEl('input', {
         type: 'file',
         attr: { accept: 'image/*', style: 'display: none;' },
       }))
@@ -214,30 +285,6 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       menu.showAtMouseEvent(e);
     });
 
-    // 2.4 搜图关键词输入框 + 搜 Unsplash 按钮（定向关键词搜索栏）
-    const searchRow = content.createDiv({ cls: 'icard-settings-cover-search-row' });
-    const kwInput = /** @type {HTMLInputElement} */ (
-      /** @type {unknown} */ (searchRow.createEl('input', {
-        type: 'text',
-        cls: 'icard-settings-text',
-        attr: { placeholder: '输入关键词搜摄影图 (如: 极简 建筑 科技)', title: '用于 Unsplash 摄影搜索' },
-      }))
-    );
-    refs.coverKeywordsInput = kwInput;
-
-    const btnUnsplash = searchRow.createEl('button', {
-      cls: 'icard-settings-cover-btn icard-settings-cover-search-btn',
-      text: '搜 Unsplash',
-      attr: { type: 'button', title: '根据左侧关键词精准搜索 Unsplash 摄影大片' },
-    });
-
-    kwInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        btnUnsplash.click();
-      }
-    });
-
     // 搜索 Unsplash 点击处理
     btnUnsplash.addEventListener('click', async () => {
       const currentLayout = view.getCurrentCardLayoutSettings();
@@ -277,41 +324,9 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       }
     });
 
-    // 2.5 配图卡（已有配图时展示）
-    const previewBox = content.createDiv({ cls: 'icard-settings-cover-preview-box hidden' });
-    refs.coverImagePreviewWrap = previewBox;
-
-    const thumbImg = /** @type {HTMLImageElement} */ (
-      /** @type {unknown} */ (previewBox.createEl('img', { cls: 'icard-settings-cover-thumb' }))
-    );
-    refs.coverImageThumb = thumbImg;
-
-    const infoCol = previewBox.createDiv({ cls: 'icard-settings-cover-info' });
-    refs.coverImagePreviewName = infoCol.createEl('span', { cls: 'icard-settings-cover-preview-name' });
-    refs.coverImagePreviewMeta = infoCol.createEl('span', { cls: 'icard-settings-note', text: '已启用' });
-    thumbImg.addEventListener('load', () => {
-      const w = thumbImg.naturalWidth;
-      const h = thumbImg.naturalHeight;
-      if (w && h && refs.coverImagePreviewMeta) {
-        refs.coverImagePreviewMeta.textContent = `${w} × ${h} · 已启用`;
-      }
-    });
-
-    const removeImgBtn = previewBox.createEl('button', {
-      cls: 'icard-settings-cover-remove',
-      text: '移除',
-      attr: { type: 'button', title: '移除封面配图' },
-    });
-    refs.coverImageRemoveBtn = removeImgBtn;
-    removeImgBtn.addEventListener('click', () => {
-      view.applyCardCoverField('coverImage', '');
-      view.applyCardCoverField('coverImageSource', '');
-      view.applyCardCoverField('coverMode', 'none');
-    });
-
-    // 2.6 进阶 AI 生图折叠组（低频进阶，默认收起）
+    // 2.3.4 途径 3：进阶 AI 生图折叠组（低频进阶，默认收起）
     const aiDetails = /** @type {HTMLDetailsElement} */ (
-      /** @type {unknown} */ (content.createEl('details', {
+      /** @type {unknown} */ (toolsWrap.createEl('details', {
         cls: 'apple-settings-details icard-settings-cover-ai',
       }))
     );
@@ -483,15 +498,26 @@ export function renderCardCoverValues(view, refs, settings) {
     const session = view.getCardSettingsSession();
     const fields = session && typeof session.getCoverFields === 'function'
       ? session.getCoverFields()
-      : { title: '', author: '', date: '', excerpt: '', coverMode: 'adaptive', coverImageStyle: '3d-clay' };
+      : { title: '', author: '', date: '', excerpt: '', coverMode: 'none', coverImageStyle: '3d-clay' };
 
     for (const [key, input] of Object.entries(refs.coverInputs || {})) {
       if (document.activeElement === input) continue;
       input.value = String(fields[key] || '');
     }
 
+    const currentMode = fields.coverMode || 'none';
     if (refs.coverModeSelect) {
-      refs.coverModeSelect.value = fields.coverMode || 'adaptive';
+      refs.coverModeSelect.value = currentMode;
+    }
+
+    const isPureText = currentMode === 'none';
+
+    // 渐进披露：纯文字模式展示快速唤起入口并折叠配图工具组；配图模式展开工具组
+    if (refs.coverAddImageBtn) {
+      refs.coverAddImageBtn.classList.toggle('hidden', !isPureText);
+    }
+    if (refs.coverImageToolsWrap) {
+      refs.coverImageToolsWrap.classList.toggle('hidden', isPureText);
     }
 
     if (refs.coverStyleSelect) {
@@ -506,11 +532,10 @@ export function renderCardCoverValues(view, refs, settings) {
       });
     }
 
-    if (refs.coverKeywordsInput && document.activeElement !== refs.coverKeywordsInput && !refs.coverKeywordsInput.value) {
-      refs.coverKeywordsInput.value = (fields.title || '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9\s]/g, ' ').trim().slice(0, 20);
-    }
+    // 关键词输入框默认留空，由 placeholder 提供搜图指引
 
-    const hasImage = Boolean(fields.coverImage);
+    // 仅在非纯文字模式且存在有效配图时展示当前配图卡
+    const hasImage = Boolean(fields.coverImage) && !isPureText;
     if (refs.coverImagePreviewWrap) {
       refs.coverImagePreviewWrap.classList.toggle('hidden', !hasImage);
       if (hasImage && refs.coverImageThumb) {

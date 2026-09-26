@@ -3539,23 +3539,72 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 }
 .apple-settings-card-wrapper .icard-settings-cover-remove:hover { color: var(--text-normal); }
 
+/* 封面配图工具组（非纯文字排版时渐进展开） */
+.apple-settings-card-wrapper .icard-settings-cover-tools-wrap:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* 「添加封面配图」快速唤起按钮（纯文字模式下展示） */
+.apple-settings-card-wrapper .icard-settings-cover-add-btn:not(.hidden) {
+  width: 100%;
+  height: 32px;
+  margin-top: 8px;
+  padding: 0 12px;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 6px;
+  background-color: var(--background-secondary);
+  color: var(--apple-accent, var(--text-accent));
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.apple-settings-card-wrapper .icard-settings-cover-add-btn:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--apple-accent, var(--text-accent));
+}
+
+/* 渐进披露通用隐藏规则（使用类特异性，禁止 !important） */
+.apple-settings-card-wrapper .hidden,
+.apple-settings-card-wrapper [hidden] {
+  display: none;
+}
+
 /* 封面搜索与快捷图源操作工具行 */
 .icard-settings-cover-search-row {
   display: flex;
   gap: 6px;
   width: 100%;
-  margin-top: 6px;
+  margin-top: 0;
   align-items: center;
 }
 .icard-settings-cover-search-row .icard-settings-text {
   flex: 1 1 auto;
+  width: 0;
+  min-width: 0;
   margin-top: 0;
 }
-.apple-settings-card-wrapper .icard-settings-cover-search-btn {
+.apple-settings-card-wrapper .icard-settings-cover-btn.icard-settings-cover-search-btn {
   flex: 0 0 auto;
-  height: 31px;
-  padding: 0 10px;
+  flex-shrink: 0;
+  width: auto;
+  min-width: 58px;
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 500;
   white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 /* 封面图源操作工具行（随机摄影 / 搜 Unsplash / 笔记/本地） */
@@ -3563,7 +3612,7 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   display: flex;
   gap: 6px;
   width: 100%;
-  margin-top: 6px;
+  margin-top: 0;
 }
 
 .apple-settings-card-wrapper .icard-settings-cover-btn {
@@ -3599,26 +3648,25 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 }
 
 /* —— 侧边栏双子 Tab 导航（排版 Token vs 封面设置）——
-   透明背景，无底线，纯净悬浮于画布之上。 */
+   纯净透明无白底，自然融入浮层磨砂画布之上。 */
 .icard-settings-nav {
-  position: sticky;
-  top: -24px;
-  z-index: 6;
-  margin: -24px 0 6px;
-  padding: 24px 0 10px;
+  margin: 0 0 12px 0;
+  padding: 0;
   background: transparent;
-  border-bottom: none;
+  border: none;
+  box-shadow: none;
 }
 
 .theme-dark .icard-settings-nav {
   background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
-/* 移动端浮层的上内边距是 12px，抵消量同步 */
+/* 移动端浮层间距对齐 */
 .apple-converter-container.apple-converter-mobile .icard-settings-nav {
-  margin-top: -12px;
-  padding-top: 12px;
-  top: -12px;
+  margin-top: 0;
+  padding-top: 0;
 }
 
 /* —— 子 Tab 分段控件（排版 Token vs 封面设置）——
@@ -3903,7 +3951,7 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   resize: vertical;
   min-height: 54px;
 }
-.icard-settings-cover-preview-box {
+.apple-settings-card-wrapper .icard-settings-cover-preview-box:not(.hidden) {
   position: relative;
   display: flex;
   align-items: center;

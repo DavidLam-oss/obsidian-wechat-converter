@@ -527,6 +527,38 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(details.open).toBe(true);
     });
 
+    it("渐进披露：纯文字模式折叠图源工具并隐藏配图卡，点击添加配图或移除配图自适应联动", () => {
+      session.applyLayoutSettings({ coverEnabled: true });
+      session.applyCoverFields({ coverMode: "none", coverImage: "data:image/png;base64,abc" });
+      view.renderCardSettingsValues();
+
+      const refs = view.cardSettingsRefs;
+      // ① 纯文字模式下：唤起按钮可见，工具组折叠隐藏，配图预览卡隐藏（即使有 coverImage 也不展示）
+      expect(refs.coverAddImageBtn.classList.contains("hidden")).toBe(false);
+      expect(refs.coverImageToolsWrap.classList.contains("hidden")).toBe(true);
+      expect(refs.coverImagePreviewWrap.classList.contains("hidden")).toBe(true);
+
+      // ② 点击「添加封面配图」快速唤起入口：切换为 adaptive 版式并展开工具组
+      refs.coverAddImageBtn.click();
+      expect(session.getCoverFields().coverMode).toBe("adaptive");
+      view.renderCardSettingsValues();
+
+      expect(refs.coverAddImageBtn.classList.contains("hidden")).toBe(true);
+      expect(refs.coverImageToolsWrap.classList.contains("hidden")).toBe(false);
+      // 有 coverImage 且处于 adaptive 时，配图卡正常展示
+      expect(refs.coverImagePreviewWrap.classList.contains("hidden")).toBe(false);
+
+      // ③ 点击配图卡「移除」按钮：清除图片并自动切回纯文字模式
+      refs.coverImageRemoveBtn.click();
+      expect(session.getCoverFields().coverMode).toBe("none");
+      expect(session.getCoverFields().coverImage).toBe("");
+      view.renderCardSettingsValues();
+
+      expect(refs.coverAddImageBtn.classList.contains("hidden")).toBe(false);
+      expect(refs.coverImageToolsWrap.classList.contains("hidden")).toBe(true);
+      expect(refs.coverImagePreviewWrap.classList.contains("hidden")).toBe(true);
+    });
+
     it("点击封面开关行（非开关本体）同样能切换封面", () => {
       const row = view.cardSettingsWrapper.querySelector(".icard-settings-subpanel-cover .icard-settings-toggle-row");
       expect(row).toBeTruthy();
