@@ -239,6 +239,87 @@ export async function fetchUnsplashCoverImage(options = {}) {
 }
 
 /**
+ * 分页或批量检索 Unsplash 摄影图片候选列表
+ * @param {object} options
+ * @param {string} options.apiKey Unsplash Access Key
+ * @param {string} [options.query] 搜索关键词（为空时拉取精选随机图）
+ * @param {number} [options.page=1]
+ * @param {number} [options.perPage=12]
+ * @param {string} [options.ratioId='3:4'] 卡片比例
+ * @param {'portrait' | 'squarish' | 'landscape'} [options.orientation]
+ * @param {Function} [options.requestUrl]
+ * @returns {Promise<{ total: number, totalPages: number, results: Array<{ id: string, thumbUrl: string, regularUrl: string, rawUrl: string, authorName: string, authorUsername: string, authorLink: string, altDescription: string }> }>}
+ */
+export async function fetchUnsplashPhotos(options = {}) {
+  const apiKey = (options.apiKey || '').trim();
+  if (!apiKey) {
+    throw new Error('未配置 Unsplash Access Key');
+  }
+
+  const query = (options.query || '').trim();
+  const page = Math.max(1, Number(options.page) || 1);
+  const perPage = Math.min(30, Math.max(1, Number(options.perPage) || 12));
+  const orientation = options.orientation || resolveUnsplashOrientation(options.ratioId || '3:4');
+
+  const endpoint = query
+    ? `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}&orientation=${orientation}&content_filter=high`
+    : `https://api.unsplash.com/photos/random?count=${perPage}&orientation=${orientation}&content_filter=high&ts=${Date.now()}`;
+
+  const reqFn = resolveRequestExecutor(options.requestUrl);
+  let rawResponse = null;
+
+  if (reqFn) {
+    const res = await reqFn({
+      url: endpoint,
+      method: 'GET',
+      headers: {
+        Authorization: `Client-ID ${apiKey}`,
+      },
+      throw: false,
+    });
+    rawResponse = /** @type {{ status?: number, text?: string, json?: unknown }} */ (res);
+  } else if (typeof fetch === 'function') {
+    const res = await fetch(endpoint, {
+      headers: { Authorization: `Client-ID ${apiKey}` },
+    });
+    const text = await res.text();
+    let json = null;
+    try { json = JSON.parse(text); } catch { json = null; }
+    rawResponse = { status: res.status, text, json };
+  } else {
+    throw new Error('当前环境缺少网络请求能力');
+  }
+
+  const status = rawResponse?.status || 0;
+  if (status >= 400 || !rawResponse?.json) {
+    const errText = rawResponse?.text || `HTTP ${status}`;
+    throw new Error(`Unsplash 检索失败 (${status}): ${errText}`);
+  }
+
+  const data = /** @type {any} */ (rawResponse.json);
+  const rawList = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : []);
+  const total = typeof data?.total === 'number' ? data.total : rawList.length;
+  const totalPages = typeof data?.total_pages === 'number' ? data.total_pages : 1;
+
+  const results = rawList.map((item) => {
+    const urls = item?.urls || {};
+    const user = item?.user || {};
+    return {
+      id: String(item?.id || Math.random().toString(36).slice(2)),
+      thumbUrl: String(urls.small || urls.thumb || urls.regular || ''),
+      regularUrl: String(urls.regular || urls.raw || ''),
+      rawUrl: String(urls.raw || urls.full || urls.regular || ''),
+      authorName: String(user.name || user.username || '摄影师'),
+      authorUsername: String(user.username || ''),
+      authorLink: String(user.links?.html || 'https://unsplash.com'),
+      altDescription: String(item?.alt_description || item?.description || 'Unsplash 摄影图'),
+    };
+  }).filter((item) => !!item.thumbUrl);
+
+  return { total, totalPages, results };
+}
+
+/**
  * 提取当前笔记中的图片引用（支持 ![[image.png]] 与 ![alt](path)）
  * @param {string} markdown
  * @returns {Array<{ name: string, path: string, isWiki: boolean }>}

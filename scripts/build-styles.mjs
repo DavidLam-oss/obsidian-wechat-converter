@@ -48,6 +48,7 @@ const STYLE_FRAGMENTS = [
   "styles/settings-tabs.css",
   "styles/feishu.css",
   "styles/material-picker.css",
+  "styles/card-media-picker.css",
   "styles/about-settings.css",
 ];
 

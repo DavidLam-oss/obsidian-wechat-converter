@@ -33,6 +33,7 @@ import {
 } from '../../services/ai-layout/providers.js';
 import { Notice } from '../apple-style-view-shared.js';
 import { obsidianApi, getObsidianRequestUrl } from '../../services/obsidian-compat.js';
+import { showCardMediaPickerModal } from './card-media-picker-modal.js';
 
 /**
  * 构建卡片侧边栏「封面设置」子面板
@@ -84,14 +85,30 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
     });
     refs.coverModeSelect = modeSelect;
 
-    // 2.2 「添加封面配图」快速唤起入口（仅在纯文字排版时展示）
+    // 2.2 「添加封面配图」快速唤起入口（唤起独立 Media Picker 选图工作台）
+    const openMediaPicker = (initialTab = 'unsplash') => {
+      showCardMediaPickerModal({
+        view,
+        initialTab,
+        onSelect: ({ dataUrl, source }) => {
+          const session = view.getCardSettingsSession();
+          if (session?.getCoverFields?.()?.coverMode === 'none') {
+            view.applyCardCoverField('coverMode', 'adaptive');
+          }
+          view.applyCardCoverField('coverImageSource', source);
+          view.applyCardCoverField('coverImage', dataUrl);
+        },
+      });
+    };
+
     const addImageBtn = content.createEl('button', {
       cls: 'icard-settings-cover-add-btn',
       text: '+ 添加封面配图',
-      attr: { type: 'button', title: '为封面添加配图，切换为主题自适应版式' },
+      attr: { type: 'button', title: '打开独立选图工作台为封面添加配图' },
     });
     addImageBtn.addEventListener('click', () => {
       view.applyCardCoverField('coverMode', 'adaptive');
+      openMediaPicker('unsplash');
     });
     refs.coverAddImageBtn = addImageBtn;
 
@@ -117,6 +134,15 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       if (w && h && refs.coverImagePreviewMeta) {
         refs.coverImagePreviewMeta.textContent = `${w} × ${h} · 已启用`;
       }
+    });
+
+    const changeImgBtn = previewBox.createEl('button', {
+      cls: 'icard-settings-cover-btn',
+      text: '更换',
+      attr: { type: 'button', title: '打开独立选图工作台更换封面配图' },
+    });
+    changeImgBtn.addEventListener('click', () => {
+      openMediaPicker();
     });
 
     const removeImgBtn = previewBox.createEl('button', {
@@ -155,8 +181,17 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       }
     });
 
-    // 2.3.3 途径 1 & 2：快捷图源操作工具行（随机摄影 / 笔记/本地，免输关键词）
+    // 2.3.3 快捷图源操作工具行（挑图工作台 / 随机摄影 / 笔记/本地，免输关键词）
     const toolsRow = toolsWrap.createDiv({ cls: 'icard-settings-cover-tools' });
+
+    const btnMediaPicker = toolsRow.createEl('button', {
+      cls: 'icard-settings-cover-btn',
+      text: '挑图工作台',
+      attr: { type: 'button', title: '打开独立选图工作台（Unsplash 大网格 / 笔记插图 / AI 生图）' },
+    });
+    btnMediaPicker.addEventListener('click', () => {
+      openMediaPicker();
+    });
 
     // 按钮 1：随机摄影（Picsum 零配置免关键词）
     const btnPicsum = toolsRow.createEl('button', {
@@ -331,7 +366,7 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       const unsplashKey = (view.plugin?.settings?.unsplashAccessKey || '').trim();
 
       if (!unsplashKey) {
-        new Notice('未配置 Unsplash Key，先为您随机获取精美摄影图；如需按词搜索请在设置中配置 Key');
+        new Notice('未配置 Unsplash Access Key，已自动获取 Picsum 精选摄影；如需按词精准搜索请前往插件设置「AI 服务」配置 Key');
         btnPicsum.click();
         return;
       }

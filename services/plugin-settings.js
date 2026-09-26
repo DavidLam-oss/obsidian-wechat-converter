@@ -144,6 +144,7 @@ export function createDefaultSettings() {
     wechatAppId: '',
     wechatAppSecret: '',
     ai: createDefaultAiSettings(),
+    unsplashAccessKey: '',
     // 图片卡片全局默认（C02）：新会话/新导出的初值，会话内调整不写回
     cardDefaults: createDefaultCardSettings(),
   };
@@ -202,7 +203,7 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
     settings.wechatAppId = '';
     settings.wechatAppSecret = '';
     didMigrate = true;
-    console.debug('✅ 已将旧账号配置迁移到新格式');
+    console.debug('[设置迁移] 已将旧账号配置迁移到新格式');
   }
 
   settings.wechatAccounts = settings.wechatAccounts.map((account) => {
@@ -235,7 +236,7 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
   if (!currentTemplate && legacyRootDir && legacyTarget === 'folder') {
     settings.cleanupDirTemplate = `${legacyRootDir}/{{note}}_img`;
     didMigrate = true;
-    console.debug('✅ 已将旧清理配置迁移为目录模板 cleanupDirTemplate');
+    console.debug('[设置迁移] 已将旧清理配置迁移为目录模板 cleanupDirTemplate');
   }
 
   if (Object.prototype.hasOwnProperty.call(settings, 'cleanupRootDir')) {
@@ -251,6 +252,14 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
   settings.lineHeight = normalizeSpacingValue(settings.lineHeight, 1.4, 2.2);
   settings.paragraphGap = normalizeSpacingValue(settings.paragraphGap, 8, 40);
   settings.letterSpacing = normalizeSpacingValue(settings.letterSpacing, 0, 2);
+
+  // Unsplash Access Key：去除多余空白字符
+  const rawUnsplashKey = settings.unsplashAccessKey;
+  const normalizedUnsplashKey = typeof rawUnsplashKey === 'string' ? rawUnsplashKey.trim() : '';
+  if (settings.unsplashAccessKey !== normalizedUnsplashKey) {
+    settings.unsplashAccessKey = normalizedUnsplashKey;
+    didMigrate = true;
+  }
 
   // 图片卡片全局默认（C02）：非法枚举/越界/非对象 → 回落钳制；不影响其他键
   const rawCardDefaults = data.cardDefaults;

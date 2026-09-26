@@ -32,13 +32,10 @@ import {
   Setting,
   Notice,
   AI_LAYOUT_SELECTION_AUTO,
-  AI_PROVIDER_KINDS,
-  COMMON_AI_PRESETS,
   getLayoutFamilyList,
   getColorPaletteList,
   isAiProviderRunnable,
   summarizeAiProviderIssues,
-  getAiProviderIssues,
   normalizeArticleLayoutCacheEntry,
   setDestructiveButtonCompat,
   refreshSettingTabCompat,
@@ -47,10 +44,9 @@ import {
   getObsidianRequestUrl,
   getObsidianRequest,
   toReadableError,
-  normalizeAiProvider,
-  createObsidianModal,
   getActiveWindowValue,
 } from "../apple-style-view-shared.js";
+import { showEditAiProviderModal } from "./ai-provider-modal.js";
 
 /**
  * 渲染独立「AI 服务」Tab 页面
@@ -126,19 +122,19 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
       const capRow = info.createDiv({ cls: "wechat-account-appid", attr: { style: "display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;" } });
       if (provider.supportsText !== false) {
         capRow.createEl("span", {
-          text: "📝 文本: " + (provider.textModel || provider.model || "未设置"),
+          text: "文本: " + (provider.textModel || provider.model || "未设置"),
           attr: { style: "font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--background-modifier-border); color: var(--text-normal);" },
         });
       }
       if (provider.supportsImage === true) {
         capRow.createEl("span", {
-          text: "🎨 生图: " + (provider.imageModel || "未设置"),
+          text: "生图: " + (provider.imageModel || "未设置"),
           attr: { style: "font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--background-modifier-border); color: var(--text-accent);" },
         });
       }
       if (provider.supportsText === false && !provider.supportsImage) {
         capRow.createEl("span", {
-          text: "⚠️ 未启用任何能力",
+          text: "未启用任何能力",
           attr: { style: "font-size: 11px; color: var(--text-error);" },
         });
       }
@@ -205,9 +201,9 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
             provider,
             createObsidianFetchAdapter({ requestUrl: getObsidianRequestUrl(), request: getObsidianRequest() })
           );
-          new NoticeCtor("✅ " + provider.name + " 连通性测试通过！");
+          new NoticeCtor(provider.name + " 连通性测试通过！");
         } catch (error) {
-          new NoticeCtor("❌ " + provider.name + " 连接失败: " + toReadableError(error).message);
+          new NoticeCtor(provider.name + " 连接失败: " + toReadableError(error).message);
         }
         testBtn.disabled = false;
         testBtn.textContent = "测试";
@@ -431,266 +427,101 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
   new SettingCtor(containerEl)
     .setName("侧边栏操作提示")
     .setDesc("提示：在转换器视图切换到「卡片」模式，点击右上角设置图标打开「封面设置」Tab，即可选定风格模板并一键生成封面。");
-}
-
-/**
- * 弹出添加 / 编辑 AI Provider 模态框
- * @param {AppleStyleSettingTabContract} tab
- * @param {AiProviderLike | null} provider
- */
-export function showEditAiProviderModal(tab, provider) {
-  const modal = createObsidianModal(tab.app);
-  modal.titleEl.setText(provider ? "编辑 AI Provider" : "添加 AI Provider");
-
-  const form = modal.contentEl.createDiv();
-
-  // 快捷预设选择（方便一键填充）
-  const presetGroup = form.createDiv({ cls: "wechat-form-group" });
-  presetGroup.createEl("label", { text: "常用服务商预设（可选）" });
-  const presetSelectWrap = presetGroup.createDiv({ cls: "wechat-form-select-wrap" });
-  const presetSelect = presetSelectWrap.createEl("select", { cls: "wechat-form-select" });
-  presetSelect.createEl("option", { value: "", text: "选择预设快速填入..." });
-  COMMON_AI_PRESETS.forEach((preset) => {
-    presetSelect.createEl("option", { value: preset.id, text: preset.label });
-  });
-
-  // 名称输入
-  const nameGroup = form.createDiv({ cls: "wechat-form-group" });
-  nameGroup.createEl("label", { text: "Provider 名称" });
-  const nameInput = nameGroup.createEl("input", {
-    type: "text",
-    placeholder: "例如：SiliconFlow / OpenAI 官方 / 自建网关",
-    value: provider?.name || "",
-  });
-
-  // 备注输入
-  const notesGroup = form.createDiv({ cls: "wechat-form-group" });
-  notesGroup.createEl("label", { text: "备注说明 (可选)" });
-  const notesInput = notesGroup.createEl("input", {
-    type: "text",
-    placeholder: "例如：免费额度 / 主力生图与排版 / 公司报销",
-    value: provider?.notes || "",
-  });
-
-  // 类型选择
-  const kindGroup = form.createDiv({ cls: "wechat-form-group" });
-  kindGroup.createEl("label", { text: "接口协议类型" });
-  const kindSelectWrap = kindGroup.createDiv({ cls: "wechat-form-select-wrap" });
-  const kindSelect = kindSelectWrap.createEl("select", { cls: "wechat-form-select" });
-  const providerKinds = [
-    { value: AI_PROVIDER_KINDS.OPENAI_COMPATIBLE, label: "OpenAI 兼容接口 (推荐)" },
-    { value: AI_PROVIDER_KINDS.GEMINI, label: "Gemini 格式" },
-    { value: AI_PROVIDER_KINDS.ANTHROPIC, label: "Anthropic 格式" },
-  ];
-  providerKinds.forEach((kind) => {
-    const option = kindSelect.createEl("option", { value: kind.value, text: kind.label });
-    if ((provider?.kind || AI_PROVIDER_KINDS.OPENAI_COMPATIBLE) === kind.value) {
-      option.selected = true;
-    }
-  });
-
-  // Base URL 输入
-  const baseUrlGroup = form.createDiv({ cls: "wechat-form-group" });
-  baseUrlGroup.createEl("label", { text: "Base URL" });
-  const baseUrlInput = baseUrlGroup.createEl("input", {
-    type: "text",
-    placeholder: "https://api.openai.com/v1 或 https://api.siliconflow.cn/v1",
-    value: provider?.baseUrl || "https://api.openai.com/v1",
-  });
-
-  // API Key 输入（带明暗文切换）
-  const apiKeyGroup = form.createDiv({ cls: "wechat-form-group" });
-  apiKeyGroup.createEl("label", { text: "API Key" });
-  const apiKeyWrap = apiKeyGroup.createDiv({ attr: { style: "position: relative; display: flex; align-items: center;" } });
-  const apiKeyInput = apiKeyWrap.createEl("input", {
-    type: "password",
-    placeholder: "sk-...",
-    value: provider?.apiKey || "",
-    attr: { style: "width: 100%; padding-right: 40px;" },
-  });
-  const toggleVisibilityBtn = apiKeyWrap.createEl("button", {
-    text: "👁️",
-    cls: "wechat-btn-small",
-    attr: { type: "button", style: "position: absolute; right: 4px; padding: 2px 8px;" },
-  });
-  toggleVisibilityBtn.onclick = () => {
-    apiKeyInput.type = apiKeyInput.type === "password" ? "text" : "password";
-  };
 
   // =========================================================================
-  // 能力区分：文本模型 & 生图模型
+  // 第四部分：摄影图库与搜索服务（Unsplash）
   // =========================================================================
-  const capSection = form.createDiv({
-    cls: "apple-settings-area",
-    attr: { style: "margin: 12px 0; padding: 12px; background: var(--background-secondary); border-radius: 6px;" },
-  });
-  capSection.createEl("div", {
-    text: "支持能力与用途（至少勾选一项）",
-    attr: { style: "font-weight: 600; margin-bottom: 8px; font-size: 13px;" },
-  });
+  new SettingCtor(containerEl)
+    .setName("摄影图库与搜索服务")
+    .setDesc("配置摄影图库 API 凭据。配合小红书/图片卡片封面，支持按关键词精准搜索高质量摄影大片。")
+    .setHeading();
 
-  // 1. 文本模型能力
-  const textCapWrap = capSection.createDiv({ attr: { style: "margin-bottom: 10px;" } });
-  const textCapLabel = textCapWrap.createEl("label", { attr: { style: "display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer;" } });
-  const textCapCheckbox = textCapLabel.createEl("input", {
-    type: "checkbox",
-  });
-  textCapCheckbox.checked = provider ? provider.supportsText !== false : true;
-  textCapLabel.createSpan({ text: "📝 文本模型（用于公众号 AI 编排与文章分析）" });
+  const unsplashSetting = new SettingCtor(containerEl)
+    .setName("Unsplash Access Key")
+    .setDesc("用于卡片封面精准关键词搜索。个人免费开发者账号每小时可享有 50 次搜索额度。");
 
-  const textModelGroup = textCapWrap.createDiv({ attr: { style: "margin: 6px 0 0 24px;" } });
-  const textModelInput = textModelGroup.createEl("input", {
-    type: "text",
-    placeholder: "文本模型名称，如 deepseek-ai/DeepSeek-V3 或 gpt-4.1-mini",
-    value: provider?.textModel || provider?.model || "gpt-4.1-mini",
-    attr: { style: "width: 100%;" },
+  /** @type {HTMLInputElement | null} */
+  let unsplashKeyInputEl = null;
+
+  unsplashSetting.addText((text) => {
+    unsplashKeyInputEl = text.inputEl;
+    text.inputEl.type = "password";
+    text
+      .setPlaceholder("例如: d8f3a9e...")
+      .setValue(tab.plugin.settings.unsplashAccessKey || "")
+      .onChange(async (value) => {
+        tab.plugin.settings.unsplashAccessKey = (value || "").trim();
+        await tab.plugin.saveSettings();
+      });
   });
 
-  // 2. 生图模型能力
-  const imgCapWrap = capSection.createDiv();
-  const imgCapLabel = imgCapWrap.createEl("label", { attr: { style: "display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer;" } });
-  const imgCapCheckbox = imgCapLabel.createEl("input", {
-    type: "checkbox",
-  });
-  imgCapCheckbox.checked = provider ? provider.supportsImage === true : false;
-  imgCapLabel.createSpan({ text: "🎨 生图模型（用于小红书/图片卡片封面生图）" });
-
-  const imgModelGroup = imgCapWrap.createDiv({ attr: { style: "margin: 6px 0 0 24px;" } });
-  const imgModelInput = imgModelGroup.createEl("input", {
-    type: "text",
-    placeholder: "生图模型名称，如 black-forest-labs/FLUX.1-schnell 或 dall-e-3",
-    value: provider?.imageModel || "",
-    attr: { style: "width: 100%;" },
+  unsplashSetting.addButton((button) => {
+    button
+      .setButtonText("显示")
+      .setTooltip("切换明文与密文显示")
+      .onClick(() => {
+        if (!unsplashKeyInputEl) return;
+        const isPassword = unsplashKeyInputEl.type === "password";
+        unsplashKeyInputEl.type = isPassword ? "text" : "password";
+        button.setButtonText(isPassword ? "隐藏" : "显示");
+      });
   });
 
-  const syncCapDisplay = () => {
-    textModelGroup.setCssStyles({ display: textCapCheckbox.checked ? 'block' : 'none' });
-    imgModelGroup.setCssStyles({ display: imgCapCheckbox.checked ? 'block' : 'none' });
-  };
-  textCapCheckbox.addEventListener("change", syncCapDisplay);
-  imgCapCheckbox.addEventListener("change", syncCapDisplay);
-  syncCapDisplay();
-
-  // 预设选择联动
-  presetSelect.addEventListener("change", () => {
-    const selectedPreset = COMMON_AI_PRESETS.find((p) => p.id === presetSelect.value);
-    if (!selectedPreset) return;
-    if (!nameInput.value.trim() || nameInput.value === "未命名 Provider") {
-      nameInput.value = selectedPreset.label.split(" ")[0];
-    }
-    kindSelect.value = selectedPreset.kind;
-    baseUrlInput.value = selectedPreset.baseUrl;
-    textCapCheckbox.checked = selectedPreset.supportsText;
-    textModelInput.value = selectedPreset.textModel;
-    imgCapCheckbox.checked = selectedPreset.supportsImage;
-    imgModelInput.value = selectedPreset.imageModel;
-    syncCapDisplay();
+  unsplashSetting.addButton((button) => {
+    button
+      .setButtonText("测试连接")
+      .setTooltip("验证 Access Key 有效性")
+      .onClick(async () => {
+        const key = (tab.plugin.settings.unsplashAccessKey || "").trim();
+        if (!key) {
+          new NoticeCtor("请先输入 Unsplash Access Key");
+          return;
+        }
+        button.setButtonText("测试中...");
+        button.setDisabled(true);
+        try {
+          const requestUrlFn = obsidian.requestUrl || getObsidianRequestUrl();
+          const response = await requestUrlFn({
+            url: "https://api.unsplash.com/photos/random?count=1",
+            method: "GET",
+            headers: {
+              Authorization: `Client-ID ${key}`,
+            },
+          });
+          if (response.status === 200) {
+            new NoticeCtor("Unsplash 连接成功，凭据有效");
+          } else {
+            new NoticeCtor(`连接失败 (HTTP ${response.status})，请检查 Access Key 是否正确`);
+          }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          new NoticeCtor(`连接测试失败: ${msg}`);
+        } finally {
+          button.setButtonText("测试连接");
+          button.setDisabled(false);
+        }
+      });
   });
 
-  // 启用状态
-  const enabledGroup = form.createDiv({ cls: "wechat-form-group" });
-  enabledGroup.createEl("label", { text: "启用状态" });
-  const enabledWrap = enabledGroup.createDiv({ cls: "wechat-provider-enabled" });
-  const enabledToggle = enabledWrap.createEl("label", { cls: "apple-toggle" }).createEl("input", {
-    type: "checkbox",
-    cls: "apple-toggle-input",
+  unsplashSetting.addButton((button) => {
+    button
+      .setButtonText("清空")
+      .setTooltip("清空已保存的 Access Key")
+      .onClick(async () => {
+        tab.plugin.settings.unsplashAccessKey = "";
+        if (unsplashKeyInputEl) {
+          unsplashKeyInputEl.value = "";
+        }
+        await tab.plugin.saveSettings();
+        new NoticeCtor("已清空 Unsplash Access Key");
+      });
   });
-  enabledToggle.checked = provider?.enabled !== false;
-  enabledToggle.parentElement.createEl("span", { cls: "apple-toggle-slider" });
-  enabledWrap.createEl("span", {
-    cls: "wechat-provider-enabled-text",
-    text: "启用后方可在文章编排和卡片生图中调用",
-  });
 
-  // 底部按钮栏
-  const btnRow = form.createDiv({ cls: "wechat-modal-buttons" });
-  const cancelBtn = btnRow.createEl("button", { text: "取消" });
-  cancelBtn.onclick = () => modal.close();
-
-  const testBtn = btnRow.createEl("button", { text: "测试连接", cls: "wechat-btn-test" });
-  testBtn.onclick = async () => {
-    const candidate = normalizeAiProvider({
-      id: provider?.id,
-      name: nameInput.value.trim() || "未命名 Provider",
-      kind: kindSelect.value,
-      baseUrl: baseUrlInput.value.trim(),
-      apiKey: apiKeyInput.value.trim(),
-      supportsText: textCapCheckbox.checked,
-      textModel: textModelInput.value.trim(),
-      supportsImage: imgCapCheckbox.checked,
-      imageModel: imgModelInput.value.trim(),
-      notes: notesInput.value.trim(),
-      enabled: enabledToggle.checked,
-    });
-    const issueSummary = summarizeAiProviderIssues(candidate, "any");
-    if (!isAiProviderRunnable(candidate, "any")) {
-      new Notice("请先补全 Provider 配置：" + issueSummary);
-      return;
-    }
-    testBtn.disabled = true;
-    testBtn.textContent = "测试中...";
-    try {
-      await testAiProviderConnection(
-        candidate,
-        createObsidianFetchAdapter({ requestUrl: getObsidianRequestUrl(), request: getObsidianRequest() })
-      );
-      new Notice("✅ AI Provider 连通性测试通过！");
-    } catch (error) {
-      new Notice("❌ 连接失败: " + toReadableError(error).message);
-    }
-    testBtn.disabled = false;
-    testBtn.textContent = "测试连接";
-  };
-
-  const saveBtn = btnRow.createEl("button", { text: "保存", cls: "mod-cta" });
-  saveBtn.onclick = async () => {
-    if (!textCapCheckbox.checked && !imgCapCheckbox.checked) {
-      new Notice("请至少勾选一项能力（文本模型或生图模型）");
-      return;
-    }
-
-    const nextProvider = normalizeAiProvider({
-      id: provider?.id,
-      name: nameInput.value.trim() || "未命名 Provider",
-      kind: kindSelect.value,
-      baseUrl: baseUrlInput.value.trim(),
-      apiKey: apiKeyInput.value.trim(),
-      supportsText: textCapCheckbox.checked,
-      textModel: textModelInput.value.trim(),
-      supportsImage: imgCapCheckbox.checked,
-      imageModel: imgModelInput.value.trim(),
-      notes: notesInput.value.trim(),
-      enabled: enabledToggle.checked,
-    });
-
-    const issues = getAiProviderIssues(nextProvider, "any").filter((issue) => issue !== "disabled");
-    if (issues.length > 0) {
-      new Notice("请补全 Provider 配置：" + summarizeAiProviderIssues(nextProvider, "any"));
-      return;
-    }
-
-    const providers = tab.plugin.settings.ai.providers || [];
-    if (provider) {
-      tab.plugin.settings.ai.providers = providers.map((item) => (item.id === provider.id ? nextProvider : item));
-    } else {
-      tab.plugin.settings.ai.providers.push(nextProvider);
-      if (!tab.plugin.settings.ai.defaultProviderId && nextProvider.supportsText) {
-        tab.plugin.settings.ai.defaultProviderId = nextProvider.id;
-      }
-      if (!tab.plugin.settings.ai.defaultImageProviderId && nextProvider.supportsImage) {
-        tab.plugin.settings.ai.defaultImageProviderId = nextProvider.id;
-      }
-    }
-
-    await tab.plugin.saveSettings();
-    tab.refreshOpenConverterAiState?.();
-    modal.close();
-    refreshSettingTabCompat(tab);
-    new Notice(provider ? "✅ AI Provider 已更新" : "✅ AI Provider 已添加");
-  };
-
-  modal.open();
+  new SettingCtor(containerEl)
+    .setName("申请免费 Access Key 指引")
 }
+
+export { showEditAiProviderModal };
 
 /**
  * 混入 AppleStyleSettingTab 原型的兼容方法对象
@@ -707,3 +538,4 @@ export const aiSettingsMethods = {
     showEditAiProviderModal(this, provider);
   },
 };
+
