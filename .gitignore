@@ -24,41 +24,20 @@ docs/plans/**
 docs/research/
 docs/research/**
 
-# Local skill directories
+# Local skill and assistant directories
 .codex/*
 !.codex/config.toml
-!.codex/hooks.json
-!.codex/hooks/
-!.codex/hooks/**
-!.codex/prompts/
-!.codex/prompts/**
-!.codex/skills/
-!.codex/skills/**
 .codex/**/.DS_Store
 .codex/skills/project-release
 .claude/skills/project-release/
+.cursor/
 
 # Generated vendored dependencies
 lib/markdown-it.min.js
 lib/highlight.min.js
 lib/mathjax-plugin.js
 
-# OpenPRD runtime & intermediate artifacts (never commit to public repository)
-.openprd/harness/
-.openprd/learning/
-.openprd/quality/reports/
-.openprd/knowledge/candidates/
-.openprd/knowledge/drafts/
-.openprd/knowledge/review-signals.jsonl
-.openprd/growth/
-.openprd/visual-evidence/
-.openprd/discovery/runs/
-.openprd/engagements/
-.openprd/reviews/
-.openprd/changes/
-.openprd/state/
-.openprd/design/active/
-.openprd/design/ui-context/
 # Local assistant / tool working dirs (memory logs, review boards, screenshots)
+.openprd/
 .workbuddy/
 .qoder/
