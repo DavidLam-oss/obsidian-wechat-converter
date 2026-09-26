@@ -177,13 +177,19 @@ function renderMissingKeyView(container, view, ratioId, onSelect, onOpenSettings
   emptyBox.createDiv({ cls: 'card-media-picker-empty-title', text: '尚未配置 Unsplash Access Key' });
   emptyBox.createDiv({
     cls: 'card-media-picker-empty-desc',
-    text: '配置官方免费 Access Key 后，即可在此直接按关键词检索世界级摄影作品，每小时享有 50 次免费搜索额度。您也可以先使用免配置的精选随机摄影。',
+    text: '配置官方免费 Access Key 后，即可在此按关键词检索世界级摄影作品，每小时享有 50 次免费搜索额度。您也可以先使用免配置的精选随机摄影。',
+  });
+
+  const previewChips = emptyBox.createDiv({ cls: 'card-media-picker-chips' });
+  previewChips.createSpan({ cls: 'card-media-picker-chip-label', text: '配置后支持：' });
+  POPULAR_TAGS.slice(0, 6).forEach((tag) => {
+    previewChips.createSpan({ cls: 'card-media-picker-chip', text: tag });
   });
 
   const btnRow = emptyBox.createDiv({ cls: 'card-media-picker-empty-actions' });
   const randomBtn = btnRow.createEl('button', {
     cls: 'mod-cta',
-    text: '获取 Picsum 随机摄影',
+    text: '获取 Picsum 随机摄影 (免配置)',
   });
   randomBtn.addEventListener('click', async () => {
     randomBtn.disabled = true;
@@ -198,7 +204,7 @@ function renderMissingKeyView(container, view, ratioId, onSelect, onOpenSettings
       const msg = err instanceof Error ? err.message : String(err);
       new Notice(`获取随机图失败: ${msg}`);
       randomBtn.disabled = false;
-      randomBtn.textContent = '获取 Picsum 随机摄影';
+      randomBtn.textContent = '获取 Picsum 随机摄影 (免配置)';
     }
   });
 

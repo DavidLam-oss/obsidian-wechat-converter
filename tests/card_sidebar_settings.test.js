@@ -247,12 +247,10 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       const refs = view.cardSettingsRefs;
       const wrapper = view.cardSettingsWrapper;
 
-      // 制造「上次的残留」：切到封面设置 + 展开字号与间距 + 手动收起过封面画面
+      // 制造「上次的残留」：切到封面设置 + 展开字号与间距 + 标记封面设置已交互
       view.switchCardSettingsSubTab("cover");
       refs.tuneGroup.open = true;
-      refs.coverAiDetails.open = false;
-      refs.coverAiDetails.dispatchEvent(new Event("toggle"));
-      expect(refs.coverAiUserToggled).toBe(true);
+      refs.coverAiUserToggled = true;
 
       const settingsBefore = view.getCurrentCardLayoutSettings();
 
@@ -268,9 +266,8 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       // ② 「字号与间距」固定收起（对应文章模式的高级选项）
       expect(refs.tuneGroup.open).toBe(false);
 
-      // ③ 「封面画面」进阶 AI 生图默认保持收起（平铺摄影/本地为主力），手动开合标记被清掉
+      // ③ 「封面画面」开合与交互标记被清掉
       expect(refs.coverAiUserToggled).toBe(false);
-      expect(refs.coverAiDetails.open).toBe(false);
 
       // ④ 取值不受影响（复位不等于悄悄改用户设置）
       expect(view.getCurrentCardLayoutSettings()).toEqual(settingsBefore);
@@ -478,10 +475,6 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
         .map((s) => s.querySelector(".apple-setting-label")?.textContent);
       expect(labels).toEqual(["封面页", "封面画面", "封面文案"]);
 
-      const aiDetails = coverPanel.querySelector("details.icard-settings-cover-ai");
-      expect(aiDetails).toBeTruthy();
-      expect(aiDetails.querySelector("summary")?.textContent).toContain("AI 生图进阶设置");
-
       // 作者 + 日期 上下两行（2026-09-21 真机回归：320px 下并排两列摆不下，已撤回）
       const copySection = Array.from(coverPanel.querySelectorAll(".apple-setting-section"))
         .find((s) => s.querySelector(".apple-setting-label")?.textContent === "封面文案");
@@ -490,24 +483,19 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
         .toEqual(["title", "author", "date", "excerpt"]);
       expect(coverPanel.querySelector(".icard-settings-cover-duo")).toBeNull();
 
-      // 主操作唯一：全场只有一枚蓝色实底按钮；三连同款的 .apple-btn-size 不再出现
-      expect(coverPanel.querySelectorAll(".icard-settings-cover-primary").length).toBe(1);
-      expect(coverPanel.querySelectorAll(".apple-btn-size").length).toBe(0);
-      // 「重新填入」降级为文字按钮，「移除配图」降级为小号幽灵按钮
+      // 操作按钮分级合理：「重新填入」为文字按钮，「移除配图」为幽灵按钮，「更换」为次级按钮
       expect(coverPanel.querySelector(".icard-settings-cover-link")).toBeTruthy();
       expect(coverPanel.querySelector(".icard-settings-cover-remove")).toBeTruthy();
+      expect(coverPanel.querySelector(".icard-settings-cover-btn")).toBeTruthy();
     });
 
-    it("封面画面折叠组：摘要回显风格·呈现·配图状态，折叠默认态跟随有无配图", () => {
+    it("封面画面：回显配图来源状态、版式选项与极简职责分离", () => {
       session.applyLayoutSettings({ coverEnabled: true });
+      session.applyCoverFields({ coverMode: "adaptive", coverImage: "data:image/png;base64,abc", coverImageSource: "picsum" });
       view.renderCardSettingsValues();
-      const echo = view.cardSettingsRefs.coverGroupEcho;
-      const details = view.cardSettingsRefs.coverAiDetails;
 
-      // AI 折叠组仅回显自身预设风格（与实际配图解绑，避免误导），且默认收起
-      expect(echo.textContent).toContain("3D 粘土质感");
-      expect(echo.textContent).toContain("预设风格");
-      expect(details.open).toBe(false);
+      const previewName = view.cardSettingsRefs.coverImagePreviewName;
+      expect(previewName.textContent).toBe("Picsum 随机摄影");
 
       // 版式选项包含纯文字排版、自适应、底图和海报
       const modeSelect = view.cardSettingsRefs.coverModeSelect;
@@ -515,16 +503,10 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(modeValues).toContain("none");
       expect(modeValues).toContain("adaptive");
 
-      // 换风格 → 摘要即时跟着变
-      view.cardSettingsRefs.coverStyleSelect.value = "minimal-vector";
-      view.cardSettingsRefs.coverStyleSelect.dispatchEvent(new Event("change"));
-      expect(view.cardSettingsRefs.coverGroupEcho.textContent).toContain("扁平矢量插画");
-
-      // 用户手动展开后，后续同步不再擅自收起（避免「刚展开又被代码收起来」）
-      details.open = true;
-      details.dispatchEvent(new Event("toggle"));
-      view.renderCardSettingsValues();
-      expect(details.open).toBe(true);
+      // 侧边栏不再渲染冗余搜图输入框与 AI 折叠组，保持极简
+      const coverPanel = view.cardSettingsWrapper.querySelector(".icard-settings-subpanel-cover");
+      expect(coverPanel.querySelector(".icard-settings-cover-search-row")).toBeNull();
+      expect(coverPanel.querySelector(".icard-settings-cover-ai")).toBeNull();
     });
 
     it("渐进披露：纯文字模式折叠图源工具并隐藏配图卡，点击添加配图或移除配图自适应联动", () => {
@@ -544,6 +526,7 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
 
       // 选图工作台选定图片后回填（或切换为 adaptive 版式）：展开工具组与配图卡
       view.applyCardCoverField("coverMode", "adaptive");
+      view.applyCardCoverField("coverImage", "data:image/png;base64,abc");
       view.renderCardSettingsValues();
 
       expect(refs.coverAddImageBtn.classList.contains("hidden")).toBe(true);
@@ -597,45 +580,15 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(view.renderCardPreview).toHaveBeenCalled();
     });
 
-    it("点击「笔记/本地」弹出菜单精准识别当前笔记插图并可应用为封面", async () => {
-      session.applyLayoutSettings({ coverEnabled: true });
-      view.cardPreviewPendingInput = {
-        sourcePath: "test-note.md",
-        sourcePathKey: "test-note.md",
-        markdown: `
-# 标题
-正文段落
-![WorkBuddy 签到脚本日志显示 401 未登录报错|400](https://davidrepo-1348433231.cos.ap-guangzhou.myqcloud.com/img/20260926101418732.png)
-        `,
-      };
-      view.renderCardSettingsValues();
+    it("点击「+ 添加封面配图」或「更换」可呼出独立选图工作台", () => {
+      globalThis.__obsidianModalRegistry = [];
+      const addBtn = view.cardSettingsRefs.coverAddImageBtn;
+      expect(addBtn).toBeTruthy();
 
-      const btnPick = Array.from(view.cardSettingsWrapper.querySelectorAll(".icard-settings-cover-btn"))
-        .find((b) => b.textContent?.includes("笔记/本地"));
-      expect(btnPick).toBeTruthy();
-
-      globalThis.__obsidianMenuRegistry = [];
-      await btnPick.click();
-
-      expect(globalThis.__obsidianMenuRegistry.length).toBe(1);
-      const menu = globalThis.__obsidianMenuRegistry[0];
-      const noteItem = menu.items.find((it) => it.title?.includes("WorkBuddy 签到脚本日志显示 401 未登录报错"));
-      expect(noteItem).toBeTruthy();
-
-      // 点击该菜单项，应用笔记远程图片为封面
-      const fakeBinary = new Uint8Array([137, 80, 78, 71]).buffer;
-      const obsidianMock = require("obsidian");
-      obsidianMock.requestUrl = vi.fn().mockResolvedValue({
-        status: 200,
-        headers: { "content-type": "image/png" },
-        arrayBuffer: fakeBinary,
-      });
-
-      await noteItem.onClickHandler();
-      expect(session.getCoverFields().coverMode).toBe("adaptive");
-      expect(session.getCoverFields().coverImageSource).toBe("note");
-      expect(session.getCoverFields().coverImage.startsWith("data:image/png;base64,")).toBe(true);
-      expect(view.renderCardPreview).toHaveBeenCalled();
+      addBtn.click();
+      expect(globalThis.__obsidianModalRegistry.length).toBe(1);
+      const modal = globalThis.__obsidianModalRegistry[0];
+      expect(modal.modalEl.classList.contains("card-media-picker-modal")).toBe(true);
     });
   });
 
