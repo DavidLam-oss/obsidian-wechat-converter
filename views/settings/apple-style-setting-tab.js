@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`../apple-style-view-shared.js`、`./settings-tab-shell.js`、`./wechat-tab.js`、`./ai-section.js`、`./wechat-account-modal.js`、`./confirm-modal.js`。
+关键依赖：`../apple-style-view-shared.js`、`./settings-tab-shell.js`、`./wechat-tab.js`、`./ai-tab.js`、`./wechat-account-modal.js`、`./confirm-modal.js`。
 
 ## 维护规则
 

@@ -129,6 +129,12 @@ async onOpen() {
   }
   this.landingPointerArmListener = () => {
     this.landingGateUserInteracted = true;
+    if (this.landingGateActive && this.lastActiveFile) {
+      this.landingGateActive = false;
+      if (this.converter && typeof this.convertCurrent === 'function') {
+        this.convertCurrent(true);
+      }
+    }
   };
   document.addEventListener('pointerdown', this.landingPointerArmListener, true);
   document.addEventListener('keydown', this.landingPointerArmListener, true);

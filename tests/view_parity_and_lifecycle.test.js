@@ -131,6 +131,53 @@ describe('AppleStyleView native render + lifecycle', () => {
     expect(view.previewContainer.classList.contains('apple-has-content')).toBe(true);
   });
 
+  it('onOpen should unlock landing gate and render when user interacts and note is already active', async () => {
+    const recentFile = {
+      path: 'notes/active-interact.md',
+      basename: 'active-interact',
+      extension: 'md',
+    };
+    const view = new AppleStyleView(null, {
+      settings: { usePhoneFrame: false },
+    });
+    view.containerEl.appendChild(createObsidianLikeElement());
+    view.containerEl.appendChild(createObsidianLikeElement());
+    view.app = {
+      workspace: {
+        getActiveViewOfType: vi.fn(() => ({
+          file: recentFile,
+          editor: { getValue: () => '# active interact' },
+          contentEl: createObsidianLikeElement(),
+        })),
+        getActiveFile: vi.fn(() => recentFile),
+        on: vi.fn(() => ({ eventName: 'registered' })),
+      },
+      vault: {
+        read: vi.fn(async () => '# active interact'),
+      },
+    };
+    view.registerEvent = vi.fn();
+    view.loadDependencies = vi.fn(async () => {});
+    view.converter = {
+      convert: vi.fn(async (md) => `<p>${md}</p>`),
+    };
+    view.renderMarkdownForPreview = vi.fn(async (md) => `<p>${md}</p>`);
+
+    await view.onOpen();
+    expect(view.landingGateActive).toBe(true);
+
+    // 用户交互触发 pointerdown
+    document.dispatchEvent(new Event('pointerdown'));
+
+    expect(view.landingGateActive).toBe(false);
+    expect(view.landingGateUserInteracted).toBe(true);
+    await vi.waitFor(() => {
+      expect(view.currentHtml).toContain('active interact');
+    });
+
+    view.onClose();
+  });
+
   it('onOpen should keep the preview shell when a non-core settings control throws', async () => {
     const recentFile = {
       path: 'notes/settings-failure.md',

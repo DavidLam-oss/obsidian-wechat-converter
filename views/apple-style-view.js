@@ -63,7 +63,7 @@ class AppleStyleView extends ItemView {
     this.theme = null;
     /** @type {TFileLike | null} */
     this.lastActiveFile = null;
-    /** @type {'article' | 'sticker'} */
+    /** @type {'article' | 'sticker' | 'card'} */
     this.previewMode = 'article';
     /**
      * Landing 门控：每次 onOpen 置 true，占位页（Landing Page）保留到用户

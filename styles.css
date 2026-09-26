@@ -4387,6 +4387,32 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 .theme-dark .icard-export-chip.is-success { color: #5fd97e; }
 .theme-dark .icard-export-chip.is-warning { color: #ffb340; }
 .theme-dark .icard-export-chip.is-error { color: #ff7b72; }
+/*
+## 核心功能
+
+图片卡片导出弹窗结果、表单、进度条与操作区样式分片。选择器统一 icard-export- 前缀。
+
+## 输入
+
+接收 Obsidian 主题变量与项目苹果配色 token。
+
+## 输出
+
+输出卡片导出结果展示、选页表单、进度条、省略警告和操作按钮样式。
+
+## 定位
+
+位于 styles/，为 card-export.css 的进度与表单子分片；构建后合并至 styles.css。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、styles/card-export.css。
+
+## 维护规则
+
+- 配色规则：颜色只表达异常与当前进行中的行。
+- 修改样式后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+*/
 
 /* ========================================
    结果卡片（表头：标签 + 操作；路径独占整行、过长换行）

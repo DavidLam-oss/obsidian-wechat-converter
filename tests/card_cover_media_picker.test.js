@@ -525,6 +525,7 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
       const textarea = container.querySelector('.card-media-picker-prompt-textarea');
       expect(textarea).not.toBeNull();
       expect(textarea.value.length).toBeGreaterThan(0);
+      expect(textarea.value).toContain('深度思考与写作');
 
       // 切换风格卡片
       const secondCard = styleCards[1];
@@ -533,6 +534,73 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
 
       const generateBtn = container.querySelector('.mod-cta');
       expect(generateBtn?.textContent).toBe('开始生成封面');
+    });
+
+    it('点击开始生成封面时透传正确的提示词与比例并调用生图服务', async () => {
+      const container = applyExtensions(document.createElement('div'));
+      const mockView = {
+        plugin: {
+          settings: {
+            ai: {
+              providers: [
+                {
+                  id: 'p-1',
+                  name: '测试提供商',
+                  baseUrl: 'https://api.openai.com/v1',
+                  apiKey: 'sk-123',
+                  supportsImage: true,
+                  imageModel: 'dall-e-3',
+                },
+              ],
+              defaultImageProviderId: 'p-1',
+            },
+          },
+        },
+        getCurrentCardCoverFields: vi.fn().mockReturnValue({}),
+        getActiveFileTitle: vi.fn().mockReturnValue('测试笔记标题'),
+        getActiveDocExcerpt: vi.fn().mockReturnValue('测试笔记摘要'),
+      };
+
+      const mockRequestUrl = vi.fn().mockResolvedValue({
+        status: 200,
+        json: {
+          data: [{ b64_json: 'aW1n' }],
+        },
+      });
+
+      renderAiMediaPickerTab({
+        container,
+        view: mockView,
+        ratioId: '3:5',
+        onSelect: vi.fn(),
+        onOpenSettings: vi.fn(),
+      });
+
+      // 提取输入框内容
+      const textarea = container.querySelector('.card-media-picker-prompt-textarea');
+      expect(textarea.value).toContain('测试笔记标题');
+
+      // 替身覆盖 requestUrl
+      const originalRequestUrl = obsidian.requestUrl;
+      obsidian.requestUrl = mockRequestUrl;
+
+      try {
+        const generateBtn = container.querySelector('.mod-cta');
+        await generateBtn.dispatchEvent(new MouseEvent('click'));
+
+        // 等待微任务
+        await new Promise((r) => setTimeout(r, 50));
+
+        expect(mockRequestUrl).toHaveBeenCalled();
+        const callArgs = mockRequestUrl.mock.calls[0][0];
+        const bodyObj = JSON.parse(callArgs.body);
+        expect(bodyObj.prompt).toBeDefined();
+        expect(bodyObj.prompt.length).toBeGreaterThan(0);
+        expect(bodyObj.prompt).toContain('测试笔记标题');
+        expect(bodyObj.size).toBe('1024x1792');
+      } finally {
+        obsidian.requestUrl = originalRequestUrl;
+      }
     });
 
     it('未配置任何 AI 生图 Provider 时展示引导配置提示', () => {

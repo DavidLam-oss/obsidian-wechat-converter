@@ -69,7 +69,11 @@ function stripNonBodyImageRegions(markdown) {
     kept.push(line);
   }
 
-  return kept.join('\n').replace(/%%[\s\S]*?%%/g, '');
+  const withoutComments = kept.join('\n')
+    .replace(/%%[\s\S]*?%%/g, '')
+    .replace(/<!--[\s\S]*?-->/g, '');
+
+  return withoutComments.replace(/`[^`\r\n]+`/g, '');
 }
 
 /**

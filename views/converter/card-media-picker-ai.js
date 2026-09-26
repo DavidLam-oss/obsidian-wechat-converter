@@ -100,8 +100,8 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onO
     const docExcerpt = typeof view.getActiveDocExcerpt === 'function' ? view.getActiveDocExcerpt(100) : '';
     promptTextarea.value = resolveCardCoverPrompt({
       styleId: selectedStyleId,
-      docTitle,
-      docExcerpt,
+      title: docTitle,
+      excerpt: docExcerpt,
     });
   };
 
@@ -148,10 +148,9 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onO
 
     try {
       const dataUrl = await generateCardCoverImage({
-        styleId: selectedStyleId,
-        customPrompt: prompt,
-        ratioId: ratioId || '3:4',
         provider: imageProvider,
+        prompt,
+        aspectRatio: ratioId || '3:4',
       });
 
       generatedDataUrl = dataUrl;

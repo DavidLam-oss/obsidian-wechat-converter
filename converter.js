@@ -112,25 +112,28 @@ function joinVaultPath(...parts) {
 }
 
 /**
+ * 与 services/path-utils.js 保持一致：折叠处理路径，保留前导 ..
  * @param {unknown} filePath
  * @returns {string}
  */
 function collapsePathSegments(filePath) {
-  const normalized = normalizeVaultPath(filePath);
-  if (!normalized) return '';
-  const segments = normalized.split('/');
-  const collapsed = [];
-  for (const seg of segments) {
-    if (!seg || seg === '.') continue;
-    if (seg === '..') {
-      if (collapsed.length > 0) {
-        collapsed.pop();
+  if (typeof filePath !== 'string') return '';
+  const clean = filePath.trim().replace(/\\/g, '/');
+  const parts = clean.split('/');
+  const stack = [];
+  for (const part of parts) {
+    if (!part || part === '.') continue;
+    if (part === '..') {
+      if (stack.length > 0 && stack[stack.length - 1] !== '..') {
+        stack.pop();
+      } else {
+        stack.push('..');
       }
-      continue;
+    } else {
+      stack.push(part);
     }
-    collapsed.push(seg);
   }
-  return collapsed.join('/');
+  return stack.join('/');
 }
 
 /**
@@ -147,6 +150,47 @@ function getFileUrlLocalPath(src) {
   } catch {
     return '';
   }
+}
+
+/**
+ * @param {unknown} app
+ * @returns {string}
+ */
+function getVaultAdapterBasePath(app) {
+  const adapter = isRecord(app) && isRecord(app.vault) ? app.vault.adapter : null;
+  if (!adapter || typeof adapter !== 'object') return '';
+  const basePath = toRecord(adapter).basePath;
+  return typeof basePath === 'string' ? basePath : '';
+}
+
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
+function normalizeAbsoluteLocalPath(value) {
+  let pathValue = String(value || '').trim().replace(/\\/g, '/').replace(/\/{2,}/g, '/');
+  const hasDrivePrefix = /^[a-zA-Z]:\//.test(pathValue);
+  if (!hasDrivePrefix) {
+    pathValue = pathValue.replace(/\/+/g, '/');
+  }
+  return pathValue.replace(/\/+$/, '');
+}
+
+/**
+ * 与 services/image-source-utils.js 的 getVaultRelativePathFromLocalPath 保持同步
+ * @param {unknown} app
+ * @param {string} localPath
+ * @returns {string}
+ */
+function getVaultRelativePathFromLocalPath(app, localPath) {
+  const basePath = getVaultAdapterBasePath(app);
+  if (!basePath || !localPath) return '';
+  const normalizedBase = normalizeAbsoluteLocalPath(basePath);
+  const normalizedLocal = normalizeAbsoluteLocalPath(localPath);
+  if (!normalizedBase || !normalizedLocal) return '';
+  if (normalizedLocal === normalizedBase) return '';
+  if (!normalizedLocal.startsWith(`${normalizedBase}/`)) return '';
+  return normalizeVaultPath(normalizedLocal.slice(normalizedBase.length + 1));
 }
 
 /**
@@ -357,23 +401,29 @@ class AppleStyleConverter {
       const fileUrlLocal = getFileUrlLocalPath(src);
       const rawPath = fileUrlLocal || src;
       // Markdown-it might encode the URL (e.g. %20 for space), but Obsidian expects decoded paths
-      const linkPath = safeDecodeUri(rawPath);
+      const decoded = safeDecodeUri(rawPath);
+      const linkPath = decoded.split(/[?#]/)[0].trim();
       const sourcePath = this.sourcePath;
+
+      // 若为系统绝对路径且位于 Vault 内，提取相对路径
+      const vaultRelative = getVaultRelativePathFromLocalPath(this.app, linkPath);
+      const lookup = vaultRelative || linkPath;
+
       // Resolve using Obsidian's standard API
-      const tFile = this.app.metadataCache?.getFirstLinkpathDest?.(linkPath, sourcePath);
+      const tFile = this.app.metadataCache?.getFirstLinkpathDest?.(lookup, sourcePath);
       if (tFile) {
         return this.app.vault?.getResourcePath?.(tFile) || src;
       }
 
       const vault = this.app.vault;
       const candidates = [];
-      const normalized = normalizeVaultPath(linkPath);
+      const normalized = normalizeVaultPath(lookup);
       if (normalized) candidates.push(normalized);
-      const collapsed = collapsePathSegments(linkPath);
+      const collapsed = collapsePathSegments(lookup);
       if (collapsed && !candidates.includes(collapsed)) candidates.push(collapsed);
 
       const noteDir = getVaultDirname(sourcePath);
-      if (normalized && noteDir && !linkPath.startsWith('/')) {
+      if (normalized && noteDir && !lookup.startsWith('/')) {
         const combined = collapsePathSegments(joinVaultPath(noteDir, normalized));
         if (combined && !candidates.includes(combined)) candidates.push(combined);
       }

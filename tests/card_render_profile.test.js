@@ -12,7 +12,7 @@ import { describe, it, expect } from "vitest";
 import { createCardDocument } from "../services/card-document.js";
 import { getCardTheme, hasCardTheme, buildCardPageCss, DEFAULT_CARD_THEME_ID, CARD_THEME_IDS } from "../services/card-themes.js";
 import { renderInlineMarkdown, renderBlockElement } from "../services/card-render-profile.js";
-import { assembleCardPage, ensurePageStyle, attachOffscreenContainer, capturePage, RATIO_PRESETS, CAPTURE_LIBRARY_IDS } from "../services/card-render-engine.js";
+import { assembleCardPage, ensurePageStyle, releasePageStyle, attachOffscreenContainer, capturePage, RATIO_PRESETS, CAPTURE_LIBRARY_IDS } from "../services/card-render-engine.js";
 
 const SAMPLE = [
   "# 标题一",
@@ -208,5 +208,12 @@ describe("card-render-engine 页面装配", () => {
     expect(style1).toBe(style2);
     expect(style1.textContent).toContain("#ffffff");
     style1.remove();
+  });
+
+  it("releasePageStyle 能够成功清理 document.head 中的主题样式标签", () => {
+    ensurePageStyle(theme);
+    expect(document.getElementById("icard-theme-style")).not.toBeNull();
+    releasePageStyle(document);
+    expect(document.getElementById("icard-theme-style")).toBeNull();
   });
 });

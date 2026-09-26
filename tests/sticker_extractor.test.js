@@ -113,6 +113,9 @@ console.log(1);
       '![[diagram.png]]',
       '~~~',
       '%% ![[comment.png]] %%',
+      '<!-- <img src="html_comment.png"> -->',
+      '<!-- ![[html_wiki.png]] -->',
+      '行内代码 `![[inline_code.png]]` 和 `<img src="inline_html.png">` 测试',
       '![[real.png]]',
     ].join('\n');
     expect(extractMarkdownImageSources(md)).toEqual(['real.png']);

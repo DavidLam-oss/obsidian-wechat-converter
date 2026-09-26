@@ -65,6 +65,7 @@ import {
 } from '../../services/card-resources.js';
 import { renderCardPages, RATIO_PRESETS } from '../../services/card-render-engine.js';
 import { DEFAULT_CARD_THEME_ID, getCardTheme } from '../../services/card-themes.js';
+import { releasePageStyle } from '../../services/card-render-assembly.js';
 import { deriveCoverFields, isCoverUsable } from '../../services/card-cover-model.js';
 import {
   createCardSessionRegistry,
@@ -644,6 +645,8 @@ disposeCardPreview() {
     selfRecord.cardSessionRegistry.disposeAll();
     selfRecord.cardSessionRegistry = null;
   }
+  const ownerDoc = /** @type {Document | undefined} */ (this.containerEl?.ownerDocument);
+  releasePageStyle(ownerDoc);
 }
 ,
 };

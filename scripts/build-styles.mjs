@@ -40,6 +40,7 @@ const STYLE_FRAGMENTS = [
   "styles/card-preview.css",
   "styles/card-settings.css",
   "styles/card-export.css",
+  "styles/card-export-progress.css",
   "styles/settings-base.css",
   "styles/wechat-settings.css",
   "styles/wechat-publish.css",

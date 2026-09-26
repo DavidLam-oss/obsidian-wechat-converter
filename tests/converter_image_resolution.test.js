@@ -28,13 +28,16 @@
 import { describe, it, expect, vi } from 'vitest';
 const { createLegacyConverter } = require('./helpers/render-runtime');
 
-function makeApp(files = {}) {
+function makeApp(files = {}, adapter = {}) {
   const byPath = new Map(Object.entries(files));
   return {
     metadataCache: {
       getFirstLinkpathDest: vi.fn(() => null),
     },
     vault: {
+      adapter: {
+        basePath: adapter.basePath || '',
+      },
       getAbstractFileByPath: vi.fn((filePath) => byPath.get(filePath) || null),
       getResourcePath: vi.fn((file) => `app://local/${encodeURIComponent(file.path)}`),
     },
@@ -90,5 +93,29 @@ describe('converter local image resolution', () => {
     const src = converter.resolveImagePath('file:///notes/images/photo.png');
 
     expect(src).toBe('app://local/notes%2Fimages%2Fphoto.png');
+  });
+
+  it('resolves vault-absolute local file url paths using adapter basePath', async () => {
+    const imageFile = { path: 'notes/images/photo.png', name: 'photo.png', extension: 'png' };
+    const converter = await createLegacyConverter({ sourcePath: 'notes/post.md' });
+    converter.app = makeApp(
+      { [imageFile.path]: imageFile },
+      { basePath: '/Users/david/MyVault' }
+    );
+
+    const src = converter.resolveImagePath('file:///Users/david/MyVault/notes/images/photo.png');
+
+    expect(src).toBe('app://local/notes%2Fimages%2Fphoto.png');
+  });
+
+  it('does not incorrectly match vault root file when note at root references ../photo.png', async () => {
+    const imageFile = { path: 'photo.png', name: 'photo.png', extension: 'png' };
+    const converter = await createLegacyConverter({ sourcePath: 'post.md' });
+    converter.app = makeApp({ [imageFile.path]: imageFile });
+
+    const src = converter.resolveImagePath('../photo.png');
+
+    // 不应错误折叠成 photo.png 并命中根目录文件
+    expect(src).toBe('../photo.png');
   });
 });

@@ -190,6 +190,20 @@ export function ensurePageStyle(theme, ownerDoc, typography) {
 }
 
 /**
+ * 移除卡片页面主题 <style> 标签，避免视图关闭或插件卸载后残留。
+ * @param {Document} [ownerDoc]
+ * @returns {void}
+ */
+export function releasePageStyle(ownerDoc) {
+  const doc = ownerDoc || (typeof window !== 'undefined' ? window.document : null);
+  if (!doc) return;
+  const style = doc.getElementById("icard-theme-style");
+  if (style) {
+    style.remove();
+  }
+}
+
+/**
  * 离屏附着容器：参与布局但不可见、不可交互；调用方负责 detach。
  * @param {Document} [ownerDoc]
  * @returns {{container: HTMLElement, detach: () => void}}

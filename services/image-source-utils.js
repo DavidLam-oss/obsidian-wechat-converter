@@ -9,7 +9,7 @@
 
 ## 输出
 
-输出 `readBlobAsBase64Payload`、`dataUrlToBlob`、`bufferFromBinary`、`inferLocalImageMimeType`、`safeDecodeUriText`、`getFileUrlLocalPath`、`getVaultAdapterBasePath`、`normalizeAbsoluteLocalPath`、`getVaultRelativePathFromLocalPath`、`getVaultDirnameFromPath`，用于资源解析、栅格化、缓存或同步前替换。
+输出 `readBlobAsBase64Payload`、`dataUrlToBlob`、`bufferFromBinary`、`inferLocalImageMimeType`、`safeDecodeUriText`、`getFileUrlLocalPath`、`getVaultAdapterBasePath`、`normalizeAbsoluteLocalPath`、`getVaultRelativePathFromLocalPath`、`getVaultDirnameFromPath`、`resolveVaultImageFile`、`resolveVaultResourceSrc`，用于资源解析、栅格化、缓存或同步前替换。
 
 ## 定位
 

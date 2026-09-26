@@ -57,7 +57,7 @@ import { debugLayoutLog, debugLayoutLogFail, debugLayoutLogOverflow, debugLayout
 
 // —— 门面 re-export：消费方统一从 card-render-engine.js 导入 ——
 
-export { RATIO_PRESETS, assembleCardPage, assembleCardPageFromPlan, assembleCardCoverPage, ensurePageStyle, attachOffscreenContainer, withCardTypography } from "./card-render-assembly.js";
+export { RATIO_PRESETS, assembleCardPage, assembleCardPageFromPlan, assembleCardCoverPage, ensurePageStyle, releasePageStyle, attachOffscreenContainer, withCardTypography } from "./card-render-assembly.js";
 export { CALLOUT_PAD_VERTICAL, measureContentHeight, measureCardDocument } from "./card-render-measure.js";
 export {
   CAPTURE_LIBRARY_IDS,
