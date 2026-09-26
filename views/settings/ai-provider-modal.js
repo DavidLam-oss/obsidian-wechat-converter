@@ -98,17 +98,17 @@ export function showEditAiProviderModal(tab, provider) {
   // API Key 输入（带明暗文切换）
   const apiKeyGroup = form.createDiv({ cls: "wechat-form-group" });
   apiKeyGroup.createEl("label", { text: "API Key" });
-  const apiKeyWrap = apiKeyGroup.createDiv({ attr: { style: "position: relative; display: flex; align-items: center;" } });
+  const apiKeyWrap = apiKeyGroup.createDiv({ cls: "ai-api-key-wrap" });
   const apiKeyInput = apiKeyWrap.createEl("input", {
     type: "password",
     placeholder: "sk-...",
     value: provider?.apiKey || "",
-    attr: { style: "width: 100%; padding-right: 40px;" },
+    cls: "ai-api-key-input",
   });
   const toggleVisibilityBtn = apiKeyWrap.createEl("button", {
     text: "显示",
-    cls: "wechat-btn-small",
-    attr: { type: "button", style: "position: absolute; right: 4px; padding: 2px 8px;" },
+    cls: "wechat-btn-small ai-api-key-toggle-btn",
+    attr: { type: "button" },
   });
   toggleVisibilityBtn.onclick = () => {
     const isPassword = apiKeyInput.type === "password";
@@ -120,46 +120,45 @@ export function showEditAiProviderModal(tab, provider) {
   // 能力区分：文本模型 & 生图模型
   // =========================================================================
   const capSection = form.createDiv({
-    cls: "apple-settings-area",
-    attr: { style: "margin: 12px 0; padding: 12px; background: var(--background-secondary); border-radius: 6px;" },
+    cls: "apple-settings-area ai-modal-cap-section",
   });
   capSection.createEl("div", {
     text: "支持能力与用途（至少勾选一项）",
-    attr: { style: "font-weight: 600; margin-bottom: 8px; font-size: 13px;" },
+    cls: "ai-modal-cap-title",
   });
 
   // 1. 文本模型能力
-  const textCapWrap = capSection.createDiv({ attr: { style: "margin-bottom: 10px;" } });
-  const textCapLabel = textCapWrap.createEl("label", { attr: { style: "display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer;" } });
+  const textCapWrap = capSection.createDiv({ cls: "ai-modal-cap-wrap" });
+  const textCapLabel = textCapWrap.createEl("label", { cls: "ai-modal-cap-label" });
   const textCapCheckbox = textCapLabel.createEl("input", {
     type: "checkbox",
   });
   textCapCheckbox.checked = provider ? provider.supportsText !== false : true;
   textCapLabel.createSpan({ text: "文本模型（用于公众号 AI 编排与文章分析）" });
 
-  const textModelGroup = textCapWrap.createDiv({ attr: { style: "margin: 6px 0 0 24px;" } });
+  const textModelGroup = textCapWrap.createDiv({ cls: "ai-modal-model-group" });
   const textModelInput = textModelGroup.createEl("input", {
     type: "text",
     placeholder: "文本模型名称，如 deepseek-ai/DeepSeek-V3 或 gpt-4.1-mini",
     value: provider?.textModel || provider?.model || "gpt-4.1-mini",
-    attr: { style: "width: 100%;" },
+    cls: "ai-modal-input-full",
   });
 
   // 2. 生图模型能力
   const imgCapWrap = capSection.createDiv();
-  const imgCapLabel = imgCapWrap.createEl("label", { attr: { style: "display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer;" } });
+  const imgCapLabel = imgCapWrap.createEl("label", { cls: "ai-modal-cap-label" });
   const imgCapCheckbox = imgCapLabel.createEl("input", {
     type: "checkbox",
   });
   imgCapCheckbox.checked = provider ? provider.supportsImage === true : false;
   imgCapLabel.createSpan({ text: "生图模型（用于小红书/图片卡片封面生图）" });
 
-  const imgModelGroup = imgCapWrap.createDiv({ attr: { style: "margin: 6px 0 0 24px;" } });
+  const imgModelGroup = imgCapWrap.createDiv({ cls: "ai-modal-model-group" });
   const imgModelInput = imgModelGroup.createEl("input", {
     type: "text",
     placeholder: "生图模型名称，如 black-forest-labs/FLUX.1-schnell 或 dall-e-3",
     value: provider?.imageModel || "",
-    attr: { style: "width: 100%;" },
+    cls: "ai-modal-input-full",
   });
 
   const syncCapDisplay = () => {

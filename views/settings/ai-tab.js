@@ -84,8 +84,7 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
   if (providers.length === 0) {
     containerEl.createEl("p", {
       text: "暂无配置任何 AI Provider，请点击下方「添加 AI Provider」按钮添加。",
-      cls: "setting-item-description",
-      attr: { style: "color: var(--text-muted); font-style: italic;" },
+      cls: "setting-item-description ai-settings-empty-tip",
     });
   } else {
     const providerList = containerEl.createDiv({ cls: "wechat-account-list" });
@@ -104,38 +103,38 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
       nameRow.createEl("span", { text: provider.name, cls: "wechat-account-name" });
 
       if (isTextDefault) {
-        nameRow.createEl("span", { text: "默认文本", cls: "wechat-account-badge", attr: { style: "background: #3b82f6;" } });
+        nameRow.createEl("span", { text: "默认文本", cls: "wechat-account-badge is-default-text" });
       }
       if (isImageDefault) {
-        nameRow.createEl("span", { text: "默认生图", cls: "wechat-account-badge", attr: { style: "background: #8b5cf6;" } });
+        nameRow.createEl("span", { text: "默认生图", cls: "wechat-account-badge is-default-image" });
       }
 
       if (provider.enabled === false) {
-        nameRow.createEl("span", { text: "已停用", cls: "wechat-account-badge", attr: { style: "background: var(--text-faint);" } });
+        nameRow.createEl("span", { text: "已停用", cls: "wechat-account-badge is-disabled" });
       } else if (isAnyRunnable) {
-        nameRow.createEl("span", { text: "可用", cls: "wechat-account-badge", attr: { style: "background: #0f8f64;" } });
+        nameRow.createEl("span", { text: "可用", cls: "wechat-account-badge is-runnable" });
       } else {
-        nameRow.createEl("span", { text: "待补全", cls: "wechat-account-badge", attr: { style: "background: #d97706;" } });
+        nameRow.createEl("span", { text: "待补全", cls: "wechat-account-badge is-pending" });
       }
 
       // 能力徽标行
-      const capRow = info.createDiv({ cls: "wechat-account-appid", attr: { style: "display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;" } });
+      const capRow = info.createDiv({ cls: "wechat-account-appid ai-capability-row" });
       if (provider.supportsText !== false) {
         capRow.createEl("span", {
           text: "文本: " + (provider.textModel || provider.model || "未设置"),
-          attr: { style: "font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--background-modifier-border); color: var(--text-normal);" },
+          cls: "ai-cap-tag",
         });
       }
       if (provider.supportsImage === true) {
         capRow.createEl("span", {
           text: "生图: " + (provider.imageModel || "未设置"),
-          attr: { style: "font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--background-modifier-border); color: var(--text-accent);" },
+          cls: "ai-cap-tag is-accent",
         });
       }
       if (provider.supportsText === false && !provider.supportsImage) {
         capRow.createEl("span", {
           text: "未启用任何能力",
-          attr: { style: "font-size: 11px; color: var(--text-error);" },
+          cls: "ai-cap-tag is-error",
         });
       }
 
@@ -143,16 +142,14 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
       if (provider.notes) {
         info.createDiv({
           text: "备注: " + provider.notes,
-          cls: "setting-item-description",
-          attr: { style: "font-size: 11px; margin-top: 2px; color: var(--text-muted);" },
+          cls: "setting-item-description ai-provider-notes",
         });
       }
 
       // 状态摘要行
       info.createDiv({
         text: provider.kind + " · " + summarizeAiProviderIssues(provider, "any"),
-        cls: "setting-item-description",
-        attr: { style: "margin-top: 2px;" },
+        cls: "setting-item-description ai-provider-status",
       });
 
       // 操作按钮区

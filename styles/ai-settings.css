@@ -1,0 +1,122 @@
+/*
+## 核心功能
+
+AI Provider 配置面板与弹窗样式片段（ai-tab 与 ai-provider-modal）。
+
+## 定位
+
+位于 styles/，由 scripts/build-styles.mjs 统一编译合并至 styles.css。
+*/
+
+/* 列表空白态 */
+.ai-settings-empty-tip {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* 徽标颜色变体 */
+.wechat-account-badge.is-default-text {
+  background: var(--interactive-accent, #007aff);
+}
+
+.wechat-account-badge.is-default-image {
+  background: #8b5cf6;
+}
+
+.wechat-account-badge.is-disabled {
+  background: var(--text-faint);
+}
+
+.wechat-account-badge.is-runnable {
+  background: #0f8f64;
+}
+
+.wechat-account-badge.is-pending {
+  background: #d97706;
+}
+
+/* 能力徽标行与标签 */
+.ai-capability-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.ai-cap-tag {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--background-modifier-border);
+  color: var(--text-normal);
+}
+
+.ai-cap-tag.is-accent {
+  color: var(--text-accent);
+}
+
+.ai-cap-tag.is-error {
+  color: var(--text-error);
+}
+
+.ai-provider-notes {
+  font-size: 11px;
+  margin-top: 2px;
+  color: var(--text-muted);
+}
+
+.ai-provider-status {
+  margin-top: 2px;
+}
+
+/* 弹窗：API Key 字段 */
+.ai-api-key-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ai-api-key-input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.ai-api-key-toggle-btn {
+  position: absolute;
+  right: 4px;
+  padding: 2px 8px;
+}
+
+/* 弹窗：能力区分区 */
+.ai-modal-cap-section {
+  margin: 12px 0;
+  padding: 12px;
+  background: var(--background-secondary);
+  border-radius: 6px;
+}
+
+.ai-modal-cap-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.ai-modal-cap-wrap {
+  margin-bottom: 10px;
+}
+
+.ai-modal-cap-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ai-modal-model-group {
+  margin: 6px 0 0 24px;
+}
+
+.ai-modal-input-full {
+  width: 100%;
+}

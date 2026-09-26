@@ -50,6 +50,7 @@ const STYLE_FRAGMENTS = [
   "styles/feishu.css",
   "styles/material-picker.css",
   "styles/card-media-picker.css",
+  "styles/ai-settings.css",
   "styles/about-settings.css",
 ];
 
