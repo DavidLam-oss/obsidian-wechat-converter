@@ -19,10 +19,10 @@ docs/*
 !docs/support.md
 !docs/basic/
 !docs/basic/**
-!docs/plans/
-docs/plans/*
-!docs/plans/2026-07-28-sticker-publishing-ui-refinement.md
-!docs/plans/2026-09-26-card-cover-media-picker-and-unsplash-plan.md
+docs/plans/
+docs/plans/**
+docs/research/
+docs/research/**
 
 # Local skill directories
 .codex/*
@@ -42,13 +42,23 @@ docs/plans/*
 lib/markdown-it.min.js
 lib/highlight.min.js
 lib/mathjax-plugin.js
+
+# OpenPRD runtime & intermediate artifacts (never commit to public repository)
 .openprd/harness/
 .openprd/learning/
 .openprd/quality/reports/
 .openprd/knowledge/candidates/
 .openprd/knowledge/drafts/
 .openprd/knowledge/review-signals.jsonl
-.openprd/growth/preferences.local.json
+.openprd/growth/
+.openprd/visual-evidence/
+.openprd/discovery/runs/
+.openprd/engagements/
+.openprd/reviews/
+.openprd/changes/
+.openprd/state/
+.openprd/design/active/
+.openprd/design/ui-context/
 # Local assistant / tool working dirs (memory logs, review boards, screenshots)
 .workbuddy/
 .qoder/
