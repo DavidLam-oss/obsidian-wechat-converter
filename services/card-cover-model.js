@@ -60,6 +60,7 @@ export const EMPTY_COVER_FIELDS = /** @type {CardCoverFields} */ ({
   coverMode: "none",
   coverImageStyle: "3d-clay",
   coverPrompt: "",
+  coverImageSource: "",
 });
 
 /**

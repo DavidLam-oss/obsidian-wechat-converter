@@ -25,6 +25,7 @@ import {
   extractNoteImageReferences,
   readLocalFileAsDataUrl,
   bufferToBase64,
+  downloadAsBase64,
 } from '../../services/card-cover-source.js';
 import {
   resolveImageAiProvider,
@@ -223,7 +224,7 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       text: '笔记/本地 ▾',
       attr: { type: 'button', title: '选用当前笔记已插入的图片，或从电脑本地上传' },
     });
-    btnPickImage.addEventListener('click', (e) => {
+    btnPickImage.addEventListener('click', async (e) => {
       const MenuClass = obsidianApi?.Menu;
       if (!MenuClass) {
         hiddenFileInput.click();
@@ -232,29 +233,66 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       const menu = new MenuClass();
 
       const session = view.getCardSettingsSession();
-      const sourcePath = session?.file?.path || view.currentFile?.path || '';
-      const markdown = session?.markdown || '';
+      const sourcePath = view.cardPreviewPendingInput?.sourcePath || session?.getSourcePath?.() || view.lastActiveFile?.path || '';
+      let markdown = view.cardPreviewPendingInput?.markdown || view.lastResolvedMarkdown || '';
+      if (!markdown && sourcePath && view.app?.vault?.getAbstractFileByPath) {
+        try {
+          const file = view.app.vault.getAbstractFileByPath(sourcePath);
+          if (file && view.app?.vault?.read) {
+            markdown = await view.app.vault.read(file);
+          }
+        } catch {
+          // 容错：路径读取失败时继续回退到活跃文件
+        }
+      }
+      if (!markdown) {
+        const activeFile = view.lastActiveFile || view.app?.workspace?.getActiveFile?.();
+        if (activeFile && view.app?.vault?.read) {
+          try {
+            markdown = await view.app.vault.read(activeFile);
+          } catch {
+            // 容错：活跃文件读取失败时回退为空
+          }
+        }
+      }
       const noteImages = extractNoteImageReferences(markdown);
 
       if (noteImages.length > 0) {
         for (const img of noteImages) {
           menu.addItem((item) => {
-            item.setTitle(`笔记: ${img.name}`)
+            const displayName = img.name.length > 36 ? img.name.slice(0, 33) + '...' : img.name;
+            item.setTitle(`笔记: ${displayName}`)
               .setIcon('image')
               .onClick(async () => {
                 try {
-                  const file = view.app?.metadataCache?.getFirstLinkpathDest(img.path, sourcePath);
-                  if (file && view.app?.vault?.readBinary) {
-                    const arrayBuffer = await view.app.vault.readBinary(file);
-                    const ext = img.name.split('.').pop()?.toLowerCase();
-                    const mime = ext === 'png' ? 'image/png' : (ext === 'webp' ? 'image/webp' : 'image/jpeg');
-                    const b64 = bufferToBase64(arrayBuffer);
+                  const isRemote = /^https?:\/\//i.test(img.path);
+                  let finalDataUrl = '';
+
+                  if (isRemote) {
+                    try {
+                      finalDataUrl = await downloadAsBase64(img.path, getObsidianRequestUrl());
+                    } catch {
+                      // 网络或跨域下载失败时降级为直接引用原始 URL
+                      finalDataUrl = img.path;
+                    }
+                  } else {
+                    const file = view.app?.metadataCache?.getFirstLinkpathDest(img.path, sourcePath);
+                    if (file && view.app?.vault?.readBinary) {
+                      const arrayBuffer = await view.app.vault.readBinary(file);
+                      const ext = img.name.split('.').pop()?.toLowerCase();
+                      const mime = ext === 'png' ? 'image/png' : (ext === 'webp' ? 'image/webp' : 'image/jpeg');
+                      const b64 = bufferToBase64(arrayBuffer);
+                      finalDataUrl = `data:${mime};base64,${b64}`;
+                    }
+                  }
+
+                  if (finalDataUrl) {
                     const curSession = view.getCardSettingsSession();
                     if (curSession?.getCoverFields?.()?.coverMode === 'none') {
                       view.applyCardCoverField('coverMode', 'adaptive');
                     }
                     view.applyCardCoverField('coverImageSource', 'note');
-                    view.applyCardCoverField('coverImage', `data:${mime};base64,${b64}`);
+                    view.applyCardCoverField('coverImage', finalDataUrl);
                     new Notice(`已应用笔记图片: ${img.name}`);
                   } else {
                     new Notice(`未能读取笔记图片: ${img.name}`);

@@ -593,6 +593,47 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(view.cardSettingsRefs.coverInputs.title.value).toBe("测试标题");
       expect(view.renderCardPreview).toHaveBeenCalled();
     });
+
+    it("点击「笔记/本地」弹出菜单精准识别当前笔记插图并可应用为封面", async () => {
+      session.applyLayoutSettings({ coverEnabled: true });
+      view.cardPreviewPendingInput = {
+        sourcePath: "test-note.md",
+        sourcePathKey: "test-note.md",
+        markdown: `
+# 标题
+正文段落
+![WorkBuddy 签到脚本日志显示 401 未登录报错|400](https://davidrepo-1348433231.cos.ap-guangzhou.myqcloud.com/img/20260926101418732.png)
+        `,
+      };
+      view.renderCardSettingsValues();
+
+      const btnPick = Array.from(view.cardSettingsWrapper.querySelectorAll(".icard-settings-cover-btn"))
+        .find((b) => b.textContent?.includes("笔记/本地"));
+      expect(btnPick).toBeTruthy();
+
+      globalThis.__obsidianMenuRegistry = [];
+      await btnPick.click();
+
+      expect(globalThis.__obsidianMenuRegistry.length).toBe(1);
+      const menu = globalThis.__obsidianMenuRegistry[0];
+      const noteItem = menu.items.find((it) => it.title?.includes("WorkBuddy 签到脚本日志显示 401 未登录报错"));
+      expect(noteItem).toBeTruthy();
+
+      // 点击该菜单项，应用笔记远程图片为封面
+      const fakeBinary = new Uint8Array([137, 80, 78, 71]).buffer;
+      const obsidianMock = require("obsidian");
+      obsidianMock.requestUrl = vi.fn().mockResolvedValue({
+        status: 200,
+        headers: { "content-type": "image/png" },
+        arrayBuffer: fakeBinary,
+      });
+
+      await noteItem.onClickHandler();
+      expect(session.getCoverFields().coverMode).toBe("adaptive");
+      expect(session.getCoverFields().coverImageSource).toBe("note");
+      expect(session.getCoverFields().coverImage.startsWith("data:image/png;base64,")).toBe(true);
+      expect(view.renderCardPreview).toHaveBeenCalled();
+    });
   });
 
   // 2026-09-19：设置页的「卡片」页签被摘除，侧栏成为全局默认的唯一配置入口。

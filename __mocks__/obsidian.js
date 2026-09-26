@@ -53,6 +53,9 @@ if (!globalThis.__obsidianNoticeRegistry) {
 if (!globalThis.__obsidianSettingInstancesRegistry) {
   globalThis.__obsidianSettingInstancesRegistry = [];
 }
+if (!globalThis.__obsidianMenuRegistry) {
+  globalThis.__obsidianMenuRegistry = [];
+}
 
 // Sentinel exposed on globalThis so tests can assert that the resolver patch
 // is wired up correctly: `expect(globalThis.__obsidianMockLoaded).toBe(true)`.
@@ -232,6 +235,38 @@ class ModalMock {
   onClose() {}
 }
 
+class MenuMock {
+  constructor() {
+    this.items = [];
+    if (globalThis.__obsidianMenuRegistry) {
+      globalThis.__obsidianMenuRegistry.push(this);
+    }
+  }
+  addItem(cb) {
+    const item = {
+      title: '',
+      icon: '',
+      disabled: false,
+      onClickHandler: null,
+      setTitle(t) { this.title = t; return this; },
+      setIcon(i) { this.icon = i; return this; },
+      setDisabled(d) { this.disabled = d; return this; },
+      onClick(fn) { this.onClickHandler = fn; return this; },
+    };
+    if (typeof cb === 'function') cb(item);
+    this.items.push(item);
+    return this;
+  }
+  addSeparator() {
+    this.items.push({ isSeparator: true });
+    return this;
+  }
+  showAtMouseEvent(e) {
+    this.lastShownEvent = e;
+    return this;
+  }
+}
+
 // createFragment is referenced as a runtime global in input.js (Obsidian
 // injects it). Polyfill once when the mock is required.
 if (typeof globalThis.createFragment !== 'function') {
@@ -281,6 +316,7 @@ module.exports = {
   },
   Setting: SettingMock,
   Modal: ModalMock,
+  Menu: MenuMock,
   requestUrl: async () => ({ json: {}, status: 200, headers: {} }),
   request: async () => '',
   setIcon: () => {},

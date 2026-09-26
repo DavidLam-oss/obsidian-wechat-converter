@@ -8,6 +8,7 @@ import {
   fetchUnsplashCoverImage,
   extractNoteImageReferences,
   readLocalFileAsDataUrl,
+  downloadAsBase64,
 } from '../services/card-cover-source.js';
 
 describe('Card Cover Source Service (services/card-cover-source.js)', () => {
@@ -159,8 +160,46 @@ describe('Card Cover Source Service (services/card-cover-source.js)', () => {
       });
     });
 
+    it('handles markdown image with Obsidian size suffix and external URL correctly', () => {
+      const markdown = `
+![WorkBuddy 签到脚本日志显示 401 未登录报错|400](https://davidrepo-1348433231.cos.ap-guangzhou.myqcloud.com/img/20260926101418732.png)
+![带双引号标题](https://example.com/img.png "测试图片")
+      `;
+      const images = extractNoteImageReferences(markdown);
+      expect(images).toHaveLength(2);
+      expect(images[0]).toEqual({
+        name: 'WorkBuddy 签到脚本日志显示 401 未登录报错',
+        path: 'https://davidrepo-1348433231.cos.ap-guangzhou.myqcloud.com/img/20260926101418732.png',
+        isWiki: false,
+      });
+      expect(images[1]).toEqual({
+        name: '带双引号标题',
+        path: 'https://example.com/img.png',
+        isWiki: false,
+      });
+    });
+
     it('returns empty array when no images exist', () => {
       expect(extractNoteImageReferences('纯文本内容')).toEqual([]);
+    });
+  });
+
+  describe('downloadAsBase64', () => {
+    it('downloads remote image via custom requestUrl and returns Base64 data URL', async () => {
+      const fakeBinary = new Uint8Array([137, 80, 78, 71]).buffer; // PNG magic bytes
+      const mockReq = vi.fn().mockResolvedValue({
+        status: 200,
+        headers: { 'content-type': 'image/png' },
+        arrayBuffer: fakeBinary,
+      });
+      const dataUrl = await downloadAsBase64('https://example.com/test.png', mockReq);
+      expect(mockReq).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: 'https://example.com/test.png',
+          method: 'GET',
+        })
+      );
+      expect(dataUrl.startsWith('data:image/png;base64,')).toBe(true);
     });
   });
 

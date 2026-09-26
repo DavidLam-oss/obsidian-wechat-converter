@@ -109,27 +109,37 @@ function resolveRequestExecutor(requestUrlFn) {
  * @param {string} [mimeType='image/jpeg']
  * @returns {Promise<string>}
  */
-async function downloadAsBase64(imageUrl, customReq, mimeType = 'image/jpeg') {
+export async function downloadAsBase64(imageUrl, customReq, defaultMime = 'image/jpeg') {
   const reqFn = resolveRequestExecutor(customReq);
+  const ext = (imageUrl.split(/[?#]/)[0].split('.').pop() || '').toLowerCase();
+  const extMime = ext === 'png' ? 'image/png'
+    : (ext === 'webp' ? 'image/webp'
+    : (ext === 'gif' ? 'image/gif'
+    : (ext === 'svg' ? 'image/svg+xml' : '')));
+
   if (reqFn) {
     const res = await reqFn({
       url: imageUrl,
       method: 'GET',
       throw: false,
     });
-    const obj = /** @type {{ status?: number, arrayBuffer?: ArrayBuffer }} */ (res);
+    const obj = /** @type {{ status?: number, headers?: Record<string, string>, arrayBuffer?: ArrayBuffer }} */ (res);
     if (obj && obj.arrayBuffer) {
+      const headerMime = obj.headers?.['content-type'] || obj.headers?.['Content-Type'];
+      const mime = headerMime?.split(';')[0]?.trim() || extMime || defaultMime;
       const b64 = bufferToBase64(obj.arrayBuffer);
-      return `data:${mimeType};base64,${b64}`;
+      return `data:${mime};base64,${b64}`;
     }
   }
 
   if (typeof fetch === 'function') {
     const res = await fetch(imageUrl);
     if (!res.ok) throw new Error(`下载图片失败: HTTP ${res.status}`);
+    const headerMime = res.headers?.get?.('content-type');
+    const mime = headerMime?.split(';')[0]?.trim() || extMime || defaultMime;
     const buf = await res.arrayBuffer();
     const b64 = bufferToBase64(buf);
-    return `data:${mimeType};base64,${b64}`;
+    return `data:${mime};base64,${b64}`;
   }
 
   throw new Error('当前环境缺少 requestUrl 与 fetch，无法下载图片');
@@ -253,12 +263,15 @@ export function extractNoteImageReferences(markdown) {
   // 2. 匹配 Markdown 格式图片 ![alt](url)
   const mdRegex = /!\[([^\]]*)\]\(([^)\n]+)\)/g;
   while ((match = mdRegex.exec(markdown)) !== null) {
-    const rawPath = match[2].trim();
-    if (rawPath && !seen.has(rawPath)) {
-      seen.add(rawPath);
-      const cleanPath = rawPath.split(/[?#]/)[0];
-      const name = match[1].trim() || (cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath);
-      results.push({ name, path: rawPath, isWiki: false });
+    const rawTarget = match[2].trim();
+    const urlPart = rawTarget.replace(/^<|>$/g, '').split(/\s+/)[0];
+    if (urlPart && !seen.has(urlPart)) {
+      seen.add(urlPart);
+      const cleanPath = urlPart.split(/[?#]/)[0];
+      const rawName = match[1].trim();
+      const nameClean = rawName.split('|')[0].trim();
+      const name = nameClean || (cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath);
+      results.push({ name, path: urlPart, isWiki: false });
     }
   }
 
