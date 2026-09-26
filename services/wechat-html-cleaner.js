@@ -743,5 +743,19 @@ export function cleanHtmlForDraft(html) {
       forceInlineStyle(code, ' margin:0 2px !important; vertical-align:baseline;');
     });
 
+    // 8. 微信公众号兼容：将 blockquote 转换为带有完全相同样式的 section 标签
+    // 避免微信官方富文本编辑器对原生 blockquote 标签强制包裹或注入默认灰色左边框（#dee0e2），
+    // 消除竖条变粗（双边框并排）以及“一半主题色、一半灰色”的兼容性异常。
+    div.querySelectorAll('blockquote').forEach(bq => {
+      const section = activeDocument.createElement('section');
+      Array.from(bq.attributes).forEach(attr => {
+        section.setAttribute(attr.name, attr.value);
+      });
+      while (bq.firstChild) {
+        section.appendChild(bq.firstChild);
+      }
+      bq.replaceWith(section);
+    });
+
     return div.innerHTML;
   }

@@ -64,4 +64,18 @@ describe('Wechat HTML Cleaner Service', () => {
     expect(output).toContain('#执业医师');
     expect(output).not.toContain('href="#%E6%89%A7%E4%B8%9A%E5%8C%BB%E5%B8%88"');
   });
+
+  it('should convert blockquote to section with identical inline styles to avoid WeChat default border', () => {
+    const input = '<blockquote style="font-size: 16px; border-left: 3px solid #8a2be2; background: #f8fafc; padding: 16px;"><p>这是一个引用</p></blockquote>';
+    const output = cleanHtmlForDraft(input);
+
+    expect(output).not.toContain('<blockquote');
+    expect(output).not.toContain('</blockquote>');
+    expect(output).toContain('<section');
+    expect(output).toContain('border-left: 3px solid #8a2be2');
+    expect(output).toContain('background: #f8fafc');
+    expect(output).toContain('<p>这是一个引用</p>');
+    expect(output).toContain('</section>');
+  });
 });
+
