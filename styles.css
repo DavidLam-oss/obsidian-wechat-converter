@@ -5732,8 +5732,14 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 }
 
 .wechat-proxy-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  line-height: 1.6;
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  color: var(--text-muted);
 }
 
 .wechat-proxy-title {
@@ -5768,6 +5774,23 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 
 .owc-custom-css-warning-title {
   color: var(--text-warning);
+}
+
+.owc-custom-css-warning-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: -2px;
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  color: var(--text-warning);
+}
+
+.wechat-proxy-icon .svg-icon,
+.owc-custom-css-warning-icon .svg-icon {
+  width: 14px;
+  height: 14px;
 }
 
 /*

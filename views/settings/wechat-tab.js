@@ -34,6 +34,7 @@ import {
   MAX_ACCOUNTS,
   WechatAPI,
   toReadableError,
+  getObsidianSetIcon,
 } from '../apple-style-view-shared.js';
 import { resolveCustomCssSource } from '../../services/custom-css-source.js';
 import { compileCustomCss } from '../../services/custom-css-compiler.js';
@@ -42,6 +43,18 @@ const WECHAT_ACCOUNT_SETUP_GUIDE_URL =
   'https://xiaoweibox.top/obsidian-publisher/guide#wechat-api';
 const CUSTOM_CSS_GUIDE_URL =
   'https://xiaoweibox.top/obsidian-publisher/guide/custom-css';
+
+/**
+ * 辅助添加 Lucide 图标
+ * @param {HTMLElement} element
+ * @param {string} iconName
+ */
+function attachIcon(element, iconName) {
+  const setIcon = getObsidianSetIcon();
+  if (typeof setIcon === 'function') {
+    setIcon(element, iconName);
+  }
+}
 
 /**
  * Obsidian 1.13.4 may stringify a DocumentFragment passed to Setting.setDesc()
@@ -164,7 +177,7 @@ const wechatSettingsMethods = {
     // 本地头像上传
     const uploadSetting = new Setting(containerEl)
       .setName('上传本地头像')
-      .setDesc(this.plugin.settings.avatarBase64 ? '✅ 已上传本地头像（优先使用）' : '选择本地图片，转换为 Base64 存储，无需网络请求');
+      .setDesc(this.plugin.settings.avatarBase64 ? '已上传本地头像（优先使用）' : '选择本地图片，转换为 Base64 存储，无需网络请求');
 
     uploadSetting.addButton(button => button
       .setButtonText(this.plugin.settings.avatarBase64 ? '重新上传' : '选择图片')
@@ -409,7 +422,8 @@ const wechatSettingsMethods = {
 
     // 1. 官方免自建服务行
     const officialRow = card.createDiv({ cls: 'wechat-proxy-row' });
-    officialRow.createSpan({ text: '·', cls: 'wechat-proxy-icon' });
+    const officialIcon = officialRow.createSpan({ cls: 'wechat-proxy-icon' });
+    attachIcon(officialIcon, 'info');
     const officialText = officialRow.createDiv();
     officialText.createEl('strong', {
       text: '官方中转',
@@ -427,7 +441,8 @@ const wechatSettingsMethods = {
 
     // 2. 自建指南行
     const selfHostedRow = card.createDiv({ cls: 'wechat-proxy-row' });
-    selfHostedRow.createSpan({ text: '·', cls: 'wechat-proxy-icon' });
+    const selfHostedIcon = selfHostedRow.createSpan({ cls: 'wechat-proxy-icon' });
+    attachIcon(selfHostedIcon, 'wrench');
     const selfHostedText = selfHostedRow.createDiv();
     selfHostedText.createEl('strong', {
       text: '手工自建',
@@ -445,7 +460,8 @@ const wechatSettingsMethods = {
 
     // 3. 安全与隐私提示
     const securityRow = card.createDiv({ cls: 'wechat-proxy-row' });
-    securityRow.createSpan({ text: '·', cls: 'wechat-proxy-icon' });
+    const securityIcon = securityRow.createSpan({ cls: 'wechat-proxy-icon' });
+    attachIcon(securityIcon, 'shield');
     const securityText = securityRow.createDiv();
     securityText.createEl('strong', {
       text: '安全声明',
@@ -472,7 +488,10 @@ const wechatSettingsMethods = {
     const warningCard = containerEl.createDiv({
       cls: 'owc-custom-css-warning',
     });
-    warningCard.createEl('strong', { text: '高阶功能', cls: 'owc-custom-css-warning-title' });
+    const warningTitle = warningCard.createEl('strong', { cls: 'owc-custom-css-warning-title' });
+    const warningIcon = warningTitle.createSpan({ cls: 'owc-custom-css-warning-icon' });
+    attachIcon(warningIcon, 'alert-triangle');
+    warningTitle.createSpan({ text: '高阶功能' });
     warningCard.createSpan({
       text: '：需要您自己编写 CSS。插件会自动把选择器样式内联到元素上，但微信仍可能清洗部分复杂样式；当文章已使用 AI 编排结果时，自定义 CSS 不生效（两者为独立的样式系统）。启用前建议先用「复制到公众号」小范围测试。'
     });
