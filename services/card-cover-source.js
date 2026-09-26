@@ -356,6 +356,19 @@ export function extractNoteImageReferences(markdown) {
     }
   }
 
+  // 3. 匹配 HTML 格式图片 <img ... src="..." ...>
+  const htmlImgRegex = /<img\b[^>]*?\bsrc=["']([^"']+)["'][^>]*>/gi;
+  while ((match = htmlImgRegex.exec(markdown)) !== null) {
+    const src = match[1].trim();
+    if (src && !seen.has(src)) {
+      seen.add(src);
+      const cleanPath = src.split(/[?#]/)[0];
+      const altMatch = /alt=["']([^"']*)["']/i.exec(match[0]);
+      const name = altMatch?.[1]?.trim() || (cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath);
+      results.push({ name, path: src, isWiki: false });
+    }
+  }
+
   return results;
 }
 

@@ -308,6 +308,75 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
       expect(dropzone.textContent).toContain('拖拽本地图片至此处，或点击浏览文件');
     });
 
+    it('能够优先从 cardPreviewPendingInput 中读取当前活跃 Markdown 正文', () => {
+      const container = applyExtensions(document.createElement('div'));
+      const mockView = {
+        app: {
+          metadataCache: {
+            getFirstLinkpathDest: vi.fn(),
+          },
+          vault: {
+            readBinary: vi.fn(),
+          },
+        },
+        cardPreviewPendingInput: {
+          markdown: '# 实时待预览笔记\n![[gallery.png]]\n<img src="https://example.com/cover.png">',
+          sourcePath: 'Notes/Daily.md',
+        },
+      };
+
+      renderNoteMediaPickerTab({
+        container,
+        view: mockView,
+        onSelect: vi.fn(),
+      });
+
+      const noteItems = container.querySelectorAll('.card-media-picker-item');
+      expect(noteItems.length).toBe(2);
+    });
+
+    it('点击笔记中的本地图片时能够读取二进制并触发 onSelect 回调', async () => {
+      const container = applyExtensions(document.createElement('div'));
+      const fakeBinary = new Uint8Array([137, 80, 78, 71]).buffer;
+      const fakeFile = { path: 'attachments/diagram.png', extension: 'png' };
+
+      const mockView = {
+        app: {
+          metadataCache: {
+            getFirstLinkpathDest: vi.fn().mockReturnValue(fakeFile),
+          },
+          vault: {
+            readBinary: vi.fn().mockResolvedValue(fakeBinary),
+          },
+        },
+        lastResolvedMarkdown: '![流程架构](attachments/diagram.png)',
+        lastResolvedSourcePath: 'Posts/Tech.md',
+      };
+
+      const onSelect = vi.fn();
+      renderNoteMediaPickerTab({
+        container,
+        view: mockView,
+        onSelect,
+      });
+
+      const noteItems = container.querySelectorAll('.card-media-picker-item');
+      expect(noteItems.length).toBe(1);
+
+      // 触发点击项
+      await noteItems[0].dispatchEvent(new MouseEvent('click'));
+      // 等待微任务加载完成
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(onSelect).toHaveBeenCalledWith(
+        expect.objectContaining({
+          source: 'note',
+          dataUrl: expect.stringContaining('data:image/png;base64,'),
+        })
+      );
+    });
+
     it('笔记中无图片时展示提示占位', () => {
       const container = applyExtensions(document.createElement('div'));
       const mockView = {

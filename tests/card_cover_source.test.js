@@ -179,6 +179,26 @@ describe('Card Cover Source Service (services/card-cover-source.js)', () => {
       });
     });
 
+    it('extracts html img tag references', () => {
+      const markdown = `
+<p>前文</p>
+<img src="https://example.com/banner.png" alt="封面配图" width="500" />
+<img src="./assets/photo.jpg">
+      `;
+      const images = extractNoteImageReferences(markdown);
+      expect(images).toHaveLength(2);
+      expect(images[0]).toEqual({
+        name: '封面配图',
+        path: 'https://example.com/banner.png',
+        isWiki: false,
+      });
+      expect(images[1]).toEqual({
+        name: 'photo.jpg',
+        path: './assets/photo.jpg',
+        isWiki: false,
+      });
+    });
+
     it('returns empty array when no images exist', () => {
       expect(extractNoteImageReferences('纯文本内容')).toEqual([]);
     });
