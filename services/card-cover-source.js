@@ -17,9 +17,15 @@
 - 统一返回 `data:image/jpeg;base64,...` 或 `data:image/png;base64,...`，保证卡片离线可用与彻底规避防盗链/CORS。
 */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return -- reason: JS file handles dynamic API responses without strict typescript type annotations */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument -- reason: JS file handles dynamic API responses without strict typescript type annotations */
 
 import { getObsidianRequestUrl } from './obsidian-compat.js';
+import {
+  safeDecodeUriText,
+  getFileUrlLocalPath,
+  getVaultRelativePathFromLocalPath,
+} from './image-source-utils.js';
+import { normalizeVaultPath, collapsePathSegments } from './path-utils.js';
 
 /** 卡片比例到 Unsplash 方向映射 */
 export const RATIO_TO_UNSPLASH_ORIENTATION = {
@@ -319,57 +325,207 @@ export async function fetchUnsplashPhotos(options = {}) {
   return { total, totalPages, results };
 }
 
+const IMAGE_EXT_REGEX = /\.(jpe?g|png|gif|webp|svg|bmp|avif)$/i;
+const NON_IMAGE_EXT_REGEX = /\.(md|markdown|txt|pdf|docx?|xlsx?|pptx?|zip|rar|tar|gz|mp4|mov|avi|mp3|wav)$/i;
+
 /**
- * 提取当前笔记中的图片引用（支持 ![[image.png]] 与 ![alt](path)）
+ * 提取当前笔记中的图片引用
+ * 支持：
+ * 1. Wikilink 语法：![[image.png]]、![[sub/image.jpg|alt]]、![[image.png|300]]、![[image.png#heading]]
+ * 2. Markdown 标准语法：![alt](url)、![alt|300](url "title")、![alt](<path with spaces.png>)、![alt](./rel.png)、![alt](../parent.png)、![alt](/root.png)
+ * 3. HTML 语法：<img src="url">、<img alt="alt" src="url">、<img src='url'>
+ * 4. 图床网络图片、Base64 Data URL、本地引用等
  * @param {string} markdown
  * @returns {Array<{ name: string, path: string, isWiki: boolean }>}
  */
 export function extractNoteImageReferences(markdown) {
   if (!markdown || typeof markdown !== 'string') return [];
-  const results = [];
-  const seen = new Set();
+  const rawMatches = [];
 
   // 1. 匹配 Wikilink 图片 ![[name.png|...]]
-  const wikiRegex = /!\[\[([^\]\n|]+)(?:\|[^\]\n]*)?\]\]/g;
+  const wikiRegex = /!\[\[([^\]\n|]+)(?:\|([^\]\n]*))?\]\]/g;
   let match;
   while ((match = wikiRegex.exec(markdown)) !== null) {
-    const path = match[1].trim();
-    if (path && !seen.has(path)) {
-      seen.add(path);
-      const name = path.includes('/') ? path.slice(path.lastIndexOf('/') + 1) : path;
-      results.push({ name, path, isWiki: true });
-    }
+    const fullTarget = match[1].trim();
+    const cleanTarget = fullTarget.split('#')[0].trim();
+    if (!cleanTarget) continue;
+    // 过滤非图片（如内嵌笔记 ![[Note Title]] 或 PDF ![[doc.pdf]]）
+    if (!IMAGE_EXT_REGEX.test(cleanTarget)) continue;
+
+    const cleanPath = cleanTarget.split(/[?#]/)[0];
+    const name = cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath;
+    rawMatches.push({
+      index: match.index,
+      name,
+      path: cleanTarget,
+      isWiki: true,
+      dedupeKey: cleanTarget.toLowerCase(),
+    });
   }
 
   // 2. 匹配 Markdown 格式图片 ![alt](url)
   const mdRegex = /!\[([^\]]*)\]\(([^)\n]+)\)/g;
   while ((match = mdRegex.exec(markdown)) !== null) {
     const rawTarget = match[2].trim();
-    const urlPart = rawTarget.replace(/^<|>$/g, '').split(/\s+/)[0];
-    if (urlPart && !seen.has(urlPart)) {
-      seen.add(urlPart);
-      const cleanPath = urlPart.split(/[?#]/)[0];
-      const rawName = match[1].trim();
-      const nameClean = rawName.split('|')[0].trim();
-      const name = nameClean || (cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath);
-      results.push({ name, path: urlPart, isWiki: false });
+    let urlPart = '';
+    if (rawTarget.startsWith('<')) {
+      const endAngle = rawTarget.indexOf('>');
+      urlPart = endAngle !== -1 ? rawTarget.slice(1, endAngle).trim() : rawTarget.slice(1).trim();
+    } else {
+      urlPart = rawTarget.split(/\s+["'(]/)[0].trim().split(/\s+/)[0].trim();
     }
+    if (!urlPart) continue;
+
+    // 过滤明确的非图片后缀
+    const cleanPath = urlPart.split(/[?#]/)[0];
+    if (NON_IMAGE_EXT_REGEX.test(cleanPath)) continue;
+
+    const rawName = match[1].trim();
+    const nameClean = rawName.split('|')[0].trim();
+    const fallbackName = cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath;
+    const name = nameClean || fallbackName || '图片';
+    rawMatches.push({
+      index: match.index,
+      name,
+      path: urlPart,
+      isWiki: false,
+      dedupeKey: urlPart.toLowerCase(),
+    });
   }
 
   // 3. 匹配 HTML 格式图片 <img ... src="..." ...>
-  const htmlImgRegex = /<img\b[^>]*?\bsrc=["']([^"']+)["'][^>]*>/gi;
-  while ((match = htmlImgRegex.exec(markdown)) !== null) {
-    const src = match[1].trim();
-    if (src && !seen.has(src)) {
-      seen.add(src);
-      const cleanPath = src.split(/[?#]/)[0];
-      const altMatch = /alt=["']([^"']*)["']/i.exec(match[0]);
-      const name = altMatch?.[1]?.trim() || (cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath);
-      results.push({ name, path: src, isWiki: false });
+  const imgTagRegex = /<img\b([\s\S]*?)\/?>/gi;
+  let tagMatch;
+  while ((tagMatch = imgTagRegex.exec(markdown)) !== null) {
+    const attrs = tagMatch[1];
+    const srcMatch = /\bsrc\s*=\s*(?:["']([^"']+)["']|([^"'\\s>]+))/i.exec(attrs);
+    if (!srcMatch) continue;
+    const src = (srcMatch[1] || srcMatch[2] || '').trim();
+    if (!src) continue;
+
+    const cleanPath = src.split(/[?#]/)[0];
+    if (NON_IMAGE_EXT_REGEX.test(cleanPath)) continue;
+
+    const altMatch = /\balt\s*=\s*(?:["']([^"']*)["']|([^"'\\s>]+))/i.exec(attrs);
+    const alt = (altMatch?.[1] || altMatch?.[2] || '').trim();
+    const fallbackName = cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath;
+    const name = alt || fallbackName || '图片';
+    rawMatches.push({
+      index: tagMatch.index,
+      name,
+      path: src,
+      isWiki: false,
+      dedupeKey: src.toLowerCase(),
+    });
+  }
+
+  // 4. 按文档中的自然出现顺序排序，并去重
+  rawMatches.sort((a, b) => a.index - b.index);
+  const results = [];
+  const seen = new Set();
+  for (const item of rawMatches) {
+    if (!seen.has(item.dedupeKey)) {
+      seen.add(item.dedupeKey);
+      results.push({ name: item.name, path: item.path, isWiki: item.isWiki });
     }
   }
 
   return results;
+}
+
+/**
+ * 解析笔记引用的本地图片文件（支持绝对引用、相对引用、Wikilink、标准 Markdown 语法、file:// 协议等）
+ * @param {object} app Obsidian App 实例
+ * @param {string} ref 图片引用路径
+ * @param {string} [sourcePath=''] 当前笔记所在路径
+ * @returns {object|null} 对应的 TFile / VaultFile 实例
+ */
+export function resolveNoteLocalImageFile(app, ref, sourcePath = '') {
+  if (!app || !ref || typeof ref !== 'string') return null;
+  const raw = ref.trim();
+  if (!raw || /^(https?:|data:image\/)/i.test(raw)) return null;
+
+  const fileUrlLocal = getFileUrlLocalPath(raw);
+  const pathWithoutProtocol = fileUrlLocal || raw;
+  const decoded = safeDecodeUriText(pathWithoutProtocol);
+  const cleanRef = decoded.split(/[?#]/)[0].trim();
+  if (!cleanRef) return null;
+
+  // 若为系统绝对路径且位于 Vault 内，提取相对路径
+  const vaultRelative = getVaultRelativePathFromLocalPath(app, cleanRef);
+  const lookup = vaultRelative || cleanRef;
+
+  const metadataCache = app.metadataCache;
+  const vault = app.vault;
+
+  // 1. 优先通过 metadataCache 检索
+  try {
+    const linked = metadataCache?.getFirstLinkpathDest?.(lookup, sourcePath || '');
+    if (linked && (linked.path || linked.extension)) return linked;
+  } catch {
+    // 忽略异常，继续候选路径匹配
+  }
+
+  // 2. 构建候选路径
+  const noteDir = sourcePath ? sourcePath.slice(0, Math.max(sourcePath.lastIndexOf('/'), 0)) : '';
+  const candidates = [];
+
+  const normalized = normalizeVaultPath(lookup);
+  if (normalized) {
+    candidates.push(normalized);
+  }
+
+  const collapsed = collapsePathSegments(lookup);
+  if (collapsed && !candidates.includes(collapsed)) {
+    candidates.push(collapsed);
+  }
+
+  // 若以 / 开头（Vault 根目录绝对路径），补充去除首斜杠的候选
+  if (lookup.startsWith('/')) {
+    const rootRel = lookup.replace(/^\/+/, '');
+    if (rootRel && !candidates.includes(rootRel)) {
+      candidates.push(rootRel);
+    }
+  }
+
+  // 与当前笔记所在目录拼接（支持相对路径如 ./pic.png, ../assets/pic.png）
+  if (noteDir && !lookup.startsWith('/')) {
+    const combinedWithNoteDir = collapsePathSegments(`${noteDir}/${lookup}`);
+    if (combinedWithNoteDir && !candidates.includes(combinedWithNoteDir)) {
+      candidates.push(combinedWithNoteDir);
+    }
+  }
+
+  // 3. 逐个候选检查 vault 抽象文件或 metadataCache
+  for (const candidate of candidates) {
+    try {
+      const found = vault?.getAbstractFileByPath?.(candidate);
+      if (found && (found.path || found.extension)) return found;
+    } catch {
+      // 尝试下一个候选
+    }
+    try {
+      const foundViaCache = metadataCache?.getFirstLinkpathDest?.(candidate, sourcePath || '');
+      if (foundViaCache && (foundViaCache.path || foundViaCache.extension)) return foundViaCache;
+    } catch {
+      // 尝试下一个候选
+    }
+  }
+
+  // 4. 若带有多级路径，尝试用纯文件名在 metadataCache 中检索兜底（Obsidian 附件全局平铺模式）
+  if (cleanRef.includes('/')) {
+    const baseName = cleanRef.slice(cleanRef.lastIndexOf('/') + 1);
+    if (baseName) {
+      try {
+        const foundByName = metadataCache?.getFirstLinkpathDest?.(baseName, sourcePath || '');
+        if (foundByName && (foundByName.path || foundByName.extension)) return foundByName;
+      } catch {
+        // 兜底失败
+      }
+    }
+  }
+
+  return null;
 }
 
 /**

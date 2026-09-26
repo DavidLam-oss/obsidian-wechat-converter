@@ -16,6 +16,7 @@
 import { Notice } from '../apple-style-view-shared.js';
 import {
   extractNoteImageReferences,
+  resolveNoteLocalImageFile,
   readLocalFileAsDataUrl,
   bufferToBase64,
   downloadAsBase64,
@@ -157,21 +158,37 @@ export function renderNoteMediaPickerTab({ container, view, onSelect }) {
         if (loadedDataUrl) return loadedDataUrl;
         if (/^https?:\/\//i.test(imgRef.path)) {
           imgEl.src = imgRef.path;
-          loadedDataUrl = await downloadAsBase64(imgRef.path, getObsidianRequestUrl(), 'image/jpeg');
+          try {
+            loadedDataUrl = await downloadAsBase64(imgRef.path, getObsidianRequestUrl(), 'image/jpeg');
+            if (loadedDataUrl) {
+              imgEl.src = loadedDataUrl;
+            }
+          } catch {
+            // 网络图片若直接可通过 DOM 加载则保留原有 src
+          }
         } else if (/^data:image\//i.test(imgRef.path)) {
           loadedDataUrl = imgRef.path;
           imgEl.src = loadedDataUrl;
         } else {
-          let file = app?.metadataCache?.getFirstLinkpathDest(imgRef.path, sourcePath);
-          if (!file && app?.vault?.getAbstractFileByPath) {
-            file = app.vault.getAbstractFileByPath(imgRef.path);
-          }
-          if (file && app?.vault?.readBinary) {
-            const buf = await app.vault.readBinary(file);
-            const ext = file.extension?.toLowerCase() || 'png';
-            const mime = ext === 'jpg' ? 'image/jpeg' : (ext === 'webp' ? 'image/webp' : (ext === 'gif' ? 'image/gif' : 'image/png'));
-            loadedDataUrl = `data:${mime};base64,${bufferToBase64(buf)}`;
-            imgEl.src = loadedDataUrl;
+          const file = resolveNoteLocalImageFile(app, imgRef.path, sourcePath);
+          if (file) {
+            if (typeof app?.vault?.getResourcePath === 'function') {
+              try {
+                const resPath = app.vault.getResourcePath(file);
+                if (resPath) imgEl.src = resPath;
+              } catch {
+                // 回退到读取二进制
+              }
+            }
+            if (app?.vault?.readBinary) {
+              const buf = await app.vault.readBinary(file);
+              const ext = file.extension?.toLowerCase() || (file.path?.split('.').pop()?.toLowerCase()) || 'png';
+              const mime = ext === 'jpg' ? 'image/jpeg' : (ext === 'webp' ? 'image/webp' : (ext === 'gif' ? 'image/gif' : (ext === 'svg' ? 'image/svg+xml' : 'image/png')));
+              loadedDataUrl = `data:${mime};base64,${bufferToBase64(buf)}`;
+              if (!imgEl.src || imgEl.src.startsWith('data:image/svg+xml')) {
+                imgEl.src = loadedDataUrl;
+              }
+            }
           }
         }
         return loadedDataUrl;
@@ -186,7 +203,7 @@ export function renderNoteMediaPickerTab({ container, view, onSelect }) {
             await loadImgData();
           }
           if (!loadedDataUrl) {
-            throw new Error('无法在当前 Vault 中找到对应图片文件');
+            throw new Error('无法在当前 Vault 中找到或加载对应图片文件');
           }
           onSelect({ dataUrl: loadedDataUrl, source: 'note' });
         } catch (err) {

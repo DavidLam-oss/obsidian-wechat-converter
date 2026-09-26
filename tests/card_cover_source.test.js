@@ -7,6 +7,7 @@ import {
   fetchPicsumCoverImage,
   fetchUnsplashCoverImage,
   extractNoteImageReferences,
+  resolveNoteLocalImageFile,
   readLocalFileAsDataUrl,
   downloadAsBase64,
 } from '../services/card-cover-source.js';
@@ -179,28 +180,150 @@ describe('Card Cover Source Service (services/card-cover-source.js)', () => {
       });
     });
 
-    it('extracts html img tag references', () => {
+    it('extracts html img tag references with various attribute orders', () => {
       const markdown = `
 <p>前文</p>
 <img src="https://example.com/banner.png" alt="封面配图" width="500" />
-<img src="./assets/photo.jpg">
+<img alt="先写alt后写src" src="./assets/photo.jpg">
+<img src='../images/test.webp'>
       `;
       const images = extractNoteImageReferences(markdown);
-      expect(images).toHaveLength(2);
+      expect(images).toHaveLength(3);
       expect(images[0]).toEqual({
         name: '封面配图',
         path: 'https://example.com/banner.png',
         isWiki: false,
       });
       expect(images[1]).toEqual({
-        name: 'photo.jpg',
+        name: '先写alt后写src',
         path: './assets/photo.jpg',
         isWiki: false,
+      });
+      expect(images[2]).toEqual({
+        name: 'test.webp',
+        path: '../images/test.webp',
+        isWiki: false,
+      });
+    });
+
+    it('extracts markdown images with angle brackets and titles, and filters non-image files', () => {
+      const markdown = `
+![带空格路径](<./assets/my image 1.png>)
+![带标题图片](assets/cover.jpg "标题说明")
+![忽略PDF附件](attachments/manual.pdf)
+![[内部笔记嵌入]]
+![[说明文档.pdf]]
+![[带块引用的图片.png#^block1]]
+      `;
+      const images = extractNoteImageReferences(markdown);
+      expect(images).toHaveLength(3);
+      expect(images[0]).toEqual({
+        name: '带空格路径',
+        path: './assets/my image 1.png',
+        isWiki: false,
+      });
+      expect(images[1]).toEqual({
+        name: '带标题图片',
+        path: 'assets/cover.jpg',
+        isWiki: false,
+      });
+      expect(images[2]).toEqual({
+        name: '带块引用的图片.png',
+        path: '带块引用的图片.png',
+        isWiki: true,
       });
     });
 
     it('returns empty array when no images exist', () => {
       expect(extractNoteImageReferences('纯文本内容')).toEqual([]);
+    });
+  });
+
+  describe('resolveNoteLocalImageFile', () => {
+    it('returns null for remote URLs, data URLs or empty inputs', () => {
+      const fakeApp = {};
+      expect(resolveNoteLocalImageFile(fakeApp, 'https://example.com/1.png')).toBeNull();
+      expect(resolveNoteLocalImageFile(fakeApp, 'http://example.com/1.png')).toBeNull();
+      expect(resolveNoteLocalImageFile(fakeApp, 'data:image/png;base64,123')).toBeNull();
+      expect(resolveNoteLocalImageFile(fakeApp, '')).toBeNull();
+      expect(resolveNoteLocalImageFile(null, 'test.png')).toBeNull();
+    });
+
+    it('resolves wikilink and simple filenames via metadataCache', () => {
+      const fakeFile = { path: 'attachments/photo.png', extension: 'png' };
+      const fakeApp = {
+        metadataCache: {
+          getFirstLinkpathDest: vi.fn().mockReturnValue(fakeFile),
+        },
+        vault: {
+          getAbstractFileByPath: vi.fn(),
+        },
+      };
+
+      const result = resolveNoteLocalImageFile(fakeApp, 'photo.png', 'Notes/Post.md');
+      expect(result).toBe(fakeFile);
+      expect(fakeApp.metadataCache.getFirstLinkpathDest).toHaveBeenCalledWith('photo.png', 'Notes/Post.md');
+    });
+
+    it('resolves relative path ./ and ../ with note sourcePath', () => {
+      const fakeFileCurrent = { path: 'Notes/Sub/diagram.png', extension: 'png' };
+      const fakeFileParent = { path: 'Notes/assets/banner.png', extension: 'png' };
+      const fakeApp = {
+        metadataCache: {
+          getFirstLinkpathDest: vi.fn().mockReturnValue(null),
+        },
+        vault: {
+          getAbstractFileByPath: vi.fn((p) => {
+            if (p === 'Notes/Sub/diagram.png') return fakeFileCurrent;
+            if (p === 'Notes/assets/banner.png') return fakeFileParent;
+            return null;
+          }),
+        },
+      };
+
+      // 测试当前目录相对路径 ./diagram.png
+      const res1 = resolveNoteLocalImageFile(fakeApp, './diagram.png', 'Notes/Sub/Article.md');
+      expect(res1).toBe(fakeFileCurrent);
+
+      // 测试父级目录相对路径 ../assets/banner.png
+      const res2 = resolveNoteLocalImageFile(fakeApp, '../assets/banner.png', 'Notes/Sub/Article.md');
+      expect(res2).toBe(fakeFileParent);
+    });
+
+    it('resolves vault-absolute paths starting with slash', () => {
+      const fakeFile = { path: 'assets/cover.png', extension: 'png' };
+      const fakeApp = {
+        metadataCache: {
+          getFirstLinkpathDest: vi.fn().mockReturnValue(null),
+        },
+        vault: {
+          getAbstractFileByPath: vi.fn((p) => (p === 'assets/cover.png' ? fakeFile : null)),
+        },
+      };
+
+      const res = resolveNoteLocalImageFile(fakeApp, '/assets/cover.png', 'Notes/Article.md');
+      expect(res).toBe(fakeFile);
+    });
+
+    it('resolves file:// URL and URL-encoded filenames', () => {
+      const fakeFile = { path: 'assets/my photo.png', extension: 'png' };
+      const fakeApp = {
+        vault: {
+          adapter: { basePath: '/Users/test/Vault' },
+          getAbstractFileByPath: vi.fn((p) => (p === 'assets/my photo.png' ? fakeFile : null)),
+        },
+        metadataCache: {
+          getFirstLinkpathDest: vi.fn().mockReturnValue(null),
+        },
+      };
+
+      // file URL 位于 Vault 内部
+      const resFileUrl = resolveNoteLocalImageFile(fakeApp, 'file:///Users/test/Vault/assets/my%20photo.png', 'Notes/Article.md');
+      expect(resFileUrl).toBe(fakeFile);
+
+      // URL 编码的普通路径
+      const resEncoded = resolveNoteLocalImageFile(fakeApp, 'assets/my%20photo.png', 'Notes/Article.md');
+      expect(resEncoded).toBe(fakeFile);
     });
   });
 

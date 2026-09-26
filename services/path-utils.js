@@ -42,3 +42,24 @@ export function isAbsolutePathLike(vaultPath) {
   if (trimmed.startsWith('/')) return true;
   return /^[a-zA-Z]:[\\/]/.test(trimmed);
 }
+
+export function collapsePathSegments(path) {
+  if (typeof path !== 'string') return '';
+  const clean = path.trim().replace(/\\/g, '/');
+  const parts = clean.split('/');
+  const stack = [];
+  for (const part of parts) {
+    if (!part || part === '.') continue;
+    if (part === '..') {
+      if (stack.length > 0 && stack[stack.length - 1] !== '..') {
+        stack.pop();
+      } else {
+        stack.push('..');
+      }
+    } else {
+      stack.push(part);
+    }
+  }
+  return stack.join('/');
+}
+

@@ -377,6 +377,95 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
       );
     });
 
+    it('能够正确解析笔记中的相对路径图片 (../assets/img.png) 并展示与选择', async () => {
+      const container = applyExtensions(document.createElement('div'));
+      const fakeBinary = new Uint8Array([255, 216, 255, 224]).buffer;
+      const fakeFile = { path: 'Notes/assets/banner.jpg', extension: 'jpg' };
+
+      const mockView = {
+        app: {
+          metadataCache: {
+            getFirstLinkpathDest: vi.fn().mockReturnValue(null),
+          },
+          vault: {
+            getAbstractFileByPath: vi.fn((p) => (p === 'Notes/assets/banner.jpg' ? fakeFile : null)),
+            readBinary: vi.fn().mockResolvedValue(fakeBinary),
+            getResourcePath: vi.fn().mockReturnValue('app://obsidian.md/Notes/assets/banner.jpg'),
+          },
+        },
+        lastResolvedMarkdown: '![父级相对配图](../assets/banner.jpg)',
+        lastResolvedSourcePath: 'Notes/SubFolder/Article.md',
+      };
+
+      const onSelect = vi.fn();
+      renderNoteMediaPickerTab({
+        container,
+        view: mockView,
+        onSelect,
+      });
+
+      const noteItems = container.querySelectorAll('.card-media-picker-item');
+      expect(noteItems.length).toBe(1);
+
+      await noteItems[0].dispatchEvent(new MouseEvent('click'));
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(onSelect).toHaveBeenCalledWith(
+        expect.objectContaining({
+          source: 'note',
+          dataUrl: expect.stringContaining('data:image/jpeg;base64,'),
+        })
+      );
+    });
+
+    it('点击笔记中的图床网络图片时能够下载为 Base64 并触发 onSelect 回调', async () => {
+      const container = applyExtensions(document.createElement('div'));
+      const fakeBinary = new Uint8Array([137, 80, 78, 71]).buffer;
+
+      // Mock obsidian.requestUrl for downloadAsBase64
+      const origObsidianReq = obsidian.requestUrl;
+      obsidian.requestUrl = vi.fn().mockResolvedValue({
+        status: 200,
+        headers: { 'content-type': 'image/png' },
+        arrayBuffer: fakeBinary,
+      });
+
+      try {
+        const mockView = {
+          app: {
+            metadataCache: { getFirstLinkpathDest: vi.fn() },
+            vault: { readBinary: vi.fn() },
+          },
+          lastResolvedMarkdown: '![CDN图床](https://cdn.example.com/images/hero.png)',
+          lastResolvedSourcePath: 'Notes/Article.md',
+        };
+
+        const onSelect = vi.fn();
+        renderNoteMediaPickerTab({
+          container,
+          view: mockView,
+          onSelect,
+        });
+
+        const noteItems = container.querySelectorAll('.card-media-picker-item');
+        expect(noteItems.length).toBe(1);
+
+        await noteItems[0].dispatchEvent(new MouseEvent('click'));
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(onSelect).toHaveBeenCalledWith(
+          expect.objectContaining({
+            source: 'note',
+            dataUrl: expect.stringContaining('data:image/png;base64,'),
+          })
+        );
+      } finally {
+        obsidian.requestUrl = origObsidianReq;
+      }
+    });
+
     it('笔记中无图片时展示提示占位', () => {
       const container = applyExtensions(document.createElement('div'));
       const mockView = {
