@@ -425,7 +425,7 @@ export function assembleCardCoverPage(args) {
 
   // 1. 纯文字排版（mode === 'none'）：100% 原生纯文字版面，无图且不放占位
   if (mode === 'none') {
-    // 纯文字直接走下方的 body 装配
+    page.classList.add('icard-cover--text-only');
   } else if (mode === 'full-bleed') {
     page.classList.add('icard-cover--full-bleed');
     if (hasImage) {
@@ -519,11 +519,15 @@ export function assembleCardCoverPage(args) {
   title.textContent = fields.title;
   body.append(title);
 
-  if (fields.excerpt) {
+  const trimmedExcerpt = (fields.excerpt || '').trim();
+  if (trimmedExcerpt) {
     const excerpt = ownerDoc.createElement('div');
     excerpt.className = 'icard-cover-excerpt';
-    excerpt.textContent = fields.excerpt;
+    excerpt.textContent = trimmedExcerpt;
     body.append(excerpt);
+  } else {
+    page.classList.add('icard-cover--no-excerpt');
+    body.classList.add('icard-cover-body--no-excerpt');
   }
 
   const meta = ownerDoc.createElement('div');

@@ -741,6 +741,12 @@ export function buildCardPageCss(theme, typography = {}) {
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
+/* 无摘要时，标题分配 margin-bottom: auto，与自身 margin-top: auto 配合实现上下垂直居中，避免掉落到底部 */
+.icard-cover--no-excerpt .icard-cover-title,
+.icard-cover-body--no-excerpt .icard-cover-title,
+.icard-cover-body:not(:has(.icard-cover-excerpt)) .icard-cover-title {
+  margin-bottom: auto;
+}
 .icard-cover-excerpt {
   font-size: 13.5px;
   line-height: 1.7;

@@ -38,6 +38,23 @@ describe('assembleCardCoverPage（DOM 装配）', () => {
     expect(page.querySelector('.icard-cover-excerpt')).toBeNull();
     expect(page.querySelector('.icard-cover-meta')).toBeNull();
     expect(page.querySelector('.icard-cover-kicker')).toBeNull();
+    expect(page.classList.contains('icard-cover--no-excerpt')).toBe(true);
+  });
+
+  it('无摘要与纯文字模式下标记对应类并在 CSS 中包含标题垂直居中规则', () => {
+    const page = assembleCardCoverPage({
+      theme: THEME,
+      fields: { title: '只有标题', author: '', date: '', excerpt: '', coverMode: 'none' },
+      size: SIZE,
+      document: document,
+    });
+    expect(page.classList.contains('icard-cover--text-only')).toBe(true);
+    expect(page.classList.contains('icard-cover--no-excerpt')).toBe(true);
+    expect(page.querySelector('.icard-cover-body')?.classList.contains('icard-cover-body--no-excerpt')).toBe(true);
+
+    const css = buildCardPageCss(THEME);
+    expect(css).toContain('.icard-cover--no-excerpt .icard-cover-title');
+    expect(css).toContain('margin-bottom: auto');
   });
 
   it('封面 meta 行：作者与水印内容不同则都显示，相同则去重（常见的同名署名）', () => {
