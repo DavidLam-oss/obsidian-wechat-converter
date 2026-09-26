@@ -28,7 +28,7 @@
 import {
   GITHUB_REPOSITORY_URL,
   MULTI_PLATFORM_TAB_LABEL,
-  getObsidianSetIcon,
+  attachIcon,
   obsidianApi,
   renderAboutSettingsTab,
   renderAiSettingsTab,
@@ -87,12 +87,7 @@ const settingsTabShellMethods = {
   renderGitHubStarBanner(containerEl) {
     const banner = containerEl.createDiv({ cls: 'apple-settings-github-banner' });
     const iconWrap = banner.createDiv({ cls: 'apple-settings-github-icon' });
-    const setIcon = getObsidianSetIcon();
-    if (typeof setIcon === 'function') {
-      setIcon(iconWrap, 'star');
-    } else {
-      iconWrap.setText('Star');
-    }
+    attachIcon(iconWrap, 'star', 'Star');
 
     const copy = banner.createDiv({ cls: 'apple-settings-github-copy' });
     copy.createEl('div', { text: '喜欢这个插件？', cls: 'apple-settings-github-kicker' });

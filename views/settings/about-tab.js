@@ -30,7 +30,7 @@
 import {
   GITHUB_REPOSITORY_URL,
   OBSIDIAN_PUBLISHER_GUIDE_URL,
-  getObsidianSetIcon,
+  attachIcon,
 } from '../apple-style-view-shared.js';
 import { SPONSORS } from '../../services/sponsors-data.js';
 import {
@@ -53,18 +53,6 @@ function openUrl(plugin, url) {
   }
   if (typeof window !== 'undefined' && typeof window.open === 'function') {
     window.open(url, '_blank');
-  }
-}
-
-/**
- * 辅助添加 Lucide 图标
- * @param {HTMLElement} element
- * @param {string} iconName
- */
-function attachIcon(element, iconName) {
-  const setIcon = getObsidianSetIcon();
-  if (typeof setIcon === 'function') {
-    setIcon(element, iconName);
   }
 }
 

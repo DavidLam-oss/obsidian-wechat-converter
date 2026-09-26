@@ -34,7 +34,7 @@ import {
   MAX_ACCOUNTS,
   WechatAPI,
   toReadableError,
-  getObsidianSetIcon,
+  attachIcon,
 } from '../apple-style-view-shared.js';
 import { resolveCustomCssSource } from '../../services/custom-css-source.js';
 import { compileCustomCss } from '../../services/custom-css-compiler.js';
@@ -44,17 +44,6 @@ const WECHAT_ACCOUNT_SETUP_GUIDE_URL =
 const CUSTOM_CSS_GUIDE_URL =
   'https://xiaoweibox.top/obsidian-publisher/guide/custom-css';
 
-/**
- * 辅助添加 Lucide 图标
- * @param {HTMLElement} element
- * @param {string} iconName
- */
-function attachIcon(element, iconName) {
-  const setIcon = getObsidianSetIcon();
-  if (typeof setIcon === 'function') {
-    setIcon(element, iconName);
-  }
-}
 
 /**
  * Obsidian 1.13.4 may stringify a DocumentFragment passed to Setting.setDesc()

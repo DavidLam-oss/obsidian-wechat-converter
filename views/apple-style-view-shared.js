@@ -190,6 +190,7 @@ export {
   getObsidianModalClass,
   createObsidianModal,
   getObsidianSetIcon,
+  attachIcon,
   getObsidianRequestUrl,
   getObsidianRequest,
 } from '../services/obsidian-compat.js';
