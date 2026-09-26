@@ -71,4 +71,24 @@ describe('converter local image resolution', () => {
 
     expect(src).toBe('app://local/notes%2Fimages%2F%E4%B8%AD%E6%96%87%20%E5%9B%BE(1).png');
   });
+
+  it('resolves parent-relative markdown image paths', async () => {
+    const imageFile = { path: 'assets/pic.png', name: 'pic.png', extension: 'png' };
+    const converter = await createLegacyConverter({ sourcePath: 'notes/deep/post.md' });
+    converter.app = makeApp({ [imageFile.path]: imageFile });
+
+    const src = converter.resolveImagePath('../../assets/pic.png');
+
+    expect(src).toBe('app://local/assets%2Fpic.png');
+  });
+
+  it('resolves local file url paths', async () => {
+    const imageFile = { path: 'notes/images/photo.png', name: 'photo.png', extension: 'png' };
+    const converter = await createLegacyConverter({ sourcePath: 'notes/post.md' });
+    converter.app = makeApp({ [imageFile.path]: imageFile });
+
+    const src = converter.resolveImagePath('file:///notes/images/photo.png');
+
+    expect(src).toBe('app://local/notes%2Fimages%2Fphoto.png');
+  });
 });

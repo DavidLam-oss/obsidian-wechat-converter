@@ -158,4 +158,21 @@ console.log(1);
     });
     expect(items[0].key).toBe('body:articles/assets/cover.png');
   });
+
+  it('should extract html img tags and markdown images in natural document order', () => {
+    const md = [
+      '![first](first.png)',
+      '<img src="second.jpg" alt="alt text" />',
+      '![[third.webp]]',
+      '<img src="https://example.com/fourth.gif">',
+    ].join('\n');
+
+    const sources = extractMarkdownImageSources(md);
+    expect(sources).toEqual([
+      'first.png',
+      'second.jpg',
+      'third.webp',
+      'https://example.com/fourth.gif',
+    ]);
+  });
 });

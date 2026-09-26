@@ -251,6 +251,8 @@ export {
   normalizeAbsoluteLocalPath,
   getVaultRelativePathFromLocalPath,
   getVaultDirnameFromPath,
+  resolveVaultImageFile,
+  resolveVaultResourceSrc,
 } from '../services/image-source-utils.js';
 export {
   APPLE_STYLE_VIEW,

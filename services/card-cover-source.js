@@ -21,11 +21,8 @@
 
 import { getObsidianRequestUrl } from './obsidian-compat.js';
 import {
-  safeDecodeUriText,
-  getFileUrlLocalPath,
-  getVaultRelativePathFromLocalPath,
+  resolveVaultImageFile,
 } from './image-source-utils.js';
-import { normalizeVaultPath, collapsePathSegments } from './path-utils.js';
 
 /** 卡片比例到 Unsplash 方向映射 */
 export const RATIO_TO_UNSPLASH_ORIENTATION = {
@@ -435,97 +432,14 @@ export function extractNoteImageReferences(markdown) {
 
 /**
  * 解析笔记引用的本地图片文件（支持绝对引用、相对引用、Wikilink、标准 Markdown 语法、file:// 协议等）
+ * 委托至服务层统一的 resolveVaultImageFile
  * @param {object} app Obsidian App 实例
  * @param {string} ref 图片引用路径
  * @param {string} [sourcePath=''] 当前笔记所在路径
  * @returns {object|null} 对应的 TFile / VaultFile 实例
  */
 export function resolveNoteLocalImageFile(app, ref, sourcePath = '') {
-  if (!app || !ref || typeof ref !== 'string') return null;
-  const raw = ref.trim();
-  if (!raw || /^(https?:|data:image\/)/i.test(raw)) return null;
-
-  const fileUrlLocal = getFileUrlLocalPath(raw);
-  const pathWithoutProtocol = fileUrlLocal || raw;
-  const decoded = safeDecodeUriText(pathWithoutProtocol);
-  const cleanRef = decoded.split(/[?#]/)[0].trim();
-  if (!cleanRef) return null;
-
-  // 若为系统绝对路径且位于 Vault 内，提取相对路径
-  const vaultRelative = getVaultRelativePathFromLocalPath(app, cleanRef);
-  const lookup = vaultRelative || cleanRef;
-
-  const metadataCache = app.metadataCache;
-  const vault = app.vault;
-
-  // 1. 优先通过 metadataCache 检索
-  try {
-    const linked = metadataCache?.getFirstLinkpathDest?.(lookup, sourcePath || '');
-    if (linked && (linked.path || linked.extension)) return linked;
-  } catch {
-    // 忽略异常，继续候选路径匹配
-  }
-
-  // 2. 构建候选路径
-  const noteDir = sourcePath ? sourcePath.slice(0, Math.max(sourcePath.lastIndexOf('/'), 0)) : '';
-  const candidates = [];
-
-  const normalized = normalizeVaultPath(lookup);
-  if (normalized) {
-    candidates.push(normalized);
-  }
-
-  const collapsed = collapsePathSegments(lookup);
-  if (collapsed && !candidates.includes(collapsed)) {
-    candidates.push(collapsed);
-  }
-
-  // 若以 / 开头（Vault 根目录绝对路径），补充去除首斜杠的候选
-  if (lookup.startsWith('/')) {
-    const rootRel = lookup.replace(/^\/+/, '');
-    if (rootRel && !candidates.includes(rootRel)) {
-      candidates.push(rootRel);
-    }
-  }
-
-  // 与当前笔记所在目录拼接（支持相对路径如 ./pic.png, ../assets/pic.png）
-  if (noteDir && !lookup.startsWith('/')) {
-    const combinedWithNoteDir = collapsePathSegments(`${noteDir}/${lookup}`);
-    if (combinedWithNoteDir && !candidates.includes(combinedWithNoteDir)) {
-      candidates.push(combinedWithNoteDir);
-    }
-  }
-
-  // 3. 逐个候选检查 vault 抽象文件或 metadataCache
-  for (const candidate of candidates) {
-    try {
-      const found = vault?.getAbstractFileByPath?.(candidate);
-      if (found && (found.path || found.extension)) return found;
-    } catch {
-      // 尝试下一个候选
-    }
-    try {
-      const foundViaCache = metadataCache?.getFirstLinkpathDest?.(candidate, sourcePath || '');
-      if (foundViaCache && (foundViaCache.path || foundViaCache.extension)) return foundViaCache;
-    } catch {
-      // 尝试下一个候选
-    }
-  }
-
-  // 4. 若带有多级路径，尝试用纯文件名在 metadataCache 中检索兜底（Obsidian 附件全局平铺模式）
-  if (cleanRef.includes('/')) {
-    const baseName = cleanRef.slice(cleanRef.lastIndexOf('/') + 1);
-    if (baseName) {
-      try {
-        const foundByName = metadataCache?.getFirstLinkpathDest?.(baseName, sourcePath || '');
-        if (foundByName && (foundByName.path || foundByName.extension)) return foundByName;
-      } catch {
-        // 兜底失败
-      }
-    }
-  }
-
-  return null;
+  return resolveVaultImageFile(app, ref, sourcePath);
 }
 
 /**

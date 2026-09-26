@@ -112,6 +112,44 @@ function joinVaultPath(...parts) {
 }
 
 /**
+ * @param {unknown} filePath
+ * @returns {string}
+ */
+function collapsePathSegments(filePath) {
+  const normalized = normalizeVaultPath(filePath);
+  if (!normalized) return '';
+  const segments = normalized.split('/');
+  const collapsed = [];
+  for (const seg of segments) {
+    if (!seg || seg === '.') continue;
+    if (seg === '..') {
+      if (collapsed.length > 0) {
+        collapsed.pop();
+      }
+      continue;
+    }
+    collapsed.push(seg);
+  }
+  return collapsed.join('/');
+}
+
+/**
+ * @param {string} src
+ * @returns {string}
+ */
+function getFileUrlLocalPath(src) {
+  try {
+    const url = new URL(String(src || '').trim());
+    if (url.protocol !== 'file:') return '';
+    if (url.hostname && url.hostname !== 'localhost') return '';
+    const pathname = decodeURIComponent(url.pathname || '');
+    return /^\/[a-zA-Z]:\//.test(pathname) ? pathname.slice(1) : pathname;
+  } catch {
+    return '';
+  }
+}
+
+/**
  * @param {MarkdownTokenLike[]} tokens
  * @param {number} idx
  * @returns {MarkdownTokenLike}
@@ -316,8 +354,10 @@ class AppleStyleConverter {
     if (/^(https?:\/\/|data:|app:\/\/|capacitor:\/\/)/i.test(src)) return src;
 
     try {
+      const fileUrlLocal = getFileUrlLocalPath(src);
+      const rawPath = fileUrlLocal || src;
       // Markdown-it might encode the URL (e.g. %20 for space), but Obsidian expects decoded paths
-      const linkPath = safeDecodeUri(src);
+      const linkPath = safeDecodeUri(rawPath);
       const sourcePath = this.sourcePath;
       // Resolve using Obsidian's standard API
       const tFile = this.app.metadataCache?.getFirstLinkpathDest?.(linkPath, sourcePath);
@@ -329,10 +369,16 @@ class AppleStyleConverter {
       const candidates = [];
       const normalized = normalizeVaultPath(linkPath);
       if (normalized) candidates.push(normalized);
-      const noteDir = getVaultDirname(sourcePath);
-      if (normalized && noteDir) candidates.push(joinVaultPath(noteDir, normalized));
+      const collapsed = collapsePathSegments(linkPath);
+      if (collapsed && !candidates.includes(collapsed)) candidates.push(collapsed);
 
-      for (const candidate of Array.from(new Set(candidates))) {
+      const noteDir = getVaultDirname(sourcePath);
+      if (normalized && noteDir && !linkPath.startsWith('/')) {
+        const combined = collapsePathSegments(joinVaultPath(noteDir, normalized));
+        if (combined && !candidates.includes(combined)) candidates.push(combined);
+      }
+
+      for (const candidate of candidates) {
         const file = vault?.getAbstractFileByPath?.(candidate);
         if (file?.extension) {
           return vault?.getResourcePath?.(file) || src;

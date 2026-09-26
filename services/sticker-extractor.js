@@ -100,18 +100,48 @@ function extractMarkdownImageItems(markdown, options = {}) {
     items.push(item);
   };
 
+  const rawMatches = [];
+
   // 1. Wiki link 图片格式: ![[path/to/image.png]] 或 ![[path/to/image.png|alt]]
   const wikiRegex = /!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
   let match;
   while ((match = wikiRegex.exec(source)) !== null) {
     if (!isImageEmbedTarget(match[1])) continue;
-    push(match[1]);
+    rawMatches.push({ index: match.index, src: match[1] });
   }
 
   // 2. 标准 Markdown 图片格式: ![alt](path/to/image.png)
   const stdRegex = /!\[[^\]]*\]\(([^)]+)\)/g;
   while ((match = stdRegex.exec(source)) !== null) {
-    push(match[1]);
+    let dest = match[1].trim();
+    if (dest.startsWith('<')) {
+      const end = dest.indexOf('>');
+      dest = end !== -1 ? dest.slice(1, end).trim() : dest.slice(1).trim();
+    } else {
+      dest = dest.split(/\s+["'(]/)[0].trim().split(/\s+/)[0].trim();
+    }
+    if (dest) {
+      rawMatches.push({ index: match.index, src: dest });
+    }
+  }
+
+  // 3. HTML 标签格式: <img ... src="..." ...>
+  const htmlRegex = /<img\b([\s\S]*?)\/?>/gi;
+  let tagMatch;
+  while ((tagMatch = htmlRegex.exec(source)) !== null) {
+    const attrs = tagMatch[1];
+    const srcMatch = /\bsrc\s*=\s*(?:["']([^"']+)["']|([^"'\\s>]+))/i.exec(attrs);
+    if (srcMatch) {
+      const src = (srcMatch[1] || srcMatch[2] || '').trim();
+      if (src) {
+        rawMatches.push({ index: tagMatch.index, src });
+      }
+    }
+  }
+
+  rawMatches.sort((a, b) => a.index - b.index);
+  for (const rawItem of rawMatches) {
+    push(rawItem.src);
   }
 
   return items;
