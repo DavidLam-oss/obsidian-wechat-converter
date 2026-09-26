@@ -113,6 +113,7 @@ function joinVaultPath(...parts) {
 
 /**
  * 与 services/path-utils.js 保持一致：折叠处理路径，保留前导 ..
+ * 改动请一并更新 services/path-utils.js 并经由 tests/converter_path_utils_parity.test.js 校验
  * @param {unknown} filePath
  * @returns {string}
  */
@@ -137,6 +138,7 @@ function collapsePathSegments(filePath) {
 }
 
 /**
+ * 与 services/image-source-utils.js 保持一致：解析 file:// 本地路径
  * @param {string} src
  * @returns {string}
  */
@@ -153,6 +155,7 @@ function getFileUrlLocalPath(src) {
 }
 
 /**
+ * 与 services/image-source-utils.js 保持一致：读取 adapter basePath
  * @param {unknown} app
  * @returns {string}
  */
@@ -164,6 +167,7 @@ function getVaultAdapterBasePath(app) {
 }
 
 /**
+ * 与 services/image-source-utils.js 保持一致：规范化绝对本地路径
  * @param {unknown} value
  * @returns {string}
  */
@@ -178,6 +182,7 @@ function normalizeAbsoluteLocalPath(value) {
 
 /**
  * 与 services/image-source-utils.js 的 getVaultRelativePathFromLocalPath 保持同步
+ * 改动请一并更新 services/image-source-utils.js 并经由 tests/converter_path_utils_parity.test.js 校验
  * @param {unknown} app
  * @param {string} localPath
  * @returns {string}
@@ -1414,6 +1419,14 @@ ${macHeader}
     return src.split('/').pop().split('\\').pop().replace(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i, '') || '图片';
   }
 }
+
+AppleStyleConverter._internal = {
+  collapsePathSegments,
+  getFileUrlLocalPath,
+  getVaultAdapterBasePath,
+  normalizeAbsoluteLocalPath,
+  getVaultRelativePathFromLocalPath,
+};
 
 APPLE_CONVERTER_GLOBAL.AppleStyleConverter = AppleStyleConverter;
 if (typeof window !== 'undefined') {

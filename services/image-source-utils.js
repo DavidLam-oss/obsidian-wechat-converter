@@ -140,6 +140,8 @@ function getVaultAdapterBasePath(app) {
 }
 
 /**
+ * 规范化绝对本地路径
+ * 注意：与 converter.js 中的同名逻辑保持同步，改动需一并更新 converter.js 并经由 tests/converter_path_utils_parity.test.js 校验
  * @param {unknown} value
  * @returns {string}
  */
@@ -153,6 +155,8 @@ function normalizeAbsoluteLocalPath(value) {
 }
 
 /**
+ * 从绝对本地路径中提取 Vault 相对路径
+ * 注意：与 converter.js 中的同名逻辑保持同步，改动需一并更新 converter.js 并经由 tests/converter_path_utils_parity.test.js 校验
  * @param {{ vault?: { adapter?: unknown } } | null | undefined} app
  * @param {string} localPath
  * @returns {string}
