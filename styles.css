@@ -3558,7 +3558,7 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   white-space: nowrap;
 }
 
-/* 封面图源操作工具行（🎲 随机摄影 / 🔍 Unsplash / 🖼️ 笔记/本地） */
+/* 封面图源操作工具行（随机摄影 / 搜 Unsplash / 笔记/本地） */
 .icard-settings-cover-tools {
   display: flex;
   gap: 6px;

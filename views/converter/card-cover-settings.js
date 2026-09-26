@@ -74,22 +74,22 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
     const modeSelect = /** @type {HTMLSelectElement} */ (
       /** @type {unknown} */ (modeRow.createEl('select', { cls: 'icard-settings-select' }))
     );
-    modeSelect.createEl('option', { value: 'none', text: `📝 ${COVER_MODE_LABELS.none}（无需配图）` });
-    modeSelect.createEl('option', { value: 'adaptive', text: `🎨 ${COVER_MODE_LABELS.adaptive}（融入主题）` });
-    modeSelect.createEl('option', { value: 'mixed', text: `🌌 ${COVER_MODE_LABELS.mixed}（底图+遮罩）` });
-    modeSelect.createEl('option', { value: 'full-bleed', text: `🖼️ ${COVER_MODE_LABELS['full-bleed']}（全幅大图）` });
+    modeSelect.createEl('option', { value: 'none', text: `${COVER_MODE_LABELS.none}（无需配图）` });
+    modeSelect.createEl('option', { value: 'adaptive', text: `${COVER_MODE_LABELS.adaptive}（融入主题）` });
+    modeSelect.createEl('option', { value: 'mixed', text: `${COVER_MODE_LABELS.mixed}（底图+遮罩）` });
+    modeSelect.createEl('option', { value: 'full-bleed', text: `${COVER_MODE_LABELS['full-bleed']}（全幅大图）` });
     modeSelect.addEventListener('change', () => {
       view.applyCardCoverField('coverMode', modeSelect.value);
     });
     refs.coverModeSelect = modeSelect;
 
-    // 2.2 快捷图源操作工具行（🎲 随机摄影 / 🖼️ 笔记/本地，免输关键词）
+    // 2.2 快捷图源操作工具行（随机摄影 / 笔记/本地，免输关键词）
     const toolsRow = content.createDiv({ cls: 'icard-settings-cover-tools' });
 
-    // 按钮 1：🎲 随机摄影（Picsum 零配置免关键词）
+    // 按钮 1：随机摄影（Picsum 零配置免关键词）
     const btnPicsum = toolsRow.createEl('button', {
       cls: 'icard-settings-cover-btn',
-      text: '🎲 随机摄影',
+      text: '随机摄影',
       attr: { type: 'button', title: '免输关键词：从 Picsum 图库随机获取一张高清摄影大片' },
     });
     btnPicsum.addEventListener('click', async () => {
@@ -97,7 +97,7 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       const ratioId = currentLayout.ratioId || '3:4';
       const originalText = btnPicsum.textContent;
       btnPicsum.disabled = true;
-      btnPicsum.textContent = '🎲 获取中...';
+      btnPicsum.textContent = '获取中...';
       try {
         const dataUrl = await fetchPicsumCoverImage({
           ratioId,
@@ -146,10 +146,10 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       }
     });
 
-    // 按钮 2：🖼️ 笔记/本地 ▾
+    // 按钮 2：笔记/本地 ▾
     const btnPickImage = toolsRow.createEl('button', {
       cls: 'icard-settings-cover-btn',
-      text: '🖼️ 笔记/本地 ▾',
+      text: '笔记/本地 ▾',
       attr: { type: 'button', title: '选用当前笔记已插入的图片，或从电脑本地上传' },
     });
     btnPickImage.addEventListener('click', (e) => {
@@ -168,7 +168,7 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       if (noteImages.length > 0) {
         for (const img of noteImages) {
           menu.addItem((item) => {
-            item.setTitle(`📸 笔记: ${img.name}`)
+            item.setTitle(`笔记: ${img.name}`)
               .setIcon('image')
               .onClick(async () => {
                 try {
@@ -204,7 +204,7 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       }
 
       menu.addItem((item) => {
-        item.setTitle('📁 从电脑选择本地图片...')
+        item.setTitle('从电脑选择本地图片...')
           .setIcon('upload')
           .onClick(() => {
             hiddenFileInput.click();
@@ -227,7 +227,7 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
 
     const btnUnsplash = searchRow.createEl('button', {
       cls: 'icard-settings-cover-btn icard-settings-cover-search-btn',
-      text: '🔍 搜 Unsplash',
+      text: '搜 Unsplash',
       attr: { type: 'button', title: '根据左侧关键词精准搜索 Unsplash 摄影大片' },
     });
 
@@ -253,7 +253,7 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
 
       const originalText = btnUnsplash.textContent;
       btnUnsplash.disabled = true;
-      btnUnsplash.textContent = '🔍 搜索中...';
+      btnUnsplash.textContent = '搜索中...';
       try {
         const dataUrl = await fetchUnsplashCoverImage({
           apiKey: unsplashKey,
@@ -317,7 +317,7 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
     );
     refs.coverAiDetails = aiDetails;
     const aiSummary = aiDetails.createEl('summary', { cls: 'apple-settings-summary' });
-    aiSummary.createEl('span', { text: '🎨 AI 生图进阶设置' });
+    aiSummary.createEl('span', { text: 'AI 生图进阶设置' });
     refs.coverGroupEcho = aiSummary.createEl('span', { cls: 'icard-settings-tune-values' });
     aiDetails.addEventListener('toggle', () => {
       refs.coverAiUserToggled = true;
@@ -370,7 +370,7 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
     const genActionRow = aiCoverGroup.createDiv({ cls: 'icard-settings-cover-actions' });
     const genBtn = genActionRow.createEl('button', {
       cls: 'icard-settings-cover-primary',
-      text: '🎨 AI 生成封面图',
+      text: 'AI 生成封面图',
       attr: { type: 'button', title: '使用配置的生图模型根据 Prompt 生成封面图片' },
     });
     refs.coverGenerateBtn = genBtn;
@@ -398,8 +398,8 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       const ratio = currentLayout.ratioId || '3:4';
 
       genBtn.disabled = true;
-      const originalText = genBtn.textContent || '🎨 AI 生成封面图';
-      genBtn.textContent = '🎨 正在生图中...';
+      const originalText = genBtn.textContent || 'AI 生成封面图';
+      genBtn.textContent = '正在生图中...';
 
       try {
         const dataUrl = await generateCardCoverImage({
