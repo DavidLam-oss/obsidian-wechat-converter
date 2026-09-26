@@ -128,7 +128,7 @@ export async function renderCardPages(cardDoc, options = {}) {
   };
 
   try {
-    ensurePageStyle(theme, ownerDoc, typography);
+    ensurePageStyle(theme, ownerDoc, typography, options.styleConsumer);
     const pageNumberEnabled = options.pageNumberEnabled !== false;
     let contentHeight = typeof options.contentHeight === "number"
       ? options.contentHeight
@@ -136,7 +136,14 @@ export async function renderCardPages(cardDoc, options = {}) {
     debugLayoutLogResources(options.resources);
 
     for (let round = 1; round <= maxRounds; round += 1) {
-      const measured = await measureFn(cardDoc, { theme, size, resolveImageSrc, document: ownerDoc, typography });
+      const measured = await measureFn(cardDoc, {
+        theme,
+        size,
+        resolveImageSrc,
+        document: ownerDoc,
+        typography,
+        styleConsumer: options.styleConsumer,
+      });
       const items = createLayoutItems(cardDoc, measured);
       const breakBefore = mapManualBreaks(cardDoc, items);
       const plan = createCardPagePlan(items, {

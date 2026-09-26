@@ -319,6 +319,30 @@ describe("C04 卡片生命周期与捕获槽预算", () => {
       // 再次调用幂等不抛错
       expect(() => view.disposeCardExportModal()).not.toThrow();
     });
+
+    it("双视图共存时，关闭第一个视图不删除共用主题样式，关闭第二个视图才彻底释放", () => {
+      const { AppleStyleView } = loadInputModule();
+      const view1 = new AppleStyleView({ view: null }, { settings: { wechatAccounts: [] } });
+      const view2 = new AppleStyleView({ view: null }, { settings: { wechatAccounts: [] } });
+      view1.containerEl = createObsidianLikeElement();
+      view2.containerEl = createObsidianLikeElement();
+
+      const { ensurePageStyle } = require("../services/card-render-engine.js");
+      const { getCardTheme } = require("../services/card-themes.js");
+      const theme = getCardTheme();
+
+      ensurePageStyle(theme, document, undefined, view1);
+      ensurePageStyle(theme, document, undefined, view2);
+      expect(document.getElementById("icard-theme-style")).not.toBeNull();
+
+      view1.disposeCardPreview();
+      // view2 仍然活跃，样式节点必须保留
+      expect(document.getElementById("icard-theme-style")).not.toBeNull();
+
+      view2.disposeCardPreview();
+      // 所有视图均关闭，样式节点被彻底释放
+      expect(document.getElementById("icard-theme-style")).toBeNull();
+    });
   });
 
   describe("多轮 20 张批次导出/取消/重试压力与持有计数验证", () => {

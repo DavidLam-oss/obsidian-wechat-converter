@@ -170,14 +170,29 @@ export function withCardTypography(theme, typography) {
 }
 
 /**
+ * 每个 Document 上「仍需要页面主题样式」的消费者集合。
+ * 用 Set（而非纯数字计数）保证幂等 —— 同一渲染任务会多次调用 ensurePageStyle。
+ * WeakMap 保证 Document 被宿主回收时自动清理，防止引用泄漏。
+ *
+ * 注意：本机制解决多面板/多任务共存时「关一个面板拖垮另一个」的问题。
+ * 若两个面板同时使用不同卡片主题，后渲染者仍会全局覆写样式（属于全局 CSS 作用域层面的后续优化项）。
+ * @type {WeakMap<Document, Set<unknown>>}
+ */
+const pageStyleConsumersByDoc = new WeakMap();
+
+/**
  * 构建页面级 <style>（幂等：同一文档只注入一次；typography 变化时覆写内容）。
  * @param {import('./card-themes.js').CardTheme} theme
  * @param {Document} [ownerDoc]
  * @param {import('./card-themes.js').CardTypography} [typography]
+ * @param {unknown} [consumer] 消费者标识（视图实例 / 导出任务对象）；传入后启用回收保护
  * @returns {HTMLStyleElement}
  */
-export function ensurePageStyle(theme, ownerDoc, typography) {
-  const doc = ownerDoc || window.document;
+export function ensurePageStyle(theme, ownerDoc, typography, consumer) {
+  const doc = ownerDoc || (typeof window !== 'undefined' ? window.document : null);
+  if (!doc) {
+    throw new Error('ensurePageStyle: document is required');
+  }
   const styleId = "icard-theme-style";
   let style = /** @type {HTMLStyleElement|null} */ (doc.getElementById(styleId));
   if (!style) {
@@ -186,17 +201,33 @@ export function ensurePageStyle(theme, ownerDoc, typography) {
     doc.head.append(style);
   }
   style.textContent = buildCardPageCss(theme, typography);
+  if (consumer) {
+    let set = pageStyleConsumersByDoc.get(doc);
+    if (!set) {
+      set = new Set();
+      pageStyleConsumersByDoc.set(doc, set);
+    }
+    set.add(consumer);
+  }
   return style;
 }
 
 /**
- * 移除卡片页面主题 <style> 标签，避免视图关闭或插件卸载后残留。
+ * 移除卡片页面主题 <style> 标签：传了 consumer 时「仍有其他使用者就保留」；不传则维持旧语义（立即删）。
  * @param {Document} [ownerDoc]
+ * @param {unknown} [consumer]
  * @returns {void}
  */
-export function releasePageStyle(ownerDoc) {
+export function releasePageStyle(ownerDoc, consumer) {
   const doc = ownerDoc || (typeof window !== 'undefined' ? window.document : null);
   if (!doc) return;
+  if (consumer) {
+    const set = pageStyleConsumersByDoc.get(doc);
+    if (set) {
+      set.delete(consumer);
+      if (set.size > 0) return; // 仍有其他活跃消费者，保留节点
+    }
+  }
   const style = doc.getElementById("icard-theme-style");
   if (style) {
     style.remove();

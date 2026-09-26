@@ -216,4 +216,28 @@ describe("card-render-engine 页面装配", () => {
     releasePageStyle(document);
     expect(document.getElementById("icard-theme-style")).toBeNull();
   });
+
+  it("有多个消费者时，释放其一不删除样式节点", () => {
+    const a = {}, b = {};
+    ensurePageStyle(theme, document, undefined, a);
+    ensurePageStyle(theme, document, undefined, b);
+    releasePageStyle(document, a);
+    expect(document.getElementById("icard-theme-style")).not.toBeNull();
+    releasePageStyle(document, b);
+    expect(document.getElementById("icard-theme-style")).toBeNull();
+  });
+
+  it("同一消费者重复 ensure 幂等（渲染路径多次调用），释放后完全清除", () => {
+    const a = {};
+    ensurePageStyle(theme, document, undefined, a);
+    ensurePageStyle(theme, document, undefined, a);
+    releasePageStyle(document, a);
+    expect(document.getElementById("icard-theme-style")).toBeNull();
+  });
+
+  it("未传 consumer 时保持旧语义（立即删除）", () => {
+    ensurePageStyle(theme, document);
+    releasePageStyle(document);
+    expect(document.getElementById("icard-theme-style")).toBeNull();
+  });
 });

@@ -350,13 +350,15 @@ async runCardLayoutPipeline(ctx) {
   const coverFields = settings.coverEnabled === true && coverSession
     ? /** @type {import('../../services/card-cover-model.js').CardCoverFields} */ (coverSession.getCoverFields())
     : null;
+  const ownerDoc = /** @type {Document | undefined} */ (this.containerEl?.ownerDocument) || window.document;
   const result = await renderCardPages(cardDoc, {
     theme,
     size,
     typography,
     resolveImageSrc: createSnapshotResolver(resources),
     resources,
-    document: window.document,
+    document: ownerDoc,
+    styleConsumer: this,
     pageNumberEnabled: settings.pageNumberEnabled !== false,
     watermarkText: String(settings.watermarkText || ''),
     cover: coverFields && isCoverUsable(coverFields)
@@ -646,7 +648,7 @@ disposeCardPreview() {
     selfRecord.cardSessionRegistry = null;
   }
   const ownerDoc = /** @type {Document | undefined} */ (this.containerEl?.ownerDocument);
-  releasePageStyle(ownerDoc);
+  releasePageStyle(ownerDoc, this);
 }
 ,
 };

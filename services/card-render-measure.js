@@ -145,7 +145,7 @@ export async function measureCardDocument(cardDoc, options = {}) {
   const resolveImageSrc = options.resolveImageSrc ||
     (options.resources ? createSnapshotResolver(options.resources) : undefined);
 
-  ensurePageStyle(theme, ownerDoc, options.typography);
+  ensurePageStyle(theme, ownerDoc, options.typography, options.styleConsumer);
   const offscreen = attachOffscreenContainer(ownerDoc);
   /** @type {Record<string, number>} */
   const heights = {};

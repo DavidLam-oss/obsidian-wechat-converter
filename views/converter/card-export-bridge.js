@@ -56,7 +56,7 @@ import {
   createCardResourceSession,
   createInlineSnapshotResolver,
 } from '../../services/card-resources.js';
-import { renderCardPages, RATIO_PRESETS, capturePage, CAPTURE_LIBRARY_IDS } from '../../services/card-render-engine.js';
+import { renderCardPages, releasePageStyle, RATIO_PRESETS, capturePage, CAPTURE_LIBRARY_IDS } from '../../services/card-render-engine.js';
 import { DEFAULT_CARD_THEME_ID, getCardTheme } from '../../services/card-themes.js';
 import { loadCommonJsDependency } from '../../services/obsidian-compat.js';
 
@@ -337,13 +337,16 @@ async createCardCaptureCallback(input) {
         : deriveCoverFields({ markdown, sourcePath: String(input.sourcePath || '') }))
     : null;
 
+  const exportConsumer = {};
+  const ownerDoc = typeof window !== 'undefined' ? window.document : undefined;
   const result = await renderCardPages(cardDoc, {
     theme,
     size,
     typography,
     resolveImageSrc: createInlineSnapshotResolver(resources),
     resources,
-    document: window.document,
+    document: ownerDoc,
+    styleConsumer: exportConsumer,
     pageNumberEnabled: settings.pageNumberEnabled !== false,
     watermarkText: String(settings.watermarkText || ''),
     cover: coverFields && isCoverUsable(coverFields) ? { fields: coverFields } : undefined,
@@ -373,6 +376,7 @@ async createCardCaptureCallback(input) {
     return { bytes };
   } finally {
     result.detach();
+    releasePageStyle(ownerDoc, exportConsumer);
   }
 }
 ,
