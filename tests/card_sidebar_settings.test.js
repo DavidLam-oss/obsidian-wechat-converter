@@ -538,9 +538,12 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(refs.coverImageToolsWrap.classList.contains("hidden")).toBe(true);
       expect(refs.coverImagePreviewWrap.classList.contains("hidden")).toBe(true);
 
-      // ② 点击「添加封面配图」快速唤起入口：切换为 adaptive 版式并展开工具组
+      // ② 点击「添加封面配图」唤起独立选图工作台（未选图时保持纯文字模式）
       refs.coverAddImageBtn.click();
-      expect(session.getCoverFields().coverMode).toBe("adaptive");
+      expect(session.getCoverFields().coverMode).toBe("none");
+
+      // 选图工作台选定图片后回填（或切换为 adaptive 版式）：展开工具组与配图卡
+      view.applyCardCoverField("coverMode", "adaptive");
       view.renderCardSettingsValues();
 
       expect(refs.coverAddImageBtn.classList.contains("hidden")).toBe(true);

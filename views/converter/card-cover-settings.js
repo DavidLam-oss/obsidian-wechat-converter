@@ -107,7 +107,6 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       attr: { type: 'button', title: '打开独立选图工作台为封面添加配图' },
     });
     addImageBtn.addEventListener('click', () => {
-      view.applyCardCoverField('coverMode', 'adaptive');
       openMediaPicker('unsplash');
     });
     refs.coverAddImageBtn = addImageBtn;

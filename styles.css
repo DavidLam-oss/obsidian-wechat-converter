@@ -8283,10 +8283,10 @@ div.modal.wechat-material-picker-modal-mobile {
  */
 
 .card-media-picker-modal {
-  width: 720px;
-  max-width: 94vw;
-  height: 80vh;
-  max-height: 820px;
+  width: 620px;
+  max-width: 90vw;
+  height: 520px;
+  max-height: 72vh;
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -8299,7 +8299,7 @@ div.modal.wechat-material-picker-modal-mobile {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px 12px;
+  padding: 14px 58px 12px 20px;
   border-bottom: 1px solid var(--background-modifier-border);
   background: var(--background-secondary);
   flex-shrink: 0;
@@ -8466,10 +8466,11 @@ div.modal.wechat-material-picker-modal-mobile {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 30px 20px;
   text-align: center;
   color: var(--text-muted);
   gap: 12px;
+  margin: auto 0;
 }
 
 .card-media-picker-empty-title {
