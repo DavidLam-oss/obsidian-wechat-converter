@@ -1827,7 +1827,7 @@ AI layout 面板和生成结果的视觉样式
   margin: 0;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 480px) {
   .apple-settings-details .setting-item {
     display: block;
     gap: 10px;
