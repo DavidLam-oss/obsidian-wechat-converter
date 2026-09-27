@@ -1,7 +1,7 @@
 /*
 ## 核心功能
 
-实现插件设置页中独立的「AI 服务」Tab（ai-tab）配置界面能力。
+实现插件设置页中独立的「AI/第三方服务」Tab（ai-tab）配置界面能力。
 
 ## 输入
 
@@ -9,11 +9,11 @@
 
 ## 输出
 
-输出 renderAiSettingsTab 与 aiSettingsMethods，用于渲染 AI 服务设置项、保存配置或打开辅助 modal。
+输出 renderAiSettingsTab 与 aiSettingsMethods，用于渲染 AI 与第三方图库服务设置项、保存配置或打开辅助 modal。
 
 ## 定位
 
-位于 views/settings/，负责 AI 服务的设置 UI 层；设置归一化交给 services/ai-layout/。
+位于 views/settings/，负责 AI 与第三方服务（如 Unsplash）的设置 UI 层。
 
 ## 依赖
 
@@ -48,6 +48,66 @@ import {
 } from "../apple-style-view-shared.js";
 import { showEditAiProviderModal } from "./ai-provider-modal.js";
 
+export const UNSPLASH_API_KEY_GUIDE_URL = "https://xiaoweibox.top/chats/unsplash-api-key";
+
+/**
+ * 安全打开外部链接
+ * @param {AppleStyleSettingTabContract} tab
+ * @param {string} url
+ * @returns {boolean}
+ */
+function openExternalUrl(tab, url) {
+  const target = String(url || "").trim();
+  if (!/^https?:\/\//i.test(target)) return false;
+
+  if (typeof tab?.plugin?.openExternalUrl === "function") {
+    return tab.plugin.openExternalUrl(target);
+  }
+  if (typeof tab?.plugin?.activeView?.openExternalUrl === "function") {
+    return tab.plugin.activeView.openExternalUrl(target);
+  }
+
+  if (typeof window !== "undefined" && typeof window.open === "function") {
+    window.open(target, "_blank", "noopener");
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * 为设置项附加行内弱化指南链接
+ * @param {object} setting
+ * @param {Document | null} activeDocument
+ * @param {string} text
+ * @param {string} linkText
+ * @param {string} href
+ * @param {() => void} openLink
+ */
+function setMutedGuideDescription(setting, activeDocument, text, linkText, href, openLink) {
+  const fallbackText = `${text} ${linkText}`;
+  const description = setting?.descEl;
+  if (!activeDocument || !description) {
+    if (typeof setting?.setDesc === "function") {
+      setting.setDesc(fallbackText);
+    }
+    return;
+  }
+
+  description.replaceChildren(activeDocument.createTextNode(`${text} `));
+  const link = activeDocument.createElement("a");
+  link.textContent = linkText;
+  link.href = href;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.className = "apple-settings-guide-link";
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    openLink();
+  });
+  description.append(link);
+}
+
 /**
  * 渲染独立「AI 服务」Tab 页面
  * @param {AppleStyleSettingTabContract} tab
@@ -64,7 +124,7 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
   if (typeof tab.renderSettingsTabIntro === "function") {
     tab.renderSettingsTabIntro(
       containerEl,
-      "集中管理用于公众号文章 AI 编排和小红书卡片封面生成的 AI 模型凭据，支持区分文本与生图用途。"
+      "集中管理 AI 大模型（文章排版与卡片生图）及第三方图库服务的 API 凭据与偏好设置。"
     );
   }
 
@@ -73,7 +133,6 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
   // =========================================================================
   new SettingCtor(containerEl)
     .setName("AI Provider 模型凭据池")
-    .setDesc("管理大模型 API 连接。支持同时或分别启用「文本模型」和「生图模型」能力，避免跨场景选错报错。")
     .setHeading();
 
   /** @type {AiProviderLike[]} */
@@ -245,12 +304,11 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
   // =========================================================================
   new SettingCtor(containerEl)
     .setName("文章 AI 编排")
-    .setDesc("针对微信公众号长文排版。通过大语言模型分析文章结构，生成符合微信规范的版式。")
     .setHeading();
 
   new SettingCtor(containerEl)
     .setName("启用 AI 编排")
-    .setDesc("关闭后隐藏右侧工具栏中的 AI 编排入口，保留既有排版缓存结果。")
+    .setDesc("在转换器侧边栏开启 AI 智能排版入口。")
     .addToggle((toggle) =>
       toggle.setValue(tab.plugin.settings.ai.enabled === true).onChange(async (value) => {
         tab.plugin.settings.ai.enabled = value;
@@ -262,11 +320,11 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
   // 默认文本 Provider 下拉框：仅过滤具备文本能力的 Provider
   const textProviders = providers.filter((p) => p.supportsText !== false && p.enabled !== false);
   new SettingCtor(containerEl)
-    .setName("默认文章编排 Provider")
+    .setName("默认文本模型")
     .setDesc(
       textProviders.length > 0
-        ? "生成公众号 AI 编排时优先使用的模型（仅列出具备文本能力的 Provider）。"
-        : "还没有具备文本能力的可用 Provider，请在上方添加或在已有 Provider 中开启「文本模型」能力。"
+        ? "执行文章排版时优先调用的服务商。"
+        : "暂无可用文本模型，请在上方添加或开启「文本模型」能力。"
     )
     .addDropdown((dropdown) => {
       dropdown.addOption("", "自动选择");
@@ -283,8 +341,8 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
 
   const layoutFamilyOptions = getLayoutFamilyList({ includeAuto: true, includeReserved: false });
   new SettingCtor(containerEl)
-    .setName("默认布局")
-    .setDesc("打开 AI 编排面板时默认选中的布局。")
+    .setName("默认排版版式")
+    .setDesc("AI 编排初始推荐的版面结构风格。")
     .addDropdown((dropdown) => {
       layoutFamilyOptions.forEach((option) => dropdown.addOption(option.value, option.label));
       dropdown.setValue(tab.plugin.settings.ai.defaultLayoutFamily || AI_LAYOUT_SELECTION_AUTO);
@@ -297,8 +355,8 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
 
   const colorPaletteOptions = getColorPaletteList({ includeAuto: true });
   new SettingCtor(containerEl)
-    .setName("默认颜色")
-    .setDesc("打开 AI 编排面板时默认选中的配色方案。")
+    .setName("默认主题配色")
+    .setDesc("AI 编排初始推荐的主题调色板。")
     .addDropdown((dropdown) => {
       colorPaletteOptions.forEach((option) => dropdown.addOption(option.value, option.label));
       dropdown.setValue(tab.plugin.settings.ai.defaultColorPalette || AI_LAYOUT_SELECTION_AUTO);
@@ -318,8 +376,8 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
   const advancedArea = advancedOptions.createDiv({ cls: "apple-settings-area apple-settings-advanced-area" });
 
   new SettingCtor(advancedArea)
-    .setName("编排时参考图片")
-    .setDesc("开启后，AI 会把文中的配图和截图作为排版素材参考，不修改正文。")
+    .setName("参考正文配图")
+    .setDesc("将文章中的配图和截图作为排版节奏参考（不改动正文）。")
     .addToggle((toggle) =>
       toggle.setValue(tab.plugin.settings.ai.includeImagesInLayout !== false).onChange(async (value) => {
         tab.plugin.settings.ai.includeImagesInLayout = value;
@@ -329,8 +387,8 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
     );
 
   new SettingCtor(advancedArea)
-    .setName("AI 请求超时（秒）")
-    .setDesc("默认 120 秒；建议保持 60 到 120 秒。")
+    .setName("接口请求超时（秒）")
+    .setDesc("单次排版请求超时限制（默认 120 秒）。")
     .addText((text) =>
       text
         .setPlaceholder("120")
@@ -384,17 +442,16 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
   // =========================================================================
   new SettingCtor(containerEl)
     .setName("卡片 AI 封面")
-    .setDesc("针对小红书/图片卡片导出。支持基于文章内容和预制风格模板生成高质感封面背景。")
     .setHeading();
 
   // 默认生图 Provider 下拉框：仅过滤具备生图能力的 Provider
   const imageProviders = providers.filter((p) => p.supportsImage === true && p.enabled !== false);
   new SettingCtor(containerEl)
-    .setName("默认生图 Provider")
+    .setName("默认生图模型")
     .setDesc(
       imageProviders.length > 0
-        ? "在侧边栏封面面板点击生图时默认调用的服务商（仅列出具备生图能力的 Provider）。"
-        : "还没有开启「生图模型」能力的 Provider，请在上方添加或在已有 Provider 中勾选生图模型。"
+        ? "生成卡片封面背景时优先调用的服务商。"
+        : "暂无可用生图模型，请在上方添加或开启「生图模型」能力。"
     )
     .addDropdown((dropdown) => {
       dropdown.addOption("", "未设置 (按侧栏所选)");
@@ -409,8 +466,8 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
     });
 
   new SettingCtor(containerEl)
-    .setName("默认封面呈现模式")
-    .setDesc("新建笔记卡片会话时的默认封面模式。在侧边栏「封面设置」中可针对单篇随时切换。")
+    .setName("默认呈现模式")
+    .setDesc("新建卡片时的默认版式（侧边栏可针对单篇随时切换）。")
     .addDropdown((dropdown) => {
       dropdown.addOption("mixed", "图文混排（AI 背景 + 插件精准中文排版，推荐）");
       dropdown.addOption("full-bleed", "纯全图封面（AI 生成纯海报，无文字层）");
@@ -421,46 +478,36 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
       });
     });
 
-  new SettingCtor(containerEl)
-    .setName("侧边栏操作提示")
-    .setDesc("提示：在转换器视图切换到「卡片」模式，点击右上角设置图标打开「封面设置」Tab，即可选定风格模板并一键生成封面。");
-
   // =========================================================================
   // 第四部分：摄影图库与搜索服务（Unsplash）
   // =========================================================================
   new SettingCtor(containerEl)
     .setName("摄影图库与搜索服务")
-    .setDesc("配置摄影图库 API 凭据。配合小红书/图片卡片封面，支持按关键词精准搜索高质量摄影大片。")
     .setHeading();
 
   const unsplashSetting = new SettingCtor(containerEl)
-    .setName("Unsplash Access Key")
-    .setDesc("用于卡片封面精准关键词搜索。个人免费开发者账号每小时可享有 50 次搜索额度。");
+    .setName("Unsplash Access Key");
 
-  /** @type {HTMLInputElement | null} */
-  let unsplashKeyInputEl = null;
+  setMutedGuideDescription(
+    unsplashSetting,
+    containerEl.ownerDocument || getActiveWindowValue("document") || null,
+    "用于卡片封面搜索高清摄影大图（每小时 50 次免费额度）。",
+    "申请图文指引 →",
+    UNSPLASH_API_KEY_GUIDE_URL,
+    () => {
+      openExternalUrl(tab, UNSPLASH_API_KEY_GUIDE_URL);
+    }
+  );
 
   unsplashSetting.addText((text) => {
-    unsplashKeyInputEl = text.inputEl;
     text.inputEl.type = "password";
+    text.inputEl.setCssStyles?.({ width: "240px", maxWidth: "100%" });
     text
-      .setPlaceholder("例如: d8f3a9e...")
+      .setPlaceholder("粘贴 Access Key...")
       .setValue(tab.plugin.settings.unsplashAccessKey || "")
       .onChange(async (value) => {
         tab.plugin.settings.unsplashAccessKey = (value || "").trim();
         await tab.plugin.saveSettings();
-      });
-  });
-
-  unsplashSetting.addButton((button) => {
-    button
-      .setButtonText("显示")
-      .setTooltip("切换明文与密文显示")
-      .onClick(() => {
-        if (!unsplashKeyInputEl) return;
-        const isPassword = unsplashKeyInputEl.type === "password";
-        unsplashKeyInputEl.type = isPassword ? "text" : "password";
-        button.setButtonText(isPassword ? "隐藏" : "显示");
       });
   });
 
@@ -499,23 +546,6 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
         }
       });
   });
-
-  unsplashSetting.addButton((button) => {
-    button
-      .setButtonText("清空")
-      .setTooltip("清空已保存的 Access Key")
-      .onClick(async () => {
-        tab.plugin.settings.unsplashAccessKey = "";
-        if (unsplashKeyInputEl) {
-          unsplashKeyInputEl.value = "";
-        }
-        await tab.plugin.saveSettings();
-        new NoticeCtor("已清空 Unsplash Access Key");
-      });
-  });
-
-  new SettingCtor(containerEl)
-    .setName("申请免费 Access Key 指引")
 }
 
 export { showEditAiProviderModal };

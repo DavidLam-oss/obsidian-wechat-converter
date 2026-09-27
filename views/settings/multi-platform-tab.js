@@ -351,13 +351,12 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     renderSettingsTabIntro.call(
       tab,
       containerEl,
-      '连接浏览器插件，并选择要保存草稿的内容平台。'
+      '通过浏览器插件与登录态，一键将文章同步至小红书、知乎、B 站等多个平台草稿箱。'
     );
   }
 
   new Setting(containerEl)
     .setName('浏览器插件发布')
-    .setDesc('Obsidian 负责写作、预览和平台选择；浏览器插件使用当前的浏览器登录态，把文章保存到小红书、知乎、抖音、头条、B 站、微博等平台草稿箱。')
     .setHeading();
 
   const guide = containerEl.createDiv({
@@ -371,8 +370,8 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     text: isProLicensed
       ? (isProCached
         ? `Pro 身份已保留（上次识别：${cachedLastSeenText}）`
-        : (isPublishingEnabled ? 'Pro 已激活：多平台发布已解锁' : '上次连接时识别为 Pro'))
-      : '下一步：安装浏览器插件并完成配置',
+        : (isPublishingEnabled ? 'Pro 已激活' : '上次连接时识别为 Pro'))
+      : '安装浏览器插件并完成配置',
   });
   guide.createEl('p', {
     text: isProLicensed
@@ -382,7 +381,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
           ? '当前浏览器插件授权已同步到 Obsidian，发布到其他平台时不再受免费版每日平台数量限制。'
           : '浏览器插件发布当前已关闭。重新启用并连接后，Obsidian 会再次确认授权状态。'))
       : (hasEverConnected
-        ? '免费版每天 3 个平台额度。想先试用，先安装浏览器插件；已经购买或已经装好浏览器插件，可直接查看配置步骤。'
+        ? '免费版每天 3 个平台额度。连接浏览器插件即可开启多平台草稿同步。'
         : '免费版每天 3 个平台额度。已购买 Pro？连接一次浏览器插件即可解锁离线保留，之后浏览器未启动也会保留 Pro 身份。'),
   });
   if (isProLicensed) {
@@ -401,7 +400,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
 
   new Setting(containerEl)
     .setName('启用浏览器插件发布')
-    .setDesc('开启后，Obsidian 会把文章发送给浏览器插件，由插件使用浏览器登录态保存到各平台草稿箱。在下方填入「连接令牌」即可完成配对。')
+    .setDesc('开启后支持通过本地桥接将文章发送至浏览器插件。在下方填入「连接令牌」即可完成配对。')
     .addToggle(toggle => toggle
       .setValue(multiPlatformSettings.enabled)
       .onChange(async (value) => {
@@ -425,7 +424,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
 
   new Setting(containerEl)
     .setName('本地服务端口')
-    .setDesc('默认 9527。只有当浏览器插件中的本地服务地址使用了其他端口时才需要修改。')
+    .setDesc('本地通信端口（默认 9527，通常无需修改）。')
     .addText(text => text
       .setPlaceholder(String(DEFAULT_WECHATSYNC_PORT))
       .setValue(String(multiPlatformSettings.port))
@@ -442,7 +441,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
 
   new Setting(containerEl)
     .setName('连接令牌')
-    .setDesc('填入浏览器插件本地服务中显示的连接令牌，用于确认 Obsidian 与插件属于同一组连接。')
+    .setDesc('浏览器插件设置中显示的配对令牌，用于建立安全连接。')
     .addText(text => text
       .setPlaceholder('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')
       .setValue(toText(multiPlatformSettings.token))
@@ -754,7 +753,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
 
   new Setting(containerEl)
     .setName('测试连接')
-    .setDesc('只验证 Obsidian、浏览器插件和连接令牌是否连通，并读取平台清单；不会实时检测所有平台登录状态。')
+    .setDesc('验证 Obsidian 与浏览器插件的连接状态及令牌有效性。')
     .addButton(button => button
       .setButtonText('测试')
       .onClick(async () => {
@@ -852,8 +851,8 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
           await plugin.saveSettings();
           shouldRedisplay = true;
           new Notice(health
-            ? '✅ 已连接浏览器插件，连接令牌校验通过'
-            : '✅ 已连接浏览器插件');
+            ? '已连接浏览器插件，连接令牌校验通过'
+            : '已连接浏览器插件');
         } catch (error) {
           /** @type {Record<string, unknown> | null} */
           let bridgeStatusAfterFailure = null;
@@ -922,7 +921,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
             },
           });
           await plugin.saveSettings();
-          new Notice(`❌ ${detailedMessage}${hint ? ` ${hint}` : ''}`, 12000);
+          new Notice(`${detailedMessage}${hint ? ` ${hint}` : ''}`, 12000);
           shouldRedisplay = true;
         } finally {
           button.setDisabled?.(false);
@@ -933,7 +932,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
 
   new Setting(containerEl)
     .setName('读取已选平台状态')
-    .setDesc('读取浏览器插件缓存的上次状态，不会实时检测登录；发布时仍以浏览器插件实际执行为准。')
+    .setDesc('读取浏览器插件缓存的各平台登录状态（发布时仍以插件实际执行为准）。')
     .addButton(button => button
       .setButtonText('读取')
       .onClick(async () => {
@@ -989,7 +988,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
           });
           await plugin.saveSettings();
           const authenticatedCount = cachedPlatforms.filter((platform) => platform.authenticated === true).length;
-          new Notice(`✅ 已读取 ${cachedPlatforms.length} 个已选平台，${authenticatedCount} 个上次可用`);
+          new Notice(`已读取 ${cachedPlatforms.length} 个已选平台，${authenticatedCount} 个上次可用`);
           refreshSettingTab(tab);
         } catch (error) {
           const readableError = toReadableError(error);
@@ -998,7 +997,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
             code: readableError.code,
             message: readableError.message,
           });
-          new Notice(`❌ 读取失败：${readableError.message}`, 10000);
+          new Notice(`读取失败：${readableError.message}`, 10000);
         } finally {
           button.setDisabled?.(false);
           button.setButtonText('读取');

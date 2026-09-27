@@ -146,7 +146,7 @@ const settingsTabShellMethods = {
     const multiTab = tabBar.createDiv({ cls: 'apple-settings-tab apple-settings-tab-multi' });
     multiTab.createSpan({ text: MULTI_PLATFORM_TAB_LABEL, cls: 'apple-settings-tab-label' });
     const feishuTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '飞书' });
-    const aiTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: 'AI 服务' });
+    const aiTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: 'AI/第三方服务' });
     const aboutTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '关于' });
 
     const wechatContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });

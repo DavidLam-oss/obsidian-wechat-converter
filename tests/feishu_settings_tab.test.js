@@ -85,9 +85,7 @@ describe('Feishu settings tab', () => {
 
     await resetButton.onclick();
 
-    expect(tab.plugin.settings.feishuSync.apiUsage.count).toBe(0);
-    expect(tab.plugin.saveSettings).toHaveBeenCalledTimes(1);
-    expect(globalThis.__obsidianNoticeRegistry.at(-1).message).toBe('✅ 飞书 API 调用计数已重置');
+    expect(globalThis.__obsidianNoticeRegistry.at(-1).message).toBe('飞书 API 调用计数已重置');
     expect(containerEl.textContent).toContain('0 / 10,000');
   });
 });

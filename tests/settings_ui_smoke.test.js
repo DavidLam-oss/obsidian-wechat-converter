@@ -984,7 +984,7 @@ describe('设置页不提供卡片页签（回归守卫）', () => {
 
     const labels = Array.from(tab.containerEl.querySelectorAll('.apple-settings-tab'))
       .map((el) => el.textContent);
-    expect(labels).toEqual(expect.arrayContaining(['微信', '飞书', 'AI 服务', '关于']));
+    expect(labels).toEqual(expect.arrayContaining(['微信', '飞书', 'AI/第三方服务', '关于']));
     expect(labels).not.toContain('卡片');
 
     // 只属于卡片页签的表单名不得再出现在设置页（侧栏才是它们的入口）

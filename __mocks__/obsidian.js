@@ -83,6 +83,10 @@ function makeButtonMock() {
       this.text = String(value || '');
       return this;
     },
+    setIcon(value) {
+      this.icon = String(value || '');
+      return this;
+    },
     setClass(cls) {
       // 对齐 ButtonComponent.setClass：记录附加类（mod-warning 等），供断言
       this.buttonClass = String(cls || '');

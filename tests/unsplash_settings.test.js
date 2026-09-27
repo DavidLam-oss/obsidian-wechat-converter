@@ -25,12 +25,14 @@ const {
 } = await import('../services/plugin-settings.js');
 const {
   renderAiSettingsTab,
+  UNSPLASH_API_KEY_GUIDE_URL,
 } = await import('../views/settings/ai-tab.js');
 
 describe('Unsplash 设置与面板渲染', () => {
   beforeEach(() => {
     globalThis.__obsidianButtonRegistry = [];
     globalThis.__obsidianSettingNamesRegistry = [];
+    globalThis.__obsidianSettingInstancesRegistry = [];
   });
 
   it('默认包含 unsplashAccessKey 为空字符串', () => {
@@ -85,16 +87,26 @@ describe('Unsplash 设置与面板渲染', () => {
     const settingNames = globalThis.__obsidianSettingNamesRegistry || [];
     expect(settingNames).toContain('摄影图库与搜索服务');
     expect(settingNames).toContain('Unsplash Access Key');
-    expect(settingNames).toContain('申请免费 Access Key 指引');
 
-    // 查找清空按钮并触发点击
+    // 检查行内指南链接是否存在并可点击打开
+    const unsplashSetting = (globalThis.__obsidianSettingInstancesRegistry || []).find(
+      (setting) => setting.name === 'Unsplash Access Key'
+    );
+    expect(unsplashSetting).toBeDefined();
+
+    const guideLink = unsplashSetting.descEl?.querySelector('.apple-settings-guide-link');
+    expect(guideLink).not.toBeNull();
+    expect(guideLink.textContent).toContain('申请图文指引');
+    expect(guideLink.getAttribute('href')).toBe(UNSPLASH_API_KEY_GUIDE_URL);
+
+    mockPlugin.openExternalUrl = vi.fn();
+    guideLink.click();
+    expect(mockPlugin.openExternalUrl).toHaveBeenCalledWith(UNSPLASH_API_KEY_GUIDE_URL);
+
+    // 检查存在测试连接按钮
     const buttons = globalThis.__obsidianButtonRegistry || [];
-    const clearBtn = buttons.find((btn) => btn.text === '清空');
-    expect(clearBtn).toBeDefined();
-
-    clearBtn.clickHandler();
-    expect(mockPlugin.settings.unsplashAccessKey).toBe('');
-    expect(mockSaveSettings).toHaveBeenCalled();
+    const testBtn = buttons.find((btn) => btn.text === '测试连接');
+    expect(testBtn).toBeDefined();
   });
 
   it('点击测试连接在无 Key 时提示输入，有 Key 时发起请求', async () => {

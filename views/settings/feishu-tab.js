@@ -114,7 +114,7 @@ function renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, No
   resetBtn.onclick = async () => {
     resetFeishuApiUsage(settings);
     await plugin.saveSettings();
-    if (Notice) new Notice('✅ 飞书 API 调用计数已重置');
+    if (Notice) new Notice('飞书 API 调用计数已重置');
     renderFeishuSettingsTab(tab, containerEl, { obsidianApi: obsidian });
   };
 
@@ -167,20 +167,14 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   if (typeof tab.renderSettingsTabIntro === 'function') {
     tab.renderSettingsTabIntro(
       containerEl,
-      '配置飞书自建应用、目标文件夹和 OpenAPI 调用统计。'
+      '一键将当前笔记转换为原生飞书云文档（docx），保留标题、表格与图片。'
     );
   }
 
-  containerEl.createEl('h2', { text: '飞书云文档同步配置', cls: 'wechat-feishu-heading' });
-  containerEl.createEl('p', {
-    text: '通过飞书自建应用机器人接口，将当前 Obsidian 笔记一键发布并转换为原生的飞书云文档（docx），支持保留标题、表格、以及图片上传（包含本地和图床图片）。',
-    cls: 'setting-item-description',
-  });
-
   // 1. Enable Toggle
   new Setting(containerEl)
-    .setName('启用飞书同步功能')
-    .setDesc('开启后，发布弹窗中会出现「飞书」选项卡，支持将笔记发布至飞书云盘。')
+    .setName('启用飞书同步')
+    .setDesc('开启后，同步弹窗中将提供「飞书」选项，支持发布至指定的飞书云盘文件夹。')
     .addToggle((toggle) => toggle
       .setValue(settings.enabled)
       .onChange(async (value) => {
@@ -196,8 +190,8 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
 
   // 2. App ID
   new Setting(containerEl)
-    .setName('飞书自建应用 App ID')
-    .setDesc('在飞书开放平台（open.feishu.cn）中，您创建的企业自建应用的 App ID')
+    .setName('App ID')
+    .setDesc('飞书开放平台（open.feishu.cn）企业自建应用的 App ID。')
     .addText((text) => text
       .setPlaceholder('cli_a248xxxxxxxxxxxx')
       .setValue(settings.appId)
@@ -209,12 +203,12 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
 
   // 3. App Secret
   new Setting(containerEl)
-    .setName('飞书自建应用 App Secret')
-    .setDesc('自建应用的 App Secret 凭证')
+    .setName('App Secret')
+    .setDesc('企业自建应用的 App Secret 凭证。')
     .addText((text) => {
-      text.inputEl.type = 'password'; // mask the password input
+      text.inputEl.type = 'password';
       text
-        .setPlaceholder('xxxxxxxxxxxxxxxxxxxx')
+        .setPlaceholder('粘贴 App Secret...')
         .setValue(settings.appSecret)
         .onChange(async (value) => {
           settings.appSecret = value.trim();
@@ -224,8 +218,8 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
 
   // 4. Folder Token
   new Setting(containerEl)
-    .setName('同步目标文件夹 Token')
-    .setDesc('飞书文件夹链接中的最后一串字符。例如：https://feishu.cn/drive/folder/fldcnXXXXXXXXX 的 Token 是 fldcnXXXXXXXXX')
+    .setName('目标文件夹 Token')
+    .setDesc('飞书云盘文件夹链接中的 Token（例如 folder/fldcnXXXXXXXXX）。')
     .addText((text) => text
       .setPlaceholder('fldcnxxxxxxxxxxxxxxxxxx')
       .setValue(settings.folderToken)
@@ -237,10 +231,10 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
 
   // 5. User ID
   new Setting(containerEl)
-    .setName('飞书用户 ID (User ID)')
-    .setDesc('用于在同步成功后，把文档的所有权由机器人自动转移给您本人（您的飞书云盘中）。建议使用 user_id 格式，如 abc1234。')
+    .setName('文档所有者 ID (User ID)')
+    .setDesc('同步成功后将文档所有权自动转移给您本人（可选，建议 user_id 格式）。')
     .addText((text) => text
-      .setPlaceholder('abc1234')
+      .setPlaceholder('例如: abc1234')
       .setValue(settings.userId)
       .onChange(async (value) => {
         settings.userId = value.trim();
@@ -251,20 +245,20 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   // 6. Test Connection Button
   new Setting(containerEl)
     .setName('测试连接')
-    .setDesc('验证自建应用授权和目标文件夹读取权限。完整上传/导入权限会在实际同步时验证。')
+    .setDesc('验证自建应用授权与目标文件夹访问权限。')
     .addButton((btn) => btn
       .setButtonText('测试连接')
       .onClick(async () => {
         if (!settings.appId || !settings.appSecret) {
-          new Notice('❌ 请先填写 App ID 和 App Secret！');
+          new Notice('请先填写 App ID 和 App Secret');
           return;
         }
         if (!settings.folderToken) {
-          new Notice('❌ 请先填写同步目标文件夹 Token！');
+          new Notice('请先填写同步目标文件夹 Token');
           return;
         }
 
-        const notice = new Notice('⏳ 正在进行飞书连接测试...', 0);
+        const notice = new Notice('正在测试飞书连接...', 0);
         try {
           let apiUsageChanged = false;
           const client = new FeishuApiClient(settings.appId, settings.appSecret, obsidian.requestUrl, {
@@ -274,20 +268,17 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
             },
           });
           
-          // Verify authentication token
           await client.getAccessToken();
-          
-          // Verify folder read access
           await client.listFolderItems(settings.folderToken);
           
           notice.hide();
           if (apiUsageChanged) await plugin.saveSettings();
-          new Notice('✅ 飞书连接成功，且目标文件夹访问正常！');
+          new Notice('飞书连接成功，目标文件夹访问正常');
         } catch (err) {
           notice.hide();
           await plugin.saveSettings();
           console.error('[飞书连接测试失败]:', err);
-          new Notice(`❌ 飞书连接测试失败: ${err.message || String(err)}`, 7000);
+          new Notice(`飞书连接测试失败: ${err.message || String(err)}`, 7000);
         }
       })
     );
@@ -295,41 +286,33 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   // 7. Render setup instructions
   const guideCard = containerEl.createDiv({ cls: 'wechat-feishu-guide-card' });
   guideCard.setCssStyles({
-    margin: '24px 0',
-    padding: '20px',
-    border: '1px solid var(--background-modifier-border-hover)',
+    margin: '20px 0',
+    padding: '16px 20px',
+    border: '1px solid var(--background-modifier-border)',
     borderRadius: '8px',
     background: 'var(--background-secondary)',
-    boxShadow: 'var(--shadow-s)',
   });
 
-  // Title
-  const titleEl = guideCard.createEl('h3', { cls: 'guide-card-title' });
-  titleEl.setText('飞书应用配置简易步骤 (SOP Guide):');
-  titleEl.setCssStyles({
-    fontSize: '15px',
-    fontWeight: '600',
-    color: 'var(--text-normal)',
-    margin: '0 0 12px 0',
-  });
-
-  // Link Row
-  const detailedLinkRow = guideCard.createDiv({ cls: 'wechat-feishu-guide-link-row' });
-  detailedLinkRow.setCssStyles({
+  const guideHeader = guideCard.createDiv({ cls: 'wechat-feishu-guide-header' });
+  guideHeader.setCssStyles({
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
-    marginBottom: '18px',
-    padding: '8px 12px',
-    background: 'var(--background-primary)',
-    borderRadius: '6px',
-    border: '1px solid var(--background-modifier-border)',
+    justifyContent: 'space-between',
+    gap: '12px',
+    marginBottom: '14px',
     flexWrap: 'wrap',
   });
 
-  detailedLinkRow.createSpan({ text: '💡 ' });
-  const detailedLink = detailedLinkRow.createEl('a', {
-    text: '点击查看飞书同步详细图文配置与排障指南 ➔',
+  const titleEl = guideHeader.createEl('div', { cls: 'guide-card-title' });
+  titleEl.setText('飞书应用配置简易步骤');
+  titleEl.setCssStyles({
+    fontSize: '14px',
+    fontWeight: '600',
+    color: 'var(--text-normal)',
+  });
+
+  const detailedLink = guideHeader.createEl('a', {
+    text: '查看详细图文指引 →',
     href: 'https://xiaoweibox.top/chats/feishu-sync',
   });
   detailedLink.onclick = (e) => {
@@ -343,7 +326,7 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   detailedLink.setCssStyles({
     color: 'var(--text-accent)',
     textDecoration: 'none',
-    fontWeight: '600',
+    fontWeight: '500',
     fontSize: '13px',
     cursor: 'pointer',
   });
