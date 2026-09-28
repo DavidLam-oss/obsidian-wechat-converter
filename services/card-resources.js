@@ -112,7 +112,7 @@ export const CARD_LOAD_CONCURRENCY = 3;
 /**
  * @typedef {object} CardResourceLoaders 可注入加载器（默认用活动窗口实现；测试注入替身）
  * @property {(src: string, signal: AbortSignal) => Promise<{ blob: Blob }>} fetchBlob
- * @property {(src: string, signal: AbortSignal) => Promise<{ width: number, height: number }>} decodeImage
+ * @property {(src: string, signal: AbortSignal, blob?: Blob) => Promise<{ width: number, height: number }>} decodeImage
  * @property {(blob: Blob) => Promise<string>} blobToDataUrl 已加载字节 → 内联 data: URL（捕获路径）
  * @property {(doc: Document, signal: AbortSignal) => Promise<"ok">} waitFonts
  */
@@ -393,7 +393,7 @@ export function createCardResourcePool(options = {}) {
         const perImageTimer = setTimeout(() => imageController.abort(), CARD_IMAGE_TIMEOUT_MS);
         try {
           const { blob } = await loaders.fetchBlob(resolved.src, imageController.signal);
-          const decode = await loaders.decodeImage(resolved.src, imageController.signal);
+          const decode = await loaders.decodeImage(resolved.src, imageController.signal, blob);
           clearTimeout(perImageTimer);
           if (controller.signal.aborted) throw abortError(); // 中止后结果不采用
           const mime = blob.type || resolved.mime;

@@ -28,6 +28,7 @@ const {
 
 const {
   renderUnsplashMediaPickerTab,
+  clearUnsplashCache,
 } = await import('../views/converter/card-media-picker-unsplash.js');
 
 const {
@@ -42,6 +43,11 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     globalThis.__obsidianModalRegistry = [];
+    obsidian.requestUrl = vi.fn().mockResolvedValue({
+      status: 200,
+      headers: { 'content-type': 'image/png' },
+      arrayBuffer: new Uint8Array([137, 80, 78, 71]).buffer,
+    });
   });
 
   describe('fetchUnsplashPhotos 接口服务', () => {
@@ -208,6 +214,52 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
       tabs[2].dispatchEvent(new MouseEvent('click'));
       expect(tabs[2].classList.contains('is-active')).toBe(true);
     });
+
+    it('切换 Tab 时通过独立 Pane 保持视图驻留，不销毁旧 Tab 的 DOM', () => {
+      const mockView = {
+        app: {
+          setting: { open: vi.fn(), openTabById: vi.fn() },
+          metadataCache: { getFirstLinkpathDest: vi.fn() },
+          vault: { readBinary: vi.fn() },
+        },
+        plugin: {
+          settings: { unsplashAccessKey: 'test-key' },
+        },
+        getCurrentCardLayoutSettings: vi.fn().mockReturnValue({ ratioId: '3:4' }),
+        getCurrentDocContent: vi.fn().mockReturnValue('# 标题\n这是一段正文。'),
+      };
+
+      showCardMediaPickerModal({
+        view: mockView,
+        initialTab: 'unsplash',
+        onSelect: vi.fn(),
+      });
+
+      const modal = globalThis.__obsidianModalRegistry[globalThis.__obsidianModalRegistry.length - 1];
+      const contentEl = modal.contentEl;
+      const tabs = Array.from(contentEl.querySelectorAll('.card-media-picker-tab-btn'));
+
+      const unsplashPane = contentEl.querySelector('.card-media-picker-pane--unsplash');
+      const notePane = contentEl.querySelector('.card-media-picker-pane--note');
+      expect(unsplashPane?.classList.contains('is-hidden')).toBe(false);
+      expect(notePane?.classList.contains('is-hidden')).toBe(true);
+
+      // 输入一个自定义关键词
+      const input = unsplashPane?.querySelector('.card-media-picker-search-input');
+      if (input) input.value = '测试保留搜索词';
+
+      // 切换到笔记与本地
+      tabs[1].dispatchEvent(new MouseEvent('click'));
+      expect(unsplashPane?.classList.contains('is-hidden')).toBe(true);
+      expect(notePane?.classList.contains('is-hidden')).toBe(false);
+
+      // 切回 Unsplash
+      tabs[0].dispatchEvent(new MouseEvent('click'));
+      expect(unsplashPane?.classList.contains('is-hidden')).toBe(false);
+      expect(notePane?.classList.contains('is-hidden')).toBe(true);
+      // 输入框内容原样保留，没有被清空重载
+      expect(unsplashPane?.querySelector('.card-media-picker-search-input')?.value).toBe('测试保留搜索词');
+    });
   });
 
   describe('renderUnsplashMediaPickerTab 交互', () => {
@@ -271,6 +323,54 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
       firstChip.dispatchEvent(new MouseEvent('click'));
       expect(searchInput.value).toBe(firstChip.textContent);
     });
+
+    it('命中缓存时无需再次发起网络请求，点击换一批可穿透缓存刷新', async () => {
+      clearUnsplashCache();
+      const container = applyExtensions(document.createElement('div'));
+      const mockFetch = vi.spyOn(await import('../services/card-cover-source.js'), 'fetchUnsplashPhotos');
+      mockFetch.mockResolvedValue({
+        total: 1,
+        totalPages: 1,
+        results: [
+          {
+            id: 'photo-cached-1',
+            thumbUrl: 'https://images.unsplash.com/thumb-c1',
+            regularUrl: 'https://images.unsplash.com/regular-c1',
+            rawUrl: 'https://images.unsplash.com/raw-c1',
+            authorName: '张三',
+          },
+        ],
+      });
+
+      const mockView = {
+        plugin: { settings: { unsplashAccessKey: 'valid-api-key' } },
+      };
+
+      renderUnsplashMediaPickerTab({
+        container,
+        view: mockView,
+        ratioId: '3:4',
+        onSelect: vi.fn(),
+        onOpenSettings: vi.fn(),
+      });
+
+      // 等待初始异步加载完成
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+
+      // 重新对同一关键词发起搜索（此时应命中缓存）
+      const searchBtn = container.querySelector('.card-media-picker-search-btn');
+      searchBtn?.dispatchEvent(new MouseEvent('click'));
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+
+      // 点击「换一批」应穿透缓存重新发起请求
+      const refreshBtn = container.querySelector('.card-media-picker-refresh-btn');
+      expect(refreshBtn).not.toBeNull();
+      refreshBtn?.dispatchEvent(new MouseEvent('click'));
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('renderNoteMediaPickerTab 交互', () => {
@@ -306,6 +406,7 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
       const dropzone = container.querySelector('.card-media-picker-dropzone');
       expect(dropzone).not.toBeNull();
       expect(dropzone.textContent).toContain('拖拽本地图片至此处，或点击浏览文件');
+      expect(dropzone.querySelector('.card-media-picker-dropzone-btn')?.textContent).toBe('浏览文件');
     });
 
     it('能够优先从 cardPreviewPendingInput 中读取当前活跃 Markdown 正文', () => {

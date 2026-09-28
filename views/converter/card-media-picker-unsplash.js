@@ -23,6 +23,18 @@ import {
 
 const POPULAR_TAGS = ['极简', '建筑', '科技', '自然', '生活', '质感', '暗黑', '城市'];
 
+/** @type {Map<string, { results: any[], timestamp: number }>} */
+const unsplashCache = new Map();
+const UNSPLASH_CACHE_TTL_MS = 30 * 60 * 1000;
+const UNSPLASH_CACHE_MAX = 30;
+
+/**
+ * 清空 Unsplash 查询缓存（供测试或强制刷新使用）
+ */
+export function clearUnsplashCache() {
+  unsplashCache.clear();
+}
+
 /**
  * 构建 Unsplash 摄影选择器 Tab
  * @param {object} options
@@ -55,6 +67,11 @@ export function renderUnsplashMediaPickerTab({ container, view, ratioId, onSelec
     cls: 'card-media-picker-search-btn mod-cta',
     text: '搜索',
   });
+  const refreshBtn = searchBar.createEl('button', {
+    cls: 'card-media-picker-refresh-btn',
+    text: '换一批',
+    attr: { type: 'button', title: '获取新一批摄影作品' },
+  });
 
   // 2. 热门推荐标签芯片
   const chipContainer = container.createDiv({ cls: 'card-media-picker-chips' });
@@ -79,19 +96,34 @@ export function renderUnsplashMediaPickerTab({ container, view, ratioId, onSelec
 
   let isSearching = false;
 
-  const doSearch = async (query = '') => {
+  const doSearch = async (query = '', options = {}) => {
     if (isSearching) return;
+    const trimmedQuery = (query || '').trim();
+    const cacheKey = `${ratioId || '3:4'}:${trimmedQuery.toLowerCase()}`;
+    const bypassCache = Boolean(options.bypassCache);
+
+    if (!bypassCache && unsplashCache.has(cacheKey)) {
+      const cached = unsplashCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < UNSPLASH_CACHE_TTL_MS) {
+        statusEl.empty();
+        statusEl.addClass('hidden');
+        renderPhotoGrid(cached.results);
+        return;
+      }
+    }
+
     isSearching = true;
     gridContainer.empty();
     statusEl.empty();
     statusEl.removeClass('hidden');
     statusEl.createEl('span', { text: '正在检索高质量摄影图片...' });
     searchBtn.disabled = true;
+    refreshBtn.disabled = true;
 
     try {
       const resp = await fetchUnsplashPhotos({
         apiKey: unsplashKey,
-        query: query.trim(),
+        query: trimmedQuery,
         ratioId: ratioId || '3:4',
         perPage: 12,
         requestUrl: getObsidianRequestUrl(),
@@ -107,6 +139,15 @@ export function renderUnsplashMediaPickerTab({ container, view, ratioId, onSelec
         return;
       }
 
+      if (unsplashCache.size >= UNSPLASH_CACHE_MAX) {
+        const oldestKey = unsplashCache.keys().next().value;
+        if (typeof oldestKey === 'string') unsplashCache.delete(oldestKey);
+      }
+      unsplashCache.set(cacheKey, {
+        results: resp.results,
+        timestamp: Date.now(),
+      });
+
       renderPhotoGrid(resp.results);
     } catch (err) {
       statusEl.empty();
@@ -117,6 +158,7 @@ export function renderUnsplashMediaPickerTab({ container, view, ratioId, onSelec
     } finally {
       isSearching = false;
       searchBtn.disabled = false;
+      refreshBtn.disabled = false;
     }
   };
 
@@ -158,6 +200,7 @@ export function renderUnsplashMediaPickerTab({ container, view, ratioId, onSelec
   };
 
   searchBtn.addEventListener('click', () => doSearch(searchInput.value));
+  refreshBtn.addEventListener('click', () => doSearch(searchInput.value, { bypassCache: true }));
   searchInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();

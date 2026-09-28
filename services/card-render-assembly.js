@@ -458,7 +458,8 @@ export function assembleCardCoverPage(args) {
   const theme = args.theme;
   const fields = args.fields;
   const page = ownerDoc.createElement("div");
-  page.className = `icard icard-page icard-cover icard-cover--${theme.coverStyle}`;
+  page.className = `icard icard-page icard-cover icard-cover--${theme.coverStyle} icard-cover--${theme.id}`;
+  page.setAttribute("data-icard-theme", theme.id);
   page.style.setProperty("--icard-page-width", `${size.width}px`);
   page.style.setProperty("--icard-page-height", `${size.height}px`);
   page.setAttribute("data-icard-cover", "true");

@@ -60,7 +60,8 @@ export function createDefaultLoaders() {
             const response = await requestUrl({ url: src, throw: false });
             if (response && response.status >= 200 && response.status < 300) {
               const buffer = /** @type {ArrayBufferLike} */ (response.arrayBuffer);
-              const mime = String(response.headers?.['content-type'] || '').split(';')[0] || 'image/png';
+              const headers = response.headers || {};
+              const mime = String(headers['content-type'] || headers['Content-Type'] || '').split(';')[0] || 'image/png';
               return { blob: new Blob([/** @type {BlobPart} */ (buffer)], { type: mime }) };
             }
             throw new Error(`HTTP ${response?.status ?? 'unknown'}（requestUrl）`);
@@ -79,29 +80,53 @@ export function createDefaultLoaders() {
     /**
      * @param {string} src
      * @param {AbortSignal} signal
+     * @param {Blob} [blob]
      * @returns {Promise<{ width: number, height: number }>}
      */
-    decodeImage(src, signal) {
+    decodeImage(src, signal, blob) {
       return new Promise((resolve, reject) => {
         const image = new Image();
+        let objectUrl = '';
+        if (blob instanceof Blob && typeof URL?.createObjectURL === 'function') {
+          try {
+            objectUrl = URL.createObjectURL(blob);
+          } catch (e) {
+            void e;
+            objectUrl = '';
+          }
+        }
+        const targetSrc = objectUrl || src;
+        const cleanup = () => {
+          if (objectUrl) {
+            try {
+              URL.revokeObjectURL(objectUrl);
+            } catch (e) {
+              void e;
+            }
+          }
+        };
         const onAbort = () => {
+          cleanup();
           image.src = '';
           reject(abortError());
         };
         if (signal.aborted) {
+          cleanup();
           reject(abortError());
           return;
         }
         signal.addEventListener('abort', onAbort, { once: true });
         image.onload = () => {
+          cleanup();
           signal.removeEventListener('abort', onAbort);
           resolve({ width: image.naturalWidth, height: image.naturalHeight });
         };
         image.onerror = () => {
+          cleanup();
           signal.removeEventListener('abort', onAbort);
           reject(new Error('图片解码失败'));
         };
-        image.src = src;
+        image.src = targetSrc;
       });
     },
     /**

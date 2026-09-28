@@ -65,11 +65,17 @@ export function resolveNoteMarkdownAndPathSync(view) {
 export function renderNoteMediaPickerTab({ container, view, onSelect }) {
   container.empty();
 
-  // 1. 本地图片拖拽/选择上传区
-  container.createDiv({ cls: 'card-media-picker-section-title', text: '本地图片上传' });
+  // 1. 本地图片拖拽/选择上传区（紧凑横幅形态，释放下半部分展示空间）
   const dropzone = container.createDiv({ cls: 'card-media-picker-dropzone' });
-  dropzone.createDiv({ cls: 'card-media-picker-dropzone-text', text: '拖拽本地图片至此处，或点击浏览文件' });
-  dropzone.createDiv({ cls: 'card-media-picker-dropzone-sub', text: '支持 PNG、JPG、JPEG、WebP 格式' });
+  const dropzoneInfo = dropzone.createDiv({ cls: 'card-media-picker-dropzone-info' });
+  dropzoneInfo.createDiv({ cls: 'card-media-picker-dropzone-text', text: '拖拽本地图片至此处，或点击浏览文件' });
+  dropzoneInfo.createDiv({ cls: 'card-media-picker-dropzone-sub', text: '支持 PNG、JPG、JPEG、WebP 格式' });
+
+  dropzone.createEl('button', {
+    cls: 'card-media-picker-dropzone-btn',
+    text: '浏览文件',
+    attr: { type: 'button' },
+  });
 
   const fileInput = /** @type {HTMLInputElement} */ (
     /** @type {unknown} */ (container.createEl('input', {

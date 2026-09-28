@@ -670,19 +670,101 @@ export function buildCardPageCss(theme, typography = {}) {
 .icard-cover--adaptive.icard-cover--magazine .icard-cover-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .icard-cover--adaptive.icard-cover--magazine .icard-cover-title { margin-top: 0; font-size: 23px; }
 
+/* 自适应居中画框（基础通用）：大画幅视窗 */
+.icard-cover--adaptive.icard-cover--centered { padding: 18px 20px; }
 .icard-cover--adaptive.icard-cover--centered .icard-cover-frame {
-  width: 180px; height: 180px; margin: 8px auto 14px; border-radius: 12px; overflow: hidden; flex-shrink: 0;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1); border: 2px solid rgba(255, 255, 255, 0.85);
+  max-width: 322px; width: calc(100% - 8px); height: 220px; margin: 6px auto 14px; border-radius: 18px; overflow: hidden; flex-shrink: 0;
+  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.18); border: 2.5px solid rgba(255, 255, 255, 0.9);
 }
 .icard-cover--adaptive.icard-cover--centered .icard-cover-frame-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .icard-cover--adaptive.icard-cover--centered .icard-cover-title { margin-top: 0; font-size: 23px; }
 
+/* 自适应轻奢大拱门（基础通用）：宏伟大拱窗 */
+.icard-cover--adaptive.icard-cover--luxury { padding: 18px 20px; }
 .icard-cover--adaptive.icard-cover--luxury .icard-cover-arch {
-  width: 160px; height: 190px; margin: 10px auto 12px; border-radius: 80px 80px 8px 8px; overflow: hidden; flex-shrink: 0;
-  border: 1.5px solid ${t.borderColor}; box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+  width: 245px; height: 240px; margin: 4px auto 14px; border-radius: 122px 122px 18px 18px; overflow: hidden; flex-shrink: 0;
+  border: 2px solid ${t.borderColor}; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
 }
 .icard-cover--adaptive.icard-cover--luxury .icard-cover-arch-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .icard-cover--adaptive.icard-cover--luxury .icard-cover-title { margin-top: 0; font-size: 23px; }
+
+/* 自适应封面通用微调：优化大图下间距节奏，防止溢出 */
+.icard-cover--adaptive .icard-cover-kicker { margin-bottom: 8px; }
+.icard-cover--adaptive .icard-cover-title::after { margin: 12px auto 0; }
+
+/* —— 四大主题个性化惊艳封面深度定制 —— */
+
+/* 1. 渐变蓝（gradient-blue）：现代画廊大画幅悬浮视窗 */
+.icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-frame {
+  max-width: 322px;
+  width: calc(100% - 8px);
+  height: 220px;
+  margin: 6px auto 14px;
+  border-radius: 18px;
+  border: 3px solid rgba(255, 255, 255, 0.98);
+  box-shadow: 0 20px 38px -8px rgba(37, 99, 235, 0.24), 0 8px 16px -4px rgba(15, 23, 42, 0.08);
+}
+.icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-title::after {
+  width: 44px;
+  height: 3.5px;
+  border-radius: 999px;
+  background: #2563eb;
+  margin: 12px auto 0;
+}
+
+/* 2. 森林绿（forest-green）：森系自然有机宽画窗 */
+.icard-cover--forest-green.icard-cover--adaptive .icard-cover-frame {
+  max-width: 322px;
+  width: calc(100% - 8px);
+  height: 215px;
+  margin: 6px auto 14px;
+  border-radius: 24px;
+  border: 2px solid rgba(252, 211, 77, 0.65);
+  box-shadow: 0 18px 40px -6px rgba(2, 44, 34, 0.85), 0 0 24px rgba(252, 211, 77, 0.16);
+}
+.icard-cover--forest-green.icard-cover--adaptive .icard-cover-title::after {
+  width: 40px;
+  height: 3px;
+  border-radius: 999px;
+  background: #fcd34d;
+  margin: 12px auto 0;
+}
+
+/* 3. 黑金（dark-gold）：古典殿堂级宏伟双线大拱门 */
+.icard-cover--dark-gold.icard-cover--adaptive .icard-cover-arch {
+  width: 245px;
+  height: 240px;
+  margin: 4px auto 14px;
+  border-radius: 122px 122px 14px 14px;
+  border: 2px solid #b45309;
+  outline: 1.5px solid rgba(245, 158, 11, 0.45);
+  outline-offset: 4px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.9), 0 0 32px rgba(245, 158, 11, 0.16);
+}
+.icard-cover--dark-gold.icard-cover--adaptive .icard-cover-title::after {
+  width: 36px;
+  height: 2px;
+  background: #f59e0b;
+  margin: 12px auto 0;
+}
+
+/* 4. 玫瑰金（rose-gold）：法式浪漫香槟浮雕拱窗 */
+.icard-cover--rose-gold.icard-cover--adaptive .icard-cover-arch {
+  width: 245px;
+  height: 240px;
+  margin: 4px auto 14px;
+  border-radius: 122px 122px 22px 22px;
+  border: 2px solid #f472b6;
+  outline: 1.5px solid rgba(244, 114, 182, 0.45);
+  outline-offset: 4px;
+  box-shadow: 0 20px 42px -8px rgba(244, 114, 182, 0.38), 0 6px 18px rgba(131, 24, 67, 0.08);
+}
+.icard-cover--rose-gold.icard-cover--adaptive .icard-cover-title::after {
+  width: 36px;
+  height: 2px;
+  background: #f472b6;
+  margin: 12px auto 0;
+}
 
 .icard-cover-cyber-overlay {
   position: absolute; inset: 0; z-index: 1;
@@ -690,7 +772,7 @@ export function buildCardPageCss(theme, typography = {}) {
   background-image: linear-gradient(#ffffff0a 1px, transparent 1px), linear-gradient(90deg, #ffffff0a 1px, transparent 1px);
   background-size: 32px 32px;
 }
-/* 封面配图占位框（100% 对标 WeChat Tool：纯实底、无边框、无文字、仅居中 ImageIcon） */
+/* 封面配图占位框（100% 对标 WeChat Tool：纯实底、无边框、无文字、仅居中 ImageIcon，主题色系自适应） */
 .icard-cover-placeholder {
   width: 100%;
   height: 100%;
@@ -698,8 +780,20 @@ export function buildCardPageCss(theme, typography = {}) {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  background: ${theme.id === 'luxury' || theme.id === 'neon' ? '#262626' : '#f3f4f6'};
-  color: ${theme.id === 'luxury' ? 'rgba(202, 138, 4, 0.5)' : (theme.id === 'neon' ? 'rgba(168, 85, 247, 0.5)' : '#d1d5db')};
+  background: ${
+    theme.id === 'dark-gold' ? '#242427' :
+    theme.id === 'forest-green' ? '#042d22' :
+    theme.id === 'rose-gold' ? '#fff1f5' :
+    theme.id === 'gradient-blue' ? '#f0f7ff' :
+    theme.id === 'neon-purple' ? '#181533' : '#f3f4f6'
+  };
+  color: ${
+    theme.id === 'dark-gold' ? 'rgba(245, 158, 11, 0.55)' :
+    theme.id === 'forest-green' ? 'rgba(252, 211, 77, 0.5)' :
+    theme.id === 'rose-gold' ? 'rgba(244, 114, 182, 0.55)' :
+    theme.id === 'gradient-blue' ? 'rgba(37, 99, 235, 0.45)' :
+    theme.id === 'neon-purple' ? 'rgba(232, 121, 249, 0.5)' : '#d1d5db'
+  };
   border: none;
   border-radius: inherit;
   user-select: none;
@@ -711,15 +805,19 @@ export function buildCardPageCss(theme, typography = {}) {
 }
 .icard-cover-frame .icard-cover-placeholder-icon,
 .icard-cover-arch .icard-cover-placeholder-icon {
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
 }
 .icard-cover-placeholder--full {
   width: 100%;
   height: 100%;
 }
 .icard-cover-bg--placeholder {
-  background: ${theme.id === 'luxury' || theme.id === 'neon' ? '#1f1f23' : '#f3f4f6'};
+  background: ${
+    theme.id === 'dark-gold' || theme.id === 'neon-purple' ? '#1f1f23' :
+    theme.id === 'forest-green' ? '#03241b' :
+    theme.id === 'rose-gold' ? '#fff1f5' : '#f3f4f6'
+  };
 }
 
 .icard-cover-body {

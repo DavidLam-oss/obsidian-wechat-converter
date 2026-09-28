@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getCardTheme } from '../services/card-themes.js';
+import { getCardTheme, buildCardPageCss } from '../services/card-themes.js';
 import { normalizeCoverFields } from '../services/card-cover-model.js';
 import { assembleCardCoverPage } from '../services/card-render-assembly.js';
 
@@ -31,7 +31,7 @@ describe('Card Adaptive Cover Assembly across 6 themes', () => {
   });
 
   describe('Centered themes (gradient-blue, forest-green)', () => {
-    it('renders framed picture card inside body for gradient-blue', () => {
+    it('renders framed picture card inside body for gradient-blue with modern gallery styling', () => {
       const theme = getCardTheme('gradient-blue');
       const fields = normalizeCoverFields({
         title: '渐变蓝居中画报',
@@ -42,14 +42,21 @@ describe('Card Adaptive Cover Assembly across 6 themes', () => {
       const page = assembleCardCoverPage({ theme, fields });
 
       expect(page.classList.contains('icard-cover--adaptive')).toBe(true);
+      expect(page.classList.contains('icard-cover--gradient-blue')).toBe(true);
+      expect(page.getAttribute('data-icard-theme')).toBe('gradient-blue');
       expect(page.classList.contains('icard-cover--has-image')).toBe(false);
       const frame = page.querySelector('.icard-cover-frame');
       expect(frame).not.toBeNull();
       const frameImg = frame?.querySelector('.icard-cover-frame-img');
       expect(frameImg?.getAttribute('src')).toBe(coverImage);
+
+      const css = buildCardPageCss(theme);
+      expect(css).toContain('.icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-frame');
+      expect(css).toContain('max-width: 322px');
+      expect(css).toContain('rgba(37, 99, 235, 0.24)');
     });
 
-    it('renders framed picture card inside body for forest-green', () => {
+    it('renders framed picture card inside body for forest-green with botanical panorama styling', () => {
       const theme = getCardTheme('forest-green');
       const fields = normalizeCoverFields({
         title: '森林绿自然画框',
@@ -60,12 +67,19 @@ describe('Card Adaptive Cover Assembly across 6 themes', () => {
       const page = assembleCardCoverPage({ theme, fields });
 
       expect(page.classList.contains('icard-cover--adaptive')).toBe(true);
+      expect(page.classList.contains('icard-cover--forest-green')).toBe(true);
+      expect(page.getAttribute('data-icard-theme')).toBe('forest-green');
       expect(page.querySelector('.icard-cover-frame')).not.toBeNull();
+
+      const css = buildCardPageCss(theme);
+      expect(css).toContain('.icard-cover--forest-green.icard-cover--adaptive .icard-cover-frame');
+      expect(css).toContain('border-radius: 24px');
+      expect(css).toContain('rgba(252, 211, 77, 0.65)');
     });
   });
 
-  describe('Luxury theme (dark-gold)', () => {
-    it('renders arch framed window for dark-gold', () => {
+  describe('Luxury theme (dark-gold, rose-gold)', () => {
+    it('renders arch framed window for dark-gold with imperial arch styling', () => {
       const theme = getCardTheme('dark-gold');
       const fields = normalizeCoverFields({
         title: '黑金古典拱门',
@@ -76,14 +90,22 @@ describe('Card Adaptive Cover Assembly across 6 themes', () => {
       const page = assembleCardCoverPage({ theme, fields });
 
       expect(page.classList.contains('icard-cover--adaptive')).toBe(true);
+      expect(page.classList.contains('icard-cover--dark-gold')).toBe(true);
+      expect(page.getAttribute('data-icard-theme')).toBe('dark-gold');
       expect(page.classList.contains('icard-cover--has-image')).toBe(false);
       const arch = page.querySelector('.icard-cover-arch');
       expect(arch).not.toBeNull();
       const archImg = arch?.querySelector('.icard-cover-arch-img');
       expect(archImg?.getAttribute('src')).toBe(coverImage);
+
+      const css = buildCardPageCss(theme);
+      expect(css).toContain('.icard-cover--dark-gold.icard-cover--adaptive .icard-cover-arch');
+      expect(css).toContain('width: 245px');
+      expect(css).toContain('border: 2px solid #b45309');
+      expect(css).toContain('outline: 1.5px solid rgba(245, 158, 11, 0.45)');
     });
 
-    it('renders arch framed window for rose-gold', () => {
+    it('renders arch framed window for rose-gold with french cameo arch styling', () => {
       const theme = getCardTheme('rose-gold');
       const fields = normalizeCoverFields({
         title: '玫瑰金轻奢拱门',
@@ -94,7 +116,15 @@ describe('Card Adaptive Cover Assembly across 6 themes', () => {
       const page = assembleCardCoverPage({ theme, fields });
 
       expect(page.classList.contains('icard-cover--adaptive')).toBe(true);
+      expect(page.classList.contains('icard-cover--rose-gold')).toBe(true);
+      expect(page.getAttribute('data-icard-theme')).toBe('rose-gold');
       expect(page.querySelector('.icard-cover-arch')).not.toBeNull();
+
+      const css = buildCardPageCss(theme);
+      expect(css).toContain('.icard-cover--rose-gold.icard-cover--adaptive .icard-cover-arch');
+      expect(css).toContain('width: 245px');
+      expect(css).toContain('border: 2px solid #f472b6');
+      expect(css).toContain('outline: 1.5px solid rgba(244, 114, 182, 0.45)');
     });
   });
 

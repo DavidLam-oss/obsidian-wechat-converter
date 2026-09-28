@@ -105,6 +105,25 @@ describe("pool.prepare 就绪与校验", () => {
     snap.release();
   });
 
+  it("prepare 会把已下载的 blob 传给 loaders.decodeImage，避免二次网络请求", async () => {
+    let receivedBlob = null;
+    const testBlob = new Blob([new Uint8Array(8)], { type: "image/png" });
+    const pool = createCardResourcePool({
+      app: makeApp({ "a.png": true }),
+      loaders: makeLoaders({
+        fetchBlob: async () => ({ blob: testBlob }),
+        decodeImage: async (_src, _signal, blob) => {
+          receivedBlob = blob;
+          return { width: 20, height: 20 };
+        },
+      }),
+    });
+    const snap = await pool.prepare([{ ref: "a.png", kind: "local" }]);
+    expect(receivedBlob).toBe(testBlob);
+    expect(snap.images["a.png"]).toBeTruthy();
+    snap.release();
+  });
+
   it("坏图（fetch 非 image MIME）→ error 诊断，计入阻断", async () => {
     const pool = createCardResourcePool({
       app: makeApp({ "a.png": true }),

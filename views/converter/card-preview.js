@@ -324,6 +324,8 @@ async runCardLayoutPipeline(ctx) {
 
   if (!selfRecord.cardResourceBudget) {
     selfRecord.cardResourceBudget = createCardResourceSession();
+  } else {
+    selfRecord.cardResourceBudget.reset();
   }
   const pool = createCardResourcePool({
     app: this.app,
@@ -493,10 +495,21 @@ renderCardPreviewDom() {
   }
   const resourceWarning = outcome?.resources?.hasBlockingFailures === true;
   if (resourceWarning) {
+    const failedDiagnostics = (outcome?.resources?.diagnostics || []).filter(
+      (d) => d && d.status !== 'ok' && d.status !== 'filtered'
+    );
+    const reasons = failedDiagnostics
+      .map((d) => `${d.ref || '未知图片'} (${d.reason || d.status || '加载失败'})`)
+      .slice(0, 5)
+      .join('\n');
     summary.createEl('span', {
       cls: 'icard-preview-chip is-error',
       text: '部分图片未能加载，导出前需处理',
+      attr: {
+        title: reasons ? `未能加载的图片：\n${reasons}` : '部分图片未能加载，导出前需处理',
+      },
     });
+    console.warn('[card-preview] 部分图片未能加载:', failedDiagnostics);
   }
   // 水印超宽（C01③）：不阻断输出，但显式提示（不静默截断）
   const watermarkOverflow = Array.isArray(outcome?.diagnostics) &&

@@ -47,8 +47,14 @@ export function showCardMediaPickerModal({ view, initialTab, onSelect }) {
 
   let currentTab = initialTab || lastActiveTabId || 'unsplash';
 
-  // 2. 主体内容容器
+  // 2. 主体内容容器与独立 Tab 面板（保持各自渲染状态，切换时不销毁重载）
   const contentContainer = modal.contentEl.createDiv({ cls: 'card-media-picker-content' });
+  const panes = {
+    unsplash: contentContainer.createDiv({ cls: 'card-media-picker-pane card-media-picker-pane--unsplash' }),
+    note: contentContainer.createDiv({ cls: 'card-media-picker-pane card-media-picker-pane--note' }),
+    ai: contentContainer.createDiv({ cls: 'card-media-picker-pane card-media-picker-pane--ai' }),
+  };
+  const renderedPanes = new Set();
 
   const openPluginSettings = () => {
     modal.close();
@@ -83,31 +89,38 @@ export function showCardMediaPickerModal({ view, initialTab, onSelect }) {
       }
     });
 
-    const currentLayout = view.getCurrentCardLayoutSettings?.() || {};
-    const ratioId = currentLayout.ratioId || '3:4';
+    Object.entries(panes).forEach(([id, pane]) => {
+      pane.toggleClass('is-hidden', id !== tabId);
+    });
 
-    if (tabId === 'unsplash') {
-      renderUnsplashMediaPickerTab({
-        container: contentContainer,
-        view,
-        ratioId,
-        onSelect: handleSelect,
-        onOpenSettings: openPluginSettings,
-      });
-    } else if (tabId === 'note') {
-      renderNoteMediaPickerTab({
-        container: contentContainer,
-        view,
-        onSelect: handleSelect,
-      });
-    } else if (tabId === 'ai') {
-      renderAiMediaPickerTab({
-        container: contentContainer,
-        view,
-        ratioId,
-        onSelect: handleSelect,
-        onOpenSettings: openPluginSettings,
-      });
+    if (!renderedPanes.has(tabId)) {
+      renderedPanes.add(tabId);
+      const currentLayout = view.getCurrentCardLayoutSettings?.() || {};
+      const ratioId = currentLayout.ratioId || '3:4';
+
+      if (tabId === 'unsplash') {
+        renderUnsplashMediaPickerTab({
+          container: panes.unsplash,
+          view,
+          ratioId,
+          onSelect: handleSelect,
+          onOpenSettings: openPluginSettings,
+        });
+      } else if (tabId === 'note') {
+        renderNoteMediaPickerTab({
+          container: panes.note,
+          view,
+          onSelect: handleSelect,
+        });
+      } else if (tabId === 'ai') {
+        renderAiMediaPickerTab({
+          container: panes.ai,
+          view,
+          ratioId,
+          onSelect: handleSelect,
+          onOpenSettings: openPluginSettings,
+        });
+      }
     }
   };
 

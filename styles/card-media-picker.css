@@ -13,13 +13,22 @@
   width: 580px;
   max-width: 90vw;
   min-height: 280px;
-  max-height: 72vh;
+  max-height: min(78vh, 680px);
   display: flex;
   flex-direction: column;
   padding: 0;
   border-radius: 14px;
   overflow: hidden;
   box-shadow: var(--shadow-l, 0 20px 48px rgba(0, 0, 0, 0.22));
+}
+
+.card-media-picker-modal .modal-content {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .card-media-picker-header {
@@ -71,12 +80,25 @@
 
 .card-media-picker-content {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 18px 20px;
+  padding: 16px 20px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-media-picker-pane {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  flex: 1;
+  min-height: 0;
 }
+
+.card-media-picker-pane.is-hidden {
+  display: none;
+}
+
 
 /* =========================================================================
    Unsplash Tab 样式
@@ -106,6 +128,25 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+}
+
+.card-media-picker-refresh-btn {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-normal);
+  transition: background 0.12s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.card-media-picker-refresh-btn:hover {
+  background: var(--background-modifier-hover);
 }
 
 .card-media-picker-chips {
@@ -230,23 +271,32 @@
 }
 
 .card-media-picker-dropzone {
-  border: 2px dashed var(--background-modifier-border);
-  border-radius: 12px;
-  padding: 28px 16px;
-  text-align: center;
+  border: 1.5px dashed var(--background-modifier-border);
+  border-radius: 10px;
+  padding: 10px 16px;
   background: var(--background-secondary);
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  flex-shrink: 0;
 }
 
 .card-media-picker-dropzone:hover,
 .card-media-picker-dropzone.is-dragover {
   border-color: var(--interactive-accent);
   background: var(--background-modifier-hover);
+}
+
+.card-media-picker-dropzone-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
 }
 
 .card-media-picker-dropzone-text {
@@ -258,6 +308,25 @@
 .card-media-picker-dropzone-sub {
   font-size: 11px;
   color: var(--text-muted);
+}
+
+.card-media-picker-dropzone-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-normal);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.card-media-picker-dropzone-btn:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
 }
 
 /* =========================================================================
