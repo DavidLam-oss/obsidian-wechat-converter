@@ -624,6 +624,14 @@ export function buildCardPageCss(theme, typography = {}) {
 .icard-cover {
   padding: 26px;
 }
+/* 封面永远是「恰好一页」：高度钉死。
+   基础 .icard-page 用的是 min-height（正文页需要按分页计划长高），
+   封面若沿用，文案一长页面会从 500 悄悄长到 521，导出比例静默失真、不留任何诊断。
+   钉死后由「图容器先让位、文字后报警」接管（见各主题的 flex 收缩 + min-height）。 */
+.icard-cover--adaptive {
+  height: var(--icard-page-height, ${CARD_PAGE_HEIGHT_3_4}px);
+  min-height: 0;
+}
 .icard-cover--full-bleed {
   padding: 0;
   overflow: hidden;
@@ -663,38 +671,59 @@ export function buildCardPageCss(theme, typography = {}) {
   text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 /* 自适应封面：根据 6 主题各自的美学特征自然融入图片，0 额外描边，注重版式与光影。
-   配图策略总纲（2026-10-03）——不再所有主题共用「圆角 + 投影 + 四边内缩」这一套裱框处理：
-   - 贴边派（simple-white / gradient-blue / forest-green）：图出血到卡片边缘、方角、零投影，
-     让照片「从卡片上沿长进来」，而不是被圆角与投影裱成一个独立物件；
-   - 画框派（dark-gold / rose-gold）：奢侈主题页面自带的双细线框是身份，故保留框，
-     图退成方角画心并去掉重投影，不与框争；
+   配图策略总纲（2026-10-03 v2）——照片不再是被裱进版面的「独立物件」，而是版面的一个层次：
+   ① 接缝化开：图与文字相接的那条边一律用 mask 渐隐到透明（露出的是页面底色/主题渐变，
+      所以「化向哪里」自动跟主题走，不需要逐主题配渐变色）；
+   ② 文字紧贴：化开带末端就是文字起点，不再留一条硬缝（负边距只往「收缩」方向用，
+      绝不往页面底部方向撑，否则会被封面溢出核验误判成「内容超出画布」）；
+   ③ 图让位于文字：图容器 flex 可收缩 + min-height，文案长时图先变矮，而不是把文字挤爆。
+   三派分工：
+   - 贴边派（simple-white / gradient-blue / forest-green）：图出血到卡片边缘、方角、零投影；
+     极简白/森林绿是「顶端出血 + 底部化开」，渐变蓝是「中带 + 上下两端都化开」；
+   - 画框派（dark-gold / rose-gold）：奢侈主题的双细线框是身份，保留；照片左右与上缘正好
+     齐平内圈细线（20px 内边距 - 6px 负边距 = 14px = 内圈 inset），框成为照片的界；
    - 整页派（neon-purple）：图退为整页底、文字压在上层，维持原状。
    贴边通用算式：自适应封面内边距统一为 18px 20px，故「左右贴边」= width: calc(100% + 40px)
-   配左右 -20px 负边距；「顶部贴边」再加 margin-top: -18px；「底部贴边」加 margin-bottom: -18px。 */
-.icard-cover--adaptive.icard-cover--magazine { padding: 18px 20px; }
+   配左右 -20px 负边距；「顶部贴边」再加 margin-top: -18px。
+   底部贴边不再用负边距 + 页面 padding-bottom: 0 —— 视觉一致，但 scrollHeight 不再虚高。 */
+.icard-cover--adaptive.icard-cover--magazine { padding: 18px 20px 20px; }
+.icard-cover--adaptive.icard-cover--magazine .icard-cover-body { flex-shrink: 0; }
 .icard-cover--adaptive.icard-cover--magazine .icard-cover-hero {
-  width: calc(100% + 40px); max-width: none; height: 272px; max-height: none;
-  margin: -18px -20px 18px; border-radius: 0; border: none; outline: none;
-  overflow: hidden; flex-shrink: 0; box-shadow: none;
+  width: calc(100% + 40px); max-width: none; height: 296px; max-height: none; min-height: 204px;
+  margin: -18px -20px 0; border-radius: 0; border: none; outline: none;
+  overflow: hidden; flex: 0 1 auto; box-shadow: none;
 }
-.icard-cover--adaptive.icard-cover--magazine .icard-cover-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.icard-cover--adaptive.icard-cover--magazine .icard-cover-hero-img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, rgba(0,0,0,0.5) 88%, rgba(0,0,0,0) 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 70%, rgba(0,0,0,0.5) 88%, rgba(0,0,0,0) 100%);
+}
 .icard-cover--adaptive.icard-cover--magazine .icard-cover-title { margin-top: 0; font-size: 23px; }
 
-/* 自适应居中画框（基础通用）：贴边派基线 —— 顶 + 左右出血、方角、零投影。
-   各 centered 主题在下方自述完整处理（gradient-blue 改沉到下缘、forest-green 加底部渐隐） */
-.icard-cover--adaptive.icard-cover--centered { padding: 18px 20px; }
+/* 自适应居中画框（基础通用）：贴边派基线 —— 顶 + 左右出血、方角零投影，底部化开进页面底色。
+   各 centered 主题在下方自述完整处理（gradient-blue 改为画报中带、forest-green 加深化开） */
+.icard-cover--adaptive.icard-cover--centered { padding: 18px 20px 20px; }
 .icard-cover--adaptive.icard-cover--centered .icard-cover-frame {
   order: -1;
-  width: calc(100% + 40px); max-width: none; height: 268px; margin: -18px -20px 18px; border-radius: 0; border: none; outline: none; overflow: hidden; flex-shrink: 0;
+  width: calc(100% + 40px); max-width: none; height: 288px; min-height: 200px;
+  margin: -18px -20px 0; border-radius: 0; border: none; outline: none; overflow: hidden;
+  flex: 0 1 auto;
   box-shadow: none;
 }
-.icard-cover--adaptive.icard-cover--centered .icard-cover-frame-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.icard-cover--adaptive.icard-cover--centered .icard-cover-frame-img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 62%, rgba(0,0,0,0.55) 84%, rgba(0,0,0,0) 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 62%, rgba(0,0,0,0.55) 84%, rgba(0,0,0,0) 100%);
+}
 .icard-cover--adaptive.icard-cover--centered .icard-cover-title { margin-top: 0; font-size: 23px; }
 
-/* 自适应轻奢大画幅（基础通用）：画框派基线 —— 方角画心、零投影，让页面双细线框（::before/::after）主导 */
-.icard-cover--adaptive.icard-cover--luxury { padding: 18px 20px; }
+/* 自适应轻奢大画幅（基础通用）：画框派 —— 照片齐平内圈细线、方角、零投影，
+   让页面双细线框（::before/::after）成为照片的界，而不是让照片在框里浮着 */
+.icard-cover--adaptive.icard-cover--luxury { padding: 18px 20px 20px; }
 .icard-cover--adaptive.icard-cover--luxury .icard-cover-arch {
-  width: 100%; max-width: 100%; height: 234px; margin: 10px auto 18px; border-radius: 0; border: none; outline: none; overflow: hidden; flex-shrink: 0;
+  width: calc(100% + 12px); max-width: none; height: 252px; min-height: 178px;
+  margin: 8px -6px 16px; border-radius: 0; border: none; outline: none;
+  flex: 0 1 auto;
   box-shadow: none;
 }
 .icard-cover--adaptive.icard-cover--luxury .icard-cover-arch-img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -721,20 +750,27 @@ export function buildCardPageCss(theme, typography = {}) {
   font-weight: 700;
   line-height: 1.3;
   margin-top: 0;
-  margin-bottom: 12px;
+  margin-bottom: 0;
 }
 .icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-frame {
-  /* 贴边派：图沉到卡片下缘（order 排到 meta 之后）、左右出血、方角零投影，页面以照片收尾 */
-  order: 9;
+  /* 贴边派 · 画报中带：图移到「标题之下 · 摘要之上」，左右出血、方角零投影；
+     上下两端都用 mask 化开进页面浅蓝底 —— 照片是「浮出版面的一条带」，不是贴在角落的方块 */
+  order: 3;
   width: calc(100% + 40px);
   max-width: none;
-  height: 238px;
-  margin: 16px -20px -18px;
+  height: 222px;
+  min-height: 150px;
+  margin: 12px -20px 8px;
   border-radius: 0;
   border: none;
   outline: none;
-  flex-shrink: 0;
+  flex: 0 1 auto;
   box-shadow: none;
+}
+.icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-frame-img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, #000 22%, #000 76%, rgba(0, 0, 0, 0) 100%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, #000 22%, #000 76%, rgba(0, 0, 0, 0) 100%);
 }
 .icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-excerpt {
   order: 4;
@@ -755,22 +791,23 @@ export function buildCardPageCss(theme, typography = {}) {
 
 /* 2. 森林绿（forest-green）：森系自然通透大画幅（零描边、纯净摄影焦点） */
 .icard-cover--forest-green.icard-cover--adaptive .icard-cover-frame {
-  /* 贴边派：顶 + 左右出血、方角零投影；底部用 mask 渐隐溶入墨绿底，让文字像是从照片里长出来 */
+  /* 贴边派：顶 + 左右出血、方角零投影；底部 mask 化开进墨绿底，文字像从照片里长出来 */
   order: -1;
   width: calc(100% + 40px);
   max-width: none;
-  height: 268px;
-  margin: -18px -20px 18px;
+  height: 288px;
+  min-height: 200px;
+  margin: -18px -20px 0;
   border-radius: 0;
   border: none;
   outline: none;
   overflow: hidden;
-  flex-shrink: 0;
+  flex: 0 1 auto;
   box-shadow: none;
 }
 .icard-cover--forest-green.icard-cover--adaptive .icard-cover-frame-img {
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 54%, rgba(0, 0, 0, 0.45) 82%, rgba(0, 0, 0, 0) 100%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 54%, rgba(0, 0, 0, 0.45) 82%, rgba(0, 0, 0, 0) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 62%, rgba(0, 0, 0, 0.55) 84%, rgba(0, 0, 0, 0) 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 62%, rgba(0, 0, 0, 0.55) 84%, rgba(0, 0, 0, 0) 100%);
 }
 .icard-cover--forest-green.icard-cover--adaptive .icard-cover-title {
   margin-top: 0;
@@ -788,15 +825,18 @@ export function buildCardPageCss(theme, typography = {}) {
 
 /* 3. 黑金（dark-gold）：电影级暗调光影大画幅（废除生硬拱门，通透沉浸） */
 .icard-cover--dark-gold.icard-cover--adaptive .icard-cover-arch {
-  /* 画框派：页面双细线框是奢侈主题的身份，保留；图退成方角画心并去掉重投影，不与框争 */
-  width: 100%;
-  max-width: 100%;
-  height: 234px;
-  margin: 10px auto 18px;
+  /* 画框派：照片左右与上缘正好齐平内圈细线（20px 内边距 - 6px 负边距 = 14px = 内圈 inset），
+     双细线框于是成为照片的界，而不是让照片在框里浮着 */
+  width: calc(100% + 12px);
+  max-width: none;
+  height: 252px;
+  min-height: 178px;
+  margin: 8px -6px 16px;
   border-radius: 0;
   border: none;
   outline: none;
   position: relative;
+  flex: 0 1 auto;
   box-shadow: none;
 }
 .icard-cover--dark-gold.icard-cover--adaptive .icard-cover-arch::after {
@@ -804,7 +844,7 @@ export function buildCardPageCss(theme, typography = {}) {
   position: absolute;
   inset: 0;
   border-radius: 0;
-  background: linear-gradient(180deg, transparent 74%, rgba(24, 24, 27, 0.4) 100%);
+  background: linear-gradient(180deg, transparent 78%, rgba(24, 24, 27, 0.28) 100%);
   pointer-events: none;
 }
 .icard-cover--dark-gold.icard-cover--adaptive .icard-cover-title {
@@ -822,15 +862,26 @@ export function buildCardPageCss(theme, typography = {}) {
 
 /* 4. 玫瑰金（rose-gold）：法式时尚沙龙画册（零描边、纯净黄金画幅与高级留白） */
 .icard-cover--rose-gold.icard-cover--adaptive .icard-cover-arch {
-  /* 画框派：同黑金，方角画心 + 去掉粉色投影，让页面双细线框主导画面 */
-  width: 100%;
-  max-width: 100%;
-  height: 234px;
-  margin: 10px auto 18px;
+  /* 画框派：同黑金 —— 照片齐平内圈细线，粉色双细线框成为照片的界 */
+  width: calc(100% + 12px);
+  max-width: none;
+  height: 252px;
+  min-height: 178px;
+  margin: 8px -6px 16px;
   border-radius: 0;
   border: none;
   outline: none;
+  position: relative;
+  flex: 0 1 auto;
   box-shadow: none;
+}
+.icard-cover--rose-gold.icard-cover--adaptive .icard-cover-arch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+  background: linear-gradient(180deg, transparent 78%, rgba(131, 24, 67, 0.14) 100%);
+  pointer-events: none;
 }
 .icard-cover--rose-gold.icard-cover--adaptive .icard-cover-title {
   margin-top: 0;
