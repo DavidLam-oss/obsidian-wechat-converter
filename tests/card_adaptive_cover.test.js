@@ -240,6 +240,18 @@ describe('Card Adaptive Cover Assembly across 6 themes', () => {
       expect(page.querySelector('.icard-cover-bg')).not.toBeNull();
       expect(page.querySelector('.icard-cover-cyber-overlay')).not.toBeNull();
     });
+
+    it('遮罩层把网格与深色渐变写在同一个 background-image 列表里（拆开会让深色遮罩整个失效）', () => {
+      const css = buildCardPageCss(getCardTheme('neon-purple'));
+      const overlay = ruleOf(css, '.icard-cover-cyber-overlay');
+      expect(overlay).toContain('background: none');
+      expect(overlay).toContain('linear-gradient(#ffffff0a 1px, transparent 1px)');
+      expect(overlay).toContain('linear-gradient(90deg, #ffffff0a 1px, transparent 1px)');
+      expect(overlay).toContain('rgba(2, 6, 23, 0.42) 0%');
+      expect(overlay).toContain('rgba(2, 6, 23, 0.94) 100%');
+      // 三层背景必须共用一条 background-size（否则深色渐变会退回 auto 尺寸）
+      expect(overlay).toContain('background-size: 32px 32px, 32px 32px, 100% 100%');
+    });
   });
 
   describe('Pure text mode (coverMode: none)', () => {

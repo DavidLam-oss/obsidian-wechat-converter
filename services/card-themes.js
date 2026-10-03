@@ -898,9 +898,14 @@ export function buildCardPageCss(theme, typography = {}) {
 
 .icard-cover-cyber-overlay {
   position: absolute; inset: 0; z-index: 1;
-  background: linear-gradient(180deg, rgba(2, 6, 23, 0.72) 0%, rgba(2, 6, 23, 0.9) 100%);
-  background-image: linear-gradient(#ffffff0a 1px, transparent 1px), linear-gradient(90deg, #ffffff0a 1px, transparent 1px);
-  background-size: 32px 32px;
+  /* 网格与深色遮罩必须是同一份多背景列表。拆成 background + background-image 时，
+     后者会把前者整体顶掉 —— 深色遮罩从未生效，白字直接压在照片上（实测确认）。 */
+  background: none;
+  background-image:
+    linear-gradient(#ffffff0a 1px, transparent 1px),
+    linear-gradient(90deg, #ffffff0a 1px, transparent 1px),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.42) 0%, rgba(2, 6, 23, 0.86) 62%, rgba(2, 6, 23, 0.94) 100%);
+  background-size: 32px 32px, 32px 32px, 100% 100%;
 }
 /* 封面配图占位框（100% 对标 WeChat Tool：纯实底、无边框、无文字、仅居中 ImageIcon，主题色系自适应） */
 .icard-cover-placeholder {
