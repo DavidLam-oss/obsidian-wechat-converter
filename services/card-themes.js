@@ -662,28 +662,40 @@ export function buildCardPageCss(theme, typography = {}) {
   color: #ffffff;
   text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
-/* 自适应封面：根据 6 主题各自的美学特征自然融入图片 */
-.icard-cover--adaptive.icard-cover--magazine { padding: 16px; }
+/* 自适应封面：根据 6 主题各自的美学特征自然融入图片，0 额外描边，注重版式与光影。
+   配图策略总纲（2026-10-03）——不再所有主题共用「圆角 + 投影 + 四边内缩」这一套裱框处理：
+   - 贴边派（simple-white / gradient-blue / forest-green）：图出血到卡片边缘、方角、零投影，
+     让照片「从卡片上沿长进来」，而不是被圆角与投影裱成一个独立物件；
+   - 画框派（dark-gold / rose-gold）：奢侈主题页面自带的双细线框是身份，故保留框，
+     图退成方角画心并去掉重投影，不与框争；
+   - 整页派（neon-purple）：图退为整页底、文字压在上层，维持原状。
+   贴边通用算式：自适应封面内边距统一为 18px 20px，故「左右贴边」= width: calc(100% + 40px)
+   配左右 -20px 负边距；「顶部贴边」再加 margin-top: -18px；「底部贴边」加 margin-bottom: -18px。 */
+.icard-cover--adaptive.icard-cover--magazine { padding: 18px 20px; }
 .icard-cover--adaptive.icard-cover--magazine .icard-cover-hero {
-  width: 100%; height: 48%; max-height: 240px; border-radius: 8px; overflow: hidden; margin-bottom: 14px; flex-shrink: 0; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  width: calc(100% + 40px); max-width: none; height: 272px; max-height: none;
+  margin: -18px -20px 18px; border-radius: 0; border: none; outline: none;
+  overflow: hidden; flex-shrink: 0; box-shadow: none;
 }
 .icard-cover--adaptive.icard-cover--magazine .icard-cover-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .icard-cover--adaptive.icard-cover--magazine .icard-cover-title { margin-top: 0; font-size: 23px; }
 
-/* 自适应居中画框（基础通用）：大画幅视窗 */
+/* 自适应居中画框（基础通用）：贴边派基线 —— 顶 + 左右出血、方角、零投影。
+   各 centered 主题在下方自述完整处理（gradient-blue 改沉到下缘、forest-green 加底部渐隐） */
 .icard-cover--adaptive.icard-cover--centered { padding: 18px 20px; }
 .icard-cover--adaptive.icard-cover--centered .icard-cover-frame {
-  max-width: 322px; width: calc(100% - 8px); height: 220px; margin: 6px auto 14px; border-radius: 18px; overflow: hidden; flex-shrink: 0;
-  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.18); border: 2.5px solid rgba(255, 255, 255, 0.9);
+  order: -1;
+  width: calc(100% + 40px); max-width: none; height: 268px; margin: -18px -20px 18px; border-radius: 0; border: none; outline: none; overflow: hidden; flex-shrink: 0;
+  box-shadow: none;
 }
 .icard-cover--adaptive.icard-cover--centered .icard-cover-frame-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .icard-cover--adaptive.icard-cover--centered .icard-cover-title { margin-top: 0; font-size: 23px; }
 
-/* 自适应轻奢大拱门（基础通用）：宏伟大拱窗 */
+/* 自适应轻奢大画幅（基础通用）：画框派基线 —— 方角画心、零投影，让页面双细线框（::before/::after）主导 */
 .icard-cover--adaptive.icard-cover--luxury { padding: 18px 20px; }
 .icard-cover--adaptive.icard-cover--luxury .icard-cover-arch {
-  width: 245px; height: 240px; margin: 4px auto 14px; border-radius: 122px 122px 18px 18px; overflow: hidden; flex-shrink: 0;
-  border: 2px solid ${t.borderColor}; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+  width: 100%; max-width: 100%; height: 234px; margin: 10px auto 18px; border-radius: 0; border: none; outline: none; overflow: hidden; flex-shrink: 0;
+  box-shadow: none;
 }
 .icard-cover--adaptive.icard-cover--luxury .icard-cover-arch-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .icard-cover--adaptive.icard-cover--luxury .icard-cover-title { margin-top: 0; font-size: 23px; }
@@ -692,75 +704,142 @@ export function buildCardPageCss(theme, typography = {}) {
 .icard-cover--adaptive .icard-cover-kicker { margin-bottom: 8px; }
 .icard-cover--adaptive .icard-cover-title::after { margin: 12px auto 0; }
 
-/* —— 四大主题个性化惊艳封面深度定制 —— */
+/* —— 四大主题个性化高级封面深度定制 —— */
 
-/* 1. 渐变蓝（gradient-blue）：现代画廊大画幅悬浮视窗 */
+/* 1. 渐变蓝（gradient-blue）：现代画报风（上文 · 中图 · 下引言） */
+.icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-body {
+  display: flex;
+  flex-direction: column;
+}
+.icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-kicker {
+  order: 1;
+  margin-bottom: 6px;
+}
+.icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-title {
+  order: 2;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
 .icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-frame {
-  max-width: 322px;
-  width: calc(100% - 8px);
-  height: 220px;
-  margin: 6px auto 14px;
-  border-radius: 18px;
-  border: 3px solid rgba(255, 255, 255, 0.98);
-  box-shadow: 0 20px 38px -8px rgba(37, 99, 235, 0.24), 0 8px 16px -4px rgba(15, 23, 42, 0.08);
+  /* 贴边派：图沉到卡片下缘（order 排到 meta 之后）、左右出血、方角零投影，页面以照片收尾 */
+  order: 9;
+  width: calc(100% + 40px);
+  max-width: none;
+  height: 238px;
+  margin: 16px -20px -18px;
+  border-radius: 0;
+  border: none;
+  outline: none;
+  flex-shrink: 0;
+  box-shadow: none;
+}
+.icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-excerpt {
+  order: 4;
+}
+.icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-meta {
+  order: 8;
+  margin-top: auto;
 }
 .icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-title::after {
-  width: 44px;
-  height: 3.5px;
+  content: "";
+  display: block;
+  width: 36px;
+  height: 3px;
   border-radius: 999px;
   background: #2563eb;
-  margin: 12px auto 0;
+  margin: 10px 0 0;
 }
 
-/* 2. 森林绿（forest-green）：森系自然有机宽画窗 */
+/* 2. 森林绿（forest-green）：森系自然通透大画幅（零描边、纯净摄影焦点） */
 .icard-cover--forest-green.icard-cover--adaptive .icard-cover-frame {
-  max-width: 322px;
-  width: calc(100% - 8px);
-  height: 215px;
-  margin: 6px auto 14px;
-  border-radius: 24px;
-  border: 2px solid rgba(252, 211, 77, 0.65);
-  box-shadow: 0 18px 40px -6px rgba(2, 44, 34, 0.85), 0 0 24px rgba(252, 211, 77, 0.16);
+  /* 贴边派：顶 + 左右出血、方角零投影；底部用 mask 渐隐溶入墨绿底，让文字像是从照片里长出来 */
+  order: -1;
+  width: calc(100% + 40px);
+  max-width: none;
+  height: 268px;
+  margin: -18px -20px 18px;
+  border-radius: 0;
+  border: none;
+  outline: none;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: none;
+}
+.icard-cover--forest-green.icard-cover--adaptive .icard-cover-frame-img {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 54%, rgba(0, 0, 0, 0.45) 82%, rgba(0, 0, 0, 0) 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 54%, rgba(0, 0, 0, 0.45) 82%, rgba(0, 0, 0, 0) 100%);
+}
+.icard-cover--forest-green.icard-cover--adaptive .icard-cover-title {
+  margin-top: 0;
+  font-size: 23px;
 }
 .icard-cover--forest-green.icard-cover--adaptive .icard-cover-title::after {
-  width: 40px;
-  height: 3px;
+  content: "";
+  display: block;
+  width: 36px;
+  height: 2.5px;
   border-radius: 999px;
   background: #fcd34d;
   margin: 12px auto 0;
 }
 
-/* 3. 黑金（dark-gold）：古典殿堂级宏伟双线大拱门 */
+/* 3. 黑金（dark-gold）：电影级暗调光影大画幅（废除生硬拱门，通透沉浸） */
 .icard-cover--dark-gold.icard-cover--adaptive .icard-cover-arch {
-  width: 245px;
-  height: 240px;
-  margin: 4px auto 14px;
-  border-radius: 122px 122px 14px 14px;
-  border: 2px solid #b45309;
-  outline: 1.5px solid rgba(245, 158, 11, 0.45);
-  outline-offset: 4px;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.9), 0 0 32px rgba(245, 158, 11, 0.16);
+  /* 画框派：页面双细线框是奢侈主题的身份，保留；图退成方角画心并去掉重投影，不与框争 */
+  width: 100%;
+  max-width: 100%;
+  height: 234px;
+  margin: 10px auto 18px;
+  border-radius: 0;
+  border: none;
+  outline: none;
+  position: relative;
+  box-shadow: none;
+}
+.icard-cover--dark-gold.icard-cover--adaptive .icard-cover-arch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+  background: linear-gradient(180deg, transparent 74%, rgba(24, 24, 27, 0.4) 100%);
+  pointer-events: none;
+}
+.icard-cover--dark-gold.icard-cover--adaptive .icard-cover-title {
+  margin-top: 0;
+  font-size: 23px;
 }
 .icard-cover--dark-gold.icard-cover--adaptive .icard-cover-title::after {
-  width: 36px;
+  content: "";
+  display: block;
+  width: 32px;
   height: 2px;
   background: #f59e0b;
   margin: 12px auto 0;
 }
 
-/* 4. 玫瑰金（rose-gold）：法式浪漫香槟浮雕拱窗 */
+/* 4. 玫瑰金（rose-gold）：法式时尚沙龙画册（零描边、纯净黄金画幅与高级留白） */
 .icard-cover--rose-gold.icard-cover--adaptive .icard-cover-arch {
-  width: 245px;
-  height: 240px;
-  margin: 4px auto 14px;
-  border-radius: 122px 122px 22px 22px;
-  border: 2px solid #f472b6;
-  outline: 1.5px solid rgba(244, 114, 182, 0.45);
-  outline-offset: 4px;
-  box-shadow: 0 20px 42px -8px rgba(244, 114, 182, 0.38), 0 6px 18px rgba(131, 24, 67, 0.08);
+  /* 画框派：同黑金，方角画心 + 去掉粉色投影，让页面双细线框主导画面 */
+  width: 100%;
+  max-width: 100%;
+  height: 234px;
+  margin: 10px auto 18px;
+  border-radius: 0;
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+.icard-cover--rose-gold.icard-cover--adaptive .icard-cover-title {
+  margin-top: 0;
+  font-size: 23px;
 }
 .icard-cover--rose-gold.icard-cover--adaptive .icard-cover-title::after {
-  width: 36px;
+  content: "";
+  display: block;
+  width: 32px;
   height: 2px;
   background: #f472b6;
   margin: 12px auto 0;

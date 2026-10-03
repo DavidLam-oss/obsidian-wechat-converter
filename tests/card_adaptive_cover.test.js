@@ -3,10 +3,37 @@ import { getCardTheme, buildCardPageCss } from '../services/card-themes.js';
 import { normalizeCoverFields } from '../services/card-cover-model.js';
 import { assembleCardCoverPage } from '../services/card-render-assembly.js';
 
+/** 把主题 CSS 拆成规则列表，便于按选择器精确断言声明块（避免在整份 CSS 里做子串匹配导致假阳性） */
+function cssRules(css) {
+  const clean = String(css || '').replace(/\/\*[\s\S]*?\*\//g, '');
+  const out = [];
+  const re = /([^{}]+)\{([^{}]*)\}/g;
+  let m;
+  while ((m = re.exec(clean)) !== null) {
+    out.push({
+      selectors: m[1].split(',').map((s) => s.trim()).filter(Boolean),
+      body: m[2].replace(/\s+/g, ' ').trim(),
+    });
+  }
+  return out;
+}
+
+/**
+ * 取某条选择器命中的**全部**声明块并拼接；找不到返回空串。
+ * 必须合并而不是取第一条：同一选择器可能既出现在共享规则里（如
+ * `.icard-cover--luxury::before, .icard-cover--luxury::after { content… }`）又出现在专属规则里。
+ */
+function ruleOf(css, selector) {
+  const bodies = cssRules(css)
+    .filter((r) => r.selectors.includes(selector))
+    .map((r) => r.body);
+  return bodies.join(' ; ');
+}
+
 describe('Card Adaptive Cover Assembly across 6 themes', () => {
   const coverImage = 'data:image/jpeg;base64,testbase64';
 
-  describe('Magazine themes (simple-white, rose-gold)', () => {
+  describe('Magazine theme (simple-white)', () => {
     it('renders hero image container before body for simple-white', () => {
       const theme = getCardTheme('simple-white');
       const fields = normalizeCoverFields({
@@ -27,6 +54,18 @@ describe('Card Adaptive Cover Assembly across 6 themes', () => {
       const body = page.querySelector('.icard-cover-body');
       expect(body).not.toBeNull();
       expect(body?.querySelector('.icard-cover-title')?.textContent).toBe('极简白杂志封面');
+    });
+
+    it('bleeds the hero to the top and both sides with square corners and no shadow', () => {
+      const css = buildCardPageCss(getCardTheme('simple-white'));
+      const hero = ruleOf(css, '.icard-cover--adaptive.icard-cover--magazine .icard-cover-hero');
+      // 贴边派：顶 + 左右出血（内边距 18px 20px → 横向 +40px、顶部 -18px 负边距）
+      expect(hero).toContain('width: calc(100% + 40px)');
+      expect(hero).toContain('margin: -18px -20px 18px');
+      // 方角 + 零投影 + 解除原始高度上限
+      expect(hero).toContain('border-radius: 0');
+      expect(hero).toContain('box-shadow: none');
+      expect(hero).toContain('max-height: none');
     });
   });
 
@@ -51,9 +90,15 @@ describe('Card Adaptive Cover Assembly across 6 themes', () => {
       expect(frameImg?.getAttribute('src')).toBe(coverImage);
 
       const css = buildCardPageCss(theme);
-      expect(css).toContain('.icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-frame');
-      expect(css).toContain('max-width: 322px');
-      expect(css).toContain('rgba(37, 99, 235, 0.24)');
+      const frameRule = ruleOf(css, '.icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-frame');
+      // 贴边派变体：图沉到卡片下缘（order 排到 meta 之后）、左右 + 底部出血、方角零投影
+      expect(frameRule).toContain('order: 9');
+      expect(frameRule).toContain('width: calc(100% + 40px)');
+      expect(frameRule).toContain('margin: 16px -20px -18px');
+      expect(frameRule).toContain('border-radius: 0');
+      expect(frameRule).toContain('box-shadow: none');
+      expect(ruleOf(css, '.icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-meta')).toContain('order: 8');
+      expect(ruleOf(css, '.icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-title')).toContain('order: 2');
     });
 
     it('renders framed picture card inside body for forest-green with botanical panorama styling', () => {
@@ -72,9 +117,16 @@ describe('Card Adaptive Cover Assembly across 6 themes', () => {
       expect(page.querySelector('.icard-cover-frame')).not.toBeNull();
 
       const css = buildCardPageCss(theme);
-      expect(css).toContain('.icard-cover--forest-green.icard-cover--adaptive .icard-cover-frame');
-      expect(css).toContain('border-radius: 24px');
-      expect(css).toContain('rgba(252, 211, 77, 0.65)');
+      const frameRule = ruleOf(css, '.icard-cover--forest-green.icard-cover--adaptive .icard-cover-frame');
+      // 贴边派变体：顶 + 左右出血 + 方角零投影，并用 order: -1 把图提到 kicker 之前
+      expect(frameRule).toContain('order: -1');
+      expect(frameRule).toContain('width: calc(100% + 40px)');
+      expect(frameRule).toContain('margin: -18px -20px 18px');
+      expect(frameRule).toContain('border-radius: 0');
+      expect(frameRule).toContain('box-shadow: none');
+      // 底部 mask 渐隐溶入墨绿底（导出实测已确认 modern-screenshot 能保留 mask）
+      expect(ruleOf(css, '.icard-cover--forest-green.icard-cover--adaptive .icard-cover-frame-img'))
+        .toContain('mask-image: linear-gradient(to bottom');
     });
   });
 
@@ -99,10 +151,14 @@ describe('Card Adaptive Cover Assembly across 6 themes', () => {
       expect(archImg?.getAttribute('src')).toBe(coverImage);
 
       const css = buildCardPageCss(theme);
-      expect(css).toContain('.icard-cover--dark-gold.icard-cover--adaptive .icard-cover-arch');
-      expect(css).toContain('width: 245px');
-      expect(css).toContain('border: 2px solid #b45309');
-      expect(css).toContain('outline: 1.5px solid rgba(245, 158, 11, 0.45)');
+      const archRule = ruleOf(css, '.icard-cover--dark-gold.icard-cover--adaptive .icard-cover-arch');
+      // 画框派：方角画心 + 零投影，页面双细线框（::before/::after）才是主角
+      expect(archRule).toContain('border-radius: 0');
+      expect(archRule).toContain('box-shadow: none');
+      expect(ruleOf(css, '.icard-cover--luxury::before')).toContain('inset: 10px');
+      expect(ruleOf(css, '.icard-cover--luxury::after')).toContain('inset: 14px');
+      expect(ruleOf(css, '.icard-cover--dark-gold.icard-cover--adaptive .icard-cover-arch::after'))
+        .toContain('linear-gradient(180deg, transparent 74%, rgba(24, 24, 27, 0.4) 100%)');
     });
 
     it('renders arch framed window for rose-gold with french cameo arch styling', () => {
@@ -121,10 +177,11 @@ describe('Card Adaptive Cover Assembly across 6 themes', () => {
       expect(page.querySelector('.icard-cover-arch')).not.toBeNull();
 
       const css = buildCardPageCss(theme);
-      expect(css).toContain('.icard-cover--rose-gold.icard-cover--adaptive .icard-cover-arch');
-      expect(css).toContain('width: 245px');
-      expect(css).toContain('border: 2px solid #f472b6');
-      expect(css).toContain('outline: 1.5px solid rgba(244, 114, 182, 0.45)');
+      const archRule = ruleOf(css, '.icard-cover--rose-gold.icard-cover--adaptive .icard-cover-arch');
+      // 画框派：同黑金，方角画心 + 零投影，让页面双细线框主导
+      expect(archRule).toContain('border-radius: 0');
+      expect(archRule).toContain('box-shadow: none');
+      expect(ruleOf(css, '.icard-cover--luxury::before')).toContain('inset: 10px');
     });
   });
 
@@ -260,6 +317,68 @@ describe('Card Adaptive Cover Assembly across 6 themes', () => {
       const img = hero?.querySelector('img');
       expect(img).not.toBeNull();
       expect(img?.getAttribute('src')).toBe('app://local/resolved-cover.jpg');
+    });
+  });
+
+  describe('封面配图按主题分派总纲（2026-10-03）', () => {
+    /** 贴边派 + 画框派：五套主题里「承载照片的容器」选择器（neon 走整页底图，不在此列） */
+    const IMAGE_CONTAINERS = {
+      'simple-white': '.icard-cover--adaptive.icard-cover--magazine .icard-cover-hero',
+      'gradient-blue': '.icard-cover--gradient-blue.icard-cover--adaptive .icard-cover-frame',
+      'forest-green': '.icard-cover--forest-green.icard-cover--adaptive .icard-cover-frame',
+      'dark-gold': '.icard-cover--dark-gold.icard-cover--adaptive .icard-cover-arch',
+      'rose-gold': '.icard-cover--rose-gold.icard-cover--adaptive .icard-cover-arch',
+    };
+
+    it('五套主题的配图容器一律方角、零投影，不再把照片裱成一个独立物件', () => {
+      for (const [id, selector] of Object.entries(IMAGE_CONTAINERS)) {
+        const rule = ruleOf(buildCardPageCss(getCardTheme(id)), selector);
+        expect(rule, `${id} 的配图容器规则应存在`).not.toBe('');
+        expect(rule, `${id} 的配图应方角`).toContain('border-radius: 0');
+        expect(rule, `${id} 的配图应去掉投影`).toContain('box-shadow: none');
+      }
+    });
+
+    it('基础通用规则也不残留圆角与投影（避免与分派总纲自相矛盾）', () => {
+      const css = buildCardPageCss(getCardTheme('forest-green'));
+      for (const selector of [
+        '.icard-cover--adaptive.icard-cover--centered .icard-cover-frame',
+        '.icard-cover--adaptive.icard-cover--luxury .icard-cover-arch',
+      ]) {
+        const rule = ruleOf(css, selector);
+        expect(rule, `${selector} 应存在`).not.toBe('');
+        expect(rule, `${selector} 不应残留圆角`).toContain('border-radius: 0');
+        expect(rule, `${selector} 不应残留投影`).toContain('box-shadow: none');
+      }
+    });
+
+    it('贴边派三套主题都横向出血（+40px / 左右 -20px）', () => {
+      for (const id of ['simple-white', 'gradient-blue', 'forest-green']) {
+        const rule = ruleOf(buildCardPageCss(getCardTheme(id)), IMAGE_CONTAINERS[id]);
+        expect(rule, `${id} 应横向出血`).toContain('width: calc(100% + 40px)');
+        expect(rule, `${id} 应用负边距抵消内边距`).toContain('-20px');
+      }
+    });
+
+    it('画框派两套主题保留页面双细线框（图像退在框内，不横穿照片）', () => {
+      for (const id of ['dark-gold', 'rose-gold']) {
+        const css = buildCardPageCss(getCardTheme(id));
+        expect(ruleOf(css, '.icard-cover--luxury::before'), `${id} 外圈细线`).toContain('border: 1px solid');
+        expect(ruleOf(css, '.icard-cover--luxury::after'), `${id} 内圈细线`).toContain('border: 1px solid');
+        // 图容器仍是 100% 宽（内缩在页面内边距里），没有被改成出血
+        expect(ruleOf(css, IMAGE_CONTAINERS[id])).not.toContain('calc(100% + 40px)');
+      }
+    });
+
+    it('neon-purple 维持整页铺图，不走贴边改造', () => {
+      const page = assembleCardCoverPage({
+        theme: getCardTheme('neon-purple'),
+        fields: normalizeCoverFields({ title: '霓虹赛博', coverImage, coverMode: 'adaptive' }),
+      });
+      expect(page.querySelector('.icard-cover-bg')).not.toBeNull();
+      expect(page.querySelector('.icard-cover-hero')).toBeNull();
+      expect(page.querySelector('.icard-cover-frame')).toBeNull();
+      expect(page.querySelector('.icard-cover-arch')).toBeNull();
     });
   });
 });
