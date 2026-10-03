@@ -16,7 +16,8 @@
 - `parseCardFrontmatter` → `Record<string, string>`（仅顶层标量键；列表/嵌套/多行块忽略）。
 - `deriveCoverFields` → `{ title, author, date, excerpt }`：title 取 frontmatter `title`，
   否则用文件名（去扩展名）；author 取 `author`；excerpt 取 `description`/`excerpt`；
-  date 取 `date` 并归一化为 `YYYY-MM-DD`——**解析失败留空，绝不补今天**（规划 §3.2）。
+  **date 恒为空串**——既不读 frontmatter `date`、也不补今天，由用户在侧边栏按需手填
+  （2026-10-03 David 定：日期不默认显示）。
 - `normalizeCoverFields` → trim 后的四字段；**不按长度截断**（长标题/摘要不静默裁切，
   超限由渲染核验显式诊断）。
 - `isCoverUsable` → title 非空即有效；全空封面按「未启用有效封面」处理。
@@ -36,7 +37,8 @@
 - 修改逻辑后同步更新本文件说明书，并检查 services 的文件夹 README 是否仍准确。
 - frontmatter 解析只做「够用的一期」：顶层 `key: value`，支持单双引号与行内注释；
   不实现完整 YAML（嵌套、多行、锚点一律忽略），复杂笔记回落文件名标题即可接受。
-- 日期语义是硬规矩：解析失败 → 空字符串，禁止回填当前日期伪装有效。
+- 日期语义是硬规矩：**初值恒为空**——不读 frontmatter `date`、禁止回填当前日期伪装有效；
+  只有用户在侧边栏显式填写，封面才会出现日期行。
 */
 
 /** 封面字段（C01③ 文字封面 + C06 AI 封面配图） */
@@ -110,31 +112,8 @@ export function parseCardFrontmatter(markdown) {
 }
 
 /**
- * 归一化日期显示：`YYYY-MM-DD` / `YYYY/M/D` / ISO 串 → `YYYY-MM-DD`；
- * 其余（含无法解析的文案）→ 空字符串。**绝不回填今天**（§3.2「日期不补今天」）。
- * @param {string} raw
- * @returns {string}
- */
-export function normalizeCoverDate(raw) {
-  const text = String(raw || "").trim();
-  if (!text) return "";
-  const match = /^(\d{4})[-/年.](\d{1,2})[-/月.](\d{1,2})日?/.exec(text);
-  if (match) {
-    const [, y, m, d] = match;
-    return `${y}-${String(Number(m)).padStart(2, "0")}-${String(Number(d)).padStart(2, "0")}`;
-  }
-  const time = Date.parse(text);
-  if (Number.isFinite(time)) {
-    const date = new Date(time);
-    const pad = (/** @type {number} */ n) => String(n).padStart(2, "0");
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-  }
-  return "";
-}
-
-/**
  * 从笔记内容派生封面初值：title 取 frontmatter `title` 否则文件名；
- * excerpt 取 `description` 或 `excerpt`；date 解析失败留空。
+ * excerpt 取 `description` 或 `excerpt`；**date 恒为空**（不预填，由用户自己填）。
  * @param {{ markdown?: string, sourcePath?: string }} input
  * @returns {CardCoverFields}
  */
@@ -150,7 +129,7 @@ export function deriveCoverFields(input = {}) {
   return {
     title,
     author: String(meta.author || "").trim(),
-    date: normalizeCoverDate(meta.date),
+    date: "",
     excerpt,
     coverImage: String(meta.cover || meta.banner || meta.image || "").trim(),
     coverMode: meta.coverMode === 'none' || meta.coverMode === 'full-bleed' || meta.coverMode === 'mixed' || meta.coverMode === 'adaptive'

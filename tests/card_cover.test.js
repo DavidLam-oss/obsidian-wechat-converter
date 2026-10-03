@@ -2,12 +2,11 @@
 import { describe, it, expect } from 'vitest';
 
 /* 封面字段模型与会话脏标记（C01③，规划 §3.2/§3.3）：
-   frontmatter 解析 → 初值派生（title 回落文件名、日期解析失败留空不补今天）→
+   frontmatter 解析 → 初值派生（title 回落文件名、日期恒为空不预填）→
    用户编辑冻结（dirty）与「按当前笔记重新填入」→ 封面有效性 → 输出资格 hasCover 语义。 */
 
 import {
   parseCardFrontmatter,
-  normalizeCoverDate,
   deriveCoverFields,
   normalizeCoverFields,
   isCoverUsable,
@@ -40,35 +39,24 @@ describe('parseCardFrontmatter（一期够用口径）', () => {
   });
 });
 
-describe('normalizeCoverDate：有效日期处理，绝不补今天', () => {
-  it('常见格式归一化为 YYYY-MM-DD', () => {
-    expect(normalizeCoverDate('2026-09-13')).toBe('2026-09-13');
-    expect(normalizeCoverDate('2026/9/3')).toBe('2026-09-03');
-    expect(normalizeCoverDate('2026年9月3日')).toBe('2026-09-03');
-    expect(normalizeCoverDate('September 13, 2026')).toBe('2026-09-13');
-  });
-
-  it('非日期文案 → 空字符串；空输入 → 空字符串', () => {
-    expect(normalizeCoverDate('昨天')).toBe('');
-    expect(normalizeCoverDate('')).toBe('');
-    expect(normalizeCoverDate(null)).toBe('');
-  });
-});
-
 describe('deriveCoverFields：初值派生', () => {
   it('title 取 frontmatter，否则回落文件名（去扩展名）', () => {
     expect(deriveCoverFields({ markdown: '---\ntitle: 早课\n---\n正文', sourcePath: 'Wechat/笔记.md' }).title).toBe('早课');
     expect(deriveCoverFields({ markdown: '正文', sourcePath: 'Wechat/我的笔记.md' }).title).toBe('我的笔记');
   });
 
-  it('excerpt 取 description/excerpt；date 解析失败留空且不补今天', () => {
+  it('excerpt 取 description/excerpt；date 恒为空（不预填、不补今天）', () => {
     const fields = deriveCoverFields({
-      markdown: '---\ndescription: 一段摘要\nauthor: David\ndate: 无效日期\n---\n',
+      markdown: '---\ndescription: 一段摘要\nauthor: David\ndate: 2026-09-13\n---\n',
       sourcePath: 'a/b.md',
     });
     expect(fields.excerpt).toBe('一段摘要');
     expect(fields.author).toBe('David');
+    // 回归（2026-10-03 David 定）：即使 frontmatter 有合法日期，也不预填
     expect(fields.date).toBe('');
+
+    expect(deriveCoverFields({ markdown: '---\ndate: 无效日期\n---\n', sourcePath: 'a/b.md' }).date).toBe('');
+    expect(deriveCoverFields({ markdown: '正文', sourcePath: 'a/b.md' }).date).toBe('');
   });
 });
 
