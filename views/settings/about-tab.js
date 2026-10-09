@@ -109,89 +109,7 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
     };
   });
 
-  // 2. 支持与赞助 (Support & Sponsor)
-  const sponsorSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
-
-  const sponsorHeader = sponsorSection.createDiv({ cls: 'apple-settings-about-section-header' });
-  const sponsorIcon = sponsorHeader.createSpan({ cls: 'apple-settings-about-section-icon' });
-  attachIcon(sponsorIcon, 'heart');
-  sponsorHeader.createSpan({ text: '支持与赞助' });
-
-  sponsorSection.createEl('p', {
-    text: '本项目始终保持免费与开源。如果它在您的日常写作与多平台发布中节省了宝贵时间，欢迎请作者喝杯咖啡，支持项目持续维护与体验打磨！',
-    cls: 'apple-settings-about-section-desc',
-  });
-
-  const planList = sponsorSection.createEl('ul', { cls: 'apple-settings-about-list' });
-  planList.createEl('li', { text: '持续适配微信公众号编辑器与官方草稿箱 API 规则变动' });
-  planList.createEl('li', { text: '优化支持飞书云文档、小红书、知乎、B 站、今日头条等多平台的分发体验' });
-  planList.createEl('li', { text: '打磨代码块高亮、LaTeX 数学公式与 Mermaid 图表的高清渲染细节' });
-
-  // 二维码并排卡片
-  const cardsContainer = sponsorSection.createDiv({ cls: 'apple-settings-sponsor-cards' });
-
-  // 微信赞赏卡片
-  const wechatCard = cardsContainer.createDiv({ cls: 'apple-settings-sponsor-card' });
-  const wechatQrWrap = wechatCard.createDiv({ cls: 'apple-settings-sponsor-qr-wrapper' });
-  const wechatImg = wechatQrWrap.createEl('img', { cls: 'apple-settings-sponsor-qr-img' });
-  wechatImg.src = WECHAT_SPONSOR_QR_DATA_URL;
-  wechatImg.alt = '微信赞赏码';
-  wechatCard.createDiv({ text: '微信赞赏', cls: 'apple-settings-sponsor-label' });
-
-  // 支付宝收款卡片
-  const alipayCard = cardsContainer.createDiv({ cls: 'apple-settings-sponsor-card' });
-  const alipayQrWrap = alipayCard.createDiv({ cls: 'apple-settings-sponsor-qr-wrapper' });
-  const alipayImg = alipayQrWrap.createEl('img', { cls: 'apple-settings-sponsor-qr-img' });
-  alipayImg.src = ALIPAY_SPONSOR_QR_DATA_URL;
-  alipayImg.alt = '支付宝收款码';
-  alipayCard.createDiv({ text: '支付宝', cls: 'apple-settings-sponsor-label' });
-
-  // 提示信息
-  const hintEl = sponsorSection.createDiv({ cls: 'apple-settings-sponsor-hint' });
-  hintEl.createSpan({
-    text: '提示：扫码赞助时请在转账备注中填写您的【昵称】与【留言寄语】。作者将在下一版本更新时，将您的名字永久收录至下方的赞助鸣谢榜！',
-  });
-
-  // 3. 赞助鸣谢榜 (Hall of Fame)
-  const fameSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
-
-  const fameHeader = fameSection.createDiv({ cls: 'apple-settings-about-section-header' });
-  const fameIcon = fameHeader.createSpan({ cls: 'apple-settings-about-section-icon' });
-  attachIcon(fameIcon, 'award');
-  fameHeader.createSpan({ text: '赞助鸣谢榜' });
-
-  fameSection.createEl('p', {
-    text: '衷心感谢以下创作者对本项目的支持与鼓励（按赞助时间排列）：',
-    cls: 'apple-settings-about-section-desc',
-  });
-
-  const wallEl = fameSection.createDiv({ cls: 'apple-settings-fame-wall' });
-
-  SPONSORS.forEach((sponsor) => {
-    const item = wallEl.createDiv({ cls: 'apple-settings-fame-item' });
-
-    const left = item.createDiv({ cls: 'apple-settings-fame-item-left' });
-    const userIcon = left.createSpan({ cls: 'apple-settings-fame-item-icon' });
-    attachIcon(userIcon, 'user-check');
-
-    const content = left.createDiv({ cls: 'apple-settings-fame-item-content' });
-    const nameRow = content.createDiv({ cls: 'apple-settings-fame-item-header' });
-    nameRow.createSpan({ text: sponsor.name, cls: 'apple-settings-fame-item-name' });
-    if (sponsor.tag) {
-      const tagEl = nameRow.createSpan({ cls: 'apple-settings-fame-item-tag' });
-      const tagIcon = tagEl.createSpan({ cls: 'apple-settings-fame-item-tag-icon' });
-      attachIcon(tagIcon, 'award');
-      tagEl.createSpan({ text: sponsor.tag });
-    }
-
-    if (sponsor.message) {
-      content.createSpan({ text: `“${sponsor.message}”`, cls: 'apple-settings-fame-item-message' });
-    }
-
-    item.createSpan({ text: sponsor.date, cls: 'apple-settings-fame-item-date' });
-  });
-
-  // 4. Obsidian 与 AI 交流社群
+  // 2. Obsidian 与 AI 交流社群
   const communitySection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
 
   const communityHeader = communitySection.createDiv({ cls: 'apple-settings-about-section-header' });
@@ -244,7 +162,7 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
   const communityHintEl = infoWrap.createDiv({ cls: 'apple-settings-community-hint' });
   communityHintEl.createSpan({ text: '微信扫码或搜索微信号添加均可，添加时请备注「OB 入群」' });
 
-  // 5. 关于作者
+  // 3. 关于作者
   const authorSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
 
   const authorHeader = authorSection.createDiv({ cls: 'apple-settings-about-section-header' });
@@ -255,6 +173,88 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
   const authorCard = authorSection.createDiv({ cls: 'apple-settings-author-card' });
   authorCard.createEl('p', {
     text: '作者：林小卫很行 (DavidLam)。一名热衷于提升生产力工具体验的开发者与创作者。相信工具的力量，让写作更优雅，让创作更自由。',
+  });
+
+  // 4. 支持与赞助 (Support & Sponsor)
+  const sponsorSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
+
+  const sponsorHeader = sponsorSection.createDiv({ cls: 'apple-settings-about-section-header' });
+  const sponsorIcon = sponsorHeader.createSpan({ cls: 'apple-settings-about-section-icon' });
+  attachIcon(sponsorIcon, 'heart');
+  sponsorHeader.createSpan({ text: '支持与赞助' });
+
+  sponsorSection.createEl('p', {
+    text: '本项目始终保持免费与开源。如果它在您的日常写作与多平台发布中节省了宝贵时间，欢迎请作者喝杯咖啡，支持项目持续维护与体验打磨！',
+    cls: 'apple-settings-about-section-desc',
+  });
+
+  const planList = sponsorSection.createEl('ul', { cls: 'apple-settings-about-list' });
+  planList.createEl('li', { text: '持续适配微信公众号编辑器与官方草稿箱 API 规则变动' });
+  planList.createEl('li', { text: '优化支持飞书云文档、小红书、知乎、B 站、今日头条等多平台的分发体验' });
+  planList.createEl('li', { text: '打磨代码块高亮、LaTeX 数学公式与 Mermaid 图表的高清渲染细节' });
+
+  // 二维码并排卡片
+  const cardsContainer = sponsorSection.createDiv({ cls: 'apple-settings-sponsor-cards' });
+
+  // 微信赞赏卡片
+  const wechatCard = cardsContainer.createDiv({ cls: 'apple-settings-sponsor-card' });
+  const wechatQrWrap = wechatCard.createDiv({ cls: 'apple-settings-sponsor-qr-wrapper' });
+  const wechatImg = wechatQrWrap.createEl('img', { cls: 'apple-settings-sponsor-qr-img' });
+  wechatImg.src = WECHAT_SPONSOR_QR_DATA_URL;
+  wechatImg.alt = '微信赞赏码';
+  wechatCard.createDiv({ text: '微信赞赏', cls: 'apple-settings-sponsor-label' });
+
+  // 支付宝收款卡片
+  const alipayCard = cardsContainer.createDiv({ cls: 'apple-settings-sponsor-card' });
+  const alipayQrWrap = alipayCard.createDiv({ cls: 'apple-settings-sponsor-qr-wrapper' });
+  const alipayImg = alipayQrWrap.createEl('img', { cls: 'apple-settings-sponsor-qr-img' });
+  alipayImg.src = ALIPAY_SPONSOR_QR_DATA_URL;
+  alipayImg.alt = '支付宝收款码';
+  alipayCard.createDiv({ text: '支付宝', cls: 'apple-settings-sponsor-label' });
+
+  // 提示信息
+  const hintEl = sponsorSection.createDiv({ cls: 'apple-settings-sponsor-hint' });
+  hintEl.createSpan({
+    text: '提示：扫码赞助时请在转账备注中填写您的【昵称】与【留言寄语】。作者将在下一版本更新时，将您的名字永久收录至下方的赞助鸣谢榜！',
+  });
+
+  // 5. 赞助鸣谢榜 (Hall of Fame)
+  const fameSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
+
+  const fameHeader = fameSection.createDiv({ cls: 'apple-settings-about-section-header' });
+  const fameIcon = fameHeader.createSpan({ cls: 'apple-settings-about-section-icon' });
+  attachIcon(fameIcon, 'award');
+  fameHeader.createSpan({ text: '赞助鸣谢榜' });
+
+  fameSection.createEl('p', {
+    text: '衷心感谢以下创作者对本项目的支持与鼓励（按赞助时间排列）：',
+    cls: 'apple-settings-about-section-desc',
+  });
+
+  const wallEl = fameSection.createDiv({ cls: 'apple-settings-fame-wall' });
+
+  SPONSORS.forEach((sponsor) => {
+    const item = wallEl.createDiv({ cls: 'apple-settings-fame-item' });
+
+    const left = item.createDiv({ cls: 'apple-settings-fame-item-left' });
+    const userIcon = left.createSpan({ cls: 'apple-settings-fame-item-icon' });
+    attachIcon(userIcon, 'user-check');
+
+    const content = left.createDiv({ cls: 'apple-settings-fame-item-content' });
+    const nameRow = content.createDiv({ cls: 'apple-settings-fame-item-header' });
+    nameRow.createSpan({ text: sponsor.name, cls: 'apple-settings-fame-item-name' });
+    if (sponsor.tag) {
+      const tagEl = nameRow.createSpan({ cls: 'apple-settings-fame-item-tag' });
+      const tagIcon = tagEl.createSpan({ cls: 'apple-settings-fame-item-tag-icon' });
+      attachIcon(tagIcon, 'award');
+      tagEl.createSpan({ text: sponsor.tag });
+    }
+
+    if (sponsor.message) {
+      content.createSpan({ text: `“${sponsor.message}”`, cls: 'apple-settings-fame-item-message' });
+    }
+
+    item.createSpan({ text: sponsor.date, cls: 'apple-settings-fame-item-date' });
   });
 }
 
