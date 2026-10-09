@@ -9289,17 +9289,54 @@ AI Provider 配置面板与弹窗样式片段（ai-tab 与 ai-provider-modal）�
   margin: 0 0 8px 0;
 }
 
-.apple-settings-community-card p:last-child {
-  margin-bottom: 0;
+.apple-settings-community-content {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--background-modifier-border);
+}
+
+@media (max-width: 540px) {
+  .apple-settings-community-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+.apple-settings-community-qr-wrapper {
+  width: 130px;
+  height: 130px;
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.apple-settings-community-qr-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.apple-settings-community-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .apple-settings-community-wechat-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--background-modifier-border);
 }
 
 .apple-settings-community-wechat-row code {
@@ -9318,6 +9355,12 @@ AI Provider 配置面板与弹窗样式片段（ai-tab 与 ai-provider-modal）�
   padding: 2px 10px;
   height: 26px;
   cursor: pointer;
+}
+
+.apple-settings-community-hint {
+  font-size: 12px;
+  color: var(--text-faint);
+  line-height: 1.5;
 }
 
 /* 作者模块 */

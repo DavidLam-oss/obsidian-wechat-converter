@@ -36,6 +36,7 @@ import { SPONSORS } from '../../services/sponsors-data.js';
 import {
   WECHAT_SPONSOR_QR_DATA_URL,
   ALIPAY_SPONSOR_QR_DATA_URL,
+  AUTHOR_WECHAT_QR_DATA_URL,
 } from '../../services/sponsor-assets.js';
 
 const DOCS_URL = 'https://github.com/DavidLam-oss/obsidian-wechat-converter/blob/main/README.md';
@@ -190,23 +191,35 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
     item.createSpan({ text: sponsor.date, cls: 'apple-settings-fame-item-date' });
   });
 
-  // 4. 交流讨论群
+  // 4. Obsidian 与 AI 交流社群
   const communitySection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
 
   const communityHeader = communitySection.createDiv({ cls: 'apple-settings-about-section-header' });
   const communityIcon = communityHeader.createSpan({ cls: 'apple-settings-about-section-icon' });
   attachIcon(communityIcon, 'users');
-  communityHeader.createSpan({ text: '交流讨论群' });
+  communityHeader.createSpan({ text: 'Obsidian 与 AI 交流社群' });
 
   const communityCard = communitySection.createDiv({ cls: 'apple-settings-community-card' });
   communityCard.createEl('p', {
-    text: '为了方便大家交流技术写作与多平台排版心得、探讨新功能与反馈使用问题，作者创建了「Obsidian 发布助手」用户交流群。',
+    text: '作者创建了一个专注于 Obsidian 与 AI 深度探索的实践交流群。',
   });
   communityCard.createEl('p', {
-    text: '目前社群成员已超过 400 人，受微信规则限制已无法通过扫描群二维码直接加入。如果您想入群交流，欢迎添加作者个人微信（备注「入群」），作者将手动拉您进群：',
+    text: '群内日常交流探讨 Obsidian 高阶工作流、个人知识库（PKM）搭建、AI Agent 与自动化落地、前沿效率工具折腾与经验心得等（非单一插件售后群）。',
+  });
+  communityCard.createEl('p', {
+    text: '目前社群成员已超过 400 人，受微信规则限制已无法通过扫描群二维码直接加入。如果您对 Obsidian 与 AI 实践感兴趣想入群交流，欢迎扫描下方微信二维码或添加作者微信（备注「OB 入群」），作者将手动拉您进群：',
   });
 
-  const wechatRow = communityCard.createDiv({ cls: 'apple-settings-community-wechat-row' });
+  const communityContent = communityCard.createDiv({ cls: 'apple-settings-community-content' });
+
+  const qrWrap = communityContent.createDiv({ cls: 'apple-settings-community-qr-wrapper' });
+  const qrImg = qrWrap.createEl('img', { cls: 'apple-settings-community-qr-img' });
+  qrImg.src = AUTHOR_WECHAT_QR_DATA_URL;
+  qrImg.alt = '作者个人微信二维码';
+
+  const infoWrap = communityContent.createDiv({ cls: 'apple-settings-community-info' });
+
+  const wechatRow = infoWrap.createDiv({ cls: 'apple-settings-community-wechat-row' });
   wechatRow.createSpan({ text: '作者微信号：' });
   wechatRow.createEl('code', { text: 'linauwawa' });
 
@@ -227,6 +240,9 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
       // ignore clipboard error
     }
   };
+
+  const communityHintEl = infoWrap.createDiv({ cls: 'apple-settings-community-hint' });
+  communityHintEl.createSpan({ text: '微信扫码或搜索微信号添加均可，添加时请备注「OB 入群」' });
 
   // 5. 关于作者
   const authorSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });

@@ -138,11 +138,17 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
     expect(messages).toContain('“生命不息，折腾不止”');
     expect(messages).toContain('“终于有 Markdown 编辑同步了，加油！”');
 
-    // 检查交流讨论群模块
+    // 检查 Obsidian 与 AI 交流社群模块
     const communityCard = containerEl.querySelector('.apple-settings-community-card');
     expect(communityCard).not.toBeNull();
     expect(communityCard?.textContent).toContain('linauwawa');
     expect(communityCard?.textContent).toContain('400 人');
+    expect(communityCard?.textContent).toContain('Obsidian 与 AI');
+    expect(communityCard?.textContent).toContain('OB 入群');
+
+    const authorQrImg = containerEl.querySelector('.apple-settings-community-qr-img');
+    expect(authorQrImg).not.toBeNull();
+    expect(authorQrImg?.src).toContain('data:image/webp;base64,');
 
     const copyBtn = containerEl.querySelector('.apple-settings-community-copy-btn');
     expect(copyBtn?.textContent).toBe('复制微信号');
