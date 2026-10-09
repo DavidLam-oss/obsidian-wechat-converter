@@ -53,7 +53,7 @@ export const SPONSORS = [
     date: '2026-09-24',
   },
   {
-    name: '阿宝自媒体',
+    name: '杭小宝',
     message: '终于有 Markdown 编辑同步了，加油！',
     date: '2026-09-28',
   },

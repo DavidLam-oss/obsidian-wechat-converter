@@ -128,7 +128,7 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
     const names = Array.from(containerEl.querySelectorAll('.apple-settings-fame-item-name')).map(
       (el) => el.textContent,
     );
-    expect(names).toEqual(['*哥', 'Tony', '林大豆豆', '阿宝自媒体']);
+    expect(names).toEqual(['*哥', 'Tony', '林大豆豆', '杭小宝']);
 
     const messages = Array.from(
       containerEl.querySelectorAll('.apple-settings-fame-item-message'),
