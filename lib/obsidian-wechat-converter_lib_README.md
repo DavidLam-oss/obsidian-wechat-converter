@@ -20,6 +20,10 @@
 
 markdown-it-mathjax3、highlight.js、markdown-it、esbuild.math.mjs。
 
+数学 bundle 使用独立的 MathJax 3 TeX/SVG 实例与已打包字形，
+通过 `scripts/math-bundle-options.mjs` 隔离宿主 `window.MathJax`；
+宿主为 MathJax 3 或 4 时均不需要 CDN 或宿主字体加载完成。
+
 ## 维护规则
 
 - 每次新增、删除、移动文件或调整目录职责后，必须更新本 README。

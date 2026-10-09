@@ -20,6 +20,9 @@
 
 Node.js、esbuild、package.json scripts、OpenPRD/Obsidian scan 规则。
 
+`math-bundle-options.mjs` 统一两条数学 bundle 构建入口的私有作用域配置，
+隔离依赖中的 `MathJax` 与 `global` 绑定，避免触碰 Obsidian 自带的数学渲染器。
+
 ## 维护规则
 
 - 每次新增、删除、移动文件或调整目录职责后，必须更新本 README。

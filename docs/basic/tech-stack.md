@@ -9,6 +9,9 @@
 - `obsidian`、`electron` 和 CodeMirror 相关 API 由 Obsidian 运行时提供。
 - `markdown-it` 和相关插件负责 Markdown 解析与扩展渲染。
 - `markdown-it-mathjax3` 与单独构建的 `lib/mathjax-plugin.js` 支撑数学公式。
+  两条构建入口共用 `scripts/math-bundle-options.mjs`，在依赖初始化前隔离
+  `MathJax`/`global` 绑定。插件保留自带 MathJax 3 的同步 TeX/SVG 渲染与字形数据，
+  不使用宿主 MathJax 4 的异步渲染或字体加载，也不向宿主 loader 注册组件。
 - `@noble/hashes` 提供桌面端和移动端一致的纯 JavaScript 哈希能力，用于浏览器桥接凭证指纹。
 - `highlight.js` 支撑代码高亮。
 - `jsdom`、`vitest` 和测试 helper 支撑单元测试。

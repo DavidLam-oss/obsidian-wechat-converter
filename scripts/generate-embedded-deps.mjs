@@ -28,6 +28,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import esbuild from 'esbuild';
+import { mathBundleOptions } from './math-bundle-options.mjs';
 
 const ROOT = process.cwd();
 const OUTPUT_FILE = path.join(ROOT, 'services', 'generated-embedded-deps.js');
@@ -83,36 +84,10 @@ async function ensureOrGenerateDeps() {
     throw new Error('Missing lib/math-entry.js for MathJax bundling.');
   }
   console.log('[generate-embedded-deps] Bundling MathJax plugin...');
-  const banner = `/* Obsidian WeChat MathJax Plugin (Bundled) */`;
   const mathResult = await esbuild.build({
+    ...mathBundleOptions(),
     entryPoints: [mathEntry],
-    bundle: true,
     write: false,
-    format: 'iife',
-    minify: true,
-    banner: { js: banner },
-    platform: 'browser',
-    define: {
-      'process.env.NODE_ENV': '"production"',
-      'PACKAGE_VERSION': '"3.2.2"'
-    },
-    external: ['katex'],
-    plugins: [
-      {
-        name: 'package-json-stub',
-        setup(build) {
-          build.onResolve({ filter: /package\.json$/ }, args => {
-            return { path: args.path, namespace: 'package-json-stub' }
-          })
-          build.onLoad({ filter: /.*/, namespace: 'package-json-stub' }, () => {
-            return {
-              contents: JSON.stringify({ version: "0.0.0" }),
-              loader: 'json',
-            }
-          })
-        },
-      }
-    ]
   });
   const mathCode = mathResult.outputFiles[0].text;
   fs.writeFileSync(mathDest, mathCode, 'utf8');
