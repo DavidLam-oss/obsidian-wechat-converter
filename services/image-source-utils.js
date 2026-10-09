@@ -268,8 +268,9 @@ function resolveVaultImageFile(app, ref, sourcePath = '') {
   }
 
   // 4. 若带有多级路径，尝试用纯文件名在 metadataCache 中检索兜底（Obsidian 附件全局平铺模式）
-  if (cleanRef.includes('/')) {
-    const baseName = cleanRef.slice(cleanRef.lastIndexOf('/') + 1);
+  const slashNormalizedRef = cleanRef.replace(/\\/g, '/');
+  if (slashNormalizedRef.includes('/')) {
+    const baseName = slashNormalizedRef.slice(slashNormalizedRef.lastIndexOf('/') + 1);
     if (baseName) {
       try {
         const foundByName = /** @type {unknown} */ (metadataCache?.getFirstLinkpathDest?.(baseName, sourcePath || ''));

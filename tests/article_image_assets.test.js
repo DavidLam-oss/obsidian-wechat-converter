@@ -201,6 +201,83 @@ describe('article image asset resolver', () => {
     expect(result.warnings.map((warning) => warning.code)).toEqual(['image_outside_vault_unsupported']);
   });
 
+  it('resolves Windows drive absolute paths inside the current vault', async () => {
+    const basePath = 'C:/20-领域 长期维护';
+    const imageFile = {
+      path: 'img/01-大会发言.jpg',
+      name: '01-大会发言.jpg',
+      extension: 'jpg',
+      bytes: Buffer.from([0xff, 0xd8, 0xff, 0x00]),
+    };
+    const app = makeApp({ 'img/01-大会发言.jpg': imageFile }, { basePath });
+    const fullWindowsPath = 'C:/20-领域 长期维护/img/01-大会发言.jpg';
+
+    const result = await resolveArticleImages(
+      `![发言](${fullWindowsPath})`,
+      { path: 'post.md', basename: 'post' },
+      { app }
+    );
+
+    expect(result.warnings).toEqual([]);
+    expect(result.assets).toHaveLength(1);
+    expect(result.assets[0].source.vaultRelativePath).toBe('img/01-大会发言.jpg');
+    expect(result.markdown).toContain('![发言](asset://image-1)');
+  });
+
+  it('resolves Windows drive absolute paths with backslashes inside the current vault', async () => {
+    const basePath = 'C:/20-领域 长期维护';
+    const imageFile = {
+      path: 'img/01-大会发言.jpg',
+      name: '01-大会发言.jpg',
+      extension: 'jpg',
+      bytes: Buffer.from([0xff, 0xd8, 0xff, 0x00]),
+    };
+    const app = makeApp({ 'img/01-大会发言.jpg': imageFile }, { basePath });
+    const fullWindowsPath = 'C:\\20-领域 长期维护\\img\\01-大会发言.jpg';
+
+    const result = await resolveArticleImages(
+      `![发言](${fullWindowsPath})`,
+      { path: 'post.md', basename: 'post' },
+      { app }
+    );
+
+    expect(result.warnings).toEqual([]);
+    expect(result.assets).toHaveLength(1);
+    expect(result.assets[0].source.vaultRelativePath).toBe('img/01-大会发言.jpg');
+    expect(result.markdown).toContain('![发言](asset://image-1)');
+  });
+
+  it('reports image_local_missing rather than image_unsupported_protocol for Windows paths not in vault', async () => {
+    const basePath = 'C:/MyVault';
+    const app = makeApp({}, { basePath });
+    const fullWindowsPath = 'C:/OtherFolder/outside.jpg';
+
+    const result = await resolveArticleImages(
+      `![missing](${fullWindowsPath})`,
+      { path: 'post.md', basename: 'post' },
+      { app }
+    );
+
+    expect(result.assets).toHaveLength(0);
+    expect(result.warnings.map((w) => w.code)).toEqual(['image_local_missing']);
+    expect(result.warnings[0].message).toContain('本地图片未找到');
+  });
+
+  it('rejects unsupported protocols with image_unsupported_protocol', async () => {
+    const app = makeApp({});
+    const result = await resolveArticleImages(
+      '![ftp](ftp://example.com/pic.png)\n\n![custom](custom-scheme://pic.png)',
+      { path: 'post.md', basename: 'post' },
+      { app }
+    );
+
+    expect(result.assets).toHaveLength(0);
+    expect(result.warnings.map((w) => w.code)).toEqual([
+      'image_unsupported_protocol',
+      'image_unsupported_protocol',
+    ]);
+  });
+
   it('turns Obsidian image wikilinks with Chinese paths and width hints into bridge assets', async () => {
     const imageFile = {
       path: 'Wechat/To-be-used/Project_Obsidian入门48_剪藏图片外链处理/attachments/6142f41a7643ed1da56cac43ad8d0359_MD5.png',

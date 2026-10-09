@@ -170,6 +170,11 @@ function isFileUrl(src) {
   return /^file:\/\//i.test(String(src || '').trim());
 }
 
+/** @param {unknown} src */
+function isWindowsDrivePath(src) {
+  return /^[a-zA-Z]:[\\/]/.test(String(src || '').trim());
+}
+
 /** @param {unknown} value */
 function decodeLocalPath(value) {
   try {
@@ -969,7 +974,7 @@ async function resolveArticleImages(markdown, noteFile, options = {}) {
     const original = String(originalSrc || '');
     if (!trimmed) return { src: trimmed };
     if (!isLocalLikeSrc(trimmed)) return { src: trimmed };
-    if (!isFileUrl(trimmed) && /^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
+    if (!isFileUrl(trimmed) && !isWindowsDrivePath(trimmed) && /^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
       return {
         src: trimmed,
         warning: createWarning('image_unsupported_protocol', '不支持的图片地址', { src: original }),
