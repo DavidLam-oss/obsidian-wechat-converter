@@ -123,12 +123,12 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
 
     // 检查赞助鸣谢榜
     const fameItems = containerEl.querySelectorAll('.apple-settings-fame-item');
-    expect(fameItems.length).toBe(3);
+    expect(fameItems.length).toBe(4);
 
     const names = Array.from(containerEl.querySelectorAll('.apple-settings-fame-item-name')).map(
       (el) => el.textContent,
     );
-    expect(names).toEqual(['*哥', 'Tony', '林大豆豆']);
+    expect(names).toEqual(['*哥', 'Tony', '林大豆豆', '阿宝自媒体']);
 
     const messages = Array.from(
       containerEl.querySelectorAll('.apple-settings-fame-item-message'),
@@ -136,6 +136,7 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
     expect(messages).toContain('“公众号排版助手真不错”');
     expect(messages).toContain('“真方便呀”');
     expect(messages).toContain('“生命不息，折腾不止”');
+    expect(messages).toContain('“终于有 Markdown 编辑同步了，加油！”');
 
     // 检查交流讨论群模块
     const communityCard = containerEl.querySelector('.apple-settings-community-card');

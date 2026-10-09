@@ -25,10 +25,7 @@ docs/research/
 docs/research/**
 
 # Local skill and assistant directories
-.codex/*
-!.codex/config.toml
-.codex/**/.DS_Store
-.codex/skills/project-release
+.codex/
 .claude/skills/project-release/
 .cursor/
 

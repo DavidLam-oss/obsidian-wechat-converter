@@ -52,4 +52,9 @@ export const SPONSORS = [
     message: '生命不息，折腾不止',
     date: '2026-09-24',
   },
+  {
+    name: '阿宝自媒体',
+    message: '终于有 Markdown 编辑同步了，加油！',
+    date: '2026-09-28',
+  },
 ];
