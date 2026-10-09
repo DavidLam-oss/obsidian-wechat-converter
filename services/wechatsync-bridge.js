@@ -407,6 +407,14 @@ function createWechatSyncBridgeService(options = {}) {
   }
 
   /** @param {string} extensionInstanceId */
+  function dismissPendingClient(extensionInstanceId) {
+    const previousLength = pendingClients.length;
+    pendingClients = pendingClients.filter((client) => client.extensionInstanceId !== extensionInstanceId);
+    if (pendingClients.length !== previousLength) persistPairingRegistry();
+    return pendingClients.length !== previousLength;
+  }
+
+  /** @param {string} extensionInstanceId */
   function unpairClient(extensionInstanceId) {
     const previousLength = pairedClients.length;
     pairedClients = pairedClients.filter((client) => client.extensionInstanceId !== extensionInstanceId);
@@ -1467,6 +1475,7 @@ function createWechatSyncBridgeService(options = {}) {
     getDiagnostics,
     getActiveClientDescriptor,
     pairClient,
+    dismissPendingClient,
     unpairClient,
     health,
     listSupportedPlatforms,

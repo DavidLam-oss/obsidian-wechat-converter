@@ -91,7 +91,7 @@ const LEGACY_SETTING_RENDER_KEY = ['dis', 'play'].join('');
  * @typedef {{ setName: (value: string) => WechatSettingLike, setDesc: (value: string) => WechatSettingLike, setHeading: () => WechatSettingLike, addToggle: (handler: (toggle: WechatToggleLike) => unknown) => WechatSettingLike, addText: (handler: (text: WechatTextLike) => unknown) => WechatSettingLike, addButton: (handler: (button: WechatButtonLike) => unknown) => WechatSettingLike }} WechatSettingLike
  * @typedef {new (containerEl: WechatSettingsElement) => WechatSettingLike} WechatSettingConstructor
  * @typedef {new (message: string, timeout?: number) => unknown} WechatNoticeConstructor
- * @typedef {{ listSupportedPlatforms: (options?: Record<string, unknown>) => Promise<unknown>, getAuthSnapshot: (options?: Record<string, unknown>) => Promise<unknown>, start: () => Promise<unknown>, waitForConnection: (timeoutMs: number) => Promise<unknown>, health: (options?: Record<string, unknown>) => Promise<unknown>, pairClient?: (id: string) => boolean, unpairClient?: (id: string) => boolean, getStatus?: () => Promise<unknown>, getDiagnostics?: () => unknown }} WechatBridgeLike
+ * @typedef {{ listSupportedPlatforms: (options?: Record<string, unknown>) => Promise<unknown>, getAuthSnapshot: (options?: Record<string, unknown>) => Promise<unknown>, start: () => Promise<unknown>, waitForConnection: (timeoutMs: number) => Promise<unknown>, health: (options?: Record<string, unknown>) => Promise<unknown>, pairClient?: (id: string) => boolean, dismissPendingClient?: (id: string) => boolean, unpairClient?: (id: string) => boolean, getStatus?: () => Promise<unknown>, getDiagnostics?: () => unknown }} WechatBridgeLike
  * @typedef {{ multiPlatformSync?: unknown }} WechatPluginSettingsLike
  * @typedef {{ settings: WechatPluginSettingsLike, obsidianApi?: Partial<WechatObsidianApiLike>, activeView?: { openExternalUrl?: (url: string) => boolean }, openExternalUrl?: (url: string) => boolean, saveSettings: () => Promise<void>, startWechatSyncBridgeInBackground: (reason: string) => unknown, getWechatSyncBridgeService: () => WechatBridgeLike, _wechatSyncBridgeService?: { stop?: () => Promise<unknown> } }} WechatPluginLike
  * @typedef {{ plugin: WechatPluginLike, renderSettingsContent?: () => void, renderSettingsTabIntro?: (containerEl: WechatSettingsElement, description: string) => void, [key: string]: unknown }} WechatSettingsTabLike
@@ -592,7 +592,8 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         const row = pairingPanel.createDiv({ cls: 'wechat-bridge-pairing-row' });
         const label = pending.profileLabel || pending.browserName || '未命名浏览器';
         row.createEl('span', { text: `${label}${pending.extensionVersion ? ` · ${pending.extensionVersion}` : ''}` });
-        const approve = row.createEl('button', { text: '批准配对', cls: 'mod-cta' });
+        const actions = row.createDiv({ cls: 'wechat-bridge-pairing-actions' });
+        const approve = actions.createEl('button', { text: '批准配对', cls: 'mod-cta' });
         approve.onclick = async () => {
           const bridge = plugin.getWechatSyncBridgeService();
           const paired = bridge.pairClient?.(String(pending.extensionInstanceId));
@@ -602,6 +603,14 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
           }
           new Notice('已批准此浏览器。请在浏览器插件中点击重新连接或重新加载扩展。', 6000);
           refreshSettingTab(tab);
+        };
+        const dismiss = actions.createEl('button', { text: '忽略' });
+        dismiss.onclick = () => {
+          const bridge = plugin.getWechatSyncBridgeService();
+          if (bridge.dismissPendingClient?.(String(pending.extensionInstanceId))) {
+            new Notice('已忽略此浏览器的待配对请求。', 5000);
+            refreshSettingTab(tab);
+          }
         };
       }
     }

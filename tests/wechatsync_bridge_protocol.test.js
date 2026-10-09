@@ -388,6 +388,36 @@ describe('§3.1 / §3.2 extension_hello handshake', () => {
     expect(changedAck).toMatchObject({ ok: false, error: HELLO_ERROR_CREDENTIAL_MISMATCH });
   });
 
+  it('dismissPendingClient removes a pending client and updates registry', async () => {
+    const port = await getFreePort();
+    const service = createWechatSyncBridgeService({
+      WebSocketServer,
+      http,
+      port,
+      token: 'secret-token',
+      helloTimeoutMs: 2000,
+    });
+    cleanup.push(service);
+    await service.start();
+
+    const pendingWs = await openSocket(port);
+    cleanup.push(pendingWs);
+    const pendingAckPromise = waitForAck(pendingWs);
+    pendingWs.send(JSON.stringify({
+      type: 'extension_hello',
+      token: 'mismatched-token',
+      ...DEFAULT_TEST_HELLO,
+      extensionInstanceId: 'dismiss-instance-1',
+    }));
+    await pendingAckPromise;
+    await waitForSocketClose(pendingWs, 1000);
+
+    expect((await service.getStatus()).pendingClients).toHaveLength(1);
+    expect(service.dismissPendingClient('dismiss-instance-1')).toBe(true);
+    expect((await service.getStatus()).pendingClients).toHaveLength(0);
+    expect(service.dismissPendingClient('dismiss-instance-1')).toBe(false);
+  });
+
   it('rejects extension_hello with an invalid payload (non-hello first message)', async () => {
     const port = await getFreePort();
     const service = createWechatSyncBridgeService({

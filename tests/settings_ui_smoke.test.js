@@ -829,6 +829,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
 
   it('shows pending browser pairing and approves only after an explicit click', async () => {
     const pairClient = vi.fn(() => true);
+    const dismissPendingClient = vi.fn(() => true);
     const plugin = makePlugin({ multiPlatformSync: {
       enabled: true,
       port: 9527,
@@ -848,14 +849,48 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
       connection: { status: 'failed', checkedAt: Date.now(), platforms: [], capabilities: {}, message: '' },
       recentTasks: [],
     } });
-    plugin.getWechatSyncBridgeService = vi.fn(() => ({ pairClient }));
+    plugin.getWechatSyncBridgeService = vi.fn(() => ({ pairClient, dismissPendingClient }));
     const tab = renderTab(plugin);
     const panel = tab.containerEl.querySelector('.wechat-bridge-pairing-panel');
     expect(panel?.textContent).toContain('写作号');
     expect(pairClient).not.toHaveBeenCalled();
-    panel.querySelector('button')?.click();
+    const buttons = panel.querySelectorAll('button');
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0].textContent).toBe('批准配对');
+    expect(buttons[1].textContent).toBe('忽略');
+    buttons[0].click();
     await Promise.resolve();
     expect(pairClient).toHaveBeenCalledWith('pending-profile');
+  });
+
+  it('dismisses pending browser pairing when 忽略 button is clicked', async () => {
+    const dismissPendingClient = vi.fn(() => true);
+    const plugin = makePlugin({ multiPlatformSync: {
+      enabled: true,
+      port: 9527,
+      token: 'migration-token',
+      connectedClients: [],
+      pairedClients: [],
+      pendingClients: [{
+        extensionInstanceId: 'pending-profile',
+        credentialHash: 'a'.repeat(64),
+        browserName: 'comet',
+        profileLabel: '写作号',
+        extensionVersion: '0.2.9',
+        reason: 'pairing_required',
+      }],
+      supportedPlatforms: [],
+      selectedPlatforms: [],
+      connection: { status: 'failed', checkedAt: Date.now(), platforms: [], capabilities: {}, message: '' },
+      recentTasks: [],
+    } });
+    plugin.getWechatSyncBridgeService = vi.fn(() => ({ dismissPendingClient }));
+    const tab = renderTab(plugin);
+    const panel = tab.containerEl.querySelector('.wechat-bridge-pairing-panel');
+    const dismissBtn = Array.from(panel.querySelectorAll('button')).find((b) => b.textContent === '忽略');
+    expect(dismissBtn).toBeDefined();
+    dismissBtn?.click();
+    expect(dismissPendingClient).toHaveBeenCalledWith('pending-profile');
   });
 
   it('§16 Phase 1: 有 profileLabel 时显示 profileLabel（不再叠加 browserName）', () => {

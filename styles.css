@@ -5336,6 +5336,13 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   overflow-wrap: anywhere;
 }
 
+.wechat-bridge-pairing-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .wechat-bridge-paired-panel {
   margin: 6px 0 14px;
 }
