@@ -15,7 +15,7 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- reason: view and plugin settings untyped in pure JS */
 
-import { Notice } from '../apple-style-view-shared.js';
+import { Notice, getObsidianSetIcon } from '../apple-style-view-shared.js';
 import {
   AI_CARD_COVER_STYLES,
   resolveCardCoverPrompt,
@@ -140,34 +140,54 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, _on
 
   const textProvider = resolveAiProvider(aiSettings);
   const isTextRunnable = isAiProviderRunnable(textProvider, 'text');
-  if (isTextRunnable) {
-    const extractBtn = topicHeader.createEl('button', {
-      cls: 'card-media-picker-ai-extract-btn',
-      text: '✨ AI 提炼观点',
-      attr: { type: 'button' },
-    });
-    extractBtn.addEventListener('click', async () => {
-      extractBtn.disabled = true;
-      extractBtn.textContent = '提炼中...';
-      try {
-        const { markdown } = resolveNoteMarkdownAndPathSync(view);
-        const aiTopic = await extractVisualTopicWithAi({
-          provider: textProvider,
-          title: docTitle,
-          content: markdown || docExcerpt,
-        });
-        topicInput.value = aiTopic;
-        syncPrompt();
-        new Notice('AI 已提炼视觉核心观点并同步提示词');
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        new Notice(`AI 提炼失败: ${msg}`);
-      } finally {
-        extractBtn.disabled = false;
-        extractBtn.textContent = '✨ AI 提炼观点';
-      }
-    });
+  const setIcon = getObsidianSetIcon();
+
+  const extractBtn = topicHeader.createEl('button', {
+    cls: `card-media-picker-ai-extract-btn ${isTextRunnable ? '' : 'is-unconfigured'}`,
+    attr: {
+      type: 'button',
+      title: isTextRunnable
+        ? '使用已配置的文本模型自动提炼文章核心观点'
+        : '未配置可用文本模型（点击查看指引）',
+    },
+  });
+
+  const iconSpan = extractBtn.createSpan({ cls: 'card-media-picker-ai-extract-icon' });
+  if (typeof setIcon === 'function') {
+    setIcon(iconSpan, 'sparkles');
   }
+
+  const textSpan = extractBtn.createSpan({
+    cls: 'card-media-picker-ai-extract-text',
+    text: 'AI 提炼观点',
+  });
+
+  extractBtn.addEventListener('click', async () => {
+    if (!isTextRunnable) {
+      new Notice('请先在「插件设置 - AI 服务商」中配置并启用文本模型，即可使用 AI 智能提炼观点');
+      return;
+    }
+
+    extractBtn.disabled = true;
+    textSpan.textContent = '提炼中...';
+    try {
+      const { markdown } = resolveNoteMarkdownAndPathSync(view);
+      const aiTopic = await extractVisualTopicWithAi({
+        provider: textProvider,
+        title: docTitle,
+        content: markdown || docExcerpt,
+      });
+      topicInput.value = aiTopic;
+      syncPrompt();
+      new Notice('AI 已提炼视觉核心观点并同步提示词');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      new Notice(`AI 提炼失败: ${msg}`);
+    } finally {
+      extractBtn.disabled = false;
+      textSpan.textContent = 'AI 提炼观点';
+    }
+  });
 
   const topicInput = /** @type {HTMLInputElement} */ (
     /** @type {unknown} */ (container.createEl('input', {
@@ -282,16 +302,7 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, _on
     ? currentCoverFields.coverImage
     : (historyList[0]?.dataUrl || '');
 
-  // 7. 大图预览区（未生图且无历史时不显示大白框）
-  const previewBox = container.createDiv({
-    cls: `card-media-picker-preview-box ${currentSelectedDataUrl ? '' : 'is-hidden'}`,
-  });
-  const previewImg = previewBox.createEl('img', { cls: 'card-media-picker-preview-img' });
-  if (currentSelectedDataUrl) {
-    previewImg.src = currentSelectedDataUrl;
-  }
-
-  // 8. 历史灵感画廊区域
+  // 7. 历史灵感画廊区域（统一作为封面预览与多图选择工作台）
   const historySection = container.createDiv({
     cls: `card-media-picker-history-section ${historyList.length > 0 ? '' : 'is-hidden'}`,
   });
@@ -305,15 +316,10 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, _on
     historyGrid.empty();
     if (historyList.length === 0) {
       historySection.addClass('is-hidden');
-      previewBox.addClass('is-hidden');
       return;
     }
 
     historySection.removeClass('is-hidden');
-    previewBox.removeClass('is-hidden');
-    if (currentSelectedDataUrl) {
-      previewImg.src = currentSelectedDataUrl;
-    }
 
     historyList.forEach((item) => {
       const isSelected = item.dataUrl === currentSelectedDataUrl;
@@ -336,7 +342,6 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, _on
       card.addEventListener('click', () => {
         if (currentSelectedDataUrl === item.dataUrl) return;
         currentSelectedDataUrl = item.dataUrl;
-        previewImg.src = item.dataUrl;
         renderHistoryThumbnails();
         if (typeof onSelect === 'function') {
           onSelect({ dataUrl: item.dataUrl, source: 'ai' });

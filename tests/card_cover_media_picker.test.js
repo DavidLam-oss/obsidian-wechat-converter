@@ -793,6 +793,47 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
       varTopic.dispatchEvent(new MouseEvent('click'));
       expect(textarea.value).toBe('视觉主体: {topic}');
     });
+
+    it('未配置文本模型时，AI 提炼观点按钮依然可见且点击后弹出配置指引 Notice', () => {
+      const container = applyExtensions(document.createElement('div'));
+      const mockView = {
+        plugin: {
+          settings: {
+            ai: {
+              imageProviderId: 'p1',
+              providers: [
+                {
+                  id: 'p1',
+                  name: 'Image Only Provider',
+                  model: 'gpt-image-1',
+                  imageModel: 'gpt-image-1',
+                  baseUrl: 'https://api.openai.com/v1',
+                  apiKey: 'sk-test',
+                  supportsImage: true,
+                  supportsText: false,
+                },
+              ],
+            },
+          },
+        },
+        getActiveFileTitle: () => '文章标题',
+      };
+
+      renderAiMediaPickerTab({
+        container,
+        view: mockView,
+        ratioId: '3:4',
+        onSelect: vi.fn(),
+      });
+
+      const extractBtn = container.querySelector('.card-media-picker-ai-extract-btn');
+      expect(extractBtn).not.toBeNull();
+      expect(extractBtn?.classList.contains('is-unconfigured')).toBe(true);
+
+      globalThis.__obsidianNoticeRegistry = [];
+      extractBtn?.dispatchEvent(new MouseEvent('click'));
+      expect(globalThis.__obsidianNoticeRegistry.at(-1)?.message).toContain('请先在「插件设置 - AI 服务商」中配置并启用文本模型');
+    });
   });
 
   describe('侧边栏封面选图入口与 Tab 智能路由', () => {

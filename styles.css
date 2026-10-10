@@ -8805,20 +8805,55 @@ div.modal.wechat-material-picker-modal-mobile {
 }
 
 .card-media-picker-ai-extract-btn {
-  font-size: 11px;
-  padding: 1px 7px;
-  height: 20px;
-  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 500;
   cursor: pointer;
-  background: var(--background-secondary);
-  border: 1px solid var(--background-modifier-border);
-  color: var(--text-muted);
+  background: color-mix(in srgb, var(--interactive-accent) 10%, var(--background-secondary));
+  border: 1px solid color-mix(in srgb, var(--interactive-accent) 25%, var(--background-modifier-border));
+  color: var(--interactive-accent);
   transition: all 0.15s ease;
 }
 
 .card-media-picker-ai-extract-btn:hover {
+  background: color-mix(in srgb, var(--interactive-accent) 18%, var(--background-secondary));
+  border-color: var(--interactive-accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.card-media-picker-ai-extract-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.card-media-picker-ai-extract-btn.is-unconfigured {
+  background: var(--background-secondary);
+  border-color: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.card-media-picker-ai-extract-btn.is-unconfigured:hover {
   color: var(--text-normal);
   border-color: var(--interactive-accent);
+}
+
+.card-media-picker-ai-extract-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+}
+
+.card-media-picker-ai-extract-icon svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.2;
 }
 
 .card-media-picker-topic-input {
@@ -8946,23 +8981,6 @@ div.modal.wechat-material-picker-modal-mobile {
   position: relative;
 }
 
-.card-media-picker-preview-box {
-  width: 100%;
-  max-width: 300px;
-  margin: 0 auto;
-  aspect-ratio: 3 / 4;
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--background-secondary);
-  border: 1px solid var(--background-modifier-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.card-media-picker-preview-box.is-hidden,
-.card-media-picker-preview-box.hidden,
 .card-media-picker-ai-actions.is-hidden,
 .card-media-picker-ai-actions.hidden,
 .card-media-picker-progress-wrap.is-hidden,
@@ -8970,12 +8988,6 @@ div.modal.wechat-material-picker-modal-mobile {
 .card-media-picker-history-section.is-hidden,
 .card-media-picker-history-section.hidden {
   display: none;
-}
-
-.card-media-picker-preview-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .card-media-picker-history-section {
