@@ -149,6 +149,38 @@ describe('deriveCoverFields：初值派生', () => {
     expect(fields.coverImageSource).toBe('note');
   });
 
+  it('智能识别 Wikilink 别名中的赞赏码等关键词并跳过，采纳真正正文图', () => {
+    const md = [
+      '# 笔记内容',
+      '![[qr_123.png|赞赏码]]',
+      '![[real_photo.jpg|正文插图]]',
+    ].join('\n');
+    const fields = deriveCoverFields({ markdown: md, sourcePath: 'Note.md' });
+    expect(fields.coverImage).toBe('real_photo.jpg');
+    expect(fields.coverMode).toBe('adaptive');
+    expect(fields.coverImageSource).toBe('note');
+  });
+
+  it('能够解包 Frontmatter 中使用 Wikilink 或 Markdown 语法填写的 banner/cover', () => {
+    const mdWiki = [
+      '---',
+      'banner: "![[attachments/header.png]]"',
+      '---',
+      '# 文章标题',
+    ].join('\n');
+    const fieldsWiki = deriveCoverFields({ markdown: mdWiki, sourcePath: 'a.md' });
+    expect(fieldsWiki.coverImage).toBe('attachments/header.png');
+
+    const mdMd = [
+      '---',
+      'cover: "![封面](img/cover.webp)"',
+      '---',
+      '# 文章标题',
+    ].join('\n');
+    const fieldsMd = deriveCoverFields({ markdown: mdMd, sourcePath: 'b.md' });
+    expect(fieldsMd.coverImage).toBe('img/cover.webp');
+  });
+
   it('正文无图时，封面配图为空且 coverMode 保持 none', () => {
     const md = '# 纯文字文章\n\n这里没有任何图片，只有文字。';
     const fields = deriveCoverFields({ markdown: md, sourcePath: 'text.md' });

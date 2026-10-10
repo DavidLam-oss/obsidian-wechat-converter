@@ -137,9 +137,11 @@ export function extractNoteImageReferences(markdown) {
 
     const cleanPath = cleanTarget.split(/[?#]/)[0];
     const name = cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath;
+    const alias = match[2] ? match[2].trim() : '';
     rawMatches.push({
       index: match.index,
       name,
+      alias,
       path: cleanTarget,
       isWiki: true,
       dedupeKey: cleanTarget.toLowerCase(),
@@ -208,7 +210,16 @@ export function extractNoteImageReferences(markdown) {
   for (const item of rawMatches) {
     if (!seen.has(item.dedupeKey)) {
       seen.add(item.dedupeKey);
-      results.push({ name: item.name, path: item.path, isWiki: item.isWiki });
+      const resItem = { name: item.name, path: item.path, isWiki: item.isWiki };
+      if (item.alias) {
+        Object.defineProperty(resItem, 'alias', {
+          value: item.alias,
+          enumerable: false,
+          writable: true,
+          configurable: true,
+        });
+      }
+      results.push(resItem);
     }
   }
 
@@ -218,13 +229,14 @@ export function extractNoteImageReferences(markdown) {
 /**
  * 启发式判断图片引用是否适合作为封面首图候选
  * 过滤小图标、Badge、赞赏码等非正文内容大图
- * @param {{ name: string, path: string }} imgRef
+ * @param {{ name: string, path: string, alias?: string }} imgRef
  * @returns {boolean}
  */
 export function isLikelyContentImage(imgRef) {
   if (!imgRef || typeof imgRef.path !== 'string') return false;
   const p = imgRef.path.toLowerCase();
   const n = (imgRef.name || '').toLowerCase();
+  const a = (imgRef.alias || '').toLowerCase();
 
   // 1. 过滤常见徽章与数据打标服务
   if (
@@ -239,19 +251,19 @@ export function isLikelyContentImage(imgRef) {
     return false;
   }
 
-  // 2. 过滤常见非正文小图标与功能性图片
-  const combined = `${p} ${n}`;
+  // 2. 过滤常见非正文小图标与功能性图片（综合检查路径、文件名、alt 以及 Wikilink 别名）
+  const combined = `${p} ${n} ${a}`;
   if (
     combined.includes('avatar') ||
     combined.includes('favicon') ||
     combined.includes('qrcode') ||
-    n.includes('icon') ||
-    n.includes('logo') ||
-    n.includes('赞赏') ||
-    n.includes('打赏') ||
-    n.includes('关注') ||
-    n.includes('头像') ||
-    n.includes('二维码')
+    combined.includes('icon') ||
+    combined.includes('logo') ||
+    combined.includes('赞赏') ||
+    combined.includes('打赏') ||
+    combined.includes('关注') ||
+    combined.includes('头像') ||
+    combined.includes('二维码')
   ) {
     return false;
   }
@@ -269,6 +281,43 @@ export function findFirstContentImage(markdown) {
   if (!images || images.length === 0) return null;
   const contentImg = images.find(isLikelyContentImage);
   return contentImg || images[0];
+}
+
+/**
+ * 规范化 Frontmatter 中的封面图片路径
+ * 支持纯路径，或用户塞入的 Wikilink / Markdown 语法格式：
+ * "banner.png" -> "banner.png"
+ * "[[banner.png]]" -> "banner.png"
+ * "![[banner.png|100]]" -> "banner.png"
+ * "![封面](attachments/cover.jpg)" -> "attachments/cover.jpg"
+ * @param {string} raw
+ * @returns {string}
+ */
+export function normalizeFrontmatterImagePath(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  const str = raw.trim();
+  if (!str) return '';
+
+  // 1. 处理 Markdown 图片格式 ![alt](path)
+  const mdMatch = /^!\[[^\]]*\]\(([^)\n]+)\)$/.exec(str);
+  if (mdMatch) {
+    let dest = mdMatch[1].trim();
+    if (dest.startsWith('<') && dest.endsWith('>')) {
+      dest = dest.slice(1, -1).trim();
+    } else {
+      dest = dest.split(/\s+["'(]/)[0].trim().split(/\s+/)[0].trim();
+    }
+    return dest.split(/[?#]/)[0].trim();
+  }
+
+  // 2. 处理 Wikilink 格式 ![[path|alias]] 或 [[path|alias]]
+  const wikiMatch = /^!?\[\[([^\]\n|]+)(?:\|[^\]\n]*)?\]\]$/.exec(str);
+  if (wikiMatch) {
+    return wikiMatch[1].split(/[?#]/)[0].trim();
+  }
+
+  // 3. 纯路径格式：剥离两端可能包裹的引号和 fragment
+  return str.split(/[?#]/)[0].trim();
 }
 
 /**
@@ -290,7 +339,8 @@ export function deriveCoverFields(input = {}) {
   const excerpt = String(meta.description || meta.excerpt || "").trim();
 
   // 1. 封面配图初值派生
-  let coverImage = String(meta.cover || meta.banner || meta.image || "").trim();
+  const rawCover = String(meta.cover || meta.banner || meta.image || "").trim();
+  let coverImage = normalizeFrontmatterImagePath(rawCover);
   let coverImageSource = String(meta.coverImageSource || "").trim();
 
   if (!coverImage) {
