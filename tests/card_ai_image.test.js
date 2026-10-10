@@ -199,5 +199,168 @@ describe('Card AI Image Service (C06.2)', () => {
         requestUrl: mockRequestUrl,
       })).rejects.toThrow('生图服务返回失败 (400): Billing quota exceeded');
     });
+
+    it('supports asynchronous task polling mode (e.g. APImart / DashScope)', async () => {
+      const fakePngBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
+      const mockRequestUrl = vi.fn()
+        // 1. Initial submission returning task_id
+        .mockResolvedValueOnce({
+          status: 200,
+          json: {
+            code: 200,
+            data: [{
+              status: 'submitted',
+              task_id: 'task_abc123',
+            }],
+          },
+        })
+        // 2. First poll: processing
+        .mockResolvedValueOnce({
+          status: 200,
+          json: {
+            code: 200,
+            data: {
+              id: 'task_abc123',
+              status: 'processing',
+            },
+          },
+        })
+        // 3. Second poll: completed with image URL
+        .mockResolvedValueOnce({
+          status: 200,
+          json: {
+            code: 200,
+            data: {
+              id: 'task_abc123',
+              status: 'completed',
+              result: {
+                images: [{
+                  url: ['https://cdn.example.com/poll-finished.png'],
+                }],
+              },
+            },
+          },
+        })
+        // 4. Download final image
+        .mockResolvedValueOnce({
+          status: 200,
+          arrayBuffer: fakePngBytes,
+        });
+
+      // Pass short interval or mock timers for fast test execution
+      const result = await generateCardCoverImage({
+        provider: {
+          ...validProvider,
+          imageModel: 'gpt-image-2',
+        },
+        prompt: 'Sunset over ocean',
+        aspectRatio: '3:4',
+        requestUrl: mockRequestUrl,
+        timeoutMs: 10000,
+        pollIntervalMs: 10,
+      });
+
+      expect(mockRequestUrl).toHaveBeenCalledTimes(4);
+      expect(mockRequestUrl.mock.calls[0][0].url).toBe('https://api.example.com/v1/images/generations');
+      expect(mockRequestUrl.mock.calls[1][0].url).toBe('https://api.example.com/v1/tasks/task_abc123');
+      expect(mockRequestUrl.mock.calls[2][0].url).toBe('https://api.example.com/v1/tasks/task_abc123');
+      expect(mockRequestUrl.mock.calls[3][0].url).toBe('https://cdn.example.com/poll-finished.png');
+      expect(result).toMatch(/^data:image\/png;base64,/);
+    });
+
+    it('tolerates non-fatal network jitter during task polling', async () => {
+      const fakePngBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
+      const mockRequestUrl = vi.fn()
+        .mockResolvedValueOnce({
+          status: 200,
+          json: {
+            data: [{ status: 'submitted', task_id: 'task_jitter' }],
+          },
+        })
+        // Temporary 504 gateway timeout during poll
+        .mockResolvedValueOnce({
+          status: 504,
+          text: 'Gateway Timeout',
+        })
+        // Next poll recovers and completes
+        .mockResolvedValueOnce({
+          status: 200,
+          json: {
+            data: {
+              status: 'completed',
+              result: { images: [{ url: 'https://cdn.example.com/jitter-ok.png' }] },
+            },
+          },
+        })
+        .mockResolvedValueOnce({
+          status: 200,
+          arrayBuffer: fakePngBytes,
+        });
+
+      const result = await generateCardCoverImage({
+        provider: validProvider,
+        prompt: 'Calm forest',
+        requestUrl: mockRequestUrl,
+        pollIntervalMs: 10,
+      });
+
+      expect(result).toMatch(/^data:image\/png;base64,/);
+      expect(mockRequestUrl).toHaveBeenCalledTimes(4);
+    });
+
+    it('handles asynchronous task failure with error message', async () => {
+      const mockRequestUrl = vi.fn()
+        .mockResolvedValueOnce({
+          status: 200,
+          json: {
+            data: [{ status: 'submitted', task_id: 'task_failed' }],
+          },
+        })
+        .mockResolvedValueOnce({
+          status: 200,
+          json: {
+            data: {
+              status: 'failed',
+              error: { message: 'Prompt violated safety guidelines' },
+            },
+          },
+        });
+
+      await expect(generateCardCoverImage({
+        provider: validProvider,
+        prompt: 'Dangerous stuff',
+        requestUrl: mockRequestUrl,
+        pollIntervalMs: 10,
+      })).rejects.toThrow('生图任务失败: Prompt violated safety guidelines');
+    });
+
+    it('performs parameter fallback retry when server rejects strict response_format or pixel size with 400', async () => {
+      const mockRequestUrl = vi.fn()
+        // First attempt with 768x1024 and b64_json fails with 400
+        .mockResolvedValueOnce({
+          status: 400,
+          json: { error: { message: 'Invalid response_format or size format' } },
+        })
+        // Fallback retry with ratio-only size and no response_format succeeds
+        .mockResolvedValueOnce({
+          status: 200,
+          json: {
+            data: [{ b64_json: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==' }],
+          },
+        });
+
+      const result = await generateCardCoverImage({
+        provider: validProvider,
+        prompt: 'Fallback test',
+        aspectRatio: '3:4',
+        requestUrl: mockRequestUrl,
+      });
+
+      expect(mockRequestUrl).toHaveBeenCalledTimes(2);
+      const fallbackBody = JSON.parse(mockRequestUrl.mock.calls[1][0].body);
+      expect(fallbackBody.size).toBe('3:4');
+      expect(fallbackBody).not.toHaveProperty('response_format');
+      expect(result).toMatch(/^data:image\/png;base64,/);
+    });
   });
 });

@@ -177,6 +177,309 @@ export function resolveCardImageDimensions(aspectRatio = '3:4', modelName = '') 
  * @param {string} options.prompt
  * @param {string} [options.aspectRatio='3:4']
  * @param {((options: Record<string, unknown>) => Promise<unknown>) | null} [options.requestUrl]
+/**
+ * 获取环境安全的 window 定时器函数
+ */
+function getWindowTimers() {
+  const win = getActiveWindowValue('window') || (typeof window !== 'undefined' ? window : null);
+  const setTimeoutFn = win && typeof win.setTimeout === 'function' ? win.setTimeout.bind(win) : setTimeout;
+  const clearTimeoutFn = win && typeof win.clearTimeout === 'function' ? win.clearTimeout.bind(win) : clearTimeout;
+  return { setTimeoutFn, clearTimeoutFn };
+}
+
+/**
+ * 统一网络请求封装
+ * @param {object} options
+ * @param {string} options.url
+ * @param {string} [options.method='POST']
+ * @param {Record<string, string>} [options.headers]
+ * @param {unknown} [options.body]
+ * @param {((options: Record<string, unknown>) => Promise<unknown>) | null} [options.requestUrlFn]
+ * @param {AbortSignal} [options.signal]
+ * @returns {Promise<{ status: number, text: string, json: unknown, headers: Record<string, string> }>}
+ */
+async function performHttpRequest(options) {
+  const { url, method = 'POST', headers = {}, body = null, requestUrlFn, signal } = options;
+
+  if (typeof requestUrlFn === 'function') {
+    try {
+      const resp = await requestUrlFn({
+        url,
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+        throw: false,
+      });
+      const typed = /** @type {{ status?: number, text?: string, json?: unknown, headers?: Record<string, string> }} */ (resp);
+      return {
+        status: typed?.status || 0,
+        text: typeof typed?.text === 'string' ? typed.text : '',
+        json: typed?.json || null,
+        headers: typed?.headers || {},
+      };
+    } catch (networkErr) {
+      const errMessage = networkErr instanceof Error ? networkErr.message : String(networkErr);
+      throw new Error(`网络请求失败: ${errMessage}`);
+    }
+  }
+
+  if (typeof fetch === 'function') {
+    const res = await fetch(url, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      signal,
+    });
+    const text = await res.text();
+    let json = null;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      json = null;
+    }
+    /** @type {Record<string, string>} */
+    const headersMap = {};
+    if (res.headers && typeof res.headers.forEach === 'function') {
+      res.headers.forEach((v, k) => { headersMap[k] = v; });
+    }
+    return {
+      status: res.status,
+      text,
+      json,
+      headers: headersMap,
+    };
+  }
+
+  throw new Error('当前环境缺少 requestUrl 与 fetch，无法发起网络请求');
+}
+
+/**
+ * 下载远程图片并转为 Base64 Data URL
+ * @param {string} url
+ * @param {((options: Record<string, unknown>) => Promise<unknown>) | null} [requestUrlFn]
+ * @param {AbortSignal} [signal]
+ * @returns {Promise<string>}
+ */
+async function downloadImageAsBase64(url, requestUrlFn, signal) {
+  if (typeof requestUrlFn === 'function') {
+    const imageRes = await requestUrlFn({
+      url,
+      method: 'GET',
+      throw: false,
+    });
+    const imgObj = /** @type {{ status?: number, arrayBuffer?: ArrayBuffer }} */ (imageRes);
+    if (imgObj?.arrayBuffer) {
+      const b64 = bufferToBase64(imgObj.arrayBuffer);
+      return `data:image/png;base64,${b64}`;
+    }
+  } else if (typeof fetch === 'function') {
+    const imgRes = await fetch(url, { signal });
+    const buf = await imgRes.arrayBuffer();
+    const b64 = bufferToBase64(buf);
+    return `data:image/png;base64,${b64}`;
+  }
+  throw new Error('无法下载生成的图片内容');
+}
+
+/**
+ * 深度嗅探响应中的异步任务凭证与状态
+ * @param {unknown} data
+ * @returns {{ taskId: string, status: string, pollingUrl: string | null } | null}
+ */
+function findTaskTokenAndStatus(data) {
+  if (!data || typeof data !== 'object') return null;
+
+  if (Array.isArray(data)) {
+    for (const item of data) {
+      const found = findTaskTokenAndStatus(item);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  const rec = /** @type {Record<string, any>} */ (data);
+
+  const directId = rec.task_id || rec.taskId || (rec.id && typeof rec.id === 'string' && rec.id.startsWith('task_') ? rec.id : null);
+  const directStatus = String(rec.status || rec.task_status || '').toLowerCase();
+  const pollingUrl = rec.task_url || rec.status_url || rec.polling_url || null;
+
+  if (directId) {
+    return {
+      taskId: String(directId),
+      status: directStatus || 'submitted',
+      pollingUrl: typeof pollingUrl === 'string' ? pollingUrl : null,
+    };
+  }
+
+  if (rec.output && typeof rec.output === 'object') {
+    const outId = rec.output.task_id || rec.output.taskId || rec.output.id;
+    if (outId) {
+      return {
+        taskId: String(outId),
+        status: String(rec.output.task_status || rec.output.status || 'submitted').toLowerCase(),
+        pollingUrl: typeof rec.output.task_url === 'string' ? rec.output.task_url : null,
+      };
+    }
+  }
+
+  if (rec.data && typeof rec.data === 'object') {
+    const nested = findTaskTokenAndStatus(rec.data);
+    if (nested) return nested;
+  }
+
+  return null;
+}
+
+/**
+ * 从已完成的任务结果对象中提取图片 URL 或 Base64
+ * @param {unknown} source
+ * @returns {string | null}
+ */
+function extractImageUrlFromTaskResult(source) {
+  if (!source || typeof source !== 'object') return null;
+  const rec = /** @type {Record<string, any>} */ (source);
+  const result = rec.result || rec;
+
+  if (Array.isArray(result.images) && result.images.length > 0) {
+    const firstImg = result.images[0];
+    if (Array.isArray(firstImg.url) && firstImg.url.length > 0) {
+      return String(firstImg.url[0]);
+    }
+    if (typeof firstImg.url === 'string' && firstImg.url) {
+      return firstImg.url;
+    }
+  }
+
+  const results = result.output?.results || result.results;
+  if (Array.isArray(results) && results.length > 0) {
+    if (results[0].url && typeof results[0].url === 'string') {
+      return String(results[0].url);
+    }
+    if (results[0].b64_image && typeof results[0].b64_image === 'string') {
+      return `data:image/png;base64,${results[0].b64_image}`;
+    }
+  }
+
+  if (Array.isArray(result.data) && result.data.length > 0) {
+    if (result.data[0].url && typeof result.data[0].url === 'string') {
+      return String(result.data[0].url);
+    }
+    if (result.data[0].b64_json && typeof result.data[0].b64_json === 'string') {
+      return `data:image/png;base64,${result.data[0].b64_json}`;
+    }
+  }
+
+  if (typeof result.url === 'string' && result.url) return result.url;
+  if (typeof rec.url === 'string' && rec.url) return rec.url;
+
+  return null;
+}
+
+/**
+ * 轮询异步生图任务状态直到完成
+ * @param {object} options
+ * @param {string} options.pollingUrl
+ * @param {string} options.apiKey
+ * @param {((options: Record<string, unknown>) => Promise<unknown>) | null} [options.requestUrlFn]
+ * @param {number} [options.timeoutMs=90000]
+ * @param {number} [options.intervalMs=2500]
+ * @param {AbortSignal} [options.signal]
+ * @returns {Promise<string>}
+ */
+async function pollImageGenerationTask(options) {
+  const {
+    pollingUrl,
+    apiKey,
+    requestUrlFn,
+    timeoutMs = 90000,
+    intervalMs = 2500,
+    signal,
+  } = options;
+
+  const { setTimeoutFn } = getWindowTimers();
+  const startTime = Date.now();
+  let consecutiveErrors = 0;
+  const maxConsecutiveErrors = 3;
+
+  while (Date.now() - startTime < timeoutMs) {
+    if (signal?.aborted) {
+      throw new Error('生图任务已被取消');
+    }
+
+    await new Promise((resolve) => {
+      setTimeoutFn(resolve, intervalMs);
+    });
+
+    let taskResp;
+    try {
+      taskResp = await performHttpRequest({
+        url: pollingUrl,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+        requestUrlFn,
+        signal,
+      });
+      consecutiveErrors = 0;
+    } catch (netErr) {
+      if (signal?.aborted) throw new Error('生图任务已被取消');
+      consecutiveErrors += 1;
+      if (consecutiveErrors >= maxConsecutiveErrors) {
+        const msg = netErr instanceof Error ? netErr.message : String(netErr);
+        throw new Error(`轮询任务状态网络异常: ${msg}`);
+      }
+      continue;
+    }
+
+    const status = taskResp.status;
+    if (status === 401 || status === 403) {
+      throw new Error(`查询任务状态鉴权失败 (${status})`);
+    }
+    if (status >= 500) {
+      consecutiveErrors += 1;
+      if (consecutiveErrors >= maxConsecutiveErrors) {
+        throw new Error(`生图服务端持续返回异常 (${status})`);
+      }
+      continue;
+    }
+
+    const taskJson = /** @type {Record<string, any>} */ (taskResp.json || {});
+    const taskData = taskJson.data || taskJson;
+    const taskStatus = String(taskData?.status || taskJson?.status || '').toLowerCase();
+
+    if (taskStatus === 'completed' || taskStatus === 'succeeded' || taskStatus === 'success') {
+      const imageUrl = extractImageUrlFromTaskResult(taskData || taskJson);
+      if (!imageUrl) {
+        throw new Error('生图任务已完成，但未解析到图片 URL');
+      }
+      if (imageUrl.startsWith('data:')) {
+        return imageUrl;
+      }
+      try {
+        return await downloadImageAsBase64(imageUrl, requestUrlFn, signal);
+      } catch (downloadErr) {
+        const msg = downloadErr instanceof Error ? downloadErr.message : String(downloadErr);
+        throw new Error(`生图完成但下载图片失败: ${msg}`);
+      }
+    }
+
+    if (taskStatus === 'failed' || taskStatus === 'error') {
+      const errMsg = taskData?.error?.message || taskJson?.error?.message || taskData?.message || '生成失败';
+      throw new Error(`生图任务失败: ${errMsg}`);
+    }
+  }
+
+  throw new Error(`生图任务处理超时（超过 ${Math.round(timeoutMs / 1000)} 秒），请稍后重试`);
+}
+
+/**
+ * 请求生图 API 并返回 Base64 格式的 Data URL
+ * @param {object} options
+ * @param {import('../project-types.js').AiProviderLike} options.provider
+ * @param {string} options.prompt
+ * @param {string} [options.aspectRatio='3:4']
+ * @param {((options: Record<string, unknown>) => Promise<unknown>) | null} [options.requestUrl]
  * @param {number} [options.timeoutMs=90000]
  * @returns {Promise<string>} 返回 `data:image/png;base64,...`
  */
@@ -187,6 +490,7 @@ export async function generateCardCoverImage(options) {
     aspectRatio = '3:4',
     requestUrl: injectedRequestUrl = null,
     timeoutMs = 90000,
+    pollIntervalMs = 2500,
   } = options || {};
 
   if (!provider) {
@@ -210,115 +514,98 @@ export async function generateCardCoverImage(options) {
     ? injectedRequestUrl
     : getObsidianRequestUrl();
 
-  const payload = {
-    model: imageModel,
-    prompt: prompt.trim(),
-    n: 1,
-    size,
-    response_format: 'b64_json',
-  };
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const { setTimeoutFn, clearTimeoutFn } = getWindowTimers();
+  const timer = controller ? setTimeoutFn(() => controller.abort(), timeoutMs) : null;
 
-  /** @type {unknown} */
-  let rawResponse;
+  try {
+    const payload = {
+      model: imageModel,
+      prompt: prompt.trim(),
+      n: 1,
+      size,
+      response_format: 'b64_json',
+    };
 
-  if (typeof requestUrlFn === 'function') {
-    try {
-      rawResponse = await requestUrlFn({
-        url: endpoint,
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${provider.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-        throw: false,
-      });
-    } catch (networkErr) {
-      const errMessage = networkErr instanceof Error ? networkErr.message : String(networkErr);
-      throw new Error(`请求生图 API 网络错误: ${errMessage}`);
+    let resp = await performHttpRequest({
+      url: endpoint,
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${provider.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: payload,
+      requestUrlFn,
+      signal: controller ? controller.signal : undefined,
+    });
+
+    if (resp.status === 400) {
+      const fallbackPayload = {
+        model: imageModel,
+        prompt: prompt.trim(),
+        n: 1,
+        size: aspectRatio || '3:4',
+      };
+      try {
+        const fallbackResp = await performHttpRequest({
+          url: endpoint,
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${provider.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: fallbackPayload,
+          requestUrlFn,
+          signal: controller ? controller.signal : undefined,
+        });
+        if (fallbackResp.status < 400) {
+          resp = fallbackResp;
+        }
+      } catch {
+        // 保持原 400 resp 供报错处理
+      }
     }
-  } else if (typeof fetch === 'function') {
-    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
-    try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${provider.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+
+    const respJson = /** @type {Record<string, any>} */ (resp.json || {});
+    const status = resp.status;
+
+    if (status >= 400 || (status === 0 && !resp.json)) {
+      const errorMsg = respJson?.error?.message || resp.text || `HTTP 错误状态码 ${status}`;
+      throw new Error(`生图服务返回失败 (${status}): ${errorMsg}`);
+    }
+
+    const dataList = respJson.data;
+    if (Array.isArray(dataList) && dataList.length > 0) {
+      const firstItem = dataList[0];
+      if (firstItem.b64_json && typeof firstItem.b64_json === 'string') {
+        const b64 = firstItem.b64_json.trim();
+        return b64.startsWith('data:') ? b64 : `data:image/png;base64,${b64}`;
+      }
+      if (firstItem.url && typeof firstItem.url === 'string') {
+        try {
+          return await downloadImageAsBase64(firstItem.url, requestUrlFn, controller ? controller.signal : undefined);
+        } catch (downloadErr) {
+          const msg = downloadErr instanceof Error ? downloadErr.message : String(downloadErr);
+          throw new Error(`生图完成但下载图片失败: ${msg}`);
+        }
+      }
+    }
+
+    const taskTokenInfo = findTaskTokenAndStatus(respJson);
+    if (taskTokenInfo && taskTokenInfo.taskId) {
+      const pollingUrl = taskTokenInfo.pollingUrl || `${provider.baseUrl.replace(/\/+$/, '')}/tasks/${encodeURIComponent(taskTokenInfo.taskId)}`;
+      return await pollImageGenerationTask({
+        pollingUrl,
+        apiKey: provider.apiKey,
+        requestUrlFn,
+        timeoutMs,
+        intervalMs: pollIntervalMs,
         signal: controller ? controller.signal : undefined,
       });
-      const text = await res.text();
-      let json = {};
-      try {
-        json = JSON.parse(text);
-      } catch {
-        json = {};
-      }
-      rawResponse = {
-        status: res.status,
-        text,
-        json,
-      };
-    } catch (fetchErr) {
-      const errMessage = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
-      throw new Error(`生图请求异常: ${errMessage}`);
-    } finally {
-      if (timer) clearTimeout(timer);
     }
-  } else {
-    throw new Error('当前环境缺少 requestUrl 与 fetch，无法发起生图请求');
+
+    throw new Error('生图 API 未返回有效的图片数据（无 b64_json 或 url）');
+  } finally {
+    if (timer) clearTimeoutFn(timer);
   }
-
-  const resp = /** @type {{ status?: number, text?: string, json?: { data?: Array<{ b64_json?: string, url?: string }>, error?: { message?: string } } }} */ (rawResponse);
-  const status = resp?.status || 0;
-
-  if (status >= 400 || (status === 0 && !resp?.json?.data)) {
-    const errorMsg = resp?.json?.error?.message || resp?.text || `HTTP 错误状态码 ${status}`;
-    throw new Error(`生图服务返回失败 (${status}): ${errorMsg}`);
-  }
-
-  const dataList = resp?.json?.data;
-  if (!Array.isArray(dataList) || dataList.length === 0) {
-    throw new Error('生图服务未返回有效的图片列表');
-  }
-
-  const firstItem = dataList[0];
-
-  // 优先返回 Base64 格式
-  if (firstItem.b64_json && typeof firstItem.b64_json === 'string') {
-    const b64 = firstItem.b64_json.trim();
-    return b64.startsWith('data:') ? b64 : `data:image/png;base64,${b64}`;
-  }
-
-  // 若返回远程 URL，使用 requestUrl 立即拉取并内联为 Base64，防止外部 URL 失效及跨域导出失败
-  if (firstItem.url && typeof firstItem.url === 'string') {
-    const remoteUrl = firstItem.url;
-    try {
-      if (typeof requestUrlFn === 'function') {
-        const imageRes = await requestUrlFn({
-          url: remoteUrl,
-          method: 'GET',
-          throw: false,
-        });
-        const imgObj = /** @type {{ status?: number, arrayBuffer?: ArrayBuffer }} */ (imageRes);
-        if (imgObj?.arrayBuffer) {
-          const b64 = bufferToBase64(imgObj.arrayBuffer);
-          return `data:image/png;base64,${b64}`;
-        }
-      } else if (typeof fetch === 'function') {
-        const imgRes = await fetch(remoteUrl);
-        const buf = await imgRes.arrayBuffer();
-        const b64 = bufferToBase64(buf);
-        return `data:image/png;base64,${b64}`;
-      }
-    } catch (downloadErr) {
-      const msg = downloadErr instanceof Error ? downloadErr.message : String(downloadErr);
-      throw new Error(`生图完成但下载图片失败: ${msg}`);
-    }
-  }
-
-  throw new Error('生图 API 未返回有效的图片数据（无 b64_json 或 url）');
 }

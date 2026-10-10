@@ -58,11 +58,64 @@ describe('ai-layout service generation providers', () => {
       model: 'deepseek-v4-flash',
       temperature: 0,
       max_tokens: 16,
+      stream: false,
       messages: [{ role: 'user', content: 'Reply with OK only.' }],
     });
     expect(options.headers.Authorization).toBe('Bearer secret');
     expect(body).not.toHaveProperty('selection');
     expect(options.body).not.toContain('排版');
+  });
+
+  it('should test image-only OpenAI-compatible providers with GET /models', async () => {
+    const provider = {
+      name: 'APIMart Image',
+      kind: 'openai-compatible',
+      baseUrl: 'https://api.apimart.ai/v1',
+      apiKey: 'secret',
+      supportsText: false,
+      supportsImage: true,
+      imageModel: 'gpt-image-2',
+    };
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [{ id: 'gpt-image-2' }] }),
+    });
+
+    await expect(testAiProviderConnection(provider, fetchImpl)).resolves.toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.apimart.ai/v1/models');
+    expect(fetchImpl.mock.calls[0][1].method).toBe('GET');
+  });
+
+  it('should test dual capability providers and report clear results', async () => {
+    const provider = {
+      name: 'Dual Provider',
+      kind: 'openai-compatible',
+      baseUrl: 'https://api.example.com/v1',
+      apiKey: 'secret',
+      supportsText: true,
+      textModel: 'gpt-4o-mini',
+      supportsImage: true,
+      imageModel: 'dall-e-3',
+    };
+    const fetchImpl = vi.fn().mockImplementation((url) => {
+      if (url.includes('/chat/completions')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({ choices: [{ message: { content: 'OK' } }] }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: [] }),
+      });
+    });
+
+    await expect(testAiProviderConnection(provider, fetchImpl)).resolves.toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
   it('should test Gemini providers with a minimal text request', async () => {

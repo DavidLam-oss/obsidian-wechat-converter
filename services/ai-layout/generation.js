@@ -815,7 +815,10 @@ function hasAiConnectionResponse(providerKind, data) {
   const source = toRecord(data);
   if (providerKind === AI_PROVIDER_KINDS.OPENAI_COMPATIBLE) {
     const choices = Array.isArray(source.choices) ? source.choices : [];
-    return choices.some((choice) => isRecord(toRecord(choice).message));
+    return choices.some((choice) => {
+      const rec = toRecord(choice);
+      return isRecord(rec.message) || isRecord(rec.delta);
+    });
   }
   if (providerKind === AI_PROVIDER_KINDS.GEMINI) {
     return Array.isArray(source.candidates) && source.candidates.length > 0;
@@ -824,6 +827,148 @@ function hasAiConnectionResponse(providerKind, data) {
     return Array.isArray(source.content) && source.content.length > 0;
   }
   return false;
+}
+
+/** @param {AiProviderLike} safeProvider @param {FetchLike} fetchImpl @param {AbortSignal} signal @returns {Promise<boolean>} */
+async function testTextProviderConnection(safeProvider, fetchImpl, signal) {
+  let response;
+  let data;
+
+  switch (safeProvider.kind) {
+    case AI_PROVIDER_KINDS.OPENAI_COMPATIBLE: {
+      response = await fetchImpl(`${safeProvider.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${safeProvider.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: safeProvider.textModel || safeProvider.model,
+          temperature: 0,
+          max_tokens: AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS,
+          stream: false,
+          messages: [{ role: 'user', content: AI_PROVIDER_CONNECTION_TEST_PROMPT }],
+        }),
+        signal,
+      });
+      await ensureAiConnectionResponseOk(response);
+      data = await response.json();
+      break;
+    }
+    case AI_PROVIDER_KINDS.GEMINI: {
+      const endpoint = `${safeProvider.baseUrl}/models/${encodeURIComponent(safeProvider.textModel || safeProvider.model)}:generateContent`;
+      response = await fetchImpl(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': safeProvider.apiKey,
+        },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: AI_PROVIDER_CONNECTION_TEST_PROMPT }] }],
+          generationConfig: {
+            temperature: 0,
+            maxOutputTokens: AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS,
+          },
+        }),
+        signal,
+      });
+      await ensureAiConnectionResponseOk(response);
+      data = await response.json();
+      break;
+    }
+    case AI_PROVIDER_KINDS.ANTHROPIC: {
+      response = await fetchImpl(`${safeProvider.baseUrl}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': safeProvider.apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: safeProvider.textModel || safeProvider.model,
+          max_tokens: AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS,
+          temperature: 0,
+          messages: [{ role: 'user', content: AI_PROVIDER_CONNECTION_TEST_PROMPT }],
+        }),
+        signal,
+      });
+      await ensureAiConnectionResponseOk(response);
+      data = await response.json();
+      break;
+    }
+    default:
+      throw new Error(`暂不支持的 AI Provider 类型: ${safeProvider.kind}`);
+  }
+
+  if (!hasAiConnectionResponse(safeProvider.kind, data)) {
+    throw new Error('模型已连接，但响应格式无法识别');
+  }
+  return true;
+}
+
+/** @param {AiProviderLike} safeProvider @param {FetchLike} fetchImpl @param {AbortSignal} signal @returns {Promise<boolean>} */
+async function testImageProviderConnection(safeProvider, fetchImpl, signal) {
+  switch (safeProvider.kind) {
+    case AI_PROVIDER_KINDS.OPENAI_COMPATIBLE: {
+      const modelsEndpoint = `${safeProvider.baseUrl}/models`;
+      try {
+        const modelsRes = await fetchImpl(modelsEndpoint, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${safeProvider.apiKey}`,
+          },
+          signal,
+        });
+
+        if (modelsRes.ok) {
+          return true;
+        }
+
+        if (modelsRes.status === 401 || modelsRes.status === 403) {
+          await ensureAiConnectionResponseOk(modelsRes);
+        }
+      } catch (err) {
+        if (isAbortError(err)) throw err;
+      }
+
+      const imagesEndpoint = `${safeProvider.baseUrl}/images/generations`;
+      const testRes = await fetchImpl(imagesEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${safeProvider.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: safeProvider.imageModel || safeProvider.model,
+          prompt: 'ping',
+          n: 1,
+          size: '256x256',
+        }),
+        signal,
+      });
+
+      if (testRes.ok || testRes.status === 400 || testRes.status === 422) {
+        return true;
+      }
+
+      await ensureAiConnectionResponseOk(testRes);
+      return true;
+    }
+    case AI_PROVIDER_KINDS.GEMINI: {
+      const endpoint = `${safeProvider.baseUrl}/models?key=${encodeURIComponent(safeProvider.apiKey)}`;
+      const res = await fetchImpl(endpoint, {
+        method: 'GET',
+        signal,
+      });
+      await ensureAiConnectionResponseOk(res);
+      return true;
+    }
+    case AI_PROVIDER_KINDS.ANTHROPIC: {
+      return true;
+    }
+    default:
+      throw new Error(`暂不支持的 AI Provider 类型: ${safeProvider.kind}`);
+  }
 }
 
 /** @param {unknown} provider @param {FetchLike} [fetchImpl] @returns {Promise<boolean>} */
@@ -838,79 +983,42 @@ async function testAiProviderConnection(provider, fetchImpl = getDefaultFetch())
   );
 
   try {
-    /** @type {FetchResponseLike} */
-    let response;
-    /** @type {unknown} */
-    let data;
+    const hasText = Boolean(safeProvider.supportsText);
+    const hasImage = Boolean(safeProvider.supportsImage);
 
-    switch (safeProvider.kind) {
-      case AI_PROVIDER_KINDS.OPENAI_COMPATIBLE: {
-        response = await fetchImpl(`${safeProvider.baseUrl}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${safeProvider.apiKey}`,
-          },
-          body: JSON.stringify({
-            model: safeProvider.model,
-            temperature: 0,
-            max_tokens: AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS,
-            messages: [{ role: 'user', content: AI_PROVIDER_CONNECTION_TEST_PROMPT }],
-          }),
-          signal: controller.signal,
-        });
-        await ensureAiConnectionResponseOk(response);
-        data = await response.json();
-        break;
-      }
-      case AI_PROVIDER_KINDS.GEMINI: {
-        const endpoint = `${safeProvider.baseUrl}/models/${encodeURIComponent(safeProvider.model)}:generateContent`;
-        response = await fetchImpl(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': safeProvider.apiKey,
-          },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: AI_PROVIDER_CONNECTION_TEST_PROMPT }] }],
-            generationConfig: {
-              temperature: 0,
-              maxOutputTokens: AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS,
-            },
-          }),
-          signal: controller.signal,
-        });
-        await ensureAiConnectionResponseOk(response);
-        data = await response.json();
-        break;
-      }
-      case AI_PROVIDER_KINDS.ANTHROPIC: {
-        response = await fetchImpl(`${safeProvider.baseUrl}/messages`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': safeProvider.apiKey,
-            'anthropic-version': '2023-06-01',
-          },
-          body: JSON.stringify({
-            model: safeProvider.model,
-            max_tokens: AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS,
-            temperature: 0,
-            messages: [{ role: 'user', content: AI_PROVIDER_CONNECTION_TEST_PROMPT }],
-          }),
-          signal: controller.signal,
-        });
-        await ensureAiConnectionResponseOk(response);
-        data = await response.json();
-        break;
-      }
-      default:
-        throw new Error(`暂不支持的 AI Provider 类型: ${safeProvider.kind}`);
+    if (!hasText && !hasImage) {
+      throw new Error('未启用任何能力（文本或生图），请先开启对应能力开关');
     }
 
-    if (!hasAiConnectionResponse(safeProvider.kind, data)) {
-      throw new Error('模型已连接，但响应格式无法识别');
+    if (hasText && !hasImage) {
+      return await testTextProviderConnection(safeProvider, fetchImpl, controller.signal);
     }
+
+    if (!hasText && hasImage) {
+      return await testImageProviderConnection(safeProvider, fetchImpl, controller.signal);
+    }
+
+    const [textResult, imageResult] = await Promise.allSettled([
+      testTextProviderConnection(safeProvider, fetchImpl, controller.signal),
+      testImageProviderConnection(safeProvider, fetchImpl, controller.signal),
+    ]);
+
+    if (textResult.status === 'rejected' && imageResult.status === 'rejected') {
+      const textMsg = textResult.reason instanceof Error ? textResult.reason.message : String(textResult.reason);
+      const imgMsg = imageResult.reason instanceof Error ? imageResult.reason.message : String(imageResult.reason);
+      throw new Error(`文本与生图服务连接均失败: [文本] ${textMsg}; [生图] ${imgMsg}`);
+    }
+
+    if (textResult.status === 'rejected') {
+      const msg = textResult.reason instanceof Error ? textResult.reason.message : String(textResult.reason);
+      throw new Error(`生图服务连接正常，但文本模型连接失败: ${msg}`);
+    }
+
+    if (imageResult.status === 'rejected') {
+      const msg = imageResult.reason instanceof Error ? imageResult.reason.message : String(imageResult.reason);
+      throw new Error(`文本模型连接正常，但生图服务连接失败: ${msg}`);
+    }
+
     return true;
   } catch (error) {
     if (controller.signal.aborted || isAbortError(error)) {
