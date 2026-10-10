@@ -69,7 +69,7 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
     refs.coverModeSelect = modeSelect;
 
     // 2.2 唤起独立选图工作台
-    const openMediaPicker = (initialTab = 'unsplash') => {
+    const openMediaPicker = (initialTab = 'note') => {
       showCardMediaPickerModal({
         view,
         initialTab,
@@ -91,7 +91,7 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       attr: { type: 'button', title: '打开独立选图工作台为封面添加配图' },
     });
     addImageBtn.addEventListener('click', () => {
-      openMediaPicker('unsplash');
+      openMediaPicker('note');
     });
     refs.coverAddImageBtn = addImageBtn;
 
@@ -124,7 +124,10 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       attr: { type: 'button', title: '打开独立选图工作台更换封面配图' },
     });
     changeImgBtn.addEventListener('click', () => {
-      openMediaPicker();
+      const session = typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession() : null;
+      const currentSource = session?.getCoverFields?.()?.coverImageSource;
+      const targetTab = currentSource === 'ai' ? 'ai' : (currentSource === 'unsplash' ? 'unsplash' : 'note');
+      openMediaPicker(targetTab);
     });
 
     const removeImgBtn = previewBox.createEl('button', {

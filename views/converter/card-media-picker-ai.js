@@ -184,19 +184,19 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, _on
   const hintBox = container.createDiv({
     cls: `card-media-picker-hint ${selectedStyleId === 'custom' ? '' : 'is-hidden'}`,
   });
-  hintBox.createSpan({ text: '💡 提示：支持变量 ' });
+  hintBox.createSpan({ text: '支持变量：' });
 
   const varTopic = hintBox.createEl('code', { cls: 'card-media-picker-hint-var', text: '{topic}' });
   varTopic.title = '点击插入 {topic}（核心主题）';
-  hintBox.createSpan({ text: '主题、' });
+  hintBox.createSpan({ text: ' 主题 · ' });
 
   const varTitle = hintBox.createEl('code', { cls: 'card-media-picker-hint-var', text: '{title}' });
   varTitle.title = '点击插入 {title}（文章标题）';
-  hintBox.createSpan({ text: '标题、' });
+  hintBox.createSpan({ text: ' 标题 · ' });
 
   const varExcerpt = hintBox.createEl('code', { cls: 'card-media-picker-hint-var', text: '{excerpt}' });
   varExcerpt.title = '点击插入 {excerpt}（文章摘要）';
-  hintBox.createSpan({ text: '摘要，生图时将自动替换对应内容。' });
+  hintBox.createSpan({ text: ' 摘要（生图时自动替换对应内容）' });
 
   const promptTextarea = /** @type {HTMLTextAreaElement} */ (
     /** @type {unknown} */ (container.createEl('textarea', {

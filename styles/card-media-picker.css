@@ -416,12 +416,10 @@
 .card-media-picker-hint {
   font-size: 11px;
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--interactive-accent) 8%, var(--background-secondary));
-  border: 1px dashed var(--interactive-accent);
-  border-radius: 6px;
-  padding: 4px 8px;
+  padding: 0;
+  margin-top: 2px;
   margin-bottom: 6px;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .card-media-picker-hint.is-hidden {
@@ -430,20 +428,22 @@
 
 .card-media-picker-hint-var {
   display: inline-block;
-  padding: 0 4px;
+  padding: 1px 4px;
   margin: 0 2px;
-  border-radius: 3px;
-  background: var(--background-primary);
+  border-radius: 4px;
+  background: var(--background-modifier-hover);
   border: 1px solid var(--background-modifier-border);
   font-family: var(--font-monospace);
-  font-size: 10px;
+  font-size: 10.5px;
   cursor: pointer;
-  color: var(--interactive-accent);
+  color: var(--text-normal);
+  transition: all 0.15s ease;
 }
 
 .card-media-picker-hint-var:hover {
-  background: var(--interactive-accent);
-  color: var(--text-on-accent, #ffffff);
+  background: color-mix(in srgb, var(--interactive-accent) 15%, var(--background-secondary));
+  border-color: var(--interactive-accent);
+  color: var(--interactive-accent);
 }
 
 .card-media-picker-prompt-textarea {

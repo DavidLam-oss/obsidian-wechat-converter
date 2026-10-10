@@ -39,6 +39,10 @@ const {
   renderAiMediaPickerTab,
 } = await import('../views/converter/card-media-picker-ai.js');
 
+const {
+  buildCardCoverSettingsSubpanel,
+} = await import('../views/converter/card-cover-settings.js');
+
 describe('卡片独立选图工作台 (Media Picker Modal)', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -731,6 +735,159 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
       const configBtn = emptyCard.querySelector('.mod-cta');
       configBtn.dispatchEvent(new MouseEvent('click'));
       expect(onOpenSettings).toHaveBeenCalled();
+    });
+
+    it('自定义风格提示词展示柔和变量提示，且支持点击插入变量', () => {
+      const container = applyExtensions(document.createElement('div'));
+      const mockView = {
+        plugin: {
+          settings: {
+            ai: {
+              imageProviderId: 'p1',
+              providers: [
+                {
+                  id: 'p1',
+                  name: 'Test Image Provider',
+                  model: 'gpt-image-1',
+                  imageModel: 'gpt-image-1',
+                  baseUrl: 'https://api.openai.com/v1',
+                  apiKey: 'sk-test',
+                  supportsImage: true,
+                },
+              ],
+            },
+          },
+        },
+        getActiveFileTitle: () => '文章标题',
+      };
+
+      renderAiMediaPickerTab({
+        container,
+        view: mockView,
+        ratioId: '3:4',
+        onSelect: vi.fn(),
+      });
+
+      const cards = Array.from(container.querySelectorAll('.card-media-picker-ai-card'));
+      const customCard = cards.find((c) => c.textContent?.includes('自定义'));
+      expect(customCard).toBeDefined();
+
+      const hintBox = container.querySelector('.card-media-picker-hint');
+      expect(hintBox).not.toBeNull();
+      expect(hintBox?.classList.contains('is-hidden')).toBe(true);
+
+      // 切换至自定义风格
+      customCard.dispatchEvent(new MouseEvent('click'));
+      expect(hintBox?.classList.contains('is-hidden')).toBe(false);
+      expect(hintBox?.textContent).toContain('支持变量：');
+      expect(hintBox?.textContent).toContain('{topic}');
+      expect(hintBox?.textContent).toContain('{title}');
+      expect(hintBox?.textContent).toContain('{excerpt}');
+
+      // 测试点击变量插入
+      const textarea = container.querySelector('.card-media-picker-prompt-textarea');
+      const varTopic = hintBox?.querySelector('.card-media-picker-hint-var');
+      expect(varTopic?.textContent).toBe('{topic}');
+
+      textarea.value = '视觉主体: ';
+      varTopic.dispatchEvent(new MouseEvent('click'));
+      expect(textarea.value).toBe('视觉主体: {topic}');
+    });
+  });
+
+  describe('侧边栏封面选图入口与 Tab 智能路由', () => {
+    it('点击「+ 添加封面配图」时默认打开「笔记与本地」Tab', () => {
+      let currentCoverFields = { coverMode: 'none' };
+      const mockView = {
+        app: {
+          setting: { open: vi.fn(), openTabById: vi.fn() },
+        },
+        plugin: {
+          settings: {
+            unsplashAccessKey: 'test-key',
+            ai: { providers: [] },
+          },
+        },
+        createSection: vi.fn((_parent, _title, callback) => {
+          const sectionEl = applyExtensions(document.createElement('div'));
+          callback(sectionEl);
+          return sectionEl;
+        }),
+        getCardSettingsSession: () => ({
+          getCoverFields: () => currentCoverFields,
+        }),
+        applyCardCoverField: vi.fn(),
+        applyCardLayoutSetting: vi.fn(),
+      };
+
+      const coverSection = applyExtensions(document.createElement('div'));
+      const refs = {};
+      buildCardCoverSettingsSubpanel(mockView, coverSection, refs);
+
+      expect(refs.coverAddImageBtn).toBeDefined();
+
+      // 点击添加封面配图按钮
+      refs.coverAddImageBtn.dispatchEvent(new MouseEvent('click'));
+
+      const modal = globalThis.__obsidianModalRegistry[globalThis.__obsidianModalRegistry.length - 1];
+      expect(modal).toBeDefined();
+
+      const contentEl = modal.contentEl;
+      const notePane = contentEl.querySelector('.card-media-picker-pane--note');
+      const unsplashPane = contentEl.querySelector('.card-media-picker-pane--unsplash');
+      expect(notePane?.classList.contains('is-hidden')).toBe(false);
+      expect(unsplashPane?.classList.contains('is-hidden')).toBe(true);
+    });
+
+    it('点击「更换」配图时根据当前图片来源智能路由 Tab', () => {
+      let currentSource = 'ai';
+      const mockView = {
+        app: {
+          setting: { open: vi.fn(), openTabById: vi.fn() },
+        },
+        plugin: {
+          settings: {
+            unsplashAccessKey: 'test-key',
+            ai: { providers: [] },
+          },
+        },
+        createSection: vi.fn((_parent, _title, callback) => {
+          const sectionEl = applyExtensions(document.createElement('div'));
+          callback(sectionEl);
+          return sectionEl;
+        }),
+        getCardSettingsSession: () => ({
+          getCoverFields: () => ({
+            coverMode: 'adaptive',
+            coverImage: 'data:image/png;base64,123',
+            coverImageSource: currentSource,
+          }),
+        }),
+        applyCardCoverField: vi.fn(),
+        applyCardLayoutSetting: vi.fn(),
+      };
+
+      const coverSection = applyExtensions(document.createElement('div'));
+      const refs = {};
+      buildCardCoverSettingsSubpanel(mockView, coverSection, refs);
+
+      const changeBtn = refs.coverImagePreviewWrap.querySelector('.icard-settings-cover-btn');
+      expect(changeBtn).toBeDefined();
+
+      // 1. 当前来源为 'ai'，更换时打开 'ai'
+      changeBtn.dispatchEvent(new MouseEvent('click'));
+      let modal = globalThis.__obsidianModalRegistry[globalThis.__obsidianModalRegistry.length - 1];
+      let aiPane = modal.contentEl.querySelector('.card-media-picker-pane--ai');
+      let notePane = modal.contentEl.querySelector('.card-media-picker-pane--note');
+      expect(aiPane?.classList.contains('is-hidden')).toBe(false);
+      expect(notePane?.classList.contains('is-hidden')).toBe(true);
+
+      // 2. 当前来源为 'unsplash'，更换时打开 'unsplash'
+      currentSource = 'unsplash';
+      changeBtn.dispatchEvent(new MouseEvent('click'));
+      modal = globalThis.__obsidianModalRegistry[globalThis.__obsidianModalRegistry.length - 1];
+      let unsplashPane = modal.contentEl.querySelector('.card-media-picker-pane--unsplash');
+      expect(unsplashPane?.classList.contains('is-hidden')).toBe(false);
     });
   });
 });
