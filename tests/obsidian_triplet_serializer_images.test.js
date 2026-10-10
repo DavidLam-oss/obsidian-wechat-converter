@@ -73,15 +73,33 @@ describe('Obsidian Triplet Serializer images', () => {
     expect(html).toContain('width:200%');
     expect(container.querySelectorAll('figure')).toHaveLength(0);
     expect(container.querySelectorAll('img')).toHaveLength(2);
-    expect(container.querySelectorAll('figcaption')).toHaveLength(2);
-    expect(container.textContent).toContain('第一张');
-    expect(container.textContent).toContain('第二张');
+    expect(container.querySelectorAll('figcaption')).toHaveLength(0);
+    expect(container.querySelector('img[alt="第一张"]')).not.toBeNull();
+    expect(container.querySelector('img[alt="第二张"]')).not.toBeNull();
     expect(container.textContent).toContain('左右滑动查看图片');
     expect(html).not.toContain('data-owc-image-swipe');
 
     const cleanedHtml = cleanHtmlForDraft(html);
     expect(cleanedHtml).toContain('overflow-x:auto');
     expect(cleanedHtml).toContain('width:200%');
+  });
+
+  it('should not render image captions inside image-swipe even when showImageCaption is true', () => {
+    const root = document.createElement('div');
+    root.innerHTML = [
+      '<section data-owc-image-swipe="1" data-owc-image-swipe-type="image-swipe">',
+      '<img src="images/1000001482.png" alt="1000001482.png">',
+      '</section>',
+    ].join('');
+
+    const customConverter = { ...converter, showImageCaption: true };
+    const html = serializeObsidianRenderedHtml({ root, converter: customConverter });
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    expect(container.querySelectorAll('figcaption')).toHaveLength(0);
+    expect(container.textContent).not.toContain('1000001482');
+    expect(container.textContent).toContain('左右滑动查看图片');
   });
 
   it('should add a default hint for marked image-swipe sections', () => {
@@ -116,7 +134,8 @@ describe('Obsidian Triplet Serializer images', () => {
     expect(img?.getAttribute('src')).toBe('https://cdn.example.com/CleanShot%202026-05-14.png');
     expect(img?.getAttribute('width')).toBe('400');
     expect(img?.getAttribute('referrerpolicy')).toBe('no-referrer');
-    expect(container.textContent).toContain('CleanShot 2026-05-14');
+    expect(container.querySelectorAll('figcaption')).toHaveLength(0);
+    expect(img?.getAttribute('alt')).toBe('CleanShot 2026-05-14.png|400');
   });
 
   it('should convert Obsidian-rendered remote image-swipe callouts into swipe blocks', () => {

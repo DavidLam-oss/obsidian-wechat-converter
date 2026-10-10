@@ -406,10 +406,10 @@ function normalizeImageSwipeImage(img, converter) {
 }
 
 /**
- * @param {{ img: HTMLImageElement, caption: string, converter: ConverterLike | null | undefined, activeDocument?: Document | null }} options
+ * @param {{ img: HTMLImageElement, caption?: string, converter: ConverterLike | null | undefined, activeDocument?: Document | null }} options
  * @returns {HTMLElement | null}
  */
-function createImageSwipePanel({ img, caption, converter, activeDocument = getActiveDocument() }) {
+function createImageSwipePanel({ img, converter, activeDocument = getActiveDocument() }) {
   if (!activeDocument) return null;
   const panel = activeDocument.createElement('section');
   setImageSwipeSectionStyle(panel, 'display:table-cell;vertical-align:top;width:1%;box-sizing:border-box;white-space:normal;padding:0 8px;margin:0;text-align:center;');
@@ -417,14 +417,6 @@ function createImageSwipePanel({ img, caption, converter, activeDocument = getAc
   img.setAttribute('data-owc-skip-standalone-image', '1');
   appendInlineStyle(img, getTagStyle(converter, 'img'));
   panel.appendChild(img);
-
-  const showCaption = !converter || converter.showImageCaption !== false;
-  if (showCaption && caption) {
-    const captionEl = activeDocument.createElement('figcaption');
-    appendInlineStyle(captionEl, getTagStyle(converter, 'figcaption'));
-    captionEl.textContent = caption;
-    panel.appendChild(captionEl);
-  }
 
   return panel;
 }
@@ -510,8 +502,8 @@ function convertImageSwipeBlocks(container, converter) {
     }
 
     for (const img of imgs) {
-      const { caption } = normalizeImageSwipeImage(img, converter);
-      const panel = createImageSwipePanel({ img, caption, converter, activeDocument });
+      normalizeImageSwipeImage(img, converter);
+      const panel = createImageSwipePanel({ img, converter, activeDocument });
       if (panel) row.appendChild(panel);
     }
 
