@@ -931,6 +931,7 @@ async function testImageProviderConnection(safeProvider, fetchImpl, signal) {
         if (isAbortError(err)) throw err;
       }
 
+      // 非 200 降级探测：发送空 prompt 探测参数校验与鉴权，严禁发送真实生图 payload 消耗额度
       const imagesEndpoint = `${safeProvider.baseUrl}/images/generations`;
       const testRes = await fetchImpl(imagesEndpoint, {
         method: 'POST',
@@ -940,9 +941,7 @@ async function testImageProviderConnection(safeProvider, fetchImpl, signal) {
         },
         body: JSON.stringify({
           model: safeProvider.imageModel || safeProvider.model,
-          prompt: 'ping',
-          n: 1,
-          size: '256x256',
+          prompt: '',
         }),
         signal,
       });
@@ -954,17 +953,9 @@ async function testImageProviderConnection(safeProvider, fetchImpl, signal) {
       await ensureAiConnectionResponseOk(testRes);
       return true;
     }
-    case AI_PROVIDER_KINDS.GEMINI: {
-      const endpoint = `${safeProvider.baseUrl}/models?key=${encodeURIComponent(safeProvider.apiKey)}`;
-      const res = await fetchImpl(endpoint, {
-        method: 'GET',
-        signal,
-      });
-      await ensureAiConnectionResponseOk(res);
-      return true;
-    }
+    case AI_PROVIDER_KINDS.GEMINI:
     case AI_PROVIDER_KINDS.ANTHROPIC: {
-      return true;
+      throw new Error(`当前卡片生图能力仅支持 OpenAI 兼容格式接口，${safeProvider.kind} 暂未支持生图调用`);
     }
     default:
       throw new Error(`暂不支持的 AI Provider 类型: ${safeProvider.kind}`);

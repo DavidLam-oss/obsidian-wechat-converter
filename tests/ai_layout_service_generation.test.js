@@ -88,6 +88,57 @@ describe('ai-layout service generation providers', () => {
     expect(fetchImpl.mock.calls[0][1].method).toBe('GET');
   });
 
+  it('should fall back to safe probe payload without burning quota when /models is unavailable', async () => {
+    const provider = {
+      name: 'APIMart Image',
+      kind: 'openai-compatible',
+      baseUrl: 'https://api.apimart.ai/v1',
+      apiKey: 'secret',
+      supportsText: false,
+      supportsImage: true,
+      imageModel: 'flux-schnell',
+    };
+    const fetchImpl = vi.fn().mockImplementation((url) => {
+      if (url.endsWith('/models')) {
+        return Promise.resolve({
+          ok: false,
+          status: 404,
+          text: async () => 'Not Found',
+        });
+      }
+      if (url.endsWith('/images/generations')) {
+        return Promise.resolve({
+          ok: false,
+          status: 400,
+          json: async () => ({ error: { message: 'prompt is required' } }),
+        });
+      }
+      return Promise.reject(new Error('Unknown url: ' + url));
+    });
+
+    await expect(testAiProviderConnection(provider, fetchImpl)).resolves.toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    const [, genOptions] = fetchImpl.mock.calls[1];
+    const genBody = JSON.parse(genOptions.body);
+    expect(genBody.prompt).toBe('');
+    expect(genBody).not.toHaveProperty('size');
+  });
+
+  it('should reject image capability connection test for gemini or anthropic', async () => {
+    const provider = {
+      name: 'Claude Image',
+      kind: 'anthropic',
+      baseUrl: 'https://api.anthropic.com/v1',
+      apiKey: 'secret',
+      supportsText: false,
+      supportsImage: true,
+      imageModel: 'claude-image',
+    };
+    const fetchImpl = vi.fn();
+    await expect(testAiProviderConnection(provider, fetchImpl)).rejects.toThrow('当前卡片生图能力仅支持 OpenAI 兼容格式接口');
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
   it('should test dual capability providers and report clear results', async () => {
     const provider = {
       name: 'Dual Provider',

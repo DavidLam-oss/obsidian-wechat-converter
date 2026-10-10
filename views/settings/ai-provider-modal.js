@@ -162,11 +162,18 @@ export function showEditAiProviderModal(tab, provider) {
   });
 
   const syncCapDisplay = () => {
+    const isOpenAiKind = kindSelect.value === AI_PROVIDER_KINDS.OPENAI_COMPATIBLE;
+    imgCapCheckbox.disabled = !isOpenAiKind;
+    if (!isOpenAiKind) {
+      imgCapCheckbox.checked = false;
+    }
+    imgCapWrap.setCssStyles({ opacity: isOpenAiKind ? "1" : "0.5" });
     textModelGroup.setCssStyles({ display: textCapCheckbox.checked ? "block" : "none" });
-    imgModelGroup.setCssStyles({ display: imgCapCheckbox.checked ? "block" : "none" });
+    imgModelGroup.setCssStyles({ display: (isOpenAiKind && imgCapCheckbox.checked) ? "block" : "none" });
   };
   textCapCheckbox.addEventListener("change", syncCapDisplay);
   imgCapCheckbox.addEventListener("change", syncCapDisplay);
+  kindSelect.addEventListener("change", syncCapDisplay);
   syncCapDisplay();
 
   // 预设选择联动
@@ -207,6 +214,7 @@ export function showEditAiProviderModal(tab, provider) {
 
   const testBtn = btnRow.createEl("button", { text: "测试连接", cls: "wechat-btn-test" });
   testBtn.onclick = async () => {
+    const isImageSupported = kindSelect.value === AI_PROVIDER_KINDS.OPENAI_COMPATIBLE && imgCapCheckbox.checked;
     const candidate = normalizeAiProvider({
       id: provider?.id,
       name: nameInput.value.trim() || "未命名 Provider",
@@ -215,8 +223,8 @@ export function showEditAiProviderModal(tab, provider) {
       apiKey: apiKeyInput.value.trim(),
       supportsText: textCapCheckbox.checked,
       textModel: textModelInput.value.trim(),
-      supportsImage: imgCapCheckbox.checked,
-      imageModel: imgModelInput.value.trim(),
+      supportsImage: isImageSupported,
+      imageModel: isImageSupported ? imgModelInput.value.trim() : "",
       notes: notesInput.value.trim(),
       enabled: enabledToggle.checked,
     });
@@ -242,8 +250,9 @@ export function showEditAiProviderModal(tab, provider) {
 
   const saveBtn = btnRow.createEl("button", { text: "保存", cls: "mod-cta" });
   saveBtn.onclick = async () => {
-    if (!textCapCheckbox.checked && !imgCapCheckbox.checked) {
-      new Notice("请至少勾选一项能力（文本模型或生图模型）");
+    const isImageSupported = kindSelect.value === AI_PROVIDER_KINDS.OPENAI_COMPATIBLE && imgCapCheckbox.checked;
+    if (!textCapCheckbox.checked && !isImageSupported) {
+      new Notice("请至少勾选一项有效能力（文本模型或生图模型）");
       return;
     }
 
@@ -255,8 +264,8 @@ export function showEditAiProviderModal(tab, provider) {
       apiKey: apiKeyInput.value.trim(),
       supportsText: textCapCheckbox.checked,
       textModel: textModelInput.value.trim(),
-      supportsImage: imgCapCheckbox.checked,
-      imageModel: imgModelInput.value.trim(),
+      supportsImage: isImageSupported,
+      imageModel: isImageSupported ? imgModelInput.value.trim() : "",
       notes: notesInput.value.trim(),
       enabled: enabledToggle.checked,
     });
