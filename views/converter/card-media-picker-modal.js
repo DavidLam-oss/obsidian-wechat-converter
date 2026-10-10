@@ -117,7 +117,12 @@ export function showCardMediaPickerModal({ view, initialTab, onSelect }) {
           container: panes.ai,
           view,
           ratioId,
-          onSelect: handleSelect,
+          onSelect: (result) => {
+            if (typeof onSelect === 'function') {
+              onSelect(result);
+            }
+          },
+          onClose: () => modal.close(),
           onOpenSettings: openPluginSettings,
         });
       }

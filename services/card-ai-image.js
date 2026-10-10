@@ -42,41 +42,41 @@ export const AI_CARD_COVER_STYLES = [
     name: '3D 粘土质感',
     description: '立体软萌、微缩景观、黏土材质与柔和棚拍光',
     promptTemplate:
-      '3D clay render style, soft rounded shapes, vibrant pastel colors, tactile matte texture, miniature isometric scene illustrating {title}, cute playful aesthetic, studio lighting, C4D octane render style, clean background, high detail, no text',
+      '3D clay render style, soft rounded shapes, vibrant pastel colors, tactile matte texture, miniature isometric scene illustrating {title}, visual metaphor for {topic}, cute playful aesthetic, studio lighting, C4D octane render style, clean background, high detail, no text',
   },
   {
     id: 'minimal-vector',
     name: '扁平矢量插画',
     description: '清晰线条、现代扁平几何图形与优雅留白',
     promptTemplate:
-      'Flat vector illustration, clean lines, minimalist modern graphic design, solid bold shapes, harmonious color palette, editorial style metaphor for {title}, white space, elegant composition, high resolution, vector graphics, no text',
+      'Flat vector illustration, clean lines, minimalist modern graphic design, solid bold shapes, harmonious color palette, editorial visual metaphor for {title} ({topic}), white space, elegant composition, high resolution, vector graphics, no text',
   },
   {
     id: 'cyberpunk-tech',
     name: '未来科技赛博',
     description: '黑曜底色、霓虹青紫辉光与全息科技几何',
     promptTemplate:
-      'Futuristic cyberpunk aesthetic, glowing neon cyan and magenta accents, holographic geometric elements, dark obsidian background, high-tech interface concept representing {title}, cinematic lighting, 8k render, unreal engine 5, detailed, no text',
+      'Futuristic cyberpunk aesthetic, glowing neon cyan and magenta accents, holographic geometric elements, dark obsidian background, high-tech interface concept representing {title}: {topic}, cinematic lighting, 8k render, unreal engine 5, detailed, no text',
   },
   {
     id: 'warm-healing',
     name: '温暖治愈手绘',
     description: '温馨水彩/水粉手绘质感与故事感意境',
     promptTemplate:
-      'Warm healing gouache illustration, hand-painted texture, cozy atmospheric lighting, soft pastel hues, comforting gentle metaphor for {title}, artistic storytelling, delicate brushstrokes, aesthetic wallpaper quality, no text',
+      'Warm healing gouache illustration, hand-painted texture, cozy atmospheric lighting, soft pastel hues, comforting gentle storytelling for {title}, conveying {topic}, artistic brushstrokes, aesthetic wallpaper quality, no text',
   },
   {
     id: 'editorial-magazine',
     name: '新潮杂志封面',
     description: '先锋艺术构图、大色块撞色与杂志海报视觉',
     promptTemplate:
-      'Contemporary editorial magazine cover background, bold modern abstract composition, sophisticated color blocking, high fashion elegance, conceptual visual metaphor representing {title}, museum poster quality, sleek clean aesthetic, no text',
+      'Contemporary editorial magazine cover background, bold modern abstract composition, sophisticated color blocking, high fashion elegance, conceptual visual metaphor representing {title} and {topic}, museum poster quality, sleek clean aesthetic, no text',
   },
   {
     id: 'custom',
     name: '自定义 Prompt',
-    description: '完全由用户编写提示词，支持 {title} / {excerpt} 变量',
-    promptTemplate: '{title}',
+    description: '完全由用户编写提示词，支持 {topic} / {title} / {excerpt} 变量',
+    promptTemplate: '{topic}',
   },
 ];
 
@@ -123,7 +123,7 @@ export function resolveCardCoverPrompt(options = {}) {
 
   let template = '';
   if (styleId === 'custom') {
-    template = (customPrompt && customPrompt.trim()) ? customPrompt.trim() : '{title}';
+    template = (customPrompt && customPrompt.trim()) ? customPrompt.trim() : '{topic}';
   } else {
     const matched = AI_CARD_COVER_STYLES.find((s) => s.id === styleId);
     template = matched ? matched.promptTemplate : AI_CARD_COVER_STYLES[0].promptTemplate;
@@ -135,11 +135,12 @@ export function resolveCardCoverPrompt(options = {}) {
   const safeTitle = (title || '精选笔记').replace(/[\r\n]+/g, ' ').trim();
   const safeExcerpt = (excerpt || '').replace(/[\r\n]+/g, ' ').slice(0, 100).trim();
   const safeTopic = (topic || '').replace(/[\r\n]+/g, ' ').trim();
+  const effectiveTopic = safeTopic || safeExcerpt || safeTitle;
 
   return template
     .replace(/\{title\}/g, safeTitle)
     .replace(/\{excerpt\}/g, safeExcerpt)
-    .replace(/\{topic\}/g, safeTopic)
+    .replace(/\{topic\}/g, effectiveTopic)
     .trim();
 }
 

@@ -75,6 +75,25 @@ describe('Card AI Image Service (C06.2)', () => {
       expect(prompt).toContain('文章标题');
       expect(prompt).toContain('golden sunset lighting');
     });
+
+    it('falls back to title or excerpt when topic is not explicitly provided', () => {
+      const promptWithoutTopic = resolveCardCoverPrompt({
+        styleId: 'cyberpunk-tech',
+        title: '深入微前端架构',
+        excerpt: '探索现代组件拆分模式',
+      });
+
+      expect(promptWithoutTopic).toContain('深入微前端架构');
+      expect(promptWithoutTopic).toContain('探索现代组件拆分模式');
+      expect(promptWithoutTopic).not.toContain('{topic}');
+
+      const promptWithTitleOnly = resolveCardCoverPrompt({
+        styleId: 'warm-healing',
+        title: '治愈系日记',
+      });
+      expect(promptWithTitleOnly).toContain('治愈系日记');
+      expect(promptWithTitleOnly).not.toContain('{topic}');
+    });
   });
 
   describe('resolveCardImageDimensions', () => {
