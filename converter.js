@@ -1110,8 +1110,113 @@ ${macHeader}
     html = this.unwrapFigures(html); // Fix: Remove <p> wrappers from <figure> to prevent empty lines
     html = this.removeBlockquoteParagraphMargins(html); // Fix: Remove margins from <p> inside <blockquote> for vertical centering
     html = this.fixMathJaxTags(html); // Fix: Replace <mjx-container> with WeChat-compatible tags
+    html = this.normalizeFontTags(html); // Normalize <font> to <span style="..."> for WeChat compatibility
     html = this.sanitizeHtml(html); // Final security pass: Neutralize XSS and dangerous tags
     return `<section class="owc-article-root" style="${this.getInlineStyle('section')}">${html}</section>`;
+  }
+
+  /**
+   * 将旧式 <font> 标签转换为微信完全兼容的 <span style="..."> 标签
+   * 规范化 color、size、face 属性并保留已有行内样式
+   * @param {string} html
+   * @returns {string}
+   */
+  normalizeFontTags(html) {
+    if (typeof html !== 'string' || (!html.includes('<font') && !html.includes('<FONT'))) {
+      return html;
+    }
+
+    /** @type {Record<string, string>} */
+    const FONT_SIZE_MAP = {
+      '1': '10px',
+      '2': '13px',
+      '3': '16px',
+      '4': '18px',
+      '5': '24px',
+      '6': '32px',
+      '7': '48px',
+    };
+
+    const normalizeColor = (val) => {
+      if (!val || typeof val !== 'string') return '';
+      const trimmed = val.trim().replace(/^['"]+|['"]+$/g, '').trim();
+      const hexCandidate = /^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$|^[0-9a-fA-F]{8}$/.test(trimmed)
+        ? `#${trimmed}`
+        : trimmed;
+      if (/^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(hexCandidate)) {
+        return hexCandidate;
+      }
+      if (/^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*[\d.]+%?)?\s*\)$/i.test(hexCandidate)) {
+        return hexCandidate;
+      }
+      if (/^hsla?\(\s*\d+(?:deg|rad|turn)?\s*,\s*[\d.]+%?\s*,\s*[\d.]+%?(?:\s*,\s*[\d.]+%?)?\s*\)$/i.test(hexCandidate)) {
+        return hexCandidate;
+      }
+      if (/^[a-zA-Z]{3,20}$/.test(hexCandidate)) {
+        return hexCandidate.toLowerCase();
+      }
+      return '';
+    };
+
+    const normalizeSize = (val) => {
+      if (!val || typeof val !== 'string') return '';
+      const trimmed = val.trim().replace(/^['"]+|['"]+$/g, '').trim();
+      if (Object.prototype.hasOwnProperty.call(FONT_SIZE_MAP, trimmed)) {
+        return FONT_SIZE_MAP[trimmed] || '';
+      }
+      if (/^\d+(?:\.\d+)?(?:px|pt|em|rem|%)$/i.test(trimmed)) return trimmed;
+      return '';
+    };
+
+    const normalizeFace = (val) => {
+      if (!val || typeof val !== 'string') return '';
+      const trimmed = val.trim().replace(/^['"]+|['"]+$/g, '').trim();
+      if (/^[a-zA-Z0-9\u4e00-\u9fa5\s,'"-]+$/.test(trimmed)) {
+        return trimmed;
+      }
+      return '';
+    };
+
+    const replacedOpen = html.replace(/<font\b([^>]*)>/gi, (_match, attrs) => {
+      const rawAttrs = String(attrs || '');
+      const colorMatch = rawAttrs.match(/\bcolor\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+      const sizeMatch = rawAttrs.match(/\bsize\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+      const faceMatch = rawAttrs.match(/\bface\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+      const styleMatch = rawAttrs.match(/\bstyle\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+
+      const color = colorMatch ? (colorMatch[1] || colorMatch[2] || colorMatch[3] || '') : '';
+      const size = sizeMatch ? (sizeMatch[1] || sizeMatch[2] || sizeMatch[3] || '') : '';
+      const face = faceMatch ? (faceMatch[1] || faceMatch[2] || faceMatch[3] || '') : '';
+      const existingStyle = styleMatch ? (styleMatch[1] || styleMatch[2] || styleMatch[3] || '') : '';
+
+      const styleParts = [];
+      if (existingStyle) {
+        const trimmed = existingStyle.trim().replace(/;+$/, '');
+        if (trimmed) styleParts.push(trimmed);
+      }
+      const validColor = normalizeColor(color);
+      if (validColor) {
+        styleParts.push(`color: ${validColor}`);
+      }
+      const validSize = normalizeSize(size);
+      if (validSize) {
+        styleParts.push(`font-size: ${validSize}`);
+      }
+      const validFace = normalizeFace(face);
+      if (validFace) {
+        styleParts.push(`font-family: ${validFace}`);
+      }
+
+      const otherAttrs = rawAttrs
+        .replace(/\b(?:color|size|face|style)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+        .trim();
+
+      const styleAttr = styleParts.length > 0 ? ` style="${styleParts.join('; ')};"` : '';
+      const otherAttrStr = otherAttrs ? ` ${otherAttrs}` : '';
+      return `<span${styleAttr}${otherAttrStr}>`;
+    });
+
+    return replacedOpen.replace(/<\/font>/gi, '</span>');
   }
 
   /**

@@ -255,6 +255,57 @@ function pruneObsidianOnlyAttributes(container, { finalStage = false } = {}) {
   });
 }
 
+/** @type {Record<string, string>} */
+const FONT_SIZE_MAP = {
+  '1': '10px',
+  '2': '13px',
+  '3': '16px',
+  '4': '18px',
+  '5': '24px',
+  '6': '32px',
+  '7': '48px',
+};
+
+function normalizeColorValue(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  const trimmed = raw.trim().replace(/^['"]+|['"]+$/g, '').trim();
+  const hexCandidate = /^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$|^[0-9a-fA-F]{8}$/.test(trimmed)
+    ? `#${trimmed}`
+    : trimmed;
+  if (/^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(hexCandidate)) {
+    return hexCandidate;
+  }
+  if (/^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*[\d.]+%?)?\s*\)$/i.test(hexCandidate)) {
+    return hexCandidate;
+  }
+  if (/^hsla?\(\s*\d+(?:deg|rad|turn)?\s*,\s*[\d.]+%?\s*,\s*[\d.]+%?(?:\s*,\s*[\d.]+%?)?\s*\)$/i.test(hexCandidate)) {
+    return hexCandidate;
+  }
+  if (/^[a-zA-Z]{3,20}$/.test(hexCandidate)) {
+    return hexCandidate.toLowerCase();
+  }
+  return '';
+}
+
+function normalizeFontSizeValue(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  const trimmed = raw.trim().replace(/^['"]+|['"]+$/g, '').trim();
+  if (Object.prototype.hasOwnProperty.call(FONT_SIZE_MAP, trimmed)) {
+    return FONT_SIZE_MAP[trimmed] || '';
+  }
+  if (/^\d+(?:\.\d+)?(?:px|pt|em|rem|%)$/i.test(trimmed)) return trimmed;
+  return '';
+}
+
+function normalizeFontFaceValue(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  const trimmed = raw.trim().replace(/^['"]+|['"]+$/g, '').trim();
+  if (/^[a-zA-Z0-9\u4e00-\u9fa5\s,'"-]+$/.test(trimmed)) {
+    return trimmed;
+  }
+  return '';
+}
+
 /**
  * @param {Element | null | undefined} container
  */
@@ -262,6 +313,7 @@ function normalizeLegacyTagAliases(container) {
   if (!container) return;
   const activeDocument = getActiveDocument();
   if (!activeDocument) return;
+
   const strikeTags = Array.from(container.querySelectorAll('s'));
   for (const sEl of strikeTags) {
     const del = activeDocument.createElement('del');
@@ -274,6 +326,53 @@ function normalizeLegacyTagAliases(container) {
       del.appendChild(sEl.firstChild);
     }
     sEl.replaceWith(del);
+  }
+
+  const fontTags = Array.from(container.querySelectorAll('font')).reverse();
+  for (const fontEl of fontTags) {
+    if (fontEl.closest?.('svg')) {
+      continue;
+    }
+    const span = activeDocument.createElement('span');
+    const color = fontEl.getAttribute('color');
+    const size = fontEl.getAttribute('size');
+    const face = fontEl.getAttribute('face');
+    const existingStyle = fontEl.getAttribute('style') || '';
+
+    const styleParts = [];
+    if (existingStyle) {
+      const trimmed = existingStyle.trim().replace(/;+$/, '');
+      if (trimmed) styleParts.push(trimmed);
+    }
+    const normalizedColor = normalizeColorValue(color);
+    if (normalizedColor) {
+      styleParts.push(`color: ${normalizedColor}`);
+    }
+    const normalizedSize = normalizeFontSizeValue(size);
+    if (normalizedSize) {
+      styleParts.push(`font-size: ${normalizedSize}`);
+    }
+    const normalizedFace = normalizeFontFaceValue(face);
+    if (normalizedFace) {
+      styleParts.push(`font-family: ${normalizedFace}`);
+    }
+
+    if (fontEl.hasAttributes()) {
+      Array.from(fontEl.attributes).forEach((attr) => {
+        const name = attr.name.toLowerCase();
+        if (name === 'color' || name === 'size' || name === 'face' || name === 'style') return;
+        span.setAttribute(attr.name, attr.value);
+      });
+    }
+
+    if (styleParts.length > 0) {
+      span.setAttribute('style', `${styleParts.join('; ')};`);
+    }
+
+    while (fontEl.firstChild) {
+      span.appendChild(fontEl.firstChild);
+    }
+    fontEl.replaceWith(span);
   }
 }
 

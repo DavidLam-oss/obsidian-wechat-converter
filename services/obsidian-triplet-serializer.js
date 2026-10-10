@@ -101,6 +101,7 @@ import {
  *   unwrapFigures?: (html: string) => string,
  *   removeBlockquoteParagraphMargins?: (html: string) => string,
  *   fixMathJaxTags?: (html: string) => string,
+ *   normalizeFontTags?: (html: string) => string,
  *   sanitizeHtml?: (html: string) => string,
  *   showImageCaption?: boolean,
  *   avatarUrl?: string,
@@ -349,9 +350,9 @@ function serializeObsidianRenderedHtml({
   promoteImageEmbedAltHints(container);
   convertObsidianImageSwipeCallouts(container);
   convertObsidianCalloutsToLegacy(container, converter);
-  pruneObsidianOnlyAttributes(container, { finalStage: false });
   normalizeLegacyTagAliases(container);
   normalizeLegacyDeleteNesting(container);
+  pruneObsidianOnlyAttributes(container, { finalStage: false });
   stripDangerousTags(container, { preserveSvgStyleTags });
   // Render math formulas that Obsidian's MarkdownRenderer didn't process
   renderUnresolvedMathFormulas(container, converter);

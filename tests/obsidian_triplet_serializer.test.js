@@ -456,4 +456,56 @@ describe('Obsidian Triplet Serializer core', () => {
     expect(html).toContain('删除线： <del');
     expect(html).not.toContain('</del> <del');
   });
+
+  it('should normalize font tags with color and size to span elements with inline styles', () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<p>这是 <font color="#F36208">橙色文字</font> 和 <font color=#123456>无引号色值</font> 和 <font color="red" size="4">大红字</font></p>';
+
+    const html = serializeObsidianRenderedHtml({ root, converter });
+    expect(html).not.toContain('<font');
+    expect(html).not.toContain('</font>');
+    expect(html).toContain('<span style="color: #F36208;">橙色文字</span>');
+    expect(html).toContain('<span style="color: #123456;">无引号色值</span>');
+    expect(html).toContain('color: red;');
+    expect(html).toContain('font-size: 18px;');
+  });
+
+  it('should handle nested font tags and sanitize unsafe font colors in triplet serializer', () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<p><font color="red"><font color="blue">嵌套变色</font></font> <font color="javascript:alert(1)">恶意内容</font></p>';
+
+    const html = serializeObsidianRenderedHtml({ root, converter });
+    expect(html).not.toContain('<font');
+    expect(html).toContain('<span style="color: red;"><span style="color: blue;">嵌套变色</span></span>');
+    expect(html).not.toContain('javascript:alert(1)');
+    expect(html).toContain('<span>恶意内容</span>');
+  });
+
+  it('should preserve existing styles when normalizing font tags', () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<p><font style="font-weight: bold" color="#00ff00">加粗绿色</font></p>';
+
+    const html = serializeObsidianRenderedHtml({ root, converter });
+    expect(html).toContain('font-weight: bold;');
+    expect(html).toContain('color: #00ff00;');
+  });
+
+  it('converter.normalizeFontTags should transform font tags into inline style spans', () => {
+    expect(typeof converter.normalizeFontTags).toBe('function');
+    const input = '<p>测试 <font color="#F36208">橙色</font> 和 <font color=red size="3" face="Arial">红色字体</font></p>';
+    const output = converter.normalizeFontTags(input);
+    expect(output).not.toContain('<font');
+    expect(output).toContain('<span style="color: #F36208;">橙色</span>');
+    expect(output).toContain('color: red;');
+    expect(output).toContain('font-size: 16px;');
+    expect(output).toContain('font-family: Arial;');
+  });
+
+  it('should not normalize font elements inside svg', () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<svg><foreignObject><font color="blue">svg-font</font></foreignObject></svg>';
+
+    const html = serializeObsidianRenderedHtml({ root, converter });
+    expect(html).toContain('<font');
+  });
 });
