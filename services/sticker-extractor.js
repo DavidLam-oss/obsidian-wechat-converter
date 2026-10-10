@@ -307,6 +307,7 @@ export {
   STICKER_MAX_IMAGES,
   STICKER_MAX_TITLE_LENGTH,
   STICKER_MAX_CONTENT_LENGTH,
+  stripNonBodyImageRegions,
   extractMarkdownImageItems,
   extractMarkdownImageSources,
   reconcileStickerImageOrder,

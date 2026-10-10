@@ -134,6 +134,21 @@ describe('deriveCoverFields：初值派生', () => {
     expect(fields.coverImageSource).toBe('note');
   });
 
+  it('正文首图自动探查智能跳过赞赏码、徽章与小图标，准确采纳正文真配图', () => {
+    const md = [
+      '# 深度好文',
+      '![赞赏码](img/reward_qr.png)',
+      '![Build Status](https://img.shields.io/badge/build-passing-brightgreen)',
+      '![头像](https://example.com/avatar.jpg)',
+      '![真正的文章配图](img/hero_feature.png)',
+      '![文末打赏](img/donate.png)',
+    ].join('\n');
+    const fields = deriveCoverFields({ markdown: md, sourcePath: 'Article.md' });
+    expect(fields.coverImage).toBe('img/hero_feature.png');
+    expect(fields.coverMode).toBe('adaptive');
+    expect(fields.coverImageSource).toBe('note');
+  });
+
   it('正文无图时，封面配图为空且 coverMode 保持 none', () => {
     const md = '# 纯文字文章\n\n这里没有任何图片，只有文字。';
     const fields = deriveCoverFields({ markdown: md, sourcePath: 'text.md' });

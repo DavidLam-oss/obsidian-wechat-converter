@@ -640,6 +640,50 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
       expect(generateBtn?.textContent).toBe('开始生成封面');
     });
 
+    it('打开弹窗时正确回显 session 中已保存的 coverImageStyle 与 coverPrompt', () => {
+      const container = applyExtensions(document.createElement('div'));
+      const mockSession = {
+        getCoverFields: vi.fn().mockReturnValue({
+          coverImageStyle: 'cyberpunk-tech',
+          coverPrompt: '用户之前自定义保存的提示词内容',
+          title: '已存文章标题',
+        }),
+      };
+      const mockView = {
+        plugin: {
+          settings: {
+            ai: {
+              providers: [
+                {
+                  id: 'p-1',
+                  name: 'OpenAI 图像服务',
+                  enabled: true,
+                  apiKey: 'sk-123',
+                  supportsImage: true,
+                  imageModel: 'dall-e-3',
+                },
+              ],
+              defaultImageProviderId: 'p-1',
+            },
+          },
+        },
+        getCardSettingsSession: vi.fn().mockReturnValue(mockSession),
+      };
+
+      renderAiMediaPickerTab({
+        container,
+        view: mockView,
+        ratioId: '3:4',
+        onSelect: vi.fn(),
+      });
+
+      const techCard = container.querySelector('.card-media-picker-ai-card.is-selected');
+      expect(techCard?.textContent).toContain('未来科技');
+
+      const textarea = container.querySelector('.card-media-picker-prompt-textarea');
+      expect(textarea?.value).toBe('用户之前自定义保存的提示词内容');
+    });
+
     it('点击开始生成封面时透传正确的提示词与比例并调用生图服务', async () => {
       const container = applyExtensions(document.createElement('div'));
       const mockView = {

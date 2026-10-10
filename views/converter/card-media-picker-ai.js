@@ -74,7 +74,7 @@ function extractArticleSummary(view, currentFields) {
  * @param {() => void} [options.onClose] 关闭弹窗回调
  * @param {() => void} [options.onOpenSettings] 打开设置回调
  */
-export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, _onClose, onOpenSettings }) {
+export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onClose, onOpenSettings }) {
   container.empty();
 
   const aiSettings = view.plugin?.settings?.ai;
@@ -93,6 +93,9 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, _on
       text: '前往设置配置生图模型',
     });
     setBtn.addEventListener('click', () => {
+      if (typeof onClose === 'function') {
+        onClose();
+      }
       if (typeof onOpenSettings === 'function') {
         onOpenSettings();
       }
@@ -109,7 +112,7 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, _on
   container.createDiv({ cls: 'card-media-picker-section-title', text: '预设画面风格' });
   const stylesGrid = container.createDiv({ cls: 'card-media-picker-ai-styles' });
 
-  let selectedStyleId = currentCoverFields.aiCoverStyleId || AI_CARD_COVER_STYLES[0].id;
+  let selectedStyleId = currentCoverFields.coverImageStyle || AI_CARD_COVER_STYLES[0].id;
 
   const styleCards = [];
   AI_CARD_COVER_STYLES.forEach((style) => {
@@ -249,7 +252,7 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, _on
 
   topicInput.addEventListener('input', syncPrompt);
 
-  promptTextarea.value = currentCoverFields.aiCoverPrompt || '';
+  promptTextarea.value = currentCoverFields.coverPrompt || '';
   if (!promptTextarea.value) {
     syncPrompt();
   }

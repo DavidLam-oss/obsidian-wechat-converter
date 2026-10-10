@@ -117,6 +117,7 @@ export function showCardMediaPickerModal({ view, initialTab, onSelect }) {
           container: panes.ai,
           view,
           ratioId,
+          // AI 绘图工作台支持多图即点即选并保持弹窗开启以便继续对比与微调，故不自动 close modal
           onSelect: (result) => {
             if (typeof onSelect === 'function') {
               onSelect(result);
