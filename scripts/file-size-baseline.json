@@ -1,0 +1,21 @@
+{
+  "note": "Auto-maintained by scripts/check-file-size-baseline.mjs. Values are frozen upper bounds for first-party source files at or above the soft limit. This check never lets a file grow past its bound; `--update` can only lower bounds, add newly-qualifying files, or prune deleted files.",
+  "softLimit": 800,
+  "files": {
+    "converter.js": 1543,
+    "services/ai-layout/generation.js": 1041,
+    "services/ai-layout/prompt-context.js": 927,
+    "services/article-image-assets.js": 1067,
+    "services/card-themes.js": 997,
+    "services/feishu-api.js": 801,
+    "services/obsidian-triplet-renderer-images.js": 814,
+    "services/obsidian-triplet-renderer.js": 1023,
+    "services/wechatsync-bridge.js": 1524,
+    "styles/ai-layout.css": 835,
+    "styles/wechat-settings.css": 804,
+    "views/converter/ai-layout-debug.js": 926,
+    "views/converter/ai-layout-panel.js": 1041,
+    "views/converter/core.js": 1173,
+    "views/settings/multi-platform-tab.js": 1017
+  }
+}
