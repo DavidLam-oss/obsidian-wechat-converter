@@ -39,42 +39,42 @@ import { getActiveWindowValue } from './dom-utils.js';
 export const AI_CARD_COVER_STYLES = [
   {
     id: '3d-clay',
-    name: '3D 粘土质感',
-    description: '立体软萌、微缩景观、黏土材质与柔和棚拍光',
+    name: '3D 粘土',
+    description: '立体软萌、微缩景观与哑光磨砂质感',
     promptTemplate:
-      '3D clay render style, soft rounded shapes, vibrant pastel colors, tactile matte texture, miniature isometric scene illustrating {title}, visual metaphor for {topic}, cute playful aesthetic, studio lighting, C4D octane render style, clean background, high detail, no text',
+      '3D 黏土微缩场景，柔和圆润造型，马卡龙暖色调，哑光磨砂黏土质感，棚拍柔光照明，C4D 渲染风格，微缩景观展现主题：{topic}，纯净背景，超清细节，画面无文字',
   },
   {
     id: 'minimal-vector',
-    name: '扁平矢量插画',
-    description: '清晰线条、现代扁平几何图形与优雅留白',
+    name: '扁平矢量',
+    description: '清晰线条、几何色块与优雅留白',
     promptTemplate:
-      'Flat vector illustration, clean lines, minimalist modern graphic design, solid bold shapes, harmonious color palette, editorial visual metaphor for {title} ({topic}), white space, elegant composition, high resolution, vector graphics, no text',
+      '扁平矢量插画风格，极简现代设计，线条利落流畅，高雅撞色与留白构图，视觉化隐喻表达：{topic}，杂志海报质感，矢量图形，超清画质，画面无文字',
   },
   {
     id: 'cyberpunk-tech',
-    name: '未来科技赛博',
-    description: '黑曜底色、霓虹青紫辉光与全息科技几何',
+    name: '未来科技',
+    description: '黑曜底色、全息几何与霓虹科技感',
     promptTemplate:
-      'Futuristic cyberpunk aesthetic, glowing neon cyan and magenta accents, holographic geometric elements, dark obsidian background, high-tech interface concept representing {title}: {topic}, cinematic lighting, 8k render, unreal engine 5, detailed, no text',
+      '未来主义赛博朋克科技感，深色黑曜背景，霓虹青紫辉光与全息光效，几何科技线条，概念化科技场景诠释：{topic}，电影级光影，超清细节，画面无文字',
   },
   {
     id: 'warm-healing',
-    name: '温暖治愈手绘',
-    description: '温馨水彩/水粉手绘质感与故事感意境',
+    name: '温暖手绘',
+    description: '温馨水彩水粉手绘质感与治愈意境',
     promptTemplate:
-      'Warm healing gouache illustration, hand-painted texture, cozy atmospheric lighting, soft pastel hues, comforting gentle storytelling for {title}, conveying {topic}, artistic brushstrokes, aesthetic wallpaper quality, no text',
+      '温馨治愈水粉水彩手绘风，细腻笔触与纸张纹理，温润柔和暖光，治愈系慢生活意境，故事感画面呼应：{topic}，唯美插画壁纸质感，画面无文字',
   },
   {
     id: 'editorial-magazine',
-    name: '新潮杂志封面',
-    description: '先锋艺术构图、大色块撞色与杂志海报视觉',
+    name: '新潮杂志',
+    description: '先锋艺术构图、撞色大色块与杂志海报',
     promptTemplate:
-      'Contemporary editorial magazine cover background, bold modern abstract composition, sophisticated color blocking, high fashion elegance, conceptual visual metaphor representing {title} and {topic}, museum poster quality, sleek clean aesthetic, no text',
+      '当代艺术先锋杂志封面背景，大胆现代抽象几何构图，高级撞色色块，前卫高级感，视觉概念象征：{topic}，美术馆海报美学，纯净大气，画面无文字',
   },
   {
     id: 'custom',
-    name: '自定义 Prompt',
+    name: '自定义',
     description: '完全由用户编写提示词，支持 {topic} / {title} / {excerpt} 变量',
     promptTemplate: '{topic}',
   },
@@ -135,7 +135,7 @@ export function resolveCardCoverPrompt(options = {}) {
   const safeTitle = (title || '精选笔记').replace(/[\r\n]+/g, ' ').trim();
   const safeExcerpt = (excerpt || '').replace(/[\r\n]+/g, ' ').slice(0, 100).trim();
   const safeTopic = (topic || '').replace(/[\r\n]+/g, ' ').trim();
-  const effectiveTopic = safeTopic || safeExcerpt || safeTitle;
+  const effectiveTopic = safeTopic || (safeExcerpt ? `${safeTitle} (${safeExcerpt})` : safeTitle);
 
   return template
     .replace(/\{title\}/g, safeTitle)
@@ -609,4 +609,68 @@ export async function generateCardCoverImage(options) {
   } finally {
     if (timer) clearTimeoutFn(timer);
   }
+}
+
+/**
+ * 使用配置的文本 AI Provider 智能提炼文章视觉核心观点
+ * @param {object} options
+ * @param {any} options.provider 文本 AI Provider
+ * @param {string} options.title 文章标题
+ * @param {string} options.content 文章正文或摘要内容
+ * @param {((options: Record<string, unknown>) => Promise<unknown>) | null} [options.requestUrlFn]
+ * @returns {Promise<string>}
+ */
+export async function extractVisualTopicWithAi(options) {
+  const {
+    provider,
+    title = '',
+    content = '',
+    requestUrlFn: injectedRequestUrl = null,
+  } = options || {};
+
+  if (!provider || !provider.baseUrl || !provider.apiKey) {
+    throw new Error('未配置可用的文本 AI Provider，请检查【AI 服务】设置');
+  }
+
+  const textModel = provider.textModel || provider.model || 'gpt-4o-mini';
+  const requestUrlFn = typeof injectedRequestUrl === 'function' ? injectedRequestUrl : getObsidianRequestUrl();
+  const cleanContent = String(content || '').slice(0, 2500);
+
+  const systemPrompt = '你是一位视觉设计与小红书封面策划专家。请根据用户提供的文章标题和内容，提炼出最核心、最具画面感的一句话视觉主题意象。要求：20字以内，语言生动形象，适合交给生图模型绘制，直接输出该短句，不要输出任何引言、解释、标点或序号。';
+  const userPrompt = `文章标题：${title || '无标题'}\n\n文章内容摘要：${cleanContent}`;
+
+  const payload = {
+    model: textModel,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    temperature: 0.5,
+    stream: false,
+  };
+
+  const resp = await performHttpRequest({
+    url: `${provider.baseUrl.replace(/\/+$/, '')}/chat/completions`,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${provider.apiKey}`,
+    },
+    body: payload,
+    requestUrlFn,
+  });
+
+  const respJson = /** @type {Record<string, any>} */ (resp.json || {});
+  if (resp.status >= 400) {
+    const msg = respJson?.error?.message || resp.text || `HTTP ${resp.status}`;
+    throw new Error(`AI 提炼失败: ${msg}`);
+  }
+
+  const choice = respJson.choices?.[0];
+  const text = choice?.message?.content || choice?.delta?.content || '';
+  const trimmed = String(text || '').replace(/^["'“”‘’\s]+|["'“”‘’\s]+$/g, '').trim();
+  if (!trimmed) {
+    throw new Error('AI 未返回有效提炼内容');
+  }
+  return trimmed;
 }

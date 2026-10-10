@@ -181,7 +181,6 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
       const onSelect = vi.fn();
       showCardMediaPickerModal({
         view: mockView,
-        initialTab: 'unsplash',
         onSelect,
       });
 
@@ -197,20 +196,20 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
 
       const tabs = Array.from(contentEl.querySelectorAll('.card-media-picker-tab-btn'));
       expect(tabs.map((t) => t.textContent)).toEqual([
-        'Unsplash 摄影',
         '笔记与本地',
         'AI 生图',
+        'Unsplash 摄影',
       ]);
 
-      // 默认初始选中 Unsplash
+      // 默认初始选中「笔记与本地」
       expect(tabs[0].classList.contains('is-active')).toBe(true);
 
-      // 模拟点击切换到「笔记与本地」
+      // 模拟点击切换到「AI 生图」
       tabs[1].dispatchEvent(new MouseEvent('click'));
       expect(tabs[1].classList.contains('is-active')).toBe(true);
       expect(tabs[0].classList.contains('is-active')).toBe(false);
 
-      // 模拟点击切换到「AI 生图」
+      // 模拟点击切换到「Unsplash 摄影」
       tabs[2].dispatchEvent(new MouseEvent('click'));
       expect(tabs[2].classList.contains('is-active')).toBe(true);
     });
@@ -248,13 +247,13 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
       const input = unsplashPane?.querySelector('.card-media-picker-search-input');
       if (input) input.value = '测试保留搜索词';
 
-      // 切换到笔记与本地
-      tabs[1].dispatchEvent(new MouseEvent('click'));
+      // 切换到笔记与本地（tabs[0]）
+      tabs[0].dispatchEvent(new MouseEvent('click'));
       expect(unsplashPane?.classList.contains('is-hidden')).toBe(true);
       expect(notePane?.classList.contains('is-hidden')).toBe(false);
 
-      // 切回 Unsplash
-      tabs[0].dispatchEvent(new MouseEvent('click'));
+      // 切回 Unsplash（tabs[2]）
+      tabs[2].dispatchEvent(new MouseEvent('click'));
       expect(unsplashPane?.classList.contains('is-hidden')).toBe(false);
       expect(notePane?.classList.contains('is-hidden')).toBe(true);
       // 输入框内容原样保留，没有被清空重载

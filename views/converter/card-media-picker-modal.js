@@ -18,13 +18,13 @@ import { renderUnsplashMediaPickerTab } from './card-media-picker-unsplash.js';
 import { renderNoteMediaPickerTab } from './card-media-picker-note.js';
 import { renderAiMediaPickerTab } from './card-media-picker-ai.js';
 
-let lastActiveTabId = 'unsplash';
+let lastActiveTabId = 'note';
 
 /**
  * 弹出封面独立选图工作台
  * @param {object} options
  * @param {any} options.view AppleStyleView 实例
- * @param {string} [options.initialTab] 初始 Tab ID ('unsplash' | 'note' | 'ai')
+ * @param {string} [options.initialTab] 初始 Tab ID ('note' | 'ai' | 'unsplash')
  * @param {(result: { dataUrl: string, source: string }) => void} options.onSelect 选定图片后的回调
  */
 export function showCardMediaPickerModal({ view, initialTab, onSelect }) {
@@ -40,19 +40,19 @@ export function showCardMediaPickerModal({ view, initialTab, onSelect }) {
 
   const tabsWrap = header.createDiv({ cls: 'card-media-picker-tabs' });
   const tabs = [
-    { id: 'unsplash', label: 'Unsplash 摄影' },
     { id: 'note', label: '笔记与本地' },
     { id: 'ai', label: 'AI 生图' },
+    { id: 'unsplash', label: 'Unsplash 摄影' },
   ];
 
-  let currentTab = initialTab || lastActiveTabId || 'unsplash';
+  let currentTab = initialTab || lastActiveTabId || 'note';
 
   // 2. 主体内容容器与独立 Tab 面板（保持各自渲染状态，切换时不销毁重载）
   const contentContainer = modal.contentEl.createDiv({ cls: 'card-media-picker-content' });
   const panes = {
-    unsplash: contentContainer.createDiv({ cls: 'card-media-picker-pane card-media-picker-pane--unsplash' }),
     note: contentContainer.createDiv({ cls: 'card-media-picker-pane card-media-picker-pane--note' }),
     ai: contentContainer.createDiv({ cls: 'card-media-picker-pane card-media-picker-pane--ai' }),
+    unsplash: contentContainer.createDiv({ cls: 'card-media-picker-pane card-media-picker-pane--unsplash' }),
   };
   const renderedPanes = new Set();
 

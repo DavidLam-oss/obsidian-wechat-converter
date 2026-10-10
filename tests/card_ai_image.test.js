@@ -26,6 +26,7 @@ import {
   resolveCardCoverPrompt,
   resolveCardImageDimensions,
   generateCardCoverImage,
+  extractVisualTopicWithAi,
 } from '../services/card-ai-image.js';
 
 describe('Card AI Image Service (C06.2)', () => {
@@ -48,10 +49,11 @@ describe('Card AI Image Service (C06.2)', () => {
         topic: '知识管理',
       });
 
-      expect(prompt).toContain('我的Obsidian工作流');
-      expect(prompt).toContain('3D clay render style');
+      expect(prompt).toContain('知识管理');
+      expect(prompt).toContain('3D 黏土微缩场景');
       expect(prompt).not.toContain('{title}');
       expect(prompt).not.toContain('{excerpt}');
+      expect(prompt).not.toContain('{topic}');
     });
 
     it('handles custom style with user prompt', () => {
@@ -71,7 +73,7 @@ describe('Card AI Image Service (C06.2)', () => {
         title: '文章标题',
       });
 
-      expect(prompt).toContain('Flat vector illustration');
+      expect(prompt).toContain('扁平矢量插画风格');
       expect(prompt).toContain('文章标题');
       expect(prompt).toContain('golden sunset lighting');
     });
@@ -380,6 +382,52 @@ describe('Card AI Image Service (C06.2)', () => {
       expect(fallbackBody.size).toBe('3:4');
       expect(fallbackBody).not.toHaveProperty('response_format');
       expect(result).toMatch(/^data:image\/png;base64,/);
+    });
+  });
+
+  describe('extractVisualTopicWithAi', () => {
+    it('successfully extracts visual topic using text model', async () => {
+      const mockRequestUrl = vi.fn().mockResolvedValue({
+        status: 200,
+        json: {
+          choices: [
+            { message: { content: '赛博全息城市与30K创作者庆典' } },
+          ],
+        },
+      });
+
+      const topic = await extractVisualTopicWithAi({
+        provider: {
+          name: 'Text Provider',
+          baseUrl: 'https://api.example.com/v1',
+          apiKey: 'key_123',
+          textModel: 'gpt-4o-mini',
+        },
+        title: 'WeChat Converter 30K',
+        content: '中秋国庆双节活动，终身 Pro 调回最初的 99 元...',
+        requestUrlFn: mockRequestUrl,
+      });
+
+      expect(topic).toBe('赛博全息城市与30K创作者庆典');
+      expect(mockRequestUrl).toHaveBeenCalledTimes(1);
+      expect(mockRequestUrl.mock.calls[0][0].url).toBe('https://api.example.com/v1/chat/completions');
+    });
+
+    it('handles failure when provider returns error status', async () => {
+      const mockRequestUrl = vi.fn().mockResolvedValue({
+        status: 401,
+        json: { error: { message: 'Invalid API key' } },
+      });
+
+      await expect(extractVisualTopicWithAi({
+        provider: {
+          baseUrl: 'https://api.example.com/v1',
+          apiKey: 'wrong_key',
+        },
+        title: 'Title',
+        content: 'Content',
+        requestUrlFn: mockRequestUrl,
+      })).rejects.toThrow('AI 提炼失败: Invalid API key');
     });
   });
 });

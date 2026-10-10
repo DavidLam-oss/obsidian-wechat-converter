@@ -20,9 +20,11 @@ import {
   AI_CARD_COVER_STYLES,
   resolveCardCoverPrompt,
   generateCardCoverImage,
+  extractVisualTopicWithAi,
 } from '../../services/card-ai-image.js';
 import {
   resolveImageAiProvider,
+  resolveAiProvider,
   isAiProviderRunnable,
 } from '../../services/ai-layout/providers.js';
 import { resolveNoteMarkdownAndPathSync } from './card-media-picker-note.js';
@@ -115,7 +117,6 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, _on
       cls: `card-media-picker-ai-card ${style.id === selectedStyleId ? 'is-selected' : ''}`,
     });
     card.createDiv({ cls: 'card-media-picker-ai-card-name', text: style.name });
-    card.createDiv({ cls: 'card-media-picker-ai-card-desc', text: style.description });
 
     card.addEventListener('click', () => {
       selectedStyleId = style.id;
@@ -123,13 +124,51 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, _on
         c.removeClass('is-selected');
       });
       card.addClass('is-selected');
+      if (selectedStyleId === 'custom') {
+        hintBox.removeClass('is-hidden');
+      } else {
+        hintBox.addClass('is-hidden');
+      }
       syncPrompt();
     });
     styleCards.push(card);
   });
 
   // 2. 画面核心观点与主题输入
-  container.createDiv({ cls: 'card-media-picker-section-title', text: '画面核心观点与主题' });
+  const topicHeader = container.createDiv({ cls: 'card-media-picker-topic-header' });
+  topicHeader.createDiv({ cls: 'card-media-picker-section-title', text: '画面核心观点与主题' });
+
+  const textProvider = resolveAiProvider(aiSettings);
+  const isTextRunnable = isAiProviderRunnable(textProvider, 'text');
+  if (isTextRunnable) {
+    const extractBtn = topicHeader.createEl('button', {
+      cls: 'card-media-picker-ai-extract-btn',
+      text: '✨ AI 提炼观点',
+      attr: { type: 'button' },
+    });
+    extractBtn.addEventListener('click', async () => {
+      extractBtn.disabled = true;
+      extractBtn.textContent = '提炼中...';
+      try {
+        const { markdown } = resolveNoteMarkdownAndPathSync(view);
+        const aiTopic = await extractVisualTopicWithAi({
+          provider: textProvider,
+          title: docTitle,
+          content: markdown || docExcerpt,
+        });
+        topicInput.value = aiTopic;
+        syncPrompt();
+        new Notice('AI 已提炼视觉核心观点并同步提示词');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        new Notice(`AI 提炼失败: ${msg}`);
+      } finally {
+        extractBtn.disabled = false;
+        extractBtn.textContent = '✨ AI 提炼观点';
+      }
+    });
+  }
+
   const topicInput = /** @type {HTMLInputElement} */ (
     /** @type {unknown} */ (container.createEl('input', {
       type: 'text',
@@ -141,12 +180,42 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, _on
 
   // 3. 画面描述词 Prompt
   container.createDiv({ cls: 'card-media-picker-section-title', text: '画面描述词 (Prompt)' });
+
+  const hintBox = container.createDiv({
+    cls: `card-media-picker-hint ${selectedStyleId === 'custom' ? '' : 'is-hidden'}`,
+  });
+  hintBox.createSpan({ text: '💡 提示：支持变量 ' });
+
+  const varTopic = hintBox.createEl('code', { cls: 'card-media-picker-hint-var', text: '{topic}' });
+  varTopic.title = '点击插入 {topic}（核心主题）';
+  hintBox.createSpan({ text: '主题、' });
+
+  const varTitle = hintBox.createEl('code', { cls: 'card-media-picker-hint-var', text: '{title}' });
+  varTitle.title = '点击插入 {title}（文章标题）';
+  hintBox.createSpan({ text: '标题、' });
+
+  const varExcerpt = hintBox.createEl('code', { cls: 'card-media-picker-hint-var', text: '{excerpt}' });
+  varExcerpt.title = '点击插入 {excerpt}（文章摘要）';
+  hintBox.createSpan({ text: '摘要，生图时将自动替换对应内容。' });
+
   const promptTextarea = /** @type {HTMLTextAreaElement} */ (
     /** @type {unknown} */ (container.createEl('textarea', {
       cls: 'card-media-picker-prompt-textarea',
-      attr: { rows: '3', placeholder: '输入或微调画面描述词...' },
+      attr: { rows: '2', placeholder: '输入或微调画面描述词...' },
     }))
   );
+
+  const insertVar = (varName) => {
+    const start = promptTextarea.selectionStart || promptTextarea.value.length;
+    const end = promptTextarea.selectionEnd || promptTextarea.value.length;
+    const val = promptTextarea.value;
+    promptTextarea.value = val.slice(0, start) + varName + val.slice(end);
+    promptTextarea.focus();
+    promptTextarea.setSelectionRange(start + varName.length, start + varName.length);
+  };
+  varTopic.addEventListener('click', () => insertVar('{topic}'));
+  varTitle.addEventListener('click', () => insertVar('{title}'));
+  varExcerpt.addEventListener('click', () => insertVar('{excerpt}'));
 
   const syncPrompt = () => {
     const topic = topicInput.value.trim();
