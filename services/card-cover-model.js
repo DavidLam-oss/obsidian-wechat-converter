@@ -41,6 +41,10 @@
   只有用户在侧边栏显式填写，封面才会出现日期行。
 */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call -- reason: untyped image items from sticker-extractor */
+
+import { extractMarkdownImageItems } from './sticker-extractor.js';
+
 /** 封面字段（C01③ 文字封面 + C06 AI 封面配图） */
 /** @typedef {{ title: string, author: string, date: string, excerpt: string, coverImage?: string, coverMode?: 'none' | 'adaptive' | 'mixed' | 'full-bleed', coverImageStyle?: string, coverPrompt?: string, coverImageSource?: string }} CardCoverFields */
 
@@ -111,106 +115,24 @@ export function parseCardFrontmatter(markdown) {
   return result;
 }
 
-const IMAGE_EXT_REGEX = /\.(jpe?g|png|gif|webp|svg|bmp|avif)$/i;
-const NON_IMAGE_EXT_REGEX = /\.(md|markdown|txt|pdf|docx?|xlsx?|pptx?|zip|rar|tar|gz|mp4|mov|avi|mp3|wav)$/i;
-
 /**
- * 提取当前笔记中的图片引用（纯正则解析，无外部依赖）
- * 支持 Wikilink、Markdown 标准语法、HTML img 语法
+ * 提取当前笔记中的图片引用（委托至通用 extractMarkdownImageItems，自带代码块/注释剥离与格式校验）
  * @param {string} markdown
  * @returns {Array<{ name: string, path: string, isWiki: boolean }>}
  */
 export function extractNoteImageReferences(markdown) {
   if (!markdown || typeof markdown !== 'string') return [];
-  const rawMatches = [];
-
-  // 1. 匹配 Wikilink 图片 ![[name.png|...]]
-  const wikiRegex = /!\[\[([^\]\n|]+)(?:\|([^\]\n]*))?\]\]/g;
-  let match;
-  while ((match = wikiRegex.exec(markdown)) !== null) {
-    const fullTarget = match[1].trim();
-    const cleanTarget = fullTarget.split('#')[0].trim();
-    if (!cleanTarget) continue;
-    if (!IMAGE_EXT_REGEX.test(cleanTarget)) continue;
-
-    const cleanPath = cleanTarget.split(/[?#]/)[0];
-    const name = cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath;
-    rawMatches.push({
-      index: match.index,
+  const items = extractMarkdownImageItems(markdown);
+  return items.map((item) => {
+    const p = item.displaySrc || item.uploadRef?.src || '';
+    const cleanPath = p.split(/[?#]/)[0];
+    const name = item.name || (cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath) || '图片';
+    return {
       name,
-      path: cleanTarget,
-      isWiki: true,
-      dedupeKey: cleanTarget.toLowerCase(),
-    });
-  }
-
-  // 2. 匹配 Markdown 格式图片 ![alt](url)
-  const mdRegex = /!\[([^\]]*)\]\(([^)\n]+)\)/g;
-  while ((match = mdRegex.exec(markdown)) !== null) {
-    const rawTarget = match[2].trim();
-    let urlPart = '';
-    if (rawTarget.startsWith('<')) {
-      const endAngle = rawTarget.indexOf('>');
-      urlPart = endAngle !== -1 ? rawTarget.slice(1, endAngle).trim() : rawTarget.slice(1).trim();
-    } else {
-      urlPart = rawTarget.split(/\s+["'(]/)[0].trim().split(/\s+/)[0].trim();
-    }
-    if (!urlPart) continue;
-
-    const cleanPath = urlPart.split(/[?#]/)[0];
-    if (NON_IMAGE_EXT_REGEX.test(cleanPath)) continue;
-
-    const rawName = match[1].trim();
-    const nameClean = rawName.split('|')[0].trim();
-    const fallbackName = cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath;
-    const name = nameClean || fallbackName || '图片';
-    rawMatches.push({
-      index: match.index,
-      name,
-      path: urlPart,
-      isWiki: false,
-      dedupeKey: urlPart.toLowerCase(),
-    });
-  }
-
-  // 3. 匹配 HTML 格式图片 <img ... src="..." ...>
-  const imgTagRegex = /<img\b([\s\S]*?)\/?>/gi;
-  let tagMatch;
-  while ((tagMatch = imgTagRegex.exec(markdown)) !== null) {
-    const attrs = tagMatch[1];
-    const srcMatch = /\bsrc\s*=\s*(?:["']([^"']+)["']|([^"'\\s>]+))/i.exec(attrs);
-    if (!srcMatch) continue;
-    const src = (srcMatch[1] || srcMatch[2] || '').trim();
-    if (!src) continue;
-
-    const cleanPath = src.split(/[?#]/)[0];
-    if (NON_IMAGE_EXT_REGEX.test(cleanPath)) continue;
-
-    const altMatch = /\balt\s*=\s*(?:["']([^"']*)["']|([^"'\\s>]+))/i.exec(attrs);
-    const alt = (altMatch?.[1] || altMatch?.[2] || '').trim();
-    const fallbackName = cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath;
-    const name = alt || fallbackName || '图片';
-    rawMatches.push({
-      index: tagMatch.index,
-      name,
-      path: src,
-      isWiki: false,
-      dedupeKey: src.toLowerCase(),
-    });
-  }
-
-  // 4. 按文档中的自然出现顺序排序，并去重
-  rawMatches.sort((a, b) => a.index - b.index);
-  const results = [];
-  const seen = new Set();
-  for (const item of rawMatches) {
-    if (!seen.has(item.dedupeKey)) {
-      seen.add(item.dedupeKey);
-      results.push({ name: item.name, path: item.path, isWiki: item.isWiki });
-    }
-  }
-
-  return results;
+      path: p,
+      isWiki: !p.includes('://') && !p.startsWith('/') && !p.startsWith('./') && !p.startsWith('../'),
+    };
+  });
 }
 
 /**

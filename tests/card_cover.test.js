@@ -115,6 +115,25 @@ describe('deriveCoverFields：初值派生', () => {
     expect(fields.coverMode).toBe('none');
   });
 
+  it('智能剥离代码块与注释中的图片语法，不把代码示例误当首图', () => {
+    const md = [
+      '# 技术教程',
+      '下面是一段 Markdown 示例代码：',
+      '```markdown',
+      '![[fake_code_image.png]]',
+      '```',
+      '<!-- 这是 HTML 注释里的图片 <img src="comment.png"> -->',
+      '%% 这是 Obsidian 注释 ![[obsidian_comment.png]] %%',
+      '',
+      '这里才是真正的文章配图：',
+      '![[real_hero.jpg]]',
+    ].join('\n');
+    const fields = deriveCoverFields({ markdown: md, sourcePath: 'Tech.md' });
+    expect(fields.coverImage).toBe('real_hero.jpg');
+    expect(fields.coverMode).toBe('adaptive');
+    expect(fields.coverImageSource).toBe('note');
+  });
+
   it('正文无图时，封面配图为空且 coverMode 保持 none', () => {
     const md = '# 纯文字文章\n\n这里没有任何图片，只有文字。';
     const fields = deriveCoverFields({ markdown: md, sourcePath: 'text.md' });
