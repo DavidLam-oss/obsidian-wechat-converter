@@ -58,6 +58,70 @@ describe('deriveCoverFields：初值派生', () => {
     expect(deriveCoverFields({ markdown: '---\ndate: 无效日期\n---\n', sourcePath: 'a/b.md' }).date).toBe('');
     expect(deriveCoverFields({ markdown: '正文', sourcePath: 'a/b.md' }).date).toBe('');
   });
+
+  it('正文包含图片时，默认自动提取第一张内容图作为封面配图，并启用自适应版式', () => {
+    const md = '# 深度好文\n\n这是一段前言。\n\n![架构全景图](assets/architecture.png)\n\n后续正文内容...';
+    const fields = deriveCoverFields({ markdown: md, sourcePath: 'Wechat/深度好文.md' });
+    expect(fields.coverImage).toBe('assets/architecture.png');
+    expect(fields.coverMode).toBe('adaptive');
+    expect(fields.coverImageSource).toBe('note');
+  });
+
+  it('支持 Wikilink 图片语法 ![[photo.jpg]] 自动设为封面首图', () => {
+    const md = '# 旅游日记\n\n![[travel/lake.jpg|风景照]]\n\n今天天气真好！';
+    const fields = deriveCoverFields({ markdown: md, sourcePath: 'Notes/Travel.md' });
+    expect(fields.coverImage).toBe('travel/lake.jpg');
+    expect(fields.coverMode).toBe('adaptive');
+    expect(fields.coverImageSource).toBe('note');
+  });
+
+  it('智能跳过开头的徽章与图标，优先选择正文内容图', () => {
+    const md = [
+      '# 开源项目',
+      '![build](https://img.shields.io/badge/build-passing-brightgreen)',
+      '![license](https://shields.io/badge/license-MIT-blue)',
+      '',
+      '![产品效果图](https://images.example.com/product-hero.png)',
+      '项目介绍详情...',
+    ].join('\n');
+    const fields = deriveCoverFields({ markdown: md, sourcePath: 'Repo.md' });
+    expect(fields.coverImage).toBe('https://images.example.com/product-hero.png');
+    expect(fields.coverMode).toBe('adaptive');
+    expect(fields.coverImageSource).toBe('note');
+  });
+
+  it('Frontmatter 显式声明 cover 时优先尊重 Frontmatter，不取正文首图', () => {
+    const md = [
+      '---',
+      'cover: https://custom.com/banner.jpg',
+      '---',
+      '# 标题',
+      '![正文插图](note/first.png)',
+    ].join('\n');
+    const fields = deriveCoverFields({ markdown: md, sourcePath: 'a.md' });
+    expect(fields.coverImage).toBe('https://custom.com/banner.jpg');
+    expect(fields.coverMode).toBe('adaptive');
+  });
+
+  it('Frontmatter 显式声明 coverMode: none 时，即使正文有图也保持纯文字排版', () => {
+    const md = [
+      '---',
+      'coverMode: none',
+      '---',
+      '# 纯文字随笔',
+      '![插图](note/img.png)',
+    ].join('\n');
+    const fields = deriveCoverFields({ markdown: md, sourcePath: 'a.md' });
+    expect(fields.coverMode).toBe('none');
+  });
+
+  it('正文无图时，封面配图为空且 coverMode 保持 none', () => {
+    const md = '# 纯文字文章\n\n这里没有任何图片，只有文字。';
+    const fields = deriveCoverFields({ markdown: md, sourcePath: 'text.md' });
+    expect(fields.coverImage).toBe('');
+    expect(fields.coverMode).toBe('none');
+    expect(fields.coverImageSource).toBe('');
+  });
 });
 
 describe('normalizeCoverFields / isCoverUsable', () => {

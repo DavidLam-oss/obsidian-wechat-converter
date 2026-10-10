@@ -111,14 +111,171 @@ export function parseCardFrontmatter(markdown) {
   return result;
 }
 
+const IMAGE_EXT_REGEX = /\.(jpe?g|png|gif|webp|svg|bmp|avif)$/i;
+const NON_IMAGE_EXT_REGEX = /\.(md|markdown|txt|pdf|docx?|xlsx?|pptx?|zip|rar|tar|gz|mp4|mov|avi|mp3|wav)$/i;
+
+/**
+ * 提取当前笔记中的图片引用（纯正则解析，无外部依赖）
+ * 支持 Wikilink、Markdown 标准语法、HTML img 语法
+ * @param {string} markdown
+ * @returns {Array<{ name: string, path: string, isWiki: boolean }>}
+ */
+export function extractNoteImageReferences(markdown) {
+  if (!markdown || typeof markdown !== 'string') return [];
+  const rawMatches = [];
+
+  // 1. 匹配 Wikilink 图片 ![[name.png|...]]
+  const wikiRegex = /!\[\[([^\]\n|]+)(?:\|([^\]\n]*))?\]\]/g;
+  let match;
+  while ((match = wikiRegex.exec(markdown)) !== null) {
+    const fullTarget = match[1].trim();
+    const cleanTarget = fullTarget.split('#')[0].trim();
+    if (!cleanTarget) continue;
+    if (!IMAGE_EXT_REGEX.test(cleanTarget)) continue;
+
+    const cleanPath = cleanTarget.split(/[?#]/)[0];
+    const name = cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath;
+    rawMatches.push({
+      index: match.index,
+      name,
+      path: cleanTarget,
+      isWiki: true,
+      dedupeKey: cleanTarget.toLowerCase(),
+    });
+  }
+
+  // 2. 匹配 Markdown 格式图片 ![alt](url)
+  const mdRegex = /!\[([^\]]*)\]\(([^)\n]+)\)/g;
+  while ((match = mdRegex.exec(markdown)) !== null) {
+    const rawTarget = match[2].trim();
+    let urlPart = '';
+    if (rawTarget.startsWith('<')) {
+      const endAngle = rawTarget.indexOf('>');
+      urlPart = endAngle !== -1 ? rawTarget.slice(1, endAngle).trim() : rawTarget.slice(1).trim();
+    } else {
+      urlPart = rawTarget.split(/\s+["'(]/)[0].trim().split(/\s+/)[0].trim();
+    }
+    if (!urlPart) continue;
+
+    const cleanPath = urlPart.split(/[?#]/)[0];
+    if (NON_IMAGE_EXT_REGEX.test(cleanPath)) continue;
+
+    const rawName = match[1].trim();
+    const nameClean = rawName.split('|')[0].trim();
+    const fallbackName = cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath;
+    const name = nameClean || fallbackName || '图片';
+    rawMatches.push({
+      index: match.index,
+      name,
+      path: urlPart,
+      isWiki: false,
+      dedupeKey: urlPart.toLowerCase(),
+    });
+  }
+
+  // 3. 匹配 HTML 格式图片 <img ... src="..." ...>
+  const imgTagRegex = /<img\b([\s\S]*?)\/?>/gi;
+  let tagMatch;
+  while ((tagMatch = imgTagRegex.exec(markdown)) !== null) {
+    const attrs = tagMatch[1];
+    const srcMatch = /\bsrc\s*=\s*(?:["']([^"']+)["']|([^"'\\s>]+))/i.exec(attrs);
+    if (!srcMatch) continue;
+    const src = (srcMatch[1] || srcMatch[2] || '').trim();
+    if (!src) continue;
+
+    const cleanPath = src.split(/[?#]/)[0];
+    if (NON_IMAGE_EXT_REGEX.test(cleanPath)) continue;
+
+    const altMatch = /\balt\s*=\s*(?:["']([^"']*)["']|([^"'\\s>]+))/i.exec(attrs);
+    const alt = (altMatch?.[1] || altMatch?.[2] || '').trim();
+    const fallbackName = cleanPath.includes('/') ? cleanPath.slice(cleanPath.lastIndexOf('/') + 1) : cleanPath;
+    const name = alt || fallbackName || '图片';
+    rawMatches.push({
+      index: tagMatch.index,
+      name,
+      path: src,
+      isWiki: false,
+      dedupeKey: src.toLowerCase(),
+    });
+  }
+
+  // 4. 按文档中的自然出现顺序排序，并去重
+  rawMatches.sort((a, b) => a.index - b.index);
+  const results = [];
+  const seen = new Set();
+  for (const item of rawMatches) {
+    if (!seen.has(item.dedupeKey)) {
+      seen.add(item.dedupeKey);
+      results.push({ name: item.name, path: item.path, isWiki: item.isWiki });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * 启发式判断图片引用是否适合作为封面首图候选
+ * 过滤小图标、Badge、赞赏码等非正文内容大图
+ * @param {{ name: string, path: string }} imgRef
+ * @returns {boolean}
+ */
+export function isLikelyContentImage(imgRef) {
+  if (!imgRef || typeof imgRef.path !== 'string') return false;
+  const p = imgRef.path.toLowerCase();
+  const n = (imgRef.name || '').toLowerCase();
+
+  // 1. 过滤常见徽章与数据打标服务
+  if (
+    p.includes('shields.io') ||
+    p.includes('badge.fury.io') ||
+    p.includes('travis-ci') ||
+    p.includes('visitor-badge') ||
+    p.includes('github.com/workflows') ||
+    p.includes('codecov.io') ||
+    p.includes('badgen.net')
+  ) {
+    return false;
+  }
+
+  // 2. 过滤常见非正文小图标与功能性图片
+  if (
+    n.includes('avatar') ||
+    n.includes('favicon') ||
+    n.includes('icon') ||
+    n.includes('logo') ||
+    n.includes('qrcode') ||
+    n.includes('赞赏') ||
+    n.includes('打赏') ||
+    n.includes('关注')
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * 智能探查正文第一张有效图片作为封面候选
+ * @param {string} markdown
+ * @returns {{ name: string, path: string, isWiki: boolean } | null}
+ */
+export function findFirstContentImage(markdown) {
+  const images = extractNoteImageReferences(markdown);
+  if (!images || images.length === 0) return null;
+  const contentImg = images.find(isLikelyContentImage);
+  return contentImg || images[0];
+}
+
 /**
  * 从笔记内容派生封面初值：title 取 frontmatter `title` 否则文件名；
- * excerpt 取 `description` 或 `excerpt`；**date 恒为空**（不预填，由用户自己填）。
+ * excerpt 取 `description` 或 `excerpt`；**date 恒为空**（不预填，由用户自己填）；
+ * 封面配图若未在 Frontmatter 指定，则自动提取正文首张内容图并启用自适应排版。
  * @param {{ markdown?: string, sourcePath?: string }} input
  * @returns {CardCoverFields}
  */
 export function deriveCoverFields(input = {}) {
-  const meta = parseCardFrontmatter(String(input.markdown || ""));
+  const markdown = String(input.markdown || "");
+  const meta = parseCardFrontmatter(markdown);
   const sourcePath = String(input.sourcePath || "");
   const fileName = sourcePath.includes("/")
     ? sourcePath.slice(sourcePath.lastIndexOf("/") + 1)
@@ -126,18 +283,43 @@ export function deriveCoverFields(input = {}) {
   const baseTitle = fileName.replace(/\.(md|markdown|mdx|txt)$/i, "").trim();
   const title = String(meta.title || "").trim() || baseTitle;
   const excerpt = String(meta.description || meta.excerpt || "").trim();
+
+  // 1. 封面配图初值派生
+  let coverImage = String(meta.cover || meta.banner || meta.image || "").trim();
+  let coverImageSource = String(meta.coverImageSource || "").trim();
+
+  if (!coverImage) {
+    const firstImg = findFirstContentImage(markdown);
+    if (firstImg && firstImg.path) {
+      coverImage = firstImg.path;
+      coverImageSource = 'note';
+    }
+  }
+
+  // 2. 封面版式（coverMode）初值派生
+  let coverMode = 'none';
+  if (
+    meta.coverMode === 'none' ||
+    meta.coverMode === 'full-bleed' ||
+    meta.coverMode === 'mixed' ||
+    meta.coverMode === 'adaptive'
+  ) {
+    coverMode = meta.coverMode;
+  } else {
+    // Frontmatter 未指定时：有封面图则默认启用自适应版式，无图则保持极简纯文字
+    coverMode = coverImage ? 'adaptive' : 'none';
+  }
+
   return {
     title,
     author: String(meta.author || "").trim(),
     date: "",
     excerpt,
-    coverImage: String(meta.cover || meta.banner || meta.image || "").trim(),
-    coverMode: meta.coverMode === 'none' || meta.coverMode === 'full-bleed' || meta.coverMode === 'mixed' || meta.coverMode === 'adaptive'
-      ? meta.coverMode
-      : 'none',
+    coverImage,
+    coverMode,
     coverImageStyle: String(meta.coverStyle || '3d-clay').trim(),
     coverPrompt: String(meta.coverPrompt || '').trim(),
-    coverImageSource: String(meta.coverImageSource || '').trim(),
+    coverImageSource,
   };
 }
 

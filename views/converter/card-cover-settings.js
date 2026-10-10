@@ -16,6 +16,7 @@
 
 import { AI_CARD_COVER_STYLES } from '../../services/card-ai-image.js';
 import { COVER_MODE_LABELS } from '../../services/card-cover-model.js';
+import { resolveVaultResourceSrc } from '../../services/image-source-utils.js';
 import { showCardMediaPickerModal } from './card-media-picker-modal.js';
 
 /**
@@ -229,7 +230,9 @@ export function renderCardCoverValues(view, refs, settings) {
     if (refs.coverImagePreviewWrap) {
       refs.coverImagePreviewWrap.classList.toggle('hidden', !hasImage);
       if (hasImage && refs.coverImageThumb) {
-        refs.coverImageThumb.src = fields.coverImage;
+        const sourcePath = view?.lastResolvedSourcePath || session?.getSourcePath?.() || '';
+        const thumbSrc = resolveVaultResourceSrc(view?.app, fields.coverImage, sourcePath);
+        refs.coverImageThumb.src = thumbSrc || fields.coverImage;
       }
     }
 
