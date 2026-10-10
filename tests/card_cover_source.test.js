@@ -148,6 +148,7 @@ describe('Card Cover Source Service (services/card-cover-source.js)', () => {
         name: 'cover-photo.png',
         path: 'cover-photo.png',
         isWiki: true,
+        alias: '封面图',
       });
       expect(images[1]).toEqual({
         name: '文章配图',

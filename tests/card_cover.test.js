@@ -181,6 +181,24 @@ describe('deriveCoverFields：初值派生', () => {
     expect(fieldsMd.coverImage).toBe('img/cover.webp');
   });
 
+  it('语义过滤收窄至文件名与别名，避免目录名含 icon/logo 误伤真实正文配图', () => {
+    const md = [
+      '# 设计分享',
+      '![设计主视觉图](assets/icons-set/hero.png)',
+    ].join('\n');
+    const fields = deriveCoverFields({ markdown: md, sourcePath: 'Design.md' });
+    expect(fields.coverImage).toBe('assets/icons-set/hero.png');
+    expect(fields.coverMode).toBe('adaptive');
+
+    const mdLogo = [
+      '# 品牌手册',
+      '![巡礼封面](img/logos-tour/cover.jpg)',
+    ].join('\n');
+    const fieldsLogo = deriveCoverFields({ markdown: mdLogo, sourcePath: 'Brand.md' });
+    expect(fieldsLogo.coverImage).toBe('img/logos-tour/cover.jpg');
+    expect(fieldsLogo.coverMode).toBe('adaptive');
+  });
+
   it('正文无图时，封面配图为空且 coverMode 保持 none', () => {
     const md = '# 纯文字文章\n\n这里没有任何图片，只有文字。';
     const fields = deriveCoverFields({ markdown: md, sourcePath: 'text.md' });

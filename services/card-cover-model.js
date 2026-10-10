@@ -119,7 +119,7 @@ export function parseCardFrontmatter(markdown) {
 /**
  * 提取当前笔记中的图片引用（支持 Wikilink、Markdown 标准语法、HTML img 语法，自带代码块/注释剥离）
  * @param {string} markdown
- * @returns {Array<{ name: string, path: string, isWiki: boolean }>}
+ * @returns {Array<{ name: string, path: string, isWiki: boolean, alias?: string }>}
  */
 export function extractNoteImageReferences(markdown) {
   if (!markdown || typeof markdown !== 'string') return [];
@@ -211,14 +211,7 @@ export function extractNoteImageReferences(markdown) {
     if (!seen.has(item.dedupeKey)) {
       seen.add(item.dedupeKey);
       const resItem = { name: item.name, path: item.path, isWiki: item.isWiki };
-      if (item.alias) {
-        Object.defineProperty(resItem, 'alias', {
-          value: item.alias,
-          enumerable: false,
-          writable: true,
-          configurable: true,
-        });
-      }
+      if (item.alias) resItem.alias = item.alias;
       results.push(resItem);
     }
   }
@@ -251,19 +244,26 @@ export function isLikelyContentImage(imgRef) {
     return false;
   }
 
-  // 2. 过滤常见非正文小图标与功能性图片（综合检查路径、文件名、alt 以及 Wikilink 别名）
-  const combined = `${p} ${n} ${a}`;
+  // 2. 强特征过滤（无论出现在路径、文件名还是别名中均严格拦截）
+  const strongSignals = `${p} ${n} ${a}`;
   if (
-    combined.includes('avatar') ||
-    combined.includes('favicon') ||
-    combined.includes('qrcode') ||
-    combined.includes('icon') ||
-    combined.includes('logo') ||
-    combined.includes('赞赏') ||
-    combined.includes('打赏') ||
-    combined.includes('关注') ||
-    combined.includes('头像') ||
-    combined.includes('二维码')
+    strongSignals.includes('qrcode') ||
+    strongSignals.includes('avatar') ||
+    strongSignals.includes('favicon')
+  ) {
+    return false;
+  }
+
+  // 3. 语义与功能词过滤（仅在文件名与别名中检查，避免目录名包含 icon/logo 误伤真实正文图）
+  const semantic = `${n} ${a}`;
+  if (
+    semantic.includes('icon') ||
+    semantic.includes('logo') ||
+    semantic.includes('赞赏') ||
+    semantic.includes('打赏') ||
+    semantic.includes('关注') ||
+    semantic.includes('头像') ||
+    semantic.includes('二维码')
   ) {
     return false;
   }
@@ -274,7 +274,7 @@ export function isLikelyContentImage(imgRef) {
 /**
  * 智能探查正文第一张有效图片作为封面候选
  * @param {string} markdown
- * @returns {{ name: string, path: string, isWiki: boolean } | null}
+ * @returns {{ name: string, path: string, isWiki: boolean, alias?: string } | null}
  */
 export function findFirstContentImage(markdown) {
   const images = extractNoteImageReferences(markdown);
