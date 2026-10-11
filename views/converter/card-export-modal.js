@@ -57,8 +57,7 @@ import { formatExportReason } from './card-export-modal-view.js';
 export const cardExportMethods = {
 /** 当前笔记的卡片会话（与设置 / 预览共用会话注册表） */
 getCardExportSession() {
-  const selfRecord = /** @type {any} */ (this);
-  const sourcePathKey = String(selfRecord.cardPreviewPendingInput?.sourcePathKey || '');
+  const sourcePathKey = String((/** @type {any} */ (this)).cardPreviewPendingInput?.sourcePathKey || '');
   if (!sourcePathKey) return null;
   return /** @type {import('../../services/card-session.js').CardNoteSessionLike} */ (
     /** @type {any} */ (this.getCardSessions()).getSession(sourcePathKey)
@@ -72,8 +71,7 @@ getCardExportSession() {
  * 外壳用 Obsidian 原生 Modal：焦点陷阱 / Escape / 遮罩 / 层叠 / 移动端全屏交给宿主。
  */
 openCardExportModal() {
-  const selfRecord = /** @type {any} */ (this);
-  if (selfRecord.cardExportModal) {
+  if ((/** @type {any} */ (this)).cardExportModal) {
     this.renderCardExportModal();
     return;
   }
@@ -88,15 +86,15 @@ openCardExportModal() {
   closeButton?.setAttribute?.('aria-label', '关闭（导出会在后台继续）');
   closeButton?.setAttribute?.('title', '关闭（导出会在后台继续）');
 
-  selfRecord.cardExportScrollTop = 0;
-  selfRecord.cardExportScrollBound = false;
+  (/** @type {any} */ (this)).cardExportScrollTop = 0;
+  (/** @type {any} */ (this)).cardExportScrollBound = false;
   modal.onClose = () => {
-    selfRecord.cardExportModal = null;
+    (/** @type {any} */ (this)).cardExportModal = null;
     const session = this.getCardExportSession();
     if (session && typeof session.closeExportModal === 'function') session.closeExportModal();
   };
 
-  selfRecord.cardExportModal = modal;
+  (/** @type {any} */ (this)).cardExportModal = modal;
   this.renderCardExportModal();
   modal.open();
 }
@@ -104,13 +102,12 @@ openCardExportModal() {
 
 /** 关闭弹窗：仅关展示层，任务继续（后台）；再次打开可恢复 */
 closeCardExportModal() {
-  const selfRecord = /** @type {any} */ (this);
-  const modal = selfRecord.cardExportModal;
+  const modal = (/** @type {any} */ (this)).cardExportModal;
   if (!modal) return;
   if (typeof modal.close === 'function') modal.close();
   // 兜底：运行时 Modal 未回调 onClose 时也要断开引用，避免下次打开拿到死弹窗
-  if (selfRecord.cardExportModal === modal) {
-    selfRecord.cardExportModal = null;
+  if ((/** @type {any} */ (this)).cardExportModal === modal) {
+    (/** @type {any} */ (this)).cardExportModal = null;
     const session = this.getCardExportSession();
     if (session && typeof session.closeExportModal === 'function') session.closeExportModal();
   }
@@ -135,10 +132,9 @@ resolveCardExportView() {
  * @param {any} event
  */
 handleCardExportProgress(event) {
-  const selfRecord = /** @type {any} */ (this);
-  selfRecord.cardExportProgress = event || null;
-  selfRecord.cardExportStage = event && event.stage === 'preparing' ? 'resources' : null;
-  if (selfRecord.cardExportModal) this.renderCardExportModal();
+  (/** @type {any} */ (this)).cardExportProgress = event || null;
+  (/** @type {any} */ (this)).cardExportStage = event && event.stage === 'preparing' ? 'resources' : null;
+  if ((/** @type {any} */ (this)).cardExportModal) this.renderCardExportModal();
 }
 ,
 
@@ -147,7 +143,6 @@ handleCardExportProgress(event) {
  * 资格不满足时不建任务并提示。
  */
 async startCardExport() {
-  const selfRecord = /** @type {any} */ (this);
   const session = this.getCardExportSession();
   if (!session) return;
   if (typeof session.hasActiveJob === 'function' && session.hasActiveJob()) {
@@ -163,7 +158,7 @@ async startCardExport() {
   }
   const collected = this.collectCardExportInput({
     rootPath: this.resolveCardExportRootDefault(),
-    scale: selfRecord.cardExportScale || DEFAULT_CARD_EXPORT_SCALE,
+    scale: (/** @type {any} */ (this)).cardExportScale || DEFAULT_CARD_EXPORT_SCALE,
     pageIds,
   });
   if (!collected || collected.ok !== true) {
@@ -172,17 +167,17 @@ async startCardExport() {
   }
   // 冻结合格快照：导出期间编辑 / 换篇不影响本次批次
   const snapshot = session.freezeSnapshot({
-    plan: selfRecord.cardPreviewOutcome?.plan,
+    plan: (/** @type {any} */ (this)).cardPreviewOutcome?.plan,
     meta: { settings: collected.settings, sourcePath: collected.input.sourcePath },
   });
 
   // 上一批的图片资源回收（每批一份内联图片快照，避免跨批累积）
-  if (selfRecord.cardExportController && typeof selfRecord.cardExportController.disposeResources === 'function') {
-    selfRecord.cardExportController.disposeResources();
+  if ((/** @type {any} */ (this)).cardExportController && typeof (/** @type {any} */ (this)).cardExportController.disposeResources === 'function') {
+    (/** @type {any} */ (this)).cardExportController.disposeResources();
   }
-  selfRecord.cardExportResourceSummary = null;
-  selfRecord.cardExportPagesExpanded = false;
-  selfRecord.cardExportScrollTop = 0;
+  (/** @type {any} */ (this)).cardExportResourceSummary = null;
+  (/** @type {any} */ (this)).cardExportPagesExpanded = false;
+  (/** @type {any} */ (this)).cardExportScrollTop = 0;
 
   const controller = this.createCardExportController(session, {
     settings: collected.settings,
@@ -191,11 +186,11 @@ async startCardExport() {
     scale: collected.input.scale,
     onProgress: (/** @type {any} */ event) => this.handleCardExportProgress(event),
   });
-  selfRecord.cardExportController = controller;
+  (/** @type {any} */ (this)).cardExportController = controller;
   // 立即切到「准备中」并清掉上一批的进度：导出期间由进度事件驱动重绘，
   // 不再等到整批结束才刷新（否则用户看到的是「点了没动静」）。
-  selfRecord.cardExportStage = 'preparing';
-  selfRecord.cardExportProgress = null;
+  (/** @type {any} */ (this)).cardExportStage = 'preparing';
+  (/** @type {any} */ (this)).cardExportProgress = null;
   this.renderCardExportModal();
 
   const outcome = await controller.exportCards({
@@ -204,11 +199,11 @@ async startCardExport() {
     configDir: String(/** @type {any} */ (this.app)?.vault?.configDir ),
   });
   const batchInfo = typeof controller.getBatchInfo === 'function' ? controller.getBatchInfo() : null;
-  if (batchInfo) selfRecord.cardExportLastBatchInfo = batchInfo;
+  if (batchInfo) (/** @type {any} */ (this)).cardExportLastBatchInfo = batchInfo;
   const resourceSummary = typeof controller.getResourceSummary === 'function' ? controller.getResourceSummary() : null;
-  selfRecord.cardExportResourceSummary = resourceSummary || null;
-  selfRecord.cardExportStage = null;
-  selfRecord.cardExportProgress = null;
+  (/** @type {any} */ (this)).cardExportResourceSummary = resourceSummary || null;
+  (/** @type {any} */ (this)).cardExportStage = null;
+  (/** @type {any} */ (this)).cardExportProgress = null;
   this.renderCardExportModal();
   if (outcome && outcome.ok === false) {
     notifyExportFailure(outcome.reason);
@@ -222,14 +217,13 @@ async startCardExport() {
  * 不删除已导出的批次目录，也不复用上一次的任务。
  */
 startNewCardExport() {
-  const selfRecord = /** @type {any} */ (this);
   const session = this.getCardExportSession();
   if (session && typeof session.markResultSeen === 'function') session.markResultSeen();
-  selfRecord.cardExportStage = null;
-  selfRecord.cardExportProgress = null;
-  selfRecord.cardExportPagesExpanded = false;
-  selfRecord.cardExportScrollTop = 0;
-  selfRecord.cardExportScope = null;
+  (/** @type {any} */ (this)).cardExportStage = null;
+  (/** @type {any} */ (this)).cardExportProgress = null;
+  (/** @type {any} */ (this)).cardExportPagesExpanded = false;
+  (/** @type {any} */ (this)).cardExportScrollTop = 0;
+  (/** @type {any} */ (this)).cardExportScope = null;
   this.renderCardExportModal();
 }
 ,
@@ -247,12 +241,11 @@ cancelCardExport() {
 
 /** 同快照重试失败页（§6.2；成功页不重写） */
 async retryCardExportFailedPages() {
-  const selfRecord = /** @type {any} */ (this);
-  const controller = selfRecord.cardExportController;
+  const controller = (/** @type {any} */ (this)).cardExportController;
   if (!controller || typeof controller.retryFailedPages !== 'function') return;
   const result = await controller.retryFailedPages();
   const batchInfo = typeof controller.getBatchInfo === 'function' ? controller.getBatchInfo() : null;
-  if (batchInfo) selfRecord.cardExportLastBatchInfo = batchInfo;
+  if (batchInfo) (/** @type {any} */ (this)).cardExportLastBatchInfo = batchInfo;
   this.renderCardExportModal();
   if (result && result.ok === false) notifyExportFailure(result.reason);
 }
@@ -260,8 +253,7 @@ async retryCardExportFailedPages() {
 
 /** 清单单独重试（结果记录未完成时收尾） */
 async retryCardExportManifest() {
-  const selfRecord = /** @type {any} */ (this);
-  const controller = selfRecord.cardExportController;
+  const controller = (/** @type {any} */ (this)).cardExportController;
   if (!controller || typeof controller.retryManifest !== 'function') return;
   const result = await controller.retryManifest();
   this.renderCardExportModal();
@@ -271,20 +263,19 @@ async retryCardExportManifest() {
 
 /** 视图关闭 / 卸载：关掉弹窗并回收本批图片资源（任务生命周期由 disposeCardPreview 的会话 dispose 负责） */
 disposeCardExportModal() {
-  const selfRecord = /** @type {any} */ (this);
-  if (selfRecord.cardExportController && typeof selfRecord.cardExportController.disposeResources === 'function') {
-    selfRecord.cardExportController.disposeResources();
+  if ((/** @type {any} */ (this)).cardExportController && typeof (/** @type {any} */ (this)).cardExportController.disposeResources === 'function') {
+    (/** @type {any} */ (this)).cardExportController.disposeResources();
   }
-  selfRecord.cardExportController = null;
-  selfRecord.cardExportResourceSummary = null;
-  selfRecord.cardExportStage = null;
-  selfRecord.cardExportProgress = null;
-  selfRecord.cardExportPagesExpanded = false;
-  selfRecord.cardExportScrollTop = 0;
-  selfRecord.cardExportScope = null;
-  const modal = selfRecord.cardExportModal;
+  (/** @type {any} */ (this)).cardExportController = null;
+  (/** @type {any} */ (this)).cardExportResourceSummary = null;
+  (/** @type {any} */ (this)).cardExportStage = null;
+  (/** @type {any} */ (this)).cardExportProgress = null;
+  (/** @type {any} */ (this)).cardExportPagesExpanded = false;
+  (/** @type {any} */ (this)).cardExportScrollTop = 0;
+  (/** @type {any} */ (this)).cardExportScope = null;
+  const modal = (/** @type {any} */ (this)).cardExportModal;
   if (modal) {
-    selfRecord.cardExportModal = null;
+    (/** @type {any} */ (this)).cardExportModal = null;
     if (typeof modal.close === 'function') modal.close();
   }
 }

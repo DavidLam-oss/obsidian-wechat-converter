@@ -237,7 +237,6 @@ buildCardExportFsAdapter() {
  * @param {{ markdown: string, sourcePath: string }} input
  */
 prepareCardExportResources(input) {
-  const self = this;
   /** @type {import('../../services/card-resources.js').CardResourceSnapshot | null} */
   let snapshot = null;
   /** @type {Promise<import('../../services/card-resources.js').CardResourceSnapshot> | null} */
@@ -254,7 +253,7 @@ prepareCardExportResources(input) {
           for (const image of block.images || []) imageRefs.push(image);
         }
         const pool = createCardResourcePool({
-          app: self.app,
+          app: this.app,
           sourcePath: String(input.sourcePath || ''),
           session: createCardResourceSession(),
         });
@@ -387,8 +386,7 @@ async createCardCaptureCallback(input) {
  * @param {{ rootPath?: string, scale?: number, pageIds?: string[] | null }} options
  */
 collectCardExportInput(options = {}) {
-  const selfRecord = /** @type {any} */ (this);
-  const outcome = selfRecord.cardPreviewOutcome;
+  const outcome = (/** @type {any} */ (this)).cardPreviewOutcome;
   const session = typeof this.getCardSettingsSession === 'function' ? this.getCardSettingsSession() : null;
   if (!outcome || !session) return { ok: false, reason: 'not-ready' };
   const hasCover = outcome?.hasCover === true && outcome?.coverPage instanceof HTMLElement;
@@ -432,7 +430,7 @@ collectCardExportInput(options = {}) {
     settings,
     session,
     size,
-    markdown: String(selfRecord.cardPreviewPendingInput?.markdown || ''),
+    markdown: String((/** @type {any} */ (this)).cardPreviewPendingInput?.markdown || ''),
     selectedPageIds: selected,
   };
 }
@@ -448,7 +446,6 @@ collectCardExportInput(options = {}) {
  */
 createCardExportController(session, context) {
   const fsAdapter = this.buildCardExportFsAdapter();
-  const self = this;
   const notify = typeof context.onProgress === 'function' ? context.onProgress : null;
   // 图片资源每批只准备一次（内联 data: URL），整批捕获复用同一快照
   const resources = this.prepareCardExportResources({
@@ -462,7 +459,7 @@ createCardExportController(session, context) {
       notify({ stage: 'preparing', total: 0, settled: 0, saved: 0, failed: 0 });
     }
     try {
-      return await self.createCardCaptureCallback({
+      return await this.createCardCaptureCallback({
         pageId: page.pageId,
         ordinal: page.ordinal,
         settings: context.settings,

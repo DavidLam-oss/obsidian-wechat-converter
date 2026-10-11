@@ -153,9 +153,8 @@ export const cardExportModalViewMethods = {
  * @returns {string}
  */
 resolveCardExportRootDefault() {
-  const selfRecord = /** @type {any} */ (this);
-  if (selfRecord.cardExportRootPath) return String(selfRecord.cardExportRootPath);
-  const raw = selfRecord.plugin?.settings?.cardDefaults?.exportRoot;
+  if ((/** @type {any} */ (this)).cardExportRootPath) return String((/** @type {any} */ (this)).cardExportRootPath);
+  const raw = (/** @type {any} */ (this)).plugin?.settings?.cardDefaults?.exportRoot;
   if (typeof raw === 'string' && raw.trim()) return raw.trim();
   return DEFAULT_CARD_EXPORT_ROOT;
 },
@@ -181,19 +180,18 @@ rememberCardExportRoot(root) {
  * 滚动位置跨重绘保留——进度事件会频繁触发重绘，不应把用户弹回顶部。
  */
 renderCardExportModal() {
-  const selfRecord = /** @type {any} */ (this);
-  const modal = selfRecord.cardExportModal;
+  const modal = (/** @type {any} */ (this)).cardExportModal;
   if (!modal) return;
   const content = /** @type {any} */ (modal.contentEl);
   if (!content) return;
 
-  const savedScroll = Number(selfRecord.cardExportScrollTop || 0);
+  const savedScroll = Number((/** @type {any} */ (this)).cardExportScrollTop || 0);
   if (typeof content.empty === 'function') content.empty();
   else content.replaceChildren?.();
 
-  if (!selfRecord.cardExportScrollBound && typeof content.addEventListener === 'function') {
-    selfRecord.cardExportScrollBound = true;
-    content.addEventListener('scroll', () => { selfRecord.cardExportScrollTop = content.scrollTop; });
+  if (!(/** @type {any} */ (this)).cardExportScrollBound && typeof content.addEventListener === 'function') {
+    (/** @type {any} */ (this)).cardExportScrollBound = true;
+    content.addEventListener('scroll', () => { (/** @type {any} */ (this)).cardExportScrollTop = content.scrollTop; });
   }
 
   const body = content.createEl('div', { cls: 'icard-export-body' });
@@ -203,7 +201,7 @@ renderCardExportModal() {
   if (!job) {
     // 任务尚未建立（点击「开始导出」到批次目录/任务落账之间）：显示准备中，
     // 否则弹窗会原地重绘成表单，看起来像「点了没反应」。
-    if (selfRecord.cardExportStage) this.renderCardExportPreparing(body, selfRecord.cardExportStage);
+    if ((/** @type {any} */ (this)).cardExportStage) this.renderCardExportPreparing(body, (/** @type {any} */ (this)).cardExportStage);
     else this.renderCardExportForm(body);
   } else {
     this.renderCardExportJob(body, job);
@@ -232,18 +230,17 @@ resolveCardExportScope() {
  * @param {any} body
  */
 renderCardExportForm(body) {
-  const selfRecord = /** @type {any} */ (this);
   const scope = this.resolveCardExportScope();
   // 页全集与导出入参组装共用同一份判定（card-export-bridge 的 listCardExportPageIds）；
   // 会话里可能残留已失效的旧页号，先按全集过滤掉。
-  const allPageIds = listCardExportPageIds(selfRecord.cardPreviewOutcome);
+  const allPageIds = listCardExportPageIds((/** @type {any} */ (this)).cardPreviewOutcome);
   const selection = (this.getCardPageSelection() || []).filter((id) => allPageIds.includes(id));
   const selectionCount = selection.length;
   const emptySelection = scope === 'selected' && selectionCount === 0;
 
   const collected = this.collectCardExportInput({
     rootPath: this.resolveCardExportRootDefault(),
-    scale: selfRecord.cardExportScale || DEFAULT_CARD_EXPORT_SCALE,
+    scale: (/** @type {any} */ (this)).cardExportScale || DEFAULT_CARD_EXPORT_SCALE,
     // 「全部」不带页 id（null 由桥接层展开全部）；空集同样走 null，不制造第三种状态
     pageIds: scope === 'selected' && selectionCount > 0 ? selection : null,
   });
@@ -261,8 +258,8 @@ renderCardExportForm(body) {
     return;
   }
 
-  const outcome = selfRecord.cardPreviewOutcome || {};
-  const scale = Number(selfRecord.cardExportScale || DEFAULT_CARD_EXPORT_SCALE);
+  const outcome = (/** @type {any} */ (this)).cardPreviewOutcome || {};
+  const scale = Number((/** @type {any} */ (this)).cardExportScale || DEFAULT_CARD_EXPORT_SCALE);
   const size = collected.size || { width: 0, height: 0 };
 
   const info = body.createEl('div', { cls: 'icard-export-info' });
@@ -304,7 +301,7 @@ renderCardExportForm(body) {
       attr: { type: 'button', 'data-scope': option.value, 'aria-pressed': active ? 'true' : 'false' },
     });
     btn.addEventListener('click', () => {
-      selfRecord.cardExportScope = option.value;
+      (/** @type {any} */ (this)).cardExportScope = option.value;
       // 首次进入「自选页」以全集为起点（已有有效选择则不动）：用户只需取消不要的页，
       // 而不是先点一次「全选」才能开始——否则一进来就是一页未选的死路。
       if (option.value === 'selected' && selectionCount === 0) this.applyCardPageSelection([...allPageIds]);
@@ -336,7 +333,7 @@ renderCardExportForm(body) {
       attr: { type: 'button', 'aria-pressed': active ? 'true' : 'false' },
     });
     btn.addEventListener('click', () => {
-      selfRecord.cardExportScale = option;
+      (/** @type {any} */ (this)).cardExportScale = option;
       this.renderCardExportModal();
     });
   }
@@ -354,7 +351,7 @@ renderCardExportForm(body) {
   rootInput.value = this.resolveCardExportRootDefault();
   rootInput.addEventListener('change', () => {
     const nextRoot = String(rootInput.value || DEFAULT_CARD_EXPORT_ROOT).trim() || DEFAULT_CARD_EXPORT_ROOT;
-    selfRecord.cardExportRootPath = nextRoot;
+    (/** @type {any} */ (this)).cardExportRootPath = nextRoot;
     // 改了即记住：下次打开弹窗（含重启后）预填这个目录
     this.rememberCardExportRoot(nextRoot);
     this.renderCardExportModal();
@@ -411,7 +408,6 @@ renderCardExportPreparing(body, stage) {
  * @param {any} body @param {any} job
  */
 renderCardExportJob(body, job) {
-  const selfRecord = /** @type {any} */ (this);
   const state = String(job.state || 'running');
   const running = state === 'running' || state === 'canceling';
   const pageIds = Array.isArray(job.pageIds) ? job.pageIds : [];
@@ -422,7 +418,7 @@ renderCardExportJob(body, job) {
   const canceled = results.filter((r) => r.status === 'canceled').length;
 
   // 当前阶段（来自导出器的进度事件）：资源准备中 / 正在渲染第 N 页
-  const progressEvent = selfRecord.cardExportProgress;
+  const progressEvent = (/** @type {any} */ (this)).cardExportProgress;
   const currentOrdinal = progressEvent && Number(progressEvent.current) > 0 ? Number(progressEvent.current) : 0;
 
   const tone = EXPORT_STATE_TONES[state] || 'muted';
@@ -438,7 +434,7 @@ renderCardExportJob(body, job) {
   statusText.createEl('div', { cls: 'icard-export-status-desc', text: jobStatusDescription({ state, running, progressEvent, currentOrdinal, saved, total, failed }) });
 
   // 图片资源失败 / 省略内容提示（§5.5 不静默少图）
-  const resourceSummary = selfRecord.cardExportResourceSummary;
+  const resourceSummary = (/** @type {any} */ (this)).cardExportResourceSummary;
   if (resourceSummary && Number(resourceSummary.failed) > 0) {
     const warn = body.createEl('div', { cls: 'icard-export-omission is-warning' });
     applyIcon(warn.createEl('span', { cls: 'icard-export-omission-icon' }), 'alert-triangle');
@@ -522,20 +518,19 @@ renderCardExportJob(body, job) {
  * @param {{ pageIds: string[], results: any[], running: boolean, currentOrdinal: number, failed: number, canceled: number, total: number }} input
  */
 renderCardExportPages(body, input) {
-  const selfRecord = /** @type {any} */ (this);
   const { pageIds, results, running, currentOrdinal, failed, canceled, total } = input;
   if (pageIds.length === 0) return;
 
   // 自动展开（进行中 / 有失败页）是「系统替你打开」，不能被记成用户意图，
   // 否则完成后会把这次自动展开粘滞下来——明明全部成功却停在展开态。
   const autoOpen = running || failed > 0;
-  const open = autoOpen || selfRecord.cardExportPagesExpanded === true;
+  const open = autoOpen || (/** @type {any} */ (this)).cardExportPagesExpanded === true;
   const details = /** @type {any} */ (body.createEl('details', { cls: 'icard-export-pages-details' }));
   if (open) details.setAttribute('open', '');
   details.addEventListener?.('toggle', () => {
     // 只有结果与本次程序化设定不同，才算用户手动切换
     if (details.open === open) return;
-    selfRecord.cardExportPagesExpanded = details.open === true;
+    (/** @type {any} */ (this)).cardExportPagesExpanded = details.open === true;
   });
 
   // 尺寸全一致时，逐行重复同一串数字纯属噪音：只在摘要处说一次。
@@ -596,8 +591,7 @@ renderCardExportPages(body, input) {
  * @param {any} body
  */
 renderCardExportResultLinks(body) {
-  const selfRecord = /** @type {any} */ (this);
-  const info = selfRecord.cardExportLastBatchInfo;
+  const info = (/** @type {any} */ (this)).cardExportLastBatchInfo;
   if (!info || !info.batchDir) return;
   const dir = String(info.batchDir);
   const absPath = typeof this.resolveCardExportAbsPath === 'function'

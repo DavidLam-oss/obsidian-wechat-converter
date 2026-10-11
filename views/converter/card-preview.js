@@ -464,6 +464,9 @@ renderCardPreviewDom() {
   container.empty();
   container.removeClass('apple-has-content');
 
+  // 添加类名标记（替代 :has 选择器以兼容 Obsidian 1.4.5）
+  container.addClass('has-card-preview');
+
   const shell = /** @type {ObsidianElementLike} */ (/** @type {unknown} */ (container.createEl('div', { cls: 'icard-preview-shell' })));
   cardStateOf(this).cardPreviewShell = shell;
 

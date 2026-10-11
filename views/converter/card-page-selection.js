@@ -104,8 +104,7 @@ getCardPageSelection() {
  * @returns {any | null}
  */
 resolveCardSelectionSession() {
-  const selfRecord = /** @type {any} */ (this);
-  const sourcePathKey = String(selfRecord.cardPreviewPendingInput?.sourcePathKey || '');
+  const sourcePathKey = String((/** @type {any} */ (this)).cardPreviewPendingInput?.sourcePathKey || '');
   if (!sourcePathKey) return null;
   return /** @type {any} */ (this.getCardSessions()).getSession(sourcePathKey) || null;
 }
