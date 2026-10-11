@@ -206,7 +206,7 @@ describe('platform-wall', () => {
       expect(expandBtn?.textContent).toContain('展开更多平台 (共 15 个) ▾');
     });
 
-    it('在 selectable 模式下渲染头部就近刷新状态按钮，并联动 onRefreshAuth 回调', async () => {
+    it('在 selectable 模式下渲染头部就近刷新状态按钮（含图标与文案），并联动 onRefreshAuth 回调', async () => {
       const container = createObsidianLikeElement('div');
       let refreshCalled = false;
       let resolveRefresh;
@@ -225,12 +225,14 @@ describe('platform-wall', () => {
 
       const refreshBtn = card.querySelector('.wechat-platform-wall-refresh-btn');
       expect(refreshBtn).not.toBeNull();
-      expect(refreshBtn?.textContent).toBe('刷新平台状态');
+      expect(refreshBtn?.textContent).toContain('刷新已选状态');
+      expect(refreshBtn?.querySelector('.wechat-platform-wall-refresh-icon')).not.toBeNull();
 
       // 触发刷新
       const clickPromise = refreshBtn?.onclick();
       expect(refreshBtn?.disabled).toBe(true);
-      expect(refreshBtn?.textContent).toBe('刷新中...');
+      expect(refreshBtn?.className).toContain('is-loading');
+      expect(refreshBtn?.textContent).toContain('刷新中...');
       expect(refreshCalled).toBe(true);
 
       // 结束刷新
@@ -238,7 +240,8 @@ describe('platform-wall', () => {
       await clickPromise;
 
       expect(refreshBtn?.disabled).toBe(false);
-      expect(refreshBtn?.textContent).toBe('刷新平台状态');
+      expect(refreshBtn?.className).not.toContain('is-loading');
+      expect(refreshBtn?.textContent).toContain('刷新已选状态');
     });
   });
 });

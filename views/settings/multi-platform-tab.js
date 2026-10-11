@@ -547,6 +547,9 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       }));
 
   // §4.1 + §16: 统一连接状态栏 — 对普通用户只呈现一个信号
+  const pairedClients = Array.isArray(multiPlatformSettings.pairedClients)
+    ? multiPlatformSettings.pairedClients.filter((client) => isRecord(client))
+    : [];
   {
     const clients = Array.isArray(multiPlatformSettings.connectedClients)
       ? multiPlatformSettings.connectedClients.map((client) => isRecord(client) ? client : {})
@@ -704,9 +707,6 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         };
       }
     }
-    const pairedClients = Array.isArray(multiPlatformSettings.pairedClients)
-      ? multiPlatformSettings.pairedClients.filter((client) => isRecord(client))
-      : [];
     if (pairedClients.length > 0) {
       const pairedPanel = containerEl.createDiv({ cls: 'wechat-bridge-paired-panel' });
       pairedPanel.createEl('strong', { text: '已配对浏览器' });
@@ -714,7 +714,10 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         const row = pairedPanel.createDiv({ cls: 'wechat-bridge-pairing-row' });
         const label = paired.profileLabel || paired.browserName || String(paired.extensionInstanceId).slice(0, 8);
         row.createEl('span', { text: label });
-        const remove = row.createEl('button', { text: '移除' });
+        const actions = row.createDiv({ cls: 'wechat-bridge-pairing-actions' });
+        const testBtn = actions.createEl('button', { text: '测试连接' });
+        testBtn.onclick = () => runTestConnectionAction(testBtn);
+        const remove = actions.createEl('button', { text: '移除' });
         remove.onclick = () => {
           const bridge = plugin.getWechatSyncBridgeService();
           if (bridge.unpairClient?.(String(paired.extensionInstanceId))) {
@@ -755,188 +758,186 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     return toAuthSnapshot(normalizeWechatsyncAuthSnapshot(response, fallbackPlatforms));
   };
 
-  new Setting(containerEl)
-    .setName('测试连接')
-    .setDesc('验证 Obsidian 与浏览器插件的连接状态及令牌有效性。')
-    .addButton(button => button
-      .setButtonText('测试')
-      .onClick(async () => {
-        button.setButtonText('等待插件...');
-        button.setDisabled?.(true);
-        const startedAt = Date.now();
-        /** @type {WechatBridgeLike | null} */
-        let bridge = null;
-        /** @type {unknown} */
-        let bridgeStartStatus = null;
-        let shouldRedisplay = false;
-        try {
-          const currentBeforeTest = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
-          const debugSettings = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
-          console.debug('[Wechatsync] test connection started', {
-            port: debugSettings.port,
-            hasToken: !!debugSettings.token,
-            forceRefresh: false,
-          });
-          bridge = plugin.getWechatSyncBridgeService();
-          bridgeStartStatus = await bridge.start();
-          console.debug('[Wechatsync] bridge started', bridgeStartStatus);
-          await bridge.waitForConnection(15000);
-          console.debug('[Wechatsync] extension connection ready', {
-            elapsedMs: Date.now() - startedAt,
-          });
-          /** @type {WechatHealthLike | null} */
-          let health = null;
-          /** @type {Record<string, unknown>} */
-          let capabilities = {};
-          try {
-            health = toHealthResult(await retryRecoverableBridgeOperation(async (context) => {
-              const attempt = Number(toRecord(context).attempt) || 0;
-              if (attempt > 0) {
-                console.debug('[Wechatsync] retrying health after bridge recovery window', { attempt });
-              }
-              const healthResult = toHealthResult(await bridge.health({ timeoutMs: 5000 }));
-              if (healthResult?.tokenValid === false) {
-                const authError = new Error('连接令牌校验失败。请确认 Obsidian 与浏览器插件使用同一个连接令牌。');
-                authError.code = 'AUTH_FAILED';
-                throw authError;
-              }
-              if (healthResult?.ok === false) {
-                const healthError = new Error(healthResult.error || '浏览器插件健康检查失败');
-                healthError.code = 'BRIDGE_REQUEST_TIMEOUT';
-                throw healthError;
-              }
-              return healthResult;
-            }, {
-              retries: 2,
-              delayMs: 1000,
-              logger: console,
-              label: 'settings health',
-            }));
-            console.debug('[Wechatsync] health result', health);
-            capabilities = normalizeWechatSyncCapabilities(toRecord(health.capabilities));
-          } catch (healthError) {
-            if (!isUnsupportedBridgeError(healthError)) throw healthError;
-            console.warn('[Wechatsync] extension does not support health, falling back to socket-only check', healthError);
+  /**
+   * @param {{ setButtonText?: (t: string) => void, setDisabled?: (d: boolean) => void, textContent?: string, disabled?: boolean }} [triggerBtn]
+   */
+  async function runTestConnectionAction(triggerBtn) {
+    const isObsidianBtn = typeof triggerBtn?.setButtonText === 'function';
+    if (isObsidianBtn) {
+      triggerBtn.setButtonText('等待插件...');
+      triggerBtn.setDisabled?.(true);
+    } else if (triggerBtn) {
+      triggerBtn.textContent = '测试中...';
+      triggerBtn.disabled = true;
+    }
+    const startedAt = Date.now();
+    /** @type {WechatBridgeLike | null} */
+    let bridge = null;
+    /** @type {unknown} */
+    let bridgeStartStatus = null;
+    let shouldRedisplay = false;
+    try {
+      const currentBeforeTest = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
+      const debugSettings = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
+      console.debug('[Wechatsync] test connection started', {
+        port: debugSettings.port,
+        hasToken: !!debugSettings.token,
+        forceRefresh: false,
+      });
+      bridge = plugin.getWechatSyncBridgeService();
+      bridgeStartStatus = await bridge.start();
+      console.debug('[Wechatsync] bridge started', bridgeStartStatus);
+      await bridge.waitForConnection(15000);
+      console.debug('[Wechatsync] extension connection ready', {
+        elapsedMs: Date.now() - startedAt,
+      });
+      /** @type {WechatHealthLike | null} */
+      let health = null;
+      /** @type {Record<string, unknown>} */
+      let capabilities = {};
+      try {
+        health = toHealthResult(await retryRecoverableBridgeOperation(async (context) => {
+          const attempt = Number(toRecord(context).attempt) || 0;
+          if (attempt > 0) {
+            console.debug('[Wechatsync] retrying health after bridge recovery window', { attempt });
           }
-          /** @type {WechatPlatformLike[]} */
-          let supportedPlatforms = [];
-          try {
-            supportedPlatforms = await getSupportedPlatformsFromExtension(bridge);
-            console.debug('[Wechatsync] supported platforms loaded', {
-              count: supportedPlatforms.length,
-              platforms: supportedPlatforms.map((platform) => getPlatformId(platform)),
-            });
-          } catch (platformError) {
-            if (isUnsupportedBridgeError(platformError)) {
-              console.warn('[Wechatsync] extension does not support listSupportedPlatforms, keeping fallback list', platformError);
-            } else {
-              console.warn('[Wechatsync] listSupportedPlatforms failed, keeping existing platform list', platformError);
-            }
+          const healthResult = toHealthResult(await bridge.health({ timeoutMs: 5000 }));
+          if (healthResult?.tokenValid === false) {
+            const authError = new Error('连接令牌校验失败。请确认 Obsidian 与浏览器插件使用同一个连接令牌。');
+            authError.code = 'AUTH_FAILED';
+            throw authError;
           }
-          const selectedPlatformIds = parseWechatsyncPlatformIds(currentBeforeTest.selectedPlatforms || []);
-          const current = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
-          const currentConnection = toRecord(current.connection);
-          const nextPlatforms = toRecordList(normalizeWechatsyncPlatformList(currentConnection.platforms || []))
-            .filter((platform) => selectedPlatformIds.includes(getPlatformId(platform)));
-          plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
-            ...current,
-            supportedPlatforms: supportedPlatforms.length ? supportedPlatforms : current.supportedPlatforms,
-            connection: {
-              ...currentConnection,
-              status: 'connected',
-              checkedAt: Date.now(),
-              platforms: nextPlatforms,
-              capabilities,
-              message: health
-                ? '已连接，连接令牌已通过插件校验。未读取平台登录状态。'
-                : '已连接。当前插件版本未提供健康校验，平台登录状态未自动检测。',
-            },
-          });
-          await plugin.saveSettings();
-          shouldRedisplay = true;
-          new Notice(health
-            ? '已连接浏览器插件，连接令牌校验通过'
-            : '已连接浏览器插件');
-        } catch (error) {
-          /** @type {Record<string, unknown> | null} */
-          let bridgeStatusAfterFailure = null;
-          /** @type {WechatDiagnosticsLike | null} */
-          let diagnostics = null;
-          try {
-            bridgeStatusAfterFailure = toRecord(await bridge?.getStatus?.());
-          } catch (statusError) {
-            const readableStatusError = toReadableError(statusError);
-            bridgeStatusAfterFailure = { error: readableStatusError.message };
+          if (healthResult?.ok === false) {
+            const healthError = new Error(healthResult.error || '浏览器插件健康检查失败');
+            healthError.code = 'BRIDGE_REQUEST_TIMEOUT';
+            throw healthError;
           }
-          try {
-            diagnostics = toDiagnostics(bridge?.getDiagnostics?.());
-          } catch {
-            diagnostics = null;
-          }
-
-          const readableError = toReadableError(error);
-          let detailedMessage = readableError.message || '浏览器插件连接失败';
-          let hint = '';
-          if (readableError.code === 'EXTENSION_NOT_CONNECTED' && diagnostics?.helloRejections > 0) {
-            const reason = diagnostics.lastHelloRejection?.reason;
-            if (reason === 'token_mismatch') {
-              detailedMessage = '配对令牌不一致。如果你刚刚在浏览器插件设置中重置过令牌，请复制新令牌并粘贴到下方"连接令牌"输入框。';
-            } else if (reason === 'pairing_required') {
-              detailedMessage = '发现一个尚未配对的浏览器。请在上方“待配对的浏览器”中确认并批准。';
-            } else if (reason === 'credential_mismatch') {
-              detailedMessage = '这个浏览器的连接凭据与已保存的配对记录不同。请确认是你正在使用的浏览器后，在上方重新批准配对。';
-            } else if (reason === 'hello_timeout') {
-              detailedMessage = '浏览器插件连接后未在限定时间内完成握手。可能扩展版本过旧或未启用握手。';
-            } else if (reason === 'invalid_payload') {
-              detailedMessage = '浏览器插件发送的握手数据格式不正确。请升级浏览器插件到支持安全握手的版本。';
-            } else if (reason === 'version_unsupported') {
-              detailedMessage = '浏览器插件版本与 Obsidian 不兼容，握手被拒绝。请升级浏览器插件。';
-            } else if (reason) {
-              detailedMessage = `浏览器插件握手失败（${reason}）。请检查浏览器插件版本与连接令牌。`;
-            }
-            hint = '';
-          } else if (['EXTENSION_NOT_CONNECTED', 'BRIDGE_UNAVAILABLE', 'BRIDGE_REQUEST_TIMEOUT'].includes(readableError.code)) {
-            hint = '请确认浏览器正在运行、已安装浏览器插件，并检查地址、端口和连接令牌与这里一致。';
-          } else if (readableError.code === 'EXTENSION_NOT_AUTHENTICATED') {
-            detailedMessage = '浏览器插件已连接但尚未通过认证。请确认插件已升级到支持安全握手的版本，且使用与 Obsidian 一致的连接令牌。';
-          }
-
-          console.error('[Wechatsync] test connection failed', {
-            elapsedMs: Date.now() - startedAt,
-            code: readableError.code,
-            message: readableError.message,
-            stack: readableError.stack,
-            bridgeStartStatus,
-            bridgeStatusAfterFailure,
-            diagnostics,
-            detailedMessage,
-          });
-          plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
-            ...toRecord(plugin.settings.multiPlatformSync),
-            connection: {
-              status: 'failed',
-              checkedAt: Date.now(),
-              platforms: [],
-              capabilities: {},
-              message: detailedMessage,
-            },
-          });
-          await plugin.saveSettings();
-          new Notice(`${detailedMessage}${hint ? ` ${hint}` : ''}`, 12000);
-          shouldRedisplay = true;
-        } finally {
-          button.setDisabled?.(false);
-          button.setButtonText('测试');
-          if (shouldRedisplay) refreshSettingTab(tab);
+          return healthResult;
+        }, {
+          retries: 2,
+          delayMs: 1000,
+          logger: console,
+          label: 'settings health',
+        }));
+        console.debug('[Wechatsync] health result', health);
+        capabilities = normalizeWechatSyncCapabilities(toRecord(health.capabilities));
+      } catch (healthError) {
+        if (!isUnsupportedBridgeError(healthError)) throw healthError;
+        console.warn('[Wechatsync] extension does not support health, falling back to socket-only check', healthError);
+      }
+      /** @type {WechatPlatformLike[]} */
+      let supportedPlatforms = [];
+      try {
+        supportedPlatforms = await getSupportedPlatformsFromExtension(bridge);
+        console.debug('[Wechatsync] supported platforms loaded', {
+          count: supportedPlatforms.length,
+          platforms: supportedPlatforms.map((platform) => getPlatformId(platform)),
+        });
+      } catch (platformError) {
+        if (isUnsupportedBridgeError(platformError)) {
+          console.warn('[Wechatsync] extension does not support listSupportedPlatforms, keeping fallback list', platformError);
+        } else {
+          console.warn('[Wechatsync] listSupportedPlatforms failed, keeping existing platform list', platformError);
         }
-      }));
+      }
+      const selectedPlatformIds = parseWechatsyncPlatformIds(currentBeforeTest.selectedPlatforms || []);
+      const current = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
+      const currentConnection = toRecord(current.connection);
+      const nextPlatforms = toRecordList(normalizeWechatsyncPlatformList(currentConnection.platforms || []))
+        .filter((platform) => selectedPlatformIds.includes(getPlatformId(platform)));
+      plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
+        ...current,
+        supportedPlatforms: supportedPlatforms.length ? supportedPlatforms : current.supportedPlatforms,
+        connection: {
+          ...currentConnection,
+          status: 'connected',
+          checkedAt: Date.now(),
+          platforms: nextPlatforms,
+          capabilities,
+          message: health
+            ? '已连接，连接令牌已通过插件校验。未读取平台登录状态。'
+            : '已连接。当前插件版本未提供健康校验，平台登录状态未自动检测。',
+        },
+      });
+      await plugin.saveSettings();
+      shouldRedisplay = true;
+      new Notice(health
+        ? '已连接浏览器插件，连接令牌校验通过'
+        : '已连接浏览器插件');
+    } catch (error) {
+      /** @type {Record<string, unknown> | null} */
+      let bridgeStatusAfterFailure = null;
+      /** @type {WechatDiagnosticsLike | null} */
+      let diagnostics = null;
+      try {
+        bridgeStatusAfterFailure = toRecord(await bridge?.getStatus?.());
+      } catch (statusError) {
+        const readableStatusError = toReadableError(statusError);
+        bridgeStatusAfterFailure = { error: readableStatusError.message };
+      }
+      try {
+        diagnostics = toDiagnostics(bridge?.getDiagnostics?.());
+      } catch {
+        diagnostics = null;
+      }
 
-  new Setting(containerEl)
-    .setName('读取已选平台状态')
-    .setDesc('读取浏览器插件缓存的各平台登录状态（发布时仍以插件实际执行为准）。')
-    .addButton(button => button
-      .setButtonText('读取')
-      .onClick(() => readPlatformAuthAction(button)));
+      const readableError = toReadableError(error);
+      let detailedMessage = readableError.message || '浏览器插件连接失败';
+      let hint = '';
+      if (readableError.code === 'EXTENSION_NOT_CONNECTED' && diagnostics?.helloRejections > 0) {
+        const reason = diagnostics.lastHelloRejection?.reason;
+        /** @type {Record<string, string>} */
+        const REASON_MESSAGES = {
+          token_mismatch: '配对令牌不一致。如果你刚刚在浏览器插件设置中重置过令牌，请复制新令牌并粘贴到下方"连接令牌"输入框。',
+          pairing_required: '发现一个尚未配对的浏览器。请在上方“待配对的浏览器”中确认并批准。',
+          credential_mismatch: '这个浏览器的连接凭据与已保存的配对记录不同。请确认是你正在使用的浏览器后，在上方重新批准配对。',
+          hello_timeout: '浏览器插件连接后未在限定时间内完成握手。可能扩展版本过旧或未启用握手。',
+          invalid_payload: '浏览器插件发送的握手数据格式不正确。请升级浏览器插件到支持安全握手的版本。',
+          version_unsupported: '浏览器插件版本与 Obsidian 不兼容，握手被拒绝。请升级浏览器插件。',
+        };
+        const reasonKey = typeof reason === 'string' ? reason : '';
+        if (reasonKey && REASON_MESSAGES[reasonKey]) {
+          detailedMessage = REASON_MESSAGES[reasonKey];
+        } else if (reasonKey) {
+          detailedMessage = `浏览器插件握手失败（${reasonKey}）。请检查浏览器插件版本与连接令牌。`;
+        }
+      } else if (['EXTENSION_NOT_CONNECTED', 'BRIDGE_UNAVAILABLE', 'BRIDGE_REQUEST_TIMEOUT'].includes(readableError.code)) {
+        hint = '请确认浏览器正在运行、已安装浏览器插件，并检查地址、端口和连接令牌与这里一致。';
+      } else if (readableError.code === 'EXTENSION_NOT_AUTHENTICATED') {
+        detailedMessage = '浏览器插件已连接但尚未通过认证。请确认插件已升级到支持安全握手的版本，且使用与 Obsidian 一致的连接令牌。';
+      }
+
+      console.error('[Wechatsync] test connection failed', {
+        elapsedMs: Date.now() - startedAt, code: readableError.code, message: readableError.message,
+        stack: readableError.stack, bridgeStartStatus, bridgeStatusAfterFailure, diagnostics, detailedMessage,
+      });
+      plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
+        ...toRecord(plugin.settings.multiPlatformSync),
+        connection: { status: 'failed', checkedAt: Date.now(), platforms: [], capabilities: {}, message: detailedMessage },
+      });
+      await plugin.saveSettings();
+      new Notice(`${detailedMessage}${hint ? ` ${hint}` : ''}`, 12000);
+      shouldRedisplay = true;
+    } finally {
+      if (isObsidianBtn) {
+        triggerBtn.setDisabled?.(false);
+        triggerBtn.setButtonText('测试');
+      } else if (triggerBtn) {
+        triggerBtn.disabled = false;
+        triggerBtn.textContent = '测试连接';
+      }
+      if (shouldRedisplay) refreshSettingTab(tab);
+    }
+  }
+
+  if (pairedClients.length === 0) {
+    new Setting(containerEl)
+      .setName('测试连接')
+      .setDesc('验证 Obsidian 与浏览器插件的连接状态及令牌有效性。')
+      .addButton(button => button
+        .setButtonText('测试')
+        .onClick(() => runTestConnectionAction(button)));
+  }
 }
 
 export { renderMultiPlatformSettingsTab };

@@ -291,18 +291,27 @@ export function renderPlatformWall(containerEl, options = {}) {
 
   if (isSelectable && typeof options.onRefreshAuth === 'function') {
     const refreshBtn = actionsEl.createEl('button', {
-      text: '刷新平台状态',
       cls: 'wechat-platform-wall-refresh-btn',
     });
+    const updateRefreshBtnContent = (isLoading) => {
+      refreshBtn.empty?.();
+      const iconSpan = refreshBtn.createSpan({ cls: 'wechat-platform-wall-refresh-icon' });
+      attachIcon(iconSpan, 'refresh-cw');
+      refreshBtn.createSpan({ text: isLoading ? '刷新中...' : '刷新已选状态' });
+    };
+    updateRefreshBtnContent(false);
+
     refreshBtn.onclick = async () => {
       refreshBtn.disabled = true;
-      refreshBtn.setText('刷新中...');
+      refreshBtn.addClass?.('is-loading');
+      updateRefreshBtnContent(true);
       try {
         const refreshHandler = /** @type {() => Promise<void> | void} */ (options.onRefreshAuth);
         await refreshHandler();
       } finally {
         refreshBtn.disabled = false;
-        refreshBtn.setText('刷新平台状态');
+        refreshBtn.removeClass?.('is-loading');
+        updateRefreshBtnContent(false);
       }
     };
   }

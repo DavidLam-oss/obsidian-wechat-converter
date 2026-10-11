@@ -469,7 +469,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     expect(names).toContain('本地服务端口');
     expect(names).toContain('连接令牌');
     expect(names).toContain('测试连接');
-    expect(names).toContain('读取已选平台状态');
+    expect(names).not.toContain('读取已选平台状态');
   });
 
   it('shows Pro identity in the multi-platform panel without adding a settings-tab badge', () => {
@@ -650,11 +650,11 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     });
     plugin.getWechatSyncBridgeService = vi.fn(() => bridge);
 
-    renderTab(plugin);
-    const readButton = globalThis.__obsidianButtonRegistry.find((button) => button.text === '读取');
-    expect(readButton).toBeDefined();
+    const tab = renderTab(plugin);
+    const refreshButton = tab.containerEl.querySelector('.wechat-platform-wall-refresh-btn');
+    expect(refreshButton).not.toBeNull();
 
-    await readButton.clickHandler();
+    await refreshButton.onclick();
 
     expect(bridge.getAuthSnapshot).toHaveBeenCalledWith({
       platforms: ['zhihu'],
@@ -945,6 +945,51 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     const body = tab.containerEl.querySelector('.wechat-bridge-status-body');
     expect(body).not.toBeNull();
     expect(body.textContent).toContain('Chrome');
+  });
+
+  it('当存在已配对浏览器时，测试连接按钮放置在移除按钮左侧，且底部不重复渲染独立的测试连接设置项', async () => {
+    const bridge = {
+      start: vi.fn().mockResolvedValue({}),
+      waitForConnection: vi.fn().mockResolvedValue(undefined),
+      health: vi.fn().mockResolvedValue({ ok: true, tokenValid: true, capabilities: {} }),
+      listSupportedPlatforms: vi.fn().mockResolvedValue([]),
+      getAuthSnapshot: vi.fn().mockResolvedValue({ platforms: [], checkedAt: 0 }),
+      checkAuth: vi.fn().mockResolvedValue([]),
+      getStatus: vi.fn().mockResolvedValue({}),
+    };
+    const plugin = makePlugin({
+      multiPlatformSync: {
+        enabled: true,
+        port: 9527,
+        token: 'abc',
+        pairedClients: [{
+          extensionInstanceId: 'paired-chrome',
+          credentialHash: 'b'.repeat(64),
+          browserName: 'chrome',
+          profileLabel: '写作号',
+        }],
+        supportedPlatforms: [],
+        selectedPlatforms: [],
+        connection: { status: 'connected', checkedAt: Date.now(), platforms: [], capabilities: {}, message: '' },
+        recentTasks: [],
+      },
+    });
+    plugin.getWechatSyncBridgeService = vi.fn(() => bridge);
+    const tab = renderTab(plugin);
+
+    // 验证底部独立 Setting 不包含测试连接
+    const names = globalThis.__obsidianSettingNamesRegistry;
+    expect(names).not.toContain('测试连接');
+
+    // 验证配对卡片内部操作区按顺序包含「测试连接」和「移除」
+    const pairedPanel = tab.containerEl.querySelector('.wechat-bridge-paired-panel');
+    expect(pairedPanel).not.toBeNull();
+    const actionBtns = Array.from(pairedPanel.querySelectorAll('.wechat-bridge-pairing-actions button'));
+    expect(actionBtns.map((b) => b.textContent)).toEqual(['测试连接', '移除']);
+
+    // 点击测试连接能正常调用底层 bridge 逻辑
+    await actionBtns[0].onclick();
+    expect(bridge.health).toHaveBeenCalled();
   });
 
   it('§18.7 Plan B: chrome / chromium 走通用 icon（不撒谎为某个特定 fork）', () => {
