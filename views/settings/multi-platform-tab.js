@@ -408,19 +408,14 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
           ...toRecord(plugin.settings.multiPlatformSync),
           enabled: value,
         });
-        await plugin.saveSettings();
-        if (value) {
-          plugin.startWechatSyncBridgeInBackground('settings-enabled');
-        } else if (plugin._wechatSyncBridgeService?.stop) {
-          await plugin._wechatSyncBridgeService.stop().catch((error) => {
-            console.warn('停止浏览器插件连接失败:', error);
-          });
+        const saveRes = await plugin.saveSettings();
+        if (saveRes?.success) {
+          if (value) plugin.startWechatSyncBridgeInBackground('settings-enabled');
+          else if (plugin._wechatSyncBridgeService?.stop) await plugin._wechatSyncBridgeService.stop().catch((error) => console.warn('停止浏览器插件连接失败:', error));
         }
         refreshSettingTab(tab);
       }));
-  if (!multiPlatformSettings.enabled) {
-    return;
-  }
+  if (!multiPlatformSettings.enabled) return;
 
   new Setting(containerEl)
     .setName('本地服务端口')
@@ -433,8 +428,8 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
           ...toRecord(plugin.settings.multiPlatformSync), port: Number.isInteger(nextPort) ? nextPort : DEFAULT_WECHATSYNC_PORT, connection: { status: 'untested' },
         });
-        await plugin.saveSettings();
-        plugin.startWechatSyncBridgeInBackground('settings-port-change');
+        const saveRes = await plugin.saveSettings();
+        if (saveRes?.success) plugin.startWechatSyncBridgeInBackground('settings-port-change');
       }));
 
   new Setting(containerEl)
@@ -445,13 +440,14 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       .setValue(toText(multiPlatformSettings.token))
       .onChange(async (value) => {
         const trimmed = value.trim();
+        let saveRes;
         if (!trimmed && multiPlatformSettings.token) {
-          await plugin.clearCredential?.('bridge', 'primary', 'token');
+          saveRes = await plugin.clearCredential?.('bridge', 'primary', 'token');
         } else {
           plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({ ...toRecord(plugin.settings.multiPlatformSync), token: trimmed, connection: { status: 'untested' } });
-          await plugin.saveSettings();
+          saveRes = await plugin.saveSettings();
         }
-        plugin.startWechatSyncBridgeInBackground('settings-token-change');
+        if (saveRes?.success) plugin.startWechatSyncBridgeInBackground('settings-token-change');
       }));
 
   // §4.1 + §16: 统一连接状态栏 — 对普通用户只呈现一个信号

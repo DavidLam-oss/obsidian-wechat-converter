@@ -569,9 +569,7 @@ class AppleStylePlugin extends Plugin {
 
   /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: dynamic configuration mutations, credential guards, and serialization safely handle raw settings objects */
   async _executeSaveSettings(draftSettings, options) {
-    const candidate = draftSettings
-      ? JSON.parse(JSON.stringify(draftSettings))
-      : JSON.parse(JSON.stringify(getPluginSettings(this)));
+    const candidate = JSON.parse(JSON.stringify(draftSettings || getPluginSettings(this)));
 
     if (this._settingsSafeMode && !options.isSafeModeOverride) {
       new Notice('⚠️ 当前处于安全保护模式，已阻止写入以防历史配置受损');
@@ -597,7 +595,11 @@ class AppleStylePlugin extends Plugin {
     if (this._storageState === 'known-existing' && !options.isSafeModeOverride) {
       try {
         if (typeof adapter.exists === 'function' && (await adapter.exists(dataPath)) === true) {
-          diskSettings = JSON.parse(await adapter.read(dataPath));
+          const parsed = JSON.parse(await adapter.read(dataPath));
+          if (!isRecord(parsed) || Object.keys(parsed).length === 0) {
+            throw new Error('磁盘文件内容为空或非有效配置对象');
+          }
+          diskSettings = parsed;
         } else {
           throw new Error('文件不存在或状态冲突');
         }
@@ -709,12 +711,10 @@ class AppleStylePlugin extends Plugin {
         return { success: false, reason: 'BACKUP_NOT_FOUND' };
       }
       const backupJson = JSON.parse(await adapter.read(bakPath));
-      if (!isRecord(backupJson)) {
-        new Notice('❌ 备份文件内容损坏，无法恢复');
+      if (!isRecord(backupJson) || Object.keys(backupJson).length === 0) {
+        new Notice('❌ 备份文件内容损坏或为空，无法恢复');
         return { success: false, reason: 'BACKUP_CORRUPTED' };
       }
-      this._settingsSafeMode = false;
-      this._storageState = 'known-existing';
       const saveRes = await this.saveSettings(backupJson, { isSafeModeOverride: true });
       if (saveRes?.success) {
         new Notice('✅ 已成功从备份文件恢复配置并解除保护模式！');

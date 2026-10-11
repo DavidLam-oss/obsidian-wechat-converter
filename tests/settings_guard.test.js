@@ -570,4 +570,59 @@ describe('Settings Safety Guard & Obsidian Compatibility (Phase A)', () => {
     expect(feishuAppIdCheck.isDowngrade).toBe(true);
     expect(feishuAppIdCheck.reason).toContain('飞书应用 ID 被意外清空');
   });
+
+  // TC-15: 磁盘空对象/非对象预检拦截 (P0-1 防空写)
+  it('TC-15: rejects saveSettings when disk data is empty object or invalid json object', async () => {
+    const plugin = new AppleStylePlugin();
+    const mockWrite = vi.fn().mockResolvedValue(undefined);
+    plugin.app = {
+      vault: {
+        configDir: '.obsidian',
+        adapter: {
+          exists: vi.fn().mockResolvedValue(true),
+          read: vi.fn().mockResolvedValue('{}'), // 磁盘被清空为 {}
+          write: mockWrite,
+        },
+      },
+    };
+    plugin._storageState = 'known-existing';
+    plugin._settingsSafeMode = false;
+    plugin._committedSettings = { theme: 'default', count: 1 };
+    plugin.saveData = vi.fn().mockResolvedValue(undefined);
+
+    const res = await plugin.saveSettings({ theme: 'default', count: 2 });
+    expect(res.success).toBe(false);
+    expect(res.reason).toBe('PRE_CHECK_FAILED');
+    expect(plugin.saveData).toHaveBeenCalledTimes(0);
+    expect(mockWrite).toHaveBeenCalledTimes(0); // 绝不写入 .bak
+  });
+
+  // TC-16: 备份恢复失败时保持 Safe Mode，防止锁被提前解除 (P0-2)
+  it('TC-16: retains safe mode and blocks subsequent saves if restoreFromBackup fails', async () => {
+    const plugin = new AppleStylePlugin();
+    plugin.app = {
+      vault: {
+        configDir: '.obsidian',
+        adapter: {
+          exists: vi.fn().mockImplementation(async (filePath) => filePath.endsWith('.bak')),
+          read: vi.fn().mockResolvedValue(JSON.stringify({ wechatAccounts: [{ id: 'a1' }] })),
+          write: vi.fn().mockResolvedValue(undefined),
+        },
+      },
+    };
+    plugin._storageState = 'unknown';
+    plugin._settingsSafeMode = true;
+    plugin._committedSettings = { wechatAccounts: [] };
+    // 模拟底层 saveData 抛错（例如权限错误或磁盘已满）
+    plugin.saveData = vi.fn().mockRejectedValue(new Error('Disk write failed'));
+
+    const res = await plugin.restoreFromBackup();
+    expect(res.success).toBe(false);
+    expect(plugin._settingsSafeMode).toBe(true); // 绝不提前解除安全模式！
+
+    // 随后的常规保存仍被安全模式拦截
+    const normalSaveRes = await plugin.saveSettings({ count: 1 });
+    expect(normalSaveRes.success).toBe(false);
+    expect(normalSaveRes.reason).toBe('SAFE_MODE_LOCKED');
+  });
 });
