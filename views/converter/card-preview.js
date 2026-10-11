@@ -393,6 +393,7 @@ renderCardEmptyState() {
   if (!this.previewContainer) return;
   this.previewContainer.empty();
   this.previewContainer.removeClass('apple-has-content');
+  this.previewContainer.removeClass('has-card-preview');
   const empty = this.previewContainer.createEl('div', { cls: 'icard-preview-empty' });
   empty.createEl('div', { cls: 'icard-preview-empty-title', text: '暂无可排版的卡片内容' });
   empty.createEl('div', {
@@ -407,6 +408,7 @@ renderCardMobileNotice() {
   if (!this.previewContainer) return;
   this.previewContainer.empty();
   this.previewContainer.removeClass('apple-has-content');
+  this.previewContainer.removeClass('has-card-preview');
   const notice = this.previewContainer.createEl('div', { cls: 'icard-preview-empty' });
   notice.createEl('div', { cls: 'icard-preview-empty-title', text: '图片卡片目前仅支持桌面端' });
   notice.createEl('div', {
@@ -421,6 +423,7 @@ renderCardFailureState(outcome) {
   if (!this.previewContainer) return;
   this.previewContainer.empty();
   this.previewContainer.removeClass('apple-has-content');
+  this.previewContainer.removeClass('has-card-preview');
   const failure = this.previewContainer.createEl('div', { cls: 'icard-preview-empty is-failure' });
   failure.createEl('div', { cls: 'icard-preview-empty-title', text: '卡片排版失败' });
   /** @type {Record<string, any> | null | undefined} */
@@ -464,7 +467,7 @@ renderCardPreviewDom() {
   container.empty();
   container.removeClass('apple-has-content');
 
-  // 添加类名标记（替代 :has 选择器以兼容 Obsidian 1.4.5）
+  // 替代 :has(.icard-preview-shell)：离开卡片画布时各渲染路径需移除
   container.addClass('has-card-preview');
 
   const shell = /** @type {ObsidianElementLike} */ (/** @type {unknown} */ (container.createEl('div', { cls: 'icard-preview-shell' })));
@@ -668,4 +671,4 @@ disposeCardPreview() {
 }
 ,
 };
-/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call -- reason: close the scoped disable block above */

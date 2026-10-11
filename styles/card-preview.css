@@ -42,7 +42,6 @@
 }
 
 /* 卡片模式重置外层容器 padding，使画板能够铺满整个侧边栏全宽且透明融入 */
-/* Note: 使用类名标记替代 :has 选择器以兼容 Obsidian 1.4.5 */
 .apple-converter-preview.has-card-preview,
 .apple-preview-wrapper.mode-classic .apple-converter-preview.has-card-preview {
   padding: 0;
@@ -64,8 +63,7 @@
   box-sizing: border-box;
   /* 隐藏滚动条：滚动条从预览顶部划到缩略图旁边，观感很差；
      隐藏后滚轮/触控板滚动不受影响（微信工具的网页式滚动同款处理）。
-     Note: scrollbar-width 在部分环境不支持，会降级显示系统默认滚动条（不影响功能）。 */
-  scrollbar-width: none;
+     Obsidian 为 Chromium 内核，::-webkit-scrollbar 即可，无需 scrollbar-width。 */
   background-color: var(--icard-canvas-bg);
   background-image: radial-gradient(
     circle,
@@ -75,8 +73,6 @@
   );
   background-size: 20px 20px;
 }
-/* WebKit 滚动条隐藏（Safari/Chrome）
-   Note: ::-webkit-scrollbar 在部分环境不支持，会降级显示系统默认滚动条（不影响功能）。 */
 .icard-preview-shell::-webkit-scrollbar {
   display: none;
 }
@@ -155,13 +151,6 @@
   margin: 0;
   padding: 28px 20px 36px;
   background: transparent;
-}
-
-/* 画板下面还有诊断区时收回底部边距，避免诊断区贴死画板边缘 */
-/* Note: 使用类名标记替代 :has 选择器以兼容 Obsidian 1.4.5 */
-.icard-preview-pages.has-diagnostics-below {
-  margin: 0;
-  border-radius: 0 0 12px 12px;
 }
 
 .icard-preview-page-item {

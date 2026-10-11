@@ -195,6 +195,7 @@ switchPreviewMode(mode) {
   if (this.previewMode === mode) return;
   if (mode !== 'article' && mode !== 'sticker' && mode !== 'card') return;
   this.previewMode = mode;
+  this.previewContainer?.removeClass('has-card-preview');
 
   // 作废在途的文章渲染（convertCurrent 的提交守卫读这两个值）。
   // 不作废的话：文章模式的渲染较慢，用户切到贴图/卡片后它才落地，
@@ -273,6 +274,7 @@ runModeRenderWithDiagnostics(label, renderPromise, timeoutMs) {
 showModeRenderFailure(label, error) {
   if (!this.previewContainer) return;
   this.previewContainer.empty();
+  this.previewContainer.removeClass('has-card-preview');
   const failure = this.previewContainer.createEl('div', { cls: 'icard-preview-empty is-failure' });
   failure.createEl('div', {
     cls: 'icard-preview-empty-title',

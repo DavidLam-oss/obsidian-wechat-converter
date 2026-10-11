@@ -83,7 +83,7 @@ class AppleStylePlugin extends Plugin {
     this._committedSettings = null;
     this._lastSaveSettingsErrorAt = 0;
   }
-  /* eslint-enable @typescript-eslint/no-unsafe-argument */
+  /* eslint-enable @typescript-eslint/no-unsafe-argument -- reason: close the scoped disable block above */
 
   async onload() {
     console.debug('📝 正在加载 Obsidian 发布助手...');
@@ -546,7 +546,7 @@ class AppleStylePlugin extends Plugin {
     setPluginSettings(this, settings);
     new Notice('⚠️ 微信发布助手：检测到配置文件读取异常，已进入安全保护模式，原文件已受保护');
   }
-  /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument -- reason: close the scoped disable block above */
 
   getArticleLayoutState(sourcePath = '', selection = {}) {
     return getArticleLayoutStateFromSettings(getPluginSettings(this), sourcePath, selection);
@@ -736,7 +736,7 @@ class AppleStylePlugin extends Plugin {
       view.requestRender();
     }
   }
-  /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: close the scoped disable block above */
 
   async onunload() {
     if (this._customCssPreviewNoticeTimer && typeof window !== 'undefined') {
@@ -762,7 +762,7 @@ class AppleStylePlugin extends Plugin {
           view.disposeCardExportModal();
         }
       }
-      /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
+      /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- reason: close the scoped disable block above */
     } catch {
       // 容错：工作区可能正在卸载或已清理
     }

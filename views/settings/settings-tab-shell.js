@@ -177,7 +177,7 @@ const settingsTabShellMethods = {
             this.display();
           }
         }
-        /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
+        /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- reason: close the scoped disable block above */
       };
     }
 

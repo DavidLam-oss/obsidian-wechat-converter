@@ -77,7 +77,7 @@ export function debugLayoutLog(round, data) {
     .join(" ");
   lines.push(`[icard-layout] 块高 ${heights}`);
   // 调试输出：受 window.ICARD_DEBUG_LAYOUT 全局开关控制
-  console.log(lines.join("\n"));
+  console.debug(lines.join("\n"));
 }
 
 /**
@@ -90,7 +90,7 @@ export function debugLayoutLogOverflow(round, worst, contentHeight, slack) {
   const w = /** @type {any} */ (typeof window !== "undefined" ? window : undefined);
   if (!w || !w.ICARD_DEBUG_LAYOUT) return;
   // 调试输出：受 window.ICARD_DEBUG_LAYOUT 全局开关控制
-  console.log(`[icard-layout] round=${round} 溢出核验 worst=${worst}px → contentHeight ${Math.round(contentHeight)}${worst > 0 ? ` → 收缩至 ${Math.round(contentHeight - worst - slack)}` : "（通过）"}`);
+  console.debug(`[icard-layout] round=${round} 溢出核验 worst=${worst}px → contentHeight ${Math.round(contentHeight)}${worst > 0 ? ` → 收缩至 ${Math.round(contentHeight - worst - slack)}` : "（通过）"}`);
 }
 
 /**
@@ -104,7 +104,7 @@ export function debugLayoutLogFail(round, diagnostics, contentHeight) {
   const lines = [`[icard-layout] round=${round} 布局失败（contentHeight=${Math.round(contentHeight)}）诊断 ${diagnostics.length} 条：`];
   for (const d of diagnostics) lines.push(`[icard-layout]   ✗ ${d.blockId || "-"}: ${d.message}`);
   // 调试输出：受 window.ICARD_DEBUG_LAYOUT 全局开关控制
-  console.log(lines.join("\n"));
+  console.debug(lines.join("\n"));
 }
 
 /**
@@ -122,6 +122,6 @@ export function debugLayoutLogResources(resources) {
     lines.push(`[icard-layout]   ${e.status === "ok" ? "✓" : "✗"} [${e.status}] ${ref.slice(0, 80)}${e.width ? ` ${e.width}x${e.height}` : ""}${e.bytes ? ` ${(e.bytes / 1024).toFixed(0)}KB` : ""}`);
   }
   // 调试输出：受 window.ICARD_DEBUG_LAYOUT 全局开关控制
-  console.log(lines.join("\n"));
+  console.debug(lines.join("\n"));
 }
-/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: close the scoped disable block above */

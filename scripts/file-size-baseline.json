@@ -20,9 +20,9 @@
     "views/settings/multi-platform-tab.js": 934
   },
   "generatedBytes": {
-    "main.js": 4430980,
+    "main.js": 4431733,
     "services/ai-layout-runtime/generated-skills.js": 47423,
     "services/generated-embedded-deps.js": 2685245,
-    "styles.css": 234957
+    "styles.css": 234809
   }
 }

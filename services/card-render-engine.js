@@ -248,4 +248,4 @@ export async function renderCardPages(cardDoc, options = {}) {
     throw error;
   }
 }
-/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument -- reason: close the scoped disable block above */

@@ -60,10 +60,6 @@ renderCardDiagnosticArea(shell, outcome) {
   const resourceBlocking = outcome?.resources?.hasBlockingFailures === true;
   if (!omissionTotal && !resourceBlocking) return;
 
-  // 添加类名标记（替代 :has 选择器以兼容 Obsidian 1.4.5）
-  const pagesWrap = shell.querySelector?.('.icard-preview-pages');
-  if (pagesWrap) pagesWrap.classList?.add?.('has-diagnostics-below');
-
   const area = shell.createEl('div', { cls: 'icard-preview-diagnostics' });
   const toggle = area.createEl('button', {
     cls: 'icard-preview-diagnostics-toggle',
@@ -130,4 +126,4 @@ appendCardDiagnosticRow(area, list, item) {
 }
 ,
 };
-/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call -- reason: close the scoped disable block above */
