@@ -2461,22 +2461,17 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   }
 }
 
-/* 处理表格：优先换行，仅在极个别长单词情况下滚动 */
+/* 表格排版：对齐微信横向滑动与单元格自适应，防止单元格限宽导致文字越界重叠 */
 .apple-converter-preview table {
-  width: 100%;
-  table-layout: auto; /* 自动宽度 */
+  table-layout: auto;
   border-collapse: collapse;
   margin: 16px 0;
-  display: table; /* 恢复表格显示属性 */
+  display: table;
 }
 
-/* 单元格内容自动换行 */
 .apple-converter-preview td,
 .apple-converter-preview th {
-  white-space: normal; /* 强制换行 */
-  word-wrap: break-word;
-  word-break: break-all; /* 允许在单词内换行，防止长链接撑破 */
-  max-width: 300px; /* 限制最大宽度，触发换行 */
+  max-width: none;
 }
 
 /* 隐藏滚动条，获得更像 App 的体验 */
