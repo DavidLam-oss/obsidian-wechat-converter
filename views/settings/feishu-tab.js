@@ -41,6 +41,58 @@ import {
   resetFeishuApiUsage,
 } from '../../services/feishu-settings.js';
 
+const FEISHU_SETUP_GUIDE_URL = 'https://xiaoweibox.top/chats/feishu-sync';
+
+/**
+ * @param {any} tab
+ * @param {string} url
+ */
+function openExternalUrl(tab, url) {
+  if (typeof tab?.plugin?.openExternalUrl === 'function') {
+    return tab.plugin.openExternalUrl(url);
+  }
+  if (typeof tab?.plugin?.activeView?.openExternalUrl === 'function') {
+    return tab.plugin.activeView.openExternalUrl(url);
+  }
+  const win = getActiveWindowValue('window') || (typeof window !== 'undefined' ? window : null);
+  if (win && typeof win.open === 'function') {
+    win.open(url, '_blank', 'noopener');
+  }
+}
+
+/**
+ * @param {{ descEl?: HTMLElement, setDesc?: (description: string) => unknown }} setting
+ * @param {Document | null} activeDocument
+ * @param {string} text
+ * @param {string} linkText
+ * @param {string} href
+ * @param {() => void} openLink
+ * @returns {void}
+ */
+function setMutedGuideDescription(setting, activeDocument, text, linkText, href, openLink) {
+  const fallbackText = `${text} ${linkText}`;
+  const description = setting?.descEl;
+  if (!activeDocument || !description) {
+    if (typeof setting?.setDesc === 'function') {
+      setting.setDesc(fallbackText);
+    }
+    return;
+  }
+
+  description.replaceChildren(activeDocument.createTextNode(`${text} `));
+  const link = activeDocument.createElement('a');
+  link.textContent = linkText;
+  link.href = href;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.className = 'apple-settings-guide-link';
+  link.addEventListener('click', (event) => {
+    event.preventDefault();
+    openLink();
+  });
+  description.append(link);
+}
+
 /**
  * @param {number} value
  * @returns {string}
@@ -172,17 +224,26 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   }
 
   // 1. Enable Toggle
-  new Setting(containerEl)
-    .setName('启用飞书同步')
-    .setDesc('开启后，同步弹窗中将提供「飞书」选项，支持发布至指定的飞书云盘文件夹。')
-    .addToggle((toggle) => toggle
-      .setValue(settings.enabled)
-      .onChange(async (value) => {
-        settings.enabled = value;
-        await plugin.saveSettings();
-        tab.display(); // re-render setting tab
-      })
-    );
+  const enableSetting = new Setting(containerEl)
+    .setName('启用飞书同步');
+  setMutedGuideDescription(
+    enableSetting,
+    containerEl.ownerDocument || getActiveWindowValue('document') || null,
+    '开启后，同步弹窗中将提供「飞书」选项，支持发布至指定的飞书云盘文件夹。',
+    '查看详细图文指引 →',
+    FEISHU_SETUP_GUIDE_URL,
+    () => {
+      openExternalUrl(tab, FEISHU_SETUP_GUIDE_URL);
+    }
+  );
+  enableSetting.addToggle((toggle) => toggle
+    .setValue(settings.enabled)
+    .onChange(async (value) => {
+      settings.enabled = value;
+      await plugin.saveSettings();
+      tab.display(); // re-render setting tab
+    })
+  );
 
   if (!settings.enabled) return;
 
@@ -287,169 +348,10 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
         }
       })
     );
-
-  // 7. Render setup instructions
-  const guideCard = containerEl.createDiv({ cls: 'wechat-feishu-guide-card' });
-  guideCard.setCssStyles({
-    margin: '20px 0',
-    padding: '16px 20px',
-    border: '1px solid var(--background-modifier-border)',
-    borderRadius: '8px',
-    background: 'var(--background-secondary)',
-  });
-
-  const guideHeader = guideCard.createDiv({ cls: 'wechat-feishu-guide-header' });
-  guideHeader.setCssStyles({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '12px',
-    marginBottom: '14px',
-    flexWrap: 'wrap',
-  });
-
-  const titleEl = guideHeader.createEl('div', { cls: 'guide-card-title' });
-  titleEl.setText('飞书应用配置简易步骤');
-  titleEl.setCssStyles({
-    fontSize: '14px',
-    fontWeight: '600',
-    color: 'var(--text-normal)',
-  });
-
-  const detailedLink = guideHeader.createEl('a', {
-    text: '查看详细图文指引 →',
-    href: 'https://xiaoweibox.top/chats/feishu-sync',
-  });
-  detailedLink.onclick = (e) => {
-    e.preventDefault();
-    if (plugin && typeof plugin.openExternalUrl === 'function') {
-      plugin.openExternalUrl('https://xiaoweibox.top/chats/feishu-sync');
-    } else {
-      window.open('https://xiaoweibox.top/chats/feishu-sync', '_blank', 'noopener');
-    }
-  };
-  detailedLink.setCssStyles({
-    color: 'var(--text-accent)',
-    textDecoration: 'none',
-    fontWeight: '500',
-    fontSize: '13px',
-    cursor: 'pointer',
-  });
-  detailedLink.onmouseenter = () => {
-    detailedLink.setCssStyles({ textDecoration: 'underline' });
-  };
-  detailedLink.onmouseleave = () => {
-    detailedLink.setCssStyles({ textDecoration: 'none' });
-  };
-
-  // Steps list
-  const stepsContainer = guideCard.createDiv({ cls: 'guide-steps-list' });
-  stepsContainer.setCssStyles({
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '14px',
-  });
-
-  // Helper function to render a step item
-  const renderStep = (num, contentFn) => {
-    const stepRow = stepsContainer.createDiv();
-    stepRow.setCssStyles({
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: '12px',
-    });
-
-    const badge = stepRow.createSpan();
-    badge.setText(num.toString());
-    badge.setCssStyles({
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: '20px',
-      height: '20px',
-      borderRadius: '50%',
-      background: 'var(--interactive-accent)',
-      color: 'var(--text-on-interactive-accent, #ffffff)',
-      fontSize: '11px',
-      fontWeight: 'bold',
-      flexShrink: '0',
-      marginTop: '2px',
-    });
-
-    const body = stepRow.createDiv();
-    body.setCssStyles({
-      fontSize: '13px',
-      lineHeight: '1.6',
-      color: 'var(--text-normal)',
-      flexGrow: '1',
-    });
-
-    contentFn(body);
-  };
-
-  // Step 1
-  renderStep(1, (body) => {
-    body.createSpan({ text: '访问 ' });
-    const link = body.createEl('a', { text: '飞书开放平台', href: 'https://open.feishu.cn/' });
-    link.onclick = (e) => {
-      e.preventDefault();
-      if (plugin && typeof plugin.openExternalUrl === 'function') {
-        plugin.openExternalUrl('https://open.feishu.cn/');
-      } else {
-        window.open('https://open.feishu.cn/', '_blank', 'noopener');
-      }
-    };
-    link.setCssStyles({ color: 'var(--text-accent)', textDecoration: 'underline' });
-    body.createSpan({ text: ' 创建自建应用，并在「应用功能」中启用「机器人」能力。' });
-  });
-
-  // Step 2
-  renderStep(2, (body) => {
-    body.createSpan({ text: '进入「权限管理」，建议按更稳妥的方式开通权限：应用身份开通「云文档」相关全部权限，用户身份开通全部权限。这样可最大限度避免导入、更新、图片处理或所有权转移时遇到 403/权限不足。完成后点击「版本管理与发布」申请上线（需管理员审批）。' });
-    const subList = body.createDiv();
-    subList.setCssStyles({
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '6px',
-      marginTop: '8px',
-      paddingLeft: '12px',
-      borderLeft: '2px solid var(--interactive-accent)',
-    });
-
-    const addSubItem = (codeText, descText) => {
-      const item = subList.createDiv();
-      item.setCssStyles({ display: 'flex', alignItems: 'center', gap: '6px' });
-      
-      const code = item.createEl('code', { text: codeText });
-      code.setCssStyles({
-        fontFamily: 'var(--font-monospace)',
-        fontSize: '12px',
-        padding: '2px 6px',
-        background: 'var(--background-primary)',
-        border: '1px solid var(--background-modifier-border)',
-        borderRadius: '4px',
-        color: 'var(--code-normal)',
-      });
-
-      const desc = item.createSpan({ text: descText });
-      desc.setCssStyles({ color: 'var(--text-muted)', fontSize: '12px' });
-    };
-
-    addSubItem('应用身份', '开通云文档 / 云空间相关全部权限');
-    addSubItem('用户身份', '建议开通全部权限，减少权限边界导致的异常');
-    addSubItem('至少包含', 'drive:drive、docs:document:import 等文档导入与云盘读写权限');
-  });
-
-  // Step 3
-  renderStep(3, (body) => {
-    body.createSpan({ text: '在飞书客户端新建群聊，添加自建机器人，并将云盘同步文件夹共享给该群，协作权限必须选择 ' });
-    const strong = body.createEl('strong', { text: '「可管理」' });
-    strong.setCssStyles({ color: 'var(--text-accent)' });
-    body.createSpan({ text: ' 权限。' });
-  });
 }
 
 export {
+  FEISHU_SETUP_GUIDE_URL,
   renderFeishuSettingsTab,
 };
 
