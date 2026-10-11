@@ -138,6 +138,12 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
     expect(messages).toContain('“生命不息，折腾不止”');
     expect(messages).toContain('“终于有 Markdown 编辑同步了，加油！”');
 
+    // 检查配置安全与受控快照模块
+    const backupCard = containerEl.querySelector('.apple-settings-backup-card');
+    expect(backupCard).not.toBeNull();
+    expect(backupCard?.textContent).toContain('受控快照');
+    expect(backupCard?.textContent).toContain('从 .bak 快照恢复配置');
+
     // 检查 Obsidian 与 AI 交流社群模块
     const communityCard = containerEl.querySelector('.apple-settings-community-card');
     expect(communityCard).not.toBeNull();

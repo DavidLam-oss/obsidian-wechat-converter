@@ -110,7 +110,28 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
     };
   });
 
-  // 2. Obsidian 与 AI 交流社群
+  // 2. 配置安全与灾备恢复 (Disaster Recovery)
+  const backupSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
+  const backupHeader = backupSection.createDiv({ cls: 'apple-settings-about-section-header' });
+  const backupIcon = backupHeader.createSpan({ cls: 'apple-settings-about-section-icon' });
+  attachIcon(backupIcon, 'shield-check');
+  backupHeader.createSpan({ text: '配置安全与受控快照' });
+
+  const backupCard = backupSection.createDiv({ cls: 'apple-settings-backup-card' });
+  backupCard.createEl('p', {
+    text: '插件在每次保存配置实质变更前会自动生成受控快照 (data.json.bak)，并受实体级防清空凭据守卫保护。如遇意外或多端同步冲突，可一键从快照恢复配置。',
+  });
+  const restoreBtn = backupCard.createEl('button', {
+    text: '从 .bak 快照恢复配置',
+    cls: 'mod-cta',
+  });
+  restoreBtn.onclick = async () => {
+    if (typeof tabInstance.plugin.restoreFromBackup === 'function') {
+      await tabInstance.plugin.restoreFromBackup();
+    }
+  };
+
+  // 3. Obsidian 与 AI 交流社群
   const communitySection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
 
   const communityHeader = communitySection.createDiv({ cls: 'apple-settings-about-section-header' });
@@ -163,7 +184,7 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
   const communityHintEl = infoWrap.createDiv({ cls: 'apple-settings-community-hint' });
   communityHintEl.createSpan({ text: '微信扫码或搜索微信号添加均可，添加时请备注「OB 入群」' });
 
-  // 3. 关于作者
+  // 4. 关于作者
   const authorSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
 
   const authorHeader = authorSection.createDiv({ cls: 'apple-settings-about-section-header' });
@@ -176,7 +197,7 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
     text: '作者：林小卫很行 (DavidLam)。一名热衷于提升生产力工具体验的开发者与创作者。相信工具的力量，让写作更优雅，让创作更自由。',
   });
 
-  // 4. 支持与赞助 (Support & Sponsor)
+  // 5. 支持与赞助 (Support & Sponsor)
   const sponsorSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
 
   const sponsorHeader = sponsorSection.createDiv({ cls: 'apple-settings-about-section-header' });
@@ -219,7 +240,7 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
     text: '提示：扫码赞助时请在转账备注中填写您的【昵称】与【留言寄语】。作者将在下一版本更新时，将您的名字永久收录至下方的赞助鸣谢榜！',
   });
 
-  // 5. 赞助鸣谢榜 (Hall of Fame)
+  // 6. 赞助鸣谢榜 (Hall of Fame)
   const fameSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
 
   const fameHeader = fameSection.createDiv({ cls: 'apple-settings-about-section-header' });
@@ -257,27 +278,6 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
 
     item.createSpan({ text: sponsor.date, cls: 'apple-settings-fame-item-date' });
   });
-
-  // 6. 配置安全与灾备恢复 (Disaster Recovery)
-  const backupSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
-  const backupHeader = backupSection.createDiv({ cls: 'apple-settings-about-section-header' });
-  const backupIcon = backupHeader.createSpan({ cls: 'apple-settings-about-section-icon' });
-  attachIcon(backupIcon, 'shield-check');
-  backupHeader.createSpan({ text: '配置安全与受控快照' });
-
-  const backupCard = backupSection.createDiv({ cls: 'apple-settings-community-card' });
-  backupCard.createEl('p', {
-    text: '插件在每次保存配置实质变更前会自动生成受控快照 (data.json.bak)，并受实体级防清空凭据守卫保护。如遇意外或多端同步冲突，可一键从快照恢复配置。',
-  });
-  const restoreBtn = backupCard.createEl('button', {
-    text: '从 .bak 快照恢复配置',
-    cls: 'mod-cta',
-  });
-  restoreBtn.onclick = async () => {
-    if (typeof tabInstance.plugin.restoreFromBackup === 'function') {
-      await tabInstance.plugin.restoreFromBackup();
-    }
-  };
 }
 
 /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call -- reason: resume typed linting after the dynamic Obsidian settings UI boundary */

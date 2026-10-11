@@ -318,8 +318,9 @@
   flex-shrink: 0;
 }
 
-/* 交流讨论群模块 */
-.apple-settings-community-card {
+/* 交流讨论群与配置快照卡片模块 */
+.apple-settings-community-card,
+.apple-settings-backup-card {
   padding: 14px 18px;
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
@@ -329,7 +330,8 @@
   line-height: 1.7;
 }
 
-.apple-settings-community-card p {
+.apple-settings-community-card p,
+.apple-settings-backup-card p {
   margin: 0 0 8px 0;
 }
 
