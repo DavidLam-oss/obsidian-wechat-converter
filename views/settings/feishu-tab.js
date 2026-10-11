@@ -34,6 +34,7 @@
 
 import { getActiveWindowValue } from '../../services/dom-utils.js';
 import { FeishuApiClient } from '../../services/feishu-api.js';
+import { renderSectionHeader } from './platform-wall.js';
 import {
   FEISHU_FREE_MONTHLY_API_LIMIT,
   incrementFeishuApiUsage,
@@ -224,6 +225,7 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   }
 
   // 1. Enable Toggle
+  renderSectionHeader(containerEl, 'cloud', '飞书同步服务');
   const enableSetting = new Setting(containerEl)
     .setName('启用飞书同步');
   setMutedGuideDescription(
@@ -247,9 +249,14 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
 
   if (!settings.enabled) return;
 
+  // 2. Usage Stats
+  renderSectionHeader(containerEl, 'bar-chart-2', '数据统计与配额');
   renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, Notice);
 
-  // 2. App ID
+  // 3. Credentials & Folder Config
+  renderSectionHeader(containerEl, 'key', '自建应用凭证与配置');
+
+  // App ID
   new Setting(containerEl)
     .setName('App ID')
     .setDesc('飞书开放平台（open.feishu.cn）企业自建应用的 App ID。')
@@ -262,7 +269,7 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
       })
     );
 
-  // 3. App Secret
+  // App Secret
   new Setting(containerEl)
     .setName('App Secret')
     .setDesc('企业自建应用的 App Secret 凭证。')
@@ -282,7 +289,7 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
         });
     });
 
-  // 4. Folder Token
+  // Folder Token
   new Setting(containerEl)
     .setName('目标文件夹 Token')
     .setDesc('飞书云盘文件夹链接中的 Token（例如 folder/fldcnXXXXXXXXX）。')
@@ -295,7 +302,7 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
       })
     );
 
-  // 5. User ID
+  // User ID
   new Setting(containerEl)
     .setName('文档所有者 ID (User ID)')
     .setDesc('同步成功后将文档所有权自动转移给您本人（可选，建议 user_id 格式）。')
@@ -308,7 +315,8 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
       })
     );
 
-  // 6. Test Connection Button
+  // 4. Test Connection Button
+  renderSectionHeader(containerEl, 'activity', '连接状态与测试');
   new Setting(containerEl)
     .setName('测试连接')
     .setDesc('验证自建应用授权与目标文件夹访问权限。')

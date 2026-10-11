@@ -698,11 +698,11 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     const body = tab.containerEl.querySelector('.wechat-bridge-status-body');
     expect(body.textContent).toContain('连接令牌校验失败');
 
-    // Unified bar must come before the platform picker.
+    // Platform picker is hoisted to the top of the tab, so it must come before the unified bar.
     const unifiedBar = tab.containerEl.querySelector('.wechat-multiplatform-token-status');
     const picker = tab.containerEl.querySelector('.wechat-platform-picker');
     expect(picker).not.toBeNull();
-    expect(unifiedBar.compareDocumentPosition(picker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(unifiedBar.compareDocumentPosition(picker) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
   });
 
   it('does not render the unified status bar or platform section when bridge is disabled', () => {

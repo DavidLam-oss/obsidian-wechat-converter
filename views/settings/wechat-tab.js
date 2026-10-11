@@ -36,6 +36,7 @@ import {
   toReadableError,
   attachIcon,
 } from '../apple-style-view-shared.js';
+import { renderSectionHeader } from './platform-wall.js';
 import { resolveCustomCssSource } from '../../services/custom-css-source.js';
 import { compileCustomCss } from '../../services/custom-css-compiler.js';
 
@@ -131,7 +132,9 @@ const wechatSettingsMethods = {
       '配置公众号账号、封面摘要和微信预览相关选项。'
     );
 
-    // 预览模式设置
+    // 1. 界面与预览设置
+    renderSectionHeader(containerEl, 'layout', '界面与预览');
+
     new Setting(containerEl)
       .setName('预览模式')
       .setHeading();
@@ -147,7 +150,9 @@ const wechatSettingsMethods = {
           new Notice('设置已保存，请关闭并重新打开发布助手面板以生效');
         }));
 
-    // 图片水印设置
+    // 2. 图片水印与头像设置
+    renderSectionHeader(containerEl, 'image', '图片水印与头像');
+
     new Setting(containerEl)
       .setName('图片水印')
       .setHeading();
@@ -222,6 +227,8 @@ const wechatSettingsMethods = {
           await this.plugin.saveSettings();
         }));
 
+    // 3. 微信公众号账号
+    renderSectionHeader(containerEl, 'users', '微信公众号账号');
     const accountHeadingSetting = new Setting(containerEl)
       .setName('微信公众号账号');
     setMutedGuideDescription(
@@ -337,10 +344,8 @@ const wechatSettingsMethods = {
       });
     }
 
-    // 高级设置
-    new Setting(containerEl)
-      .setName('高级设置')
-      .setHeading();
+    // 4. 高级设置与同步清理
+    renderSectionHeader(containerEl, 'settings-2', '高级设置与同步清理');
 
     new Setting(containerEl)
       .setName('发送成功后自动清理资源')
@@ -383,6 +388,9 @@ const wechatSettingsMethods = {
           this.plugin.settings.cleanupUseSystemTrash = value;
           await this.plugin.saveSettings();
         }));
+
+    // 5. API 网络代理
+    renderSectionHeader(containerEl, 'shield', 'API 网络代理');
 
     let hasWarnedInsecureProxy = false;
     new Setting(containerEl)
@@ -477,9 +485,7 @@ const wechatSettingsMethods = {
    * @param {ObsidianElementLike} containerEl
    */
   renderCustomCssSection(containerEl) {
-    new Setting(containerEl)
-      .setName('自定义 CSS')
-      .setHeading();
+    renderSectionHeader(containerEl, 'palette', '自定义 CSS');
 
     const warningCard = containerEl.createDiv({
       cls: 'owc-custom-css-warning',

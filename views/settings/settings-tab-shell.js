@@ -154,8 +154,16 @@ const settingsTabShellMethods = {
         justifyContent: 'space-between',
         fontSize: '13px',
       });
-      safeBanner.createSpan({
-        text: '⚠️ 当前处于配置只读保护模式（已拦截写入以防账号凭据丢失）。',
+      const safeContent = safeBanner.createSpan({ cls: 'owc-settings-safe-mode-content' });
+      safeContent.setCssStyles({
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+      });
+      const iconSpan = safeContent.createSpan();
+      attachIcon(iconSpan, 'triangle-alert');
+      safeContent.createSpan({
+        text: '当前处于配置只读保护模式（已拦截写入以防账号凭据丢失）。',
       });
       const restoreBtn = safeBanner.createEl('button', {
         text: '从 .bak 恢复配置',

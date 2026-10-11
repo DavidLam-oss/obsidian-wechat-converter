@@ -23,11 +23,12 @@
 
 - 严格排除微信 (weixin) 与飞书 (feishu)，这两个平台拥有独立 Tab。
 - 遵循无 emoji 规范，全量使用 Obsidian 原生 Lucide 图标。
-- Logo 加载采用三级容灾：[Xiaoweibox 官方源] → [DuckDuckGo Favicon] → [品牌色首字符微标]。
 */
 
+// views/settings/platform-wall.js
 import { getFallbackWechatsyncPlatforms } from '../../services/wechatsync-results.js';
 import { attachIcon } from '../apple-style-view-shared.js';
+import { EMBEDDED_PLATFORM_ICONS } from './platform-icons.js';
 
 /**
  * 渲染统一样式的带原生 Lucide 图标的 Section Header
@@ -172,13 +173,28 @@ export function renderLetterFallback(wrap, platform) {
 
 /**
  * 渲染平台图标，具备三级容灾能力：
- * Stage 0: Xiaoweibox 官方高清静态资源
- * Stage 1: DuckDuckGo Favicon 镜像服务
- * Stage 2: 品牌色首字符方形徽标
+ * Stage 0: 内置离线高清 Base64 数据（0网络请求/0IP暴露/离线立现/滚动不重载）
+ * Stage 1: Xiaoweibox 官方高清静态资源
+ * Stage 2: DuckDuckGo Favicon 镜像服务
+ * Stage 3: 品牌色首字符方形徽标
  * @param {HTMLElement} iconWrap
  * @param {{ id: string, name: string, homepage?: string }} platform
  */
 export function renderPlatformIcon(iconWrap, platform) {
+  const embeddedSrc = EMBEDDED_PLATFORM_ICONS[platform.id];
+  if (embeddedSrc) {
+    iconWrap.createEl('img', {
+      cls: 'wechat-platform-wall-icon',
+      attr: {
+        src: embeddedSrc,
+        alt: platform.name,
+        width: '16',
+        height: '16',
+      },
+    });
+    return;
+  }
+
   const officialFile = OFFICIAL_PLATFORM_ICONS[platform.id];
   const hostname = resolvePlatformHostname(platform);
   const primarySrc = officialFile
@@ -191,7 +207,6 @@ export function renderPlatformIcon(iconWrap, platform) {
       attr: {
         src: primarySrc,
         alt: platform.name,
-        loading: 'lazy',
         width: '16',
         height: '16',
       },
@@ -215,7 +230,7 @@ export function renderPlatformIcon(iconWrap, platform) {
 }
 
 /**
- * 获取适用于多平台发布 Tab 的有效平台列表（严格剔除微信与飞书）
+ * 获取适用于多平台发布 Tab 的有效平台列表（严格剔除微信与飞书，含变体）
  * @param {Array<{ id: string, name: string }> | undefined} [customPlatforms]
  * @returns {Array<{ id: string, name: string, homepage?: string }>}
  */
@@ -224,10 +239,10 @@ export function getMultiPlatformWallList(customPlatforms) {
     ? customPlatforms
     : getFallbackWechatsyncPlatforms();
 
-  // 严格过滤掉微信（已有微信 Tab）与飞书（已有飞书 Tab）
+  // 严格过滤掉微信（已有微信 Tab）与飞书（已有飞书 Tab），包含变体（如 wechatmp, weixin-mp 等）
   return rawList.filter((platform) => {
-    const id = String(platform?.id || '').toLowerCase();
-    return id !== 'weixin' && id !== 'wechat' && id !== 'feishu';
+    const id = String(platform?.id || '').toLowerCase().replace(/[-_\s]/g, '');
+    return !/^(weixin|wechat|feishu)/.test(id);
   });
 }
 
@@ -306,7 +321,7 @@ export function renderPlatformWall(containerEl, options = {}) {
       : { text: '', cls: '', status: '' };
 
     const chip = grid.createEl('label', {
-      cls: `wechat-platform-wall-tile wechat-platform-chip ${isSelected ? `${authBadge.cls} is-selected` : ''}`,
+      cls: `wechat-platform-wall-tile wechat-platform-chip${isSelected ? ` ${authBadge.cls} is-selected` : ''}`,
     });
     chip.setAttribute('title', isSelected && authBadge.text ? `${platform.name} · ${authBadge.text}` : platform.name);
 
@@ -325,38 +340,37 @@ export function renderPlatformWall(containerEl, options = {}) {
     });
     statusEl.setAttribute('title', authBadge.text);
 
-    const setStatusVisible = (visible) => {
+    const setStatusVisible = (visible, currentBadge = authBadge) => {
       for (const cls of ['is-ok', 'is-error', 'is-unknown', 'is-bridge']) {
         chip.removeClass?.(cls);
-        chip.classList?.remove(cls);
         statusEl.removeClass?.(cls);
-        statusEl.classList?.remove(cls);
       }
-      statusEl.textContent = authBadge.text;
+      statusEl.textContent = currentBadge.text;
       if (visible) {
-        chip.addClass?.(authBadge.cls);
-        chip.classList?.add(authBadge.cls);
-        statusEl.addClass?.(authBadge.cls);
-        statusEl.classList?.add(authBadge.cls);
+        if (currentBadge.cls) {
+          chip.addClass?.(currentBadge.cls);
+          statusEl.addClass?.(currentBadge.cls);
+        }
       }
-      chip.setAttribute('title', visible ? `${platform.name} · ${authBadge.text}` : platform.name);
+      chip.setAttribute('title', visible && currentBadge.text ? `${platform.name} · ${currentBadge.text}` : platform.name);
     };
 
     checkbox.onchange = async () => {
+      const latestBadge = typeof options.getAuthBadge === 'function'
+        ? options.getAuthBadge(platform)
+        : authBadge;
       if (checkbox.checked) {
         selectedSet.add(platform.id);
         chip.addClass?.('is-selected');
-        chip.classList?.add('is-selected');
-        setStatusVisible(true);
+        setStatusVisible(true, latestBadge);
       } else {
         selectedSet.delete(platform.id);
         chip.removeClass?.('is-selected');
-        chip.classList?.remove('is-selected');
-        setStatusVisible(false);
+        setStatusVisible(false, latestBadge);
       }
       updateSummary();
       if (typeof options.onToggle === 'function') {
-        await options.onToggle(platform, checkbox.checked, selectedSet, authBadge);
+        await options.onToggle(platform, checkbox.checked, selectedSet, latestBadge);
       }
     };
   });

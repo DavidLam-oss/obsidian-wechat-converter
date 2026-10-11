@@ -353,7 +353,37 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     );
   }
 
-  // 1. 浏览器配套同步服务 (Onboarding Banner + 启用开关)
+  const availablePlatforms = toPlatformList(getAvailableWechatsyncPlatforms(multiPlatformSettings));
+  const selectedPlatformSet = new Set(parseWechatsyncPlatformIds(multiPlatformSettings.selectedPlatforms || []));
+  const getPlatformAuthBadge = (platform = {}) => toPlatformStatusBadge(getWechatsyncPlatformStatusBadge(platform, {
+    bridgeConnected: multiPlatformSettings.connection?.status === 'connected',
+  }));
+
+  const saveSelectedPlatforms = async () => {
+    const current = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
+    plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({ ...current, selectedPlatforms: Array.from(selectedPlatformSet) });
+    await plugin.saveSettings();
+  };
+
+  // 1. 支持发布平台矩阵 / 全览 (置顶呈现，未开启时也能一眼看到全部平台)
+  renderSectionHeader(containerEl, 'share-2', isPublishingEnabled ? '支持发布平台矩阵' : '支持发布平台全览');
+  renderPlatformWall(containerEl, {
+    selectable: isPublishingEnabled,
+    platforms: availablePlatforms,
+    selectedSet: selectedPlatformSet,
+    getAuthBadge: getPlatformAuthBadge,
+    desc: isPublishingEnabled ? '已勾选平台会显示上次状态；本次发布仍以浏览器插件实际结果为准。' : '涵盖主流自媒体、技术社区与财经资讯平台。开启下方服务后，可直接勾选平台并一键同步草稿。',
+    onToggle: async (platform, isChecked, set, authBadge) => {
+      const authRecord = toRecord(authBadge);
+      const platformRecord = toRecord(platform);
+      if (isChecked && authRecord.status === 'login_required') {
+        new Notice(`${toText(platformRecord.name)} 上次状态为需登录。请先在浏览器插件打开平台登录页，或继续尝试由插件返回实际结果。`, 8000);
+      }
+      await saveSelectedPlatforms();
+    },
+  });
+
+  // 2. 浏览器配套同步服务 (Onboarding Banner + 启用开关)
   renderSectionHeader(containerEl, 'plug', '浏览器配套同步服务');
 
   const guide = containerEl.createDiv({
@@ -414,12 +444,10 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       }));
 
   if (!multiPlatformSettings.enabled) {
-    renderSectionHeader(containerEl, 'share-2', '支持发布平台全览');
-    renderPlatformWall(containerEl, { selectable: false });
     return;
   }
 
-  // 2. 本地连接与通信设置 (只有启用后展示)
+  // 3. 本地连接与通信设置 (只有启用后展示)
   renderSectionHeader(containerEl, 'link', '本地连接与通信');
 
   new Setting(containerEl)
@@ -662,20 +690,6 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       timeoutMs: 5000,
     });
     return toAuthSnapshot(normalizeWechatsyncAuthSnapshot(response, fallbackPlatforms));
-  };
-  const availablePlatforms = toPlatformList(getAvailableWechatsyncPlatforms(multiPlatformSettings));
-  const selectedPlatformSet = new Set(parseWechatsyncPlatformIds(multiPlatformSettings.selectedPlatforms || []));
-  const getPlatformAuthBadge = (platform = {}) => toPlatformStatusBadge(getWechatsyncPlatformStatusBadge(platform, {
-    bridgeConnected: multiPlatformSettings.connection?.status === 'connected',
-  }));
-
-  const saveSelectedPlatforms = async () => {
-    const current = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
-    plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
-      ...current,
-      selectedPlatforms: Array.from(selectedPlatformSet),
-    });
-    await plugin.saveSettings();
   };
 
   new Setting(containerEl)
@@ -927,23 +941,6 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
           button.setButtonText('读取');
         }
       }));
-
-  // 3. 支持发布平台矩阵 (一体化平台墙，集成 Logo、勾选框与登录状态)
-  renderSectionHeader(containerEl, 'share-2', '支持发布平台矩阵');
-  renderPlatformWall(containerEl, {
-    selectable: true,
-    platforms: availablePlatforms,
-    selectedSet: selectedPlatformSet,
-    getAuthBadge: getPlatformAuthBadge,
-    onToggle: async (platform, isChecked, set, authBadge) => {
-      const authRecord = toRecord(authBadge);
-      const platformRecord = toRecord(platform);
-      if (isChecked && authRecord.status === 'login_required') {
-        new Notice(`${toText(platformRecord.name)} 上次状态为需登录。请先在浏览器插件打开平台登录页，或继续尝试由插件返回实际结果。`, 8000);
-      }
-      await saveSelectedPlatforms();
-    },
-  });
 }
 
 export { renderMultiPlatformSettingsTab };

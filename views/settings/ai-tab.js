@@ -47,6 +47,7 @@ import {
   getActiveWindowValue,
 } from "../apple-style-view-shared.js";
 import { showEditAiProviderModal } from "./ai-provider-modal.js";
+import { renderSectionHeader } from "./platform-wall.js";
 
 export const UNSPLASH_API_KEY_GUIDE_URL = "https://xiaoweibox.top/chats/unsplash-api-key";
 
@@ -131,9 +132,7 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
   // =========================================================================
   // 第一部分：AI Provider 凭据池
   // =========================================================================
-  new SettingCtor(containerEl)
-    .setName("AI Provider 模型凭据池")
-    .setHeading();
+  renderSectionHeader(containerEl, 'bot', 'AI Provider 模型凭据池');
 
   /** @type {AiProviderLike[]} */
   const providers = tab.plugin.settings.ai.providers || [];
@@ -306,9 +305,7 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
   // =========================================================================
   // 第二部分：文章 AI 编排（公众号排版）
   // =========================================================================
-  new SettingCtor(containerEl)
-    .setName("文章 AI 编排")
-    .setHeading();
+  renderSectionHeader(containerEl, 'sparkles', '文章 AI 编排');
 
   new SettingCtor(containerEl)
     .setName("启用 AI 编排")
@@ -444,9 +441,7 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
   // =========================================================================
   // 第三部分：卡片 AI 封面（小红书/图片卡片生图）
   // =========================================================================
-  new SettingCtor(containerEl)
-    .setName("卡片 AI 封面")
-    .setHeading();
+  renderSectionHeader(containerEl, 'image', '卡片 AI 封面');
 
   // 默认生图 Provider 下拉框：仅过滤具备生图能力的 Provider
   const imageProviders = providers.filter((p) => p.supportsImage === true && p.enabled !== false);
@@ -485,6 +480,8 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
   // =========================================================================
   // 第四部分：摄影图库与搜索服务（Unsplash）
   // =========================================================================
+  renderSectionHeader(containerEl, 'camera', '摄影图库与搜索服务 (Unsplash)');
+
   new SettingCtor(containerEl)
     .setName("摄影图库与搜索服务")
     .setHeading();
