@@ -81,6 +81,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Place styling rules in `themes/apple-theme.js`.
 - Place preprocessing, path resolution, and cleaner logic in their respective modules under `services/`.
 
+### 7. Path Resolution Function Parity
+- **Constraint**: `converter.js` contains 4 path processing functions that must stay synchronized with `services/path-utils.js` and `services/image-source-utils.js`:
+  - `collapsePathSegments()`
+  - `getFileUrlLocalPath()`
+  - `getVaultAdapterBasePath()`
+  - `getVaultRelativePathFromLocalPath()`
+- **Rationale**: `converter.js` is the historical core of article conversion and importing shared modules would break its boundary. Duplication is intentional but must be managed carefully.
+- **Test Guard**: `tests/converter_path_utils_parity.test.js` verifies implementation parity with 36 test cases covering edge cases (relative paths, absolute paths, `file://` URLs, Windows paths, symlinks).
+- **Maintenance Rule**: When modifying any path resolution logic:
+  1. Update both `converter.js` AND the corresponding functions in `services/`
+  2. Run `npm test` to ensure the parity test passes
+  3. Update function-level comments in both locations to document the change
+- **Do NOT**: Attempt to extract these functions into a shared module to eliminate duplication. The test guard is sufficient, and extraction would require significant refactoring with unclear benefits.
+
 ## Release
 
 发布新版本时，使用 `/project-release` skill 查看完整流程。
