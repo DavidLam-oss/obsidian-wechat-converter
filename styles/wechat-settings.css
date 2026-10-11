@@ -282,12 +282,10 @@
   background: color-mix(in srgb, var(--text-error, #d33) 15%, transparent);
   color: var(--text-error, #d33);
 }
-
 .wechat-multiplatform-token-status-dot.is-unknown {
   background: color-mix(in srgb, var(--text-warning, #d99300) 18%, transparent);
   color: var(--text-warning, #d99300);
 }
-
 .wechat-multiplatform-token-status-dot.is-ok {
   background: color-mix(in srgb, var(--text-success, #2c9c4c) 18%, transparent);
   color: var(--text-success, #2c9c4c);
@@ -296,13 +294,11 @@
 .wechat-multiplatform-token-status-text {
   color: var(--text-muted, #666);
 }
-
 .wechat-bridge-browser-icon {
   display: inline-block;
   vertical-align: middle;
   flex-shrink: 0;
 }
-
 .wechat-bridge-status-body {
   display: flex;
   align-items: center;
@@ -311,20 +307,17 @@
   min-width: 0;
   color: var(--text-muted, #666);
 }
-
 .wechat-bridge-pairing-panel {
   margin: 8px 0 14px;
   padding: 10px 12px;
   border-left: 3px solid var(--color-yellow);
   background: var(--background-secondary);
 }
-
 .wechat-bridge-pairing-panel > p {
   margin: 4px 0 8px;
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
 }
-
 .wechat-bridge-pairing-row {
   display: flex;
   align-items: center;
@@ -332,12 +325,10 @@
   gap: 12px;
   min-height: 32px;
 }
-
 .wechat-bridge-pairing-row > span {
   min-width: 0;
   overflow-wrap: anywhere;
 }
-
 .wechat-bridge-pairing-actions {
   display: flex;
   align-items: center;
@@ -348,12 +339,21 @@
 .wechat-bridge-paired-panel {
   margin: 6px 0 14px;
 }
-
 .wechat-bridge-paired-panel > strong {
   display: block;
   margin-bottom: 4px;
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
+}
+.wechat-bridge-paired-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.wechat-bridge-paired-info .wechat-bridge-status-time {
+  margin-left: 0;
 }
 
 .wechat-bridge-status-profile {

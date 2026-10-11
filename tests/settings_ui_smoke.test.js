@@ -977,19 +977,62 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     plugin.getWechatSyncBridgeService = vi.fn(() => bridge);
     const tab = renderTab(plugin);
 
+    // 验证配对存在时，不渲染顶部冗余的独立连接状态栏
+    expect(tab.containerEl.querySelector('.wechat-multiplatform-token-status')).toBeNull();
+
+    // 验证配对卡片行内整合了浏览器信息与「已就绪」状态徽标
+    const pairedPanel = tab.containerEl.querySelector('.wechat-bridge-paired-panel');
+    expect(pairedPanel).not.toBeNull();
+    const info = pairedPanel.querySelector('.wechat-bridge-paired-info');
+    expect(info).not.toBeNull();
+    expect(info.textContent).toContain('写作号');
+    expect(info.textContent).toContain('已就绪');
+    expect(info.querySelector('.wechat-multiplatform-token-status-dot.is-ok')).not.toBeNull();
+
     // 验证底部独立 Setting 不包含测试连接
     const names = globalThis.__obsidianSettingNamesRegistry;
     expect(names).not.toContain('测试连接');
 
     // 验证配对卡片内部操作区按顺序包含「测试连接」和「移除」
-    const pairedPanel = tab.containerEl.querySelector('.wechat-bridge-paired-panel');
-    expect(pairedPanel).not.toBeNull();
     const actionBtns = Array.from(pairedPanel.querySelectorAll('.wechat-bridge-pairing-actions button'));
     expect(actionBtns.map((b) => b.textContent)).toEqual(['测试连接', '移除']);
 
     // 点击测试连接能正常调用底层 bridge 逻辑
     await actionBtns[0].onclick();
     expect(bridge.health).toHaveBeenCalled();
+  });
+
+  it('当存在已配对浏览器但连接失败时，保留顶部独立错误状态栏并显示连接失败徽标', () => {
+    const tab = renderTab(makePlugin({
+      multiPlatformSync: {
+        enabled: true,
+        port: 9527,
+        token: 'abc',
+        pairedClients: [{
+          extensionInstanceId: 'paired-chrome',
+          credentialHash: 'b'.repeat(64),
+          browserName: 'chrome',
+          profileLabel: '写作号',
+        }],
+        supportedPlatforms: [],
+        selectedPlatforms: [],
+        connection: { status: 'failed', checkedAt: Date.now(), platforms: [], capabilities: {}, message: '端口被占用' },
+        recentTasks: [],
+      },
+    }));
+
+    // 失败时必须渲染顶部错误状态栏以供排查诊断
+    const dot = tab.containerEl.querySelector('.wechat-multiplatform-token-status .wechat-multiplatform-token-status-dot');
+    expect(dot).not.toBeNull();
+    expect(dot.textContent).toBe('连接失败');
+    expect(dot.classList.contains('is-error')).toBe(true);
+    expect(tab.containerEl.querySelector('.wechat-bridge-status-body').textContent).toContain('端口被占用');
+
+    // 配对行内徽标也呈现「连接失败」
+    const pairedPanel = tab.containerEl.querySelector('.wechat-bridge-paired-panel');
+    const rowDot = pairedPanel.querySelector('.wechat-multiplatform-token-status-dot');
+    expect(rowDot.textContent).toBe('连接失败');
+    expect(rowDot.classList.contains('is-error')).toBe(true);
   });
 
   it('§18.7 Plan B: chrome / chromium 走通用 icon（不撒谎为某个特定 fork）', () => {

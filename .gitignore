@@ -1,6 +1,7 @@
 node_modules/
 .DS_Store
 data.json
+*.bak
 workspace.json
 xgplayer/
 *.zip

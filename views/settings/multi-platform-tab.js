@@ -116,9 +116,7 @@ function isRecord(value) {
  * @returns {{ message: string, code?: string, stack?: string }}
  */
 function toReadableError(error) {
-  if (error instanceof Error) {
-    return /** @type {{ message: string, code?: string, stack?: string }} */ (error);
-  }
+  if (error instanceof Error) return /** @type {{ message: string, code?: string, stack?: string }} */ (error);
   if (isRecord(error)) {
     return {
       message: typeof error.message === 'string' ? error.message : String(error),
@@ -235,9 +233,7 @@ function toDiagnostics(value) {
   const last = toRecord(record.lastHelloRejection);
   return {
     helloRejections: Number(record.helloRejections) || 0,
-    lastHelloRejection: {
-      reason: toText(last.reason),
-    },
+    lastHelloRejection: { reason: toText(last.reason) },
   };
 }
 
@@ -628,48 +624,43 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       return `${Math.floor(d / 86400000)} 天前`;
     }
 
-    const bar = containerEl.createDiv({ cls: 'wechat-multiplatform-token-status' });
-    const dot = bar.createEl('span', { cls: 'wechat-multiplatform-token-status-dot' });
-    const body = bar.createDiv({ cls: 'wechat-bridge-status-body' });
+    if (pairedClients.length === 0 || multiPlatformSettings.connection?.status === 'failed') {
+      const bar = containerEl.createDiv({ cls: 'wechat-multiplatform-token-status' });
+      const dot = bar.createEl('span', { cls: 'wechat-multiplatform-token-status-dot' });
+      const body = bar.createDiv({ cls: 'wechat-bridge-status-body' });
 
-    if (!multiPlatformSettings.token) {
-      dot.classList?.add?.('is-error');
-      dot.textContent = '未填写';
-      body.createEl('span', { text: '连接令牌尚未填写。请到浏览器扩展弹窗复制令牌。' });
-    } else if (liveClient) {
-      dot.classList?.add?.('is-ok');
-      dot.textContent = '已就绪';
-      renderBrowserIcon(body, liveClient.browserName);
-      renderBrowserLabel(body, liveClient.browserName, liveClient.profileLabel);
-      body.createEl('span', { cls: 'wechat-bridge-status-time', text: fmtRelativeTime(liveClient.lastSeenAt) });
-    } else if (lastClient) {
-      dot.classList?.add?.('is-unknown');
-      dot.textContent = '已断开';
-      renderBrowserIcon(body, lastClient.browserName);
-      renderBrowserLabel(body, lastClient.browserName, lastClient.profileLabel);
-      body.createEl('span', { text: ' 已断开，请重启浏览器扩展重新连接。' });
-      body.createEl('span', { cls: 'wechat-bridge-status-time', text: fmtRelativeTime(lastClient.lastSeenAt) });
-    } else if (multiPlatformSettings.connection?.status === 'connected') {
-      dot.classList?.add?.('is-ok');
-      dot.textContent = '已就绪';
-      const checkedAt = formatWechatsyncCheckedAt(multiPlatformSettings.connection.checkedAt);
-      body.createEl('span', {
-        text: checkedAt
-          ? `浏览器扩展已连接，可以发布。上次检查 ${checkedAt}。`
-          : '浏览器扩展已连接，可以发布。',
-      });
-    } else if (multiPlatformSettings.connection?.status === 'failed') {
-      dot.classList?.add?.('is-error');
-      dot.textContent = '连接失败';
-      body.createEl('span', {
-        text: multiPlatformSettings.connection.message
-          ? `${multiPlatformSettings.connection.message}。请检查端口和令牌后点击「测试连接」。`
-          : '请检查端口和令牌后点击「测试连接」。',
-      });
-    } else {
-      dot.classList?.add?.('is-unknown');
-      dot.textContent = '等待连接';
-      body.createEl('span', { text: '令牌已填写，请点击下方「测试连接」确认连接。' });
+      if (!multiPlatformSettings.token) {
+        dot.classList?.add?.('is-error');
+        dot.textContent = '未填写';
+        body.createEl('span', { text: '连接令牌尚未填写。请到浏览器扩展弹窗复制令牌。' });
+      } else if (liveClient) {
+        dot.classList?.add?.('is-ok');
+        dot.textContent = '已就绪';
+        renderBrowserIcon(body, liveClient.browserName);
+        renderBrowserLabel(body, liveClient.browserName, liveClient.profileLabel);
+        body.createEl('span', { cls: 'wechat-bridge-status-time', text: fmtRelativeTime(liveClient.lastSeenAt) });
+      } else if (lastClient) {
+        dot.classList?.add?.('is-unknown');
+        dot.textContent = '已断开';
+        renderBrowserIcon(body, lastClient.browserName);
+        renderBrowserLabel(body, lastClient.browserName, lastClient.profileLabel);
+        body.createEl('span', { text: ' 已断开，请重启浏览器扩展重新连接。' });
+        body.createEl('span', { cls: 'wechat-bridge-status-time', text: fmtRelativeTime(lastClient.lastSeenAt) });
+      } else if (multiPlatformSettings.connection?.status === 'connected') {
+        dot.classList?.add?.('is-ok');
+        dot.textContent = '已就绪';
+        const checkedAt = formatWechatsyncCheckedAt(multiPlatformSettings.connection.checkedAt);
+        body.createEl('span', { text: checkedAt ? `浏览器扩展已连接，可以发布。上次检查 ${checkedAt}。` : '浏览器扩展已连接，可以发布。' });
+      } else if (multiPlatformSettings.connection?.status === 'failed') {
+        dot.classList?.add?.('is-error');
+        dot.textContent = '连接失败';
+        const msg = multiPlatformSettings.connection.message;
+        body.createEl('span', { text: msg ? `${msg}。请检查端口和令牌后点击「测试连接」。` : '请检查端口和令牌后点击「测试连接」。' });
+      } else {
+        dot.classList?.add?.('is-unknown');
+        dot.textContent = '等待连接';
+        body.createEl('span', { text: '令牌已填写，请点击下方「测试连接」确认连接。' });
+      }
     }
 
     const pendingClients = Array.isArray(multiPlatformSettings.pendingClients)
@@ -688,19 +679,14 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         const actions = row.createDiv({ cls: 'wechat-bridge-pairing-actions' });
         const approve = actions.createEl('button', { text: '批准配对', cls: 'mod-cta' });
         approve.onclick = async () => {
-          const bridge = plugin.getWechatSyncBridgeService();
-          const paired = bridge.pairClient?.(String(pending.extensionInstanceId));
-          if (!paired) {
-            new Notice('该待配对请求已过期，请重新加载浏览器插件后再试。', 6000);
-            return;
-          }
+          const paired = plugin.getWechatSyncBridgeService().pairClient?.(String(pending.extensionInstanceId));
+          if (!paired) { new Notice('该待配对请求已过期，请重新加载浏览器插件后再试。', 6000); return; }
           new Notice('已批准此浏览器。请在浏览器插件中点击重新连接或重新加载扩展。', 6000);
           refreshSettingTab(tab);
         };
         const dismiss = actions.createEl('button', { text: '忽略' });
         dismiss.onclick = () => {
-          const bridge = plugin.getWechatSyncBridgeService();
-          if (bridge.dismissPendingClient?.(String(pending.extensionInstanceId))) {
+          if (plugin.getWechatSyncBridgeService().dismissPendingClient?.(String(pending.extensionInstanceId))) {
             new Notice('已忽略此浏览器的待配对请求。', 5000);
             refreshSettingTab(tab);
           }
@@ -712,15 +698,30 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       pairedPanel.createEl('strong', { text: '已配对浏览器' });
       for (const paired of pairedClients) {
         const row = pairedPanel.createDiv({ cls: 'wechat-bridge-pairing-row' });
-        const label = paired.profileLabel || paired.browserName || String(paired.extensionInstanceId).slice(0, 8);
-        row.createEl('span', { text: label });
+        const info = row.createDiv({ cls: 'wechat-bridge-paired-info' });
+        renderBrowserIcon(info, paired.browserName);
+        renderBrowserLabel(info, paired.browserName || String(paired.extensionInstanceId || '').slice(0, 8), paired.profileLabel);
+        const client = clients.find((c) => c.extensionInstanceId === paired.extensionInstanceId)
+          || (pairedClients.length === 1 ? (liveClient || lastClient) : null);
+        let statusText = '等待连接', statusCls = 'is-unknown', timeText = fmtRelativeTime(paired.pairedAt);
+        if (multiPlatformSettings.connection?.status === 'failed') {
+          statusText = '连接失败'; statusCls = 'is-error'; timeText = '';
+        } else if (client?.status === 'connected' || (multiPlatformSettings.connection?.status === 'connected' && (!client || client.status !== 'disconnected'))) {
+          statusText = '已就绪'; statusCls = 'is-ok';
+          timeText = fmtRelativeTime(client?.lastSeenAt || multiPlatformSettings.connection?.checkedAt || paired.pairedAt);
+        } else if (client?.status === 'disconnected') {
+          statusText = '已断开'; statusCls = 'is-unknown';
+          timeText = fmtRelativeTime(client?.lastSeenAt || paired.pairedAt);
+        }
+        info.createSpan({ cls: `wechat-multiplatform-token-status-dot ${statusCls}`, text: statusText });
+        if (timeText) info.createSpan({ cls: 'wechat-bridge-status-time', text: timeText });
+
         const actions = row.createDiv({ cls: 'wechat-bridge-pairing-actions' });
         const testBtn = actions.createEl('button', { text: '测试连接' });
         testBtn.onclick = () => runTestConnectionAction(testBtn);
         const remove = actions.createEl('button', { text: '移除' });
         remove.onclick = () => {
-          const bridge = plugin.getWechatSyncBridgeService();
-          if (bridge.unpairClient?.(String(paired.extensionInstanceId))) {
+          if (plugin.getWechatSyncBridgeService().unpairClient?.(String(paired.extensionInstanceId))) {
             new Notice('已移除此浏览器配对。', 5000);
             refreshSettingTab(tab);
           }
@@ -934,9 +935,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     new Setting(containerEl)
       .setName('测试连接')
       .setDesc('验证 Obsidian 与浏览器插件的连接状态及令牌有效性。')
-      .addButton(button => button
-        .setButtonText('测试')
-        .onClick(() => runTestConnectionAction(button)));
+      .addButton(button => button.setButtonText('测试').onClick(() => runTestConnectionAction(button)));
   }
 }
 
