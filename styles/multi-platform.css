@@ -717,7 +717,7 @@
   margin-bottom: 4px;
 }
 
-.wechat-platform-wall-title-wrap { display: inline-flex; align-items: center; gap: 6px; }
+.wechat-platform-wall-title-wrap { display: inline-flex; align-items: center; gap: 8px; }
 
 .wechat-platform-wall-title {
   color: var(--text-normal);

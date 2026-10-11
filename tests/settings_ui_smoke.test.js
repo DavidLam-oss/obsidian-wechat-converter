@@ -169,7 +169,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
 
   it('keeps the公众号首次配置指南 inline with the account heading', () => {
     const plugin = makePlugin();
-    renderTab(plugin);
+    const tab = renderTab(plugin);
 
     expect(globalThis.__obsidianSettingNamesRegistry).not.toContain('公众号首次配置指南');
     expect(
@@ -183,20 +183,14 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
       )
     ).toBe(false);
 
-    const accountGuideDescription = globalThis.__obsidianSettingInstancesRegistry.find(
-      (setting) => setting.name === '微信公众号账号'
-    )?.descEl;
-    expect(accountGuideDescription?.textContent).toContain(
-      '首次配置请先完成 IP 白名单设置。 查看图文指南 →'
-    );
-    expect(accountGuideDescription?.textContent).not.toContain('[object DocumentFragment]');
-    const accountGuideLink = accountGuideDescription?.querySelector('a');
-    expect(accountGuideLink?.classList.contains('apple-settings-guide-link')).toBe(true);
+    const accountGuideLink = tab.containerEl.querySelector('a.apple-settings-guide-link');
+    expect(accountGuideLink).not.toBeNull();
+    expect(accountGuideLink?.textContent).toContain('查看图文指南 →');
     expect(accountGuideLink?.href).toBe(
       'https://xiaoweibox.top/obsidian-publisher/guide#wechat-api'
     );
 
-    accountGuideLink.click();
+    accountGuideLink?.click();
 
     expect(plugin.openExternalUrl).toHaveBeenCalledWith(
       'https://xiaoweibox.top/obsidian-publisher/guide#wechat-api'

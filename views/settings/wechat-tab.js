@@ -220,27 +220,18 @@ const wechatSettingsMethods = {
         }));
 
     // 3. 微信公众号账号
-    const accountHeadingSetting = new Setting(containerEl)
-      .setName('微信公众号账号');
-    accountHeadingSetting.setHeading();
-    accountHeadingSetting.settingEl?.addClass?.('apple-settings-about-section-header');
-    if (accountHeadingSetting.nameEl && typeof accountHeadingSetting.nameEl.createSpan === 'function') {
-      const iconSpan = accountHeadingSetting.nameEl.createSpan({ cls: 'apple-settings-about-section-icon' });
-      attachIcon(iconSpan, 'users');
-      if (typeof accountHeadingSetting.nameEl.prepend === 'function') {
-        accountHeadingSetting.nameEl.prepend(iconSpan);
-      }
-    }
-    setMutedGuideDescription(
-      accountHeadingSetting,
-      containerEl.ownerDocument || getActiveDocumentCompat(),
-      '添加用于同步草稿的公众号 AppID 和 AppSecret。首次配置请先完成 IP 白名单设置。',
-      '查看图文指南 →',
-      WECHAT_ACCOUNT_SETUP_GUIDE_URL,
-      () => {
-        this.plugin.openExternalUrl(WECHAT_ACCOUNT_SETUP_GUIDE_URL);
-      }
-    );
+    renderSectionHeader(containerEl, 'users', '微信公众号账号');
+    const accountDesc = containerEl.createDiv({ cls: 'apple-settings-about-section-desc' });
+    accountDesc.createSpan({ text: '添加用于同步草稿的公众号 AppID 和 AppSecret。首次配置请先完成 IP 白名单设置。 ' });
+    const guideLink = accountDesc.createEl('a', {
+      text: '查看图文指南 →',
+      href: WECHAT_ACCOUNT_SETUP_GUIDE_URL,
+      cls: 'apple-settings-guide-link',
+    });
+    guideLink.onclick = (e) => {
+      e.preventDefault();
+      this.plugin.openExternalUrl(WECHAT_ACCOUNT_SETUP_GUIDE_URL);
+    };
 
     // 账号列表
     const accounts = this.plugin.settings.wechatAccounts || [];
