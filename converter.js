@@ -1118,6 +1118,17 @@ ${macHeader}
   /**
    * 将旧式 <font> 标签转换为微信完全兼容的 <span style="..."> 标签
    * 规范化 color、size、face 属性并保留已有行内样式
+   *
+   * ## 实现约束
+   * - 使用正则表达式解析 HTML（regex-based parsing）
+   * - 分两步：先替换开标签 `<font>` -> `<span>`，再替换闭标签 `</font>` -> `</span>`
+   * - 不处理嵌套内容（避免了 `/<font>(.*?)<\/font>/` 的嵌套陷阱）
+   *
+   * ## 安全边界
+   * - **输入来源受控**：仅处理 markdown-it 生成的 HTML（结构可预测）
+   * - **后置清理兜底**：`sanitizeHtml()` 会清理任何解析错误遗留的危险标签
+   * - **监控建议**：如生产环境遇到 `<font>` 标签解析错误，可考虑引入 DOM 解析器（jsdom/htmlparser2）
+   *
    * @param {string} html
    * @returns {string}
    */
