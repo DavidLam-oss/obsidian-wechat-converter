@@ -365,8 +365,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     await plugin.saveSettings();
   };
 
-  // 1. 支持发布平台矩阵 / 全览 (置顶呈现，未开启时也能一眼看到全部平台)
-  renderSectionHeader(containerEl, 'share-2', isPublishingEnabled ? '支持发布平台矩阵' : '支持发布平台全览');
+  // 1. 支持发布平台矩阵 / 全览 (置顶呈现，自带规范 Lucide share-2 图标与数量状态徽标)
   renderPlatformWall(containerEl, {
     selectable: isPublishingEnabled,
     platforms: availablePlatforms,

@@ -147,10 +147,9 @@ function renderFeishuUsageStats(containerEl, tab, plugin, settings, obsidian, No
   });
 
   const copy = header.createDiv();
-  copy.createEl('div', { text: '数据统计', cls: 'setting-item-heading' });
   const sharedCount = Array.isArray(settings.uploadHistory) ? settings.uploadHistory.length : 0;
   const shareTitle = copy.createEl('div', { text: '分享文档数', cls: 'setting-item-name' });
-  shareTitle.setCssStyles({ marginTop: '10px' });
+  shareTitle.setCssStyles({ marginTop: '2px' });
   copy.createEl('div', {
     text: `您已成功分享 ${formatFeishuUsageNumber(sharedCount)} 个文档。`,
     cls: 'setting-item-description',
@@ -315,8 +314,6 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
       })
     );
 
-  // 4. Test Connection Button
-  renderSectionHeader(containerEl, 'activity', '连接状态与测试');
   new Setting(containerEl)
     .setName('测试连接')
     .setDesc('验证自建应用授权与目标文件夹访问权限。')

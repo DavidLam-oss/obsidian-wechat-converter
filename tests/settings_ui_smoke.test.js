@@ -328,12 +328,13 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     expect(names).toContain('API 代理地址');
   });
 
-  it('renders the preview / watermark headings on the wechat tab', () => {
-    renderTab(makePlugin());
+  it('renders the preview / watermark section headers and settings on the wechat tab', () => {
+    const tab = renderTab(makePlugin());
+    expect(tab.containerEl.textContent).toContain('界面与预览模式');
+    expect(tab.containerEl.textContent).toContain('图片水印与头像');
     const names = globalThis.__obsidianSettingNamesRegistry;
-    expect(names).toContain('预览模式');
     expect(names).toContain('使用手机仿真框');
-    expect(names).toContain('图片水印');
+    expect(names).toContain('启用图片水印');
   });
 
   it('cancels AI Provider deletion through an Obsidian confirmation modal', async () => {

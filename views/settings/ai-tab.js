@@ -482,10 +482,6 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
   // =========================================================================
   renderSectionHeader(containerEl, 'camera', '摄影图库与搜索服务 (Unsplash)');
 
-  new SettingCtor(containerEl)
-    .setName("摄影图库与搜索服务")
-    .setHeading();
-
   const unsplashSetting = new SettingCtor(containerEl)
     .setName("Unsplash Access Key");
 

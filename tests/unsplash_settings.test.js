@@ -83,9 +83,9 @@ describe('Unsplash 设置与面板渲染', () => {
 
     renderAiSettingsTab(mockTab, containerEl);
 
-    // 检查注册的 Setting 项中包含 Unsplash 相关的标题和设置项
+    // 检查渲染内容中包含 Unsplash 相关的统一规范标题和设置项
+    expect(containerEl.textContent).toContain('摄影图库与搜索服务 (Unsplash)');
     const settingNames = globalThis.__obsidianSettingNamesRegistry || [];
-    expect(settingNames).toContain('摄影图库与搜索服务');
     expect(settingNames).toContain('Unsplash Access Key');
 
     // 检查行内指南链接是否存在并可点击打开

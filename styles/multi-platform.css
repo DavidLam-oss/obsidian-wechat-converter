@@ -707,9 +707,7 @@
   border-radius: 8px;
 }
 
-.wechat-platform-wall-header {
-  margin-bottom: 12px;
-}
+.wechat-platform-wall-header { margin-bottom: 12px; }
 
 .wechat-platform-wall-title-row {
   display: flex;
@@ -718,6 +716,8 @@
   gap: 10px;
   margin-bottom: 4px;
 }
+
+.wechat-platform-wall-title-wrap { display: inline-flex; align-items: center; gap: 6px; }
 
 .wechat-platform-wall-title {
   color: var(--text-normal);

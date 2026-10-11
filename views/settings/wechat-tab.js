@@ -133,11 +133,7 @@ const wechatSettingsMethods = {
     );
 
     // 1. 界面与预览设置
-    renderSectionHeader(containerEl, 'layout', '界面与预览');
-
-    new Setting(containerEl)
-      .setName('预览模式')
-      .setHeading();
+    renderSectionHeader(containerEl, 'layout', '界面与预览模式');
 
     new Setting(containerEl)
       .setName('使用手机仿真框')
@@ -152,10 +148,6 @@ const wechatSettingsMethods = {
 
     // 2. 图片水印与头像设置
     renderSectionHeader(containerEl, 'image', '图片水印与头像');
-
-    new Setting(containerEl)
-      .setName('图片水印')
-      .setHeading();
 
     new Setting(containerEl)
       .setName('启用图片水印')
@@ -228,9 +220,17 @@ const wechatSettingsMethods = {
         }));
 
     // 3. 微信公众号账号
-    renderSectionHeader(containerEl, 'users', '微信公众号账号');
     const accountHeadingSetting = new Setting(containerEl)
       .setName('微信公众号账号');
+    accountHeadingSetting.setHeading();
+    accountHeadingSetting.settingEl?.addClass?.('apple-settings-about-section-header');
+    if (accountHeadingSetting.nameEl && typeof accountHeadingSetting.nameEl.createSpan === 'function') {
+      const iconSpan = accountHeadingSetting.nameEl.createSpan({ cls: 'apple-settings-about-section-icon' });
+      attachIcon(iconSpan, 'users');
+      if (typeof accountHeadingSetting.nameEl.prepend === 'function') {
+        accountHeadingSetting.nameEl.prepend(iconSpan);
+      }
+    }
     setMutedGuideDescription(
       accountHeadingSetting,
       containerEl.ownerDocument || getActiveDocumentCompat(),
@@ -241,7 +241,6 @@ const wechatSettingsMethods = {
         this.plugin.openExternalUrl(WECHAT_ACCOUNT_SETUP_GUIDE_URL);
       }
     );
-    accountHeadingSetting.setHeading();
 
     // 账号列表
     const accounts = this.plugin.settings.wechatAccounts || [];

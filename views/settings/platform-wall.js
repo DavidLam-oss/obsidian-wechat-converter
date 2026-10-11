@@ -272,8 +272,11 @@ export function renderPlatformWall(containerEl, options = {}) {
   // 头部统计栏
   const header = card.createDiv({ cls: 'wechat-platform-wall-header' });
   const titleRow = header.createDiv({ cls: 'wechat-platform-wall-title-row' });
-  titleRow.createSpan({
-    text: options.title || (isSelectable ? '发布平台（浏览器插件支持）' : `已打通全网 ${platforms.length} 个主流平台`),
+  const titleWrap = titleRow.createSpan({ cls: 'wechat-platform-wall-title-wrap' });
+  const iconSpan = titleWrap.createSpan({ cls: 'apple-settings-about-section-icon' });
+  attachIcon(iconSpan, 'share-2');
+  titleWrap.createSpan({
+    text: options.title || (isSelectable ? '支持发布平台矩阵' : `已打通全网 ${platforms.length} 个主流平台`),
     cls: 'wechat-platform-wall-title',
   });
 
