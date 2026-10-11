@@ -302,14 +302,21 @@ const wechatSettingsMethods = {
             confirmText: '删除',
           });
           if (!confirmed) return;
-          this.plugin.settings.wechatAccounts = accounts.filter(a => a.id !== account.id);
-          // 如果删除的是默认账号，自动选择第一个
-          if (account.id === defaultId && this.plugin.settings.wechatAccounts.length > 0) {
-            this.plugin.settings.defaultAccountId = this.plugin.settings.wechatAccounts[0].id;
-          } else if (this.plugin.settings.wechatAccounts.length === 0) {
-            this.plugin.settings.defaultAccountId = '';
+          /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- reason: dynamic plugin invocation for account deletion API with backward compatibility fallback */
+          let res;
+          if (typeof (/** @type {any} */ (this.plugin)).deleteWechatAccount === "function") {
+            res = await (/** @type {any} */ (this.plugin)).deleteWechatAccount(account.id);
+          } else {
+            this.plugin.settings.wechatAccounts = accounts.filter((a) => a.id !== account.id);
+            if (account.id === defaultId && this.plugin.settings.wechatAccounts.length > 0) {
+              this.plugin.settings.defaultAccountId = this.plugin.settings.wechatAccounts[0].id;
+            } else if (this.plugin.settings.wechatAccounts.length === 0) {
+              this.plugin.settings.defaultAccountId = '';
+            }
+            res = await this.plugin.saveSettings();
           }
-          await this.plugin.saveSettings();
+          if (!res || res.success === false) return;
+          /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
           refreshSettingTabCompat(this);
         };
       }
@@ -477,13 +484,36 @@ const wechatSettingsMethods = {
     const warningCard = containerEl.createDiv({
       cls: 'owc-custom-css-warning',
     });
-    const warningTitle = warningCard.createEl('strong', { cls: 'owc-custom-css-warning-title' });
-    const warningIcon = warningTitle.createSpan({ cls: 'owc-custom-css-warning-icon' });
+    const warningHeader = warningCard.createDiv({ cls: 'owc-custom-css-warning-header' });
+    const warningIcon = warningHeader.createSpan({ cls: 'owc-custom-css-warning-icon' });
     attachIcon(warningIcon, 'alert-triangle');
-    warningTitle.createSpan({ text: '高阶功能' });
-    warningCard.createSpan({
-      text: '：需要您自己编写 CSS。插件会自动把选择器样式内联到元素上，但微信仍可能清洗部分复杂样式；当文章已使用 AI 编排结果时，自定义 CSS 不生效（两者为独立的样式系统）。启用前建议先用「复制到公众号」小范围测试。'
-    });
+    warningHeader.createSpan({ text: '高阶功能与排版须知', cls: 'owc-custom-css-warning-title' });
+
+    const warningList = warningCard.createDiv({ cls: 'owc-custom-css-warning-list' });
+
+    // 条目 1：覆盖规则
+    const item1 = warningList.createDiv({ cls: 'owc-custom-css-warning-item' });
+    item1.createEl('strong', { text: '覆盖默认样式：' });
+    item1.createSpan({ text: '主题样式已直接内联注入各元素。若要覆盖排版（如对齐方式、字号、正文字色等），声明后请添加 ' });
+    item1.createEl('code', { text: '!important' });
+    item1.createSpan({ text: '（例如 ' });
+    item1.createEl('code', { text: 'text-align: left !important;' });
+    item1.createSpan({ text: '）。' });
+
+    // 条目 2：微信平台样式清洗
+    const item2 = warningList.createDiv({ cls: 'owc-custom-css-warning-item' });
+    item2.createEl('strong', { text: '平台兼容过滤：' });
+    item2.createSpan({ text: '插件会自动将 CSS 选择器内联到元素，但微信后台仍可能清洗部分伪类、动画等复杂样式。' });
+
+    // 条目 3：与 AI 编排互斥
+    const item3 = warningList.createDiv({ cls: 'owc-custom-css-warning-item' });
+    item3.createEl('strong', { text: 'AI 编排独立：' });
+    item3.createSpan({ text: '当文章已使用「AI 视觉编排」结果时，自定义 CSS 不生效（两者为互不干扰的独立排版系统）。' });
+
+    // 条目 4：建议先测后发
+    const item4 = warningList.createDiv({ cls: 'owc-custom-css-warning-item' });
+    item4.createEl('strong', { text: '测试建议：' });
+    item4.createSpan({ text: '编写新规则后，建议先用「复制到公众号」或「同步草稿箱」在微信端预览确认排版效果。' });
 
     // 使用指南外链
     const customCssGuideSetting = new Setting(containerEl)
@@ -510,7 +540,7 @@ const wechatSettingsMethods = {
           customCssEnabled = value;
           this.plugin.settings.enableCustomCss = value;
           const saved = await this.plugin.saveSettings();
-          if (saved) this.plugin.scheduleCustomCssPreviewNotice?.();
+          if (saved && saved.success !== false) this.plugin.scheduleCustomCssPreviewNotice?.();
           refreshSettingTabCompat(this);
         }));
 
@@ -552,17 +582,17 @@ const wechatSettingsMethods = {
     // CSS textarea
     const textareaSetting = new Setting(containerEl)
       .setName('自定义 CSS 内容')
-      .setDesc('直接粘贴 CSS，例如 p { color: #333; }。无需写 .owc-article-root 前缀，插件会自动限定作用域。');
+      .setDesc('直接粘贴 CSS。覆盖主题内置样式（如对齐、字号、颜色）时请加 !important，例如：p { text-align: left !important; }。无需写 .owc-article-root 前缀，插件会自动限定作用域。');
 
     textareaSetting.settingEl?.setCssStyles?.({ flexWrap: 'wrap' });
     textareaSetting.addTextArea(text => {
       text
-        .setPlaceholder('/* 在此输入你的自定义 CSS */\np { color: #333; }')
+        .setPlaceholder('/* 在此输入你的自定义 CSS，覆盖主题内置样式需加 !important */\n/* 示例：将内容改为左对齐 */\nsection.owc-article-root, p, li, blockquote {\n  text-align: left !important;\n}')
         .setValue(this.plugin.settings.customCss || '')
         .onChange(async (value) => {
           this.plugin.settings.customCss = value;
           const saved = await this.plugin.saveSettings();
-          if (saved) {
+          if (saved && saved.success !== false) {
             this.plugin.scheduleCustomCssPreviewNotice?.();
             refreshCustomCssStatus(800);
           }
@@ -588,7 +618,7 @@ const wechatSettingsMethods = {
         .onChange(async (value) => {
           this.plugin.settings.customCssNote = value.trim();
           const saved = await this.plugin.saveSettings();
-          if (saved) {
+          if (saved && saved.success !== false) {
             this.plugin.scheduleCustomCssPreviewNotice?.();
             refreshCustomCssStatus(800);
           }

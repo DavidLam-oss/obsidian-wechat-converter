@@ -173,6 +173,7 @@ const wechatAccountModalMethods = {
         onlyFansCanComment: fansCommentInput.checked,
       });
 
+      const hadSecret = Boolean(account?.appSecret);
       if (account) {
         // 编辑现有账号
         account.name = name;
@@ -197,7 +198,18 @@ const wechatAccountModalMethods = {
         }
       }
 
-      await this.plugin.saveSettings();
+      const saveOptions = {};
+      if (account && hadSecret && !appSecret) {
+        saveOptions.intent = {
+          action: 'clear_credential',
+          entityType: 'wechat_account',
+          targetId: account.id,
+          fieldPath: 'appSecret',
+        };
+      }
+
+      const res = await this.plugin.saveSettings(this.plugin.settings, saveOptions);
+      if (!res || res.success === false) return;
       modal.close();
       refreshSettingTabCompat(this);
       new Notice(account ? '✅ 账号已更新' : '✅ 账号已添加');

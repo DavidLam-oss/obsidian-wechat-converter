@@ -560,7 +560,36 @@ export function cleanHtmlForDraft(html) {
       li.insertBefore(wrapper, firstList);
     });
 
-    // 2. 将深层嵌套列表转为伪列表（仅处理 depth >= 2）
+    // 1.5 微信兼容修复：强制列表项内 strong/code 保持行内，避免“标题词”和冒号/正文断行
+    /**
+     * @param {Element} el
+     * @param {string} [extraStyle]
+     */
+    const forceInlineStyle = (el, extraStyle = '') => {
+      const currentStyle = el.getAttribute('style') || '';
+      const cleanedStyle = currentStyle
+        .replace(/display\s*:\s*[^;]+;?/gi, '')
+        .replace(/width\s*:\s*[^;]+;?/gi, '')
+        .replace(/float\s*:\s*[^;]+;?/gi, '')
+        .trim();
+      const normalizedStyle = cleanedStyle
+        ? `${cleanedStyle}${cleanedStyle.endsWith(';') ? '' : ';'}`
+        : '';
+      const finalStyle = `${normalizedStyle}display:inline !important; width:auto !important; float:none !important;${extraStyle}`;
+      el.setAttribute('style', finalStyle);
+    };
+
+    div.querySelectorAll('li strong').forEach(strong => {
+      forceInlineStyle(strong);
+    });
+
+    div.querySelectorAll('li code').forEach(code => {
+      // 仅修复行内 code，避免误伤列表里的代码块（pre > code）
+      if (code.closest('pre, .code-block, .code-block-code')) return;
+      forceInlineStyle(code, ' margin:0 2px !important; vertical-align:baseline;');
+    });
+
+    // 2. 将列表转为抗微信改写的悬挂缩进伪段落
     /**
      * @param {Element} list
      * @returns {number}
@@ -593,27 +622,48 @@ export function cleanHtmlForDraft(html) {
         );
 
         const liStyle = li.getAttribute('style') || '';
-        const indent = Math.max(0, depth - 1) * 20;
+        const isTask = (() => {
+          if (/list-style-type\s*:\s*none/i.test(liStyle) && /margin-left\s*:\s*-\d+px/i.test(liStyle)) return true;
+          const text = li.textContent || '';
+          return /^[☑☐□]/.test(text.trim());
+        })();
+
+        let cleanStyle = liStyle
+          .replace(/margin(-[a-z]+)?\s*:\s*[^;]+;?/gi, '')
+          .replace(/padding(-[a-z]+)?\s*:\s*[^;]+;?/gi, '')
+          .replace(/text-indent\s*:\s*[^;]+;?/gi, '')
+          .replace(/list-style(-type)?\s*:\s*[^;]+;?/gi, '')
+          .trim();
+        if (cleanStyle && !cleanStyle.endsWith(';')) cleanStyle += ';';
+
+        const hangingIndent = isTask ? -20 : (isOrdered ? -18 : -14);
+        const paddingLeft = Math.max(1, depth) * 20;
         const wrapper = activeDocument.createElement('p');
         wrapper.setAttribute(
           'style',
-          `${liStyle} margin:0 0 4px ${indent}px; padding:0;`
+          `${cleanStyle} margin: 4px 0; padding-left: ${paddingLeft}px; text-indent: ${hangingIndent}px;`
         );
 
         /** @type {ChildNode[]} */
         const contentNodes = [];
-        Array.from(li.childNodes).forEach(node => {
-          if (node instanceof Element && (node.tagName === 'UL' || node.tagName === 'OL')) return;
-          if (node instanceof Element && node.tagName === 'P') {
-            const children = Array.from(node.childNodes);
-            if (children.length && contentNodes.length) {
-              contentNodes.push(activeDocument.createTextNode(' '));
+        /** @param {NodeList | ChildNode[] | unknown[]} nodes */
+        const extractNodes = (nodes) => {
+          Array.from(nodes).forEach(rawNode => {
+            const node = /** @type {ChildNode} */ (rawNode);
+            if (node instanceof Element && (node.tagName === 'UL' || node.tagName === 'OL')) return;
+            // 将列表项内部包装的 p 或 display:block span 解包为行内流，避免段落内换行脱节
+            if (node instanceof Element && (node.tagName === 'P' || (node.tagName === 'SPAN' && /display\s*:\s*block/i.test(node.getAttribute('style') || '')))) {
+              const children = Array.from(node.childNodes);
+              if (children.length && contentNodes.length) {
+                contentNodes.push(activeDocument.createTextNode(' '));
+              }
+              extractNodes(children);
+              return;
             }
-            children.forEach(child => contentNodes.push(child));
-            return;
-          }
-          contentNodes.push(node);
-        });
+            contentNodes.push(node);
+          });
+        };
+        extractNodes(li.childNodes);
 
         // Trim leading whitespace-only text nodes to avoid bullets on separate lines.
         while (
@@ -645,12 +695,22 @@ export function cleanHtmlForDraft(html) {
             }
           });
 
-          const markerText = isOrdered ? `${index}. ` : '• ';
-          const firstText = contentNodes.find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
-          if (firstText) {
-            firstText.textContent = markerText + firstText.textContent;
-          } else {
-            contentNodes.unshift(activeDocument.createTextNode(markerText));
+          // Trim trailing whitespace-only text nodes
+          while (
+            contentNodes.length > 0 &&
+            contentNodes[contentNodes.length - 1].nodeType === Node.TEXT_NODE &&
+            !contentNodes[contentNodes.length - 1].textContent.trim()
+          ) {
+            contentNodes.pop();
+          }
+          if (contentNodes.length > 0 && contentNodes[contentNodes.length - 1].nodeType === Node.TEXT_NODE) {
+            contentNodes[contentNodes.length - 1].textContent = contentNodes[contentNodes.length - 1].textContent.replace(/\s+$/, '');
+          }
+
+          if (!isTask) {
+            const markerSpan = activeDocument.createElement('span');
+            markerSpan.textContent = isOrdered ? `${index}. ` : '• ';
+            contentNodes.unshift(markerSpan);
           }
 
           contentNodes.forEach(node => wrapper.appendChild(node));
@@ -669,8 +729,12 @@ export function cleanHtmlForDraft(html) {
 
     Array.from(div.querySelectorAll('ul, ol')).forEach(list => {
       if (!div.contains(list)) return;
-      const depth = getListDepth(list);
-      if (depth < 2) return;
+      const isUl = list.tagName === 'UL';
+      const depth = getListDepth(list) + 1;
+      // 1. 无序列表（UL）在微信草稿箱中必然被重写（丢弃样式、强制转 class、子项包 p 导致圆点文字脱节或居中错位，见 #78）
+      //    因此无序列表自第 1 层起全部转换为悬挂缩进的抗改写段落；
+      // 2. 有序列表（OL）保持现有策略：深层嵌套（depth >= 2）转为伪段落，第 1 层保留以保持原生数字编号及标签行内化。
+      if (!isUl && depth < 2) return;
       const fragment = buildPseudoItems(list, depth);
       if (list.parentNode) {
         list.parentNode.insertBefore(fragment, list);
@@ -712,35 +776,6 @@ export function cleanHtmlForDraft(html) {
           node.remove();
         }
       });
-    });
-
-    // 7. 微信兼容修复：强制列表项内 strong/code 保持行内，避免“标题词”和冒号/正文断行
-    /**
-     * @param {Element} el
-     * @param {string} [extraStyle]
-     */
-    const forceInlineStyle = (el, extraStyle = '') => {
-      const currentStyle = el.getAttribute('style') || '';
-      const cleanedStyle = currentStyle
-        .replace(/display\s*:\s*[^;]+;?/gi, '')
-        .replace(/width\s*:\s*[^;]+;?/gi, '')
-        .replace(/float\s*:\s*[^;]+;?/gi, '')
-        .trim();
-      const normalizedStyle = cleanedStyle
-        ? `${cleanedStyle}${cleanedStyle.endsWith(';') ? '' : ';'}`
-        : '';
-      const finalStyle = `${normalizedStyle}display:inline !important; width:auto !important; float:none !important;${extraStyle}`;
-      el.setAttribute('style', finalStyle);
-    };
-
-    div.querySelectorAll('li strong').forEach(strong => {
-      forceInlineStyle(strong);
-    });
-
-    div.querySelectorAll('li code').forEach(code => {
-      // 仅修复行内 code，避免误伤列表里的代码块（pre > code）
-      if (code.closest('pre, .code-block, .code-block-code')) return;
-      forceInlineStyle(code, ' margin:0 2px !important; vertical-align:baseline;');
     });
 
     // 8. 微信公众号兼容：将 blockquote 转换为带有完全相同样式的 section 标签

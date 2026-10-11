@@ -276,16 +276,20 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
             })
           : true;
         if (!confirmed) return;
-        tab.plugin.settings.ai.providers = providers.filter((item) => item.id !== provider.id);
-        if (provider.id === defaultProviderId) {
-          const nextRunnable = tab.plugin.settings.ai.providers.find((item) => item.enabled !== false && isAiProviderRunnable(item, "text"));
-          tab.plugin.settings.ai.defaultProviderId = nextRunnable?.id || "";
+        let res;
+        if (typeof tab.plugin.deleteAiProvider === "function") {
+          res = await tab.plugin.deleteAiProvider(provider.id);
+        } else {
+          tab.plugin.settings.ai.providers = providers.filter((item) => item.id !== provider.id);
+          if (provider.id === defaultProviderId) {
+            tab.plugin.settings.ai.defaultProviderId = tab.plugin.settings.ai.providers[0]?.id || "";
+          }
+          if (provider.id === defaultImageProviderId) {
+            tab.plugin.settings.ai.defaultImageProviderId = tab.plugin.settings.ai.providers.find((item) => item.supportsImage)?.id || "";
+          }
+          res = await tab.plugin.saveSettings();
         }
-        if (provider.id === defaultImageProviderId) {
-          const nextRunnableImg = tab.plugin.settings.ai.providers.find((item) => item.enabled !== false && isAiProviderRunnable(item, "image"));
-          tab.plugin.settings.ai.defaultImageProviderId = nextRunnableImg?.id || "";
-        }
-        await tab.plugin.saveSettings();
+        if (!res || res.success === false) return;
         tab.refreshOpenConverterAiState?.();
         refreshSettingTabCompat(tab);
       };

@@ -211,8 +211,13 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
         .setPlaceholder('粘贴 App Secret...')
         .setValue(settings.appSecret)
         .onChange(async (value) => {
-          settings.appSecret = value.trim();
-          await plugin.saveSettings();
+          const nextSecret = value.trim();
+          if (!nextSecret && settings.appSecret) {
+            await plugin.clearCredential?.('feishu', 'primary', 'appSecret');
+          } else {
+            settings.appSecret = nextSecret;
+            await plugin.saveSettings();
+          }
         });
     });
 

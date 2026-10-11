@@ -25,7 +25,7 @@
 - 版本号动态读取 manifest.json，严禁硬编码。
 */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access -- reason: JS file handles dynamic Obsidian app and plugin manifest structures without strict typescript annotations */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call -- reason: JS file handles dynamic Obsidian app and plugin manifest structures without strict typescript annotations */
 
 import {
   GITHUB_REPOSITORY_URL,
@@ -89,6 +89,7 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
   const linksContainer = headerEl.createDiv({ cls: 'apple-settings-about-links' });
 
   const linkItems = [
+    { label: '检查更新', icon: 'refresh-cw', url: 'obsidian://show-plugin?id=obsidian-wechat-converter' },
     { label: 'GitHub 仓库', icon: 'star', url: GITHUB_REPOSITORY_URL },
     { label: '使用文档', icon: 'book-open', url: DOCS_URL },
     { label: '问题反馈', icon: 'message-square', url: ISSUES_URL },
@@ -256,6 +257,27 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
 
     item.createSpan({ text: sponsor.date, cls: 'apple-settings-fame-item-date' });
   });
+
+  // 6. 配置安全与灾备恢复 (Disaster Recovery)
+  const backupSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
+  const backupHeader = backupSection.createDiv({ cls: 'apple-settings-about-section-header' });
+  const backupIcon = backupHeader.createSpan({ cls: 'apple-settings-about-section-icon' });
+  attachIcon(backupIcon, 'shield-check');
+  backupHeader.createSpan({ text: '配置安全与受控快照' });
+
+  const backupCard = backupSection.createDiv({ cls: 'apple-settings-community-card' });
+  backupCard.createEl('p', {
+    text: '插件在每次保存配置实质变更前会自动生成受控快照 (data.json.bak)，并受实体级防清空凭据守卫保护。如遇意外或多端同步冲突，可一键从快照恢复配置。',
+  });
+  const restoreBtn = backupCard.createEl('button', {
+    text: '从 .bak 快照恢复配置',
+    cls: 'mod-cta',
+  });
+  restoreBtn.onclick = async () => {
+    if (typeof tabInstance.plugin.restoreFromBackup === 'function') {
+      await tabInstance.plugin.restoreFromBackup();
+    }
+  };
 }
 
-/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access -- reason: resume typed linting after the dynamic Obsidian settings UI boundary */
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call -- reason: resume typed linting after the dynamic Obsidian settings UI boundary */

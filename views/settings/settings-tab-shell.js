@@ -141,6 +141,38 @@ const settingsTabShellMethods = {
 
     this.renderGitHubStarBanner(stickyHeader);
 
+    if (this.plugin?._settingsSafeMode) {
+      const safeBanner = stickyHeader.createDiv({ cls: 'owc-settings-safe-mode-banner' });
+      safeBanner.setCssStyles({
+        backgroundColor: 'var(--background-modifier-error)',
+        color: 'var(--text-on-accent)',
+        padding: '10px 14px',
+        borderRadius: '6px',
+        marginBottom: '10px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        fontSize: '13px',
+      });
+      safeBanner.createSpan({
+        text: '⚠️ 当前处于配置只读保护模式（已拦截写入以防账号凭据丢失）。',
+      });
+      const restoreBtn = safeBanner.createEl('button', {
+        text: '从 .bak 恢复配置',
+      });
+      restoreBtn.onclick = async () => {
+        /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- reason: dynamic plugin method invocation */
+        const plugin = /** @type {any} */ (this.plugin);
+        if (typeof plugin?.restoreFromBackup === 'function') {
+          const res = await plugin.restoreFromBackup();
+          if (res && res.success) {
+            this.display();
+          }
+        }
+        /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
+      };
+    }
+
     const tabBar = stickyHeader.createDiv({ cls: 'apple-settings-tabs' });
     const wechatTab = tabBar.createDiv({ cls: 'apple-settings-tab active', text: '微信' });
     const multiTab = tabBar.createDiv({ cls: 'apple-settings-tab apple-settings-tab-multi' });

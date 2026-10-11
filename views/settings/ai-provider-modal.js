@@ -289,7 +289,20 @@ export function showEditAiProviderModal(tab, provider) {
       }
     }
 
-    await tab.plugin.saveSettings();
+    const saveOptions = {};
+    if (provider && provider.apiKey && !nextProvider.apiKey) {
+      saveOptions.intent = {
+        action: 'clear_credential',
+        entityType: 'ai_provider',
+        targetId: provider.id,
+        fieldPath: 'apiKey',
+      };
+    }
+
+    const res = await tab.plugin.saveSettings(tab.plugin.settings, saveOptions);
+    if (!res || res.success === false) {
+      return;
+    }
     tab.refreshOpenConverterAiState?.();
     modal.close();
     refreshSettingTabCompat(tab);

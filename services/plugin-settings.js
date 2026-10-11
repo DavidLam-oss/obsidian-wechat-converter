@@ -161,11 +161,14 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
   const generateId = typeof options.generateId === 'function'
     ? options.generateId
     : generateFallbackId;
+  const isVirginInstall = Boolean(options.isVirginInstall);
   let didMigrate = false;
 
   if (!settings.clientId) {
     settings.clientId = `wp_dev_${generateId()}`;
-    didMigrate = true;
+    if (!isVirginInstall && isRecord(loadedData) && Object.keys(loadedData).length > 0) {
+      didMigrate = true;
+    }
   }
 
   settings.multiPlatformSync = normalizeMultiPlatformSyncSettings(settings.multiPlatformSync);
@@ -193,7 +196,7 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
 
   if (settings.wechatAppId && settings.wechatAccounts.length === 0) {
     const migratedAccount = {
-      id: generateId(),
+      id: 'wx_legacy_primary',
       name: '我的公众号',
       appId: String(settings.wechatAppId || ''),
       appSecret: String(settings.wechatAppSecret || ''),
@@ -302,5 +305,5 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
     }
   }
 
-  return { settings, didMigrate };
+  return { settings, didMigrate: isVirginInstall ? false : didMigrate };
 }

@@ -93,7 +93,7 @@ const LEGACY_SETTING_RENDER_KEY = ['dis', 'play'].join('');
  * @typedef {new (message: string, timeout?: number) => unknown} WechatNoticeConstructor
  * @typedef {{ listSupportedPlatforms: (options?: Record<string, unknown>) => Promise<unknown>, getAuthSnapshot: (options?: Record<string, unknown>) => Promise<unknown>, start: () => Promise<unknown>, waitForConnection: (timeoutMs: number) => Promise<unknown>, health: (options?: Record<string, unknown>) => Promise<unknown>, pairClient?: (id: string) => boolean, dismissPendingClient?: (id: string) => boolean, unpairClient?: (id: string) => boolean, getStatus?: () => Promise<unknown>, getDiagnostics?: () => unknown }} WechatBridgeLike
  * @typedef {{ multiPlatformSync?: unknown }} WechatPluginSettingsLike
- * @typedef {{ settings: WechatPluginSettingsLike, obsidianApi?: Partial<WechatObsidianApiLike>, activeView?: { openExternalUrl?: (url: string) => boolean }, openExternalUrl?: (url: string) => boolean, saveSettings: () => Promise<void>, startWechatSyncBridgeInBackground: (reason: string) => unknown, getWechatSyncBridgeService: () => WechatBridgeLike, _wechatSyncBridgeService?: { stop?: () => Promise<unknown> } }} WechatPluginLike
+ * @typedef {{ settings: WechatPluginSettingsLike, obsidianApi?: Partial<WechatObsidianApiLike>, activeView?: { openExternalUrl?: (url: string) => boolean }, openExternalUrl?: (url: string) => boolean, saveSettings: () => Promise<unknown>, clearCredential?: (entityType: string, targetId: string, fieldPath: string) => Promise<unknown>, startWechatSyncBridgeInBackground: (reason: string) => unknown, getWechatSyncBridgeService: () => WechatBridgeLike, _wechatSyncBridgeService?: { stop?: () => Promise<unknown> } }} WechatPluginLike
  * @typedef {{ plugin: WechatPluginLike, renderSettingsContent?: () => void, renderSettingsTabIntro?: (containerEl: WechatSettingsElement, description: string) => void, [key: string]: unknown }} WechatSettingsTabLike
  * @typedef {{ Setting: WechatSettingConstructor, Notice: WechatNoticeConstructor }} WechatObsidianApiLike
  * @typedef {{ color: string, path: string }} BrowserIconDef
@@ -431,9 +431,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       .onChange(async (value) => {
         const nextPort = Number(value);
         plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
-          ...toRecord(plugin.settings.multiPlatformSync),
-          port: Number.isInteger(nextPort) ? nextPort : DEFAULT_WECHATSYNC_PORT,
-          connection: { status: 'untested' },
+          ...toRecord(plugin.settings.multiPlatformSync), port: Number.isInteger(nextPort) ? nextPort : DEFAULT_WECHATSYNC_PORT, connection: { status: 'untested' },
         });
         await plugin.saveSettings();
         plugin.startWechatSyncBridgeInBackground('settings-port-change');
@@ -446,12 +444,13 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       .setPlaceholder('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')
       .setValue(toText(multiPlatformSettings.token))
       .onChange(async (value) => {
-        plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
-          ...toRecord(plugin.settings.multiPlatformSync),
-          token: value,
-          connection: { status: 'untested' },
-        });
-        await plugin.saveSettings();
+        const trimmed = value.trim();
+        if (!trimmed && multiPlatformSettings.token) {
+          await plugin.clearCredential?.('bridge', 'primary', 'token');
+        } else {
+          plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({ ...toRecord(plugin.settings.multiPlatformSync), token: trimmed, connection: { status: 'untested' } });
+          await plugin.saveSettings();
+        }
         plugin.startWechatSyncBridgeInBackground('settings-token-change');
       }));
 

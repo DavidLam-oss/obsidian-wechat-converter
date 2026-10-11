@@ -282,7 +282,24 @@ if (typeof globalThis.createFragment !== 'function') {
 }
 
 module.exports = {
-  Plugin: class {},
+  Plugin: class {
+    constructor(app, manifest) {
+      this.app = app || {
+        vault: {
+          configDir: '.obsidian',
+          adapter: {
+            exists: async () => true,
+            read: async () => JSON.stringify(typeof this.loadData === 'function' ? (await this.loadData()) || {} : {}),
+            write: async () => {},
+          },
+        },
+      };
+      this.manifest = manifest || {
+        id: 'obsidian-wechat-converter',
+        dir: '.obsidian/plugins/obsidian-wechat-converter',
+      };
+    }
+  },
   // NOTE: Intentionally NOT exporting Platform. input.js's isMobileClient()
   // checks `Platform?.isMobile` first and only falls back to `app.isMobile`
   // if Platform is undefined. Tests like sync_modal_ui / view_parity rely

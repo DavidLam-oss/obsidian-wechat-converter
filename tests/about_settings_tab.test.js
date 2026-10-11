@@ -113,9 +113,9 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
     const taglineEl = containerEl.querySelector('.apple-settings-about-tagline');
     expect(taglineEl?.textContent).toContain('Obsidian 与全网发布 (Wechat Converter)');
 
-    // 检查是否有 4 个快捷操作链接
+    // 检查是否有 5 个快捷操作链接（含检查更新）
     const actionLinks = containerEl.querySelectorAll('.apple-settings-about-link');
-    expect(actionLinks.length).toBe(4);
+    expect(actionLinks.length).toBe(5);
 
     // 检查赞助二维码卡片（微信 + 支付宝）
     const sponsorCards = containerEl.querySelectorAll('.apple-settings-sponsor-card');

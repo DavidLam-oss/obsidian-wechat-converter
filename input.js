@@ -59,9 +59,10 @@ import {
   getImageSwipeCommandCopy,
   createImageSwipeCalloutMarkdown,
   isMobileClient,
-  generateId,
 } from './views/apple-style-view-shared.js';
 import { drainCaptureQueue } from './services/card-render-capture.js';
+import { normalizeVaultPath } from './services/path-utils.js';
+import { checkCredentialDowngrade, isRecord, canonicalJsonEqual } from './services/settings-guard.js';
 
 const CUSTOM_CSS_PREVIEW_REFRESH_DELAY_MS = 650;
 
@@ -69,12 +70,23 @@ const CUSTOM_CSS_PREVIEW_REFRESH_DELAY_MS = 650;
  * 📝 Obsidian 发布助手主插件
  */
 class AppleStylePlugin extends Plugin {
-  async onload() {
-    console.debug('📝 正在加载 Obsidian 发布助手...');
+  /* eslint-disable @typescript-eslint/no-unsafe-argument -- reason: constructor forwards dynamic Obsidian app and manifest arguments to base Plugin */
+  constructor(app, manifest) {
+    super(app, manifest);
     /** @type {ObsidianApiLike} */
     this.obsidianApi = obsidianApi;
     /** @type {number} */
     this._customCssPreviewNoticeTimer = 0;
+    this._saveQueue = Promise.resolve();
+    this._storageState = 'unknown';
+    this._settingsSafeMode = false;
+    this._committedSettings = null;
+    this._lastSaveSettingsErrorAt = 0;
+  }
+  /* eslint-enable @typescript-eslint/no-unsafe-argument */
+
+  async onload() {
+    console.debug('📝 正在加载 Obsidian 发布助手...');
 
     await this.loadSettings();
 
@@ -422,30 +434,119 @@ class AppleStylePlugin extends Plugin {
       });
   }
 
-  async loadSettings() {
-    const { settings, didMigrate } = normalizeLoadedSettings(await this.loadData(), { generateId });
-    const bridgeSettings = normalizeMultiPlatformSyncSettings(settings.multiPlatformSync);
-    const stableCapabilities = { ...(bridgeSettings.connection.capabilities || {}) };
-    delete stableCapabilities.proLicensed;
-    const hadRuntimeConnectionState = bridgeSettings.connection.status === 'connected'
-      || bridgeSettings.connectedClients.some((client) => client.status === 'connected');
-    settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
-      ...bridgeSettings,
-      connectedClients: bridgeSettings.connectedClients.map((client) => ({
-        ...client,
-        status: 'disconnected',
-      })),
-      connection: {
-        ...bridgeSettings.connection,
-        status: 'untested',
-        capabilities: stableCapabilities,
-      },
-    });
-    setPluginSettings(this, settings);
-    if (didMigrate || hadRuntimeConnectionState) {
-      await this.saveSettings();
+  getPluginDataPath() {
+    let raw = '';
+    if (this.manifest?.dir && typeof this.manifest.dir === 'string') {
+      raw = `${this.manifest.dir}/data.json`;
+    } else {
+      const configDir = this.app?.vault?.configDir;
+      const pluginId = this.manifest?.id || 'obsidian-wechat-converter';
+      if (configDir && typeof configDir === 'string') {
+        raw = `${configDir}/plugins/${pluginId}/data.json`;
+      }
     }
+    return raw ? normalizeVaultPath(raw) : null;
   }
+
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument -- reason: loadSettings handles raw disk JSON and dynamic Obsidian adapter without TypeScript types */
+  async loadSettings() {
+    const adapter = this.app?.vault?.adapter;
+    const dataPath = this.getPluginDataPath();
+
+    if (!adapter || !dataPath) {
+      this._storageState = 'unknown';
+      this._settingsSafeMode = true;
+      let rawFallback = null;
+      try {
+        rawFallback = await this.loadData();
+      } catch (err) {
+        console.error('[Settings] loadData 读取抛错:', err);
+      }
+      const { settings } = normalizeLoadedSettings(isRecord(rawFallback) ? rawFallback : null, { isVirginInstall: false });
+      this._committedSettings = JSON.parse(JSON.stringify(settings));
+      setPluginSettings(this, settings);
+      new Notice('⚠️ 微信发布助手：存储适配器不可用，已进入安全保护模式');
+      return;
+    }
+
+    let loadedRaw = null;
+    try {
+      loadedRaw = await this.loadData();
+    } catch (err) {
+      console.error('[Settings] loadData 读取抛错:', err);
+    }
+
+    let exists = null;
+    try {
+      if (typeof adapter.exists === 'function') {
+        const res = await adapter.exists(dataPath);
+        if (typeof res === 'boolean') {
+          exists = res;
+        }
+      }
+    } catch {
+      exists = null;
+    }
+
+    // 纯净首装确认：仅在 adapter 严格确认文件不存在且读出空时进入
+    if (exists === false && (loadedRaw === null || (isRecord(loadedRaw) && Object.keys(loadedRaw).length === 0))) {
+      this._storageState = 'virgin';
+      const { settings } = normalizeLoadedSettings(null, { isVirginInstall: true });
+      this._committedSettings = JSON.parse(JSON.stringify(settings));
+      setPluginSettings(this, settings);
+      return; // 0 次写盘 Clean Load
+    }
+
+    // 存量正常状态 (分离 rawDiskBaseline 与 migrationDraft)
+    if (exists === true && isRecord(loadedRaw) && Object.keys(loadedRaw).length > 0) {
+      this._storageState = 'known-existing';
+      const rawDiskBaseline = JSON.parse(JSON.stringify(loadedRaw));
+      const { settings: migratedSettings, didMigrate } = normalizeLoadedSettings(loadedRaw, { isVirginInstall: false });
+
+      // 重置内存中的运行态连接状态
+      const bridgeSettings = normalizeMultiPlatformSyncSettings(migratedSettings.multiPlatformSync);
+      const stableCapabilities = { ...(bridgeSettings.connection.capabilities || {}) };
+      delete stableCapabilities.proLicensed;
+      migratedSettings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
+        ...bridgeSettings,
+        connectedClients: bridgeSettings.connectedClients.map((client) => ({
+          ...client,
+          status: 'disconnected',
+        })),
+        connection: {
+          ...bridgeSettings.connection,
+          status: 'untested',
+          capabilities: stableCapabilities,
+        },
+      });
+
+      if (didMigrate) {
+        this._committedSettings = JSON.parse(JSON.stringify(rawDiskBaseline));
+        setPluginSettings(this, migratedSettings);
+        const res = await this.saveSettings(migratedSettings, { isMigration: true });
+        if (!res || !res.success) {
+          console.error('[Settings] 存量迁移写盘失败，回滚内存并锁定安全模式');
+          const fallback = JSON.parse(JSON.stringify(rawDiskBaseline));
+          this._committedSettings = fallback;
+          setPluginSettings(this, fallback);
+          this._settingsSafeMode = true;
+        }
+      } else {
+        this._committedSettings = JSON.parse(JSON.stringify(migratedSettings));
+        setPluginSettings(this, migratedSettings);
+      }
+      return;
+    }
+
+    // 其它所有异常场景一律 Fail-Closed
+    this._storageState = exists === true ? 'known-existing' : 'unknown';
+    this._settingsSafeMode = true;
+    const { settings } = normalizeLoadedSettings(isRecord(loadedRaw) ? loadedRaw : null, { isVirginInstall: false });
+    this._committedSettings = JSON.parse(JSON.stringify(settings));
+    setPluginSettings(this, settings);
+    new Notice('⚠️ 微信发布助手：检测到配置文件读取异常，已进入安全保护模式，原文件已受保护');
+  }
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument */
 
   getArticleLayoutState(sourcePath = '', selection = {}) {
     return getArticleLayoutStateFromSettings(getPluginSettings(this), sourcePath, selection);
@@ -454,23 +555,188 @@ class AppleStylePlugin extends Plugin {
   async saveArticleLayoutState(sourcePath = '', nextState = null, selection = {}) {
     const saved = saveArticleLayoutStateToSettings(getPluginSettings(this), sourcePath, nextState, selection);
     if (!saved) return false;
-    return this.saveSettings();
+    const res = await this.saveSettings();
+    return Boolean(res && res.success !== false);
   }
 
-  async saveSettings() {
+  async saveSettings(draftSettings = null, options = {}) {
+    const next = (this._saveQueue || Promise.resolve()).then(async () => {
+      return await this._executeSaveSettings(draftSettings, options);
+    });
+    this._saveQueue = next.catch(() => {});
+    return await next;
+  }
+
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: dynamic configuration mutations, credential guards, and serialization safely handle raw settings objects */
+  async _executeSaveSettings(draftSettings, options) {
+    const candidate = draftSettings
+      ? JSON.parse(JSON.stringify(draftSettings))
+      : JSON.parse(JSON.stringify(getPluginSettings(this)));
+
+    if (this._settingsSafeMode && !options.isSafeModeOverride) {
+      new Notice('⚠️ 当前处于安全保护模式，已阻止写入以防历史配置受损');
+      if (this._committedSettings) {
+        setPluginSettings(this, JSON.parse(JSON.stringify(this._committedSettings)));
+      }
+      return { success: false, reason: 'SAFE_MODE_LOCKED' };
+    }
+
+    const adapter = this.app?.vault?.adapter;
+    const dataPath = this.getPluginDataPath();
+
+    if (!adapter || !dataPath || (this._storageState === 'unknown' && !options.isSafeModeOverride)) {
+      new Notice('⛔ 存储状态未知，已阻止保存以防覆盖数据');
+      if (this._committedSettings) {
+        setPluginSettings(this, JSON.parse(JSON.stringify(this._committedSettings)));
+      }
+      return { success: false, reason: 'STORAGE_UNKNOWN' };
+    }
+
+    // 存量配置必须通过磁盘预检
+    let diskSettings = null;
+    if (this._storageState === 'known-existing' && !options.isSafeModeOverride) {
+      try {
+        if (typeof adapter.exists === 'function' && (await adapter.exists(dataPath)) === true) {
+          diskSettings = JSON.parse(await adapter.read(dataPath));
+        } else {
+          throw new Error('文件不存在或状态冲突');
+        }
+      } catch (err) {
+        console.error('[Settings] 保存预检失败:', err);
+        new Notice('⛔ 磁盘文件无法读取或损坏，已拦截保存以防旧配置被覆盖');
+        if (this._committedSettings) {
+          setPluginSettings(this, JSON.parse(JSON.stringify(this._committedSettings)));
+        }
+        return { success: false, reason: 'PRE_CHECK_FAILED' };
+      }
+    }
+
+    // 敏感凭据防清空检查
+    if (diskSettings) {
+      const downgrade = checkCredentialDowngrade(diskSettings, candidate, options.intent);
+      if (downgrade.isDowngrade) {
+        new Notice(`⛔ 已阻止保存：${downgrade.reason}`);
+        if (this._committedSettings) {
+          setPluginSettings(this, JSON.parse(JSON.stringify(this._committedSettings)));
+        }
+        return { success: false, reason: 'CREDENTIAL_DOWNGRADE' };
+      }
+
+      // 受控快照：仅在内容发生实质结构变更时写入 .bak (ADR-5)
+      if (!canonicalJsonEqual(diskSettings, candidate)) {
+        const bakPath = `${dataPath}.bak`;
+        try {
+          if (typeof adapter.write === 'function') {
+            const diskRaw = JSON.stringify(diskSettings, null, 2);
+            await adapter.write(bakPath, diskRaw);
+          }
+        } catch (bakErr) {
+          // ADR-5: 快照写入异常仅 Warn 记录，Fail-Safe 不阻断正本提交
+          console.warn('[Settings] 写入 .bak 快照失败 (Fail-Safe 允许继续写入正本):', bakErr);
+        }
+      }
+    }
+
     try {
-      await this.saveData(getPluginSettings(this));
-      return true;
-    } catch (error) {
-      console.error('保存插件设置失败:', error);
+      await this.saveData(candidate);
+      if (this._storageState === 'virgin' || options.isSafeModeOverride) {
+        this._storageState = 'known-existing';
+        this._settingsSafeMode = false;
+      }
+      this._committedSettings = JSON.parse(JSON.stringify(candidate));
+      setPluginSettings(this, candidate);
+      return { success: true };
+    } catch (err) {
+      console.error('保存插件设置失败:', err);
+      if (this._committedSettings) {
+        setPluginSettings(this, JSON.parse(JSON.stringify(this._committedSettings)));
+      }
       const now = Date.now();
       if (!this._lastSaveSettingsErrorAt || now - this._lastSaveSettingsErrorAt > 3000) {
         this._lastSaveSettingsErrorAt = now;
         new Notice('⚠️ 设置保存失败，本次修改仅在当前会话生效');
       }
-      return false;
+      return { success: false, reason: 'SAVE_FAILED' };
     }
   }
+
+  async deleteAiProvider(providerId) {
+    const draft = JSON.parse(JSON.stringify(getPluginSettings(this)));
+    if (draft.ai?.providers) {
+      draft.ai.providers = draft.ai.providers.filter((p) => p.id !== providerId);
+      if (draft.ai.defaultProviderId === providerId) draft.ai.defaultProviderId = draft.ai.providers[0]?.id || '';
+      if (draft.ai.defaultImageProviderId === providerId) draft.ai.defaultImageProviderId = draft.ai.providers.find((p) => p.supportsImage)?.id || '';
+    }
+    return await this.saveSettings(draft, { intent: { action: 'delete_ai_provider', entityType: 'ai_provider', targetId: providerId } });
+  }
+
+  async deleteWechatAccount(accountId) {
+    const draft = JSON.parse(JSON.stringify(getPluginSettings(this)));
+    if (Array.isArray(draft.wechatAccounts)) {
+      draft.wechatAccounts = draft.wechatAccounts.filter((a) => a.id !== accountId);
+      if (draft.defaultAccountId === accountId) draft.defaultAccountId = draft.wechatAccounts[0]?.id || '';
+    }
+    return await this.saveSettings(draft, { intent: { action: 'delete_wechat_account', entityType: 'wechat_account', targetId: accountId } });
+  }
+
+  async clearCredential(entityType, targetId, fieldPath) {
+    const draft = JSON.parse(JSON.stringify(getPluginSettings(this)));
+    if (entityType === 'ai_provider') {
+      const p = draft.ai?.providers?.find((item) => item.id === targetId);
+      if (p && fieldPath === 'apiKey') p.apiKey = '';
+    } else if (entityType === 'wechat_account') {
+      const acc = draft.wechatAccounts?.find((item) => item.id === targetId);
+      if (acc && fieldPath === 'appSecret') acc.appSecret = '';
+    } else if (entityType === 'feishu' && fieldPath === 'appSecret') {
+      if (draft.feishuSync) draft.feishuSync.appSecret = '';
+    } else if (entityType === 'bridge' && fieldPath === 'token') {
+      if (draft.multiPlatformSync) draft.multiPlatformSync.token = '';
+    }
+    return await this.saveSettings(draft, { intent: { action: 'clear_credential', entityType, targetId, fieldPath } });
+  }
+
+  async restoreFromBackup() {
+    const adapter = this.app?.vault?.adapter;
+    const dataPath = this.getPluginDataPath();
+    if (!adapter || !dataPath) {
+      new Notice('❌ 存储适配器不可用，无法恢复备份');
+      return { success: false, reason: 'STORAGE_UNAVAILABLE' };
+    }
+    const bakPath = `${dataPath}.bak`;
+    try {
+      if (typeof adapter.exists !== 'function' || !(await adapter.exists(bakPath))) {
+        new Notice('ℹ️ 未找到配置备份文件 (.bak)');
+        return { success: false, reason: 'BACKUP_NOT_FOUND' };
+      }
+      const backupJson = JSON.parse(await adapter.read(bakPath));
+      if (!isRecord(backupJson)) {
+        new Notice('❌ 备份文件内容损坏，无法恢复');
+        return { success: false, reason: 'BACKUP_CORRUPTED' };
+      }
+      this._settingsSafeMode = false;
+      this._storageState = 'known-existing';
+      const saveRes = await this.saveSettings(backupJson, { isSafeModeOverride: true });
+      if (saveRes?.success) {
+        new Notice('✅ 已成功从备份文件恢复配置并解除保护模式！');
+        return { success: true };
+      }
+      return { success: false, reason: saveRes?.reason || 'RESTORE_SAVE_FAILED' };
+    } catch (err) {
+      console.error('[Settings] 从备份恢复配置失败:', err);
+      new Notice('❌ 恢复备份失败：' + (err instanceof Error ? err.message : String(err)));
+      return { success: false, reason: 'RESTORE_ERROR' };
+    }
+  }
+
+  async onExternalSettingsChange() {
+    console.debug('[Settings] 检测到外部同步修改 (Obsidian Sync / 云端同步)，重新载入配置...');
+    await this.loadSettings();
+    const view = this.getConverterView?.();
+    if (view && typeof view.requestRender === 'function') {
+      view.requestRender();
+    }
+  }
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
 
   async onunload() {
     if (this._customCssPreviewNoticeTimer && typeof window !== 'undefined') {

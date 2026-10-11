@@ -5769,35 +5769,28 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 }
 
 .owc-custom-css-warning {
-  margin-bottom: 12px;
-  padding: 10px 12px;
+  margin-top: 8px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--background-modifier-border);
   border-left: 3px solid var(--text-warning);
-  border-radius: 4px;
+  border-radius: 6px;
   background-color: var(--background-primary-alt);
-  font-size: 13px;
+  font-size: 12.5px;
   line-height: 1.6;
-  color: var(--text-muted);
 }
-
-.owc-custom-css-warning-title {
-  color: var(--text-warning);
-}
-
-.owc-custom-css-warning-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: -2px;
-  width: 14px;
-  height: 14px;
-  margin-right: 4px;
-  color: var(--text-warning);
-}
-
+.owc-custom-css-warning-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.owc-custom-css-warning-title { color: var(--text-warning); font-weight: 600; font-size: 13px; }
+.owc-custom-css-warning-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 15px; height: 15px; color: var(--text-warning); }
+.owc-custom-css-warning-list { display: flex; flex-direction: column; gap: 6px; }
+.owc-custom-css-warning-item { position: relative; padding-left: 14px; color: var(--text-muted); font-size: 12px; line-height: 1.55; }
+.owc-custom-css-warning-item::before { content: '•'; position: absolute; left: 2px; top: 0; color: var(--text-warning); font-size: 13px; line-height: 1.4; }
+.owc-custom-css-warning-item strong { color: var(--text-normal); font-weight: 600; }
+.owc-custom-css-warning-item code { padding: 1px 5px; margin: 0 2px; border-radius: 3px; font-size: 11px; background-color: var(--background-modifier-form-field); color: var(--text-accent); }
 .wechat-proxy-icon .svg-icon,
 .owc-custom-css-warning-icon .svg-icon {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
 }
 
 /*

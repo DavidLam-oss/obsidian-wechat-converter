@@ -12,10 +12,10 @@
     "services/obsidian-triplet-renderer.js": 1023,
     "services/wechatsync-bridge.js": 1524,
     "styles/ai-layout.css": 835,
-    "styles/wechat-settings.css": 804,
+    "styles/wechat-settings.css": 797,
     "views/converter/ai-layout-debug.js": 926,
     "views/converter/ai-layout-panel.js": 1041,
     "views/converter/core.js": 1173,
-    "views/settings/multi-platform-tab.js": 1017
+    "views/settings/multi-platform-tab.js": 1016
   }
 }
