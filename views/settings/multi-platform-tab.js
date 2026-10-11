@@ -42,7 +42,6 @@
 // where `tab` is the AppleStyleSettingTab instance, used for accessing
 // `tab.plugin.*` and triggering settings re-renders through a compatibility helper.
 
-
 import {
   DEFAULT_WECHATSYNC_PORT,
   retryRecoverableBridgeOperation,
@@ -66,10 +65,9 @@ import {
   parseWechatsyncPlatformIds,
 } from '../../services/wechatsync-settings.js';
 
-import {
-  formatWechatsyncCheckedAt,
-} from '../connection-status-bar.js';
+import { formatWechatsyncCheckedAt } from '../connection-status-bar.js';
 import { getActiveWindowValue } from '../../services/dom-utils.js';
+import { renderPlatformWall, renderSectionHeader } from './platform-wall.js';
 
 const OBSIDIAN_PUBLISHER_PRO_URL = 'https://xiaoweibox.top/obsidian-publisher/pro/?from=obsidian-plugin';
 const OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL = 'https://xiaoweibox.top/obsidian-publisher/guide/?from=obsidian-plugin#install-extension';
@@ -355,9 +353,12 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     );
   }
 
-  new Setting(containerEl)
-    .setName('浏览器插件发布')
-    .setHeading();
+  // 1. 支持发布平台全览 (Platform Wall)
+  renderSectionHeader(containerEl, 'share-2', '支持发布平台全览');
+  renderPlatformWall(containerEl);
+
+  // 2. 浏览器配套同步服务 (Onboarding Banner + 启用开关)
+  renderSectionHeader(containerEl, 'plug', '浏览器配套同步服务');
 
   const guide = containerEl.createDiv({
     cls: `wechat-multiplatform-onboarding${isProLicensed ? ' is-pro' : ''}`,
@@ -416,6 +417,9 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         refreshSettingTab(tab);
       }));
   if (!multiPlatformSettings.enabled) return;
+
+  // 3. 本地连接与通信设置 (只有启用后展示)
+  renderSectionHeader(containerEl, 'link', '本地连接与通信');
 
   new Setting(containerEl)
     .setName('本地服务端口')
@@ -529,7 +533,6 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       return `${Math.floor(d / 86400000)} 天前`;
     }
 
-
     const bar = containerEl.createDiv({ cls: 'wechat-multiplatform-token-status' });
     const dot = bar.createEl('span', { cls: 'wechat-multiplatform-token-status-dot' });
     const body = bar.createDiv({ cls: 'wechat-bridge-status-body' });
@@ -634,9 +637,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   // §3.5 + §4.1: allowRemote 是高级功能（127.0.0.1 ↔ 0.0.0.0 切换），
   // 99% 普通用户用不上且开启会扩大攻击面，因此默认不在设置 UI 暴露。
   // 底层数据通路（settings.allowRemote / bridge bind host / cache key）
-  // 全部保留：高级用户仍可直接编辑 data.json 让其生效，未来挂回 UI
-  // 也只需恢复这块 toggle。
-  // §16 连接状态已合并进上方统一状态栏。
+  // 全部保留：高级用户仍可直接编辑 data.json 让其生效，未来挂回 UI 也只需恢复这块 toggle。
 
   /**
    * @param {WechatBridgeLike} bridge
@@ -672,8 +673,6 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   const getPlatformAuthBadge = (platform = {}) => toPlatformStatusBadge(getWechatsyncPlatformStatusBadge(platform, {
     bridgeConnected: multiPlatformSettings.connection?.status === 'connected',
   }));
-
-  // 连接状态栏已合并进令牌行统一状态栏（见上方 §4.1+§16 unified block）。
 
   const platformPicker = containerEl.createDiv({ cls: 'wechat-platform-picker' });
   const platformPickerHeader = platformPicker.createDiv({ cls: 'wechat-platform-picker-header' });

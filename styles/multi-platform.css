@@ -698,3 +698,118 @@
   border-color: var(--interactive-accent);
   color: var(--interactive-accent);
 }
+
+/* ───── 平台清单照片墙 (Platform Wall) ───── */
+.wechat-platform-wall-card {
+  margin: 16px 0 20px;
+  padding: 16px 18px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+}
+
+.wechat-platform-wall-header {
+  margin-bottom: 12px;
+}
+
+.wechat-platform-wall-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.wechat-platform-wall-title {
+  color: var(--text-normal);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.wechat-platform-wall-badge {
+  flex: 0 0 auto;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-accent);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.wechat-platform-wall-desc {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.wechat-platform-wall-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 6px 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wechat-platform-wall-tile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  box-sizing: border-box;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.wechat-platform-wall-tile:hover {
+  background: var(--background-modifier-hover);
+  border-color: color-mix(in srgb, var(--interactive-accent) 40%, var(--background-modifier-border));
+}
+
+.wechat-platform-wall-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  overflow: hidden;
+  border-radius: 3px;
+}
+
+.wechat-platform-wall-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.wechat-platform-wall-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.wechat-platform-wall-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-normal);
+  font-size: 12px;
+  font-weight: 500;
+}
