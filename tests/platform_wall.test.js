@@ -92,22 +92,50 @@ describe('platform-wall', () => {
       });
     });
 
-    it('当图片加载失败 (onerror) 时能降级渲染首字符徽标', () => {
+    it('当图片加载失败时能经 DuckDuckGo 二级回退并最终降级为首字符微标', () => {
       const container = createObsidianLikeElement('div');
       const customPlatforms = [{ id: 'zhihu', name: '知乎' }];
       const card = renderPlatformWall(container, { platforms: customPlatforms });
 
       const img = card.querySelector('img.wechat-platform-wall-icon');
       expect(img).not.toBeNull();
+      expect(img?.getAttribute('src')).toContain('xiaoweibox.top');
 
-      // 触发 onerror 回退
-      if (typeof img.onerror === 'function') {
+      // 第一次失败：触发 Stage 1 回退到 DuckDuckGo
+      if (typeof img?.onerror === 'function') {
         img.onerror();
       }
+      expect(img?.getAttribute('src')).toContain('icons.duckduckgo.com');
 
+      // 第二次失败：触发 Stage 2 最终降级为首字符微标
+      if (typeof img?.onerror === 'function') {
+        img.onerror();
+      }
       const letterFallback = card.querySelector('.wechat-platform-wall-letter');
       expect(letterFallback).not.toBeNull();
       expect(letterFallback?.textContent).toBe('知');
+    });
+
+    it('支持可交互勾选模式 (selectable: true)，正确渲染复选框与登录状态徽标', () => {
+      const container = createObsidianLikeElement('div');
+      const customPlatforms = [{ id: 'zhihu', name: '知乎' }, { id: 'juejin', name: '掘金' }];
+      const selectedSet = new Set(['zhihu']);
+
+      const card = renderPlatformWall(container, {
+        selectable: true,
+        platforms: customPlatforms,
+        selectedSet,
+        getAuthBadge: (p) => p.id === 'zhihu' ? { text: '上次可用', cls: 'is-ok' } : { text: '需登录', cls: 'is-error' },
+      });
+
+      expect(card.className).toContain('is-selectable');
+      const chips = card.querySelectorAll('.wechat-platform-chip');
+      expect(chips.length).toBe(2);
+
+      const zhihuChip = card.querySelector('.wechat-platform-chip.is-selected');
+      expect(zhihuChip).not.toBeNull();
+      expect(zhihuChip?.querySelector('input')?.checked).toBe(true);
+      expect(zhihuChip?.querySelector('.wechat-platform-chip-status')?.textContent).toBe('上次可用');
     });
   });
 });

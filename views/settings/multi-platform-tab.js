@@ -353,11 +353,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     );
   }
 
-  // 1. 支持发布平台全览 (Platform Wall)
-  renderSectionHeader(containerEl, 'share-2', '支持发布平台全览');
-  renderPlatformWall(containerEl);
-
-  // 2. 浏览器配套同步服务 (Onboarding Banner + 启用开关)
+  // 1. 浏览器配套同步服务 (Onboarding Banner + 启用开关)
   renderSectionHeader(containerEl, 'plug', '浏览器配套同步服务');
 
   const guide = containerEl.createDiv({
@@ -416,9 +412,14 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         }
         refreshSettingTab(tab);
       }));
-  if (!multiPlatformSettings.enabled) return;
 
-  // 3. 本地连接与通信设置 (只有启用后展示)
+  if (!multiPlatformSettings.enabled) {
+    renderSectionHeader(containerEl, 'share-2', '支持发布平台全览');
+    renderPlatformWall(containerEl, { selectable: false });
+    return;
+  }
+
+  // 2. 本地连接与通信设置 (只有启用后展示)
   renderSectionHeader(containerEl, 'link', '本地连接与通信');
 
   new Setting(containerEl)
@@ -662,38 +663,12 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     });
     return toAuthSnapshot(normalizeWechatsyncAuthSnapshot(response, fallbackPlatforms));
   };
-  const hasExtensionPlatformList = Array.isArray(multiPlatformSettings.supportedPlatforms)
-    && multiPlatformSettings.supportedPlatforms.length > 0
-    && multiPlatformSettings.connection?.status === 'connected';
   const availablePlatforms = toPlatformList(getAvailableWechatsyncPlatforms(multiPlatformSettings));
   const selectedPlatformSet = new Set(parseWechatsyncPlatformIds(multiPlatformSettings.selectedPlatforms || []));
-  const hasCachedAuthState = availablePlatforms.some(
-    (platform) => platform.authKnown && platform.authStatus !== 'bridge_required'
-  );
   const getPlatformAuthBadge = (platform = {}) => toPlatformStatusBadge(getWechatsyncPlatformStatusBadge(platform, {
     bridgeConnected: multiPlatformSettings.connection?.status === 'connected',
   }));
 
-  const platformPicker = containerEl.createDiv({ cls: 'wechat-platform-picker' });
-  const platformPickerHeader = platformPicker.createDiv({ cls: 'wechat-platform-picker-header' });
-  const platformPickerTitle = platformPickerHeader.createDiv();
-  platformPickerTitle.createEl('div', { text: '发布平台（浏览器插件支持）', cls: 'wechat-platform-picker-title' });
-  const checkedAtText = formatWechatsyncCheckedAt(multiPlatformSettings.connection?.checkedAt);
-  platformPickerTitle.createEl('div', {
-    text: hasCachedAuthState
-      ? `已勾选平台会显示上次状态${checkedAtText ? `（${checkedAtText}）` : ''}；本次发布仍以浏览器插件实际结果为准。`
-      : (hasExtensionPlatformList
-        ? '平台清单来自当前连接的浏览器插件；仅勾选的平台会显示上次状态。'
-        : '未连接插件前先显示本地备用清单；连接成功后会刷新为插件实际支持的平台。'),
-    cls: 'wechat-platform-picker-desc',
-  });
-  const platformSummary = platformPickerHeader.createDiv({ cls: 'wechat-platform-picker-summary' });
-  const updatePlatformSummary = () => {
-    platformSummary.setText(`已选择 ${selectedPlatformSet.size} 个`);
-  };
-  updatePlatformSummary();
-
-  const platformGrid = platformPicker.createDiv({ cls: 'wechat-platform-grid' });
   const saveSelectedPlatforms = async () => {
     const current = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
     plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
@@ -702,57 +677,6 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     });
     await plugin.saveSettings();
   };
-
-  for (const platform of availablePlatforms) {
-    const authBadge = getPlatformAuthBadge(platform);
-    const isSelected = selectedPlatformSet.has(platform.id);
-    const chip = platformGrid.createEl('label', {
-      cls: `wechat-platform-chip ${isSelected ? `${authBadge.cls} is-selected` : ''}`,
-    });
-    chip.setAttribute('title', isSelected ? `${platform.name} · ${authBadge.text}` : platform.name);
-    const checkbox = chip.createEl('input', { attr: { type: 'checkbox' } });
-    checkbox.checked = isSelected;
-    checkbox.value = platform.id;
-    const chipBody = chip.createEl('span', { cls: 'wechat-platform-chip-body' });
-    chipBody.createEl('span', { text: platform.name, cls: 'wechat-platform-chip-name' });
-    const statusEl = /** @type {WechatSettingsElement} */ (chipBody.createEl('span', {
-      text: authBadge.text,
-      cls: `wechat-platform-chip-status ${authBadge.cls}`,
-    }));
-    statusEl.setAttribute('title', authBadge.text);
-    const setStatusVisible = (visible) => {
-      for (const cls of ['is-ok', 'is-error', 'is-unknown', 'is-bridge']) {
-        chip.removeClass?.(cls);
-        chip.classList?.remove(cls);
-        statusEl.removeClass?.(cls);
-        statusEl.classList?.remove(cls);
-      }
-      statusEl.textContent = authBadge.text;
-      if (visible) {
-        chip.addClass?.(authBadge.cls);
-        chip.classList?.add(authBadge.cls);
-        statusEl.addClass?.(authBadge.cls);
-        statusEl.classList?.add(authBadge.cls);
-      }
-      chip.setAttribute('title', visible ? `${platform.name} · ${authBadge.text}` : platform.name);
-    };
-    checkbox.onchange = async () => {
-      if (checkbox.checked) {
-        selectedPlatformSet.add(platform.id);
-        chip.addClass('is-selected');
-        setStatusVisible(true);
-        if (authBadge.status === 'login_required') {
-          new Notice(`${platform.name} 上次状态为需登录。请先在浏览器插件打开平台登录页，或继续尝试由插件返回实际结果。`, 8000);
-        }
-      } else {
-        selectedPlatformSet.delete(platform.id);
-        chip.removeClass('is-selected');
-        setStatusVisible(false);
-      }
-      updatePlatformSummary();
-      await saveSelectedPlatforms();
-    };
-  }
 
   new Setting(containerEl)
     .setName('测试连接')
@@ -873,9 +797,6 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
             diagnostics = null;
           }
 
-          // §4.1 / §7.1: detect state 3 (extension connected but hello rejected) vs
-          // state 2 (no extension reached the bridge at all) so the user sees an
-          // actionable message instead of the generic timeout text.
           const readableError = toReadableError(error);
           let detailedMessage = readableError.message || '浏览器插件连接失败';
           let hint = '';
@@ -1006,6 +927,23 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
           button.setButtonText('读取');
         }
       }));
+
+  // 3. 支持发布平台矩阵 (一体化平台墙，集成 Logo、勾选框与登录状态)
+  renderSectionHeader(containerEl, 'share-2', '支持发布平台矩阵');
+  renderPlatformWall(containerEl, {
+    selectable: true,
+    platforms: availablePlatforms,
+    selectedSet: selectedPlatformSet,
+    getAuthBadge: getPlatformAuthBadge,
+    onToggle: async (platform, isChecked, set, authBadge) => {
+      const authRecord = toRecord(authBadge);
+      const platformRecord = toRecord(platform);
+      if (isChecked && authRecord.status === 'login_required') {
+        new Notice(`${toText(platformRecord.name)} 上次状态为需登录。请先在浏览器插件打开平台登录页，或继续尝试由插件返回实际结果。`, 8000);
+      }
+      await saveSelectedPlatforms();
+    },
+  });
 }
 
 export { renderMultiPlatformSettingsTab };

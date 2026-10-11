@@ -7284,7 +7284,6 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   border-color: var(--interactive-accent);
   color: var(--interactive-accent);
 }
-
 /* ───── 平台清单照片墙 (Platform Wall) ───── */
 .wechat-platform-wall-card {
   margin: 16px 0 20px;
@@ -7340,6 +7339,11 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   list-style: none;
 }
 
+.wechat-platform-wall-grid.is-selectable {
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 8px 10px;
+}
+
 .wechat-platform-wall-tile {
   display: flex;
   align-items: center;
@@ -7369,11 +7373,7 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   border-radius: 3px;
 }
 
-.wechat-platform-wall-icon {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
-}
+.wechat-platform-wall-icon { width: 16px; height: 16px; object-fit: contain; }
 
 .wechat-platform-wall-letter {
   display: inline-flex;
