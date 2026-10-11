@@ -260,3 +260,4 @@ function renderMissingKeyView(container, view, ratioId, onSelect, onOpenSettings
     }
   });
 }
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */

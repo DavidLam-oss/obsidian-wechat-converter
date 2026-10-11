@@ -173,7 +173,7 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
         await navigator.clipboard.writeText('linauwawa');
       }
       copyBtn.textContent = '已复制';
-      setTimeout(() => {
+      window.setTimeout(() => {
         copyBtn.textContent = '复制微信号';
       }, 2000);
     } catch {

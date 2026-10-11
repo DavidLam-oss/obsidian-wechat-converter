@@ -335,7 +335,7 @@ export function createCardResourcePool(options = {}) {
       if (externalSignal.aborted) throw abortError();
       externalSignal.addEventListener("abort", () => controller.abort(), { once: true });
     }
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const timer = globalThis.setTimeout(() => controller.abort(), timeoutMs);
     try {
       await loaders.waitFonts(doc, controller.signal);
       return { status: "ok" };
@@ -346,7 +346,7 @@ export function createCardResourcePool(options = {}) {
       }
       return { status: "timeout" };
     } finally {
-      clearTimeout(timer);
+      globalThis.clearTimeout(timer);
     }
   }
 
@@ -367,7 +367,7 @@ export function createCardResourcePool(options = {}) {
       if (externalSignal.aborted) throw abortError();
       externalSignal.addEventListener("abort", () => controller.abort(), { once: true });
     }
-    const wholeTimer = setTimeout(() => controller.abort(), wholeTimeoutMs);
+    const wholeTimer = globalThis.setTimeout(() => controller.abort(), wholeTimeoutMs);
     const refs = (imageRefs || []).filter(Boolean);
 
     /** @type {{ [ref: string]: CardResourceImageEntry }} */
@@ -390,11 +390,11 @@ export function createCardResourcePool(options = {}) {
         const imageController = new AbortController();
         const onOuterAbort = () => imageController.abort();
         controller.signal.addEventListener("abort", onOuterAbort, { once: true });
-        const perImageTimer = setTimeout(() => imageController.abort(), CARD_IMAGE_TIMEOUT_MS);
+        const perImageTimer = globalThis.setTimeout(() => imageController.abort(), CARD_IMAGE_TIMEOUT_MS);
         try {
           const { blob } = await loaders.fetchBlob(resolved.src, imageController.signal);
           const decode = await loaders.decodeImage(resolved.src, imageController.signal, blob);
-          clearTimeout(perImageTimer);
+          globalThis.clearTimeout(perImageTimer);
           if (controller.signal.aborted) throw abortError(); // 中止后结果不采用
           const mime = blob.type || resolved.mime;
           if (!mime.startsWith(IMAGE_MIME_PREFIX)) {
@@ -448,7 +448,7 @@ export function createCardResourcePool(options = {}) {
           };
           return { status: /** @type {CardResourceStatus} */ ("ok"), refEntry, entry };
         } catch (error) {
-          clearTimeout(perImageTimer);
+          globalThis.clearTimeout(perImageTimer);
           if (externalSignal?.aborted) {
             throw abortError(); // 外部取消：结果不采用
           }
@@ -467,7 +467,7 @@ export function createCardResourcePool(options = {}) {
       () => controller.signal.aborted
     );
 
-    clearTimeout(wholeTimer);
+    globalThis.clearTimeout(wholeTimer);
     if (externalSignal?.aborted) {
       throw abortError(); // 取消：不产出快照，已加载结果全部丢弃
     }

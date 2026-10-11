@@ -135,7 +135,8 @@ function clampNumber(value, limit, baseValue, oneDecimal = false) {
  */
 function normalizeWatermarkText(value, baseValue) {
   if (typeof value !== "string") return baseValue;
-  // 去控制字符（保留空格以便词间分隔），收拢换行为空格
+  // 去除控制字符（保留空格以便词间分隔）：0x00-0x1F（NUL、换行等）和 0x7F（DEL）
+  // 收拢连续空白为单空格
   const cleaned = value.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
   return cleaned;
 }

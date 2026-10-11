@@ -135,6 +135,7 @@ export async function downloadAsBase64(imageUrl, customReq, defaultMime = 'image
     }
   }
 
+  // Fallback to fetch when requestUrl is not available (e.g., test environment or Node.js context)
   if (typeof fetch === 'function') {
     const res = await fetch(imageUrl);
     if (!res.ok) throw new Error(`下载图片失败: HTTP ${res.status}`);
@@ -208,6 +209,7 @@ export async function fetchUnsplashCoverImage(options = {}) {
       throw: false,
     });
     rawResponse = /** @type {{ status?: number, text?: string, json?: unknown }} */ (res);
+  // Fallback to fetch when requestUrl is not available (e.g., test environment or Node.js context)
   } else if (typeof fetch === 'function') {
     const res = await fetch(endpoint, {
       headers: { Authorization: `Client-ID ${apiKey}` },
@@ -281,6 +283,7 @@ export async function fetchUnsplashPhotos(options = {}) {
       throw: false,
     });
     rawResponse = /** @type {{ status?: number, text?: string, json?: unknown }} */ (res);
+  // Fallback to fetch when requestUrl is not available (e.g., test environment or Node.js context)
   } else if (typeof fetch === 'function') {
     const res = await fetch(endpoint, {
       headers: { Authorization: `Client-ID ${apiKey}` },
@@ -359,3 +362,4 @@ export function readLocalFileAsDataUrl(file) {
     reader.readAsDataURL(file);
   });
 }
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */

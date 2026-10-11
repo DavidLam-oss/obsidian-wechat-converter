@@ -62,6 +62,7 @@ export const NOTE_SEGMENT_MAX_LENGTH = 60;
 export const NEUTRAL_SEGMENT_FALLBACK = 'note';
 
 const WINDOWS_RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
+/** 非法路径字符（包含控制字符 0x00-0x1F，如 NUL、换行符等）及 Windows 保留字符 */
 const ILLEGAL_SEGMENT_CHARS = /[<>:"|?*\u0000-\u001f\\/]/g;
 /** 非法字符检测用（无 g 标志，避免 RegExp.test 的 lastIndex 状态陷阱） */
 const ILLEGAL_SEGMENT_CHECK = /[<>:"|?*\u0000-\u001f\\/]/;
@@ -148,7 +149,7 @@ export function validateExportRoot(rootPath, context = {}) {
   if (segments.some((segment) => ILLEGAL_SEGMENT_CHECK.test(segment))) {
     return { ok: false, reason: 'path-illegal-chars' };
   }
-  if (isReservedOutputPath(normalized, context.configDir || '.obsidian')) {
+  if (isReservedOutputPath(normalized, context.configDir)) {
     return { ok: false, reason: 'path-reserved' };
   }
   return { ok: true, root: normalized };

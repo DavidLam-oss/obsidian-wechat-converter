@@ -201,7 +201,7 @@ async startCardExport() {
   const outcome = await controller.exportCards({
     ...collected.input,
     snapshotId: snapshot.snapshotId,
-    configDir: String(/** @type {any} */ (this.app)?.vault?.configDir || '.obsidian'),
+    configDir: String(/** @type {any} */ (this.app)?.vault?.configDir ),
   });
   const batchInfo = typeof controller.getBatchInfo === 'function' ? controller.getBatchInfo() : null;
   if (batchInfo) selfRecord.cardExportLastBatchInfo = batchInfo;
@@ -297,3 +297,4 @@ function notifyExportFailure(reason) {
     /** @type {any} */ (Notice).call(null, `卡片导出未完成：${formatExportReason(reason)}`);
   }).catch(() => {});
 }
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */

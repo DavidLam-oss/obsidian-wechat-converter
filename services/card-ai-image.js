@@ -224,6 +224,7 @@ async function performHttpRequest(options) {
     }
   }
 
+  // Fallback to fetch when requestUrl is not available (e.g., test environment or Node.js context)
   if (typeof fetch === 'function') {
     const res = await fetch(url, {
       method,
@@ -273,6 +274,7 @@ async function downloadImageAsBase64(url, requestUrlFn, signal) {
       const b64 = bufferToBase64(imgObj.arrayBuffer);
       return `data:image/png;base64,${b64}`;
     }
+  // Fallback to fetch when requestUrl is not available (e.g., test environment or Node.js context)
   } else if (typeof fetch === 'function') {
     const imgRes = await fetch(url, { signal });
     const buf = await imgRes.arrayBuffer();
@@ -674,3 +676,4 @@ export async function extractVisualTopicWithAi(options) {
   }
   return trimmed;
 }
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */

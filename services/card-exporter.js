@@ -521,7 +521,7 @@ export function createCardExporter(deps) {
         return { ok: false, reason: 'page-out-of-range' };
       }
       // 路径配置校验（§6.1）——以上校验全部同步，此后进入异步段前先同步占位防并发
-      const rootCheck = validateExportRoot(input.rootPath, { configDir: input.configDir || '.obsidian' });
+      const rootCheck = validateExportRoot(input.rootPath, { configDir: input.configDir });
       if (!rootCheck.ok) return { ok: false, reason: String(rootCheck.reason) };
       const root = rootCheck.root;
       runActive = true;

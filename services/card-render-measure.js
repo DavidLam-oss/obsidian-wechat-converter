@@ -107,10 +107,10 @@ async function waitForImagesReady(root, timeoutMs = 4000) {
       const done = () => {
         img.removeEventListener("load", done);
         img.removeEventListener("error", done);
-        clearTimeout(timer);
+        globalThis.clearTimeout(timer);
         resolve();
       };
-      const timer = setTimeout(done, timeoutMs);
+      const timer = globalThis.setTimeout(done, timeoutMs);
       img.addEventListener("load", done, { once: true });
       img.addEventListener("error", done, { once: true });
     });
@@ -267,3 +267,4 @@ export async function measureCardDocument(cardDoc, options = {}) {
     offscreen.detach();
   }
 }
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */

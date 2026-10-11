@@ -423,8 +423,8 @@ scheduleCardDefaultsSave() {
   // 无持久化能力（测试替身 / 极简宿主）时不排定时器，避免留下悬挂回调
   if (!plugin || typeof plugin.saveSettings !== 'function') return;
   const selfRecord = cardSettingsStateOf(this);
-  if (selfRecord.cardDefaultsSaveTimer) clearTimeout(selfRecord.cardDefaultsSaveTimer);
-  selfRecord.cardDefaultsSaveTimer = setTimeout(() => {
+  if (selfRecord.cardDefaultsSaveTimer) window.clearTimeout(selfRecord.cardDefaultsSaveTimer);
+  selfRecord.cardDefaultsSaveTimer = window.setTimeout(() => {
     selfRecord.cardDefaultsSaveTimer = null;
     const host = /** @type {any} */ (this).plugin;
     if (host && typeof host.saveSettings === 'function') void host.saveSettings();
@@ -575,3 +575,4 @@ renderCardCoverGroupEcho(fields, hasImage) {
 ,
 
 };
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
