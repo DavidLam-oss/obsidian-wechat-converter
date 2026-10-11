@@ -162,5 +162,83 @@ describe('platform-wall', () => {
       expect(juejinChip.className).toContain('is-selected');
       expect(statusQueryCount).toBeGreaterThan(2);
     });
+
+    it('默认折叠 3 行（前 9 个），支持点击展开更多与收起，且已勾选项始终常驻不被折叠', () => {
+      const container = createObsidianLikeElement('div');
+      // 创建 15 个平台，并将第 12 个（索引 11）设为勾选
+      const platforms = Array.from({ length: 15 }, (_, i) => ({
+        id: `plat_${i + 1}`,
+        name: `平台 ${i + 1}`,
+      }));
+      const selectedSet = new Set(['plat_12']);
+
+      const card = renderPlatformWall(container, {
+        selectable: true,
+        platforms,
+        selectedSet,
+      });
+
+      const tiles = card.querySelectorAll('.wechat-platform-wall-tile');
+      expect(tiles.length).toBe(15);
+
+      // 验证收起态：前 9 项显示；第 10~15 项中，除了已勾选的 plat_12，其余都带有 is-collapsed-hidden
+      const hiddenTiles = card.querySelectorAll('.is-collapsed-hidden');
+      expect(hiddenTiles.length).toBe(5); // 15 - 9 - 1 (plat_12) = 5 项被隐藏
+
+      const plat12Tile = tiles[11];
+      expect(plat12Tile.className).not.toContain('is-collapsed-hidden');
+      expect(plat12Tile.className).toContain('is-selected');
+
+      const expandBtn = card.querySelector('.wechat-platform-wall-expand-btn');
+      expect(expandBtn).not.toBeNull();
+      expect(expandBtn?.textContent).toContain('展开更多平台 (共 15 个) ▾');
+
+      // 点击展开
+      expandBtn?.click();
+      const hiddenAfterExpand = card.querySelectorAll('.is-collapsed-hidden');
+      expect(hiddenAfterExpand.length).toBe(0);
+      expect(expandBtn?.textContent).toBe('收起 ▴');
+
+      // 再次点击收起
+      expandBtn?.click();
+      const hiddenAfterCollapse = card.querySelectorAll('.is-collapsed-hidden');
+      expect(hiddenAfterCollapse.length).toBe(5);
+      expect(expandBtn?.textContent).toContain('展开更多平台 (共 15 个) ▾');
+    });
+
+    it('在 selectable 模式下渲染头部就近刷新状态按钮，并联动 onRefreshAuth 回调', async () => {
+      const container = createObsidianLikeElement('div');
+      let refreshCalled = false;
+      let resolveRefresh;
+      const refreshPromise = new Promise((resolve) => {
+        resolveRefresh = resolve;
+      });
+
+      const card = renderPlatformWall(container, {
+        selectable: true,
+        platforms: [{ id: 'zhihu', name: '知乎' }],
+        onRefreshAuth: async () => {
+          refreshCalled = true;
+          await refreshPromise;
+        },
+      });
+
+      const refreshBtn = card.querySelector('.wechat-platform-wall-refresh-btn');
+      expect(refreshBtn).not.toBeNull();
+      expect(refreshBtn?.textContent).toBe('刷新平台状态');
+
+      // 触发刷新
+      const clickPromise = refreshBtn?.onclick();
+      expect(refreshBtn?.disabled).toBe(true);
+      expect(refreshBtn?.textContent).toBe('刷新中...');
+      expect(refreshCalled).toBe(true);
+
+      // 结束刷新
+      resolveRefresh();
+      await clickPromise;
+
+      expect(refreshBtn?.disabled).toBe(false);
+      expect(refreshBtn?.textContent).toBe('刷新平台状态');
+    });
   });
 });

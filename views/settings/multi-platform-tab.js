@@ -365,12 +365,76 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     await plugin.saveSettings();
   };
 
+  /**
+   * @param {{ setButtonText?: (t: string) => void, setDisabled?: (d: boolean) => void }} [triggerBtn]
+   */
+  const readPlatformAuthAction = async (triggerBtn) => {
+    const current = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
+    const platformById = new Map(toPlatformList(getAvailableWechatsyncPlatforms(current)).map((p) => [p.id, p]));
+    /** @type {WechatPlatformLike[]} */
+    const candidates = parseWechatsyncPlatformIds(current.selectedPlatforms || [])
+      .map((id) => platformById.get(id) || { id, name: id })
+      .filter((p) => p.id);
+    if (!candidates.length) {
+      new Notice('请先勾选至少一个发布平台');
+      return;
+    }
+
+    triggerBtn?.setButtonText?.('读取中...');
+    triggerBtn?.setDisabled?.(true);
+    const startedAt = Date.now();
+    try {
+      const bridge = plugin.getWechatSyncBridgeService();
+      await bridge.start();
+      await bridge.waitForConnection(15000);
+      const platformFallbacks = toRecordList(mergeWechatsyncPlatformLists(
+        current.supportedPlatforms, toRecord(current.connection).platforms, getFallbackWechatsyncPlatforms()
+      ));
+      const authSnapshot = await getAuthSnapshotFromExtension(
+        bridge, candidates.map((p) => p.id), platformFallbacks
+      );
+      const cachedPlatforms = toRecordList(normalizeWechatsyncPlatformList(authSnapshot.platforms || []));
+      console.debug('[Wechatsync] selected platform cached auth snapshot summary', {
+        elapsedMs: Date.now() - startedAt,
+        checkedAt: authSnapshot.checkedAt,
+        ...summarizeWechatsyncPlatformResponse(cachedPlatforms),
+      });
+      plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
+        ...current,
+        connection: {
+          ...toRecord(current.connection),
+          status: 'connected',
+          checkedAt: authSnapshot.checkedAt || Date.now(),
+          platforms: cachedPlatforms,
+          capabilities: { ...toRecord(toRecord(current.connection).capabilities), getAuthSnapshot: true },
+          message: '已读取所选平台的上次登录状态。',
+        },
+      });
+      await plugin.saveSettings();
+      const authenticatedCount = cachedPlatforms.filter((p) => p.authenticated === true).length;
+      new Notice(`已读取 ${cachedPlatforms.length} 个已选平台，${authenticatedCount} 个上次可用`);
+      refreshSettingTab(tab);
+    } catch (error) {
+      const readableError = toReadableError(error);
+      console.error('[Wechatsync] selected platform cached auth snapshot failed', {
+        elapsedMs: Date.now() - startedAt,
+        code: readableError.code,
+        message: readableError.message,
+      });
+      new Notice(`读取失败：${readableError.message}`, 10000);
+    } finally {
+      triggerBtn?.setDisabled?.(false);
+      triggerBtn?.setButtonText?.('读取');
+    }
+  };
+
   // 1. 支持发布平台矩阵 / 全览 (置顶呈现，自带规范 Lucide share-2 图标与数量状态徽标)
   renderPlatformWall(containerEl, {
     selectable: isPublishingEnabled,
     platforms: availablePlatforms,
     selectedSet: selectedPlatformSet,
     getAuthBadge: getPlatformAuthBadge,
+    onRefreshAuth: readPlatformAuthAction,
     desc: isPublishingEnabled ? '已勾选平台会显示上次状态；本次发布仍以浏览器插件实际结果为准。' : '涵盖主流自媒体、技术社区与财经资讯平台。开启下方服务后，可直接勾选平台并一键同步草稿。',
     onToggle: async (platform, isChecked, set, authBadge) => {
       const authRecord = toRecord(authBadge);
@@ -872,74 +936,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     .setDesc('读取浏览器插件缓存的各平台登录状态（发布时仍以插件实际执行为准）。')
     .addButton(button => button
       .setButtonText('读取')
-      .onClick(async () => {
-        const current = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
-        const platformById = new Map(
-          toPlatformList(getAvailableWechatsyncPlatforms(current)).map((platform) => [platform.id, platform])
-        );
-        /** @type {WechatPlatformLike[]} */
-        const candidates = parseWechatsyncPlatformIds(current.selectedPlatforms || [])
-          .map((id) => platformById.get(id) || { id, name: id })
-          .filter((platform) => platform.id);
-        if (!candidates.length) {
-          new Notice('请先勾选至少一个发布平台');
-          return;
-        }
-
-        button.setButtonText('读取中...');
-        button.setDisabled?.(true);
-        const startedAt = Date.now();
-        try {
-          const bridge = plugin.getWechatSyncBridgeService();
-          await bridge.start();
-          await bridge.waitForConnection(15000);
-          const platformFallbacks = toRecordList(mergeWechatsyncPlatformLists(
-            current.supportedPlatforms,
-            toRecord(current.connection).platforms,
-            getFallbackWechatsyncPlatforms()
-          ));
-          const authSnapshot = await getAuthSnapshotFromExtension(
-            bridge,
-            candidates.map((platform) => platform.id),
-            platformFallbacks
-          );
-          const cachedPlatforms = toRecordList(normalizeWechatsyncPlatformList(authSnapshot.platforms || []));
-          console.debug('[Wechatsync] selected platform cached auth snapshot summary', {
-            elapsedMs: Date.now() - startedAt,
-            checkedAt: authSnapshot.checkedAt,
-            ...summarizeWechatsyncPlatformResponse(cachedPlatforms),
-          });
-          plugin.settings.multiPlatformSync = normalizeMultiPlatformSyncSettings({
-            ...current,
-            connection: {
-              ...toRecord(current.connection),
-              status: 'connected',
-              checkedAt: authSnapshot.checkedAt || Date.now(),
-              platforms: cachedPlatforms,
-              capabilities: {
-                ...toRecord(toRecord(current.connection).capabilities),
-                getAuthSnapshot: true,
-              },
-              message: '已读取所选平台的上次登录状态。',
-            },
-          });
-          await plugin.saveSettings();
-          const authenticatedCount = cachedPlatforms.filter((platform) => platform.authenticated === true).length;
-          new Notice(`已读取 ${cachedPlatforms.length} 个已选平台，${authenticatedCount} 个上次可用`);
-          refreshSettingTab(tab);
-        } catch (error) {
-          const readableError = toReadableError(error);
-          console.error('[Wechatsync] selected platform cached auth snapshot failed', {
-            elapsedMs: Date.now() - startedAt,
-            code: readableError.code,
-            message: readableError.message,
-          });
-          new Notice(`读取失败：${readableError.message}`, 10000);
-        } finally {
-          button.setDisabled?.(false);
-          button.setButtonText('读取');
-        }
-      }));
+      .onClick(() => readPlatformAuthAction(button)));
 }
 
 export { renderMultiPlatformSettingsTab };

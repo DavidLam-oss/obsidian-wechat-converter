@@ -255,6 +255,7 @@ export function getMultiPlatformWallList(customPlatforms) {
  * @param {Set<string>} [options.selectedSet] 已勾选的平台 ID 集合
  * @param {(platform: any) => { text: string, cls: string, status?: string }} [options.getAuthBadge]
  * @param {(platform: any, selected: boolean, selectedSet: Set<string>, badge: any) => Promise<void> | void} [options.onToggle]
+ * @param {(() => Promise<void> | void)} [options.onRefreshAuth] 刷新各平台授权状态回调
  * @param {string} [options.title]
  * @param {string} [options.desc]
  * @returns {HTMLDivElement}
@@ -280,12 +281,31 @@ export function renderPlatformWall(containerEl, options = {}) {
     cls: 'wechat-platform-wall-title',
   });
 
-  const badgeEl = titleRow.createSpan({
+  const actionsEl = titleRow.createDiv({ cls: 'wechat-platform-wall-actions' });
+  const badgeEl = actionsEl.createSpan({
     text: isSelectable
       ? `已选择 ${selectedSet.size} 个`
       : `${platforms.length} 平台矩阵`,
     cls: 'wechat-platform-wall-badge',
   });
+
+  if (isSelectable && typeof options.onRefreshAuth === 'function') {
+    const refreshBtn = actionsEl.createEl('button', {
+      text: '刷新平台状态',
+      cls: 'wechat-platform-wall-refresh-btn',
+    });
+    refreshBtn.onclick = async () => {
+      refreshBtn.disabled = true;
+      refreshBtn.setText('刷新中...');
+      try {
+        const refreshHandler = /** @type {() => Promise<void> | void} */ (options.onRefreshAuth);
+        await refreshHandler();
+      } finally {
+        refreshBtn.disabled = false;
+        refreshBtn.setText('刷新平台状态');
+      }
+    };
+  }
 
   const subtitle = options.desc || (isSelectable
     ? '已勾选平台会显示上次状态；本次发布仍以浏览器插件实际结果为准。'
@@ -300,83 +320,135 @@ export function renderPlatformWall(containerEl, options = {}) {
     cls: `wechat-platform-wall-grid${isSelectable ? ' is-selectable' : ''}`,
   });
 
+  const DEFAULT_VISIBLE_COUNT = 9;
+  let isExpanded = false;
+  /** @type {Array<{ el: HTMLElement, platform: { id: string }, index: number }>} */
+  const tileEntries = [];
+
   // 只读展示态
   if (!isSelectable) {
-    platforms.forEach((platform) => {
+    platforms.forEach((platform, index) => {
       const tile = grid.createEl('div', { cls: 'wechat-platform-wall-tile is-readonly' });
       tile.setAttribute('title', platform.name);
       const iconWrap = tile.createSpan({ cls: 'wechat-platform-wall-icon-wrap' });
       renderPlatformIcon(iconWrap, platform);
       tile.createSpan({ text: platform.name, cls: 'wechat-platform-wall-name' });
+      tileEntries.push({ el: tile, platform, index });
     });
-    return card;
+  } else {
+    // 交互勾选态 (合并契约保持对 .wechat-platform-chip 的全兼容)
+    const updateSummary = () => {
+      badgeEl.setText(`已选择 ${selectedSet.size} 个`);
+    };
+
+    platforms.forEach((platform, index) => {
+      const isSelected = selectedSet.has(platform.id);
+      const authBadge = typeof options.getAuthBadge === 'function'
+        ? options.getAuthBadge(platform)
+        : { text: '', cls: '', status: '' };
+
+      const chip = grid.createEl('label', {
+        cls: `wechat-platform-wall-tile wechat-platform-chip${isSelected ? ` ${authBadge.cls} is-selected` : ''}`,
+      });
+      chip.setAttribute('title', isSelected && authBadge.text ? `${platform.name} · ${authBadge.text}` : platform.name);
+
+      const checkbox = chip.createEl('input', { attr: { type: 'checkbox' } });
+      checkbox.checked = isSelected;
+      checkbox.value = platform.id;
+
+      const iconWrap = chip.createSpan({ cls: 'wechat-platform-wall-icon-wrap' });
+      renderPlatformIcon(iconWrap, platform);
+
+      const chipBody = chip.createEl('span', { cls: 'wechat-platform-chip-body' });
+      chipBody.createEl('span', { text: platform.name, cls: 'wechat-platform-chip-name' });
+      const statusEl = chipBody.createEl('span', {
+        text: authBadge.text,
+        cls: `wechat-platform-chip-status ${authBadge.cls}`,
+      });
+      statusEl.setAttribute('title', authBadge.text);
+
+      const setStatusVisible = (visible, currentBadge = authBadge) => {
+        for (const cls of ['is-ok', 'is-error', 'is-unknown', 'is-bridge']) {
+          chip.removeClass?.(cls);
+          statusEl.removeClass?.(cls);
+        }
+        statusEl.textContent = currentBadge.text;
+        if (visible) {
+          if (currentBadge.cls) {
+            chip.addClass?.(currentBadge.cls);
+            statusEl.addClass?.(currentBadge.cls);
+          }
+        }
+        chip.setAttribute('title', visible && currentBadge.text ? `${platform.name} · ${currentBadge.text}` : platform.name);
+      };
+
+      checkbox.onchange = async () => {
+        const latestBadge = typeof options.getAuthBadge === 'function'
+          ? options.getAuthBadge(platform)
+          : authBadge;
+        if (checkbox.checked) {
+          selectedSet.add(platform.id);
+          chip.addClass?.('is-selected');
+          setStatusVisible(true, latestBadge);
+        } else {
+          selectedSet.delete(platform.id);
+          chip.removeClass?.('is-selected');
+          setStatusVisible(false, latestBadge);
+        }
+        updateSummary();
+        updateVisibility();
+        if (typeof options.onToggle === 'function') {
+          const toggleHandler = /** @type {(platform: any, selected: boolean, selectedSet: Set<string>, badge: any) => Promise<void> | void} */ (options.onToggle);
+          await toggleHandler(platform, checkbox.checked, selectedSet, latestBadge);
+        }
+      };
+
+      tileEntries.push({ el: chip, platform, index });
+    });
   }
 
-  // 交互勾选态 (合并契约保持对 .wechat-platform-chip 的全兼容)
-  const updateSummary = () => {
-    badgeEl.setText(`已选择 ${selectedSet.size} 个`);
+  /** @type {HTMLButtonElement | null} */
+  let expandBtn = null;
+
+  const updateVisibility = () => {
+    let hiddenCount = 0;
+    tileEntries.forEach(({ el, platform, index }) => {
+      const isSelected = selectedSet.has(platform.id);
+      const shouldHide = !isExpanded && index >= DEFAULT_VISIBLE_COUNT && !isSelected;
+      if (shouldHide) {
+        el.addClass?.('is-collapsed-hidden');
+        hiddenCount++;
+      } else {
+        el.removeClass?.('is-collapsed-hidden');
+      }
+    });
+
+    if (expandBtn) {
+      if (isExpanded) {
+        expandBtn.setText('收起 ▴');
+        expandBtn.setCssStyles?.({ display: '' });
+      } else if (hiddenCount > 0) {
+        expandBtn.setText(`展开更多平台 (共 ${platforms.length} 个) ▾`);
+        expandBtn.setCssStyles?.({ display: '' });
+      } else {
+        expandBtn.setCssStyles?.({ display: 'none' });
+      }
+    }
   };
 
-  platforms.forEach((platform) => {
-    const isSelected = selectedSet.has(platform.id);
-    const authBadge = typeof options.getAuthBadge === 'function'
-      ? options.getAuthBadge(platform)
-      : { text: '', cls: '', status: '' };
-
-    const chip = grid.createEl('label', {
-      cls: `wechat-platform-wall-tile wechat-platform-chip${isSelected ? ` ${authBadge.cls} is-selected` : ''}`,
+  if (platforms.length > DEFAULT_VISIBLE_COUNT) {
+    const footer = card.createDiv({ cls: 'wechat-platform-wall-footer' });
+    expandBtn = footer.createEl('button', {
+      cls: 'wechat-platform-wall-expand-btn',
+      text: `展开更多平台 (共 ${platforms.length} 个) ▾`,
     });
-    chip.setAttribute('title', isSelected && authBadge.text ? `${platform.name} · ${authBadge.text}` : platform.name);
-
-    const checkbox = chip.createEl('input', { attr: { type: 'checkbox' } });
-    checkbox.checked = isSelected;
-    checkbox.value = platform.id;
-
-    const iconWrap = chip.createSpan({ cls: 'wechat-platform-wall-icon-wrap' });
-    renderPlatformIcon(iconWrap, platform);
-
-    const chipBody = chip.createEl('span', { cls: 'wechat-platform-chip-body' });
-    chipBody.createEl('span', { text: platform.name, cls: 'wechat-platform-chip-name' });
-    const statusEl = chipBody.createEl('span', {
-      text: authBadge.text,
-      cls: `wechat-platform-chip-status ${authBadge.cls}`,
-    });
-    statusEl.setAttribute('title', authBadge.text);
-
-    const setStatusVisible = (visible, currentBadge = authBadge) => {
-      for (const cls of ['is-ok', 'is-error', 'is-unknown', 'is-bridge']) {
-        chip.removeClass?.(cls);
-        statusEl.removeClass?.(cls);
-      }
-      statusEl.textContent = currentBadge.text;
-      if (visible) {
-        if (currentBadge.cls) {
-          chip.addClass?.(currentBadge.cls);
-          statusEl.addClass?.(currentBadge.cls);
-        }
-      }
-      chip.setAttribute('title', visible && currentBadge.text ? `${platform.name} · ${currentBadge.text}` : platform.name);
+    expandBtn.onclick = () => {
+      isExpanded = !isExpanded;
+      updateVisibility();
     };
+  }
 
-    checkbox.onchange = async () => {
-      const latestBadge = typeof options.getAuthBadge === 'function'
-        ? options.getAuthBadge(platform)
-        : authBadge;
-      if (checkbox.checked) {
-        selectedSet.add(platform.id);
-        chip.addClass?.('is-selected');
-        setStatusVisible(true, latestBadge);
-      } else {
-        selectedSet.delete(platform.id);
-        chip.removeClass?.('is-selected');
-        setStatusVisible(false, latestBadge);
-      }
-      updateSummary();
-      if (typeof options.onToggle === 'function') {
-        await options.onToggle(platform, checkbox.checked, selectedSet, latestBadge);
-      }
-    };
-  });
+  updateVisibility();
 
   return card;
 }
