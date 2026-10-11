@@ -361,10 +361,7 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
     await plugin.saveSettings();
   };
 
-  /**
-   * @param {{ setButtonText?: (t: string) => void, setDisabled?: (d: boolean) => void }} [triggerBtn]
-   */
-  const readPlatformAuthAction = async (triggerBtn) => {
+  const readPlatformAuthAction = async () => {
     const current = normalizeMultiPlatformSyncSettings(plugin.settings.multiPlatformSync);
     const platformById = new Map(toPlatformList(getAvailableWechatsyncPlatforms(current)).map((p) => [p.id, p]));
     /** @type {WechatPlatformLike[]} */
@@ -376,8 +373,6 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
       return;
     }
 
-    triggerBtn?.setButtonText?.('读取中...');
-    triggerBtn?.setDisabled?.(true);
     const startedAt = Date.now();
     try {
       const bridge = plugin.getWechatSyncBridgeService();
@@ -418,9 +413,6 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
         message: readableError.message,
       });
       new Notice(`读取失败：${readableError.message}`, 10000);
-    } finally {
-      triggerBtn?.setDisabled?.(false);
-      triggerBtn?.setButtonText?.('读取');
     }
   };
 

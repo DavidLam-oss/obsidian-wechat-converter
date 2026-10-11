@@ -173,8 +173,8 @@ export function renderLetterFallback(wrap, platform) {
 
 /**
  * 渲染平台图标，具备三级容灾能力：
- * Stage 0: 内置离线高清 Base64 数据（0网络请求/0IP暴露/离线立现/滚动不重载）
- * Stage 1: Xiaoweibox 官方高清静态资源
+ * Stage 0: 内置离线高清 Base64 数据（27 个内置平台 0 网络请求 / 0 IP 泄露 / 离线立现 / 滚动不重载）
+ * Stage 1: 未内置的自定义平台回退至 Xiaoweibox 官方高清静态资源
  * Stage 2: DuckDuckGo Favicon 镜像服务
  * Stage 3: 品牌色首字符方形徽标
  * @param {HTMLElement} iconWrap
@@ -419,6 +419,15 @@ export function renderPlatformWall(containerEl, options = {}) {
   /** @type {HTMLButtonElement | null} */
   let expandBtn = null;
 
+  const updateExpandBtnContent = () => {
+    if (!expandBtn) return;
+    expandBtn.empty?.();
+    const label = isExpanded ? '收起' : `展开更多平台 (共 ${platforms.length} 个)`;
+    expandBtn.createSpan({ text: label });
+    const iconSpan = expandBtn.createSpan({ cls: 'wechat-platform-wall-expand-icon' });
+    attachIcon(iconSpan, isExpanded ? 'chevron-up' : 'chevron-down');
+  };
+
   const updateVisibility = () => {
     let hiddenCount = 0;
     tileEntries.forEach(({ el, platform, index }) => {
@@ -433,11 +442,8 @@ export function renderPlatformWall(containerEl, options = {}) {
     });
 
     if (expandBtn) {
-      if (isExpanded) {
-        expandBtn.setText('收起 ▴');
-        expandBtn.setCssStyles?.({ display: '' });
-      } else if (hiddenCount > 0) {
-        expandBtn.setText(`展开更多平台 (共 ${platforms.length} 个) ▾`);
+      if (isExpanded || hiddenCount > 0) {
+        updateExpandBtnContent();
         expandBtn.setCssStyles?.({ display: '' });
       } else {
         expandBtn.setCssStyles?.({ display: 'none' });
@@ -449,7 +455,6 @@ export function renderPlatformWall(containerEl, options = {}) {
     const footer = card.createDiv({ cls: 'wechat-platform-wall-footer' });
     expandBtn = footer.createEl('button', {
       cls: 'wechat-platform-wall-expand-btn',
-      text: `展开更多平台 (共 ${platforms.length} 个) ▾`,
     });
     expandBtn.onclick = () => {
       isExpanded = !isExpanded;

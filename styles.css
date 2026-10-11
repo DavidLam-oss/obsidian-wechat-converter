@@ -7660,6 +7660,9 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
 }
 
 .wechat-platform-wall-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: transparent;
   border: none;
   box-shadow: none;
@@ -7674,6 +7677,16 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
 .wechat-platform-wall-expand-btn:hover {
   color: var(--text-accent);
   background-color: var(--background-modifier-hover);
+}
+
+.wechat-platform-wall-expand-btn .wechat-platform-wall-expand-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.wechat-platform-wall-expand-btn .wechat-platform-wall-expand-icon svg {
+  width: 13px;
+  height: 13px;
 }
 
 /*

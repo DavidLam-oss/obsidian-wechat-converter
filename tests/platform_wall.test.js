@@ -191,19 +191,21 @@ describe('platform-wall', () => {
 
       const expandBtn = card.querySelector('.wechat-platform-wall-expand-btn');
       expect(expandBtn).not.toBeNull();
-      expect(expandBtn?.textContent).toContain('展开更多平台 (共 15 个) ▾');
+      expect(expandBtn?.textContent).toContain('展开更多平台 (共 15 个)');
+      expect(expandBtn?.querySelector('.wechat-platform-wall-expand-icon')).not.toBeNull();
 
       // 点击展开
       expandBtn?.click();
       const hiddenAfterExpand = card.querySelectorAll('.is-collapsed-hidden');
       expect(hiddenAfterExpand.length).toBe(0);
-      expect(expandBtn?.textContent).toBe('收起 ▴');
+      expect(expandBtn?.textContent).toContain('收起');
+      expect(expandBtn?.querySelector('.wechat-platform-wall-expand-icon')).not.toBeNull();
 
       // 再次点击收起
       expandBtn?.click();
       const hiddenAfterCollapse = card.querySelectorAll('.is-collapsed-hidden');
       expect(hiddenAfterCollapse.length).toBe(5);
-      expect(expandBtn?.textContent).toContain('展开更多平台 (共 15 个) ▾');
+      expect(expandBtn?.textContent).toContain('展开更多平台 (共 15 个)');
     });
 
     it('在 selectable 模式下渲染头部就近刷新状态按钮（含图标与文案），并联动 onRefreshAuth 回调', async () => {
