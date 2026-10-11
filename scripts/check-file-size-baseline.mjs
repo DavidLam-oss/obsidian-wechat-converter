@@ -97,16 +97,17 @@ function listTrackedSourceFiles() {
 }
 
 /**
- * @returns {{ softLimit: number, files: Record<string, number> }}
+ * @returns {{ softLimit: number, files: Record<string, number>, generatedBytes: Record<string, number> }}
  */
 function readBaseline() {
   if (!fs.existsSync(BASELINE_PATH)) {
-    return { softLimit: SOFT_LIMIT, files: {} };
+    return { softLimit: SOFT_LIMIT, files: {}, generatedBytes: {} };
   }
   const parsed = JSON.parse(fs.readFileSync(BASELINE_PATH, "utf8"));
   return {
     softLimit: typeof parsed.softLimit === "number" ? parsed.softLimit : SOFT_LIMIT,
     files: parsed && typeof parsed.files === "object" && parsed.files !== null ? parsed.files : {},
+    generatedBytes: parsed && typeof parsed.generatedBytes === "object" && parsed.generatedBytes !== null ? parsed.generatedBytes : {},
   };
 }
 
@@ -124,9 +125,9 @@ function measure(files) {
 }
 
 /**
- * 计算新的基线：**只允许下调或新增，绝不抬升**。
+ * 计算新的基线：**只允许下调或新增,绝不抬升**。
  * @param {Map<string, number>} snapshot
- * @param {{ softLimit: number, files: Record<string, number> }} baseline
+ * @param {{ softLimit: number, files: Record<string, number>, generatedBytes: Record<string, number> }} baseline
  * @returns {Record<string, number>}
  */
 function nextBaseline(snapshot, baseline) {
@@ -147,12 +148,53 @@ function nextBaseline(snapshot, baseline) {
   return next;
 }
 
+/**
+ * 测量生成物文件的字节数。
+ * @returns {Map<string, number>}
+ */
+function measureGeneratedBytes() {
+  const sizes = new Map();
+  for (const file of GENERATED_FILES) {
+    const fullPath = path.join(ROOT, file);
+    if (fs.existsSync(fullPath)) {
+      sizes.set(file, fs.statSync(fullPath).size);
+    }
+  }
+  return sizes;
+}
+
+/**
+ * 计算生成物字节数基线：**只允许下调或新增，绝不抬升**。
+ * @param {Map<string, number>} bytesSnapshot
+ * @param {Record<string, number>} baselineBytes
+ * @returns {Record<string, number>}
+ */
+function nextGeneratedBytesBaseline(bytesSnapshot, baselineBytes) {
+  /** @type {Record<string, number>} */
+  const next = {};
+  const names = [...bytesSnapshot.keys()].sort();
+  for (const name of names) {
+    const current = bytesSnapshot.get(name) ?? 0;
+    const previous = typeof baselineBytes[name] === "number" ? baselineBytes[name] : null;
+    if (previous !== null) {
+      // 已冻结：取较小值，不允许抬升
+      next[name] = Math.min(previous, current);
+    } else {
+      // 新文件：直接记录当前值
+      next[name] = current;
+    }
+  }
+  return next;
+}
+
+
 const args = process.argv.slice(2);
 const shouldUpdate = args.includes("--update");
 const useJson = args.includes("--json");
 
 const baseline = readBaseline();
 const snapshot = measure(listTrackedSourceFiles());
+const bytesSnapshot = measureGeneratedBytes();
 
 /** @type {{ file: string, baseline: number, current: number, delta: number }[]} */
 const grown = [];
@@ -162,6 +204,10 @@ const newOversized = [];
 const staleEntries = [];
 /** @type {string[]} */
 const shrank = [];
+/** @type {{ file: string, baseline: number, current: number, delta: number }[]} */
+const bytesGrown = [];
+/** @type {string[]} */
+const bytesShrankOrNew = [];
 
 for (const [file, current] of snapshot) {
   const previous = baseline.files[file];
@@ -180,11 +226,28 @@ for (const file of Object.keys(baseline.files)) {
   if (!snapshot.has(file)) staleEntries.push(file);
 }
 
+// Check generated file byte sizes
+for (const [file, currentBytes] of bytesSnapshot) {
+  const previousBytes = baseline.generatedBytes[file];
+  if (typeof previousBytes === "number") {
+    if (currentBytes > previousBytes) {
+      bytesGrown.push({ file, baseline: previousBytes, current: currentBytes, delta: currentBytes - previousBytes });
+    } else if (currentBytes < previousBytes) {
+      bytesShrankOrNew.push(file);
+    }
+  } else {
+    // New generated file - record but don't fail
+    bytesShrankOrNew.push(file);
+  }
+}
+
 grown.sort((a, b) => b.delta - a.delta);
 newOversized.sort((a, b) => b.current - a.current);
+bytesGrown.sort((a, b) => b.delta - a.delta);
 
 if (shouldUpdate) {
   const next = nextBaseline(snapshot, baseline);
+  const nextBytes = nextGeneratedBytesBaseline(bytesSnapshot, baseline.generatedBytes);
   fs.writeFileSync(
     BASELINE_PATH,
     `${JSON.stringify(
@@ -192,6 +255,7 @@ if (shouldUpdate) {
         note: "Auto-maintained by scripts/check-file-size-baseline.mjs. Values are frozen upper bounds for first-party source files at or above the soft limit. This check never lets a file grow past its bound; `--update` can only lower bounds, add newly-qualifying files, or prune deleted files.",
         softLimit: baseline.softLimit,
         files: next,
+        generatedBytes: nextBytes,
       },
       null,
       2,
@@ -204,12 +268,15 @@ if (shouldUpdate) {
       ? `[check-file-size-baseline] refused to raise ${grown.length} grown bound(s); they remain enforced.`
       : "[check-file-size-baseline] no bound was raised.",
   );
+  if (Object.keys(nextBytes).length > 0) {
+    console.log(`[check-file-size-baseline] generated file byte sizes: ${Object.keys(nextBytes).length} file(s) tracked.`);
+  }
 }
 
 if (useJson) {
   console.log(
     JSON.stringify(
-      { softLimit: baseline.softLimit, grown, newOversized, shrank, staleEntries },
+      { softLimit: baseline.softLimit, grown, newOversized, shrank, staleEntries, bytesGrown, bytesShrankOrNew },
       null,
       2,
     ),
@@ -237,10 +304,37 @@ if (newOversized.length > 0) {
   console.error("  Register it after review: npm run check:size -- --update");
 }
 
+if (bytesGrown.length > 0) {
+  failed = true;
+  console.error("\n[check-file-size-baseline] Generated file(s) grew past their byte size bound:");
+  for (const item of bytesGrown) {
+    const baselineKB = (item.baseline / 1024).toFixed(1);
+    const currentKB = (item.current / 1024).toFixed(1);
+    const deltaKB = (item.delta / 1024).toFixed(1);
+    console.error(`  - ${item.file}: ${baselineKB} KB -> ${currentKB} KB (+${deltaKB} KB)`);
+  }
+  console.error("  Generated files should not grow unbounded. Review the changes and update baseline if justified: npm run check:size -- --update");
+}
+
 if (shrank.length > 0 && !shouldUpdate) {
   console.log(`\n[check-file-size-baseline] ${shrank.length} frozen file(s) shrank — tighten the bound with: npm run check:size -- --update`);
   for (const file of shrank) {
     console.log(`  - ${file}: ${baseline.files[file]} -> ${snapshot.get(file)}`);
+  }
+}
+
+if (bytesShrankOrNew.length > 0 && !shouldUpdate) {
+  console.log(`\n[check-file-size-baseline] ${bytesShrankOrNew.length} generated file(s) shrank or are new — update baseline with: npm run check:size -- --update`);
+  for (const file of bytesShrankOrNew) {
+    const current = bytesSnapshot.get(file) ?? 0;
+    const previous = baseline.generatedBytes[file];
+    const currentKB = (current / 1024).toFixed(1);
+    if (typeof previous === "number") {
+      const previousKB = (previous / 1024).toFixed(1);
+      console.log(`  - ${file}: ${previousKB} KB -> ${currentKB} KB`);
+    } else {
+      console.log(`  - ${file}: (new) ${currentKB} KB`);
+    }
   }
 }
 
@@ -254,7 +348,9 @@ if (staleEntries.length > 0 && !shouldUpdate) {
 if (failed) {
   process.exitCode = 1;
 } else {
+  const generatedCount = Object.keys(baseline.generatedBytes).length;
+  const generatedMsg = generatedCount > 0 ? `, ${generatedCount} generated file(s) within byte limit` : "";
   console.log(
-    `[check-file-size-baseline] OK: ${Object.keys(baseline.files).length} frozen file(s) within bound, no new file at or above ${baseline.softLimit} lines.`,
+    `[check-file-size-baseline] OK: ${Object.keys(baseline.files).length} frozen file(s) within bound, no new file at or above ${baseline.softLimit} lines${generatedMsg}.`,
   );
 }
