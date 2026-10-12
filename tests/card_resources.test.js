@@ -96,15 +96,16 @@ describe("resolveCardImageSource 来源解析", () => {
 });
 
 describe("appendCoverImageRef 封面引用并入准备清单", () => {
-  it("本地封面路径追加为 local 引用；远程/data:/空值跳过；重复去重", () => {
+  it("本地封面追加为 local 引用；远程追加为 remote 引用；data:/空值跳过；重复去重", () => {
     const refs = [{ ref: "body.png", kind: "local" }];
     appendCoverImageRef(refs, "img/cover.jpg");
     expect(refs[1]).toEqual({ ref: "img/cover.jpg", kind: "local", gif: false });
-    appendCoverImageRef(refs, "img/cover.jpg");
+    appendCoverImageRef(refs, "img/cover.jpg"); // 重复去重
     appendCoverImageRef(refs, "https://x.test/a.png");
+    expect(refs[2]).toEqual({ ref: "https://x.test/a.png", kind: "remote", gif: false });
     appendCoverImageRef(refs, "data:image/png;base64,AAAA");
     appendCoverImageRef(refs, "");
-    expect(refs).toHaveLength(2);
+    expect(refs).toHaveLength(3);
   });
 
   it("回归：frontmatter 封面路径进快照后，预览 resolver 能解析出 vault 资源地址", async () => {

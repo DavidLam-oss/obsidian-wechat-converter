@@ -234,6 +234,11 @@ cancelCardExport() {
   const job = session && typeof session.getActiveJob === 'function' ? session.getActiveJob() : null;
   if (session && job && typeof session.requestCancel === 'function') {
     session.requestCancel(job.jobId);
+  }
+  const controller = (/** @type {any} */ (this)).cardExportController;
+  if (controller && typeof controller.cancel === 'function') {
+    void controller.cancel().then(() => this.renderCardExportModal());
+  } else {
     this.renderCardExportModal();
   }
 }
@@ -256,6 +261,9 @@ async retryCardExportManifest() {
   const controller = (/** @type {any} */ (this)).cardExportController;
   if (!controller || typeof controller.retryManifest !== 'function') return;
   const result = await controller.retryManifest();
+  if (result && result.ok && !result.finalized && typeof controller.resume === 'function') {
+    await controller.resume();
+  }
   this.renderCardExportModal();
   if (result && result.ok === false) notifyExportFailure(result.reason);
 }

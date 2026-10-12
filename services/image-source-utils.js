@@ -183,6 +183,21 @@ function getVaultDirnameFromPath(filePath) {
 }
 
 /**
+ * 校验是否为有效的文件对象（排除 Obsidian TFolder）。
+ * Obsidian TFolder 包含 children: TAbstractFile[] 数组；TFile 包含 extension 字符串。
+ * @param {unknown} file
+ * @returns {boolean}
+ */
+function isAbstractFileRecord(file) {
+  if (!file || typeof file !== 'object') return false;
+  // 排除 TFolder：包含 children 数组
+  if ('children' in file && Array.isArray(/** @type {{children?: unknown}} */ (file).children)) {
+    return false;
+  }
+  return 'path' in file || 'extension' in file;
+}
+
+/**
  * 全局统一解析笔记引用的本地文件（支持 Wikilink、Markdown、HTML、file:// 协议、相对/绝对路径等）
  * @param {{ metadataCache?: { getFirstLinkpathDest?: (linkpath: string, sourcePath: string) => unknown }, vault?: { getAbstractFileByPath?: (path: string) => unknown, adapter?: unknown, getResourcePath?: (file: unknown) => string } } | null | undefined} app
  * @param {string} ref 图片引用路径
@@ -210,7 +225,7 @@ function resolveVaultImageFile(app, ref, sourcePath = '') {
   // 1. 优先通过 metadataCache 检索
   try {
     const linked = /** @type {unknown} */ (metadataCache?.getFirstLinkpathDest?.(lookup, sourcePath || ''));
-    if (linked && typeof linked === 'object' && ('path' in linked || 'extension' in linked)) {
+    if (isAbstractFileRecord(linked)) {
       return /** @type {Record<string, unknown>} */ (linked);
     }
   } catch {
@@ -251,7 +266,7 @@ function resolveVaultImageFile(app, ref, sourcePath = '') {
   for (const candidate of candidates) {
     try {
       const found = /** @type {unknown} */ (vault?.getAbstractFileByPath?.(candidate));
-      if (found && typeof found === 'object' && ('path' in found || 'extension' in found)) {
+      if (isAbstractFileRecord(found)) {
         return /** @type {Record<string, unknown>} */ (found);
       }
     } catch {
@@ -259,27 +274,11 @@ function resolveVaultImageFile(app, ref, sourcePath = '') {
     }
     try {
       const foundViaCache = /** @type {unknown} */ (metadataCache?.getFirstLinkpathDest?.(candidate, sourcePath || ''));
-      if (foundViaCache && typeof foundViaCache === 'object' && ('path' in foundViaCache || 'extension' in foundViaCache)) {
+      if (isAbstractFileRecord(foundViaCache)) {
         return /** @type {Record<string, unknown>} */ (foundViaCache);
       }
     } catch {
       // 尝试下一个候选
-    }
-  }
-
-  // 4. 若带有多级路径，尝试用纯文件名在 metadataCache 中检索兜底（Obsidian 附件全局平铺模式）
-  const slashNormalizedRef = cleanRef.replace(/\\/g, '/');
-  if (slashNormalizedRef.includes('/')) {
-    const baseName = slashNormalizedRef.slice(slashNormalizedRef.lastIndexOf('/') + 1);
-    if (baseName) {
-      try {
-        const foundByName = /** @type {unknown} */ (metadataCache?.getFirstLinkpathDest?.(baseName, sourcePath || ''));
-        if (foundByName && typeof foundByName === 'object' && ('path' in foundByName || 'extension' in foundByName)) {
-          return /** @type {Record<string, unknown>} */ (foundByName);
-        }
-      } catch {
-        // 兜底失败
-      }
     }
   }
 

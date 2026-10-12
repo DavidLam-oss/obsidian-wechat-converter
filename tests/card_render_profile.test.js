@@ -12,7 +12,7 @@ import { describe, it, expect } from "vitest";
 import { createCardDocument } from "../services/card-document.js";
 import { getCardTheme, hasCardTheme, buildCardPageCss, DEFAULT_CARD_THEME_ID, CARD_THEME_IDS } from "../services/card-themes.js";
 import { renderInlineMarkdown, renderBlockElement } from "../services/card-render-profile.js";
-import { assembleCardPage, ensurePageStyle, releasePageStyle, attachOffscreenContainer, capturePage, RATIO_PRESETS, CAPTURE_LIBRARY_IDS } from "../services/card-render-engine.js";
+import { assembleCardPage, resolveCoverImageUrl, ensurePageStyle, releasePageStyle, attachOffscreenContainer, capturePage, RATIO_PRESETS, CAPTURE_LIBRARY_IDS } from "../services/card-render-engine.js";
 
 const SAMPLE = [
   "# 标题一",
@@ -239,5 +239,40 @@ describe("card-render-engine 页面装配", () => {
     ensurePageStyle(theme, document);
     releasePageStyle(document);
     expect(document.getElementById("icard-theme-style")).toBeNull();
+  });
+
+  it("M6 回归：指定 styleId 时注入独立样式节点，释放时不影响默认预览样式节点", () => {
+    const previewConsumer = {};
+    const exportConsumer = {};
+    // 预览注入默认 styleId
+    ensurePageStyle(theme, document, undefined, previewConsumer);
+    expect(document.getElementById("icard-theme-style")).not.toBeNull();
+
+    // 导出注入独立的 styleId: icard-theme-style-export
+    ensurePageStyle(theme, document, undefined, exportConsumer, "icard-theme-style-export");
+    expect(document.getElementById("icard-theme-style-export")).not.toBeNull();
+
+    // 导出完成释放
+    releasePageStyle(document, exportConsumer, "icard-theme-style-export");
+    expect(document.getElementById("icard-theme-style-export")).toBeNull();
+    // 预览节点依然完好
+    expect(document.getElementById("icard-theme-style")).not.toBeNull();
+
+    // 预览释放
+    releasePageStyle(document, previewConsumer);
+    expect(document.getElementById("icard-theme-style")).toBeNull();
+  });
+
+  it("M7 回归：resolveCoverImageUrl 优先使用 resolver 返回的内联 data URL，避免跨域取图失败", () => {
+    const rawRemoteUrl = "https://images.unsplash.com/photo-12345?w=800";
+    const inlinedDataUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+
+    // resolver 提供了内联 data URL
+    const resolver = (ref) => ref === rawRemoteUrl ? inlinedDataUrl : null;
+    expect(resolveCoverImageUrl(rawRemoteUrl, resolver)).toBe(inlinedDataUrl);
+
+    // 未提供 resolver 或 resolver 返回 null 时，回退到原始 http(s) URL 放行
+    expect(resolveCoverImageUrl(rawRemoteUrl, () => null)).toBe(rawRemoteUrl);
+    expect(resolveCoverImageUrl(rawRemoteUrl)).toBe(rawRemoteUrl);
   });
 });

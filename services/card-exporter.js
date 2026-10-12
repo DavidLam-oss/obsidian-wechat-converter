@@ -197,12 +197,16 @@ export function createCardExporter(deps) {
      */
     function buildManifestState(input) {
       /** @type {CardExportPageEntry[]} */
-      const pages = input.pages.map((page) => ({
-        pageId: page.pageId,
-        ordinal: page.ordinal,
-        fileName: (/** @type {{fileName?: string}} */ (page)).fileName || imageFileName(page.ordinal),
-        status: 'pending',
-      }));
+      const pages = input.pages.map((page) => {
+        const isCover = page.pageId === 'cover' || page.ordinal === 0;
+        const defaultFileName = isCover ? COVER_EXPORT_FILE_NAME : imageFileName(page.ordinal);
+        return {
+          pageId: page.pageId,
+          ordinal: page.ordinal,
+          fileName: (/** @type {{fileName?: string}} */ (page)).fileName || defaultFileName,
+          status: 'pending',
+        };
+      });
       return {
         batchId: input.batchId,
         batchDir: input.batchDir,
@@ -419,7 +423,9 @@ export function createCardExporter(deps) {
           recordResult(page.pageId, { status: 'failed', reason: 'capture-invalid' });
           continue;
         }
-        const fileName = (/** @type {{fileName?: string}} */ (page)).fileName || imageFileName(page.ordinal);
+        const isCover = page.pageId === 'cover' || page.ordinal === 0;
+        const defaultFileName = isCover ? COVER_EXPORT_FILE_NAME : imageFileName(page.ordinal);
+        const fileName = (/** @type {{fileName?: string}} */ (page)).fileName || defaultFileName;
         const imagePath = manifestState ? `${manifestState.batchDir}/${fileName}` : '';
         const security = await verifyPathInsideRoot(imagePath);
         if (!security.ok) {
@@ -479,7 +485,14 @@ export function createCardExporter(deps) {
      * @returns {Promise<CardExportOutcome | { ok: false, reason: string }>}
      */
     async function exportCards(input) {
-      if (runActive || (phase !== 'idle' && phase !== 'done')) {
+      if (runActive) {
+        return { ok: false, reason: 'export-in-progress' };
+      }
+      if (phase === 'paused-manifest') {
+        // 前序批次已暂停且未续跑，用户发起新导出时先将旧批次按取消收尾，释放会话锁与快照引用
+        await finalize({ canceled: true });
+      }
+      if (phase !== 'idle' && phase !== 'done') {
         return { ok: false, reason: 'export-in-progress' };
       }
       const pages = Array.isArray(input.pages) ? input.pages : [];
@@ -585,7 +598,15 @@ export function createCardExporter(deps) {
         scale, pages: orderedPages,
       });
       // fileName 一并带入队列（C01③ 封面页 cover.png 不走 imageFileName 回落）
-      remaining = orderedPages.map((p) => ({ pageId: p.pageId, ordinal: Math.floor(p.ordinal), fileName: (/** @type {{fileName?: string}} */ (p)).fileName }));
+      remaining = orderedPages.map((p) => {
+        const isCover = p.pageId === 'cover' || p.ordinal === 0;
+        const defaultFileName = isCover ? COVER_EXPORT_FILE_NAME : imageFileName(p.ordinal);
+        return {
+          pageId: p.pageId,
+          ordinal: Math.floor(p.ordinal),
+          fileName: (/** @type {{fileName?: string}} */ (p)).fileName || defaultFileName,
+        };
+      });
 
       // 刻意不再写「首份空清单」：批次目录已创建成功，该位置可写这件事已经成立；
       // 而清单要到出现失败页才有内容，任务一开始就落一份空账本只是给用户留垃圾（2026-09-12 策略）。
@@ -594,6 +615,7 @@ export function createCardExporter(deps) {
       const loopResult = await runPageLoop();
       if (loopResult.pausedManifest) {
         phase = 'paused-manifest';
+        runActive = false;
         return {
           status: 'paused-manifest',
           manifestPending: true,
@@ -643,6 +665,7 @@ export function createCardExporter(deps) {
       const loopResult = await runPageLoop();
       if (loopResult.pausedManifest) {
         phase = 'paused-manifest';
+        runActive = false;
         return {
           ok: true,
           outcome: /** @type {CardExportOutcome} */ ({
@@ -700,12 +723,21 @@ export function createCardExporter(deps) {
         // 失败页复位为待处理；此前成功页保持不动（不重新捕获/不重写）
         patchPage(page.pageId, { status: 'pending', reason: undefined, detail: undefined });
       }
-      remaining = failedPages.map((p) => ({ pageId: p.pageId, ordinal: p.ordinal }));
+      remaining = failedPages.map((p) => {
+        const isCover = p.pageId === 'cover' || p.ordinal === 0;
+        const defaultFileName = isCover ? COVER_EXPORT_FILE_NAME : imageFileName(p.ordinal);
+        return {
+          pageId: p.pageId,
+          ordinal: p.ordinal,
+          fileName: (/** @type {{fileName?: string}} */ (p)).fileName || defaultFileName,
+        };
+      });
       phase = 'running';
       emitProgress('begin');
       const loopResult = await runPageLoop();
       if (loopResult.pausedManifest) {
         phase = 'paused-manifest';
+        runActive = false;
         return {
           ok: true,
           outcome: /** @type {CardExportOutcome} */ ({
@@ -720,6 +752,17 @@ export function createCardExporter(deps) {
         };
       }
       return { ok: true, outcome: await finalize({}) };
+    }
+
+    /** 取消当前导出：处于 paused-manifest 时立即按取消收尾，释放会话锁与快照引用。 */
+    async function cancel() {
+      if (phase === 'paused-manifest') {
+        return await finalize({ canceled: true });
+      }
+      if (jobId) {
+        session.requestCancel(jobId);
+      }
+      return { ok: true };
     }
 
     /** @returns {{ batchDir: string, manifestPath: string, batchId: string } | null} */
@@ -737,6 +780,7 @@ export function createCardExporter(deps) {
       retryManifest,
       resume,
       retryFailedPages,
+      cancel,
       getBatchInfo,
     };
   }

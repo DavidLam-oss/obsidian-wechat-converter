@@ -96,4 +96,40 @@ describe("导出 × 封面（C01③）", () => {
     expect(outcome.ok).toBe(false);
     expect(outcome.reason).toBe("page-invalid");
   });
+
+  it("H6 回归：重试失败的封面页时文件名保持 card-000.png，不覆盖正文第 1 页", async () => {
+    const ctx = sessionWithSnapshot(1);
+    const fakeFs = createFakeFs();
+    let coverFailOnce = true;
+    const exporter = createCardExporter({
+      session: ctx.session,
+      fs: fakeFs,
+      capturePageBytes: async ({ pageId }) => {
+        if (pageId === "cover" && coverFailOnce) {
+          coverFailOnce = false;
+          throw new Error("cover capture boom");
+        }
+        return { bytes: makePngBytes(750, 1000) };
+      },
+      now: () => new Date(2026, 8, 13, 9, 0, 0),
+    });
+    const outcome = /** @type {any} */ (await exporter.exportCards(exportInput(ctx, [
+      { pageId: "cover", ordinal: 0, fileName: "card-000.png" },
+      { pageId: "page-1", ordinal: 1 },
+    ])));
+    expect(outcome.status).toBe("partial");
+    // page-1 成功保存为 card-001.png，cover 失败
+    const namesAfterFirst = [...fakeFs.files.keys()].filter((p) => p.endsWith(".png")).map((p) => p.split("/").pop());
+    expect(namesAfterFirst).toEqual(["card-001.png"]);
+
+    // 重试失败页（仅 cover 失败）
+    const retried = await exporter.retryFailedPages();
+    expect(retried.ok).toBe(true);
+    expect(retried.outcome?.status).toBe("completed");
+
+    const namesAfterRetry = [...fakeFs.files.keys()].filter((p) => p.endsWith(".png")).map((p) => p.split("/").pop());
+    expect(namesAfterRetry).toContain("card-000.png");
+    expect(namesAfterRetry).toContain("card-001.png");
+    expect(namesAfterRetry).toHaveLength(2);
+  });
 });

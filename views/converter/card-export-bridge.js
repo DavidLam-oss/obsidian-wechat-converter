@@ -348,6 +348,7 @@ async createCardCaptureCallback(input) {
     resources,
     document: ownerDoc,
     styleConsumer: exportConsumer,
+    styleId: 'icard-theme-style-export',
     pageNumberEnabled: settings.pageNumberEnabled !== false,
     watermarkText: String(settings.watermarkText || ''),
     cover: coverFields && isCoverUsable(coverFields) ? { fields: coverFields } : undefined,
@@ -377,7 +378,7 @@ async createCardCaptureCallback(input) {
     return { bytes };
   } finally {
     result.detach();
-    releasePageStyle(ownerDoc, exportConsumer);
+    releasePageStyle(ownerDoc, exportConsumer, 'icard-theme-style-export');
   }
 }
 ,

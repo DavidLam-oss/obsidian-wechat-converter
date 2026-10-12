@@ -118,4 +118,37 @@ describe('converter local image resolution', () => {
     // 不应错误折叠成 photo.png 并命中根目录文件
     expect(src).toBe('../photo.png');
   });
+
+  describe('H7 回归：resolveVaultImageFile 健壮性', () => {
+    const { resolveVaultImageFile } = require('../services/image-source-utils.js');
+
+    it('排除 TFolder：遇到目录对象时不误判为图片文件', () => {
+      const folderRecord = { path: 'assets/images', name: 'images', children: [] };
+      const app = {
+        metadataCache: { getFirstLinkpathDest: vi.fn(() => null) },
+        vault: { getAbstractFileByPath: vi.fn((p) => p === 'assets/images' ? folderRecord : null) },
+      };
+
+      const result = resolveVaultImageFile(app, 'assets/images', 'notes/post.md');
+      expect(result).toBeNull();
+    });
+
+    it('移除 Step 4：多级不存在相对路径不会跨目录静默匹配到 vault 中同名图片', () => {
+      const unrelatedPhoto = { path: 'archive/2021/cover.png', name: 'cover.png', extension: 'png' };
+      const app = {
+        metadataCache: {
+          getFirstLinkpathDest: vi.fn((link) => {
+            // 如果传入纯 basename "cover.png"，模拟全局附件匹配；但完整相对路径时不命中
+            if (link === 'cover.png') return unrelatedPhoto;
+            return null;
+          }),
+        },
+        vault: { getAbstractFileByPath: vi.fn(() => null) },
+      };
+
+      // 用户引用了一个不存在的相对路径 ../nonexistent/assets/cover.png
+      const result = resolveVaultImageFile(app, '../nonexistent/assets/cover.png', 'notes/post.md');
+      expect(result).toBeNull();
+    });
+  });
 });

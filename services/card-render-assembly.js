@@ -176,7 +176,7 @@ export function withCardTypography(theme, typography) {
  *
  * 注意：本机制解决多面板/多任务共存时「关一个面板拖垮另一个」的问题。
  * 若两个面板同时使用不同卡片主题，后渲染者仍会全局覆写样式（属于全局 CSS 作用域层面的后续优化项）。
- * @type {WeakMap<Document, Set<unknown>>}
+ * @type {WeakMap<Document, Map<string, Set<unknown>>>}
  */
 const pageStyleConsumersByDoc = new WeakMap();
 
@@ -186,26 +186,32 @@ const pageStyleConsumersByDoc = new WeakMap();
  * @param {Document} [ownerDoc]
  * @param {import('./card-themes.js').CardTypography} [typography]
  * @param {unknown} [consumer] 消费者标识（视图实例 / 导出任务对象）；传入后启用回收保护
+ * @param {string} [styleId] 样式标签 DOM ID（默认 "icard-theme-style"；导出可隔离使用 "icard-theme-style-export"）
  * @returns {HTMLStyleElement}
  */
-export function ensurePageStyle(theme, ownerDoc, typography, consumer) {
+export function ensurePageStyle(theme, ownerDoc, typography, consumer, styleId = "icard-theme-style") {
   const doc = ownerDoc || (typeof window !== 'undefined' ? window.document : null);
   if (!doc) {
     throw new Error('ensurePageStyle: document is required');
   }
-  const styleId = "icard-theme-style";
-  let style = /** @type {HTMLStyleElement|null} */ (doc.getElementById(styleId));
+  const targetId = styleId || "icard-theme-style";
+  let style = /** @type {HTMLStyleElement|null} */ (doc.getElementById(targetId));
   if (!style) {
     style = doc.createElement("style");
-    style.setAttribute("id", styleId);
+    style.setAttribute("id", targetId);
     doc.head.append(style);
   }
   style.textContent = buildCardPageCss(theme, typography);
   if (consumer) {
-    let set = pageStyleConsumersByDoc.get(doc);
+    let map = pageStyleConsumersByDoc.get(doc);
+    if (!map) {
+      map = new Map();
+      pageStyleConsumersByDoc.set(doc, map);
+    }
+    let set = map.get(targetId);
     if (!set) {
       set = new Set();
-      pageStyleConsumersByDoc.set(doc, set);
+      map.set(targetId, set);
     }
     set.add(consumer);
   }
@@ -216,19 +222,24 @@ export function ensurePageStyle(theme, ownerDoc, typography, consumer) {
  * 移除卡片页面主题 <style> 标签：传了 consumer 时「仍有其他使用者就保留」；不传则维持旧语义（立即删）。
  * @param {Document} [ownerDoc]
  * @param {unknown} [consumer]
+ * @param {string} [styleId]
  * @returns {void}
  */
-export function releasePageStyle(ownerDoc, consumer) {
+export function releasePageStyle(ownerDoc, consumer, styleId = "icard-theme-style") {
   const doc = ownerDoc || (typeof window !== 'undefined' ? window.document : null);
   if (!doc) return;
+  const targetId = styleId || "icard-theme-style";
   if (consumer) {
-    const set = pageStyleConsumersByDoc.get(doc);
-    if (set) {
-      set.delete(consumer);
-      if (set.size > 0) return; // 仍有其他活跃消费者，保留节点
+    const map = pageStyleConsumersByDoc.get(doc);
+    if (map) {
+      const set = map.get(targetId);
+      if (set) {
+        set.delete(consumer);
+        if (set.size > 0) return; // 仍有其他活跃消费者，保留节点
+      }
     }
   }
-  const style = doc.getElementById("icard-theme-style");
+  const style = doc.getElementById(targetId);
   if (style) {
     style.remove();
   }
@@ -399,14 +410,14 @@ export function createCoverPlaceholder(doc) {
 export function resolveCoverImageUrl(raw, resolver) {
   const src = String(raw || '').trim();
   if (!src) return '';
-  if (/^(https?:\/\/|data:image\/|blob:|app:\/\/)/i.test(src)) {
-    return src;
-  }
   if (typeof resolver === 'function') {
     const resolved = resolver(src);
     if (resolved && typeof resolved === 'string' && resolved.trim()) {
       return resolved.trim();
     }
+  }
+  if (/^(https?:\/\/|data:image\/|blob:|app:\/\/)/i.test(src)) {
+    return src;
   }
   return '';
 }

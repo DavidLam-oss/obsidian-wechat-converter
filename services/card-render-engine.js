@@ -57,7 +57,7 @@ import { debugLayoutLog, debugLayoutLogFail, debugLayoutLogOverflow, debugLayout
 
 // —— 门面 re-export：消费方统一从 card-render-engine.js 导入 ——
 
-export { RATIO_PRESETS, assembleCardPage, assembleCardPageFromPlan, assembleCardCoverPage, ensurePageStyle, releasePageStyle, attachOffscreenContainer, withCardTypography } from "./card-render-assembly.js";
+export { RATIO_PRESETS, assembleCardPage, assembleCardPageFromPlan, assembleCardCoverPage, resolveCoverImageUrl, ensurePageStyle, releasePageStyle, attachOffscreenContainer, withCardTypography } from "./card-render-assembly.js";
 export { CALLOUT_PAD_VERTICAL, measureContentHeight, measureCardDocument } from "./card-render-measure.js";
 export {
   CAPTURE_LIBRARY_IDS,
@@ -128,7 +128,7 @@ export async function renderCardPages(cardDoc, options = {}) {
   };
 
   try {
-    ensurePageStyle(theme, ownerDoc, typography, options.styleConsumer);
+    ensurePageStyle(theme, ownerDoc, typography, options.styleConsumer, options.styleId);
     const pageNumberEnabled = options.pageNumberEnabled !== false;
     let contentHeight = typeof options.contentHeight === "number"
       ? options.contentHeight
@@ -143,6 +143,7 @@ export async function renderCardPages(cardDoc, options = {}) {
         document: ownerDoc,
         typography,
         styleConsumer: options.styleConsumer,
+        styleId: options.styleId,
       });
       const items = createLayoutItems(cardDoc, measured);
       const breakBefore = mapManualBreaks(cardDoc, items);

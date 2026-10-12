@@ -244,6 +244,45 @@ describe("清单：写入失败 → paused-manifest / manifestPending", () => {
     expect(blocked).toEqual({ ok: false, reason: "manifest-unhealthy" });
   });
 
+  it("H5 回归：paused-manifest 期间调用 cancel() 成功收尾并释放会话任务锁", async () => {
+    const ctx = sessionWithSnapshot(3);
+    const fakeFs = createFakeFs({ failManifestOverwriteFrom: 1 });
+    const exporter = buildExporter(ctx, fakeFs, failOnOrdinal(1));
+    const paused = /** @type {any} */ (await exporter.exportCards(exportInput(ctx)));
+    expect(paused.status).toBe("paused-manifest");
+    expect(ctx.session.hasActiveJob()).toBe(true);
+
+    const cancelResult = await exporter.cancel();
+    expect(cancelResult.status).toBe("canceled");
+    expect(ctx.session.hasActiveJob()).toBe(false);
+    expect(ctx.session.getLastJob()?.state).toBe("canceled");
+  });
+
+  it("H5 回归：paused-manifest 期间发起新导出自动收尾旧任务，不被 export-in-progress 锁死", async () => {
+    const ctx = sessionWithSnapshot(3);
+    // 第一次导出：第 1 次覆写清单失败进入 paused-manifest；第二次导出：清单正常可写
+    let manifestFail = true;
+    const fakeFs = createFakeFs();
+    const originalWriteBinary = fakeFs.writeBinary;
+    fakeFs.writeBinary = async (path, bytes) => {
+      if (path.includes("export-manifest.json") && manifestFail) {
+        throw new Error("disk full");
+      }
+      return originalWriteBinary(path, bytes);
+    };
+
+    const exporter = buildExporter(ctx, fakeFs, failOnOrdinal(1));
+    const paused = /** @type {any} */ (await exporter.exportCards(exportInput(ctx)));
+    expect(paused.status).toBe("paused-manifest");
+    expect(ctx.session.hasActiveJob()).toBe(true);
+
+    // 用户不再 resume，而是重新点击导出新批次
+    manifestFail = false;
+    const newOutcome = /** @type {any} */ (await exporter.exportCards(exportInput(ctx)));
+    expect(newOutcome.status).toBe("partial"); // 正常跑完新批次（p1 失败，其余成功），未被 export-in-progress 拒绝
+    expect(newOutcome.reason).toBeUndefined();
+  });
+
   it("收尾清单写失败 → partial + manifestPending；重试清单成功后收尾并清除标记", async () => {
     const ctx = sessionWithSnapshot(2);
     // 写入次序：p2 成功后(1) 成功，收尾(2) 失败，重试清单(3) 成功，重新收尾(4) 成功

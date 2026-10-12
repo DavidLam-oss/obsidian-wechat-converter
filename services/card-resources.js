@@ -563,10 +563,11 @@ function freezeSnapshot(parts) {
 export function appendCoverImageRef(imageRefs, coverImage) {
   const refs = Array.isArray(imageRefs) ? imageRefs : [];
   const ref = String(coverImage || "").trim();
-  // 远程/data:/blob:/app:// 由 resolveCoverImageUrl 直接放行，无需进快照
-  if (!ref || /^(https?:\/\/|data:|blob:|app:\/\/)/i.test(ref)) return refs;
+  // data:/blob:/app:// 已为内联或本地运行时 URL，无需进快照；但远程 https?:// 需内联为 data URL 避免导出跨域丢失
+  if (!ref || /^(data:|blob:|app:\/\/)/i.test(ref)) return refs;
   if (refs.some((entry) => entry && entry.ref === ref)) return refs;
-  refs.push({ ref, kind: "local", gif: /\.gif(?:[?#].*)?$/i.test(ref) });
+  const isRemote = /^https?:\/\//i.test(ref);
+  refs.push({ ref, kind: isRemote ? "remote" : "local", gif: /\.gif(?:[?#].*)?$/i.test(ref) });
   return refs;
 }
 
