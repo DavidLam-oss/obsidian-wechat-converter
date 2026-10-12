@@ -205,5 +205,15 @@ describe('AI Provider Capabilities (C06.1)', () => {
     expect(custom.defaultImageProviderId).toBe('p-img');
     expect(custom.cardCoverImageStyle).toBe('editorial-magazine');
     expect(custom.cardCoverMode).toBe('full-bleed');
+
+    const adaptive = normalizeAiSettings({
+      cardCoverMode: 'adaptive',
+    });
+    expect(adaptive.cardCoverMode).toBe('adaptive');
+
+    const invalid = normalizeAiSettings({
+      cardCoverMode: 'invalid-mode',
+    });
+    expect(invalid.cardCoverMode).toBe('mixed');
   });
 });

@@ -81,6 +81,27 @@ function syncArrayInPlace(tgtArr, srcArr) {
     }
   }
 
+  /**
+   * 无 id 对象：优先尝试语义键（key/name/title/path/code）精确匹配，
+   * 避免数组乱序或中间插入时导致旧对象被错位覆盖。
+   * @param {Record<string, unknown>} srcObj
+   * @returns {Record<string, unknown> | null}
+   */
+  const findCandidateBySemanticKey = (srcObj) => {
+    for (const key of ['key', 'name', 'title', 'path', 'code']) {
+      const val = srcObj[key];
+      if (val !== undefined && val !== null && val !== '') {
+        const strVal = String(val);
+        const idx = existingOthers.findIndex((cand) => String(cand[key]) === strVal);
+        if (idx !== -1) {
+          const [found] = existingOthers.splice(idx, 1);
+          return found;
+        }
+      }
+    }
+    return null;
+  };
+
   const newItems = [];
   for (let i = 0; i < srcArr.length; i++) {
     const srcItem = srcArr[i];
@@ -93,8 +114,11 @@ function syncArrayInPlace(tgtArr, srcArr) {
         if (matched) {
           existingById.delete(String(srcObj.id));
         }
-      } else if (existingOthers.length > 0) {
-        matched = existingOthers.shift() || null;
+      } else {
+        matched = findCandidateBySemanticKey(srcObj);
+        if (!matched && existingOthers.length > 0) {
+          matched = existingOthers.shift() || null;
+        }
       }
 
       if (matched) {

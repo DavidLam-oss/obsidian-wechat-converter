@@ -57,6 +57,12 @@ export const COVER_MODE_LABELS = /** @type {const} */ ({
   'full-bleed': '纯海报整页铺满',
 });
 
+/** 全部合法封面版式枚举（含纯文字） */
+export const VALID_CARD_COVER_MODES = /** @type {const} */ (['none', 'adaptive', 'mixed', 'full-bleed']);
+
+/** 全局默认封面版式有效白名单（排除纯文字 none） */
+export const VALID_DEFAULT_CARD_COVER_MODES = /** @type {const} */ (['mixed', 'full-bleed', 'adaptive']);
+
 /** 空字段基准 */
 export const EMPTY_COVER_FIELDS = /** @type {CardCoverFields} */ ({
   title: "",
@@ -364,8 +370,11 @@ export function deriveCoverFields(input = {}) {
     // Frontmatter 未指定时：有封面图优先使用全局默认版式，其次回落自适应版式；无图则保持极简纯文字
     const defaultsObj = input.defaults && typeof input.defaults === 'object' ? input.defaults : null;
     const defaultMode = defaultsObj?.cardCoverMode;
-    const isValidDefaultMode = defaultMode === 'mixed' || defaultMode === 'full-bleed' || defaultMode === 'adaptive';
-    coverMode = coverImage ? (isValidDefaultMode ? defaultMode : 'adaptive') : 'none';
+    const isValidDefaultMode = VALID_DEFAULT_CARD_COVER_MODES.includes(/** @type {any} */ (defaultMode));
+    const fallbackMode = isValidDefaultMode && (defaultMode === 'mixed' || defaultMode === 'full-bleed' || defaultMode === 'adaptive')
+      ? defaultMode
+      : 'adaptive';
+    coverMode = coverImage ? fallbackMode : 'none';
   }
 
   const defaultsObj = input.defaults && typeof input.defaults === 'object' ? input.defaults : null;

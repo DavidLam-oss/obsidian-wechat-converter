@@ -142,6 +142,15 @@ describe('卡片全局默认：设置层归一化（C02）', () => {
       clientId: 'c1',
       cardDefaults: { ...createDefaultCardSettings(), coverEnabled: true },
     }).didMigrate).toBe(false);
+
+    const defaultAi = createDefaultSettings().ai;
+    const adaptiveRes = normalizeLoadedSettings({
+      clientId: 'c1',
+      cardDefaults: { ...createDefaultCardSettings(), coverEnabled: true },
+      ai: { ...defaultAi, cardCoverMode: 'adaptive' },
+    });
+    expect(adaptiveRes.settings.ai.cardCoverMode).toBe('adaptive');
+    expect(adaptiveRes.didMigrate).toBe(false);
   });
 
   it('cardDefaults 为非对象时回落默认；不触碰其他设置键', () => {

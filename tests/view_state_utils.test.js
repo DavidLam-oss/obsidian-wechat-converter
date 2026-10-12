@@ -113,6 +113,32 @@ describe('view-state-utils: syncInPlace & setPluginSettings', () => {
     expect(heldRule0.pattern).toBe('foo-updated');
   });
 
+  it('数组内无 id 对象在顺序颠倒或重新排序时，通过语义键精准对齐，绝不错配', () => {
+    const target = {
+      rules: [
+        { name: 'rule-A', action: 'allow' },
+        { name: 'rule-B', action: 'deny' },
+      ],
+    };
+    const heldRuleA = target.rules[0];
+    const heldRuleB = target.rules[1];
+
+    // 新数组顺序反转，且内容更新
+    const source = {
+      rules: [
+        { name: 'rule-B', action: 'deny-updated' },
+        { name: 'rule-A', action: 'allow-updated' },
+      ],
+    };
+
+    syncInPlace(target, source);
+
+    expect(target.rules[0]).toBe(heldRuleB);
+    expect(target.rules[0].action).toBe('deny-updated');
+    expect(target.rules[1]).toBe(heldRuleA);
+    expect(target.rules[1].action).toBe('allow-updated');
+  });
+
   it('setPluginSettings 保持 plugin.settings 引用并就地更新', () => {
     const plugin = {
       settings: {

@@ -31,6 +31,10 @@ import { createHtmlContainer, getActiveDocument } from './dom-utils.js';
  * @typedef {{ firstElementIdx: number, prefixEndIdx: number }} InlineLabelPrefixInfo
  */
 
+const LIST_DISMANTLE_BLOCK_TAGS = new Set([
+  'PRE', 'TABLE', 'BLOCKQUOTE', 'FIGURE', 'DIV', 'HR', 'P', 'SECTION', 'DETAILS', 'ASIDE', 'OL', 'UL',
+]);
+
 /**
  * @param {string} html
  * @returns {string}
@@ -712,9 +716,7 @@ export function cleanHtmlForDraft(html) {
 
           contentNodes.forEach(node => {
             const isBlock = node instanceof Element && (
-              node.tagName === 'PRE' || node.tagName === 'TABLE' ||
-              node.tagName === 'BLOCKQUOTE' || node.tagName === 'FIGURE' ||
-              node.classList.contains('code-block')
+              LIST_DISMANTLE_BLOCK_TAGS.has(node.tagName) || node.classList.contains('code-block')
             );
             if (isBlock) {
               currentP = null;

@@ -41,6 +41,7 @@ import { normalizeHexColor } from './color.js';
 import { normalizeAiProvider } from './providers.js';
 import { normalizeArticleLayoutCacheEntry } from './state-cache.js';
 import { clampNumber, isRecord, toRecord } from './utils.js';
+import { VALID_DEFAULT_CARD_COVER_MODES } from '../card-cover-model.js';
 
 /** @returns {AiSettingsLike} */
 function createDefaultAiSettings() {
@@ -52,6 +53,7 @@ function createDefaultAiSettings() {
     cardCoverMode: 'mixed',
     defaultLayoutFamily: AI_LAYOUT_SELECTION_AUTO,
     defaultColorPalette: AI_LAYOUT_SELECTION_AUTO,
+    defaultStylePack: AI_LAYOUT_DEFAULT_COLOR_PALETTE,
     customColor: '#7c3aed',
     includeImagesInLayout: true,
     requestTimeoutMs: DEFAULT_AI_REQUEST_TIMEOUT_MS,
@@ -92,7 +94,9 @@ function normalizeAiSettings(raw = {}) {
     ? source.cardCoverImageStyle.trim()
     : defaults.cardCoverImageStyle;
 
-  const cardCoverMode = source.cardCoverMode === 'full-bleed' ? 'full-bleed' : 'mixed';
+  const cardCoverMode = VALID_DEFAULT_CARD_COVER_MODES.includes(/** @type {any} */ (source.cardCoverMode))
+    ? source.cardCoverMode
+    : defaults.cardCoverMode;
 
   return {
     enabled: Object.prototype.hasOwnProperty.call(source, 'enabled')

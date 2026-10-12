@@ -173,6 +173,26 @@ describe('Wechat HTML Cleaner Service', () => {
       // 尾段为独立段落
       expect(output).toContain('尾部说明');
     });
+
+    it('遇列表内嵌套 div 与 hr 等长尾块级元素，解构为同级兄弟，避免 p 标签提前闭合', () => {
+      const input = `
+        <ul>
+          <li>第一行<div>块级内容</div><hr>第二行</li>
+        </ul>
+      `;
+      const output = cleanHtmlForDraft(input);
+
+      expect(output).not.toContain('<ul');
+      expect(output).not.toContain('<li');
+      const dom = document.createElement('div');
+      dom.innerHTML = output;
+      expect(dom.querySelector('p div')).toBeNull();
+      expect(dom.querySelector('p hr')).toBeNull();
+      expect(output).toContain('<div style=" margin-left: 20px;">块级内容</div>');
+      expect(output).toContain('<hr style=" margin-left: 20px;">');
+      expect(output).toContain('<span>• </span>第一行');
+      expect(output).toContain('第二行');
+    });
   });
 });
 
