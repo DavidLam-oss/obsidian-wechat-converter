@@ -483,4 +483,48 @@ describe("实机回归（2026-09-08 首轮分页实验暴露）", () => {
     expect(plan.diagnostics[0].blockId).toBe("p");
     expect(plan.diagnostics[0].message).toContain("行内图片");
   });
+
+  it("可拆项单单元超过半页且不足 orphanUnits：降级孤行保护跨页拆解，绝不死循环", () => {
+    // 复现 review.md 中的 Critical 死循环场景：
+    // 2 个单元各 600px，页高 1000px，orphanUnits 为 2。
+    // 单页仅放得下 1 个单元（take=1 < orphanUnits），孤行保护降级后应拆成 2 页，顺利退出。
+    const items = [
+      item({
+        blockId: "split-heavy",
+        type: "paragraph",
+        units: [
+          { height: 600 },
+          { height: 600 },
+        ],
+      }),
+    ];
+    const plan = createCardPagePlan(items, { contentHeight: 1000, orphanUnits: 2 });
+    expect(plan.ok).toBe(true);
+    expect(plan.pages).toHaveLength(2);
+    expect(plan.pages[0].entries[0].blockId).toBe("split-heavy");
+    expect(plan.pages[0].entries[0].unitEnd).toBe(1);
+    expect(plan.pages[0].entries[0].continues).toBe(true);
+    expect(plan.pages[1].entries[0].blockId).toBe("split-heavy");
+    expect(plan.pages[1].entries[0].unitStart).toBe(1);
+    expect(plan.pages[1].entries[0].unitEnd).toBe(2);
+    expect(verifyPagePlan(items, plan).ok).toBe(true);
+  });
+
+  it("可拆项单单元高度超过整页高度时：显式触发 oversized-atomic 诊断退出", () => {
+    const items = [
+      item({
+        blockId: "oversized-unit",
+        type: "paragraph",
+        units: [
+          { height: 1200 },
+          { height: 600 },
+        ],
+      }),
+    ];
+    const plan = createCardPagePlan(items, { contentHeight: 1000, orphanUnits: 2 });
+    expect(plan.ok).toBe(false);
+    expect(plan.diagnostics).toHaveLength(1);
+    expect(plan.diagnostics[0].reason).toBe("oversized-atomic");
+    expect(plan.diagnostics[0].blockId).toBe("oversized-unit");
+  });
 });

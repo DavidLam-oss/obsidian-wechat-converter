@@ -365,21 +365,26 @@ export function createCardPagePlan(items, options) {
       if (from + take < item.units.length && remaining - take < orphanUnits && remaining >= orphanUnits * 2) {
         take = remaining - orphanUnits;
       }
+      if (take === 0) {
+        // 单个单元高度甚至超过了整页高度（即便在空页上也放不下）→ 显式失败出口，避免死循环
+        diagnostics.push({
+          blockId: item.blockId,
+          reason: "oversized-atomic",
+          message: `单元过大无法在单页内布局（首单元 ${Math.round(item.units[from].height)}px > 页高 ${Math.round(contentHeight)}px）。`,
+        });
+        ok = false;
+        return;
+      }
       if (take < Math.min(orphanUnits, remaining)) {
-        // 当前页连孤行阈值都放不下（异常小页）：整项挪到下页
-        if (firstOnPage && take === 0 && remaining <= item.units.length) {
-          // 无法在单页内满足 → 显式失败，避免死循环
-          diagnostics.push({
-            blockId: item.blockId,
-            reason: "oversized-atomic",
-            message: `单元过大无法在单页内布局（首单元 ${Math.round(item.units[from].height)}px > 页高 ${Math.round(contentHeight)}px）。`,
-          });
-          ok = false;
-          return;
+        // 当前页空间容纳不下 orphanUnits 要求的单元数：
+        // 若当前页已有其他内容，则先换到新空页重试；
+        // 若当前页本就是空页，说明单元过大导致单页容量天然低于 orphanUnits，
+        // 此时必须降级孤行保护（取当前页能装下的单元），确保游标单调前进，杜绝同步死循环。
+        if (currentPage.length > 0) {
+          flush();
+          firstOnPage = true;
+          continue;
         }
-        flush();
-        firstOnPage = true;
-        continue;
       }
       const continues = from + take < item.units.length;
       currentPage.push({

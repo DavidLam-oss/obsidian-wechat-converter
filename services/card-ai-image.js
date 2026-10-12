@@ -343,6 +343,50 @@ function extractImageUrlFromTaskResult(source) {
 }
 
 /**
+ * 校验并构造同源安全的异步任务轮询地址，防范 API Key 外泄到第三方域名
+ * @param {string | null | undefined} rawPollingUrl API 返回的 task_url / status_url
+ * @param {string} baseUrl 用户配置的 Provider Base URL
+ * @param {string} [taskId] 任务 ID
+ * @returns {string} 验证通过的完整 URL
+ */
+export function resolveSafePollingUrl(rawPollingUrl, baseUrl, taskId = '') {
+  if (!baseUrl || typeof baseUrl !== 'string') {
+    throw new Error('缺少有效的 Provider Base URL，无法验证轮询地址安全性');
+  }
+
+  let baseParsed;
+  try {
+    baseParsed = new URL(baseUrl);
+  } catch {
+    throw new Error(`Provider Base URL 格式无效: ${baseUrl}`);
+  }
+
+  const trimmedRaw = typeof rawPollingUrl === 'string' ? rawPollingUrl.trim() : '';
+
+  // 若未指定 pollingUrl，基于 baseUrl 拼接默认 tasks 路径
+  if (!trimmedRaw) {
+    if (!taskId) {
+      throw new Error('缺少任务 ID，无法构建默认任务轮询地址');
+    }
+    return `${baseUrl.replace(/\/+$/, '')}/tasks/${encodeURIComponent(taskId)}`;
+  }
+
+  let resolvedParsed;
+  try {
+    resolvedParsed = new URL(trimmedRaw, baseParsed);
+  } catch {
+    throw new Error(`生图任务轮询地址格式无效: ${trimmedRaw}`);
+  }
+
+  // 严格比对协议与主机（origin）
+  if (resolvedParsed.origin.toLowerCase() !== baseParsed.origin.toLowerCase()) {
+    throw new Error(`生图任务轮询地址域名 (${resolvedParsed.origin}) 与配置的 Provider (${baseParsed.origin}) 不一致，已拦截请求以防 API Key 泄露`);
+  }
+
+  return resolvedParsed.href;
+}
+
+/**
  * 轮询异步生图任务状态直到完成
  * @param {object} options
  * @param {string} options.pollingUrl
@@ -557,7 +601,7 @@ export async function generateCardCoverImage(options) {
 
     const taskTokenInfo = findTaskTokenAndStatus(respJson);
     if (taskTokenInfo && taskTokenInfo.taskId) {
-      const pollingUrl = taskTokenInfo.pollingUrl || `${provider.baseUrl.replace(/\/+$/, '')}/tasks/${encodeURIComponent(taskTokenInfo.taskId)}`;
+      const pollingUrl = resolveSafePollingUrl(taskTokenInfo.pollingUrl, provider.baseUrl, taskTokenInfo.taskId);
       return await pollImageGenerationTask({
         pollingUrl,
         apiKey: provider.apiKey,

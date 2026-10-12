@@ -223,6 +223,8 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
     );
   }
 
+  const getLiveSettings = () => plugin.settings.feishuSync || settings;
+
   // 1. Enable Toggle
   renderSectionHeader(containerEl, 'cloud', '飞书同步服务');
   const enableSetting = new Setting(containerEl)
@@ -240,7 +242,7 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
   enableSetting.addToggle((toggle) => toggle
     .setValue(settings.enabled)
     .onChange(async (value) => {
-      settings.enabled = value;
+      getLiveSettings().enabled = value;
       await plugin.saveSettings();
       tab.display(); // re-render setting tab
     })
@@ -263,7 +265,7 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
       .setPlaceholder('cli_a248xxxxxxxxxxxx')
       .setValue(settings.appId)
       .onChange(async (value) => {
-        settings.appId = value.trim();
+        getLiveSettings().appId = value.trim();
         await plugin.saveSettings();
       })
     );
@@ -278,11 +280,12 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
         .setPlaceholder('粘贴 App Secret...')
         .setValue(settings.appSecret)
         .onChange(async (value) => {
+          const current = getLiveSettings();
           const nextSecret = value.trim();
-          if (!nextSecret && settings.appSecret) {
+          if (!nextSecret && current.appSecret) {
             await plugin.clearCredential?.('feishu', 'primary', 'appSecret');
           } else {
-            settings.appSecret = nextSecret;
+            current.appSecret = nextSecret;
             await plugin.saveSettings();
           }
         });
@@ -296,7 +299,7 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
       .setPlaceholder('fldcnxxxxxxxxxxxxxxxxxx')
       .setValue(settings.folderToken)
       .onChange(async (value) => {
-        settings.folderToken = value.trim();
+        getLiveSettings().folderToken = value.trim();
         await plugin.saveSettings();
       })
     );
@@ -309,7 +312,7 @@ function renderFeishuSettingsTab(tab, containerEl, options = {}) {
       .setPlaceholder('例如: abc1234')
       .setValue(settings.userId)
       .onChange(async (value) => {
-        settings.userId = value.trim();
+        getLiveSettings().userId = value.trim();
         await plugin.saveSettings();
       })
     );

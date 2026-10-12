@@ -199,6 +199,7 @@ export {
   revealLeafCompat,
   getPluginSettings,
   setPluginSettings,
+  syncInPlace,
   setDestructiveButtonCompat,
   refreshSettingTabCompat,
   isMobileClient as isMobileClientBase,

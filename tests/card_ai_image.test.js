@@ -27,6 +27,7 @@ import {
   resolveCardImageDimensions,
   generateCardCoverImage,
   extractVisualTopicWithAi,
+  resolveSafePollingUrl,
 } from '../services/card-ai-image.js';
 
 describe('Card AI Image Service (C06.2)', () => {
@@ -382,6 +383,58 @@ describe('Card AI Image Service (C06.2)', () => {
       expect(fallbackBody.size).toBe('3:4');
       expect(fallbackBody).not.toHaveProperty('response_format');
       expect(result).toMatch(/^data:image\/png;base64,/);
+    });
+
+    it('rejects cross-origin task_url to prevent Bearer API Key leakage', async () => {
+      // 模拟恶意或被劫持的中转服务商返回外部第三方 task_url
+      const mockRequestUrl = vi.fn().mockResolvedValue({
+        status: 200,
+        json: {
+          task_id: 'task_evil_123',
+          status: 'submitted',
+          task_url: 'https://attacker.evil.com/leak/task_evil_123',
+        },
+      });
+
+      await expect(
+        generateCardCoverImage({
+          provider: {
+            name: 'Test Provider',
+            baseUrl: 'https://api.trusted-provider.com/v1',
+            apiKey: 'super-secret-api-key',
+            imageModel: 'flux-schnell',
+          },
+          prompt: 'A cyberpunk city',
+          requestUrl: mockRequestUrl,
+        })
+      ).rejects.toThrow('生图任务轮询地址域名 (https://attacker.evil.com) 与配置的 Provider (https://api.trusted-provider.com) 不一致，已拦截请求以防 API Key 泄露');
+
+      // 验证仅发起了最初的 POST 请求，绝不向第三方域名发起带 Bearer Token 的轮询 GET 请求
+      expect(mockRequestUrl).toHaveBeenCalledTimes(1);
+      expect(mockRequestUrl.mock.calls[0][0].url).toBe('https://api.trusted-provider.com/v1/images/generations');
+    });
+  });
+
+  describe('resolveSafePollingUrl', () => {
+    it('constructs default tasks URL if rawPollingUrl is empty', () => {
+      const url = resolveSafePollingUrl('', 'https://api.openai.com/v1', 'task_123');
+      expect(url).toBe('https://api.openai.com/v1/tasks/task_123');
+    });
+
+    it('resolves safe relative path against baseUrl', () => {
+      const url = resolveSafePollingUrl('/v1/tasks/task_abc', 'https://api.openai.com/v1', 'task_abc');
+      expect(url).toBe('https://api.openai.com/v1/tasks/task_abc');
+    });
+
+    it('accepts same-origin absolute URL', () => {
+      const url = resolveSafePollingUrl('https://api.openai.com/v1/custom-tasks/task_xyz', 'https://api.openai.com/v1', 'task_xyz');
+      expect(url).toBe('https://api.openai.com/v1/custom-tasks/task_xyz');
+    });
+
+    it('throws when task_url belongs to a different origin', () => {
+      expect(() => {
+        resolveSafePollingUrl('https://malicious.com/steal', 'https://api.openai.com/v1', 'task_123');
+      }).toThrow('生图任务轮询地址域名 (https://malicious.com) 与配置的 Provider (https://api.openai.com) 不一致，已拦截请求以防 API Key 泄露');
     });
   });
 

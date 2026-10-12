@@ -59,14 +59,63 @@ function getPluginSettings(plugin) {
 }
 
 /**
+ * 递归深度就地同步对象属性，保持目标根对象与嵌套子对象/数组的内存引用稳定
+ * @param {Record<string, unknown>} target
+ * @param {Record<string, unknown>} source
+ */
+function syncInPlace(target, source) {
+  if (!target || typeof target !== 'object' || !source || typeof source !== 'object') {
+    return;
+  }
+
+  // 1. 移除 target 中存在但 source 中已被删除的键
+  for (const key of Object.keys(target)) {
+    if (!Object.prototype.hasOwnProperty.call(source, key)) {
+      delete target[key];
+    }
+  }
+
+  // 2. 将 source 中的字段同步至 target，对象与数组就地维护引用
+  for (const key of Object.keys(source)) {
+    const srcVal = source[key];
+    const tgtVal = target[key];
+
+    if (
+      srcVal &&
+      typeof srcVal === 'object' &&
+      !Array.isArray(srcVal) &&
+      tgtVal &&
+      typeof tgtVal === 'object' &&
+      !Array.isArray(tgtVal)
+    ) {
+      // 嵌套纯对象就地同步
+      syncInPlace(tgtVal, srcVal);
+    } else if (Array.isArray(srcVal) && Array.isArray(tgtVal)) {
+      // 数组清空并重新填入，保持数组本身引用不变
+      tgtVal.length = 0;
+      srcVal.forEach((item) => {
+        tgtVal.push(item && typeof item === 'object' ? JSON.parse(JSON.stringify(item)) : item);
+      });
+    } else {
+      // 基本类型或结构变更时直接赋值（对象深拷贝防污染）
+      target[key] = srcVal && typeof srcVal === 'object' ? JSON.parse(JSON.stringify(srcVal)) : srcVal;
+    }
+  }
+}
+
+/**
  * @param {PluginWithSettingsLike | null | undefined} plugin
  * @param {Record<string, unknown>} settings
  * @returns {Record<string, unknown>}
  */
 function setPluginSettings(plugin, settings) {
   if (!plugin || typeof plugin !== 'object') return settings;
-  plugin.settings = settings;
-  return settings;
+  if (!plugin.settings || typeof plugin.settings !== 'object') {
+    plugin.settings = settings;
+    return settings;
+  }
+  syncInPlace(plugin.settings, settings);
+  return plugin.settings;
 }
 
 /**
@@ -125,6 +174,7 @@ export {
   revealLeafCompat,
   getPluginSettings,
   setPluginSettings,
+  syncInPlace,
   setDestructiveButtonCompat,
   refreshSettingTabCompat,
   isMobileClient,

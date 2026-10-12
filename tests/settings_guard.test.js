@@ -625,4 +625,54 @@ describe('Settings Safety Guard & Obsidian Compatibility (Phase A)', () => {
     expect(normalSaveRes.success).toBe(false);
     expect(normalSaveRes.reason).toBe('SAFE_MODE_LOCKED');
   });
+
+  // TC-17: 连续保存场景下保持对象及子对象引用稳定，杜绝闭包引用断裂导致后续修改静默丢失 (Review H2)
+  it('TC-17: preserves object and sub-object references across consecutive saves', async () => {
+    const plugin = new AppleStylePlugin();
+    let currentDisk = JSON.stringify({
+      theme: 'default',
+      feishuSync: { appId: 'app_1', folderToken: 'tok_1' },
+    });
+    plugin.app = {
+      vault: {
+        configDir: '.obsidian',
+        adapter: {
+          exists: vi.fn().mockResolvedValue(true),
+          read: vi.fn().mockImplementation(() => Promise.resolve(currentDisk)),
+          write: vi.fn().mockResolvedValue(undefined),
+        },
+      },
+    };
+    plugin._storageState = 'known-existing';
+    plugin._settingsSafeMode = false;
+    plugin.settings = JSON.parse(currentDisk);
+    plugin._committedSettings = JSON.parse(currentDisk);
+
+    plugin.saveData = vi.fn().mockImplementation(async (data) => {
+      currentDisk = JSON.stringify(data);
+    });
+
+    // 局部持有子对象引用（如同设置 Tab 打开时）
+    const initialRootRef = plugin.settings;
+    const localFeishuRef = plugin.settings.feishuSync;
+
+    // 第一次修改：修改 App ID 并保存
+    localFeishuRef.appId = 'app_2';
+    const res1 = await plugin.saveSettings();
+    expect(res1.success).toBe(true);
+
+    // 验证根对象和子对象引用未被替换
+    expect(plugin.settings).toBe(initialRootRef);
+    expect(plugin.settings.feishuSync).toBe(localFeishuRef);
+
+    // 第二次修改：修改 Folder Token 并再次保存
+    localFeishuRef.folderToken = 'tok_2';
+    const res2 = await plugin.saveSettings();
+    expect(res2.success).toBe(true);
+
+    // 验证两次修改均成功持久化到磁盘
+    const parsed = JSON.parse(currentDisk);
+    expect(parsed.feishuSync.appId).toBe('app_2');
+    expect(parsed.feishuSync.folderToken).toBe('tok_2');
+  });
 });
