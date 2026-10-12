@@ -1127,21 +1127,12 @@ async onClose() {
   this.settingsBtn = null;
 
   // 清理文章状态缓存
-  if (this.articleStates) {
-    this.articleStates.clear();
-  }
-  if (this.svgUploadCache) {
-    this.svgUploadCache.clear();
-  }
-  if (this.imageUploadCache) {
-    this.imageUploadCache.clear();
-  }
-  if (this.coverUploadCache) {
-    this.coverUploadCache.clear();
-  }
-  if (this.mermaidImageCache) {
-    this.mermaidImageCache.clear();
-  }
+  if (this.articleStates) this.articleStates.clear();
+  if (this.svgUploadCache) this.svgUploadCache.clear();
+  if (this.imageUploadCache) this.imageUploadCache.clear();
+  if (this.coverUploadCache) this.coverUploadCache.clear();
+  if (this.mermaidImageCache) this.mermaidImageCache.clear();
+  this._cardAiImageHistory = null;
   if (this.stickerUiStates) {
     for (const state of this.stickerUiStates.values()) {
       if (!state?.objectUrls) continue;

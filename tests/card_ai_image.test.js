@@ -482,5 +482,79 @@ describe('Card AI Image Service (C06.2)', () => {
         requestUrlFn: mockRequestUrl,
       })).rejects.toThrow('AI 提炼失败: Invalid API key');
     });
+
+    it('supports abort signal cancellation', async () => {
+      const controller = new AbortController();
+      controller.abort();
+
+      const mockRequestUrl = vi.fn();
+      await expect(extractVisualTopicWithAi({
+        provider: {
+          baseUrl: 'https://api.example.com/v1',
+          apiKey: 'key_123',
+        },
+        title: 'Title',
+        content: 'Content',
+        requestUrlFn: mockRequestUrl,
+        signal: controller.signal,
+      })).rejects.toThrow('提炼观点任务已被取消');
+
+      expect(mockRequestUrl).not.toHaveBeenCalled();
+    });
+
+    it('fails fast on 429 rate limit', async () => {
+      const mockRequestUrl = vi.fn().mockResolvedValue({
+        status: 429,
+        json: { error: { message: 'Rate limit reached' } },
+      });
+
+      await expect(extractVisualTopicWithAi({
+        provider: {
+          baseUrl: 'https://api.example.com/v1',
+          apiKey: 'key_123',
+        },
+        title: 'Title',
+        content: 'Content',
+        requestUrlFn: mockRequestUrl,
+      })).rejects.toThrow('HTTP 429');
+    });
+  });
+
+  describe('generateCardCoverImage abort and fail-fast', () => {
+    const validProvider = {
+      id: 'p-img',
+      name: 'Test Image Provider',
+      baseUrl: 'https://api.example.com/v1',
+      apiKey: 'sk-secret-key',
+      imageModel: 'black-forest-labs/FLUX.1-schnell',
+    };
+
+    it('aborts immediately when signal is already cancelled', async () => {
+      const controller = new AbortController();
+      controller.abort();
+
+      const mockRequestUrl = vi.fn();
+      await expect(generateCardCoverImage({
+        provider: validProvider,
+        prompt: 'test prompt',
+        requestUrl: mockRequestUrl,
+        signal: controller.signal,
+      })).rejects.toThrow('生图任务已被取消');
+
+      expect(mockRequestUrl).not.toHaveBeenCalled();
+    });
+
+    it('fails fast on 429 quota exhaustion without futile polling', async () => {
+      const mockRequestUrl = vi.fn().mockResolvedValue({
+        status: 429,
+        json: { error: { message: 'Insufficient quota' } },
+      });
+
+      await expect(generateCardCoverImage({
+        provider: validProvider,
+        prompt: 'test prompt',
+        requestUrl: mockRequestUrl,
+      })).rejects.toThrow('HTTP 429');
+    });
   });
 });

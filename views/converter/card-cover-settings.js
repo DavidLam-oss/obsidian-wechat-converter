@@ -14,6 +14,7 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- reason: AppleStyleView 方法组与会话合同字段以 unknown 持有 */
 
+import { Notice } from '../apple-style-view-shared.js';
 import { AI_CARD_COVER_STYLES } from '../../services/card-ai-image.js';
 import { COVER_MODE_LABELS } from '../../services/card-cover-model.js';
 import { resolveVaultResourceSrc } from '../../services/image-source-utils.js';
@@ -71,10 +72,39 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
 
     // 2.2 唤起独立选图工作台
     const openMediaPicker = (initialTab = 'note') => {
+      const activeSession = typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession() : null;
+      const targetSourcePathKey = String(
+        view.cardPreviewPendingInput?.sourcePathKey || activeSession?.noteId || '',
+      );
+
       showCardMediaPickerModal({
         view,
+        sourcePathKey: targetSourcePathKey,
         initialTab,
         onSelect: ({ dataUrl, source }) => {
+          const currentSourcePathKey = String(
+            view.cardPreviewPendingInput?.sourcePathKey || (typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession()?.noteId : '') || '',
+          );
+
+          if (targetSourcePathKey && currentSourcePathKey && targetSourcePathKey !== currentSourcePathKey) {
+            const targetSession = view.getCardSessions()?.getSession(targetSourcePathKey);
+            if (targetSession && typeof targetSession.applyCoverFields === 'function') {
+              const prevMode = targetSession.getCoverFields?.()?.coverMode;
+              const fields = {
+                coverImageSource: source,
+                coverImage: dataUrl,
+              };
+              if (prevMode === 'none') {
+                fields.coverMode = 'adaptive';
+              }
+              targetSession.applyCoverFields(fields);
+              new Notice('已切换笔记，所选封面已保存至原笔记');
+            } else {
+              new Notice('已切换笔记，原笔记会话已失效');
+            }
+            return;
+          }
+
           const session = view.getCardSettingsSession();
           if (session?.getCoverFields?.()?.coverMode === 'none') {
             view.applyCardCoverField('coverMode', 'adaptive');

@@ -24,15 +24,33 @@ let lastActiveTabId = 'note';
  * 弹出封面独立选图工作台
  * @param {object} options
  * @param {any} options.view AppleStyleView 实例
+ * @param {string} [options.sourcePathKey] 发起时的笔记标识
  * @param {string} [options.initialTab] 初始 Tab ID ('note' | 'ai' | 'unsplash')
  * @param {(result: { dataUrl: string, source: string }) => void} options.onSelect 选定图片后的回调
  */
-export function showCardMediaPickerModal({ view, initialTab, onSelect }) {
+export function showCardMediaPickerModal({ view, sourcePathKey, initialTab, onSelect }) {
   const modal = createObsidianModal(view.app);
   modal.modalEl.addClass('card-media-picker-modal');
 
   // 清空默认内边距
   modal.contentEl.empty();
+
+  // 资源与任务清理器队列
+  const cleanups = [];
+  const originalOnClose = typeof modal.onClose === 'function' ? modal.onClose.bind(modal) : null;
+  modal.onClose = () => {
+    cleanups.forEach((fn) => {
+      try {
+        fn();
+      } catch {
+        // safe ignore
+      }
+    });
+    cleanups.length = 0;
+    if (typeof originalOnClose === 'function') {
+      originalOnClose();
+    }
+  };
 
   // 1. 顶部 Header 与 Tab 切换器
   const header = modal.contentEl.createDiv({ cls: 'card-media-picker-header' });
@@ -102,6 +120,7 @@ export function showCardMediaPickerModal({ view, initialTab, onSelect }) {
         renderUnsplashMediaPickerTab({
           container: panes.unsplash,
           view,
+          sourcePathKey,
           ratioId,
           onSelect: handleSelect,
           onOpenSettings: openPluginSettings,
@@ -113,9 +132,10 @@ export function showCardMediaPickerModal({ view, initialTab, onSelect }) {
           onSelect: handleSelect,
         });
       } else if (tabId === 'ai') {
-        renderAiMediaPickerTab({
+        const aiTabInstance = renderAiMediaPickerTab({
           container: panes.ai,
           view,
+          sourcePathKey,
           ratioId,
           // AI 绘图工作台支持多图即点即选并保持弹窗开启以便继续对比与微调，故不自动 close modal
           onSelect: (result) => {
@@ -126,6 +146,9 @@ export function showCardMediaPickerModal({ view, initialTab, onSelect }) {
           onClose: () => modal.close(),
           onOpenSettings: openPluginSettings,
         });
+        if (aiTabInstance && typeof aiTabInstance.cleanup === 'function') {
+          cleanups.push(aiTabInstance.cleanup);
+        }
       }
     }
   };

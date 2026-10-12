@@ -40,11 +40,12 @@ export function clearUnsplashCache() {
  * @param {object} options
  * @param {HTMLElement} options.container 宿主内容容器
  * @param {any} options.view AppleStyleView 实例
+ * @param {string} [options.sourcePathKey] 发起时的笔记标识
  * @param {string} options.ratioId 当前卡片比例 ID
  * @param {(result: { dataUrl: string, source: string }) => void} options.onSelect 选中图片回调
  * @param {() => void} options.onOpenSettings 打开设置回调
  */
-export function renderUnsplashMediaPickerTab({ container, view, ratioId, onSelect, onOpenSettings }) {
+export function renderUnsplashMediaPickerTab({ container, view, sourcePathKey, ratioId, onSelect, onOpenSettings }) {
   container.empty();
 
   const unsplashKey = (view.plugin?.settings?.unsplashAccessKey || '').trim();
@@ -189,6 +190,27 @@ export function renderUnsplashMediaPickerTab({ container, view, ratioId, onSelec
             ? `${photo.rawUrl}&w=1600&q=85&auto=format`
             : `${photo.rawUrl}?w=1600&q=85&auto=format`;
           const base64Data = await downloadAsBase64(downloadUrl, getObsidianRequestUrl(), 'image/jpeg');
+
+          const currentKey = (typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession()?.noteId : '') || view?.lastResolvedSourcePath || '';
+          if (sourcePathKey && currentKey && sourcePathKey !== currentKey) {
+            const targetSession = view.getCardSessions()?.getSession(sourcePathKey);
+            if (targetSession && typeof targetSession.applyCoverFields === 'function') {
+              const prevMode = targetSession.getCoverFields?.()?.coverMode;
+              const fields = {
+                coverImageSource: 'unsplash',
+                coverImage: base64Data,
+              };
+              if (prevMode === 'none') {
+                fields.coverMode = 'adaptive';
+              }
+              targetSession.applyCoverFields(fields);
+              new Notice('已切换笔记，Unsplash 封面已保存至原笔记');
+            } else {
+              new Notice('已切换笔记，原笔记会话已失效');
+            }
+            return;
+          }
+
           onSelect({ dataUrl: base64Data, source: 'unsplash' });
         } catch (err) {
           item.removeClass('is-loading');

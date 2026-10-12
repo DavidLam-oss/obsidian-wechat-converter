@@ -178,4 +178,10 @@ console.log(1);
       'https://example.com/fourth.gif',
     ]);
   });
+
+  it('should correctly parse unquoted img src containing letter s', () => {
+    const md = '<img src=assets/subfolder/pic.png width=200>';
+    const sources = extractMarkdownImageSources(md);
+    expect(sources).toEqual(['assets/subfolder/pic.png']);
+  });
 });

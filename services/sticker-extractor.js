@@ -134,7 +134,7 @@ function extractMarkdownImageItems(markdown, options = {}) {
   let tagMatch;
   while ((tagMatch = htmlRegex.exec(source)) !== null) {
     const attrs = tagMatch[1];
-    const srcMatch = /\bsrc\s*=\s*(?:["']([^"']+)["']|([^"'\\s>]+))/i.exec(attrs);
+    const srcMatch = /\bsrc\s*=\s*(?:["']([^"']+)["']|([^"'\s>]+))/i.exec(attrs);
     if (srcMatch) {
       const src = (srcMatch[1] || srcMatch[2] || '').trim();
       if (src) {

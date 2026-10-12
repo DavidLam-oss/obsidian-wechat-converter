@@ -69,12 +69,14 @@ function extractArticleSummary(view, currentFields) {
  * @param {object} options
  * @param {HTMLElement} options.container 宿主内容容器
  * @param {any} options.view AppleStyleView 实例
+ * @param {string} [options.sourcePathKey] 发起时的笔记标识
  * @param {string} options.ratioId 当前卡片比例 ID
  * @param {(result: { dataUrl: string, source: string }) => void} options.onSelect 选中图片回调
  * @param {() => void} [options.onClose] 关闭弹窗回调
  * @param {() => void} [options.onOpenSettings] 打开设置回调
+ * @returns {{ cleanup: () => void }}
  */
-export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onClose, onOpenSettings }) {
+export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId, onSelect, onClose, onOpenSettings }) {
   container.empty();
 
   const aiSettings = view.plugin?.settings?.ai;
@@ -100,7 +102,7 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onC
         onOpenSettings();
       }
     });
-    return;
+    return { cleanup: () => {} };
   }
 
   const session = typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession() : null;
@@ -171,6 +173,8 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onC
       return;
     }
 
+    const initialSourceKey = sourcePathKey || session?.noteId || view?.lastResolvedSourcePath || '';
+
     extractBtn.disabled = true;
     textSpan.textContent = '提炼中...';
     try {
@@ -180,6 +184,13 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onC
         title: docTitle,
         content: markdown || docExcerpt,
       });
+
+      const currentSourceKey = (typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession()?.noteId : '') || view?.lastResolvedSourcePath || '';
+      if (initialSourceKey && currentSourceKey && initialSourceKey !== currentSourceKey) {
+        new Notice('检测到已切换笔记，已丢弃提炼观点');
+        return;
+      }
+
       topicInput.value = aiTopic;
       syncPrompt();
       new Notice('AI 已提炼视觉核心观点并同步提示词');
@@ -284,9 +295,23 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onC
   const barFill = barBg.createDiv({ cls: 'card-media-picker-progress-bar-fill' });
   barFill.setCssStyles({ width: '8%' });
 
-  // 6. 历史记录缓存管理（按当前笔记持久化在 view 实例中）
-  const noteKey = session?.noteId || view?.lastResolvedSourcePath || 'default_note';
+  // 6. 历史记录缓存管理（按当前笔记持久化在 view 实例中，设容量上限防内存泄漏）
+  const MAX_AI_IMAGE_HISTORY = 10;
+  const MAX_CACHED_NOTES = 10;
+
+  if (!view._tempNoteKey) {
+    view._tempNoteKey = `temp_${Date.now()}`;
+  }
+  const noteKey = sourcePathKey || session?.noteId || view?.lastResolvedSourcePath || view._tempNoteKey;
+
   view._cardAiImageHistory = view._cardAiImageHistory || {};
+
+  // 控制已缓存笔记数量上限 (LRU/FIFO)
+  const cachedKeys = Object.keys(view._cardAiImageHistory);
+  if (!view._cardAiImageHistory[noteKey] && cachedKeys.length >= MAX_CACHED_NOTES) {
+    delete view._cardAiImageHistory[cachedKeys[0]];
+  }
+
   if (!Array.isArray(view._cardAiImageHistory[noteKey])) {
     view._cardAiImageHistory[noteKey] = [];
     if (currentCoverFields.coverImage && currentCoverFields.coverImageSource === 'ai') {
@@ -362,6 +387,34 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onC
   const clearIntervalFn = win && typeof win.clearInterval === 'function' ? win.clearInterval.bind(win) : clearInterval;
   const setTimeoutFn = win && typeof win.setTimeout === 'function' ? win.setTimeout.bind(win) : setTimeout;
 
+  let activeAbortController = null;
+  let activeIntervalId = null;
+
+  const cleanupActiveGeneration = () => {
+    if (activeIntervalId !== null) {
+      clearIntervalFn(activeIntervalId);
+      activeIntervalId = null;
+    }
+    if (activeAbortController) {
+      activeAbortController.abort();
+      activeAbortController = null;
+    }
+  };
+
+  // 取消生成按钮
+  const cancelBtn = progressHeader.createEl('button', {
+    cls: 'card-media-picker-cancel-btn',
+    text: '取消',
+    attr: { type: 'button', title: '取消当前生图任务' },
+  });
+  cancelBtn.addEventListener('click', () => {
+    cleanupActiveGeneration();
+    progressWrap.addClass('is-hidden');
+    generateBtn.disabled = false;
+    generateBtn.textContent = '开始生成封面';
+    new Notice('已取消 AI 封面生成');
+  });
+
   // 9. 生图点击响应
   generateBtn.addEventListener('click', async () => {
     const prompt = promptTextarea.value.trim();
@@ -369,6 +422,8 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onC
       new Notice('请输入画面描述词');
       return;
     }
+
+    cleanupActiveGeneration();
 
     generateBtn.disabled = true;
     generateBtn.textContent = 'AI 正在绘制封面...';
@@ -380,9 +435,10 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onC
     barFill.setCssStyles({ width: '10%' });
 
     const startTime = Date.now();
-    let timerId = null;
+    const abortController = new AbortController();
+    activeAbortController = abortController;
 
-    timerId = setIntervalFn(() => {
+    const timerId = setIntervalFn(() => {
       const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
       timeLabel.textContent = `已耗时: ${elapsedSec}s`;
 
@@ -404,6 +460,7 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onC
         barFill.setCssStyles({ width: `${pct}%` });
       }
     }, 500);
+    activeIntervalId = timerId;
 
     new Notice('AI 正在绘制封面图片，通常需要 20-40 秒（复杂模型约需 1 分钟），请稍候...');
 
@@ -412,12 +469,14 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onC
         provider: imageProvider,
         prompt,
         aspectRatio: ratioId || '3:4',
+        signal: abortController.signal,
       });
 
-      if (timerId !== null) {
-        clearIntervalFn(timerId);
-        timerId = null;
+      if (activeIntervalId !== null) {
+        clearIntervalFn(activeIntervalId);
+        activeIntervalId = null;
       }
+      activeAbortController = null;
 
       stageLabel.textContent = '阶段 4/4: 封面绘制完成！';
       barFill.setCssStyles({ width: '100%' });
@@ -426,20 +485,48 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onC
         progressWrap.addClass('is-hidden');
       }, 400);
 
-      currentSelectedDataUrl = dataUrl;
+      // 检查切篇状态
+      const currentNoteKey = (typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession()?.noteId : '') || view?.lastResolvedSourcePath || '';
+      const isNoteSwitched = noteKey && currentNoteKey && noteKey !== currentNoteKey;
 
-      // 压入历史列表首位（避免重复）
-      const existingIdx = historyList.findIndex((h) => h.dataUrl === dataUrl);
+      // 压入发起时 noteKey 的历史列表首位（避免重复且不超过上限）
+      const targetHistory = view._cardAiImageHistory[noteKey] || historyList;
+      const existingIdx = targetHistory.findIndex((h) => h.dataUrl === dataUrl);
       if (existingIdx >= 0) {
-        historyList.splice(existingIdx, 1);
+        targetHistory.splice(existingIdx, 1);
       }
-      historyList.unshift({
+      targetHistory.unshift({
         id: `ai_${Date.now()}`,
         dataUrl,
         prompt,
         styleId: selectedStyleId,
         timestamp: Date.now(),
       });
+      if (targetHistory.length > MAX_AI_IMAGE_HISTORY) {
+        targetHistory.length = MAX_AI_IMAGE_HISTORY;
+      }
+
+      if (isNoteSwitched) {
+        // 用户切到了另一篇笔记：回写原笔记 session，严禁污染当前活动笔记！
+        const targetSession = view.getCardSessions()?.getSession(noteKey);
+        if (targetSession && typeof targetSession.applyCoverFields === 'function') {
+          const prevMode = targetSession.getCoverFields?.()?.coverMode;
+          const fields = {
+            coverImageSource: 'ai',
+            coverImage: dataUrl,
+            coverPrompt: prompt,
+            coverImageStyle: selectedStyleId,
+          };
+          if (prevMode === 'none') {
+            fields.coverMode = 'adaptive';
+          }
+          targetSession.applyCoverFields(fields);
+        }
+        new Notice('AI 封面生成完毕！检测到已切换笔记，封面已保存至原笔记。');
+        return;
+      }
+
+      currentSelectedDataUrl = dataUrl;
 
       // 实时生效并回传封面
       if (typeof onSelect === 'function') {
@@ -449,17 +536,26 @@ export function renderAiMediaPickerTab({ container, view, ratioId, onSelect, onC
       renderHistoryThumbnails();
       new Notice('AI 封面生成完毕并已设为封面！');
     } catch (err) {
-      if (timerId !== null) {
-        clearIntervalFn(timerId);
-        timerId = null;
+      if (activeIntervalId !== null) {
+        clearIntervalFn(activeIntervalId);
+        activeIntervalId = null;
       }
+      activeAbortController = null;
       progressWrap.addClass('is-hidden');
-      const msg = err instanceof Error ? err.message : String(err);
-      new Notice(`AI 封面生成失败: ${msg}`);
+
+      const isCancelled = abortController.signal.aborted || (err instanceof Error && err.message.includes('取消'));
+      if (isCancelled) {
+        new Notice('已取消 AI 封面生成');
+      } else {
+        const msg = err instanceof Error ? err.message : String(err);
+        new Notice(`AI 封面生成失败: ${msg}`);
+      }
     } finally {
       generateBtn.disabled = false;
       generateBtn.textContent = '再次生成灵感封面';
     }
   });
+
+  return { cleanup: cleanupActiveGeneration };
 }
 /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- reason: close the scoped disable block above */

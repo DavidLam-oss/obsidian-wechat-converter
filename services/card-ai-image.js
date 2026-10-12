@@ -1,32 +1,9 @@
 /*
-## 核心功能
-
-实现小红书卡片导出（Image Card）的 AI 封面图片生成服务。
-对接 OpenAI 兼容格式的生图 API（`/images/generations`），提供预设风格模版、动态 Prompt 变量替换、比例适配以及自动将远程 URL 转换为 Base64 内联格式。
-
-## 输入
-
-- `provider`: 符合 `AiProviderLike` 契约的对象（包含 `baseUrl`, `apiKey`, `imageModel`, `kind`）。
-- `prompt`: 生图提示词或模版。
-- `aspectRatio`: 比例规格（如 `'3:4'`, `'3:5'`, `'9:16'`, `'1:1'`）。
-- `articleMeta`: 文章元数据（`title`, `excerpt`, `topic` 等）。
-
-## 输出
-
-- `AI_CARD_COVER_STYLES`: 内置生图风格模版列表。
-- `resolveCardCoverPrompt()`: 提示词变量解析与填充函数。
-- `resolveCardImageDimensions()`: 比例到 API 像素分辨率映射函数。
-- `generateCardCoverImage()`: 核心生图请求函数，返回 `data:image/png;base64,...` 字符串。
-
-## 定位
-
-位于 `services/`，属于纯服务层无状态模块；不包含 UI 状态或 DOM 操作。
-
-## 依赖
-
-- `./obsidian-compat.js`（`getObsidianRequestUrl`）。
-- `./dom-utils.js`（`getActiveWindowValue`）。
-*/
+ * ## 核心功能: 小红书卡片导出（Image Card）AI 封面生成服务。
+ * - 对接 OpenAI 兼容生图 API（/images/generations），提供预设风格模版与动态 Prompt 变量替换；
+ * - 比例适配与 Base64 内联转码；支持 AbortSignal 取消与超时保护。
+ * ## 输出: AI_CARD_COVER_STYLES, resolveCardCoverPrompt, resolveCardImageDimensions, generateCardCoverImage, extractVisualTopicWithAi.
+ */
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: JS file handles dynamic API responses without strict typescript type annotations */
 
@@ -189,6 +166,60 @@ function getWindowTimers() {
 }
 
 /**
+ * 为异步 Promise 附加 AbortSignal 监听
+ * @template T
+ * @param {Promise<T>} promise
+ * @param {AbortSignal | undefined} signal
+ * @param {string} [errorMsg]
+ * @returns {Promise<T>}
+ */
+function withAbortSignal(promise, signal, errorMsg = '生图任务已被取消') {
+  if (!signal) return promise;
+  if (signal.aborted) return Promise.reject(new Error(errorMsg));
+  return new Promise((resolve, reject) => {
+    const onAbort = () => reject(new Error(errorMsg));
+    signal.addEventListener('abort', onAbort, { once: true });
+    promise.then(resolve, reject).finally(() => {
+      signal.removeEventListener('abort', onAbort);
+    });
+  });
+}
+
+/**
+ * 构造统一的 Signal 控制器与超时管理
+ */
+function setupSignalTimeout(externalSignal, timeoutMs, timeoutMsg, cancelMsg) {
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const { setTimeoutFn, clearTimeoutFn } = getWindowTimers();
+  let externalListener = null;
+  if (externalSignal && controller) {
+    if (externalSignal.aborted) {
+      controller.abort();
+    } else {
+      externalListener = () => controller.abort();
+      externalSignal.addEventListener('abort', externalListener, { once: true });
+    }
+  }
+  let isTimedOut = false;
+  let timer = null;
+  if (controller && timeoutMs > 0) {
+    timer = setTimeoutFn(() => { isTimedOut = true; controller.abort(); }, timeoutMs);
+  }
+  return {
+    signal: controller ? controller.signal : (externalSignal || undefined),
+    cleanup: () => {
+      if (timer) clearTimeoutFn(timer);
+      if (externalSignal && externalListener) externalSignal.removeEventListener('abort', externalListener);
+    },
+    checkError: (err) => {
+      if (isTimedOut) throw new Error(timeoutMsg);
+      if (controller?.signal?.aborted || externalSignal?.aborted) throw new Error(cancelMsg);
+      throw err;
+    },
+  };
+}
+
+/**
  * 统一网络请求封装
  * @param {object} options
  * @param {string} options.url
@@ -196,20 +227,23 @@ function getWindowTimers() {
  * @param {Record<string, string>} [options.headers]
  * @param {unknown} [options.body]
  * @param {((options: Record<string, unknown>) => Promise<unknown>) | null} [options.requestUrlFn]
+ * @param {AbortSignal} [options.signal]
  * @returns {Promise<{ status: number, text: string, json: unknown, headers: Record<string, string> }>}
  */
 async function performHttpRequest(options) {
-  const { url, method = 'POST', headers = {}, body = null, requestUrlFn } = options;
+  const { url, method = 'POST', headers = {}, body = null, requestUrlFn, signal } = options;
+  if (signal?.aborted) throw new Error('生图任务已被取消');
 
   if (typeof requestUrlFn === 'function') {
     try {
-      const resp = await requestUrlFn({
+      const fetchPromise = requestUrlFn({
         url,
         method,
         headers,
         body: body ? JSON.stringify(body) : undefined,
         throw: false,
       });
+      const resp = await withAbortSignal(fetchPromise, signal, '生图任务已被取消');
       const typed = /** @type {{ status?: number, text?: string, json?: unknown, headers?: Record<string, string> }} */ (resp);
       return {
         status: typed?.status || 0,
@@ -218,8 +252,9 @@ async function performHttpRequest(options) {
         headers: typed?.headers || {},
       };
     } catch (networkErr) {
-      const errMessage = networkErr instanceof Error ? networkErr.message : String(networkErr);
-      throw new Error(`网络请求失败: ${errMessage}`);
+      if (signal?.aborted) throw new Error('生图任务已被取消');
+      const msg = networkErr instanceof Error ? networkErr.message : String(networkErr);
+      throw new Error(`网络请求失败: ${msg}`);
     }
   }
 
@@ -230,19 +265,23 @@ async function performHttpRequest(options) {
  * 下载远程图片并转为 Base64 Data URL
  * @param {string} url
  * @param {((options: Record<string, unknown>) => Promise<unknown>) | null} [requestUrlFn]
+ * @param {AbortSignal} [signal]
  * @returns {Promise<string>}
  */
-async function downloadImageAsBase64(url, requestUrlFn) {
+async function downloadImageAsBase64(url, requestUrlFn, signal) {
+  if (signal?.aborted) throw new Error('生图任务已被取消');
+
   if (typeof requestUrlFn === 'function') {
-    const imageRes = await requestUrlFn({
-      url,
-      method: 'GET',
-      throw: false,
-    });
-    const imgObj = /** @type {{ status?: number, arrayBuffer?: ArrayBuffer }} */ (imageRes);
-    if (imgObj?.arrayBuffer) {
-      const b64 = bufferToBase64(imgObj.arrayBuffer);
-      return `data:image/png;base64,${b64}`;
+    try {
+      const fetchPromise = requestUrlFn({ url, method: 'GET', throw: false });
+      const imageRes = await withAbortSignal(fetchPromise, signal, '生图任务已被取消');
+      const imgObj = /** @type {{ status?: number, arrayBuffer?: ArrayBuffer }} */ (imageRes);
+      if (imgObj?.arrayBuffer) {
+        return `data:image/png;base64,${bufferToBase64(imgObj.arrayBuffer)}`;
+      }
+    } catch (downloadErr) {
+      if (signal?.aborted) throw new Error('生图任务已被取消');
+      throw downloadErr;
     }
   }
   throw new Error('无法下载生成的图片内容');
@@ -430,6 +469,7 @@ async function pollImageGenerationTask(options) {
           Authorization: `Bearer ${apiKey}`,
         },
         requestUrlFn,
+        signal,
       });
       consecutiveErrors = 0;
     } catch (netErr) {
@@ -445,6 +485,9 @@ async function pollImageGenerationTask(options) {
     const status = taskResp.status;
     if (status === 401 || status === 403) {
       throw new Error(`查询任务状态鉴权失败 (${status})`);
+    }
+    if (status === 429) {
+      throw new Error('生图任务请求超限或配额不足 (HTTP 429)，已终止轮询');
     }
     if (status >= 500) {
       consecutiveErrors += 1;
@@ -467,8 +510,9 @@ async function pollImageGenerationTask(options) {
         return imageUrl;
       }
       try {
-        return await downloadImageAsBase64(imageUrl, requestUrlFn);
+        return await downloadImageAsBase64(imageUrl, requestUrlFn, signal);
       } catch (downloadErr) {
+        if (signal?.aborted) throw new Error('生图任务已被取消');
         const msg = downloadErr instanceof Error ? downloadErr.message : String(downloadErr);
         throw new Error(`生图完成但下载图片失败: ${msg}`);
       }
@@ -491,6 +535,8 @@ async function pollImageGenerationTask(options) {
  * @param {string} [options.aspectRatio='3:4']
  * @param {((options: Record<string, unknown>) => Promise<unknown>) | null} [options.requestUrl]
  * @param {number} [options.timeoutMs=90000]
+ * @param {number} [options.pollIntervalMs=2500]
+ * @param {AbortSignal} [options.signal]
  * @returns {Promise<string>} 返回 `data:image/png;base64,...`
  */
 export async function generateCardCoverImage(options) {
@@ -501,6 +547,7 @@ export async function generateCardCoverImage(options) {
     requestUrl: injectedRequestUrl = null,
     timeoutMs = 90000,
     pollIntervalMs = 2500,
+    signal: externalSignal = null,
   } = options || {};
 
   if (!provider) {
@@ -524,11 +571,18 @@ export async function generateCardCoverImage(options) {
     ? injectedRequestUrl
     : getObsidianRequestUrl();
 
-  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-  const { setTimeoutFn, clearTimeoutFn } = getWindowTimers();
-  const timer = controller ? setTimeoutFn(() => controller.abort(), timeoutMs) : null;
+  const { signal: effectiveSignal, cleanup, checkError } = setupSignalTimeout(
+    externalSignal,
+    timeoutMs,
+    `生图任务处理超时（超过 ${Math.round(timeoutMs / 1000)} 秒），请稍后重试`,
+    '生图任务已被取消',
+  );
 
   try {
+    if (effectiveSignal?.aborted) {
+      throw new Error('生图任务已被取消');
+    }
+
     const payload = {
       model: imageModel,
       prompt: prompt.trim(),
@@ -546,36 +600,52 @@ export async function generateCardCoverImage(options) {
       },
       body: payload,
       requestUrlFn,
+      signal: effectiveSignal,
     });
 
-    if (resp.status === 400) {
-      const fallbackPayload = {
-        model: imageModel,
-        prompt: prompt.trim(),
-        n: 1,
-        size: aspectRatio || '3:4',
-      };
-      try {
-        const fallbackResp = await performHttpRequest({
-          url: endpoint,
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${provider.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: fallbackPayload,
-          requestUrlFn,
-        });
-        if (fallbackResp.status < 400) {
-          resp = fallbackResp;
+    if (resp.status === 400 && !effectiveSignal?.aborted) {
+      const respJsonForRetry = /** @type {Record<string, any>} */ (resp.json || {});
+      const respErrorStr = `${respJsonForRetry?.error?.message || ''} ${resp.text || ''}`.toLowerCase();
+      const isParamOrDimensionError = respErrorStr.includes('size')
+        || respErrorStr.includes('dimension')
+        || respErrorStr.includes('resolution')
+        || respErrorStr.includes('format')
+        || respErrorStr.includes('parameter');
+      const isAlreadyFallbackSize = size === (aspectRatio || '3:4');
+      if (isParamOrDimensionError && !isAlreadyFallbackSize) {
+        const fallbackPayload = {
+          model: imageModel,
+          prompt: prompt.trim(),
+          n: 1,
+          size: aspectRatio || '3:4',
+        };
+        try {
+          const fallbackResp = await performHttpRequest({
+            url: endpoint,
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${provider.apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: fallbackPayload,
+            requestUrlFn,
+            signal: effectiveSignal,
+          });
+          if (fallbackResp.status < 400) {
+            resp = fallbackResp;
+          }
+        } catch {
+          // 保持原 400 resp 供报错处理
         }
-      } catch {
-        // 保持原 400 resp 供报错处理
       }
     }
 
     const respJson = /** @type {Record<string, any>} */ (resp.json || {});
     const status = resp.status;
+
+    if (status === 429) {
+      throw new Error('生图服务请求频率超限或配额耗尽 (HTTP 429)，请检查账号额度');
+    }
 
     if (status >= 400 || (status === 0 && !resp.json)) {
       const errorMsg = respJson?.error?.message || resp.text || `HTTP 错误状态码 ${status}`;
@@ -591,8 +661,9 @@ export async function generateCardCoverImage(options) {
       }
       if (firstItem.url && typeof firstItem.url === 'string') {
         try {
-          return await downloadImageAsBase64(firstItem.url, requestUrlFn);
+          return await downloadImageAsBase64(firstItem.url, requestUrlFn, effectiveSignal);
         } catch (downloadErr) {
+          if (effectiveSignal?.aborted) throw new Error('生图任务已被取消');
           const msg = downloadErr instanceof Error ? downloadErr.message : String(downloadErr);
           throw new Error(`生图完成但下载图片失败: ${msg}`);
         }
@@ -608,13 +679,15 @@ export async function generateCardCoverImage(options) {
         requestUrlFn,
         timeoutMs,
         intervalMs: pollIntervalMs,
-        signal: controller ? controller.signal : undefined,
+        signal: effectiveSignal,
       });
     }
 
     throw new Error('生图 API 未返回有效的图片数据（无 b64_json 或 url）');
+  } catch (err) {
+    checkError(err);
   } finally {
-    if (timer) clearTimeoutFn(timer);
+    cleanup();
   }
 }
 
@@ -625,6 +698,8 @@ export async function generateCardCoverImage(options) {
  * @param {string} options.title 文章标题
  * @param {string} options.content 文章正文或摘要内容
  * @param {((options: Record<string, unknown>) => Promise<unknown>) | null} [options.requestUrlFn]
+ * @param {AbortSignal} [options.signal]
+ * @param {number} [options.timeoutMs=30000]
  * @returns {Promise<string>}
  */
 export async function extractVisualTopicWithAi(options) {
@@ -633,6 +708,8 @@ export async function extractVisualTopicWithAi(options) {
     title = '',
     content = '',
     requestUrlFn: injectedRequestUrl = null,
+    signal: externalSignal = null,
+    timeoutMs = 30000,
   } = options || {};
 
   if (!provider || !provider.baseUrl || !provider.apiKey) {
@@ -656,29 +733,50 @@ export async function extractVisualTopicWithAi(options) {
     stream: false,
   };
 
-  const resp = await performHttpRequest({
-    url: `${provider.baseUrl.replace(/\/+$/, '')}/chat/completions`,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${provider.apiKey}`,
-    },
-    body: payload,
-    requestUrlFn,
-  });
+  const { signal: effectiveSignal, cleanup, checkError } = setupSignalTimeout(
+    externalSignal,
+    timeoutMs,
+    `AI 提炼观点超时（超过 ${Math.round(timeoutMs / 1000)} 秒），请稍后重试`,
+    '提炼观点任务已被取消',
+  );
 
-  const respJson = /** @type {Record<string, any>} */ (resp.json || {});
-  if (resp.status >= 400) {
-    const msg = respJson?.error?.message || resp.text || `HTTP ${resp.status}`;
-    throw new Error(`AI 提炼失败: ${msg}`);
-  }
+  try {
+    if (effectiveSignal?.aborted) {
+      throw new Error('提炼观点任务已被取消');
+    }
 
-  const choice = respJson.choices?.[0];
-  const text = choice?.message?.content || choice?.delta?.content || '';
-  const trimmed = String(text || '').replace(/^["'“”‘’\s]+|["'“”‘’\s]+$/g, '').trim();
-  if (!trimmed) {
-    throw new Error('AI 未返回有效提炼内容');
+    const resp = await performHttpRequest({
+      url: `${provider.baseUrl.replace(/\/+$/, '')}/chat/completions`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${provider.apiKey}`,
+      },
+      body: payload,
+      requestUrlFn,
+      signal: effectiveSignal,
+    });
+
+    const respJson = /** @type {Record<string, any>} */ (resp.json || {});
+    if (resp.status === 429) {
+      throw new Error('文本 AI 服务请求频率超限或配额耗尽 (HTTP 429)');
+    }
+    if (resp.status >= 400) {
+      const msg = respJson?.error?.message || resp.text || `HTTP ${resp.status}`;
+      throw new Error(`AI 提炼失败: ${msg}`);
+    }
+
+    const choice = respJson.choices?.[0];
+    const text = choice?.message?.content || choice?.delta?.content || '';
+    const trimmed = String(text || '').replace(/^["'“”‘’\s]+|["'“”‘’\s]+$/g, '').trim();
+    if (!trimmed) {
+      throw new Error('AI 未返回有效提炼内容');
+    }
+    return trimmed;
+  } catch (err) {
+    checkError(err);
+  } finally {
+    cleanup();
   }
-  return trimmed;
 }
 /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: close the scoped disable block above */
