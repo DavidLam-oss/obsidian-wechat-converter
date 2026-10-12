@@ -31,7 +31,8 @@ CardDocument（services/card-document.js）；可选 `resolveImageSrc(ref)`（A0
 - 修改逻辑后同步更新本文件说明书，并检查 services 的文件夹 README 是否仍准确。
 */
 
-import MarkdownIt from "markdown-it";
+// 与转换器共用 lib 内同版本 markdown-it（由 node_modules/markdown-it/dist 拷贝），避免主 bundle 打包两份
+import MarkdownIt from "../lib/markdown-it.min.js";
 
 /* markdown-it 为无类型 JS 包（inline token children 按运行时形态处理），TS 服务器推断为 any；
    所有节点均通过安全 DOM API 构建并经 card_render_profile.test.js 断言，此处关闭 unsafe-* 检查 */

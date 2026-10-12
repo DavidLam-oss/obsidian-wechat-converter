@@ -38,7 +38,8 @@ Markdown 源字符串；options：`markdownIt`（可选注入实例）。
 - 样本预期账本 `tests/fixtures/image-card/expected.json` 是本模块单测的断言输入，改样本必须同步改账本。
 */
 
-import MarkdownIt from "markdown-it";
+// 与转换器共用 lib 内同版本 markdown-it（由 node_modules/markdown-it/dist 拷贝），避免主 bundle 打包两份
+import MarkdownIt from "../lib/markdown-it.min.js";
 
 /* markdown-it 为无类型 JS 包（token/map 结构按运行时形态处理）， TS 服务器推断为 any；
    输出结构已由本文件头部 JSDoc 契约与 card_document.test.js 断言约束，此处关闭 unsafe-* 检查 */
