@@ -62,6 +62,7 @@ import {
   createCardResourcePool,
   createCardResourceSession,
   createSnapshotResolver,
+  appendCoverImageRef,
 } from '../../services/card-resources.js';
 import { renderCardPages, RATIO_PRESETS } from '../../services/card-render-engine.js';
 import { DEFAULT_CARD_THEME_ID, getCardTheme } from '../../services/card-themes.js';
@@ -107,6 +108,24 @@ import { OMISSION_LABELS } from './card-preview-diagnostics.js';
  */
 function cardStateOf(view) {
   return /** @type {CardViewStateLike} */ (view);
+}
+
+/**
+ * 取当前会话封面图字段（需预载进资源快照）；未启用封面时返回空串。
+ * @param {unknown} view
+ * @param {unknown} settings 会话归一化后的排版设置
+ * @returns {string}
+ */
+function getPendingCoverImage(view, settings) {
+  if (!settings || /** @type {{ coverEnabled?: unknown }} */ (settings).coverEnabled !== true) return '';
+  const anyView = /** @type {any} */ (view);
+  const coverSession = typeof anyView.getCardSettingsSession === 'function'
+    ? anyView.getCardSettingsSession()
+    : null;
+  const fields = coverSession && typeof coverSession.getCoverFields === 'function'
+    ? coverSession.getCoverFields()
+    : null;
+  return String((fields && fields.coverImage) || '');
 }
 
 /** @type {CardPreviewMethodsContract & ThisType<AppleStyleViewContract>} */
@@ -321,6 +340,9 @@ async runCardLayoutPipeline(ctx) {
   for (const block of cardDoc.blocks || []) {
     for (const image of block.images || []) imageRefs.push(image);
   }
+  // 封面图（frontmatter cover / 用户选择的本地路径）也需进入资源快照，
+  // 否则 resolveCoverImageUrl 经快照 resolver 解析不到本地路径，封面退化为占位图
+  appendCoverImageRef(imageRefs, getPendingCoverImage(this, settings));
 
   if (!selfRecord.cardResourceBudget) {
     selfRecord.cardResourceBudget = createCardResourceSession();

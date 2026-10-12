@@ -22,6 +22,10 @@ import {
   downloadAsBase64,
 } from '../../services/card-cover-source.js';
 import { getObsidianRequestUrl } from '../../services/obsidian-compat.js';
+import {
+  parseCardFrontmatter,
+  normalizeFrontmatterImagePath,
+} from '../../services/card-cover-model.js';
 
 /**
  * 同步优先解析当前笔记的 Markdown 文本与源路径
@@ -135,9 +139,34 @@ export function renderNoteMediaPickerTab({ container, view, onSelect }) {
 
   const renderImages = (markdown, sourcePath) => {
     noteListContainer.empty();
-    const noteImages = extractNoteImageReferences(markdown);
 
-    if (noteImages.length === 0) {
+    // 1. 提取 frontmatter 封面图片
+    const frontmatter = parseCardFrontmatter(markdown);
+    const frontmatterCover = normalizeFrontmatterImagePath(
+      frontmatter.cover || frontmatter.banner || frontmatter.image || ''
+    );
+
+    // 2. 提取正文图片引用
+    const bodyImages = extractNoteImageReferences(markdown);
+
+    // 3. 合并：frontmatter 封面在前，正文图片在后（去重）
+    const allImages = [];
+    if (frontmatterCover) {
+      allImages.push({
+        name: frontmatterCover.split('/').pop() || 'cover',
+        path: frontmatterCover,
+        source: 'frontmatter',
+      });
+    }
+    bodyImages.forEach((img) => {
+      // 去重：如果正文图片路径与 frontmatter 封面相同，则跳过
+      if (frontmatterCover && img.path === frontmatterCover) {
+        return;
+      }
+      allImages.push({ ...img, source: 'body' });
+    });
+
+    if (allImages.length === 0) {
       const emptyBox = noteListContainer.createDiv({ cls: 'card-media-picker-empty' });
       emptyBox.createDiv({ cls: 'card-media-picker-empty-title', text: '当前笔记暂无插图' });
       emptyBox.createDiv({ cls: 'card-media-picker-empty-desc', text: '若笔记中插入了图片，将在此处平铺展示，点击即可一键设为封面。' });
@@ -147,7 +176,7 @@ export function renderNoteMediaPickerTab({ container, view, onSelect }) {
     const gridContainer = noteListContainer.createDiv({ cls: 'card-media-picker-grid' });
     const app = view.app;
 
-    noteImages.forEach((imgRef) => {
+    allImages.forEach((imgRef) => {
       const item = gridContainer.createDiv({ cls: 'card-media-picker-item' });
       const imgEl = item.createEl('img', {
         cls: 'card-media-picker-item-img',

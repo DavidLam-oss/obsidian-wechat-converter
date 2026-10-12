@@ -126,6 +126,12 @@ function clampNumber(value, limit, baseValue, oneDecimal = false) {
   return Math.min(limit.max, Math.max(limit.min, num));
 }
 
+/** 水印控制字符 0x00-0x1F 与 DEL(0x7F)；以字符串拼入正则，避免正则字面量内出现控制字符 */
+const WATERMARK_CONTROL_CHARS = new RegExp(
+  `[${String.fromCharCode(0)}-${String.fromCharCode(0x1f)}${String.fromCharCode(0x7f)}]`,
+  "g",
+);
+
 /**
  * 水印文案归一化：trim + 去控制字符；**不按长度截断**（§C01④「长水印不静默截断」），
  * 超长由渲染核验给出显式诊断（CARD_WATERMARK_SOFT_LIMIT 仅作提示口径）。
@@ -137,7 +143,7 @@ function normalizeWatermarkText(value, baseValue) {
   if (typeof value !== "string") return baseValue;
   // 去除控制字符（保留空格以便词间分隔）：0x00-0x1F（NUL、换行等）和 0x7F（DEL）
   // 收拢连续空白为单空格
-  const cleaned = value.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+  const cleaned = value.replace(WATERMARK_CONTROL_CHARS, " ").replace(/\s+/g, " ").trim();
   return cleaned;
 }
 

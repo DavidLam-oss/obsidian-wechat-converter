@@ -96,13 +96,13 @@ function withTimeout(promise, timeoutMs, label, signal) {
     }
   });
   const timeout = new Promise((_, reject) => {
-    timer = globalThis.setTimeout(() => {
+    timer = window.setTimeout(() => {
       const error = Object.assign(new Error(`capture timeout: ${label} (${timeoutMs}ms)`), { code: "CAPTURE_TIMEOUT" });
       reject(error);
     }, timeoutMs);
   });
   return Promise.race([promise, timeout, abortPromise]).finally(() => {
-    if (timer) globalThis.clearTimeout(timer);
+    if (timer) window.clearTimeout(timer);
     if (signal && onAbort) signal.removeEventListener("abort", onAbort);
   });
 }

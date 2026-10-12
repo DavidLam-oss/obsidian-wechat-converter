@@ -52,8 +52,8 @@ import { isAbsolutePathLike, normalizeVaultPath } from './path-utils.js';
 export const DEFAULT_EXPORT_ROOT = '卡片导出';
 /** 清单文件名（每批一份，§6.1） */
 export const EXPORT_MANIFEST_NAME = 'export-manifest.json';
-/** 保留目录（大小写等价比较） */
-export const RESERVED_EXPORT_DIRS = ['.obsidian', '.trash', '.git'];
+/** 保留目录（大小写等价比较）；配置目录不写死，由调用方传入 Vault#configDir 判断 */
+export const RESERVED_EXPORT_DIRS = ['.trash', '.git'];
 /** 批次目录冲突时的重新生成尝试上限（§6.1） */
 export const MAX_BATCH_DIR_ATTEMPTS = 5;
 /** 笔记名段长度上限（字符） */
@@ -62,10 +62,12 @@ export const NOTE_SEGMENT_MAX_LENGTH = 60;
 export const NEUTRAL_SEGMENT_FALLBACK = 'note';
 
 const WINDOWS_RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
-/** 非法路径字符（包含控制字符 0x00-0x1F，如 NUL、换行符等）及 Windows 保留字符 */
-const ILLEGAL_SEGMENT_CHARS = /[<>:"|?*\u0000-\u001f\\/]/g;
+/** 控制字符区间 0x00-0x1F（NUL、换行符等）；以字符串拼入正则，避免正则字面量内出现控制字符 */
+const CONTROL_CHAR_RANGE = `${String.fromCharCode(0)}-${String.fromCharCode(0x1f)}`;
+/** 非法路径字符（含控制字符）及 Windows 保留字符 */
+const ILLEGAL_SEGMENT_CHARS = new RegExp(`[<>:"|?*${CONTROL_CHAR_RANGE}\\\\/]`, 'g');
 /** 非法字符检测用（无 g 标志，避免 RegExp.test 的 lastIndex 状态陷阱） */
-const ILLEGAL_SEGMENT_CHECK = /[<>:"|?*\u0000-\u001f\\/]/;
+const ILLEGAL_SEGMENT_CHECK = new RegExp(`[<>:"|?*${CONTROL_CHAR_RANGE}\\\\/]`);
 
 /**
  * 净化单个路径段：非法字符/控制字符替换为 `-`，去尾随点与空格，钳制长度，空回落占位名。

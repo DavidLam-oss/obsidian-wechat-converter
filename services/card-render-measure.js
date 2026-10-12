@@ -107,10 +107,10 @@ async function waitForImagesReady(root, timeoutMs = 4000) {
       const done = () => {
         img.removeEventListener("load", done);
         img.removeEventListener("error", done);
-        globalThis.clearTimeout(timer);
+        window.clearTimeout(timer);
         resolve();
       };
-      const timer = globalThis.setTimeout(done, timeoutMs);
+      const timer = window.setTimeout(done, timeoutMs);
       img.addEventListener("load", done, { once: true });
       img.addEventListener("error", done, { once: true });
     });

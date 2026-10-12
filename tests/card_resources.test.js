@@ -7,6 +7,7 @@ import {
   CARD_IMAGE_TIMEOUT_MS,
   CARD_MAX_IMAGE_BYTES,
   CARD_MAX_IMAGE_PIXELS,
+  appendCoverImageRef,
   createCardResourcePool,
   createCardResourceSession,
   createInlineSnapshotResolver,
@@ -91,6 +92,28 @@ describe("resolveCardImageSource 来源解析", () => {
 
   it("vault 中找不到的本地引用返回 null", () => {
     expect(resolveCardImageSource({ ref: "missing.png", kind: "local" }, { app: makeApp({}), sourcePath: "a.md" })).toBeNull();
+  });
+});
+
+describe("appendCoverImageRef 封面引用并入准备清单", () => {
+  it("本地封面路径追加为 local 引用；远程/data:/空值跳过；重复去重", () => {
+    const refs = [{ ref: "body.png", kind: "local" }];
+    appendCoverImageRef(refs, "img/cover.jpg");
+    expect(refs[1]).toEqual({ ref: "img/cover.jpg", kind: "local", gif: false });
+    appendCoverImageRef(refs, "img/cover.jpg");
+    appendCoverImageRef(refs, "https://x.test/a.png");
+    appendCoverImageRef(refs, "data:image/png;base64,AAAA");
+    appendCoverImageRef(refs, "");
+    expect(refs).toHaveLength(2);
+  });
+
+  it("回归：frontmatter 封面路径进快照后，预览 resolver 能解析出 vault 资源地址", async () => {
+    const app = makeApp({ "Wechat/published/img/cover.jpg": true });
+    const pool = createCardResourcePool({ app, sourcePath: "Wechat/published/a.md", loaders: makeLoaders({}) });
+    const snap = await pool.prepare(appendCoverImageRef([], "Wechat/published/img/cover.jpg"));
+    expect(createSnapshotResolver(snap)("Wechat/published/img/cover.jpg"))
+      .toBe("app://local/Wechat/published/img/cover.jpg");
+    snap.release();
   });
 });
 

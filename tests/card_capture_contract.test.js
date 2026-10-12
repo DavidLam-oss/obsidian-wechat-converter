@@ -1,4 +1,5 @@
-// @vitest-environment node
+// jsdom 环境：捕获层的定时器走 window.setTimeout（插件运行在浏览器窗口内，
+// 且 Obsidian 弹出窗口兼容性要求不使用 globalThis），node 环境下无 window 可用。
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -30,6 +31,17 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PNG_8X8 = readFileSync(path.join(HERE, "fixtures/image-card/assets/sample.png"));
 
 const pngBlob = () => new Blob([PNG_8X8], { type: "image/png" });
+
+/** jsdom 的 Blob 没有 arrayBuffer()，用 FileReader 兜底读字节 */
+function readBlobBytes(blob) {
+  if (typeof blob.arrayBuffer === "function") return blob.arrayBuffer();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(blob);
+  });
+}
 
 /** 手动控制resolution的deferred */
 function deferred() {
@@ -68,7 +80,7 @@ describe("capturePage 契约", () => {
     const root = /** @type {any} */ ({}); // 引擎已 mock，root 不参与 DOM
     const blob = await capturePage(root, { library: "modern-screenshot", pixelRatio: 2 });
     expect(blob.type).toBe("image/png");
-    expect(readPngSize(await blob.arrayBuffer())).toEqual({ width: 8, height: 8 });
+    expect(readPngSize(await readBlobBytes(blob))).toEqual({ width: 8, height: 8 });
     expect(state.modern.calls[0][1]).toEqual({ scale: 2 });
   });
 

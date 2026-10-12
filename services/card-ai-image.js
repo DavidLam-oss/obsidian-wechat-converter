@@ -196,11 +196,10 @@ function getWindowTimers() {
  * @param {Record<string, string>} [options.headers]
  * @param {unknown} [options.body]
  * @param {((options: Record<string, unknown>) => Promise<unknown>) | null} [options.requestUrlFn]
- * @param {AbortSignal} [options.signal]
  * @returns {Promise<{ status: number, text: string, json: unknown, headers: Record<string, string> }>}
  */
 async function performHttpRequest(options) {
-  const { url, method = 'POST', headers = {}, body = null, requestUrlFn, signal } = options;
+  const { url, method = 'POST', headers = {}, body = null, requestUrlFn } = options;
 
   if (typeof requestUrlFn === 'function') {
     try {
@@ -224,45 +223,16 @@ async function performHttpRequest(options) {
     }
   }
 
-  // Fallback to fetch when requestUrl is not available (e.g., test environment or Node.js context)
-  if (typeof fetch === 'function') {
-    const res = await fetch(url, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-      signal,
-    });
-    const text = await res.text();
-    let json = null;
-    try {
-      json = JSON.parse(text);
-    } catch {
-      json = null;
-    }
-    /** @type {Record<string, string>} */
-    const headersMap = {};
-    if (res.headers && typeof res.headers.forEach === 'function') {
-      res.headers.forEach((v, k) => { headersMap[k] = v; });
-    }
-    return {
-      status: res.status,
-      text,
-      json,
-      headers: headersMap,
-    };
-  }
-
-  throw new Error('当前环境缺少 requestUrl 与 fetch，无法发起网络请求');
+  throw new Error('当前环境缺少 requestUrl，无法发起网络请求');
 }
 
 /**
  * 下载远程图片并转为 Base64 Data URL
  * @param {string} url
  * @param {((options: Record<string, unknown>) => Promise<unknown>) | null} [requestUrlFn]
- * @param {AbortSignal} [signal]
  * @returns {Promise<string>}
  */
-async function downloadImageAsBase64(url, requestUrlFn, signal) {
+async function downloadImageAsBase64(url, requestUrlFn) {
   if (typeof requestUrlFn === 'function') {
     const imageRes = await requestUrlFn({
       url,
@@ -274,12 +244,6 @@ async function downloadImageAsBase64(url, requestUrlFn, signal) {
       const b64 = bufferToBase64(imgObj.arrayBuffer);
       return `data:image/png;base64,${b64}`;
     }
-  // Fallback to fetch when requestUrl is not available (e.g., test environment or Node.js context)
-  } else if (typeof fetch === 'function') {
-    const imgRes = await fetch(url, { signal });
-    const buf = await imgRes.arrayBuffer();
-    const b64 = bufferToBase64(buf);
-    return `data:image/png;base64,${b64}`;
   }
   throw new Error('无法下载生成的图片内容');
 }
@@ -422,7 +386,6 @@ async function pollImageGenerationTask(options) {
           Authorization: `Bearer ${apiKey}`,
         },
         requestUrlFn,
-        signal,
       });
       consecutiveErrors = 0;
     } catch (netErr) {
@@ -460,7 +423,7 @@ async function pollImageGenerationTask(options) {
         return imageUrl;
       }
       try {
-        return await downloadImageAsBase64(imageUrl, requestUrlFn, signal);
+        return await downloadImageAsBase64(imageUrl, requestUrlFn);
       } catch (downloadErr) {
         const msg = downloadErr instanceof Error ? downloadErr.message : String(downloadErr);
         throw new Error(`生图完成但下载图片失败: ${msg}`);
@@ -539,7 +502,6 @@ export async function generateCardCoverImage(options) {
       },
       body: payload,
       requestUrlFn,
-      signal: controller ? controller.signal : undefined,
     });
 
     if (resp.status === 400) {
@@ -559,7 +521,6 @@ export async function generateCardCoverImage(options) {
           },
           body: fallbackPayload,
           requestUrlFn,
-          signal: controller ? controller.signal : undefined,
         });
         if (fallbackResp.status < 400) {
           resp = fallbackResp;
@@ -586,7 +547,7 @@ export async function generateCardCoverImage(options) {
       }
       if (firstItem.url && typeof firstItem.url === 'string') {
         try {
-          return await downloadImageAsBase64(firstItem.url, requestUrlFn, controller ? controller.signal : undefined);
+          return await downloadImageAsBase64(firstItem.url, requestUrlFn);
         } catch (downloadErr) {
           const msg = downloadErr instanceof Error ? downloadErr.message : String(downloadErr);
           throw new Error(`生图完成但下载图片失败: ${msg}`);

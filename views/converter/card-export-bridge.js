@@ -55,6 +55,7 @@ import {
   createCardResourcePool,
   createCardResourceSession,
   createInlineSnapshotResolver,
+  appendCoverImageRef,
 } from '../../services/card-resources.js';
 import { renderCardPages, releasePageStyle, RATIO_PRESETS, capturePage, CAPTURE_LIBRARY_IDS } from '../../services/card-render-engine.js';
 import { DEFAULT_CARD_THEME_ID, getCardTheme } from '../../services/card-themes.js';
@@ -234,7 +235,7 @@ buildCardExportFsAdapter() {
 /**
  * 单批导出共享的图片资源快照：把「逐页重复下载」收敛为「每批一次」，并暴露加载失败摘要
  * （§5.5：资源不可用时导出侧不得静默少图）；release() 幂等，批次结束或视图释放时调用。
- * @param {{ markdown: string, sourcePath: string }} input
+ * @param {{ markdown: string, sourcePath: string, coverImage?: string }} input
  */
 prepareCardExportResources(input) {
   /** @type {import('../../services/card-resources.js').CardResourceSnapshot | null} */
@@ -252,6 +253,7 @@ prepareCardExportResources(input) {
         for (const block of cardDoc.blocks || []) {
           for (const image of block.images || []) imageRefs.push(image);
         }
+        appendCoverImageRef(imageRefs, input.coverImage);
         const pool = createCardResourcePool({
           app: this.app,
           sourcePath: String(input.sourcePath || ''),
@@ -451,6 +453,10 @@ createCardExportController(session, context) {
   const resources = this.prepareCardExportResources({
     markdown: context.markdown,
     sourcePath: context.sourcePath,
+    // 封面本地图需进同一快照，否则内联 resolver 解析不到，导出封面退化为占位图
+    coverImage: context.settings?.coverEnabled === true && typeof session.getCoverFields === 'function'
+      ? String(session.getCoverFields()?.coverImage || '')
+      : '',
   });
   /** 资源是否已就绪：首批捕获结束即视为就绪（ensure 幂等，失败后续页会重试并再次发信号） */
   let resourcesPrepared = false;

@@ -2,7 +2,7 @@
 ## 核心功能
 
 卡片资源的默认加载器（自 card-resources.js 拆出）：远程图片经 Obsidian requestUrl 主进程转发取字节、
-标准 fetch 回退、图片解码尺寸探测、已加载字节内联为 data: URL、字体就绪等待；以及统一的取消错误构造。
+本地 vault 图经 vault.readBinary、data: URL 内存解码（不使用全局 fetch）、图片解码尺寸探测、已加载字节内联为 data: URL、字体就绪等待；以及统一的取消错误构造。
 
 ## 输入
 
@@ -21,7 +21,7 @@
 
 ## 依赖
 
-`./obsidian-compat.js`（requestUrl 能力探测）；浏览器全局 fetch/Image/FileReader。
+`./obsidian-compat.js`（requestUrl 能力探测）；浏览器全局 Image/FileReader/atob。
 
 ## 维护规则
 
@@ -30,6 +30,25 @@
 */
 
 import { getObsidianRequestUrl } from './obsidian-compat.js';
+
+/**
+ * data: URL → Blob（base64 与百分号编码两种载荷）。
+ * @param {string} dataUrl
+ * @returns {Blob}
+ */
+function dataUrlToBlob(dataUrl) {
+  const comma = dataUrl.indexOf(',');
+  const meta = comma >= 0 ? dataUrl.slice(5, comma) : '';
+  const payload = comma >= 0 ? dataUrl.slice(comma + 1) : '';
+  const mime = meta.split(';')[0] || 'application/octet-stream';
+  if (/;base64/i.test(meta)) {
+    const binary = window.atob(payload);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
+  }
+  return new Blob([decodeURIComponent(payload)], { type: mime });
+}
 
 /** @returns {Error} */
 export function abortError() {
@@ -45,37 +64,40 @@ export function abortError() {
 export function createDefaultLoaders() {
   return {
     /**
-     * 远程 http(s) 优先走 Obsidian requestUrl（主进程转发，不受渲染进程 CORS 限制；
-     * 参考 Export Img remote-images 的做法），失败或不可用时回退标准 fetch。
-     * requestUrl 不支持 AbortSignal，取消语义由外层「晚到结果丢弃」兜底（§5.6）。
+     * 取图片字节（不使用全局 fetch，遵循 Obsidian 社区审核规则）：
+     * - data:image/* → 内存解码；
+     * - vault 本地图（资源池解析出 vaultPath）→ `vault.readBinary`；
+     * - 远程 http(s) → Obsidian requestUrl（主进程转发，不受渲染进程 CORS 限制）。
+     * requestUrl / readBinary 不支持 AbortSignal，取消语义由外层「晚到结果丢弃」兜底（§5.6）。
      * @param {string} src
      * @param {AbortSignal} signal
+     * @param {{ vaultPath?: string, mime?: string, app?: import('./card-resources.js').CardAppLike | null }} [context]
      * @returns {Promise<{ blob: Blob }>}
      */
-    async fetchBlob(src, signal) {
-      if (/^https?:\/\//i.test(src)) {
-        try {
-          const requestUrl = getObsidianRequestUrl();
-          if (typeof requestUrl === 'function') {
-            const response = await requestUrl({ url: src, throw: false });
-            if (response && response.status >= 200 && response.status < 300) {
-              const buffer = /** @type {ArrayBufferLike} */ (response.arrayBuffer);
-              const headers = response.headers || {};
-              const mime = String(headers['content-type'] || headers['Content-Type'] || '').split(';')[0] || 'image/png';
-              return { blob: new Blob([/** @type {BlobPart} */ (buffer)], { type: mime }) };
-            }
-            throw new Error(`HTTP ${response?.status ?? 'unknown'}（requestUrl）`);
-          }
-        } catch (error) {
-          if (signal.aborted) throw abortError();
-          // 回退 fetch（可能因 CORS 失败，届时进入显式资源失败诊断）
-          void error;
-        }
+    async fetchBlob(src, signal, context = {}) {
+      if (signal.aborted) throw abortError();
+      if (/^data:/i.test(src)) return { blob: dataUrlToBlob(src) };
+      const vault = context.app?.vault;
+      const vaultFile = context.vaultPath ? vault?.getAbstractFileByPath?.(context.vaultPath) : null;
+      if (vaultFile && typeof vault?.readBinary === 'function') {
+        /** @type {ArrayBuffer} */
+        const buffer = await vault.readBinary(vaultFile);
+        if (signal.aborted) throw abortError();
+        return { blob: new Blob([/** @type {BlobPart} */ (buffer)], { type: context.mime || 'image/png' }) };
       }
-      const response = await fetch(src, { signal });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const blob = await response.blob();
-      return { blob };
+      if (/^https?:\/\//i.test(src)) {
+        const requestUrl = getObsidianRequestUrl();
+        if (typeof requestUrl !== 'function') throw new Error('当前环境缺少 requestUrl，无法加载远程图片');
+        const response = await requestUrl({ url: src, throw: false });
+        if (signal.aborted) throw abortError();
+        if (!response || response.status < 200 || response.status >= 300) {
+          throw new Error(`HTTP ${response?.status ?? 'unknown'}（requestUrl）`);
+        }
+        const headers = response.headers || {};
+        const mime = String(headers['content-type'] || headers['Content-Type'] || '').split(';')[0] || 'image/png';
+        return { blob: new Blob([/** @type {BlobPart} */ (response.arrayBuffer)], { type: mime }) };
+      }
+      throw new Error(`无法读取图片资源：${src.slice(0, 80)}`);
     },
     /**
      * @param {string} src

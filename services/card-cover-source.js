@@ -135,18 +135,7 @@ export async function downloadAsBase64(imageUrl, customReq, defaultMime = 'image
     }
   }
 
-  // Fallback to fetch when requestUrl is not available (e.g., test environment or Node.js context)
-  if (typeof fetch === 'function') {
-    const res = await fetch(imageUrl);
-    if (!res.ok) throw new Error(`下载图片失败: HTTP ${res.status}`);
-    const headerMime = res.headers?.get?.('content-type');
-    const mime = headerMime?.split(';')[0]?.trim() || extMime || defaultMime;
-    const buf = await res.arrayBuffer();
-    const b64 = bufferToBase64(buf);
-    return `data:${mime};base64,${b64}`;
-  }
-
-  throw new Error('当前环境缺少 requestUrl 与 fetch，无法下载图片');
+  throw new Error(reqFn ? '下载图片失败：响应无内容' : '当前环境缺少 requestUrl，无法下载图片');
 }
 
 /**
@@ -209,17 +198,8 @@ export async function fetchUnsplashCoverImage(options = {}) {
       throw: false,
     });
     rawResponse = /** @type {{ status?: number, text?: string, json?: unknown }} */ (res);
-  // Fallback to fetch when requestUrl is not available (e.g., test environment or Node.js context)
-  } else if (typeof fetch === 'function') {
-    const res = await fetch(endpoint, {
-      headers: { Authorization: `Client-ID ${apiKey}` },
-    });
-    const text = await res.text();
-    let json = null;
-    try { json = JSON.parse(text); } catch { json = null; }
-    rawResponse = { status: res.status, text, json };
   } else {
-    throw new Error('当前环境缺少网络请求能力');
+    throw new Error('当前环境缺少 requestUrl，无法发起网络请求');
   }
 
   const status = rawResponse?.status || 0;
@@ -283,17 +263,8 @@ export async function fetchUnsplashPhotos(options = {}) {
       throw: false,
     });
     rawResponse = /** @type {{ status?: number, text?: string, json?: unknown }} */ (res);
-  // Fallback to fetch when requestUrl is not available (e.g., test environment or Node.js context)
-  } else if (typeof fetch === 'function') {
-    const res = await fetch(endpoint, {
-      headers: { Authorization: `Client-ID ${apiKey}` },
-    });
-    const text = await res.text();
-    let json = null;
-    try { json = JSON.parse(text); } catch { json = null; }
-    rawResponse = { status: res.status, text, json };
   } else {
-    throw new Error('当前环境缺少网络请求能力');
+    throw new Error('当前环境缺少 requestUrl，无法发起网络请求');
   }
 
   const status = rawResponse?.status || 0;

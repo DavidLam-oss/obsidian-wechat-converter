@@ -16,6 +16,7 @@
 - 常量 `CARD_IMAGE_TIMEOUT_MS` 等预算值（§5.5/§5.6 初始值）。
 - `resolveCardImageSource(ref, ctx)`：ref → {src, mime, vaultPath} | null。
 - `createCardResourcePool(...)`：`prepare()` 返回冻结的 CardResourceSnapshot（images/诊断/hasBlockingFailures），含 `retain()/release()` 引用计数；`waitForFonts()` 返回 {status:"ok"|"timeout"}。
+- `appendCoverImageRef(imageRefs, coverImage)`：把封面本地图引用并入准备清单（远程/data: 跳过、去重）。
 - `createSnapshotResolver(snapshot)`：ref → 可渲染 src | null（预览用，保留原始资源地址）。
 - `createInlineSnapshotResolver(snapshot)`：ref → 内联 data: URL | 原始 src | null（捕获/导出用，避免截图引擎跨域取图失败）。
 - `createCardResourceSession()`：会话级累计字节预算。
@@ -101,7 +102,7 @@ export const CARD_LOAD_CONCURRENCY = 3;
 /**
  * @typedef {object} CardAppLike
  * @property {{ getFirstLinkpathDest?: (linkpath: string, sourcePath: string) => unknown }} [metadataCache]
- * @property {{ getAbstractFileByPath?: (path: string) => unknown, getResourcePath?: (file: unknown) => string }} [vault]
+ * @property {{ getAbstractFileByPath?: (path: string) => unknown, getResourcePath?: (file: unknown) => string, readBinary?: (file: unknown) => Promise<ArrayBuffer> }} [vault]
  */
 
 /**
@@ -111,7 +112,7 @@ export const CARD_LOAD_CONCURRENCY = 3;
 
 /**
  * @typedef {object} CardResourceLoaders 可注入加载器（默认用活动窗口实现；测试注入替身）
- * @property {(src: string, signal: AbortSignal) => Promise<{ blob: Blob }>} fetchBlob
+ * @property {(src: string, signal: AbortSignal, context?: { vaultPath?: string, mime?: string, app?: CardAppLike | null }) => Promise<{ blob: Blob }>} fetchBlob
  * @property {(src: string, signal: AbortSignal, blob?: Blob) => Promise<{ width: number, height: number }>} decodeImage
  * @property {(blob: Blob) => Promise<string>} blobToDataUrl 已加载字节 → 内联 data: URL（捕获路径）
  * @property {(doc: Document, signal: AbortSignal) => Promise<"ok">} waitFonts
@@ -335,7 +336,7 @@ export function createCardResourcePool(options = {}) {
       if (externalSignal.aborted) throw abortError();
       externalSignal.addEventListener("abort", () => controller.abort(), { once: true });
     }
-    const timer = globalThis.setTimeout(() => controller.abort(), timeoutMs);
+    const timer = window.setTimeout(() => controller.abort(), timeoutMs);
     try {
       await loaders.waitFonts(doc, controller.signal);
       return { status: "ok" };
@@ -346,7 +347,7 @@ export function createCardResourcePool(options = {}) {
       }
       return { status: "timeout" };
     } finally {
-      globalThis.clearTimeout(timer);
+      window.clearTimeout(timer);
     }
   }
 
@@ -367,7 +368,7 @@ export function createCardResourcePool(options = {}) {
       if (externalSignal.aborted) throw abortError();
       externalSignal.addEventListener("abort", () => controller.abort(), { once: true });
     }
-    const wholeTimer = globalThis.setTimeout(() => controller.abort(), wholeTimeoutMs);
+    const wholeTimer = window.setTimeout(() => controller.abort(), wholeTimeoutMs);
     const refs = (imageRefs || []).filter(Boolean);
 
     /** @type {{ [ref: string]: CardResourceImageEntry }} */
@@ -390,11 +391,15 @@ export function createCardResourcePool(options = {}) {
         const imageController = new AbortController();
         const onOuterAbort = () => imageController.abort();
         controller.signal.addEventListener("abort", onOuterAbort, { once: true });
-        const perImageTimer = globalThis.setTimeout(() => imageController.abort(), CARD_IMAGE_TIMEOUT_MS);
+        const perImageTimer = window.setTimeout(() => imageController.abort(), CARD_IMAGE_TIMEOUT_MS);
         try {
-          const { blob } = await loaders.fetchBlob(resolved.src, imageController.signal);
+          const { blob } = await loaders.fetchBlob(resolved.src, imageController.signal, {
+            vaultPath: resolved.vaultPath || "",
+            mime: resolved.mime,
+            app,
+          });
           const decode = await loaders.decodeImage(resolved.src, imageController.signal, blob);
-          globalThis.clearTimeout(perImageTimer);
+          window.clearTimeout(perImageTimer);
           if (controller.signal.aborted) throw abortError(); // 中止后结果不采用
           const mime = blob.type || resolved.mime;
           if (!mime.startsWith(IMAGE_MIME_PREFIX)) {
@@ -448,7 +453,7 @@ export function createCardResourcePool(options = {}) {
           };
           return { status: /** @type {CardResourceStatus} */ ("ok"), refEntry, entry };
         } catch (error) {
-          globalThis.clearTimeout(perImageTimer);
+          window.clearTimeout(perImageTimer);
           if (externalSignal?.aborted) {
             throw abortError(); // 外部取消：结果不采用
           }
@@ -467,7 +472,7 @@ export function createCardResourcePool(options = {}) {
       () => controller.signal.aborted
     );
 
-    globalThis.clearTimeout(wholeTimer);
+    window.clearTimeout(wholeTimer);
     if (externalSignal?.aborted) {
       throw abortError(); // 取消：不产出快照，已加载结果全部丢弃
     }
@@ -546,6 +551,23 @@ function freezeSnapshot(parts) {
     },
   });
   return Object.freeze(snapshot);
+}
+
+/**
+ * 把封面图本地引用并入资源准备清单：封面不在正文 block 里，不并入则快照 resolver
+ * 解析不到 frontmatter 封面路径，封面退化为占位图。原地追加并返回同一数组。
+ * @param {Array<{ ref: string, kind?: string, gif?: boolean }>} imageRefs
+ * @param {unknown} coverImage 会话封面字段 coverImage
+ * @returns {Array<{ ref: string, kind?: string, gif?: boolean }>}
+ */
+export function appendCoverImageRef(imageRefs, coverImage) {
+  const refs = Array.isArray(imageRefs) ? imageRefs : [];
+  const ref = String(coverImage || "").trim();
+  // 远程/data:/blob:/app:// 由 resolveCoverImageUrl 直接放行，无需进快照
+  if (!ref || /^(https?:\/\/|data:|blob:|app:\/\/)/i.test(ref)) return refs;
+  if (refs.some((entry) => entry && entry.ref === ref)) return refs;
+  refs.push({ ref, kind: "local", gif: /\.gif(?:[?#].*)?$/i.test(ref) });
+  return refs;
 }
 
 /**
