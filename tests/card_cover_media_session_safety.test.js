@@ -44,7 +44,9 @@ describe('卡片封面选图切篇安全与取消机制 (H3, H4, M4)', () => {
     globalThis.__obsidianModalRegistry = [];
 
     noteASession = {
-      noteId: 'note-a.md',
+      noteId: 'note-1-2isfeea',
+      sourcePath: 'note-a.md',
+      getSourcePath: () => 'note-a.md',
       fields: { coverMode: 'none', coverImage: '', coverImageSource: '' },
       getCoverFields: () => noteASession.fields,
       applyCoverFields: vi.fn((patch) => {
@@ -54,7 +56,9 @@ describe('卡片封面选图切篇安全与取消机制 (H3, H4, M4)', () => {
     };
 
     noteBSession = {
-      noteId: 'note-b.md',
+      noteId: 'note-2-9qkfeeb',
+      sourcePath: 'note-b.md',
+      getSourcePath: () => 'note-b.md',
       fields: { coverMode: 'none', coverImage: '', coverImageSource: '' },
       getCoverFields: () => noteBSession.fields,
       applyCoverFields: vi.fn((patch) => {
@@ -73,7 +77,7 @@ describe('卡片封面选图切篇安全与取消机制 (H3, H4, M4)', () => {
     mockView = {
       app: {},
       lastResolvedSourcePath: 'note-a.md',
-      cardPreviewPendingInput: { sourcePathKey: 'note-a.md' },
+      cardPreviewPendingInput: { sourcePathKey: 'note-a.md', sourcePath: 'note-a.md' },
       plugin: {
         settings: {
           ai: {
@@ -97,6 +101,7 @@ describe('卡片封面选图切篇安全与取消机制 (H3, H4, M4)', () => {
         },
       },
       getCardSessions: () => ({
+        has: (key) => Object.prototype.hasOwnProperty.call(sessionStore, key),
         getSession: (key) => sessionStore[key] || null,
       }),
       getCardSettingsSession: () => sessionStore[currentActiveNote] || null,
@@ -109,7 +114,7 @@ describe('卡片封面选图切篇安全与取消机制 (H3, H4, M4)', () => {
       switchToNote: (newNote) => {
         currentActiveNote = newNote;
         mockView.lastResolvedSourcePath = newNote;
-        mockView.cardPreviewPendingInput.sourcePathKey = newNote;
+        mockView.cardPreviewPendingInput = { sourcePathKey: newNote, sourcePath: newNote };
       },
     };
 
@@ -250,6 +255,145 @@ describe('卡片封面选图切篇安全与取消机制 (H3, H4, M4)', () => {
       // 验证输入框没有被篡改
       expect(topicInput.value).toBe(originalVal);
     });
+
+    it('在笔记 A 未切换笔记时，AI 生图完成正常触发 onSelect 回调并设为封面', async () => {
+      const container = applyExtensions(document.createElement('div'));
+      const onSelect = vi.fn();
+
+      renderAiMediaPickerTab({
+        container,
+        view: mockView,
+        sourcePathKey: 'note-a.md',
+        ratioId: '3:4',
+        onSelect,
+      });
+
+      const generateBtn = container.querySelector('.card-media-picker-ai-actions button');
+      generateBtn.click();
+
+      await vi.waitFor(() => {
+        expect(generateBtn.disabled).toBe(false);
+      });
+
+      expect(onSelect).toHaveBeenCalledWith(
+        expect.objectContaining({
+          source: 'ai',
+          dataUrl: expect.stringContaining('data:image/png;base64,'),
+        }),
+      );
+      expect(noteASession.applyCoverFields).not.toHaveBeenCalled();
+    });
+
+    it('在笔记 A 未切换笔记时，Unsplash 选图完成正常触发 onSelect 回调', async () => {
+      const container = applyExtensions(document.createElement('div'));
+      const onSelect = vi.fn();
+
+      obsidian.requestUrl = vi.fn().mockImplementation(async ({ url }) => {
+        if (url.includes('api.unsplash.com/search') || url.includes('api.unsplash.com/photos/random')) {
+          return {
+            status: 200,
+            json: {
+              results: [
+                {
+                  id: 'unsplash-1',
+                  urls: { small: 'https://img.example/1-thumb', raw: 'https://img.example/1-raw' },
+                  user: { name: 'Photographer' },
+                  links: { download_location: 'https://api.unsplash.com/photos/unsplash-1/download' },
+                },
+              ],
+            },
+          };
+        }
+        if (url.includes('download')) {
+          return { status: 200, json: { url: 'https://img.example/1-raw' } };
+        }
+        return {
+          status: 200,
+          headers: { 'content-type': 'image/jpeg' },
+          arrayBuffer: new Uint8Array([255, 216, 255]).buffer,
+        };
+      });
+
+      renderUnsplashMediaPickerTab({
+        container,
+        view: mockView,
+        sourcePathKey: 'note-a.md',
+        ratioId: '3:4',
+        onSelect,
+      });
+
+      await vi.waitFor(() => {
+        expect(container.querySelectorAll('.card-media-picker-item').length).toBe(1);
+      });
+
+      const photoItem = container.querySelector('.card-media-picker-item');
+      photoItem.click();
+
+      await vi.waitFor(() => {
+        expect(onSelect).toHaveBeenCalledWith(
+          expect.objectContaining({
+            source: 'unsplash',
+            dataUrl: expect.stringContaining('data:image/jpeg;base64,'),
+          }),
+        );
+      });
+    });
+
+    it('在笔记 A 未切换笔记时，AI 提炼观点成功写入输入框', async () => {
+      const container = applyExtensions(document.createElement('div'));
+
+      obsidian.requestUrl = vi.fn().mockResolvedValue({
+        status: 200,
+        json: {
+          choices: [{ message: { content: '提炼得到的笔记 A 观点' } }],
+        },
+      });
+
+      renderAiMediaPickerTab({
+        container,
+        view: mockView,
+        sourcePathKey: 'note-a.md',
+        ratioId: '3:4',
+        onSelect: vi.fn(),
+      });
+
+      const extractBtn = container.querySelector('.card-media-picker-ai-extract-btn');
+      const topicInput = container.querySelector('.card-media-picker-topic-input');
+
+      extractBtn.click();
+      await vi.waitFor(() => {
+        expect(extractBtn.disabled).toBe(false);
+      });
+
+      expect(topicInput.value).toBe('提炼得到的笔记 A 观点');
+    });
+
+    it('切走笔记且原笔记会话已被销毁时，安全提示会话已失效并不抛错', async () => {
+      const container = applyExtensions(document.createElement('div'));
+      const onSelect = vi.fn();
+
+      renderAiMediaPickerTab({
+        container,
+        view: mockView,
+        sourcePathKey: 'note-a.md',
+        ratioId: '3:4',
+        onSelect,
+      });
+
+      const generateBtn = container.querySelector('.card-media-picker-ai-actions button');
+
+      // 切走笔记且原笔记从 registry 中被注销
+      mockView.switchToNote('note-b.md');
+      delete sessionStore['note-a.md'];
+
+      generateBtn.click();
+      await vi.waitFor(() => {
+        expect(generateBtn.disabled).toBe(false);
+      });
+
+      expect(onSelect).not.toHaveBeenCalled();
+      expect(noteBSession.applyCoverFields).not.toHaveBeenCalled();
+    });
   });
 
   describe('H4: AI 生图取消机制与生命周期清理', () => {
@@ -349,6 +493,8 @@ describe('卡片封面选图切篇安全与取消机制 (H3, H4, M4)', () => {
       for (let i = 0; i < 10; i++) {
         mockView._cardAiImageHistory[`note-${i}.md`] = [];
       }
+
+      mockView.switchToNote('note-new.md');
 
       renderAiMediaPickerTab({
         container,

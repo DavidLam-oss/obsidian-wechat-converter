@@ -638,11 +638,6 @@ export function cleanHtmlForDraft(html) {
 
         const hangingIndent = isTask ? -20 : (isOrdered ? -18 : -14);
         const paddingLeft = Math.max(1, depth) * 20;
-        const wrapper = activeDocument.createElement('p');
-        wrapper.setAttribute(
-          'style',
-          `${cleanStyle} margin: 4px 0; padding-left: ${paddingLeft}px; text-indent: ${hangingIndent}px;`
-        );
 
         /** @type {ChildNode[]} */
         const contentNodes = [];
@@ -665,56 +660,83 @@ export function cleanHtmlForDraft(html) {
         };
         extractNodes(li.childNodes);
 
-        // Trim leading whitespace-only text nodes to avoid bullets on separate lines.
-        while (
-          contentNodes.length > 0 &&
-          contentNodes[0].nodeType === Node.TEXT_NODE &&
-          !contentNodes[0].textContent.trim()
-        ) {
+        // Trim leading whitespace-only text nodes
+        while (contentNodes.length > 0 && contentNodes[0].nodeType === Node.TEXT_NODE && !contentNodes[0].textContent.trim()) {
           contentNodes.shift();
         }
-        // If the first text node starts with a newline/indent, trim it to keep marker + text on one line.
         if (contentNodes.length > 0 && contentNodes[0].nodeType === Node.TEXT_NODE) {
           contentNodes[0].textContent = contentNodes[0].textContent.replace(/^\s+/, '');
-          if (!contentNodes[0].textContent) {
-            contentNodes.shift();
-          }
+          if (!contentNodes[0].textContent) contentNodes.shift();
         }
 
-        const hasContent = contentNodes.some(node => {
-          if (node.nodeType === Node.TEXT_NODE) return node.textContent.trim();
-          return true;
-        });
+        const hasContent = contentNodes.some(node => node.nodeType === Node.TEXT_NODE ? Boolean(node.textContent.trim()) : true);
 
         if (hasContent) {
           contentNodes.forEach(node => {
             if (node.nodeType !== Node.TEXT_NODE) return;
             node.textContent = node.textContent.replace(/\s*\n\s*/g, ' ').replace(/\s{2,}/g, ' ');
-            if (!node.textContent.trim()) {
-              node.remove();
-            }
+            if (!node.textContent.trim()) node.remove();
           });
 
-          // Trim trailing whitespace-only text nodes
-          while (
-            contentNodes.length > 0 &&
-            contentNodes[contentNodes.length - 1].nodeType === Node.TEXT_NODE &&
-            !contentNodes[contentNodes.length - 1].textContent.trim()
-          ) {
+          while (contentNodes.length > 0 && contentNodes[contentNodes.length - 1].nodeType === Node.TEXT_NODE && !contentNodes[contentNodes.length - 1].textContent.trim()) {
             contentNodes.pop();
           }
           if (contentNodes.length > 0 && contentNodes[contentNodes.length - 1].nodeType === Node.TEXT_NODE) {
             contentNodes[contentNodes.length - 1].textContent = contentNodes[contentNodes.length - 1].textContent.replace(/\s+$/, '');
           }
 
-          if (!isTask) {
-            const markerSpan = activeDocument.createElement('span');
-            markerSpan.textContent = isOrdered ? `${index}. ` : '• ';
-            contentNodes.unshift(markerSpan);
-          }
+          // 分段挂载：遇块级元素（PRE/TABLE/BLOCKQUOTE等）解构为同级兄弟，防止微信/浏览器在 p 内遇块级时提前闭合
+          /** @type {HTMLElement | null} */
+          let currentP = null;
+          let isFirstP = true;
 
-          contentNodes.forEach(node => wrapper.appendChild(node));
-          fragment.appendChild(wrapper);
+          const appendToParagraph = (node) => {
+            if (!currentP) {
+              currentP = activeDocument.createElement('p');
+              const indent = isFirstP
+                ? `margin: 4px 0; padding-left: ${paddingLeft}px; text-indent: ${hangingIndent}px;`
+                : `margin: 4px 0; padding-left: ${paddingLeft}px;`;
+              currentP.setAttribute('style', `${cleanStyle} ${indent}`);
+              if (isFirstP && !isTask) {
+                const markerSpan = activeDocument.createElement('span');
+                markerSpan.textContent = isOrdered ? `${index}. ` : '• ';
+                currentP.appendChild(markerSpan);
+              }
+              isFirstP = false;
+              fragment.appendChild(currentP);
+            }
+            if (currentP) {
+              (/** @type {HTMLElement} */ (currentP)).appendChild(node);
+            }
+          };
+
+          contentNodes.forEach(node => {
+            const isBlock = node instanceof Element && (
+              node.tagName === 'PRE' || node.tagName === 'TABLE' ||
+              node.tagName === 'BLOCKQUOTE' || node.tagName === 'FIGURE' ||
+              node.classList.contains('code-block')
+            );
+            if (isBlock) {
+              currentP = null;
+              if (isFirstP && !isTask) {
+                const markerP = activeDocument.createElement('p');
+                markerP.setAttribute('style', `${cleanStyle} margin: 4px 0; padding-left: ${paddingLeft}px; text-indent: ${hangingIndent}px;`);
+                const markerSpan = activeDocument.createElement('span');
+                markerSpan.textContent = isOrdered ? `${index}. ` : '• ';
+                markerP.appendChild(markerSpan);
+                fragment.appendChild(markerP);
+              }
+              isFirstP = false;
+              const blockEl = /** @type {Element} */ (node);
+              const bStyle = blockEl.getAttribute('style') || '';
+              if (!/margin-left/i.test(bStyle)) {
+                blockEl.setAttribute('style', `${bStyle ? bStyle + ';' : ''} margin-left: ${paddingLeft}px;`);
+              }
+              fragment.appendChild(blockEl);
+            } else {
+              appendToParagraph(node);
+            }
+          });
         }
 
         nestedLists.forEach(nested => {
@@ -744,51 +766,25 @@ export function cleanHtmlForDraft(html) {
 
     // 3. 处理嵌套的 ul/ol（在 li 内的列表）：移除 margin，调整缩进
     div.querySelectorAll('li > ul, li > ol').forEach(nestedList => {
-      // 获取原有样式
-      let style = nestedList.getAttribute('style') || '';
-      // 移除 margin，保留其他样式 (Fix: use regex that catches margin-left/top etc)
-      style = style.replace(/margin(-[a-z]+)?:\s*[^;]+;?/gi, '');
-      // 添加 margin: 0 确保紧贴父元素
-      style = 'margin: 0; ' + style;
-      nestedList.setAttribute('style', style);
+      let style = (nestedList.getAttribute('style') || '').replace(/margin(-[a-z]+)?:\s*[^;]+;?/gi, '');
+      nestedList.setAttribute('style', `margin: 0; ${style}`);
     });
 
-    // 4. 移除空的 li 元素
+    // 4. 移除空的 li 元素与纯空白文本节点
     div.querySelectorAll('li').forEach(li => {
-      if (!li.textContent.trim() && li.querySelectorAll('img, ul, ol').length === 0) {
-        li.remove();
-      }
+      if (!li.textContent.trim() && li.querySelectorAll('img, ul, ol').length === 0) li.remove();
     });
-
-    // 5. 移除 ul/ol 内的纯空白文本节点
-    div.querySelectorAll('ul, ol').forEach(list => {
-      Array.from(list.childNodes).forEach(node => {
-        if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) {
-          node.remove();
-        }
-      });
-    });
-
-    // 6. 移除 li 内的多余换行/空白文本节点
-    div.querySelectorAll('li').forEach(li => {
-      Array.from(li.childNodes).forEach(node => {
-        if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) {
-          node.remove();
-        }
+    div.querySelectorAll('ul, ol, li').forEach(el => {
+      Array.from(el.childNodes).forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) node.remove();
       });
     });
 
     // 8. 微信公众号兼容：将 blockquote 转换为带有完全相同样式的 section 标签
-    // 避免微信官方富文本编辑器对原生 blockquote 标签强制包裹或注入默认灰色左边框（#dee0e2），
-    // 消除竖条变粗（双边框并排）以及“一半主题色、一半灰色”的兼容性异常。
     div.querySelectorAll('blockquote').forEach(bq => {
       const section = activeDocument.createElement('section');
-      Array.from(bq.attributes).forEach(attr => {
-        section.setAttribute(attr.name, attr.value);
-      });
-      while (bq.firstChild) {
-        section.appendChild(bq.firstChild);
-      }
+      Array.from(bq.attributes).forEach(attr => section.setAttribute(attr.name, attr.value));
+      while (bq.firstChild) section.appendChild(bq.firstChild);
       bq.replaceWith(section);
     });
 

@@ -19,7 +19,9 @@ import {
   fetchUnsplashPhotos,
   downloadAsBase64,
   fetchPicsumCoverImage,
+  trackUnsplashDownload,
 } from '../../services/card-cover-source.js';
+import { resolveActiveCardSourceKey } from './card-media-picker-note.js';
 
 const POPULAR_TAGS = ['极简', '建筑', '科技', '自然', '生活', '质感', '暗黑', '城市'];
 
@@ -176,35 +178,53 @@ export function renderUnsplashMediaPickerTab({ container, view, sourcePathKey, r
         },
       });
 
-      // 摄影师署名
-      item.createDiv({
+      // 摄影师署名（符合 Unsplash API 规范，外链附带 UTM 参数）
+      const authorEl = item.createEl('a', {
         cls: 'card-media-picker-item-author',
         text: photo.authorName ? `@${photo.authorName}` : 'Unsplash',
+        attr: {
+          href: photo.authorLink || 'https://unsplash.com?utm_source=obsidian_wechat_converter&utm_medium=referral',
+          target: '_blank',
+          rel: 'noopener noreferrer',
+          title: `在 Unsplash 查看 ${photo.authorName || '摄影师'} 的主页`,
+        },
+      });
+      authorEl.addEventListener('click', (e) => {
+        e.stopPropagation();
       });
 
       item.addEventListener('click', async () => {
         item.addClass('is-loading');
         new Notice('正在下载高清摄影图并转码...');
         try {
+          if (photo.downloadLocation) {
+            void trackUnsplashDownload(String(photo.downloadLocation || ''), String(unsplashKey || ''), getObsidianRequestUrl());
+          }
+
           const downloadUrl = photo.rawUrl.includes('?')
             ? `${photo.rawUrl}&w=1600&q=85&auto=format`
             : `${photo.rawUrl}?w=1600&q=85&auto=format`;
           const base64Data = await downloadAsBase64(downloadUrl, getObsidianRequestUrl(), 'image/jpeg');
 
-          const currentKey = (typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession()?.noteId : '') || view?.lastResolvedSourcePath || '';
+          const currentKey = resolveActiveCardSourceKey(view);
           if (sourcePathKey && currentKey && sourcePathKey !== currentKey) {
-            const targetSession = view.getCardSessions()?.getSession(sourcePathKey);
-            if (targetSession && typeof targetSession.applyCoverFields === 'function') {
-              const prevMode = targetSession.getCoverFields?.()?.coverMode;
-              const fields = {
-                coverImageSource: 'unsplash',
-                coverImage: base64Data,
-              };
-              if (prevMode === 'none') {
-                fields.coverMode = 'adaptive';
+            const registry = typeof view.getCardSessions === 'function' ? view.getCardSessions() : null;
+            if (registry && typeof registry.has === 'function' && registry.has(sourcePathKey)) {
+              const targetSession = registry.getSession(sourcePathKey);
+              if (targetSession && typeof targetSession.applyCoverFields === 'function') {
+                const prevMode = targetSession.getCoverFields?.()?.coverMode;
+                const fields = {
+                  coverImageSource: 'unsplash',
+                  coverImage: base64Data,
+                };
+                if (prevMode === 'none') {
+                  fields.coverMode = 'adaptive';
+                }
+                targetSession.applyCoverFields(fields);
+                new Notice('已切换笔记，Unsplash 封面已保存至原笔记');
+              } else {
+                new Notice('已切换笔记，原笔记会话已失效');
               }
-              targetSession.applyCoverFields(fields);
-              new Notice('已切换笔记，Unsplash 封面已保存至原笔记');
             } else {
               new Notice('已切换笔记，原笔记会话已失效');
             }

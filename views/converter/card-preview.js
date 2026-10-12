@@ -299,7 +299,15 @@ async renderCardPreview() {
     });
   }
   // 封面初值（C01③）：随内容刷新；用户编辑过（dirty）时会话内自动忽略 seed
-  session.setCoverSeed(deriveCoverFields({ markdown, sourcePath }));
+  const aiConfig = (/** @type {any} */ (this).plugin)?.settings?.ai;
+  session.setCoverSeed(deriveCoverFields({
+    markdown,
+    sourcePath,
+    defaults: {
+      cardCoverMode: aiConfig?.cardCoverMode,
+      cardCoverImageStyle: aiConfig?.cardCoverImageStyle,
+    },
+  }));
   selfRecord.cardPreviewPendingInput = { markdown, sourcePath, sourcePathKey: sourcePath };
 
   const settled = await selfRecord.cardPreviewRunner.schedule();

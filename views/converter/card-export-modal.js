@@ -146,8 +146,13 @@ async startCardExport() {
   const session = this.getCardExportSession();
   if (!session) return;
   if (typeof session.hasActiveJob === 'function' && session.hasActiveJob()) {
-    this.renderCardExportModal();
-    return;
+    const controller = (/** @type {any} */ (this)).cardExportController;
+    if (controller && typeof controller.isPausedManifest === 'function' && controller.isPausedManifest()) {
+      await controller.cancel();
+    } else {
+      this.renderCardExportModal();
+      return;
+    }
   }
   // 导出范围：'all' 不带页 id；'selected' 用弹窗清单里的自选页（空选兜底：不建任务，表单本已禁用按钮）
   const scope = this.resolveCardExportScope();

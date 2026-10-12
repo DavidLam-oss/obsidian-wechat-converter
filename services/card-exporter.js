@@ -782,6 +782,7 @@ export function createCardExporter(deps) {
       retryFailedPages,
       cancel,
       getBatchInfo,
+      isPausedManifest: () => phase === 'paused-manifest',
     };
   }
 

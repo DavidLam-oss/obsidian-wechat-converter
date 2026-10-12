@@ -235,6 +235,61 @@ export async function fetchUnsplashCoverImage(options = {}) {
  * @param {Function} [options.requestUrl]
  * @returns {Promise<{ total: number, totalPages: number, results: Array<{ id: string, thumbUrl: string, regularUrl: string, rawUrl: string, authorName: string, authorUsername: string, authorLink: string, altDescription: string }> }>}
  */
+const UNSPLASH_UTM_PARAMS = 'utm_source=obsidian_wechat_converter&utm_medium=referral';
+
+/**
+ * 为 Unsplash 链接附加合规的 UTM 参数
+ * @param {string} url
+ * @returns {string}
+ */
+export function appendUnsplashUtm(url) {
+  const base = String(url || 'https://unsplash.com').trim();
+  if (!base) return `https://unsplash.com?${UNSPLASH_UTM_PARAMS}`;
+  const sep = base.includes('?') ? '&' : '?';
+  return `${base}${sep}${UNSPLASH_UTM_PARAMS}`;
+}
+
+/**
+ * 按照 Unsplash API 规范触发下载上报 (trigger download endpoint)
+ * @param {string} downloadLocation
+ * @param {string} apiKey
+ * @param {Function} [requestUrl]
+ * @returns {Promise<boolean>}
+ */
+export async function trackUnsplashDownload(downloadLocation, apiKey, requestUrl) {
+  const loc = (downloadLocation || '').trim();
+  const key = (apiKey || '').trim();
+  if (!loc || !key) return false;
+  const reqFn = resolveRequestExecutor(requestUrl);
+  if (!reqFn) return false;
+  try {
+    await reqFn({
+      url: loc,
+      method: 'GET',
+      headers: {
+        Authorization: `Client-ID ${key}`,
+      },
+      throw: false,
+    });
+    return true;
+  } catch (e) {
+    console.warn('[wechat-converter] Unsplash download tracking failed:', e);
+    return false;
+  }
+}
+
+/**
+ * 分页或批量检索 Unsplash 摄影图片候选列表
+ * @param {object} options
+ * @param {string} options.apiKey Unsplash Access Key
+ * @param {string} [options.query] 搜索关键词（为空时拉取精选随机图）
+ * @param {number} [options.page=1]
+ * @param {number} [options.perPage=12]
+ * @param {string} [options.ratioId='3:4'] 卡片比例
+ * @param {'portrait' | 'squarish' | 'landscape'} [options.orientation]
+ * @param {Function} [options.requestUrl]
+ * @returns {Promise<{ total: number, totalPages: number, results: Array<{ id: string, thumbUrl: string, regularUrl: string, rawUrl: string, authorName: string, authorUsername: string, authorLink: string, altDescription: string, downloadLocation: string }> }>}
+ */
 export async function fetchUnsplashPhotos(options = {}) {
   const apiKey = (options.apiKey || '').trim();
   if (!apiKey) {
@@ -281,6 +336,7 @@ export async function fetchUnsplashPhotos(options = {}) {
   const results = rawList.map((item) => {
     const urls = item?.urls || {};
     const user = item?.user || {};
+    const links = item?.links || {};
     return {
       id: String(item?.id || Math.random().toString(36).slice(2)),
       thumbUrl: String(urls.small || urls.thumb || urls.regular || ''),
@@ -288,8 +344,9 @@ export async function fetchUnsplashPhotos(options = {}) {
       rawUrl: String(urls.raw || urls.full || urls.regular || ''),
       authorName: String(user.name || user.username || '摄影师'),
       authorUsername: String(user.username || ''),
-      authorLink: String(user.links?.html || 'https://unsplash.com'),
+      authorLink: appendUnsplashUtm(user.links?.html || (user.username ? `https://unsplash.com/@${user.username}` : 'https://unsplash.com')),
       altDescription: String(item?.alt_description || item?.description || 'Unsplash 摄影图'),
+      downloadLocation: String(links.download_location || ''),
     };
   }).filter((item) => !!item.thumbUrl);
 

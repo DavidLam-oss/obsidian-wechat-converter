@@ -250,12 +250,31 @@ describe("清单：写入失败 → paused-manifest / manifestPending", () => {
     const exporter = buildExporter(ctx, fakeFs, failOnOrdinal(1));
     const paused = /** @type {any} */ (await exporter.exportCards(exportInput(ctx)));
     expect(paused.status).toBe("paused-manifest");
+    expect(exporter.isPausedManifest()).toBe(true);
     expect(ctx.session.hasActiveJob()).toBe(true);
 
     const cancelResult = await exporter.cancel();
     expect(cancelResult.status).toBe("canceled");
+    expect(exporter.isPausedManifest()).toBe(false);
     expect(ctx.session.hasActiveJob()).toBe(false);
     expect(ctx.session.getLastJob()?.state).toBe("canceled");
+  });
+
+  it("paused-manifest 状态可通过 retryManifest 与 resume 续跑完成剩余页", async () => {
+    const ctx = sessionWithSnapshot(3);
+    const fakeFs = createFakeFs({ failManifestOverwriteFrom: 1, failManifestOverwriteUntil: 1 });
+    const exporter = buildExporter(ctx, fakeFs, failOnOrdinal(1));
+    const paused = /** @type {any} */ (await exporter.exportCards(exportInput(ctx)));
+    expect(paused.status).toBe("paused-manifest");
+    expect(exporter.isPausedManifest()).toBe(true);
+
+    // 重试清单并续跑
+    const retry = await exporter.retryManifest();
+    expect(retry.ok).toBe(true);
+    const resumeResult = /** @type {any} */ (await exporter.resume());
+    expect(resumeResult.ok).toBe(true);
+    expect(exporter.isPausedManifest()).toBe(false);
+    expect(ctx.session.hasActiveJob()).toBe(false);
   });
 
   it("H5 回归：paused-manifest 期间发起新导出自动收尾旧任务，不被 export-in-progress 锁死", async () => {

@@ -194,6 +194,10 @@ toggleSettingsPanel() {
 switchPreviewMode(mode) {
   if (this.previewMode === mode) return;
   if (mode !== 'article' && mode !== 'sticker' && mode !== 'card') return;
+  if (this._modeRenderTimer) {
+    window.clearTimeout(this._modeRenderTimer);
+    this._modeRenderTimer = null;
+  }
   this.previewMode = mode;
   this.previewContainer?.removeClass('has-card-preview');
 
@@ -223,9 +227,9 @@ switchPreviewMode(mode) {
   this.applyModeActionVisibility();
 
   if (mode === 'sticker') {
-    this.runModeRenderWithDiagnostics('贴图', this.renderStickerPreview(), 8000);
+    this.runModeRenderWithDiagnostics('贴图', this.renderStickerPreview(), 8000, 'sticker');
   } else if (mode === 'card') {
-    this.runModeRenderWithDiagnostics('卡片', this.renderCardPreview(), 20000);
+    this.runModeRenderWithDiagnostics('卡片', this.renderCardPreview(), 20000, 'card');
   } else {
     this.convertCurrent(true);
   }
@@ -243,26 +247,46 @@ switchPreviewMode(mode) {
  * 「静默失败——模式选了、预览没变」。这里把两类异常变成可见症状：
  * ① promise 拒绝 → 预览区直接显示错误内容（同时 console.error 留全栈）；
  * ② 超时仍未落地 → 显示超时提示（识别「数据构建挂起」场景）。
+ * 增加 expectedMode 与定时器句柄隔离，杜绝模式切走后的幽灵横幅污染。
  * @param {string} label 模式名（用于错误文案）
  * @param {unknown} renderPromise 模式渲染 promise
  * @param {number} timeoutMs 看门狗超时
+ * @param {string} [expectedMode] 期待匹配的模式
  */
-runModeRenderWithDiagnostics(label, renderPromise, timeoutMs) {
+runModeRenderWithDiagnostics(label, renderPromise, timeoutMs, expectedMode) {
+  const targetMode = expectedMode || this.previewMode;
+  if (this._modeRenderTimer) {
+    window.clearTimeout(this._modeRenderTimer);
+    this._modeRenderTimer = null;
+  }
   let settled = false;
-  Promise.resolve(renderPromise)
-    .catch((error) => {
-      console.error(`[wechat-converter] ${label}渲染失败:`, error);
-      if (this.previewContainer && !settled) {
-        this.showModeRenderFailure(label, error instanceof Error ? error : new Error(String(error)));
-      }
-    })
-    .finally(() => { settled = true; });
-  window.setTimeout(() => {
-    if (!settled && this.previewMode !== 'article' && this.previewContainer) {
+  let timerId = null;
+
+  timerId = window.setTimeout(() => {
+    if (this._modeRenderTimer === timerId) {
+      this._modeRenderTimer = null;
+    }
+    if (!settled && this.previewMode === targetMode && this.previewContainer) {
       console.error(`[wechat-converter] ${label}渲染超过 ${Math.round(timeoutMs / 1000)}s 未落地（可能在数据构建处挂起）`);
       this.showModeRenderFailure(label, new Error(`渲染超过 ${Math.round(timeoutMs / 1000)} 秒仍未完成，可能是数据构建卡住。请把开发者控制台里 [wechat-converter] 开头的输出发给开发者。`));
     }
   }, timeoutMs);
+  this._modeRenderTimer = timerId;
+
+  Promise.resolve(renderPromise)
+    .catch((error) => {
+      console.error(`[wechat-converter] ${label}渲染失败:`, error);
+      if (!settled && this.previewMode === targetMode && this.previewContainer) {
+        this.showModeRenderFailure(label, error instanceof Error ? error : new Error(String(error)));
+      }
+    })
+    .finally(() => {
+      settled = true;
+      if (this._modeRenderTimer === timerId) {
+        window.clearTimeout(timerId);
+        this._modeRenderTimer = null;
+      }
+    });
 }
 ,
 

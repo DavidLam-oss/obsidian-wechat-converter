@@ -48,6 +48,7 @@ import {
 } from "../apple-style-view-shared.js";
 import { showEditAiProviderModal } from "./ai-provider-modal.js";
 import { renderSectionHeader } from "./platform-wall.js";
+import { AI_CARD_COVER_STYLES } from "../../services/card-ai-image.js";
 
 export const UNSPLASH_API_KEY_GUIDE_URL = "https://xiaoweibox.top/chats/unsplash-api-key";
 
@@ -470,9 +471,24 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
     .addDropdown((dropdown) => {
       dropdown.addOption("mixed", "图文混排（AI 背景 + 插件精准中文排版，推荐）");
       dropdown.addOption("full-bleed", "纯全图封面（AI 生成纯海报，无文字层）");
+      dropdown.addOption("adaptive", "自适应融入主题（卡片主题推荐版式）");
       dropdown.setValue(tab.plugin.settings.ai.cardCoverMode || "mixed");
       dropdown.onChange(async (value) => {
         tab.plugin.settings.ai.cardCoverMode = value;
+        await tab.plugin.saveSettings();
+      });
+    });
+
+  new SettingCtor(containerEl)
+    .setName("默认 AI 配图风格")
+    .setDesc("AI 封面生图时的默认预设画面风格。")
+    .addDropdown((dropdown) => {
+      AI_CARD_COVER_STYLES.forEach((style) => {
+        dropdown.addOption(style.id, style.name);
+      });
+      dropdown.setValue(tab.plugin.settings.ai.cardCoverImageStyle || "3d-clay");
+      dropdown.onChange(async (value) => {
+        tab.plugin.settings.ai.cardCoverImageStyle = value;
         await tab.plugin.saveSettings();
       });
     });

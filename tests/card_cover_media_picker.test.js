@@ -81,6 +81,9 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
                 links: { html: 'https://unsplash.com/@zhangsan' },
               },
               alt_description: '壮丽山河风景',
+              links: {
+                download_location: 'https://api.unsplash.com/photos/photo-1/download',
+              },
             },
           ],
         },
@@ -109,9 +112,10 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
         thumbUrl: 'https://images.unsplash.com/thumb-1',
         regularUrl: 'https://images.unsplash.com/regular-1',
         rawUrl: 'https://images.unsplash.com/raw-1',
+        downloadLocation: 'https://api.unsplash.com/photos/photo-1/download',
         authorName: '摄影师张三',
         authorUsername: 'zhangsan',
-        authorLink: 'https://unsplash.com/@zhangsan',
+        authorLink: 'https://unsplash.com/@zhangsan?utm_source=obsidian_wechat_converter&utm_medium=referral',
         altDescription: '壮丽山河风景',
       });
     });

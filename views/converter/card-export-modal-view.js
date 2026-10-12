@@ -75,6 +75,7 @@ const EXPORT_STATE_LABELS = {
   partial: '部分完成',
   failed: '导出失败',
   canceled: '已取消',
+  'paused-manifest': '导出已暂停（结果记录失败）',
 };
 
 /** 单页结果状态 → 标签 */
@@ -94,6 +95,7 @@ const EXPORT_STATE_TONES = {
   partial: 'warning',
   failed: 'error',
   canceled: 'muted',
+  'paused-manifest': 'warning',
 };
 
 /** 终态状态区的语义图标（Obsidian lucide 图标名） */
@@ -102,6 +104,7 @@ const EXPORT_STATE_ICONS = {
   partial: 'alert-triangle',
   failed: 'x',
   canceled: 'slash',
+  'paused-manifest': 'alert-triangle',
 };
 
 /**
@@ -408,8 +411,10 @@ renderCardExportPreparing(body, stage) {
  * @param {any} body @param {any} job
  */
 renderCardExportJob(body, job) {
-  const state = String(job.state || 'running');
-  const running = state === 'running' || state === 'canceling';
+  const controller = (/** @type {any} */ (this)).cardExportController;
+  const isPaused = Boolean(controller && typeof controller.isPausedManifest === 'function' && controller.isPausedManifest());
+  const state = isPaused ? 'paused-manifest' : String(job.state || 'running');
+  const running = !isPaused && (state === 'running' || state === 'canceling');
   const pageIds = Array.isArray(job.pageIds) ? job.pageIds : [];
   const total = pageIds.length;
   const results = Array.isArray(job.results) ? job.results : [];
@@ -445,7 +450,7 @@ renderCardExportJob(body, job) {
   }
 
   // 结果定位（终态且已落账批次信息时）
-  if (!running) this.renderCardExportResultLinks(body);
+  if (!running && state !== 'paused-manifest') this.renderCardExportResultLinks(body);
 
   // 进度条：只在进行中展示（终态的张数写在状态区，不再重复）
   if (running) {
@@ -475,10 +480,10 @@ renderCardExportJob(body, job) {
     return;
   }
 
-  // 终态：恢复类操作（重试）放主区，导航类操作放页脚
-  if (state === 'partial' || state === 'failed') {
+  // 终态 / 暂停态：恢复类操作（重试）放主区，导航类操作放页脚
+  if (state === 'partial' || state === 'failed' || state === 'paused-manifest') {
     const actions = body.createEl('div', { cls: 'icard-export-actions' });
-    if (failed > 0) {
+    if (failed > 0 && state !== 'paused-manifest') {
       const retryBtn = actions.createEl('button', {
         cls: 'icard-export-retry',
         text: '重试失败页',
@@ -487,14 +492,25 @@ renderCardExportJob(body, job) {
       retryBtn.addEventListener('click', () => { void this.retryCardExportFailedPages(); });
     }
     const manifestBtn = actions.createEl('button', {
-      cls: 'icard-export-retry-manifest',
-      text: '重试结果记录',
+      cls: 'icard-export-retry-manifest mod-cta',
+      text: state === 'paused-manifest' ? '重试记录清单并继续' : '重试结果记录',
       attr: { type: 'button' },
     });
     manifestBtn.addEventListener('click', () => { void this.retryCardExportManifest(); });
   }
 
   const footer = body.createEl('div', { cls: 'icard-export-footer' });
+  if (state === 'paused-manifest') {
+    footer.createEl('span', { cls: 'icard-export-footer-hint', text: '清单修复后可继续剩余页导出' });
+    const cancelBtn = footer.createEl('button', {
+      cls: 'icard-export-cancel',
+      text: '取消导出',
+      attr: { type: 'button' },
+    });
+    cancelBtn.addEventListener('click', () => this.cancelCardExport());
+    return;
+  }
+
   // 结果已看完 → 允许换倍率/目录再导一批（否则重开永远停在结果页，无法二次导出）
   const againBtn = footer.createEl('button', {
     cls: 'icard-export-again',
@@ -686,6 +702,9 @@ function appendBreakablePath(el, text) {
  */
 function jobStatusDescription({ state, running, progressEvent, currentOrdinal, saved, total, failed }) {
   if (!running) {
+    if (state === 'paused-manifest') {
+      return `清单写入失败，已暂停后续页（已存 ${saved} 张）；可重试记录清单并继续导出，或取消导出。`;
+    }
     const base = `${saved} 张卡片已保存`;
     if (failed > 0) return `${base}，${failed} 张失败`;
     if (state === 'canceled') return `已在保存 ${saved} 张后取消`;

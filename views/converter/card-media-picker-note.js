@@ -60,6 +60,27 @@ export function resolveNoteMarkdownAndPathSync(view) {
 }
 
 /**
+ * 获取当前卡片视图活跃的笔记标识 key（统一为文档 sourcePath 规范化路径字符串）
+ * @param {any} view
+ * @returns {string}
+ */
+export function resolveActiveCardSourceKey(view) {
+  const pendingKey = view?.cardPreviewPendingInput?.sourcePathKey || view?.cardPreviewPendingInput?.sourcePath;
+  if (pendingKey && typeof pendingKey === 'string') return pendingKey.trim();
+
+  const lastPath = view?.lastResolvedSourcePath;
+  if (lastPath && typeof lastPath === 'string') return lastPath.trim();
+
+  if (typeof view?.getCardSettingsSession === 'function') {
+    const session = view.getCardSettingsSession();
+    const sessPath = session?.getSourcePath?.() || session?.sourcePath;
+    if (sessPath && typeof sessPath === 'string') return sessPath.trim();
+  }
+
+  return '';
+}
+
+/**
  * 构建笔记插图与本地上传 Tab
  * @param {object} options
  * @param {HTMLElement} options.container 宿主内容容器

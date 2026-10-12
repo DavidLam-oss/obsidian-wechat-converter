@@ -19,6 +19,7 @@ import { AI_CARD_COVER_STYLES } from '../../services/card-ai-image.js';
 import { COVER_MODE_LABELS } from '../../services/card-cover-model.js';
 import { resolveVaultResourceSrc } from '../../services/image-source-utils.js';
 import { showCardMediaPickerModal } from './card-media-picker-modal.js';
+import { resolveActiveCardSourceKey } from './card-media-picker-note.js';
 
 /**
  * 构建卡片侧边栏「封面设置」子面板
@@ -72,33 +73,33 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
 
     // 2.2 唤起独立选图工作台
     const openMediaPicker = (initialTab = 'note') => {
-      const activeSession = typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession() : null;
-      const targetSourcePathKey = String(
-        view.cardPreviewPendingInput?.sourcePathKey || activeSession?.noteId || '',
-      );
+      const targetSourcePathKey = resolveActiveCardSourceKey(view);
 
       showCardMediaPickerModal({
         view,
         sourcePathKey: targetSourcePathKey,
         initialTab,
         onSelect: ({ dataUrl, source }) => {
-          const currentSourcePathKey = String(
-            view.cardPreviewPendingInput?.sourcePathKey || (typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession()?.noteId : '') || '',
-          );
+          const currentSourcePathKey = resolveActiveCardSourceKey(view);
 
           if (targetSourcePathKey && currentSourcePathKey && targetSourcePathKey !== currentSourcePathKey) {
-            const targetSession = view.getCardSessions()?.getSession(targetSourcePathKey);
-            if (targetSession && typeof targetSession.applyCoverFields === 'function') {
-              const prevMode = targetSession.getCoverFields?.()?.coverMode;
-              const fields = {
-                coverImageSource: source,
-                coverImage: dataUrl,
-              };
-              if (prevMode === 'none') {
-                fields.coverMode = 'adaptive';
+            const registry = typeof view.getCardSessions === 'function' ? view.getCardSessions() : null;
+            if (registry && typeof registry.has === 'function' && registry.has(targetSourcePathKey)) {
+              const targetSession = registry.getSession(targetSourcePathKey);
+              if (targetSession && typeof targetSession.applyCoverFields === 'function') {
+                const prevMode = targetSession.getCoverFields?.()?.coverMode;
+                const fields = {
+                  coverImageSource: source,
+                  coverImage: dataUrl,
+                };
+                if (prevMode === 'none') {
+                  fields.coverMode = 'adaptive';
+                }
+                targetSession.applyCoverFields(fields);
+                new Notice('已切换笔记，所选封面已保存至原笔记');
+              } else {
+                new Notice('已切换笔记，原笔记会话已失效');
               }
-              targetSession.applyCoverFields(fields);
-              new Notice('已切换笔记，所选封面已保存至原笔记');
             } else {
               new Notice('已切换笔记，原笔记会话已失效');
             }

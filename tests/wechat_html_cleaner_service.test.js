@@ -151,6 +151,28 @@ describe('Wechat HTML Cleaner Service', () => {
       expect(output).toContain('核心指标：');
       expect(output).toContain('准确率达到 99%');
     });
+
+    it('遇列表内代码块/表格等块级元素，解构为同级兄弟并保持缩进，避免 p 标签提前闭合', () => {
+      const input = `
+        <ul>
+          <li>示例文本：<pre><code>const a = 1;</code></pre>尾部说明</li>
+        </ul>
+      `;
+      const output = cleanHtmlForDraft(input);
+
+      expect(output).not.toContain('<ul');
+      expect(output).not.toContain('<li');
+      // pre 不应被包裹在 p 内部
+      const dom = document.createElement('div');
+      dom.innerHTML = output;
+      expect(dom.querySelector('p pre')).toBeNull();
+      // pre 作为同级存在并具有 margin-left 缩进
+      expect(output).toContain('<pre style=" margin-left: 20px;">');
+      // 首段有标点与文本
+      expect(output).toContain('<span>• </span>示例文本：');
+      // 尾段为独立段落
+      expect(output).toContain('尾部说明');
+    });
   });
 });
 

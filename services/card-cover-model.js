@@ -324,7 +324,7 @@ export function normalizeFrontmatterImagePath(raw) {
  * 从笔记内容派生封面初值：title 取 frontmatter `title` 否则文件名；
  * excerpt 取 `description` 或 `excerpt`；**date 恒为空**（不预填，由用户自己填）；
  * 封面配图若未在 Frontmatter 指定，则自动提取正文首张内容图并启用自适应排版。
- * @param {{ markdown?: string, sourcePath?: string }} input
+ * @param {{ markdown?: string, sourcePath?: string, defaults?: { cardCoverMode?: 'none' | 'adaptive' | 'mixed' | 'full-bleed' | string, cardCoverImageStyle?: string } }} [input]
  * @returns {CardCoverFields}
  */
 export function deriveCoverFields(input = {}) {
@@ -352,7 +352,7 @@ export function deriveCoverFields(input = {}) {
   }
 
   // 2. 封面版式（coverMode）初值派生
-  let coverMode = 'none';
+  let coverMode = /** @type {'none' | 'adaptive' | 'mixed' | 'full-bleed'} */ ('none');
   if (
     meta.coverMode === 'none' ||
     meta.coverMode === 'full-bleed' ||
@@ -361,9 +361,16 @@ export function deriveCoverFields(input = {}) {
   ) {
     coverMode = meta.coverMode;
   } else {
-    // Frontmatter 未指定时：有封面图则默认启用自适应版式，无图则保持极简纯文字
-    coverMode = coverImage ? 'adaptive' : 'none';
+    // Frontmatter 未指定时：有封面图优先使用全局默认版式，其次回落自适应版式；无图则保持极简纯文字
+    const defaultsObj = input.defaults && typeof input.defaults === 'object' ? input.defaults : null;
+    const defaultMode = defaultsObj?.cardCoverMode;
+    const isValidDefaultMode = defaultMode === 'mixed' || defaultMode === 'full-bleed' || defaultMode === 'adaptive';
+    coverMode = coverImage ? (isValidDefaultMode ? defaultMode : 'adaptive') : 'none';
   }
+
+  const defaultsObj = input.defaults && typeof input.defaults === 'object' ? input.defaults : null;
+  const defaultStyle = defaultsObj?.cardCoverImageStyle;
+  const coverImageStyle = String(meta.coverStyle || meta.coverImageStyle || defaultStyle || '3d-clay').trim();
 
   return {
     title,
@@ -372,7 +379,7 @@ export function deriveCoverFields(input = {}) {
     excerpt,
     coverImage,
     coverMode,
-    coverImageStyle: String(meta.coverStyle || '3d-clay').trim(),
+    coverImageStyle,
     coverPrompt: String(meta.coverPrompt || '').trim(),
     coverImageSource,
   };

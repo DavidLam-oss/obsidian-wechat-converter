@@ -59,7 +59,67 @@ function getPluginSettings(plugin) {
 }
 
 /**
- * 递归深度就地同步对象属性，保持目标根对象与嵌套子对象/数组的内存引用稳定
+ * 递归就地同步数组元素：若元素为对象且具备 id，按 id 匹配并原地合并；无 id 则按位置匹配；
+ * 保持持有数组元素（如 ai.providers[i]）的 UI 内存引用不丢失。
+ * @param {unknown[]} tgtArr
+ * @param {unknown[]} srcArr
+ */
+function syncArrayInPlace(tgtArr, srcArr) {
+  /** @type {Map<string, Record<string, unknown>>} */
+  const existingById = new Map();
+  /** @type {Array<Record<string, unknown>>} */
+  const existingOthers = [];
+
+  for (const item of tgtArr) {
+    if (item && typeof item === 'object' && !Array.isArray(item)) {
+      const obj = /** @type {Record<string, unknown>} */ (item);
+      if (obj.id !== undefined && obj.id !== null) {
+        existingById.set(String(obj.id), obj);
+      } else {
+        existingOthers.push(obj);
+      }
+    }
+  }
+
+  const newItems = [];
+  for (let i = 0; i < srcArr.length; i++) {
+    const srcItem = srcArr[i];
+    if (srcItem && typeof srcItem === 'object' && !Array.isArray(srcItem)) {
+      const srcObj = /** @type {Record<string, unknown>} */ (srcItem);
+      /** @type {Record<string, unknown> | null} */
+      let matched = null;
+      if (srcObj.id !== undefined && srcObj.id !== null) {
+        matched = existingById.get(String(srcObj.id)) || null;
+        if (matched) {
+          existingById.delete(String(srcObj.id));
+        }
+      } else if (existingOthers.length > 0) {
+        matched = existingOthers.shift() || null;
+      }
+
+      if (matched) {
+        syncInPlace(matched, srcObj);
+        newItems.push(matched);
+      } else {
+        newItems.push(JSON.parse(JSON.stringify(srcObj)));
+      }
+    } else if (Array.isArray(srcItem)) {
+      const matched = Array.isArray(tgtArr[i]) ? tgtArr[i] : [];
+      syncArrayInPlace(matched, srcItem);
+      newItems.push(matched);
+    } else {
+      newItems.push(srcItem);
+    }
+  }
+
+  tgtArr.length = newItems.length;
+  for (let i = 0; i < newItems.length; i++) {
+    tgtArr[i] = newItems[i];
+  }
+}
+
+/**
+ * 递归深度就地同步对象属性，保持目标根对象与嵌套子对象/数组及数组内对象的内存引用稳定
  * @param {Record<string, unknown>} target
  * @param {Record<string, unknown>} source
  */
@@ -91,11 +151,8 @@ function syncInPlace(target, source) {
       // 嵌套纯对象就地同步
       syncInPlace(tgtVal, srcVal);
     } else if (Array.isArray(srcVal) && Array.isArray(tgtVal)) {
-      // 数组清空并重新填入，保持数组本身引用不变
-      tgtVal.length = 0;
-      srcVal.forEach((item) => {
-        tgtVal.push(item && typeof item === 'object' ? JSON.parse(JSON.stringify(item)) : item);
-      });
+      // 数组及数组内元素就地同步
+      syncArrayInPlace(tgtVal, srcVal);
     } else {
       // 基本类型或结构变更时直接赋值（对象深拷贝防污染）
       target[key] = srcVal && typeof srcVal === 'object' ? JSON.parse(JSON.stringify(srcVal)) : srcVal;

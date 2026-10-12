@@ -27,7 +27,7 @@ import {
   resolveAiProvider,
   isAiProviderRunnable,
 } from '../../services/ai-layout/providers.js';
-import { resolveNoteMarkdownAndPathSync } from './card-media-picker-note.js';
+import { resolveNoteMarkdownAndPathSync, resolveActiveCardSourceKey } from './card-media-picker-note.js';
 
 /**
  * 提取文章摘要作为核心内容初值
@@ -173,7 +173,7 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
       return;
     }
 
-    const initialSourceKey = sourcePathKey || session?.noteId || view?.lastResolvedSourcePath || '';
+    const initialSourceKey = resolveActiveCardSourceKey(view) || sourcePathKey || '';
 
     extractBtn.disabled = true;
     textSpan.textContent = '提炼中...';
@@ -185,7 +185,7 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
         content: markdown || docExcerpt,
       });
 
-      const currentSourceKey = (typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession()?.noteId : '') || view?.lastResolvedSourcePath || '';
+      const currentSourceKey = resolveActiveCardSourceKey(view);
       if (initialSourceKey && currentSourceKey && initialSourceKey !== currentSourceKey) {
         new Notice('检测到已切换笔记，已丢弃提炼观点');
         return;
@@ -302,7 +302,7 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
   if (!view._tempNoteKey) {
     view._tempNoteKey = `temp_${Date.now()}`;
   }
-  const noteKey = sourcePathKey || session?.noteId || view?.lastResolvedSourcePath || view._tempNoteKey;
+  const noteKey = resolveActiveCardSourceKey(view) || sourcePathKey || view._tempNoteKey;
 
   view._cardAiImageHistory = view._cardAiImageHistory || {};
 
@@ -486,7 +486,7 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
       }, 400);
 
       // 检查切篇状态
-      const currentNoteKey = (typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession()?.noteId : '') || view?.lastResolvedSourcePath || '';
+      const currentNoteKey = resolveActiveCardSourceKey(view);
       const isNoteSwitched = noteKey && currentNoteKey && noteKey !== currentNoteKey;
 
       // 压入发起时 noteKey 的历史列表首位（避免重复且不超过上限）
@@ -508,21 +508,28 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
 
       if (isNoteSwitched) {
         // 用户切到了另一篇笔记：回写原笔记 session，严禁污染当前活动笔记！
-        const targetSession = view.getCardSessions()?.getSession(noteKey);
-        if (targetSession && typeof targetSession.applyCoverFields === 'function') {
-          const prevMode = targetSession.getCoverFields?.()?.coverMode;
-          const fields = {
-            coverImageSource: 'ai',
-            coverImage: dataUrl,
-            coverPrompt: prompt,
-            coverImageStyle: selectedStyleId,
-          };
-          if (prevMode === 'none') {
-            fields.coverMode = 'adaptive';
+        const registry = typeof view.getCardSessions === 'function' ? view.getCardSessions() : null;
+        if (registry && typeof registry.has === 'function' && registry.has(noteKey)) {
+          const targetSession = registry.getSession(noteKey);
+          if (targetSession && typeof targetSession.applyCoverFields === 'function') {
+            const prevMode = targetSession.getCoverFields?.()?.coverMode;
+            const fields = {
+              coverImageSource: 'ai',
+              coverImage: dataUrl,
+              coverPrompt: prompt,
+              coverImageStyle: selectedStyleId,
+            };
+            if (prevMode === 'none') {
+              fields.coverMode = 'adaptive';
+            }
+            targetSession.applyCoverFields(fields);
+            new Notice('AI 封面生成完毕！检测到已切换笔记，封面已保存至原笔记。');
+          } else {
+            new Notice('AI 封面生成完毕！检测到已切换笔记，原笔记会话已失效。');
           }
-          targetSession.applyCoverFields(fields);
+        } else {
+          new Notice('AI 封面生成完毕！检测到已切换笔记，原笔记会话已失效。');
         }
-        new Notice('AI 封面生成完毕！检测到已切换笔记，封面已保存至原笔记。');
         return;
       }
 

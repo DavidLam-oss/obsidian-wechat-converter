@@ -332,10 +332,18 @@ async createCardCaptureCallback(input) {
     pagePadding: Number(settings.pagePadding),
   };
   // 封面字段：优先取会话当前值（含用户编辑）；无会话时按内容派生（C01③）
+  const aiConfig = (/** @type {any} */ (this).plugin)?.settings?.ai;
   const coverFields = settings.coverEnabled === true
     ? (input.coverFields && typeof input.coverFields === 'object'
         ? input.coverFields
-        : deriveCoverFields({ markdown, sourcePath: String(input.sourcePath || '') }))
+        : deriveCoverFields({
+            markdown,
+            sourcePath: String(input.sourcePath || ''),
+            defaults: {
+              cardCoverMode: aiConfig?.cardCoverMode,
+              cardCoverImageStyle: aiConfig?.cardCoverImageStyle,
+            },
+          }))
     : null;
 
   const exportConsumer = {};
