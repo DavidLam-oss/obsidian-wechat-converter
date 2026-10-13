@@ -113,9 +113,9 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
     const taglineEl = containerEl.querySelector('.apple-settings-about-tagline');
     expect(taglineEl?.textContent).toContain('Obsidian 与全网发布 (Wechat Converter)');
 
-    // 检查是否有 4 个快捷操作链接
+    // 检查是否有 5 个快捷操作链接（含检查更新）
     const actionLinks = containerEl.querySelectorAll('.apple-settings-about-link');
-    expect(actionLinks.length).toBe(4);
+    expect(actionLinks.length).toBe(5);
 
     // 检查赞助二维码卡片（微信 + 支付宝）
     const sponsorCards = containerEl.querySelectorAll('.apple-settings-sponsor-card');
@@ -123,12 +123,12 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
 
     // 检查赞助鸣谢榜
     const fameItems = containerEl.querySelectorAll('.apple-settings-fame-item');
-    expect(fameItems.length).toBe(3);
+    expect(fameItems.length).toBe(4);
 
     const names = Array.from(containerEl.querySelectorAll('.apple-settings-fame-item-name')).map(
       (el) => el.textContent,
     );
-    expect(names).toEqual(['*哥', 'Tony', '林大豆豆']);
+    expect(names).toEqual(['*哥', 'Tony', '林大豆豆', '杭小宝']);
 
     const messages = Array.from(
       containerEl.querySelectorAll('.apple-settings-fame-item-message'),
@@ -136,12 +136,25 @@ describe('Settings - About Tab & Sponsor Hall of Fame', () => {
     expect(messages).toContain('“公众号排版助手真不错”');
     expect(messages).toContain('“真方便呀”');
     expect(messages).toContain('“生命不息，折腾不止”');
+    expect(messages).toContain('“终于有 Markdown 编辑同步了，加油！”');
 
-    // 检查交流讨论群模块
+    // 检查配置安全与受控快照模块
+    const backupCard = containerEl.querySelector('.apple-settings-backup-card');
+    expect(backupCard).not.toBeNull();
+    expect(backupCard?.textContent).toContain('受控快照');
+    expect(backupCard?.textContent).toContain('从 .bak 快照恢复配置');
+
+    // 检查 Obsidian 与 AI 交流社群模块
     const communityCard = containerEl.querySelector('.apple-settings-community-card');
     expect(communityCard).not.toBeNull();
     expect(communityCard?.textContent).toContain('linauwawa');
     expect(communityCard?.textContent).toContain('400 人');
+    expect(communityCard?.textContent).toContain('Obsidian 与 AI');
+    expect(communityCard?.textContent).toContain('OB 入群');
+
+    const authorQrImg = containerEl.querySelector('.apple-settings-community-qr-img');
+    expect(authorQrImg).not.toBeNull();
+    expect(authorQrImg?.src).toContain('data:image/webp;base64,');
 
     const copyBtn = containerEl.querySelector('.apple-settings-community-copy-btn');
     expect(copyBtn?.textContent).toBe('复制微信号');

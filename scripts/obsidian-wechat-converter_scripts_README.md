@@ -2,7 +2,7 @@
 
 ## 核心功能
 
-承载仓库构建、生成、扫描、发布校验和性能测量脚本。
+承载仓库构建、生成、扫描、发布校验、体量基线和性能测量脚本。
 
 ## 输入
 
@@ -19,6 +19,10 @@
 ## 依赖
 
 Node.js、esbuild、package.json scripts、OpenPRD/Obsidian scan 规则。
+
+## 关键文件
+
+- `check-file-size-baseline.mjs` + `file-size-baseline.json`：体量基线守卫。已冻结文件（≥800 行的第一方源码）的行数上限只允许下调，禁止上涨；未登记的新文件不得越过 800 软线。`--update` 只能收紧基线，不能放宽。已挂进 `scan:guard`。
 
 ## 维护规则
 

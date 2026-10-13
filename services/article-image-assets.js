@@ -25,6 +25,8 @@
 - 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
 */
 
+import { resolveVaultImageFile } from './image-source-utils.js';
+
 const DEFAULT_MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const DEFAULT_MAX_TOTAL_IMAGE_SIZE_BYTES = 50 * 1024 * 1024;
 
@@ -142,18 +144,6 @@ function normalizeAbsoluteLocalPath(value) {
   return pathValue;
 }
 
-/** @param {unknown} filePath */
-function getDirname(filePath) {
-  const normalized = normalizePath(filePath);
-  const index = normalized.lastIndexOf('/');
-  return index > 0 ? normalized.slice(0, index) : '';
-}
-
-/** @param {...unknown} parts */
-function joinVaultPath(...parts) {
-  return normalizePath(parts.filter(Boolean).join('/'));
-}
-
 /** @param {unknown} filename */
 function getExtension(filename) {
   const ext = String(filename || '').split('?')[0].split('#')[0].split('.').pop();
@@ -178,6 +168,11 @@ function isAssetImageSrc(src) {
 /** @param {unknown} src */
 function isFileUrl(src) {
   return /^file:\/\//i.test(String(src || '').trim());
+}
+
+/** @param {unknown} src */
+function isWindowsDrivePath(src) {
+  return /^[a-zA-Z]:[\\/]/.test(String(src || '').trim());
 }
 
 /** @param {unknown} value */
@@ -596,43 +591,9 @@ function getNoteSourcePath(noteFile) {
 function resolveVaultFile(app, src, noteFile) {
   const appRef = asApp(app);
   if (!appRef || !src) return null;
-  const decoded = String((() => {
-    try {
-      return decodeURI(src);
-    } catch {
-      return src;
-    }
-  })() || '');
   const sourcePath = getNoteSourcePath(noteFile);
-  const metadataCache = appRef.metadataCache;
-  const vault = appRef.vault;
-  const lookupSrc = getVaultRelativePathFromLocalPath(appRef, decoded) || decoded;
-
-  try {
-    const linked = asVaultFile(metadataCache?.getFirstLinkpathDest?.(lookupSrc, sourcePath));
-    if (linked?.extension) return linked;
-  } catch {
-    // Fall through to path-based candidates.
-  }
-
-  /** @type {string[]} */
-  const candidates = [];
-  const normalized = normalizePath(lookupSrc);
-  if (normalized) candidates.push(normalized);
-  if (sourcePath && normalized && !normalized.startsWith('/')) {
-    const noteDir = getDirname(sourcePath);
-    candidates.push(joinVaultPath(noteDir, normalized));
-  }
-
-  for (const candidate of candidates) {
-    try {
-      const file = asVaultFile(vault?.getAbstractFileByPath?.(candidate));
-      if (file?.extension) return file;
-    } catch {
-      // Try the next candidate.
-    }
-  }
-  return null;
+  const found = /** @type {unknown} */ (resolveVaultImageFile(appRef, String(src || ''), sourcePath));
+  return asVaultFile(found);
 }
 
 /**
@@ -1013,7 +974,7 @@ async function resolveArticleImages(markdown, noteFile, options = {}) {
     const original = String(originalSrc || '');
     if (!trimmed) return { src: trimmed };
     if (!isLocalLikeSrc(trimmed)) return { src: trimmed };
-    if (!isFileUrl(trimmed) && /^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
+    if (!isFileUrl(trimmed) && !isWindowsDrivePath(trimmed) && /^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
       return {
         src: trimmed,
         warning: createWarning('image_unsupported_protocol', '不支持的图片地址', { src: original }),

@@ -10,6 +10,7 @@
 - `markdown-it` 和相关插件负责 Markdown 解析与扩展渲染。
 - `markdown-it-mathjax3` 与单独构建的 `lib/mathjax-plugin.js` 支撑数学公式。
 - `@noble/hashes` 提供桌面端和移动端一致的纯 JavaScript 哈希能力，用于浏览器桥接凭证指纹。
+- `modern-screenshot@4.7.0` 作为图片卡片导出的唯一截图引擎（A06 选型定案，动态 import 加载，具备 0 失败稳定性与跨域内联支持）。
 - `highlight.js` 支撑代码高亮。
 - `jsdom`、`vitest` 和测试 helper 支撑单元测试。
 - `typescript`、`@typescript-eslint/parser` 和 `@typescript-eslint/eslint-plugin` 为 JavaScript/JSDoc 提供类型感知检查；`project-types.js` 与 `project-*.d.ts` 只在分析阶段生效。

@@ -1,0 +1,171 @@
+/**
+ * ## 核心功能
+
+小红书卡片封面独立选图工作台（Media Picker Modal）宿主弹窗。
+承载 Tab 状态机调度（Unsplash 摄影 / 笔记与本地 / AI 生图）、尺寸自适应与图片选定落地回调。
+
+## 设计原则
+
+- 严格遵守无 emoji 规范；
+- 遵守单文件软线 800 行约束；
+- 使用 Obsidian 原生 Modal 与 DOM 操作 API（无 innerHTML）。
+*/
+
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- reason: Modal and view instances untyped in pure JS */
+
+import { createObsidianModal } from '../apple-style-view-shared.js';
+import { renderUnsplashMediaPickerTab } from './card-media-picker-unsplash.js';
+import { renderNoteMediaPickerTab } from './card-media-picker-note.js';
+import { renderAiMediaPickerTab } from './card-media-picker-ai.js';
+
+let lastActiveTabId = 'note';
+
+/**
+ * 弹出封面独立选图工作台
+ * @param {object} options
+ * @param {any} options.view AppleStyleView 实例
+ * @param {string} [options.sourcePathKey] 发起时的笔记标识
+ * @param {string} [options.initialTab] 初始 Tab ID ('note' | 'ai' | 'unsplash')
+ * @param {(result: { dataUrl: string, source: string }) => void} options.onSelect 选定图片后的回调
+ */
+export function showCardMediaPickerModal({ view, sourcePathKey, initialTab, onSelect }) {
+  const modal = createObsidianModal(view.app);
+  modal.modalEl.addClass('card-media-picker-modal');
+
+  // 清空默认内边距
+  modal.contentEl.empty();
+
+  // 资源与任务清理器队列
+  const cleanups = [];
+  const originalOnClose = typeof modal.onClose === 'function' ? modal.onClose.bind(modal) : null;
+  modal.onClose = () => {
+    cleanups.forEach((fn) => {
+      try {
+        fn();
+      } catch {
+        // safe ignore
+      }
+    });
+    cleanups.length = 0;
+    if (typeof originalOnClose === 'function') {
+      originalOnClose();
+    }
+  };
+
+  // 1. 顶部 Header 与 Tab 切换器
+  const header = modal.contentEl.createDiv({ cls: 'card-media-picker-header' });
+  header.createDiv({ cls: 'card-media-picker-title', text: '选择封面配图' });
+
+  const tabsWrap = header.createDiv({ cls: 'card-media-picker-tabs' });
+  const tabs = [
+    { id: 'note', label: '笔记与本地' },
+    { id: 'ai', label: 'AI 生图' },
+    { id: 'unsplash', label: 'Unsplash 摄影' },
+  ];
+
+  let currentTab = initialTab || lastActiveTabId || 'note';
+
+  // 2. 主体内容容器与独立 Tab 面板（保持各自渲染状态，切换时不销毁重载）
+  const contentContainer = modal.contentEl.createDiv({ cls: 'card-media-picker-content' });
+  const panes = {
+    note: contentContainer.createDiv({ cls: 'card-media-picker-pane card-media-picker-pane--note' }),
+    ai: contentContainer.createDiv({ cls: 'card-media-picker-pane card-media-picker-pane--ai' }),
+    unsplash: contentContainer.createDiv({ cls: 'card-media-picker-pane card-media-picker-pane--unsplash' }),
+  };
+  const renderedPanes = new Set();
+
+  const openPluginSettings = () => {
+    modal.close();
+    const settingApi = view.app?.setting;
+    if (settingApi && typeof settingApi.open === 'function') {
+      settingApi.open();
+      const tabId = view.plugin?.manifest?.id || 'obsidian-wechat-converter';
+      if (typeof settingApi.openTabById === 'function') {
+        settingApi.openTabById(tabId);
+      }
+    }
+  };
+
+  const handleSelect = (result) => {
+    if (typeof onSelect === 'function') {
+      onSelect(result);
+    }
+    modal.close();
+  };
+
+  const tabButtons = [];
+
+  const switchTab = (tabId) => {
+    currentTab = tabId;
+    lastActiveTabId = tabId;
+
+    tabButtons.forEach(({ id, btn }) => {
+      if (id === tabId) {
+        btn.addClass('is-active');
+      } else {
+        btn.removeClass('is-active');
+      }
+    });
+
+    Object.entries(panes).forEach(([id, pane]) => {
+      pane.toggleClass('is-hidden', id !== tabId);
+    });
+
+    if (!renderedPanes.has(tabId)) {
+      renderedPanes.add(tabId);
+      const currentLayout = view.getCurrentCardLayoutSettings?.() || {};
+      const ratioId = currentLayout.ratioId || '3:4';
+
+      if (tabId === 'unsplash') {
+        renderUnsplashMediaPickerTab({
+          container: panes.unsplash,
+          view,
+          sourcePathKey,
+          ratioId,
+          onSelect: handleSelect,
+          onOpenSettings: openPluginSettings,
+        });
+      } else if (tabId === 'note') {
+        renderNoteMediaPickerTab({
+          container: panes.note,
+          view,
+          onSelect: handleSelect,
+        });
+      } else if (tabId === 'ai') {
+        const aiTabInstance = renderAiMediaPickerTab({
+          container: panes.ai,
+          view,
+          sourcePathKey,
+          ratioId,
+          // AI 绘图工作台支持多图即点即选并保持弹窗开启以便继续对比与微调，故不自动 close modal
+          onSelect: (result) => {
+            if (typeof onSelect === 'function') {
+              onSelect(result);
+            }
+          },
+          onClose: () => modal.close(),
+          onOpenSettings: openPluginSettings,
+        });
+        if (aiTabInstance && typeof aiTabInstance.cleanup === 'function') {
+          cleanups.push(aiTabInstance.cleanup);
+        }
+      }
+    }
+  };
+
+  tabs.forEach((item) => {
+    const btn = tabsWrap.createEl('button', {
+      cls: `card-media-picker-tab-btn ${item.id === currentTab ? 'is-active' : ''}`,
+      text: item.label,
+      attr: { type: 'button' },
+    });
+    btn.addEventListener('click', () => switchTab(item.id));
+    tabButtons.push({ id: item.id, btn });
+  });
+
+  // 初始渲染当前 Tab
+  switchTab(currentTab);
+
+  modal.open();
+}
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- reason: close the scoped disable block above */

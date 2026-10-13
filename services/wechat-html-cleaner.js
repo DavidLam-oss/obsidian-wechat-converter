@@ -31,6 +31,10 @@ import { createHtmlContainer, getActiveDocument } from './dom-utils.js';
  * @typedef {{ firstElementIdx: number, prefixEndIdx: number }} InlineLabelPrefixInfo
  */
 
+const LIST_DISMANTLE_BLOCK_TAGS = new Set([
+  'PRE', 'TABLE', 'BLOCKQUOTE', 'FIGURE', 'DIV', 'HR', 'P', 'SECTION', 'DETAILS', 'ASIDE', 'OL', 'UL',
+]);
+
 /**
  * @param {string} html
  * @returns {string}
@@ -560,7 +564,36 @@ export function cleanHtmlForDraft(html) {
       li.insertBefore(wrapper, firstList);
     });
 
-    // 2. 将深层嵌套列表转为伪列表（仅处理 depth >= 2）
+    // 1.5 微信兼容修复：强制列表项内 strong/code 保持行内，避免“标题词”和冒号/正文断行
+    /**
+     * @param {Element} el
+     * @param {string} [extraStyle]
+     */
+    const forceInlineStyle = (el, extraStyle = '') => {
+      const currentStyle = el.getAttribute('style') || '';
+      const cleanedStyle = currentStyle
+        .replace(/display\s*:\s*[^;]+;?/gi, '')
+        .replace(/width\s*:\s*[^;]+;?/gi, '')
+        .replace(/float\s*:\s*[^;]+;?/gi, '')
+        .trim();
+      const normalizedStyle = cleanedStyle
+        ? `${cleanedStyle}${cleanedStyle.endsWith(';') ? '' : ';'}`
+        : '';
+      const finalStyle = `${normalizedStyle}display:inline !important; width:auto !important; float:none !important;${extraStyle}`;
+      el.setAttribute('style', finalStyle);
+    };
+
+    div.querySelectorAll('li strong').forEach(strong => {
+      forceInlineStyle(strong);
+    });
+
+    div.querySelectorAll('li code').forEach(code => {
+      // 仅修复行内 code，避免误伤列表里的代码块（pre > code）
+      if (code.closest('pre, .code-block, .code-block-code')) return;
+      forceInlineStyle(code, ' margin:0 2px !important; vertical-align:baseline;');
+    });
+
+    // 2. 将列表转为抗微信改写的悬挂缩进伪段落
     /**
      * @param {Element} list
      * @returns {number}
@@ -593,68 +626,119 @@ export function cleanHtmlForDraft(html) {
         );
 
         const liStyle = li.getAttribute('style') || '';
-        const indent = Math.max(0, depth - 1) * 20;
-        const wrapper = activeDocument.createElement('p');
-        wrapper.setAttribute(
-          'style',
-          `${liStyle} margin:0 0 4px ${indent}px; padding:0;`
-        );
+        const isTask = (() => {
+          if (/list-style-type\s*:\s*none/i.test(liStyle) && /margin-left\s*:\s*-\d+px/i.test(liStyle)) return true;
+          const text = li.textContent || '';
+          return /^[☑☐□]/.test(text.trim());
+        })();
+
+        let cleanStyle = liStyle
+          .replace(/margin(-[a-z]+)?\s*:\s*[^;]+;?/gi, '')
+          .replace(/padding(-[a-z]+)?\s*:\s*[^;]+;?/gi, '')
+          .replace(/text-indent\s*:\s*[^;]+;?/gi, '')
+          .replace(/list-style(-type)?\s*:\s*[^;]+;?/gi, '')
+          .trim();
+        if (cleanStyle && !cleanStyle.endsWith(';')) cleanStyle += ';';
+
+        const hangingIndent = isTask ? -20 : (isOrdered ? -18 : -14);
+        const paddingLeft = Math.max(1, depth) * 20;
 
         /** @type {ChildNode[]} */
         const contentNodes = [];
-        Array.from(li.childNodes).forEach(node => {
-          if (node instanceof Element && (node.tagName === 'UL' || node.tagName === 'OL')) return;
-          if (node instanceof Element && node.tagName === 'P') {
-            const children = Array.from(node.childNodes);
-            if (children.length && contentNodes.length) {
-              contentNodes.push(activeDocument.createTextNode(' '));
+        /** @param {NodeList | ChildNode[] | unknown[]} nodes */
+        const extractNodes = (nodes) => {
+          Array.from(nodes).forEach(rawNode => {
+            const node = /** @type {ChildNode} */ (rawNode);
+            if (node instanceof Element && (node.tagName === 'UL' || node.tagName === 'OL')) return;
+            // 将列表项内部包装的 p 或 display:block span 解包为行内流，避免段落内换行脱节
+            if (node instanceof Element && (node.tagName === 'P' || (node.tagName === 'SPAN' && /display\s*:\s*block/i.test(node.getAttribute('style') || '')))) {
+              const children = Array.from(node.childNodes);
+              if (children.length && contentNodes.length) {
+                contentNodes.push(activeDocument.createTextNode(' '));
+              }
+              extractNodes(children);
+              return;
             }
-            children.forEach(child => contentNodes.push(child));
-            return;
-          }
-          contentNodes.push(node);
-        });
+            contentNodes.push(node);
+          });
+        };
+        extractNodes(li.childNodes);
 
-        // Trim leading whitespace-only text nodes to avoid bullets on separate lines.
-        while (
-          contentNodes.length > 0 &&
-          contentNodes[0].nodeType === Node.TEXT_NODE &&
-          !contentNodes[0].textContent.trim()
-        ) {
+        // Trim leading whitespace-only text nodes
+        while (contentNodes.length > 0 && contentNodes[0].nodeType === Node.TEXT_NODE && !contentNodes[0].textContent.trim()) {
           contentNodes.shift();
         }
-        // If the first text node starts with a newline/indent, trim it to keep marker + text on one line.
         if (contentNodes.length > 0 && contentNodes[0].nodeType === Node.TEXT_NODE) {
           contentNodes[0].textContent = contentNodes[0].textContent.replace(/^\s+/, '');
-          if (!contentNodes[0].textContent) {
-            contentNodes.shift();
-          }
+          if (!contentNodes[0].textContent) contentNodes.shift();
         }
 
-        const hasContent = contentNodes.some(node => {
-          if (node.nodeType === Node.TEXT_NODE) return node.textContent.trim();
-          return true;
-        });
+        const hasContent = contentNodes.some(node => node.nodeType === Node.TEXT_NODE ? Boolean(node.textContent.trim()) : true);
 
         if (hasContent) {
           contentNodes.forEach(node => {
             if (node.nodeType !== Node.TEXT_NODE) return;
             node.textContent = node.textContent.replace(/\s*\n\s*/g, ' ').replace(/\s{2,}/g, ' ');
-            if (!node.textContent.trim()) {
-              node.remove();
-            }
+            if (!node.textContent.trim()) node.remove();
           });
 
-          const markerText = isOrdered ? `${index}. ` : '• ';
-          const firstText = contentNodes.find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
-          if (firstText) {
-            firstText.textContent = markerText + firstText.textContent;
-          } else {
-            contentNodes.unshift(activeDocument.createTextNode(markerText));
+          while (contentNodes.length > 0 && contentNodes[contentNodes.length - 1].nodeType === Node.TEXT_NODE && !contentNodes[contentNodes.length - 1].textContent.trim()) {
+            contentNodes.pop();
+          }
+          if (contentNodes.length > 0 && contentNodes[contentNodes.length - 1].nodeType === Node.TEXT_NODE) {
+            contentNodes[contentNodes.length - 1].textContent = contentNodes[contentNodes.length - 1].textContent.replace(/\s+$/, '');
           }
 
-          contentNodes.forEach(node => wrapper.appendChild(node));
-          fragment.appendChild(wrapper);
+          // 分段挂载：遇块级元素（PRE/TABLE/BLOCKQUOTE等）解构为同级兄弟，防止微信/浏览器在 p 内遇块级时提前闭合
+          /** @type {HTMLElement | null} */
+          let currentP = null;
+          let isFirstP = true;
+
+          const appendToParagraph = (node) => {
+            if (!currentP) {
+              currentP = activeDocument.createElement('p');
+              const indent = isFirstP
+                ? `margin: 4px 0; padding-left: ${paddingLeft}px; text-indent: ${hangingIndent}px;`
+                : `margin: 4px 0; padding-left: ${paddingLeft}px;`;
+              currentP.setAttribute('style', `${cleanStyle} ${indent}`);
+              if (isFirstP && !isTask) {
+                const markerSpan = activeDocument.createElement('span');
+                markerSpan.textContent = isOrdered ? `${index}. ` : '• ';
+                currentP.appendChild(markerSpan);
+              }
+              isFirstP = false;
+              fragment.appendChild(currentP);
+            }
+            if (currentP) {
+              (/** @type {HTMLElement} */ (currentP)).appendChild(node);
+            }
+          };
+
+          contentNodes.forEach(node => {
+            const isBlock = node instanceof Element && (
+              LIST_DISMANTLE_BLOCK_TAGS.has(node.tagName) || node.classList.contains('code-block')
+            );
+            if (isBlock) {
+              currentP = null;
+              if (isFirstP && !isTask) {
+                const markerP = activeDocument.createElement('p');
+                markerP.setAttribute('style', `${cleanStyle} margin: 4px 0; padding-left: ${paddingLeft}px; text-indent: ${hangingIndent}px;`);
+                const markerSpan = activeDocument.createElement('span');
+                markerSpan.textContent = isOrdered ? `${index}. ` : '• ';
+                markerP.appendChild(markerSpan);
+                fragment.appendChild(markerP);
+              }
+              isFirstP = false;
+              const blockEl = /** @type {Element} */ (node);
+              const bStyle = blockEl.getAttribute('style') || '';
+              if (!/margin-left/i.test(bStyle)) {
+                blockEl.setAttribute('style', `${bStyle ? bStyle + ';' : ''} margin-left: ${paddingLeft}px;`);
+              }
+              fragment.appendChild(blockEl);
+            } else {
+              appendToParagraph(node);
+            }
+          });
         }
 
         nestedLists.forEach(nested => {
@@ -669,8 +753,12 @@ export function cleanHtmlForDraft(html) {
 
     Array.from(div.querySelectorAll('ul, ol')).forEach(list => {
       if (!div.contains(list)) return;
-      const depth = getListDepth(list);
-      if (depth < 2) return;
+      const isUl = list.tagName === 'UL';
+      const depth = getListDepth(list) + 1;
+      // 1. 无序列表（UL）在微信草稿箱中必然被重写（丢弃样式、强制转 class、子项包 p 导致圆点文字脱节或居中错位，见 #78）
+      //    因此无序列表自第 1 层起全部转换为悬挂缩进的抗改写段落；
+      // 2. 有序列表（OL）保持现有策略：深层嵌套（depth >= 2）转为伪段落，第 1 层保留以保持原生数字编号及标签行内化。
+      if (!isUl && depth < 2) return;
       const fragment = buildPseudoItems(list, depth);
       if (list.parentNode) {
         list.parentNode.insertBefore(fragment, list);
@@ -680,67 +768,26 @@ export function cleanHtmlForDraft(html) {
 
     // 3. 处理嵌套的 ul/ol（在 li 内的列表）：移除 margin，调整缩进
     div.querySelectorAll('li > ul, li > ol').forEach(nestedList => {
-      // 获取原有样式
-      let style = nestedList.getAttribute('style') || '';
-      // 移除 margin，保留其他样式 (Fix: use regex that catches margin-left/top etc)
-      style = style.replace(/margin(-[a-z]+)?:\s*[^;]+;?/gi, '');
-      // 添加 margin: 0 确保紧贴父元素
-      style = 'margin: 0; ' + style;
-      nestedList.setAttribute('style', style);
+      let style = (nestedList.getAttribute('style') || '').replace(/margin(-[a-z]+)?:\s*[^;]+;?/gi, '');
+      nestedList.setAttribute('style', `margin: 0; ${style}`);
     });
 
-    // 4. 移除空的 li 元素
+    // 4. 移除空的 li 元素与纯空白文本节点
     div.querySelectorAll('li').forEach(li => {
-      if (!li.textContent.trim() && li.querySelectorAll('img, ul, ol').length === 0) {
-        li.remove();
-      }
+      if (!li.textContent.trim() && li.querySelectorAll('img, ul, ol').length === 0) li.remove();
     });
-
-    // 5. 移除 ul/ol 内的纯空白文本节点
-    div.querySelectorAll('ul, ol').forEach(list => {
-      Array.from(list.childNodes).forEach(node => {
-        if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) {
-          node.remove();
-        }
+    div.querySelectorAll('ul, ol, li').forEach(el => {
+      Array.from(el.childNodes).forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) node.remove();
       });
     });
 
-    // 6. 移除 li 内的多余换行/空白文本节点
-    div.querySelectorAll('li').forEach(li => {
-      Array.from(li.childNodes).forEach(node => {
-        if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) {
-          node.remove();
-        }
-      });
-    });
-
-    // 7. 微信兼容修复：强制列表项内 strong/code 保持行内，避免“标题词”和冒号/正文断行
-    /**
-     * @param {Element} el
-     * @param {string} [extraStyle]
-     */
-    const forceInlineStyle = (el, extraStyle = '') => {
-      const currentStyle = el.getAttribute('style') || '';
-      const cleanedStyle = currentStyle
-        .replace(/display\s*:\s*[^;]+;?/gi, '')
-        .replace(/width\s*:\s*[^;]+;?/gi, '')
-        .replace(/float\s*:\s*[^;]+;?/gi, '')
-        .trim();
-      const normalizedStyle = cleanedStyle
-        ? `${cleanedStyle}${cleanedStyle.endsWith(';') ? '' : ';'}`
-        : '';
-      const finalStyle = `${normalizedStyle}display:inline !important; width:auto !important; float:none !important;${extraStyle}`;
-      el.setAttribute('style', finalStyle);
-    };
-
-    div.querySelectorAll('li strong').forEach(strong => {
-      forceInlineStyle(strong);
-    });
-
-    div.querySelectorAll('li code').forEach(code => {
-      // 仅修复行内 code，避免误伤列表里的代码块（pre > code）
-      if (code.closest('pre, .code-block, .code-block-code')) return;
-      forceInlineStyle(code, ' margin:0 2px !important; vertical-align:baseline;');
+    // 8. 微信公众号兼容：将 blockquote 转换为带有完全相同样式的 section 标签
+    div.querySelectorAll('blockquote').forEach(bq => {
+      const section = activeDocument.createElement('section');
+      Array.from(bq.attributes).forEach(attr => section.setAttribute(attr.name, attr.value));
+      while (bq.firstChild) section.appendChild(bq.firstChild);
+      bq.replaceWith(section);
     });
 
     return div.innerHTML;

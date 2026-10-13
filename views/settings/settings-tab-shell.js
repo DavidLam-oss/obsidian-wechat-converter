@@ -28,9 +28,10 @@
 import {
   GITHUB_REPOSITORY_URL,
   MULTI_PLATFORM_TAB_LABEL,
-  getObsidianSetIcon,
+  attachIcon,
   obsidianApi,
   renderAboutSettingsTab,
+  renderAiSettingsTab,
   renderFeishuSettingsTab,
   renderMultiPlatformSettingsTab,
 } from '../apple-style-view-shared.js';
@@ -86,12 +87,7 @@ const settingsTabShellMethods = {
   renderGitHubStarBanner(containerEl) {
     const banner = containerEl.createDiv({ cls: 'apple-settings-github-banner' });
     const iconWrap = banner.createDiv({ cls: 'apple-settings-github-icon' });
-    const setIcon = getObsidianSetIcon();
-    if (typeof setIcon === 'function') {
-      setIcon(iconWrap, 'star');
-    } else {
-      iconWrap.setText('Star');
-    }
+    attachIcon(iconWrap, 'star', 'Star');
 
     const copy = banner.createDiv({ cls: 'apple-settings-github-copy' });
     copy.createEl('div', { text: '喜欢这个插件？', cls: 'apple-settings-github-kicker' });
@@ -145,11 +141,52 @@ const settingsTabShellMethods = {
 
     this.renderGitHubStarBanner(stickyHeader);
 
+    if (this.plugin?._settingsSafeMode) {
+      const safeBanner = stickyHeader.createDiv({ cls: 'owc-settings-safe-mode-banner' });
+      safeBanner.setCssStyles({
+        backgroundColor: 'var(--background-modifier-error)',
+        color: 'var(--text-on-accent)',
+        padding: '10px 14px',
+        borderRadius: '6px',
+        marginBottom: '10px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        fontSize: '13px',
+      });
+      const safeContent = safeBanner.createSpan({ cls: 'owc-settings-safe-mode-content' });
+      safeContent.setCssStyles({
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+      });
+      const iconSpan = safeContent.createSpan();
+      attachIcon(iconSpan, 'triangle-alert');
+      safeContent.createSpan({
+        text: '当前处于配置只读保护模式（已拦截写入以防账号凭据丢失）。',
+      });
+      const restoreBtn = safeBanner.createEl('button', {
+        text: '从 .bak 恢复配置',
+      });
+      restoreBtn.onclick = async () => {
+        /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- reason: dynamic plugin method invocation */
+        const plugin = /** @type {any} */ (this.plugin);
+        if (typeof plugin?.restoreFromBackup === 'function') {
+          const res = await plugin.restoreFromBackup();
+          if (res && res.success) {
+            this.display();
+          }
+        }
+        /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- reason: close the scoped disable block above */
+      };
+    }
+
     const tabBar = stickyHeader.createDiv({ cls: 'apple-settings-tabs' });
     const wechatTab = tabBar.createDiv({ cls: 'apple-settings-tab active', text: '微信' });
     const multiTab = tabBar.createDiv({ cls: 'apple-settings-tab apple-settings-tab-multi' });
     multiTab.createSpan({ text: MULTI_PLATFORM_TAB_LABEL, cls: 'apple-settings-tab-label' });
     const feishuTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '飞书' });
+    const aiTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: 'AI/第三方服务' });
     const aboutTab = tabBar.createDiv({ cls: 'apple-settings-tab', text: '关于' });
 
     const wechatContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
@@ -157,62 +194,44 @@ const settingsTabShellMethods = {
     multiContent.setCssStyles({ display: 'none' });
     const feishuContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
     feishuContent.setCssStyles({ display: 'none' });
+    const aiContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
+    aiContent.setCssStyles({ display: 'none' });
     const aboutContent = containerEl.createDiv({ cls: 'apple-settings-tab-content' });
     aboutContent.setCssStyles({ display: 'none' });
 
-    wechatTab.onclick = () => {
-      this._activeSettingsTab = 'wechat';
-      wechatTab.addClass('active');
-      feishuTab.removeClass('active');
-      multiTab.removeClass('active');
-      aboutTab.removeClass('active');
-      wechatContent.setCssStyles({ display: '' });
-      feishuContent.setCssStyles({ display: 'none' });
-      multiContent.setCssStyles({ display: 'none' });
-      aboutContent.setCssStyles({ display: 'none' });
-    };
-    feishuTab.onclick = () => {
-      this._activeSettingsTab = 'feishu';
-      feishuTab.addClass('active');
-      wechatTab.removeClass('active');
-      multiTab.removeClass('active');
-      aboutTab.removeClass('active');
-      wechatContent.setCssStyles({ display: 'none' });
-      feishuContent.setCssStyles({ display: '' });
-      multiContent.setCssStyles({ display: 'none' });
-      aboutContent.setCssStyles({ display: 'none' });
-      renderFeishuSettingsTab(this, feishuContent, { obsidianApi });
-    };
-    multiTab.onclick = () => {
-      this._activeSettingsTab = 'multi';
-      multiTab.addClass('active');
-      wechatTab.removeClass('active');
-      feishuTab.removeClass('active');
-      aboutTab.removeClass('active');
-      wechatContent.setCssStyles({ display: 'none' });
-      feishuContent.setCssStyles({ display: 'none' });
-      multiContent.setCssStyles({ display: '' });
-      aboutContent.setCssStyles({ display: 'none' });
-    };
-    aboutTab.onclick = () => {
-      this._activeSettingsTab = 'about';
-      aboutTab.addClass('active');
-      wechatTab.removeClass('active');
-      feishuTab.removeClass('active');
-      multiTab.removeClass('active');
-      wechatContent.setCssStyles({ display: 'none' });
-      feishuContent.setCssStyles({ display: 'none' });
-      multiContent.setCssStyles({ display: 'none' });
-      aboutContent.setCssStyles({ display: '' });
-      renderAboutSettingsTab(this, aboutContent);
-    };
+    /**
+     * 设置页签定义（key 与 _activeSettingsTab 持久化值一致）。
+     * 卡片设置不在此处：图片卡片的全部配置收敛在转换器侧边栏面板
+     * （侧栏「排版 Token / 封面设置」），全局偏好设置不重复提供表单。
+     * @typedef {{ tab: ObsidianElementLike, content: ObsidianElementLike, key: 'wechat'|'multi'|'feishu'|'ai'|'about' }} SettingsTabDef
+     */
 
-    if (this._activeSettingsTab === 'feishu') {
-      feishuTab.onclick();
-    } else if (this._activeSettingsTab === 'multi') {
-      multiTab.onclick();
-    } else if (this._activeSettingsTab === 'about') {
-      aboutTab.onclick();
+    /** @type {SettingsTabDef[]} */
+    const tabDefs = [
+      { tab: wechatTab, content: wechatContent, key: 'wechat' },
+      { tab: multiTab, content: multiContent, key: 'multi' },
+      { tab: feishuTab, content: feishuContent, key: 'feishu' },
+      { tab: aiTab, content: aiContent, key: 'ai' },
+      { tab: aboutTab, content: aboutContent, key: 'about' },
+    ];
+    for (const def of tabDefs) {
+      def.tab.onclick = () => {
+        for (const d of tabDefs) {
+          d.tab.toggleClass('active', d.tab === def.tab);
+          d.content.setCssStyles({ display: d.tab === def.tab ? '' : 'none' });
+        }
+        this._activeSettingsTab = def.key;
+        if (def.key === 'feishu') renderFeishuSettingsTab(this, feishuContent, { obsidianApi });
+        if (def.key === 'ai') renderAiSettingsTab(this, aiContent, { obsidianApi });
+        if (def.key === 'about') renderAboutSettingsTab(this, aboutContent);
+      };
+    }
+
+    // 已摘除的页签 key（如卡片页签移除前遗留的 'card'）回落微信，避免停在空白内容区
+    const initialDef = tabDefs.find((def) => def.key === this._activeSettingsTab);
+    if (!initialDef) this._activeSettingsTab = 'wechat';
+    if (initialDef && initialDef.key !== 'wechat') {
+      initialDef.tab.onclick();
     }
 
     this.renderWechatSettingsTab(wechatContent);

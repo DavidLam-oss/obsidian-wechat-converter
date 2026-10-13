@@ -53,6 +53,9 @@ if (!globalThis.__obsidianNoticeRegistry) {
 if (!globalThis.__obsidianSettingInstancesRegistry) {
   globalThis.__obsidianSettingInstancesRegistry = [];
 }
+if (!globalThis.__obsidianMenuRegistry) {
+  globalThis.__obsidianMenuRegistry = [];
+}
 
 // Sentinel exposed on globalThis so tests can assert that the resolver patch
 // is wired up correctly: `expect(globalThis.__obsidianMockLoaded).toBe(true)`.
@@ -75,8 +78,18 @@ function makeButtonMock() {
     text: '',
     disabled: false,
     clickHandler: null,
+    buttonClass: '',
     setButtonText(value) {
       this.text = String(value || '');
+      return this;
+    },
+    setIcon(value) {
+      this.icon = String(value || '');
+      return this;
+    },
+    setClass(cls) {
+      // 对齐 ButtonComponent.setClass：记录附加类（mod-warning 等），供断言
+      this.buttonClass = String(cls || '');
       return this;
     },
     setDisabled(value) {
@@ -226,6 +239,38 @@ class ModalMock {
   onClose() {}
 }
 
+class MenuMock {
+  constructor() {
+    this.items = [];
+    if (globalThis.__obsidianMenuRegistry) {
+      globalThis.__obsidianMenuRegistry.push(this);
+    }
+  }
+  addItem(cb) {
+    const item = {
+      title: '',
+      icon: '',
+      disabled: false,
+      onClickHandler: null,
+      setTitle(t) { this.title = t; return this; },
+      setIcon(i) { this.icon = i; return this; },
+      setDisabled(d) { this.disabled = d; return this; },
+      onClick(fn) { this.onClickHandler = fn; return this; },
+    };
+    if (typeof cb === 'function') cb(item);
+    this.items.push(item);
+    return this;
+  }
+  addSeparator() {
+    this.items.push({ isSeparator: true });
+    return this;
+  }
+  showAtMouseEvent(e) {
+    this.lastShownEvent = e;
+    return this;
+  }
+}
+
 // createFragment is referenced as a runtime global in input.js (Obsidian
 // injects it). Polyfill once when the mock is required.
 if (typeof globalThis.createFragment !== 'function') {
@@ -237,7 +282,24 @@ if (typeof globalThis.createFragment !== 'function') {
 }
 
 module.exports = {
-  Plugin: class {},
+  Plugin: class {
+    constructor(app, manifest) {
+      this.app = app || {
+        vault: {
+          configDir: '.obsidian',
+          adapter: {
+            exists: async () => true,
+            read: async () => JSON.stringify(typeof this.loadData === 'function' ? (await this.loadData()) || {} : {}),
+            write: async () => {},
+          },
+        },
+      };
+      this.manifest = manifest || {
+        id: 'obsidian-wechat-converter',
+        dir: '.obsidian/plugins/obsidian-wechat-converter',
+      };
+    }
+  },
   // NOTE: Intentionally NOT exporting Platform. input.js's isMobileClient()
   // checks `Platform?.isMobile` first and only falls back to `app.isMobile`
   // if Platform is undefined. Tests like sync_modal_ui / view_parity rely
@@ -275,6 +337,7 @@ module.exports = {
   },
   Setting: SettingMock,
   Modal: ModalMock,
+  Menu: MenuMock,
   requestUrl: async () => ({ json: {}, status: 200, headers: {} }),
   request: async () => '',
   setIcon: () => {},

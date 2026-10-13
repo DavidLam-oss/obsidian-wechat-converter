@@ -282,12 +282,10 @@
   background: color-mix(in srgb, var(--text-error, #d33) 15%, transparent);
   color: var(--text-error, #d33);
 }
-
 .wechat-multiplatform-token-status-dot.is-unknown {
   background: color-mix(in srgb, var(--text-warning, #d99300) 18%, transparent);
   color: var(--text-warning, #d99300);
 }
-
 .wechat-multiplatform-token-status-dot.is-ok {
   background: color-mix(in srgb, var(--text-success, #2c9c4c) 18%, transparent);
   color: var(--text-success, #2c9c4c);
@@ -296,13 +294,11 @@
 .wechat-multiplatform-token-status-text {
   color: var(--text-muted, #666);
 }
-
 .wechat-bridge-browser-icon {
   display: inline-block;
   vertical-align: middle;
   flex-shrink: 0;
 }
-
 .wechat-bridge-status-body {
   display: flex;
   align-items: center;
@@ -311,20 +307,17 @@
   min-width: 0;
   color: var(--text-muted, #666);
 }
-
 .wechat-bridge-pairing-panel {
   margin: 8px 0 14px;
   padding: 10px 12px;
   border-left: 3px solid var(--color-yellow);
   background: var(--background-secondary);
 }
-
 .wechat-bridge-pairing-panel > p {
   margin: 4px 0 8px;
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
 }
-
 .wechat-bridge-pairing-row {
   display: flex;
   align-items: center;
@@ -332,21 +325,35 @@
   gap: 12px;
   min-height: 32px;
 }
-
 .wechat-bridge-pairing-row > span {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+.wechat-bridge-pairing-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .wechat-bridge-paired-panel {
   margin: 6px 0 14px;
 }
-
 .wechat-bridge-paired-panel > strong {
   display: block;
   margin-bottom: 4px;
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
+}
+.wechat-bridge-paired-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.wechat-bridge-paired-info .wechat-bridge-status-time {
+  margin-left: 0;
 }
 
 .wechat-bridge-status-profile {
@@ -702,3 +709,89 @@
   border-color: var(--interactive-accent);
   box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.15);
 }
+
+/* 设置页提示与中转卡片样式 */
+.wechat-settings-empty-tip {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.wechat-settings-max-tip {
+  color: var(--text-muted);
+}
+
+.wechat-proxy-card {
+  margin-top: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background-color: var(--background-primary-alt);
+  font-size: 12px;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wechat-proxy-row {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.wechat-proxy-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  color: var(--text-muted);
+}
+
+.wechat-proxy-title {
+  color: var(--text-normal);
+  font-weight: 600;
+}
+
+.wechat-proxy-title.is-warning {
+  color: var(--text-warning);
+}
+
+.wechat-proxy-desc {
+  color: var(--text-muted);
+}
+
+.wechat-proxy-link {
+  margin-left: 6px;
+  color: var(--text-muted);
+  text-decoration: underline;
+}
+
+.owc-custom-css-warning {
+  margin-top: 8px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--background-modifier-border);
+  border-left: 3px solid var(--text-warning);
+  border-radius: 6px;
+  background-color: var(--background-primary-alt);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.owc-custom-css-warning-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.owc-custom-css-warning-title { color: var(--text-warning); font-weight: 600; font-size: 13px; }
+.owc-custom-css-warning-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 15px; height: 15px; color: var(--text-warning); }
+.owc-custom-css-warning-list { display: flex; flex-direction: column; gap: 6px; }
+.owc-custom-css-warning-item { position: relative; padding-left: 14px; color: var(--text-muted); font-size: 12px; line-height: 1.55; }
+.owc-custom-css-warning-item::before { content: '•'; position: absolute; left: 2px; top: 0; color: var(--text-warning); font-size: 13px; line-height: 1.4; }
+.owc-custom-css-warning-item strong { color: var(--text-normal); font-weight: 600; }
+.owc-custom-css-warning-item code { padding: 1px 5px; margin: 0 2px; border-radius: 3px; font-size: 11px; background-color: var(--background-modifier-form-field); color: var(--text-accent); }
+.wechat-proxy-icon .svg-icon,
+.owc-custom-css-warning-icon .svg-icon {
+  width: 15px;
+  height: 15px;
+}
+

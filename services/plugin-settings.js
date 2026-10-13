@@ -9,7 +9,8 @@
 
 ## 输出
 
-输出 `createDefaultSettings`、`normalizeLoadedSettings`，供入口、设置页和同步服务共享。
+输出 `createDefaultSettings`、`normalizeLoadedSettings`（含图片卡片全局默认 `cardDefaults` 的
+归一化与迁移标记），供入口、设置页和同步服务共享。
 
 ## 定位
 
@@ -17,7 +18,7 @@
 
 ## 依赖
 
-关键依赖：`./path-utils.js`、`./wechatsync-settings.js`、`./feishu-settings.js`、`./wechat-draft-cache.js`、`./ai-layout.js`。
+关键依赖：`./path-utils.js`、`./wechatsync-settings.js`、`./feishu-settings.js`、`./wechat-draft-cache.js`、`./ai-layout.js`、`./card-settings-model.js`（卡片默认排版归一化）、`./card-export-paths.js`（默认导出根目录）。
 
 ## 维护规则
 
@@ -26,6 +27,8 @@
 */
 
 import { normalizeVaultPath } from './path-utils.js';
+import { DEFAULT_EXPORT_ROOT } from './card-export-paths.js';
+import { DEFAULT_CARD_LAYOUT_SETTINGS, normalizeCardLayoutSettings } from './card-settings-model.js';
 import {
   createDefaultMultiPlatformSyncSettings,
   normalizeMultiPlatformSyncSettings,
@@ -73,6 +76,34 @@ function generateFallbackId() {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
+/**
+ * 图片卡片全局默认（C02）：排版八项（含 C01③ 封面/页码/水印）+ 导出根目录。
+ * 会话创建时读取一次；会话内调整不写回；设置页修改只影响之后新建的会话与导出。
+ * @typedef {{ themeId: string, ratioId: string, fontSize: number, lineHeight: number, pagePadding: number, coverEnabled: boolean, pageNumberEnabled: boolean, watermarkText: string, exportRoot: string }} CardGlobalDefaults
+ * @returns {CardGlobalDefaults}
+ */
+export function createDefaultCardSettings() {
+  return {
+    ...DEFAULT_CARD_LAYOUT_SETTINGS,
+    exportRoot: DEFAULT_EXPORT_ROOT,
+  };
+}
+
+/**
+ * 归一化图片卡片全局默认：排版项委托 normalizeCardLayoutSettings（非法枚举回落、
+ * 数值钳制）；exportRoot 做 vault 相对路径归一化，空值回落默认根目录。
+ * 深度校验（保留目录/绝对路径拒绝）不在本层——导出执行时由路径安全层把守。
+ * @param {unknown} value
+ * @returns {CardGlobalDefaults}
+ */
+function normalizeCardGlobalDefaults(value) {
+  const src = isRecord(value) ? value : {};
+  const layout = normalizeCardLayoutSettings(src, DEFAULT_CARD_LAYOUT_SETTINGS);
+  const exportRoot = normalizeVaultPath(typeof src.exportRoot === 'string' ? src.exportRoot : '')
+    || DEFAULT_EXPORT_ROOT;
+  return { ...layout, exportRoot };
+}
+
 /** @returns {PluginSettingsLike} */
 export function createDefaultSettings() {
   return {
@@ -113,6 +144,9 @@ export function createDefaultSettings() {
     wechatAppId: '',
     wechatAppSecret: '',
     ai: createDefaultAiSettings(),
+    unsplashAccessKey: '',
+    // 图片卡片全局默认（C02）：新会话/新导出的初值，会话内调整不写回
+    cardDefaults: createDefaultCardSettings(),
   };
 }
 
@@ -127,11 +161,14 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
   const generateId = typeof options.generateId === 'function'
     ? options.generateId
     : generateFallbackId;
+  const isVirginInstall = Boolean(options.isVirginInstall);
   let didMigrate = false;
 
   if (!settings.clientId) {
     settings.clientId = `wp_dev_${generateId()}`;
-    didMigrate = true;
+    if (!isVirginInstall && isRecord(loadedData) && Object.keys(loadedData).length > 0) {
+      didMigrate = true;
+    }
   }
 
   settings.multiPlatformSync = normalizeMultiPlatformSyncSettings(settings.multiPlatformSync);
@@ -159,7 +196,7 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
 
   if (settings.wechatAppId && settings.wechatAccounts.length === 0) {
     const migratedAccount = {
-      id: generateId(),
+      id: 'wx_legacy_primary',
       name: '我的公众号',
       appId: String(settings.wechatAppId || ''),
       appSecret: String(settings.wechatAppSecret || ''),
@@ -169,7 +206,7 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
     settings.wechatAppId = '';
     settings.wechatAppSecret = '';
     didMigrate = true;
-    console.debug('✅ 已将旧账号配置迁移到新格式');
+    console.debug('[设置迁移] 已将旧账号配置迁移到新格式');
   }
 
   settings.wechatAccounts = settings.wechatAccounts.map((account) => {
@@ -202,7 +239,7 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
   if (!currentTemplate && legacyRootDir && legacyTarget === 'folder') {
     settings.cleanupDirTemplate = `${legacyRootDir}/{{note}}_img`;
     didMigrate = true;
-    console.debug('✅ 已将旧清理配置迁移为目录模板 cleanupDirTemplate');
+    console.debug('[设置迁移] 已将旧清理配置迁移为目录模板 cleanupDirTemplate');
   }
 
   if (Object.prototype.hasOwnProperty.call(settings, 'cleanupRootDir')) {
@@ -218,6 +255,37 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
   settings.lineHeight = normalizeSpacingValue(settings.lineHeight, 1.4, 2.2);
   settings.paragraphGap = normalizeSpacingValue(settings.paragraphGap, 8, 40);
   settings.letterSpacing = normalizeSpacingValue(settings.letterSpacing, 0, 2);
+
+  // Unsplash Access Key：去除多余空白字符
+  const rawUnsplashKey = settings.unsplashAccessKey;
+  const normalizedUnsplashKey = typeof rawUnsplashKey === 'string' ? rawUnsplashKey.trim() : '';
+  if (settings.unsplashAccessKey !== normalizedUnsplashKey) {
+    settings.unsplashAccessKey = normalizedUnsplashKey;
+    didMigrate = true;
+  }
+
+  // 图片卡片全局默认（C02）：非法枚举/越界/非对象 → 回落钳制；不影响其他键
+  const rawCardDefaults = data.cardDefaults;
+  settings.cardDefaults = normalizeCardGlobalDefaults(rawCardDefaults ?? settings.cardDefaults);
+  if (rawCardDefaults !== undefined) {
+    const normalizedRawCard = normalizeCardGlobalDefaults(rawCardDefaults);
+    if (JSON.stringify(normalizedRawCard) !== JSON.stringify(rawCardDefaults)) {
+      didMigrate = true;
+    }
+  }
+
+  // C01③ 遗留迁移（一次性）：封面默认由「关闭」改为「开启」。旧版本的封面默认没有任何全局
+  // 配置入口（当时「卡片」页签不含该项、侧栏开关只写会话态），所以 data.json 里的
+  // coverEnabled:false 只可能来自旧默认值，翻正不会覆盖用户真实选择。
+  // 标记只为「不重复翻正」而存在：只有在真的翻正时才触发写盘（避免无谓的 save 副作用）；
+  // 未翻正时标记留在内存里，会随用户后续任意一次保存落库。
+  if (settings.cardCoverDefaultMigrated !== true) {
+    if (settings.cardDefaults.coverEnabled === false) {
+      settings.cardDefaults.coverEnabled = true;
+      didMigrate = true;
+    }
+    settings.cardCoverDefaultMigrated = true;
+  }
 
   const deprecatedRenderKeys = [
     'useTripletPipeline',
@@ -237,5 +305,5 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
     }
   }
 
-  return { settings, didMigrate };
+  return { settings, didMigrate: isVirginInstall ? false : didMigrate };
 }

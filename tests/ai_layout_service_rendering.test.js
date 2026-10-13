@@ -490,9 +490,9 @@ describe('ai-layout service rendering', () => {
     expect(html).toContain('孙项');
     expect(html).not.toContain('降级正文');
     expect(cleaned).toContain('子项一');
-    expect(cleaned).toContain('1. 孙项');
+    expect(cleaned).toContain('<span>1. </span>孙项');
     expect(cleaned).not.toContain('margin-left:20px');
-    expect(cleaned).toContain('margin: 0');
+    expect(cleaned).toContain('margin: 4px 0');
   });
 
   it('should remap preserved theme accent colors inside ai fragments to the active ai palette', () => {

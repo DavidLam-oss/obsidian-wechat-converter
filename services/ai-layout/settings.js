@@ -41,14 +41,19 @@ import { normalizeHexColor } from './color.js';
 import { normalizeAiProvider } from './providers.js';
 import { normalizeArticleLayoutCacheEntry } from './state-cache.js';
 import { clampNumber, isRecord, toRecord } from './utils.js';
+import { VALID_DEFAULT_CARD_COVER_MODES } from '../card-cover-model.js';
 
 /** @returns {AiSettingsLike} */
 function createDefaultAiSettings() {
   return {
     enabled: true,
     defaultProviderId: '',
+    defaultImageProviderId: '',
+    cardCoverImageStyle: '3d-clay',
+    cardCoverMode: 'mixed',
     defaultLayoutFamily: AI_LAYOUT_SELECTION_AUTO,
     defaultColorPalette: AI_LAYOUT_SELECTION_AUTO,
+    defaultStylePack: AI_LAYOUT_DEFAULT_COLOR_PALETTE,
     customColor: '#7c3aed',
     includeImagesInLayout: true,
     requestTimeoutMs: DEFAULT_AI_REQUEST_TIMEOUT_MS,
@@ -80,11 +85,27 @@ function normalizeAiSettings(raw = {}) {
     defaultProviderId = '';
   }
 
+  let defaultImageProviderId = typeof source.defaultImageProviderId === 'string' ? source.defaultImageProviderId : defaults.defaultImageProviderId;
+  if (defaultImageProviderId && !providers.some((provider) => provider.id === defaultImageProviderId && provider.enabled !== false && provider.supportsImage === true)) {
+    defaultImageProviderId = '';
+  }
+
+  const cardCoverImageStyle = typeof source.cardCoverImageStyle === 'string' && source.cardCoverImageStyle.trim()
+    ? source.cardCoverImageStyle.trim()
+    : defaults.cardCoverImageStyle;
+
+  const cardCoverMode = VALID_DEFAULT_CARD_COVER_MODES.includes(/** @type {any} */ (source.cardCoverMode))
+    ? source.cardCoverMode
+    : defaults.cardCoverMode;
+
   return {
     enabled: Object.prototype.hasOwnProperty.call(source, 'enabled')
       ? source.enabled === true
       : defaults.enabled,
     defaultProviderId,
+    defaultImageProviderId,
+    cardCoverImageStyle,
+    cardCoverMode,
     defaultLayoutFamily: normalizeLayoutFamily(source.defaultLayoutFamily, AI_LAYOUT_SELECTION_AUTO),
     defaultColorPalette: normalizeColorPalette(
       source.defaultColorPalette ?? source.defaultStylePack,

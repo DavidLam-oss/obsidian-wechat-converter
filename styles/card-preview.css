@@ -1,0 +1,354 @@
+/*
+## 核心功能
+
+图片卡片预览/实验样式分片（A03 离屏容器 + B02 预览 UI）。
+卡片成品页样式由主题 token 动态生成（services/card-themes.js），不进本分片。
+
+## 输入
+
+接收 Obsidian 主题变量（--background-primary / --background-modifier-* / --text-* /
+--interactive-accent 等）与项目苹果配色 token（--apple-success / --apple-warning / --apple-error）。
+
+## 输出
+
+输出预览外壳的布局与状态表现：摘要条与 chip、缩放控制、缩略页容器、
+空态/失败态/诊断区（含深色主题适配）。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+预览 DOM 由 views/converter/card-preview.js 产出；选页清单归导出弹窗（card-page-selection.js）。
+
+## 依赖
+
+依赖 Obsidian 主题变量与 styles/base.css 的苹果 token；不依赖其它分片的类名。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 新增选择器必须以 icard- 前缀作用域，避免污染宿主 UI。
+- 缩略图不挂任何覆盖控件（2026-09-20 David 定）：左上勾选与右上复制都已移出，
+  挑页改在导出弹窗的「自选页」清单（styles/card-export.css 的 icard-export-picker-）。
+*/
+
+/* 离屏捕获容器：参与布局但不可见、不可交互（禁止 display:none，见规划 §5.1） */
+.icard-offscreen {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* 卡片模式重置外层容器 padding，使画板能够铺满整个侧边栏全宽且透明融入 */
+.apple-converter-preview.has-card-preview,
+.apple-preview-wrapper.mode-classic .apple-converter-preview.has-card-preview {
+  padding: 0;
+  background: transparent;
+}
+
+/* —— B02 卡片预览 UI：全域一体化自适应 Design Studio 画布 —— */
+
+.icard-preview-shell {
+  --icard-canvas-bg: color-mix(in srgb, var(--background-secondary) 65%, var(--background-primary));
+  --icard-canvas-dot: rgba(0, 0, 0, 0.10);
+  --icard-canvas-dot-sub: rgba(0, 0, 0, 0.035);
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  /* 隐藏滚动条：滚动条从预览顶部划到缩略图旁边，观感很差；
+     隐藏后滚轮/触控板滚动不受影响（微信工具的网页式滚动同款处理）。
+     Obsidian 为 Chromium 内核，::-webkit-scrollbar 即可，无需 scrollbar-width。 */
+  background-color: var(--icard-canvas-bg);
+  background-image: radial-gradient(
+    circle,
+    var(--icard-canvas-dot) 1.25px,
+    var(--icard-canvas-dot-sub) 1.55px,
+    transparent 1.85px
+  );
+  background-size: 20px 20px;
+}
+.icard-preview-shell::-webkit-scrollbar {
+  display: none;
+}
+
+.theme-dark .icard-preview-shell {
+  --icard-canvas-bg: color-mix(in srgb, var(--background-secondary) 85%, #000000);
+  --icard-canvas-dot: rgba(255, 255, 255, 0.095);
+  --icard-canvas-dot-sub: rgba(255, 255, 255, 0.03);
+}
+
+/* 顶部工具条：状态摘要行（通透悬浮在全域画布顶端，配以轻柔毛玻璃与细分界线） */
+.icard-preview-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 20px 10px;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--icard-canvas-bg) 75%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid color-mix(in srgb, var(--background-modifier-border) 45%, transparent);
+}
+
+/* 状态区：页数 / 过期提示 / 省略与资源警告 */
+.icard-preview-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  min-width: 0;
+}
+
+.icard-preview-summary-count {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.icard-preview-summary-stale {
+  color: var(--text-warning, #b8860b);
+}
+
+.icard-preview-summary-omissions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.icard-preview-chip {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  background: var(--background-modifier-hover);
+  color: var(--text-muted);
+}
+
+.icard-preview-chip.is-warning {
+  background: rgba(255, 179, 0, 0.16);
+  color: var(--text-warning, #8a6d00);
+}
+
+.icard-preview-chip.is-error {
+  background: rgba(224, 62, 62, 0.14);
+  color: var(--text-error, #b3261e);
+}
+
+/* 缩略页列表：page-item 外壳承载缩放尺寸，内部 .icard-page transform 缩放。
+   无缝继承外壳的全域微点阵自适应画布，消除一切色块拼贴断层。
+   内部通过 padding 提供充足舒适的居中呼吸空间（左右 20px），兼顾最大化侧栏空间利用率与卡片居中感。
+   同时设置 flex: 1 0 auto，保证无论有几页卡片，画板均自然铺满视口底部，消灭断层留白。 */
+.icard-preview-pages {
+  flex: 1 0 auto;
+  margin: 0;
+  padding: 28px 20px 36px;
+  background: transparent;
+}
+
+.icard-preview-page-item {
+  position: relative;
+  margin: 0 auto 24px;
+  border-radius: 10px;
+  overflow: hidden;
+  /* 苹果风格多层自然阴影：1px 轻描边防融边 + 接触微阴影 + 柔和环境散景 */
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 2px 6px -1px rgba(0, 0, 0, 0.06),
+    0 10px 24px -10px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  will-change: transform, box-shadow;
+  transition:
+    transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.icard-preview-page-item:hover {
+  /* 纯 Y 轴轻盈上浮微位移：彻底避免 scale 缩放引起的文字/图片亚像素模糊与边缘抖动 */
+  transform: translateY(-4px);
+  /* 悬浮态大范围柔和弥散光影（Elevation Shadow），移除原先外扩的 2px 突兀虚框 */
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.07),
+    0 6px 14px -2px rgba(0, 0, 0, 0.08),
+    0 20px 38px -10px rgba(0, 0, 0, 0.28);
+}
+
+.theme-dark .icard-preview-page-item {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 2px 6px -1px rgba(0, 0, 0, 0.2),
+    0 12px 28px -10px rgba(0, 0, 0, 0.5);
+}
+
+.theme-dark .icard-preview-page-item:hover {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 6px 16px -2px rgba(0, 0, 0, 0.3),
+    0 22px 42px -10px rgba(0, 0, 0, 0.7);
+}
+
+.icard-preview-page-item.is-selected {
+  box-shadow:
+    0 0 0 2px var(--interactive-accent),
+    0 6px 14px -2px rgba(0, 0, 0, 0.08),
+    0 16px 32px -8px rgba(0, 0, 0, 0.24);
+}
+
+.theme-dark .icard-preview-page-item.is-selected {
+  box-shadow:
+    0 0 0 2px var(--interactive-accent),
+    0 6px 16px -2px rgba(0, 0, 0, 0.3),
+    0 20px 38px -8px rgba(0, 0, 0, 0.65);
+}
+
+.icard-preview-page-item .icard-page {
+  transform-origin: top left;
+}
+
+/* 页码徽章贴右上角，不贴右下：卡片页脚的页脚条本身就是「左页码 / 右水印」，
+   徽章原先落位 `right/bottom: 6px` 会正好压在水印上（用户 2026-09-20 反馈）。
+   右上角同时避开页脚左侧的页码，两块「第几页」的信息也不再互相遮挡。 */
+.icard-preview-page-badge {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  /* 白磨砂小片：跟卡片的纸质观感同语言；固定白底配固定深字，不随宿主主题翻转
+     （徽章只在预览 DOM，不进导出图）。深灰平涂版在浅色卡片上像调试标，已废弃。 */
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #3a3a3c;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  letter-spacing: 0.3px;
+  pointer-events: none;
+}
+
+/* 空态 / 失败态 / 移动端说明态 */
+.icard-preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.icard-preview-empty.is-failure .icard-preview-empty-title {
+  color: var(--text-error, #b3261e);
+}
+
+.icard-preview-empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.icard-preview-empty-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  max-width: 420px;
+}
+
+/* —— B03 诊断区（省略/资源失败明细 + 确认闭环）—— */
+
+.icard-preview-chip.is-info {
+  background: var(--background-modifier-hover);
+  color: var(--text-muted);
+}
+
+.icard-preview-diagnostics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-secondary);
+}
+
+.icard-preview-diagnostics-toggle {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.icard-preview-diagnostics-toggle:hover {
+  background: var(--background-modifier-border);
+}
+
+.icard-preview-diagnostics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.icard-preview-diagnostic-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.icard-preview-diagnostic-type {
+  flex: 0 0 auto;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: rgba(255, 179, 0, 0.16);
+  color: var(--text-warning, #8a6d00);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.icard-preview-diagnostic-type.is-high-risk {
+  background: rgba(224, 62, 62, 0.14);
+  color: var(--text-error, #b3261e);
+}
+
+.icard-preview-diagnostic-excerpt {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icard-preview-diagnostic-locate {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-normal);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.icard-preview-diagnostic-locate:hover {
+  background: var(--background-modifier-hover);
+}
+
+/* 全文省略空态 */
+.icard-preview-empty.is-all-omitted {
+  align-items: flex-start;
+  text-align: left;
+  padding: 24px 12px 8px;
+}

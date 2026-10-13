@@ -92,8 +92,8 @@
  * @typedef {{ ok: boolean, markdown?: string, sourcePath?: string }} MarkdownSourceResultLike
  * @typedef {{ showLoading?: boolean, loadingText?: string, loadingDelay?: number, sourceOverride?: { markdown?: string, sourcePath?: string } | null, activeViewOverride?: MarkdownViewLike | null }} ConvertCurrentOptionsLike
  * @typedef {{ sourcePath?: string, settings?: PluginSettingsLike | Record<string, unknown> }} RenderCandidateContextLike
- * @typedef {{ id: string, name: string, kind: string, baseUrl: string, apiKey: string, model: string, enabled?: boolean }} AiProviderLike
- * @typedef {{ enabled: boolean, defaultLayoutFamily: string, defaultColorPalette: string, defaultProviderId: string, customColor?: string, includeImagesInLayout?: boolean, requestTimeoutMs?: number, providers: AiProviderLike[], articleLayoutsByPath: Record<string, unknown> }} AiSettingsLike
+ * @typedef {{ id: string, name: string, kind: string, baseUrl: string, apiKey: string, model: string, enabled?: boolean, supportsText?: boolean, textModel?: string, supportsImage?: boolean, imageModel?: string, notes?: string }} AiProviderLike
+ * @typedef {{ enabled: boolean, defaultLayoutFamily: string, defaultColorPalette: string, defaultProviderId: string, defaultImageProviderId?: string, cardCoverImageStyle?: string, cardCoverMode?: string, customColor?: string, includeImagesInLayout?: boolean, requestTimeoutMs?: number, providers: AiProviderLike[], articleLayoutsByPath: Record<string, unknown> }} AiSettingsLike
  * @typedef {{ theme: string, themeColor: string, customColor: string, quoteCalloutStyleMode: string, fontFamily: string, fontSize: number, macCodeBlock: boolean, codeLineNumber: boolean, avatarUrl: string, avatarBase64: string, enableWatermark: boolean, enableCustomCss?: boolean, customCss?: string, customCssNote?: string, showImageCaption: boolean, normalizeChinesePunctuation: boolean, wechatAccounts: WechatAccountLike[], defaultAccountId: string, proxyUrl: string, clientId: string, draftCache: unknown, usePhoneFrame: boolean, sidePadding: number, coloredHeader: boolean, cleanupAfterSync: boolean, cleanupUseSystemTrash: boolean, cleanupDirTemplate: string, multiPlatformSync: unknown, wechatAppId: string, wechatAppSecret: string, ai: AiSettingsLike, [key: string]: unknown }} PluginSettingsLike
  * @typedef {{ lineHeight: number, paragraphGap: number }} ThemeConfigLike
  * @typedef {{ update: (values: Record<string, unknown>) => void, getThemeConfig?: () => ThemeConfigLike }} ThemeRuntimeLike
@@ -145,4 +145,13 @@
  * @typedef {{ initMarkdownIt?: () => Promise<void> | void }} ConverterLike
  * @typedef {{ introParagraphs: string[], introBulletGroups: string[][], introCallouts: MarkdownCallout[], headings: MarkdownHeading[], sections: MarkdownSection[] }} MarkdownStructure
  * @typedef {{ ok: boolean, status: number, statusText?: string, text: () => Promise<string>, json: () => Promise<unknown> }} FetchResponseLike
+ * —— 图片卡片会话/视图状态（B01，运行时实现在 services/card-session.js）——
+ * @typedef {{ content: number, config: number, theme: number, resource: number }} CardVersionSetLike
+ * @typedef {"idle"|"updating"|"ready"|"failed"} CardPreviewStatusLike
+ * @typedef {{ state: CardPreviewStatusLike, layoutKey: string | null, stale: boolean, hasOmissions: boolean, hasResult: boolean }} CardPreviewUiStateLike
+ * @typedef {"running"|"canceling"|"completed"|"partial"|"failed"|"canceled"} CardExportJobStatusLike
+ * @typedef {{ pageId: string, snapshotId: string, status: "saved"|"failed"|"canceled", bytes?: number, width?: number, height?: number, reason?: string }} CardExportPageResultLike
+ * @typedef {{ jobId: string, snapshotId: string, state: CardExportJobStatusLike, display: "open"|"closed", pageIds: string[], scale: number, results: CardExportPageResultLike[], cancelRequested: boolean, unseenResult: boolean, versions: CardVersionSetLike, layoutKey: string }} CardExportJobViewLike
+ * @typedef {{ snapshotId: string, noteId: string, sourcePath: string, versions: CardVersionSetLike, layoutKey: string, plan: unknown, resources: unknown, meta: Record<string, unknown>, createdAt: number }} CardSnapshotViewLike
+ * @typedef {{ kind: "job"|"result"|"none", job?: CardExportJobViewLike }} CardExportReopenViewLike
  */

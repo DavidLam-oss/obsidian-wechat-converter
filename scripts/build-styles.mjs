@@ -37,6 +37,10 @@ const STYLE_FRAGMENTS = [
   "styles/sticker-settings.css",
   "styles/preview.css",
   "styles/sticker-preview.css",
+  "styles/card-preview.css",
+  "styles/card-settings.css",
+  "styles/card-export.css",
+  "styles/card-export-progress.css",
   "styles/settings-base.css",
   "styles/wechat-settings.css",
   "styles/wechat-publish.css",
@@ -45,6 +49,8 @@ const STYLE_FRAGMENTS = [
   "styles/settings-tabs.css",
   "styles/feishu.css",
   "styles/material-picker.css",
+  "styles/card-media-picker.css",
+  "styles/ai-settings.css",
   "styles/about-settings.css",
 ];
 

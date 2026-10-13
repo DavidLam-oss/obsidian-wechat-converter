@@ -26,8 +26,6 @@
 */
 
 import {
-  normalizeVaultPath,
-  isAbsolutePathLike,
   convertRenderedMermaidDiagramsToImages,
   processAllImagesService,
   processMathFormulasService,
@@ -47,7 +45,7 @@ import {
   safeDecodeUriText,
   getFileUrlLocalPath,
   getVaultRelativePathFromLocalPath,
-  getVaultDirnameFromPath,
+  resolveVaultImageFile,
   getObsidianSetIcon,
   getObsidianRequestUrl,
   pMap,
@@ -88,32 +86,7 @@ resolveLocalImageFileForUpload(src) {
     throw new Error('只支持读取当前 vault 内的 file:// 图片');
   }
 
-  const lookupSrc = fromFileUrl || decoded;
-  try {
-    const linked = this.app?.metadataCache?.getFirstLinkpathDest?.(lookupSrc, sourcePath);
-    if (linked && typeof linked === 'object' && typeof linked['extension'] === 'string') return linked;
-  } catch {
-    // Continue with direct path candidates.
-  }
-
-  const candidates = [];
-  const normalized = normalizeVaultPath(lookupSrc);
-  if (normalized) candidates.push(normalized);
-  const noteDir = getVaultDirnameFromPath(sourcePath);
-  if (normalized && noteDir && !isAbsolutePathLike(normalized)) {
-    candidates.push(normalizeVaultPath(`${noteDir}/${normalized}`));
-  }
-
-  for (const candidate of Array.from(new Set(candidates))) {
-    try {
-      const file = this.app?.vault?.getAbstractFileByPath?.(candidate);
-      if (file && typeof file === 'object' && typeof file['extension'] === 'string') return file;
-    } catch {
-      // Try the next candidate.
-    }
-  }
-
-  return null;
+  return /** @type {unknown} */ (resolveVaultImageFile(this.app, raw, sourcePath));
 }
 ,
 

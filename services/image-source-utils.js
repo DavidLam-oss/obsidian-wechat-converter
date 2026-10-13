@@ -9,7 +9,7 @@
 
 ## 输出
 
-输出 `readBlobAsBase64Payload`、`dataUrlToBlob`、`bufferFromBinary`、`inferLocalImageMimeType`、`safeDecodeUriText`、`getFileUrlLocalPath`、`getVaultAdapterBasePath`、`normalizeAbsoluteLocalPath`、`getVaultRelativePathFromLocalPath`、`getVaultDirnameFromPath`，用于资源解析、栅格化、缓存或同步前替换。
+输出 `readBlobAsBase64Payload`、`dataUrlToBlob`、`bufferFromBinary`、`inferLocalImageMimeType`、`safeDecodeUriText`、`getFileUrlLocalPath`、`getVaultAdapterBasePath`、`normalizeAbsoluteLocalPath`、`getVaultRelativePathFromLocalPath`、`getVaultDirnameFromPath`、`resolveVaultImageFile`、`resolveVaultResourceSrc`，用于资源解析、栅格化、缓存或同步前替换。
 
 ## 定位
 
@@ -25,7 +25,7 @@
 - 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
 */
 
-import { normalizeVaultPath } from './path-utils.js';
+import { normalizeVaultPath, collapsePathSegments } from './path-utils.js';
 
 /**
  * @param {Blob} blob
@@ -140,6 +140,8 @@ function getVaultAdapterBasePath(app) {
 }
 
 /**
+ * 规范化绝对本地路径
+ * 注意：与 converter.js 中的同名逻辑保持同步，改动需一并更新 converter.js 并经由 tests/converter_path_utils_parity.test.js 校验
  * @param {unknown} value
  * @returns {string}
  */
@@ -153,6 +155,8 @@ function normalizeAbsoluteLocalPath(value) {
 }
 
 /**
+ * 从绝对本地路径中提取 Vault 相对路径
+ * 注意：与 converter.js 中的同名逻辑保持同步，改动需一并更新 converter.js 并经由 tests/converter_path_utils_parity.test.js 校验
  * @param {{ vault?: { adapter?: unknown } } | null | undefined} app
  * @param {string} localPath
  * @returns {string}
@@ -178,6 +182,137 @@ function getVaultDirnameFromPath(filePath) {
   return index > 0 ? normalized.slice(0, index) : '';
 }
 
+/**
+ * 校验是否为有效的文件对象（排除 Obsidian TFolder）。
+ * Obsidian TFolder 包含 children: TAbstractFile[] 数组；TFile 包含 extension 字符串。
+ * @param {unknown} file
+ * @returns {boolean}
+ */
+function isAbstractFileRecord(file) {
+  if (!file || typeof file !== 'object') return false;
+  // 排除 TFolder：包含 children 数组
+  if ('children' in file && Array.isArray(/** @type {{children?: unknown}} */ (file).children)) {
+    return false;
+  }
+  return 'path' in file || 'extension' in file;
+}
+
+/**
+ * 全局统一解析笔记引用的本地文件（支持 Wikilink、Markdown、HTML、file:// 协议、相对/绝对路径等）
+ * @param {{ metadataCache?: { getFirstLinkpathDest?: (linkpath: string, sourcePath: string) => unknown }, vault?: { getAbstractFileByPath?: (path: string) => unknown, adapter?: unknown, getResourcePath?: (file: unknown) => string } } | null | undefined} app
+ * @param {string} ref 图片引用路径
+ * @param {string} [sourcePath=''] 当前笔记所在路径
+ * @returns {Record<string, unknown> | null} 对应的 TFile / VaultFile 实例
+ */
+function resolveVaultImageFile(app, ref, sourcePath = '') {
+  if (!app || !ref || typeof ref !== 'string') return null;
+  const raw = ref.trim();
+  if (!raw || /^(https?:|data:image\/|data:application\/|app:\/\/|capacitor:\/\/)/i.test(raw)) return null;
+
+  const fileUrlLocal = getFileUrlLocalPath(raw);
+  const pathWithoutProtocol = fileUrlLocal || raw;
+  const decoded = safeDecodeUriText(pathWithoutProtocol);
+  const cleanRef = decoded.split(/[?#]/)[0].trim();
+  if (!cleanRef) return null;
+
+  // 若为系统绝对路径且位于 Vault 内，提取相对路径
+  const vaultRelative = getVaultRelativePathFromLocalPath(app, cleanRef);
+  const lookup = vaultRelative || cleanRef;
+
+  const metadataCache = app.metadataCache;
+  const vault = app.vault;
+
+  // 1. 优先通过 metadataCache 检索
+  try {
+    const linked = /** @type {unknown} */ (metadataCache?.getFirstLinkpathDest?.(lookup, sourcePath || ''));
+    if (isAbstractFileRecord(linked)) {
+      return /** @type {Record<string, unknown>} */ (linked);
+    }
+  } catch {
+    // 忽略异常，继续候选路径匹配
+  }
+
+  // 2. 构建候选路径
+  const noteDir = sourcePath ? sourcePath.slice(0, Math.max(sourcePath.lastIndexOf('/'), 0)) : '';
+  const candidates = [];
+
+  const normalized = normalizeVaultPath(lookup);
+  if (normalized) {
+    candidates.push(normalized);
+  }
+
+  const collapsed = collapsePathSegments(lookup);
+  if (collapsed && !candidates.includes(collapsed)) {
+    candidates.push(collapsed);
+  }
+
+  // 若以 / 开头（Vault 根目录绝对路径），补充去除首斜杠的候选
+  if (lookup.startsWith('/')) {
+    const rootRel = lookup.replace(/^\/+/, '');
+    if (rootRel && !candidates.includes(rootRel)) {
+      candidates.push(rootRel);
+    }
+  }
+
+  // 与当前笔记所在目录拼接（支持相对路径如 ./pic.png, ../assets/pic.png）
+  if (noteDir && !lookup.startsWith('/')) {
+    const combinedWithNoteDir = collapsePathSegments(`${noteDir}/${lookup}`);
+    if (combinedWithNoteDir && !candidates.includes(combinedWithNoteDir)) {
+      candidates.push(combinedWithNoteDir);
+    }
+  }
+
+  // 3. 逐个候选检查 vault 抽象文件或 metadataCache
+  for (const candidate of candidates) {
+    try {
+      const found = /** @type {unknown} */ (vault?.getAbstractFileByPath?.(candidate));
+      if (isAbstractFileRecord(found)) {
+        return /** @type {Record<string, unknown>} */ (found);
+      }
+    } catch {
+      // 尝试下一个候选
+    }
+    try {
+      const foundViaCache = /** @type {unknown} */ (metadataCache?.getFirstLinkpathDest?.(candidate, sourcePath || ''));
+      if (isAbstractFileRecord(foundViaCache)) {
+        return /** @type {Record<string, unknown>} */ (foundViaCache);
+      }
+    } catch {
+      // 尝试下一个候选
+    }
+  }
+
+  return null;
+}
+
+/**
+ * 解析并生成 Obsidian 内部显示用的资源路径（若定位到 Vault 文件则调用 getResourcePath，否则原样回退）
+ * @param {{ metadataCache?: { getFirstLinkpathDest?: (linkpath: string, sourcePath: string) => unknown }, vault?: { getAbstractFileByPath?: (path: string) => unknown, adapter?: unknown, getResourcePath?: (file: unknown) => string } } | null | undefined} app
+ * @param {string} ref
+ * @param {string} [sourcePath='']
+ * @returns {string}
+ */
+function resolveVaultResourceSrc(app, ref, sourcePath = '') {
+  const raw = String(ref || '').trim();
+  if (!raw || /^(https?:|data:|app:\/\/|capacitor:\/\/)/i.test(raw)) return raw;
+  const file = resolveVaultImageFile(app, raw, sourcePath);
+  if (file) {
+    const vault = app?.vault;
+    if (vault && typeof vault === 'object' && 'getResourcePath' in vault) {
+      const vaultWithResourcePath = /** @type {{ getResourcePath?: (targetFile: unknown) => unknown }} */ (vault);
+      if (typeof vaultWithResourcePath.getResourcePath === 'function') {
+        try {
+          const res = vaultWithResourcePath.getResourcePath(file);
+          if (typeof res === 'string' && res) return res;
+        } catch {
+          // fallback
+        }
+      }
+    }
+  }
+  return raw;
+}
+
 export {
   readBlobAsBase64Payload,
   dataUrlToBlob,
@@ -189,4 +324,6 @@ export {
   normalizeAbsoluteLocalPath,
   getVaultRelativePathFromLocalPath,
   getVaultDirnameFromPath,
+  resolveVaultImageFile,
+  resolveVaultResourceSrc,
 };

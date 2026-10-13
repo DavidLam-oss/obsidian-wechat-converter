@@ -35,6 +35,10 @@ import {
 } from '../apple-style-view-shared.js';
 import { normalizeVaultPath } from '../../services/path-utils.js';
 import {
+  resolveVaultResourceSrc,
+  resolveVaultImageFile,
+} from '../../services/image-source-utils.js';
+import {
   extractStickerData,
   STICKER_MAX_IMAGES,
   STICKER_MAX_CONTENT_LENGTH,
@@ -122,19 +126,7 @@ restoreAllStickerImages(filePath) {
 ,
 
 resolveStickerImageSrc(src, sourcePath) {
-  const raw = String(src || '');
-  if (!raw || /^(data:|https?:\/\/|app:\/\/|capacitor:\/\/)/i.test(raw)) return raw;
-
-  const linkFile = this.app?.metadataCache?.getFirstLinkpathDest?.(raw, sourcePath || '');
-  if (!linkFile) return raw;
-
-  const vault = toRecord(this.app.vault);
-  const getResourcePathRaw = ('getResourcePath' in vault) ? vault.getResourcePath : null;
-  if (typeof getResourcePathRaw !== 'function') return raw;
-
-  const getResourcePath = /** @type {(file: unknown) => unknown} */ (getResourcePathRaw);
-  const resolved = getResourcePath(linkFile);
-  return typeof resolved === 'string' && resolved ? resolved : raw;
+  return resolveVaultResourceSrc(this.app, src, sourcePath);
 }
 ,
 
@@ -175,9 +167,9 @@ async buildStickerData(options = {}) {
   const fallbackTitle = activeFile && typeof activeFile.basename === 'string' ? activeFile.basename : '未命名贴图';
   const uiState = this.getStickerUiState(sourcePath);
   const resolveBodyImageIdentity = (src) => {
-    const resolved = this.app?.metadataCache?.getFirstLinkpathDest?.(src, sourcePath);
-    return resolved && typeof resolved.path === 'string'
-      ? normalizeVaultPath(resolved.path)
+    const resolved = resolveVaultImageFile(this.app, src, sourcePath);
+    return resolved && typeof resolved['path'] === 'string'
+      ? normalizeVaultPath(resolved['path'])
       : normalizeVaultPath(src);
   };
 

@@ -120,8 +120,9 @@ function makePlugin(settingsOverrides = {}) {
   };
 }
 
-function renderTab(plugin) {
+function renderTab(plugin, activeTab = 'wechat') {
   const tab = new AppleStyleSettingTab(plugin.app, plugin);
+  tab._activeSettingsTab = activeTab;
   tab.containerEl = createObsidianLikeElement('div');
   tab.renderSettingsContent();
   return tab;
@@ -168,7 +169,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
 
   it('keeps the公众号首次配置指南 inline with the account heading', () => {
     const plugin = makePlugin();
-    renderTab(plugin);
+    const tab = renderTab(plugin);
 
     expect(globalThis.__obsidianSettingNamesRegistry).not.toContain('公众号首次配置指南');
     expect(
@@ -182,20 +183,14 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
       )
     ).toBe(false);
 
-    const accountGuideDescription = globalThis.__obsidianSettingInstancesRegistry.find(
-      (setting) => setting.name === '微信公众号账号'
-    )?.descEl;
-    expect(accountGuideDescription?.textContent).toContain(
-      '首次配置请先完成 IP 白名单设置。 查看图文指南 →'
-    );
-    expect(accountGuideDescription?.textContent).not.toContain('[object DocumentFragment]');
-    const accountGuideLink = accountGuideDescription?.querySelector('a');
-    expect(accountGuideLink?.classList.contains('apple-settings-guide-link')).toBe(true);
+    const accountGuideLink = tab.containerEl.querySelector('a.apple-settings-guide-link');
+    expect(accountGuideLink).not.toBeNull();
+    expect(accountGuideLink?.textContent).toContain('查看图文指南 →');
     expect(accountGuideLink?.href).toBe(
       'https://xiaoweibox.top/obsidian-publisher/guide#wechat-api'
     );
 
-    accountGuideLink.click();
+    accountGuideLink?.click();
 
     expect(plugin.openExternalUrl).toHaveBeenCalledWith(
       'https://xiaoweibox.top/obsidian-publisher/guide#wechat-api'
@@ -327,12 +322,13 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     expect(names).toContain('API 代理地址');
   });
 
-  it('renders the preview / watermark headings on the wechat tab', () => {
-    renderTab(makePlugin());
+  it('renders the preview / watermark section headers and settings on the wechat tab', () => {
+    const tab = renderTab(makePlugin());
+    expect(tab.containerEl.textContent).toContain('界面与预览模式');
+    expect(tab.containerEl.textContent).toContain('图片水印与头像');
     const names = globalThis.__obsidianSettingNamesRegistry;
-    expect(names).toContain('预览模式');
     expect(names).toContain('使用手机仿真框');
-    expect(names).toContain('图片水印');
+    expect(names).toContain('启用图片水印');
   });
 
   it('cancels AI Provider deletion through an Obsidian confirmation modal', async () => {
@@ -356,7 +352,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
         articleLayoutsByPath: {},
       },
     });
-    const tab = renderTab(plugin);
+    const tab = renderTab(plugin, 'ai');
     const deleteButton = Array.from(tab.containerEl.querySelectorAll('button'))
       .find((button) => button.textContent === '删除');
     expect(deleteButton).toBeDefined();
@@ -392,7 +388,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
         articleLayoutsByPath: {},
       },
     });
-    const tab = renderTab(plugin);
+    const tab = renderTab(plugin, 'ai');
     const deleteButton = Array.from(tab.containerEl.querySelectorAll('button'))
       .find((button) => button.textContent === '删除');
 
@@ -429,7 +425,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
         },
       },
     });
-    renderTab(plugin);
+    renderTab(plugin, 'ai');
     const clearButton = globalThis.__obsidianButtonRegistry.find((button) => button.text === '清空缓存');
     expect(clearButton).toBeDefined();
     expect(clearButton.destructive).toBe(true);
@@ -473,7 +469,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     expect(names).toContain('本地服务端口');
     expect(names).toContain('连接令牌');
     expect(names).toContain('测试连接');
-    expect(names).toContain('读取已选平台状态');
+    expect(names).not.toContain('读取已选平台状态');
   });
 
   it('shows Pro identity in the multi-platform panel without adding a settings-tab badge', () => {
@@ -654,11 +650,11 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     });
     plugin.getWechatSyncBridgeService = vi.fn(() => bridge);
 
-    renderTab(plugin);
-    const readButton = globalThis.__obsidianButtonRegistry.find((button) => button.text === '读取');
-    expect(readButton).toBeDefined();
+    const tab = renderTab(plugin);
+    const refreshButton = tab.containerEl.querySelector('.wechat-platform-wall-refresh-btn');
+    expect(refreshButton).not.toBeNull();
 
-    await readButton.clickHandler();
+    await refreshButton.onclick();
 
     expect(bridge.getAuthSnapshot).toHaveBeenCalledWith({
       platforms: ['zhihu'],
@@ -697,11 +693,11 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     const body = tab.containerEl.querySelector('.wechat-bridge-status-body');
     expect(body.textContent).toContain('连接令牌校验失败');
 
-    // Unified bar must come before the platform picker.
+    // Platform picker is hoisted to the top of the tab, so it must come before the unified bar.
     const unifiedBar = tab.containerEl.querySelector('.wechat-multiplatform-token-status');
     const picker = tab.containerEl.querySelector('.wechat-platform-picker');
     expect(picker).not.toBeNull();
-    expect(unifiedBar.compareDocumentPosition(picker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(unifiedBar.compareDocumentPosition(picker) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
   });
 
   it('does not render the unified status bar or platform section when bridge is disabled', () => {
@@ -828,6 +824,7 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
 
   it('shows pending browser pairing and approves only after an explicit click', async () => {
     const pairClient = vi.fn(() => true);
+    const dismissPendingClient = vi.fn(() => true);
     const plugin = makePlugin({ multiPlatformSync: {
       enabled: true,
       port: 9527,
@@ -847,14 +844,48 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
       connection: { status: 'failed', checkedAt: Date.now(), platforms: [], capabilities: {}, message: '' },
       recentTasks: [],
     } });
-    plugin.getWechatSyncBridgeService = vi.fn(() => ({ pairClient }));
+    plugin.getWechatSyncBridgeService = vi.fn(() => ({ pairClient, dismissPendingClient }));
     const tab = renderTab(plugin);
     const panel = tab.containerEl.querySelector('.wechat-bridge-pairing-panel');
     expect(panel?.textContent).toContain('写作号');
     expect(pairClient).not.toHaveBeenCalled();
-    panel.querySelector('button')?.click();
+    const buttons = panel.querySelectorAll('button');
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0].textContent).toBe('批准配对');
+    expect(buttons[1].textContent).toBe('忽略');
+    buttons[0].click();
     await Promise.resolve();
     expect(pairClient).toHaveBeenCalledWith('pending-profile');
+  });
+
+  it('dismisses pending browser pairing when 忽略 button is clicked', async () => {
+    const dismissPendingClient = vi.fn(() => true);
+    const plugin = makePlugin({ multiPlatformSync: {
+      enabled: true,
+      port: 9527,
+      token: 'migration-token',
+      connectedClients: [],
+      pairedClients: [],
+      pendingClients: [{
+        extensionInstanceId: 'pending-profile',
+        credentialHash: 'a'.repeat(64),
+        browserName: 'comet',
+        profileLabel: '写作号',
+        extensionVersion: '0.2.9',
+        reason: 'pairing_required',
+      }],
+      supportedPlatforms: [],
+      selectedPlatforms: [],
+      connection: { status: 'failed', checkedAt: Date.now(), platforms: [], capabilities: {}, message: '' },
+      recentTasks: [],
+    } });
+    plugin.getWechatSyncBridgeService = vi.fn(() => ({ dismissPendingClient }));
+    const tab = renderTab(plugin);
+    const panel = tab.containerEl.querySelector('.wechat-bridge-pairing-panel');
+    const dismissBtn = Array.from(panel.querySelectorAll('button')).find((b) => b.textContent === '忽略');
+    expect(dismissBtn).toBeDefined();
+    dismissBtn?.click();
+    expect(dismissPendingClient).toHaveBeenCalledWith('pending-profile');
   });
 
   it('§16 Phase 1: 有 profileLabel 时显示 profileLabel（不再叠加 browserName）', () => {
@@ -916,6 +947,94 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     expect(body.textContent).toContain('Chrome');
   });
 
+  it('当存在已配对浏览器时，测试连接按钮放置在移除按钮左侧，且底部不重复渲染独立的测试连接设置项', async () => {
+    const bridge = {
+      start: vi.fn().mockResolvedValue({}),
+      waitForConnection: vi.fn().mockResolvedValue(undefined),
+      health: vi.fn().mockResolvedValue({ ok: true, tokenValid: true, capabilities: {} }),
+      listSupportedPlatforms: vi.fn().mockResolvedValue([]),
+      getAuthSnapshot: vi.fn().mockResolvedValue({ platforms: [], checkedAt: 0 }),
+      checkAuth: vi.fn().mockResolvedValue([]),
+      getStatus: vi.fn().mockResolvedValue({}),
+    };
+    const plugin = makePlugin({
+      multiPlatformSync: {
+        enabled: true,
+        port: 9527,
+        token: 'abc',
+        pairedClients: [{
+          extensionInstanceId: 'paired-chrome',
+          credentialHash: 'b'.repeat(64),
+          browserName: 'chrome',
+          profileLabel: '写作号',
+        }],
+        supportedPlatforms: [],
+        selectedPlatforms: [],
+        connection: { status: 'connected', checkedAt: Date.now(), platforms: [], capabilities: {}, message: '' },
+        recentTasks: [],
+      },
+    });
+    plugin.getWechatSyncBridgeService = vi.fn(() => bridge);
+    const tab = renderTab(plugin);
+
+    // 验证配对存在时，不渲染顶部冗余的独立连接状态栏
+    expect(tab.containerEl.querySelector('.wechat-multiplatform-token-status')).toBeNull();
+
+    // 验证配对卡片行内整合了浏览器信息与「已就绪」状态徽标
+    const pairedPanel = tab.containerEl.querySelector('.wechat-bridge-paired-panel');
+    expect(pairedPanel).not.toBeNull();
+    const info = pairedPanel.querySelector('.wechat-bridge-paired-info');
+    expect(info).not.toBeNull();
+    expect(info.textContent).toContain('写作号');
+    expect(info.textContent).toContain('已就绪');
+    expect(info.querySelector('.wechat-multiplatform-token-status-dot.is-ok')).not.toBeNull();
+
+    // 验证底部独立 Setting 不包含测试连接
+    const names = globalThis.__obsidianSettingNamesRegistry;
+    expect(names).not.toContain('测试连接');
+
+    // 验证配对卡片内部操作区按顺序包含「测试连接」和「移除」
+    const actionBtns = Array.from(pairedPanel.querySelectorAll('.wechat-bridge-pairing-actions button'));
+    expect(actionBtns.map((b) => b.textContent)).toEqual(['测试连接', '移除']);
+
+    // 点击测试连接能正常调用底层 bridge 逻辑
+    await actionBtns[0].onclick();
+    expect(bridge.health).toHaveBeenCalled();
+  });
+
+  it('当存在已配对浏览器但连接失败时，保留顶部独立错误状态栏并显示连接失败徽标', () => {
+    const tab = renderTab(makePlugin({
+      multiPlatformSync: {
+        enabled: true,
+        port: 9527,
+        token: 'abc',
+        pairedClients: [{
+          extensionInstanceId: 'paired-chrome',
+          credentialHash: 'b'.repeat(64),
+          browserName: 'chrome',
+          profileLabel: '写作号',
+        }],
+        supportedPlatforms: [],
+        selectedPlatforms: [],
+        connection: { status: 'failed', checkedAt: Date.now(), platforms: [], capabilities: {}, message: '端口被占用' },
+        recentTasks: [],
+      },
+    }));
+
+    // 失败时必须渲染顶部错误状态栏以供排查诊断
+    const dot = tab.containerEl.querySelector('.wechat-multiplatform-token-status .wechat-multiplatform-token-status-dot');
+    expect(dot).not.toBeNull();
+    expect(dot.textContent).toBe('连接失败');
+    expect(dot.classList.contains('is-error')).toBe(true);
+    expect(tab.containerEl.querySelector('.wechat-bridge-status-body').textContent).toContain('端口被占用');
+
+    // 配对行内徽标也呈现「连接失败」
+    const pairedPanel = tab.containerEl.querySelector('.wechat-bridge-paired-panel');
+    const rowDot = pairedPanel.querySelector('.wechat-multiplatform-token-status-dot');
+    expect(rowDot.textContent).toBe('连接失败');
+    expect(rowDot.classList.contains('is-error')).toBe(true);
+  });
+
   it('§18.7 Plan B: chrome / chromium 走通用 icon（不撒谎为某个特定 fork）', () => {
     const tab = renderTab(makePlugin({ multiPlatformSync: {
       enabled: true,
@@ -965,5 +1084,38 @@ describe('AppleStyleSettingTab settings rendering - smoke test', () => {
     } }));
     const body = tab.containerEl.querySelector('.wechat-bridge-status-body');
     expect(body.querySelector('.wechat-bridge-browser-icon')).not.toBeNull();
+  });
+});
+
+// 回归守卫（2026-09-19，方向反转）：图片卡片的全部配置收敛在转换器侧边栏面板
+// （「排版 Token / 封面设置」），全局偏好设置**不再**提供「卡片」页签。
+// 页签若被重新加回，会出现两处入口、默认值写入路径分叉——这里锁死它不该存在。
+describe('设置页不提供卡片页签（回归守卫）', () => {
+  beforeEach(() => {
+    globalThis.__obsidianSettingNamesRegistry = [];
+    globalThis.__obsidianButtonRegistry = [];
+  });
+
+  it('页签列表不含「卡片」，卡片全局表单不再渲染', () => {
+    const plugin = makePlugin();
+    const tab = renderTab(plugin, 'wechat');
+
+    const labels = Array.from(tab.containerEl.querySelectorAll('.apple-settings-tab'))
+      .map((el) => el.textContent);
+    expect(labels).toEqual(expect.arrayContaining(['微信', '飞书', 'AI/第三方服务', '关于']));
+    expect(labels).not.toContain('卡片');
+
+    // 只属于卡片页签的表单名不得再出现在设置页（侧栏才是它们的入口）
+    expect(globalThis.__obsidianSettingNamesRegistry).not.toContain('默认主题');
+    expect(globalThis.__obsidianSettingNamesRegistry).not.toContain('默认导出目录');
+  });
+
+  it('历史遗留的 "card" 活跃页签回落微信，不停在空白内容区', () => {
+    const plugin = makePlugin();
+    const tab = new AppleStyleSettingTab(plugin.app, plugin);
+    tab._activeSettingsTab = 'card';
+    tab.containerEl = createObsidianLikeElement('div');
+    tab.renderSettingsContent();
+    expect(tab._activeSettingsTab).toBe('wechat');
   });
 });

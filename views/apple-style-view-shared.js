@@ -72,6 +72,11 @@ export {
   normalizeLayoutSelection,
   getArticleLayoutSelectionState,
   resolveAiProvider,
+  resolveImageAiProvider,
+  listTextAiProviders,
+  listImageAiProviders,
+  DEFAULT_IMAGE_MODELS,
+  COMMON_AI_PRESETS,
   deriveArticleLayoutStateForSelection,
   normalizeArticleLayoutState,
   normalizeArticleLayoutCacheEntry,
@@ -156,6 +161,9 @@ export {
   renderFeishuSettingsTab,
 } from './settings/feishu-tab.js';
 export {
+  renderAiSettingsTab,
+} from './settings/ai-tab.js';
+export {
   renderAboutSettingsTab,
 } from './settings/about-tab.js';
 export {
@@ -182,6 +190,7 @@ export {
   getObsidianModalClass,
   createObsidianModal,
   getObsidianSetIcon,
+  attachIcon,
   getObsidianRequestUrl,
   getObsidianRequest,
 } from '../services/obsidian-compat.js';
@@ -190,6 +199,7 @@ export {
   revealLeafCompat,
   getPluginSettings,
   setPluginSettings,
+  syncInPlace,
   setDestructiveButtonCompat,
   refreshSettingTabCompat,
   isMobileClient as isMobileClientBase,
@@ -243,6 +253,8 @@ export {
   normalizeAbsoluteLocalPath,
   getVaultRelativePathFromLocalPath,
   getVaultDirnameFromPath,
+  resolveVaultImageFile,
+  resolveVaultResourceSrc,
 } from '../services/image-source-utils.js';
 export {
   APPLE_STYLE_VIEW,

@@ -112,6 +112,93 @@ function joinVaultPath(...parts) {
 }
 
 /**
+ * 与 services/path-utils.js 保持一致：折叠处理路径，保留前导 ..
+ * 改动请一并更新 services/path-utils.js 并经由 tests/converter_path_utils_parity.test.js 校验
+ * @param {unknown} filePath
+ * @returns {string}
+ */
+function collapsePathSegments(filePath) {
+  if (typeof filePath !== 'string') return '';
+  const clean = filePath.trim().replace(/\\/g, '/');
+  const parts = clean.split('/');
+  const stack = [];
+  for (const part of parts) {
+    if (!part || part === '.') continue;
+    if (part === '..') {
+      if (stack.length > 0 && stack[stack.length - 1] !== '..') {
+        stack.pop();
+      } else {
+        stack.push('..');
+      }
+    } else {
+      stack.push(part);
+    }
+  }
+  return stack.join('/');
+}
+
+/**
+ * 与 services/image-source-utils.js 保持一致：解析 file:// 本地路径
+ * @param {string} src
+ * @returns {string}
+ */
+function getFileUrlLocalPath(src) {
+  try {
+    const url = new URL(String(src || '').trim());
+    if (url.protocol !== 'file:') return '';
+    if (url.hostname && url.hostname !== 'localhost') return '';
+    const pathname = decodeURIComponent(url.pathname || '');
+    return /^\/[a-zA-Z]:\//.test(pathname) ? pathname.slice(1) : pathname;
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * 与 services/image-source-utils.js 保持一致：读取 adapter basePath
+ * @param {unknown} app
+ * @returns {string}
+ */
+function getVaultAdapterBasePath(app) {
+  const adapter = isRecord(app) && isRecord(app.vault) ? app.vault.adapter : null;
+  if (!adapter || typeof adapter !== 'object') return '';
+  const basePath = toRecord(adapter).basePath;
+  return typeof basePath === 'string' ? basePath : '';
+}
+
+/**
+ * 与 services/image-source-utils.js 保持一致：规范化绝对本地路径
+ * @param {unknown} value
+ * @returns {string}
+ */
+function normalizeAbsoluteLocalPath(value) {
+  let pathValue = String(value || '').trim().replace(/\\/g, '/').replace(/\/{2,}/g, '/');
+  const hasDrivePrefix = /^[a-zA-Z]:\//.test(pathValue);
+  if (!hasDrivePrefix) {
+    pathValue = pathValue.replace(/\/+/g, '/');
+  }
+  return pathValue.replace(/\/+$/, '');
+}
+
+/**
+ * 与 services/image-source-utils.js 的 getVaultRelativePathFromLocalPath 保持同步
+ * 改动请一并更新 services/image-source-utils.js 并经由 tests/converter_path_utils_parity.test.js 校验
+ * @param {unknown} app
+ * @param {string} localPath
+ * @returns {string}
+ */
+function getVaultRelativePathFromLocalPath(app, localPath) {
+  const basePath = getVaultAdapterBasePath(app);
+  if (!basePath || !localPath) return '';
+  const normalizedBase = normalizeAbsoluteLocalPath(basePath);
+  const normalizedLocal = normalizeAbsoluteLocalPath(localPath);
+  if (!normalizedBase || !normalizedLocal) return '';
+  if (normalizedLocal === normalizedBase) return '';
+  if (!normalizedLocal.startsWith(`${normalizedBase}/`)) return '';
+  return normalizeVaultPath(normalizedLocal.slice(normalizedBase.length + 1));
+}
+
+/**
  * @param {MarkdownTokenLike[]} tokens
  * @param {number} idx
  * @returns {MarkdownTokenLike}
@@ -316,23 +403,37 @@ class AppleStyleConverter {
     if (/^(https?:\/\/|data:|app:\/\/|capacitor:\/\/)/i.test(src)) return src;
 
     try {
+      const fileUrlLocal = getFileUrlLocalPath(src);
+      const rawPath = fileUrlLocal || src;
       // Markdown-it might encode the URL (e.g. %20 for space), but Obsidian expects decoded paths
-      const linkPath = safeDecodeUri(src);
+      const decoded = safeDecodeUri(rawPath);
+      const linkPath = decoded.split(/[?#]/)[0].trim();
       const sourcePath = this.sourcePath;
+
+      // 若为系统绝对路径且位于 Vault 内，提取相对路径
+      const vaultRelative = getVaultRelativePathFromLocalPath(this.app, linkPath);
+      const lookup = vaultRelative || linkPath;
+
       // Resolve using Obsidian's standard API
-      const tFile = this.app.metadataCache?.getFirstLinkpathDest?.(linkPath, sourcePath);
+      const tFile = this.app.metadataCache?.getFirstLinkpathDest?.(lookup, sourcePath);
       if (tFile) {
         return this.app.vault?.getResourcePath?.(tFile) || src;
       }
 
       const vault = this.app.vault;
       const candidates = [];
-      const normalized = normalizeVaultPath(linkPath);
+      const normalized = normalizeVaultPath(lookup);
       if (normalized) candidates.push(normalized);
-      const noteDir = getVaultDirname(sourcePath);
-      if (normalized && noteDir) candidates.push(joinVaultPath(noteDir, normalized));
+      const collapsed = collapsePathSegments(lookup);
+      if (collapsed && !candidates.includes(collapsed)) candidates.push(collapsed);
 
-      for (const candidate of Array.from(new Set(candidates))) {
+      const noteDir = getVaultDirname(sourcePath);
+      if (normalized && noteDir && !lookup.startsWith('/')) {
+        const combined = collapsePathSegments(joinVaultPath(noteDir, normalized));
+        if (combined && !candidates.includes(combined)) candidates.push(combined);
+      }
+
+      for (const candidate of candidates) {
         const file = vault?.getAbstractFileByPath?.(candidate);
         if (file?.extension) {
           return vault?.getResourcePath?.(file) || src;
@@ -1009,8 +1110,124 @@ ${macHeader}
     html = this.unwrapFigures(html); // Fix: Remove <p> wrappers from <figure> to prevent empty lines
     html = this.removeBlockquoteParagraphMargins(html); // Fix: Remove margins from <p> inside <blockquote> for vertical centering
     html = this.fixMathJaxTags(html); // Fix: Replace <mjx-container> with WeChat-compatible tags
+    html = this.normalizeFontTags(html); // Normalize <font> to <span style="..."> for WeChat compatibility
     html = this.sanitizeHtml(html); // Final security pass: Neutralize XSS and dangerous tags
     return `<section class="owc-article-root" style="${this.getInlineStyle('section')}">${html}</section>`;
+  }
+
+  /**
+   * 将旧式 <font> 标签转换为微信完全兼容的 <span style="..."> 标签
+   * 规范化 color、size、face 属性并保留已有行内样式
+   *
+   * ## 实现约束
+   * - 使用正则表达式解析 HTML（regex-based parsing）
+   * - 分两步：先替换开标签 `<font>` -> `<span>`，再替换闭标签 `</font>` -> `</span>`
+   * - 不处理嵌套内容（避免了 `/<font>(.*?)<\/font>/` 的嵌套陷阱）
+   *
+   * ## 安全边界
+   * - **输入来源受控**：仅处理 markdown-it 生成的 HTML（结构可预测）
+   * - **后置清理兜底**：`sanitizeHtml()` 会清理任何解析错误遗留的危险标签
+   * - **监控建议**：如生产环境遇到 `<font>` 标签解析错误，可考虑引入 DOM 解析器（jsdom/htmlparser2）
+   *
+   * @param {string} html
+   * @returns {string}
+   */
+  normalizeFontTags(html) {
+    if (typeof html !== 'string' || (!html.includes('<font') && !html.includes('<FONT'))) {
+      return html;
+    }
+
+    /** @type {Record<string, string>} */
+    const FONT_SIZE_MAP = {
+      '1': '10px',
+      '2': '13px',
+      '3': '16px',
+      '4': '18px',
+      '5': '24px',
+      '6': '32px',
+      '7': '48px',
+    };
+
+    const normalizeColor = (val) => {
+      if (!val || typeof val !== 'string') return '';
+      const trimmed = val.trim().replace(/^['"]+|['"]+$/g, '').trim();
+      const hexCandidate = /^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$|^[0-9a-fA-F]{8}$/.test(trimmed)
+        ? `#${trimmed}`
+        : trimmed;
+      if (/^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(hexCandidate)) {
+        return hexCandidate;
+      }
+      if (/^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*[\d.]+%?)?\s*\)$/i.test(hexCandidate)) {
+        return hexCandidate;
+      }
+      if (/^hsla?\(\s*\d+(?:deg|rad|turn)?\s*,\s*[\d.]+%?\s*,\s*[\d.]+%?(?:\s*,\s*[\d.]+%?)?\s*\)$/i.test(hexCandidate)) {
+        return hexCandidate;
+      }
+      if (/^[a-zA-Z]{3,20}$/.test(hexCandidate)) {
+        return hexCandidate.toLowerCase();
+      }
+      return '';
+    };
+
+    const normalizeSize = (val) => {
+      if (!val || typeof val !== 'string') return '';
+      const trimmed = val.trim().replace(/^['"]+|['"]+$/g, '').trim();
+      if (Object.prototype.hasOwnProperty.call(FONT_SIZE_MAP, trimmed)) {
+        return FONT_SIZE_MAP[trimmed] || '';
+      }
+      if (/^\d+(?:\.\d+)?(?:px|pt|em|rem|%)$/i.test(trimmed)) return trimmed;
+      return '';
+    };
+
+    const normalizeFace = (val) => {
+      if (!val || typeof val !== 'string') return '';
+      const trimmed = val.trim().replace(/^['"]+|['"]+$/g, '').trim();
+      if (/^[a-zA-Z0-9\u4e00-\u9fa5\s,'"-]+$/.test(trimmed)) {
+        return trimmed;
+      }
+      return '';
+    };
+
+    const replacedOpen = html.replace(/<font\b([^>]*)>/gi, (_match, attrs) => {
+      const rawAttrs = String(attrs || '');
+      const colorMatch = rawAttrs.match(/\bcolor\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+      const sizeMatch = rawAttrs.match(/\bsize\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+      const faceMatch = rawAttrs.match(/\bface\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+      const styleMatch = rawAttrs.match(/\bstyle\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+
+      const color = colorMatch ? (colorMatch[1] || colorMatch[2] || colorMatch[3] || '') : '';
+      const size = sizeMatch ? (sizeMatch[1] || sizeMatch[2] || sizeMatch[3] || '') : '';
+      const face = faceMatch ? (faceMatch[1] || faceMatch[2] || faceMatch[3] || '') : '';
+      const existingStyle = styleMatch ? (styleMatch[1] || styleMatch[2] || styleMatch[3] || '') : '';
+
+      const styleParts = [];
+      if (existingStyle) {
+        const trimmed = existingStyle.trim().replace(/;+$/, '');
+        if (trimmed) styleParts.push(trimmed);
+      }
+      const validColor = normalizeColor(color);
+      if (validColor) {
+        styleParts.push(`color: ${validColor}`);
+      }
+      const validSize = normalizeSize(size);
+      if (validSize) {
+        styleParts.push(`font-size: ${validSize}`);
+      }
+      const validFace = normalizeFace(face);
+      if (validFace) {
+        styleParts.push(`font-family: ${validFace}`);
+      }
+
+      const otherAttrs = rawAttrs
+        .replace(/\b(?:color|size|face|style)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+        .trim();
+
+      const styleAttr = styleParts.length > 0 ? ` style="${styleParts.join('; ')};"` : '';
+      const otherAttrStr = otherAttrs ? ` ${otherAttrs}` : '';
+      return `<span${styleAttr}${otherAttrStr}>`;
+    });
+
+    return replacedOpen.replace(/<\/font>/gi, '</span>');
   }
 
   /**
@@ -1318,6 +1535,14 @@ ${macHeader}
     return src.split('/').pop().split('\\').pop().replace(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i, '') || '图片';
   }
 }
+
+AppleStyleConverter._internal = {
+  collapsePathSegments,
+  getFileUrlLocalPath,
+  getVaultAdapterBasePath,
+  normalizeAbsoluteLocalPath,
+  getVaultRelativePathFromLocalPath,
+};
 
 APPLE_CONVERTER_GLOBAL.AppleStyleConverter = AppleStyleConverter;
 if (typeof window !== 'undefined') {

@@ -156,6 +156,8 @@ type CoreMethodsContract = Pick<
     | 'onResize'
     | 'onClose'
     | 'simpleHash'
+    | 'deriveNativePreviewHtml'
+    | 'refreshCustomCssPreview'
 >;
 
 type SettingsPanelMethodsContract = Pick<
@@ -181,6 +183,104 @@ type PanelShellMethodsContract = Pick<
     | 'closeTransientPanels'
     | 'toggleSettingsPanel'
     | 'switchPreviewMode'
+    | 'runModeRenderWithDiagnostics'
+    | 'showModeRenderFailure'
+    | 'applyModeActionVisibility'
+    | 'updateSettingsButtonLabel'
+>;
+
+type CardPreviewMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'getCardSessions'
+    | 'renderCardPreview'
+    | 'scheduleCardPreviewUpdate'
+    | 'markCardPreviewStaleNow'
+    | 'resolveCardMarkdownSource'
+    | 'runCardLayoutPipeline'
+    | 'getCardPreviewZoom'
+    | 'applyCardPreviewZoom'
+    | 'maybeAutoFitCardPreviewZoom'
+    | 'renderCardEmptyState'
+    | 'renderCardMobileNotice'
+    | 'renderCardFailureState'
+    | 'renderCardPreviewDom'
+    | 'locateCardPageSource'
+    | 'disposeCardPreview'
+    | 'locateCardSourceLine'
+>;
+
+type CardPageSelectionMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'getCardPageSelection'
+    | 'resolveCardSelectionSession'
+    | 'toggleCardPageSelection'
+    | 'applyCardPageSelection'
+    | 'renderCardExportPicker'
+>;
+
+type CardPreviewDiagnosticsMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'renderCardDiagnosticArea'
+    | 'appendCardDiagnosticRow'
+>;
+
+type CardSettingsMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'buildCardSettingsPanel'
+    | 'renderCardSettingsValues'
+    | 'renderCardCoverGroupEcho'
+    | 'switchCardSettingsSubTab'
+    | 'openCardSettingsTab'
+    | 'resetCardSettingsPanelViewState'
+    | 'applyCardLayoutSetting'
+    | 'applyCardLayoutSettings'
+    | 'applyCardTheme'
+    | 'persistCardLayoutDefaults'
+    | 'scheduleCardDefaultsSave'
+    | 'applyCardCoverField'
+    | 'resetCardCoverFields'
+    | 'getCardSettingsSession'
+    | 'getCurrentCardLayoutSettings'
+>;
+
+type CardExportBridgeMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'buildCardExportFsAdapter'
+    | 'prepareCardExportResources'
+    | 'createCardCaptureCallback'
+    | 'collectCardExportInput'
+    | 'createCardExportController'
+    | 'resolveCardExportAbsPath'
+    | 'canRevealCardExportOutput'
+    | 'revealCardExportOutput'
+>;
+
+type CardExportMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'getCardExportSession'
+    | 'openCardExportModal'
+    | 'closeCardExportModal'
+    | 'resolveCardExportView'
+    | 'handleCardExportProgress'
+    | 'startCardExport'
+    | 'startNewCardExport'
+    | 'cancelCardExport'
+    | 'retryCardExportFailedPages'
+    | 'retryCardExportManifest'
+    | 'disposeCardExportModal'
+>;
+
+type CardExportModalViewMethodsContract = Pick<
+    AppleStyleViewContract,
+    | 'renderCardExportModal'
+    | 'renderCardExportForm'
+    | 'resolveCardExportScope'
+    | 'resolveCardExportRootDefault'
+    | 'rememberCardExportRoot'
+    | 'renderCardExportPreparing'
+    | 'renderCardExportJob'
+    | 'renderCardExportPages'
+    | 'renderCardExportResultLinks'
 >;
 
 type StickerPreviewMethodsContract = Pick<
@@ -258,6 +358,7 @@ type WechatPreviewExportMethodsContract = Pick<
     | 'openExternalUrl'
     | 'openPublisherProPage'
     | 'openPublisherGuidePage'
+    | 'resolveArticleHtmlSource'
 >;
 
 type WechatSyncActionMethodsContract = Pick<
@@ -274,6 +375,7 @@ type WechatSyncModalMethodsContract = Pick<
 type AiSettingsMethodsContract = Pick<
     AppleStyleSettingTabContract,
     | 'renderAiSettingsSection'
+    | 'renderAiSettingsTab'
     | 'showEditAiProviderModal'
 >;
 
@@ -284,7 +386,6 @@ type ConfirmModalMethodsContract = Pick<
 
 type SettingsTabShellMethodsContract = Pick<
     AppleStyleSettingTabContract,
-    | 'getSettingDefinitions'
     | 'renderGitHubStarBanner'
     | 'renderSettingsTabIntro'
     | 'renderSettingsContent'

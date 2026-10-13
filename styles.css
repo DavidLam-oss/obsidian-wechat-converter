@@ -49,6 +49,7 @@
   --apple-success: #34c759;
   --apple-warning: #ff9500;
   --apple-error: #ff3b30;
+  --apple-purple: #8b5cf6;
 
   /* 代码配色 */
   --apple-code-text: #c7254e;
@@ -94,6 +95,7 @@
   --apple-code-bg: #2d2d2d;
   --apple-code-block-bg: #1e1e1e;
   --apple-code-block-border: #333;
+  --apple-purple: #a78bfa;
 }
 
 /* ========================================
@@ -1827,7 +1829,7 @@ AI layout 面板和生成结果的视觉样式
   margin: 0;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 480px) {
   .apple-settings-details .setting-item {
     display: block;
     gap: 10px;
@@ -1882,6 +1884,31 @@ AI layout 面板和生成结果的视觉样式
   outline: none;
   border-color: var(--apple-accent);
   box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.1);
+}
+
+.apple-settings-summary-value {
+  margin-left: auto;
+  margin-right: 8px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--apple-secondary);
+}
+
+.apple-settings-inline-tip {
+  font-size: 11px;
+  color: var(--apple-secondary);
+  opacity: 0.8;
+  font-weight: 500;
+  display: block;
+}
+
+.apple-settings-inline-tip.is-spaced {
+  margin-top: 8px;
+}
+
+.apple-settings-inline-tip.is-loose {
+  opacity: 0.78;
+  line-height: 1.6;
 }
 /*
 ## 核心功能
@@ -2434,22 +2461,17 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   }
 }
 
-/* 处理表格：优先换行，仅在极个别长单词情况下滚动 */
+/* 表格排版：对齐微信横向滑动与单元格自适应，防止单元格限宽导致文字越界重叠 */
 .apple-converter-preview table {
-  width: 100%;
-  table-layout: auto; /* 自动宽度 */
+  table-layout: auto;
   border-collapse: collapse;
   margin: 16px 0;
-  display: table; /* 恢复表格显示属性 */
+  display: table;
 }
 
-/* 单元格内容自动换行 */
 .apple-converter-preview td,
 .apple-converter-preview th {
-  white-space: normal; /* 强制换行 */
-  word-wrap: break-word;
-  word-break: break-all; /* 允许在单词内换行，防止长链接撑破 */
-  max-width: 300px; /* 限制最大宽度，触发换行 */
+  max-width: none;
 }
 
 /* 隐藏滚动条，获得更像 App 的体验 */
@@ -3043,6 +3065,1858 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 /*
 ## 核心功能
 
+图片卡片预览/实验样式分片（A03 离屏容器 + B02 预览 UI）。
+卡片成品页样式由主题 token 动态生成（services/card-themes.js），不进本分片。
+
+## 输入
+
+接收 Obsidian 主题变量（--background-primary / --background-modifier-* / --text-* /
+--interactive-accent 等）与项目苹果配色 token（--apple-success / --apple-warning / --apple-error）。
+
+## 输出
+
+输出预览外壳的布局与状态表现：摘要条与 chip、缩放控制、缩略页容器、
+空态/失败态/诊断区（含深色主题适配）。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+预览 DOM 由 views/converter/card-preview.js 产出；选页清单归导出弹窗（card-page-selection.js）。
+
+## 依赖
+
+依赖 Obsidian 主题变量与 styles/base.css 的苹果 token；不依赖其它分片的类名。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 新增选择器必须以 icard- 前缀作用域，避免污染宿主 UI。
+- 缩略图不挂任何覆盖控件（2026-09-20 David 定）：左上勾选与右上复制都已移出，
+  挑页改在导出弹窗的「自选页」清单（styles/card-export.css 的 icard-export-picker-）。
+*/
+
+/* 离屏捕获容器：参与布局但不可见、不可交互（禁止 display:none，见规划 §5.1） */
+.icard-offscreen {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* 卡片模式重置外层容器 padding，使画板能够铺满整个侧边栏全宽且透明融入 */
+.apple-converter-preview.has-card-preview,
+.apple-preview-wrapper.mode-classic .apple-converter-preview.has-card-preview {
+  padding: 0;
+  background: transparent;
+}
+
+/* —— B02 卡片预览 UI：全域一体化自适应 Design Studio 画布 —— */
+
+.icard-preview-shell {
+  --icard-canvas-bg: color-mix(in srgb, var(--background-secondary) 65%, var(--background-primary));
+  --icard-canvas-dot: rgba(0, 0, 0, 0.10);
+  --icard-canvas-dot-sub: rgba(0, 0, 0, 0.035);
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  /* 隐藏滚动条：滚动条从预览顶部划到缩略图旁边，观感很差；
+     隐藏后滚轮/触控板滚动不受影响（微信工具的网页式滚动同款处理）。
+     Obsidian 为 Chromium 内核，::-webkit-scrollbar 即可，无需 scrollbar-width。 */
+  background-color: var(--icard-canvas-bg);
+  background-image: radial-gradient(
+    circle,
+    var(--icard-canvas-dot) 1.25px,
+    var(--icard-canvas-dot-sub) 1.55px,
+    transparent 1.85px
+  );
+  background-size: 20px 20px;
+}
+.icard-preview-shell::-webkit-scrollbar {
+  display: none;
+}
+
+.theme-dark .icard-preview-shell {
+  --icard-canvas-bg: color-mix(in srgb, var(--background-secondary) 85%, #000000);
+  --icard-canvas-dot: rgba(255, 255, 255, 0.095);
+  --icard-canvas-dot-sub: rgba(255, 255, 255, 0.03);
+}
+
+/* 顶部工具条：状态摘要行（通透悬浮在全域画布顶端，配以轻柔毛玻璃与细分界线） */
+.icard-preview-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 20px 10px;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--icard-canvas-bg) 75%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid color-mix(in srgb, var(--background-modifier-border) 45%, transparent);
+}
+
+/* 状态区：页数 / 过期提示 / 省略与资源警告 */
+.icard-preview-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  min-width: 0;
+}
+
+.icard-preview-summary-count {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.icard-preview-summary-stale {
+  color: var(--text-warning, #b8860b);
+}
+
+.icard-preview-summary-omissions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.icard-preview-chip {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  background: var(--background-modifier-hover);
+  color: var(--text-muted);
+}
+
+.icard-preview-chip.is-warning {
+  background: rgba(255, 179, 0, 0.16);
+  color: var(--text-warning, #8a6d00);
+}
+
+.icard-preview-chip.is-error {
+  background: rgba(224, 62, 62, 0.14);
+  color: var(--text-error, #b3261e);
+}
+
+/* 缩略页列表：page-item 外壳承载缩放尺寸，内部 .icard-page transform 缩放。
+   无缝继承外壳的全域微点阵自适应画布，消除一切色块拼贴断层。
+   内部通过 padding 提供充足舒适的居中呼吸空间（左右 20px），兼顾最大化侧栏空间利用率与卡片居中感。
+   同时设置 flex: 1 0 auto，保证无论有几页卡片，画板均自然铺满视口底部，消灭断层留白。 */
+.icard-preview-pages {
+  flex: 1 0 auto;
+  margin: 0;
+  padding: 28px 20px 36px;
+  background: transparent;
+}
+
+.icard-preview-page-item {
+  position: relative;
+  margin: 0 auto 24px;
+  border-radius: 10px;
+  overflow: hidden;
+  /* 苹果风格多层自然阴影：1px 轻描边防融边 + 接触微阴影 + 柔和环境散景 */
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 2px 6px -1px rgba(0, 0, 0, 0.06),
+    0 10px 24px -10px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  will-change: transform, box-shadow;
+  transition:
+    transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.icard-preview-page-item:hover {
+  /* 纯 Y 轴轻盈上浮微位移：彻底避免 scale 缩放引起的文字/图片亚像素模糊与边缘抖动 */
+  transform: translateY(-4px);
+  /* 悬浮态大范围柔和弥散光影（Elevation Shadow），移除原先外扩的 2px 突兀虚框 */
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.07),
+    0 6px 14px -2px rgba(0, 0, 0, 0.08),
+    0 20px 38px -10px rgba(0, 0, 0, 0.28);
+}
+
+.theme-dark .icard-preview-page-item {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 2px 6px -1px rgba(0, 0, 0, 0.2),
+    0 12px 28px -10px rgba(0, 0, 0, 0.5);
+}
+
+.theme-dark .icard-preview-page-item:hover {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 6px 16px -2px rgba(0, 0, 0, 0.3),
+    0 22px 42px -10px rgba(0, 0, 0, 0.7);
+}
+
+.icard-preview-page-item.is-selected {
+  box-shadow:
+    0 0 0 2px var(--interactive-accent),
+    0 6px 14px -2px rgba(0, 0, 0, 0.08),
+    0 16px 32px -8px rgba(0, 0, 0, 0.24);
+}
+
+.theme-dark .icard-preview-page-item.is-selected {
+  box-shadow:
+    0 0 0 2px var(--interactive-accent),
+    0 6px 16px -2px rgba(0, 0, 0, 0.3),
+    0 20px 38px -8px rgba(0, 0, 0, 0.65);
+}
+
+.icard-preview-page-item .icard-page {
+  transform-origin: top left;
+}
+
+/* 页码徽章贴右上角，不贴右下：卡片页脚的页脚条本身就是「左页码 / 右水印」，
+   徽章原先落位 `right/bottom: 6px` 会正好压在水印上（用户 2026-09-20 反馈）。
+   右上角同时避开页脚左侧的页码，两块「第几页」的信息也不再互相遮挡。 */
+.icard-preview-page-badge {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  /* 白磨砂小片：跟卡片的纸质观感同语言；固定白底配固定深字，不随宿主主题翻转
+     （徽章只在预览 DOM，不进导出图）。深灰平涂版在浅色卡片上像调试标，已废弃。 */
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #3a3a3c;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  letter-spacing: 0.3px;
+  pointer-events: none;
+}
+
+/* 空态 / 失败态 / 移动端说明态 */
+.icard-preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.icard-preview-empty.is-failure .icard-preview-empty-title {
+  color: var(--text-error, #b3261e);
+}
+
+.icard-preview-empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.icard-preview-empty-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  max-width: 420px;
+}
+
+/* —— B03 诊断区（省略/资源失败明细 + 确认闭环）—— */
+
+.icard-preview-chip.is-info {
+  background: var(--background-modifier-hover);
+  color: var(--text-muted);
+}
+
+.icard-preview-diagnostics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-secondary);
+}
+
+.icard-preview-diagnostics-toggle {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.icard-preview-diagnostics-toggle:hover {
+  background: var(--background-modifier-border);
+}
+
+.icard-preview-diagnostics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.icard-preview-diagnostic-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.icard-preview-diagnostic-type {
+  flex: 0 0 auto;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: rgba(255, 179, 0, 0.16);
+  color: var(--text-warning, #8a6d00);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.icard-preview-diagnostic-type.is-high-risk {
+  background: rgba(224, 62, 62, 0.14);
+  color: var(--text-error, #b3261e);
+}
+
+.icard-preview-diagnostic-excerpt {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icard-preview-diagnostic-locate {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-normal);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.icard-preview-diagnostic-locate:hover {
+  background: var(--background-modifier-hover);
+}
+
+/* 全文省略空态 */
+.icard-preview-empty.is-all-omitted {
+  align-items: flex-start;
+  text-align: left;
+  padding: 24px 12px 8px;
+}
+/*
+## 核心功能
+
+图片卡片排版设置浮层的自有样式（B03）。控件本体已与文章模式对齐：
+滑块复用 style-controls.css 的 apple-slider，按钮复用 style-panel.css 的
+apple-btn-row/apple-btn-size；分节间距由本文件的
+  `.apple-settings-card-wrapper .apple-setting-section` 覆盖块对齐文章模式设置面板。
+子 Tab 导航（.icard-settings-nav）置顶吸顶，其上的分段控件 .icard-settings-segmented
+用「灰轨道 + 白胶囊」把导航与取值区分开，见该块的注释。
+本分片只保留卡片设置特有的少量样式。作用域 icard-settings- 前缀，
+仅作用于卡片模式设置浮层（.apple-settings-card-wrapper），不污染文章/贴图设置。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 新增选择器必须以 icard-settings- 前缀作用域，避免污染宿主 UI。
+- 沿用 Obsidian 宿主变量（--background-* / --text-* / --apple-*），不覆盖宿主配色。
+- 给 button 写样式要提防宿主全局规则 `button:not(.clickable-icon)`（特异性 0-1-1）：
+  单个类选择器（0-1-0）盖不住它的 background-color / box-shadow，需加前缀凑到 0-2-0，
+  并写成 background-color / box-shadow 长写（简写与长写在层叠里是逐条属性比对的）。
+*/
+
+/* 滑块数值标签（右对齐，与文章模式「页面两侧留白」同款口径） */
+.icard-settings-slider-value {
+  font-size: 12px;
+  color: var(--apple-secondary, var(--text-muted));
+  min-width: 36px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 选项说明文案（水印软上限等提示） */
+.icard-settings-note {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* 文本输入（封面字段 / 水印文案；C01③） */
+.icard-settings-text {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 6px;
+  padding: 5px 8px;
+  font-size: 12.5px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+.icard-settings-text:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+/* 封面字段行（label + 输入，C01③）
+   2026-09-21 改版：分区与主次见 docs/plans/2026-09-21-cover-settings-redesign.md。
+   分节内容容器（.apple-setting-content）是普通块级元素、不吃 flex gap，
+   所以节内节奏继续靠子元素自己的 margin-top。 */
+.icard-settings-cover-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+/* ⚠️ min-width: 0 是必需的：`<input>` 的 min-content 宽约 20 字符（≈187px），而 flex 子项
+   默认 min-width: auto 会拒绝收缩到该值以下 —— 输入框顶出容器宽度后被卡片边缘裁掉
+   （2026-09-21 评审图实测：143px 的列里塞进 187px 的输入框）。
+   `.icard-settings-cover-duo`（作者/日期并排两列）已于同日真机回归后删除，规则一并清掉。 */
+.icard-settings-cover-row .icard-settings-text { margin-top: 0; flex: 1 1 auto; min-width: 0; }
+/* 标签列 42px：原来 34px 时中文双字标签刚好占满，标签与输入框之间没有留白 */
+.icard-settings-cover-label {
+  flex: 0 0 42px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* —— 以下三个按钮类一律带 .apple-settings-card-wrapper 前缀凑 0-2-0 ——
+   ⚠️ 宿主基础规则 `button:not(.clickable-icon)` 是 **0-1-1**，单个类选择器（0-1-0）
+   写的 color / background-color / box-shadow / height / padding / border-radius
+   全都会被它盖掉（按钮被刷成白底 + 固定 30px 高 + 居中）。背景写 background-color 长写。 */
+
+/* 「按当前笔记重新填入」：低频补救动作，降级为文字按钮，不与主操作抢重量 */
+.apple-settings-card-wrapper .icard-settings-cover-link {
+  display: block;
+  width: fit-content;
+  height: auto;
+  margin: 8px 0 0 auto;
+  padding: 2px 0;
+  border: none;
+  background-color: transparent;
+  box-shadow: none;
+  color: var(--apple-accent);
+  font-size: 12px;
+  cursor: pointer;
+}
+.apple-settings-card-wrapper .icard-settings-cover-link:hover {
+  color: var(--apple-primary);
+  background-color: transparent;
+}
+
+/* 主操作（AI 生成封面图）：本页唯一蓝色实底按钮。
+   改版前它和「移除配图」「重新填入」同为 .apple-btn-size，主操作完全被淹没。 */
+.apple-settings-card-wrapper .icard-settings-cover-primary {
+  width: 100%;
+  height: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--apple-accent);
+  border-radius: 7px;
+  background-color: var(--apple-accent);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: normal;
+  box-shadow: none;
+  cursor: pointer;
+}
+.apple-settings-card-wrapper .icard-settings-cover-primary:hover { filter: brightness(1.06); }
+.apple-settings-card-wrapper .icard-settings-cover-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+  filter: none;
+}
+
+/* 配图卡里的小号「移除」：破坏性但可恢复的动作，压到最低重量（不与主操作同款） */
+.apple-settings-card-wrapper .icard-settings-cover-remove {
+  flex: 0 0 auto;
+  height: auto;
+  padding: 3px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  box-shadow: none;
+  cursor: pointer;
+}
+.apple-settings-card-wrapper .icard-settings-cover-remove:hover { color: var(--text-normal); }
+
+/* 封面配图工具组（非纯文字排版时渐进展开） */
+.apple-settings-card-wrapper .icard-settings-cover-tools-wrap:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* 「添加封面配图」快速唤起按钮（纯文字模式下展示） */
+.apple-settings-card-wrapper .icard-settings-cover-add-btn:not(.hidden) {
+  width: 100%;
+  height: 32px;
+  margin-top: 8px;
+  padding: 0 12px;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 6px;
+  background-color: var(--background-secondary);
+  color: var(--apple-accent, var(--text-accent));
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.apple-settings-card-wrapper .icard-settings-cover-add-btn:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--apple-accent, var(--text-accent));
+}
+
+/* 渐进披露通用隐藏规则（使用类特异性，禁止 !important） */
+.apple-settings-card-wrapper .hidden,
+.apple-settings-card-wrapper [hidden] {
+  display: none;
+}
+
+/* 封面搜索与快捷图源操作工具行 */
+.icard-settings-cover-search-row {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  margin-top: 0;
+  align-items: center;
+}
+.icard-settings-cover-search-row .icard-settings-text {
+  flex: 1 1 auto;
+  width: 0;
+  min-width: 0;
+  margin-top: 0;
+}
+.apple-settings-card-wrapper .icard-settings-cover-btn.icard-settings-cover-search-btn {
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  width: auto;
+  min-width: 58px;
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* 封面图源操作工具行（随机摄影 / 搜 Unsplash / 笔记/本地） */
+.icard-settings-cover-tools {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  margin-top: 0;
+}
+
+.apple-settings-card-wrapper .icard-settings-cover-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 30px;
+  padding: 0 4px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.apple-settings-card-wrapper .icard-settings-cover-btn:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--apple-accent);
+}
+
+.apple-settings-card-wrapper .icard-settings-cover-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* —— 侧边栏双子 Tab 导航（排版 Token vs 封面设置）——
+   纯净透明无白底，自然融入浮层磨砂画布之上。 */
+.icard-settings-nav {
+  margin: 0 0 12px 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.theme-dark .icard-settings-nav {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* 移动端浮层间距对齐 */
+.apple-converter-container.apple-converter-mobile .icard-settings-nav {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* —— 子 Tab 分段控件（排版 Token vs 封面设置）——
+   沿用预览区「模式胶囊」（.apple-preview-mode-segment）的同一套语汇：灰轨道 + 白色胶囊。
+   不用 .apple-btn-size 的蓝底选中态，是因为蓝色在本页已经被用来表达「这个值被选中」
+   （主题、比例、页码三处），导航再占一次就分不清「我在哪个页签」和「选了哪个值」。
+   蓝色只留给取值，导航只表达位置。
+   轨道撑满整行，两个分段各占一半；高度与下方 .apple-btn-size 对齐（约 30px）。 */
+.icard-settings-segmented {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+}
+
+.theme-dark .icard-settings-segmented {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ⚠️ 选择器必须带 .icard-settings-segmented 前缀（凑到 0-2-0）。
+   宿主有一条全局规则：button:not(.clickable-icon) { background-color: var(--interactive-normal);
+   box-shadow: var(--input-shadow); }，特异性 0-**1-1**，**高于**单个类选择器（0-1-0）。
+   亮色默认主题里 --interactive-normal 就是白，于是「未选中」也被刷成白底 + 宿主投影，
+   和选中的白胶囊一模一样 —— 选中态等于不存在（2026-09-20 真机复现）。
+   另外这里用 background-color / box-shadow 长写，别只写 background 简写：
+   简写与长写在层叠里是**逐条属性**比特异性的，写简写并不能一并盖掉宿主的长写。 */
+.icard-settings-segmented .icard-settings-segment {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 28px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.icard-settings-segmented .icard-settings-segment:hover {
+  color: var(--text-normal);
+  background-color: rgba(0, 0, 0, 0.045);
+}
+
+.theme-dark .icard-settings-segmented .icard-settings-segment:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* 选中段：亮色是「白胶囊浮在灰轨道上」，暗色改成提亮胶囊（整段铺白在暗色里太扎眼）。
+   底色差 + 描边 + 投影三层一起给，少一层在深色主题里就会被吃掉。 */
+.icard-settings-segmented .icard-settings-segment.is-active {
+  color: var(--text-normal);
+  font-weight: 600;
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+.theme-dark .icard-settings-segmented .icard-settings-segment.is-active {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* 主题网格（2026-09-20 David）：2 行 × 3 列。单行挤 6 枚时每枚被压得很窄，显得小气；
+   网格铺满整行后每枚宽度一致、字号不再受挤压。 */
+.icard-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.icard-grid-3 .apple-btn-size {
+  width: 100%;
+  text-align: center;
+  padding: 7px 4px;
+  white-space: nowrap;
+}
+
+/* 比例卡片（2026-09-20 David，参考微信工具样式）：形状示意 + 数值。
+   形状即说明，「竖版/长竖版」文字降级为 hover title。
+   前缀凑 0-2-0（宿主 button:not(.clickable-icon) 是 0-1-1，单类会被盖），背景写 background-color 长写。
+   ⚠️ 必须显式写 height: auto：宿主基础 button 规则带固定 height: var(--input-height)=30px
+   且 align-items/justify-content 居中，不声明高度时内容（形状 26 + 间距 5 + 文字 12 + 内边距 16 ≈ 63px）
+   会上下双向溢出——形状顶出卡片、数值压到卡底（2026-09-20 真机复现）。 */
+.icard-settings-ratios {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.icard-settings-ratios .icard-ratio-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: auto;
+  padding: 9px 4px 7px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: normal;
+  color: var(--apple-secondary);
+  background-color: var(--apple-background);
+  border: 1px solid var(--apple-border);
+  border-radius: 8px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.icard-settings-ratios .icard-ratio-option:hover {
+  color: var(--apple-primary);
+  border-color: var(--apple-accent);
+}
+
+/* 选中态与同面板的「主题」按钮（.apple-btn-size.active）同一套语言：
+   苹果蓝底纹 + 蓝字 + 蓝描边。不用宿主 --interactive-accent——它跟随用户主题（可能偏紫），
+   与面板既有的蓝色取值语汇不一致（2026-09-20 真机反馈）。 */
+.icard-settings-ratios .icard-ratio-option.active {
+  background-color: rgba(0, 113, 227, 0.1);
+  color: var(--apple-accent);
+  border-color: rgba(0, 113, 227, 0.3);
+}
+
+/* 形状示意：等高、宽度按真实比例（aspect-ratio），一眼看出三档的高矮差异 */
+.icard-ratio-shape {
+  display: block;
+  flex: 0 0 auto;
+  height: 26px;
+  width: auto;
+  border: 1.5px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.85;
+}
+
+.icard-ratio-shape[data-ratio="3:4"] { aspect-ratio: 3 / 4; }
+.icard-ratio-shape[data-ratio="3:5"] { aspect-ratio: 3 / 5; }
+.icard-ratio-shape[data-ratio="9:16"] { aspect-ratio: 9 / 16; }
+
+.icard-ratio-text {
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* 折叠摘要右侧的当前值回显（字号 / 行高 / 边距），与文章模式「排版间距」摘要同款口径 */
+.icard-settings-tune-values {
+  margin-left: auto;
+  margin-right: 8px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--apple-secondary, var(--text-muted));
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 折叠区是「排版 Token」页签的最后一节。上面各节靠 .apple-setting-section 的 padding 收尾，
+   而 details 自带 margin-bottom:16px，和浮层自身的下内边距叠起来会多出一截，所以归零。
+   ⚠️ 不要在这里补 padding「留呼吸」：details 有自己的背景色（比摘要浅），收起时那点 padding
+   会渲染成摘要下面的一条白框（2026-09-20 真机复现）。底部呼吸交给浮层的内边距。 */
+.apple-settings-card-wrapper .icard-settings-tune {
+  margin-bottom: 0;
+}
+
+/* 折叠组内的行距由 .icard-settings-cover-ai-area 的 gap 负责，
+   这里只给「主操作与上方 Prompt」留一点额外呼吸 */
+.icard-settings-cover-actions {
+  margin-top: 2px;
+}
+
+/* —— 折叠组「封面画面」（2026-09-21）——
+   AI 相关控件属低频（只在换风格/重生成时用），常驻会把高频的文案编辑压下去。
+   与「排版 Token」页的「字号与间距」同款：details 自带卡框，摘要右侧回显当前值。 */
+.apple-settings-card-wrapper .icard-settings-cover-ai {
+  margin-bottom: 0;
+}
+
+/* 折叠区内容容器：覆盖 .apple-settings-area 的 24px gap 与「320px 居中窄栏」
+   （那套是给独立设置页用的，塞进折叠组会既挤又宽窄不一）。
+   前缀凑到 0-3-0，稳定盖过 `.apple-settings-details .apple-settings-area`。 */
+.apple-settings-card-wrapper .apple-settings-details .icard-settings-cover-ai-area {
+  gap: 8px;
+  max-width: none;
+  margin: 0;
+}
+
+/* 配图卡主行 = 风格名；次行是尺寸/状态，复用 .icard-settings-note */
+.icard-settings-cover-preview-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-normal);
+}
+
+/* 开关行（正文页码）：左侧说明 + 右侧 .apple-toggle 开关，整行可点。
+   与贴图模式「配图序号」（.apple-sticker-toggle-*）同一套口径，只是作用域换成卡片前缀。 */
+.icard-settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  cursor: pointer;
+  user-select: none;
+}
+
+.icard-settings-toggle-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.icard-settings-toggle-label {
+  font-size: 12px;
+  color: var(--text-normal);
+}
+
+.icard-settings-toggle-desc {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+/* AI 封面控件与提示词域 */
+.icard-settings-select {
+  width: 100%;
+  box-sizing: border-box;
+  /* 与 .icard-settings-text 同理：下拉的 min-content 由最宽的 option 决定（风格项带
+     一长串描述），不归零 min-width 就会被顶出容器、被卡片边缘裁掉。 */
+  min-width: 0;
+  margin-top: 6px;
+  /* 右内边距给自绘箭头让位（与 .apple-select 同款口径） */
+  padding: 5px 26px 5px 8px;
+  font-size: 12.5px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  /* ⚠️ 必须写 background-color 长写：`background` 简写会把下面那张箭头图一并清空，
+     表现就是「下拉框没有箭头、用户不知道能展开」（2026-09-21 真机反馈）。
+     箭头与 .apple-select 用的是同一张图，改一处要两处对齐。 */
+  background-color: var(--background-primary);
+  color: var(--text-normal);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236e6e73' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px;
+}
+
+/* 暗色主题下箭头要更亮，否则深底上看不见（与 .apple-select 同款取值） */
+.theme-dark .icard-settings-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23b3b3b3' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+}
+.icard-settings-prompt-area {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  resize: vertical;
+  min-height: 54px;
+}
+.apple-settings-card-wrapper .icard-settings-cover-preview-box:not(.hidden) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+}
+.icard-settings-cover-thumb {
+  width: 44px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+}
+.icard-settings-cover-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* —— 分节间距对齐文章模式设置面板 ——
+   文章模式的「分节留白 + 细分隔线」来自 `.apple-settings-details .apple-setting-section`
+   （见 styles/style-panel.css）：padding 12px + 顶部 1px 细线 + gap 8px。卡片浮层的分节
+   不在 .apple-settings-details 内，只吃到 .apple-setting-section 的基础规则（仅 flex + gap:8px），
+   于是各分节之间没有任何留白、视觉上糊成一片。这里复用同一套口径。 */
+.apple-settings-card-wrapper:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+}
+
+.apple-settings-card-wrapper .apple-setting-section {
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid color-mix(in srgb, var(--background-modifier-border) 82%, transparent);
+}
+
+.apple-settings-card-wrapper .apple-setting-section:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+/*
+## 核心功能
+
+图片卡片导出弹窗样式分片（B05 视觉重构）。选择器统一 icard-export- 前缀，避免污染宿主 UI。
+外壳是 Obsidian 原生 Modal（.modal.icard-export-modal），内嵌内容在 .icard-export-content。
+
+## 输入
+
+接收 Obsidian 主题变量（--background-primary / --text-normal / --interactive-accent 等）
+与项目苹果配色 token（--apple-success / --apple-warning / --apple-error / --apple-radius-*）。
+
+## 输出
+
+输出导出弹窗的布局、层级、配色与状态表现（含深色主题与移动端全屏适配）。
+
+## 定位
+
+位于 styles/，是样式源文件；构建后汇总到 styles.css，禁止只改生成样式。
+结构对应 views/converter/card-export-modal-view.js 的渲染方法。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、项目 base.css 的 --apple-* token、以及渲染层的 class 命名。
+
+## 维护规则
+
+- 配色规则（不得回退）：颜色只表达两件事——**异常**（失败 / 警告）与**当前进行中的那一行**。
+  正常完成的行必须保持中性（透明底 + 分隔线）；禁止整列铺成功色底（旧版 is-saved 绿底已移除）。
+- 同一事实只说一次：完成态的「已保存张数」在状态区，进度条只在进行中出现。
+- 按钮层级：页脚主操作（完成）用 mod-cta，次级操作（再次导出 / 取消）用默认样式。
+- 挑页只在弹窗里（2026-09-20）：预览缩略图不挂覆盖控件，自选清单的选择器一律
+  icard-export-picker- 前缀；清单限高内滚，不把「倍率 / 目录 / 开始」挤出视野。
+- 修改样式后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+*/
+
+/* ========================================
+   弹窗外壳（Obsidian 原生 Modal）
+   ======================================== */
+.modal.icard-export-modal {
+  width: min(520px, 92vw);
+  max-width: min(520px, 92vw);
+  border-radius: var(--apple-radius-lg, 12px);
+}
+
+.is-mobile .modal.icard-export-modal {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 0;
+}
+
+.modal.icard-export-modal .modal-content {
+  padding: 0;
+}
+
+.icard-export-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--apple-spacing-md, 16px);
+  min-height: 168px;
+  padding: 4px 20px 20px;
+}
+
+.icard-export-content button {
+  padding: 5px 14px;
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-normal);
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--apple-radius-md, 8px);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.icard-export-content button:hover {
+  background: var(--background-modifier-hover);
+}
+
+.icard-export-content button.mod-cta {
+  color: var(--text-on-accent, #fff);
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+}
+
+.icard-export-content button.mod-cta:hover {
+  background: var(--interactive-accent-hover, var(--interactive-accent));
+}
+
+.icard-export-content button.is-disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.icard-export-content .svg-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ========================================
+   状态区（hero）：完成 / 进行中 / 失败
+   ======================================== */
+.icard-export-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.icard-export-status-mark {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  color: var(--text-muted);
+  background: var(--background-secondary);
+  border-radius: 50%;
+}
+
+.icard-export-status.is-success .icard-export-status-mark {
+  color: var(--apple-success, #34c759);
+  background: rgba(52, 199, 89, 0.14);
+}
+
+.icard-export-status.is-warning .icard-export-status-mark {
+  color: var(--apple-warning, #ff9500);
+  background: rgba(255, 149, 0, 0.14);
+}
+
+.icard-export-status.is-error .icard-export-status-mark {
+  color: var(--apple-error, #ff3b30);
+  background: rgba(255, 59, 48, 0.13);
+}
+
+.icard-export-status.is-accent .icard-export-status-mark {
+  color: var(--interactive-accent);
+}
+
+.theme-dark .icard-export-status.is-success .icard-export-status-mark {
+  color: #30d158;
+  background: rgba(48, 209, 88, 0.18);
+}
+
+.theme-dark .icard-export-status.is-warning .icard-export-status-mark {
+  color: #ffb340;
+  background: rgba(255, 179, 64, 0.18);
+}
+
+.theme-dark .icard-export-status.is-error .icard-export-status-mark {
+  color: #ff7b72;
+  background: rgba(255, 123, 114, 0.18);
+}
+
+.icard-export-status-mark .svg-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.icard-export-status-text {
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.icard-export-status-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-normal);
+}
+
+.icard-export-status-desc {
+  margin-top: 3px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.icard-export-hint {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--text-faint);
+}
+
+/* ========================================
+   进度（仅进行中展示）
+   ======================================== */
+.icard-export-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icard-export-progress-track {
+  flex: 1 1 auto;
+  height: 6px;
+  overflow: hidden;
+  background: var(--background-modifier-border);
+  border-radius: 999px;
+}
+
+.icard-export-progress-bar {
+  height: 100%;
+  background: var(--interactive-accent);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.icard-export-progress-label {
+  flex: 0 0 auto;
+  min-width: 36px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* 旋转指示器（随宿主主题取强调色） */
+.icard-export-spinner {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--background-modifier-border);
+  border-top-color: var(--interactive-accent);
+  border-radius: 50%;
+  animation: icard-export-spin 0.8s linear infinite;
+}
+
+@keyframes icard-export-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================
+   逐页明细（默认折叠；进行中或存在失败页时展开）
+   ======================================== */
+.icard-export-pages-details {
+  padding-top: 10px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.icard-export-pages-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-normal);
+  list-style: none;
+  cursor: pointer;
+}
+
+.icard-export-pages-summary::-webkit-details-marker {
+  display: none;
+}
+
+.icard-export-pages-caret {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--text-faint);
+  transition: transform 0.15s ease;
+}
+
+.icard-export-pages-details[open] .icard-export-pages-caret {
+  transform: rotate(90deg);
+}
+
+.icard-export-pages-caret .svg-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.icard-export-pages-label {
+  flex: 1 1 auto;
+}
+
+/* 统一尺寸的说明：只说一次，放在摘要里，不逐行重复 */
+.icard-export-pages-size-note {
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+}
+
+.icard-export-pages {
+  display: flex;
+  flex-direction: column;
+  max-height: 240px;
+  margin-top: 8px;
+  overflow-y: auto;
+}
+
+/* 正常行保持中性：只用分隔线建立节奏，不铺背景色 */
+.icard-export-page-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 6px;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.icard-export-page-row:last-child {
+  border-bottom: none;
+}
+
+/* 当前正在渲染的那一行：唯一的强调色落点 */
+.icard-export-page-row.is-rendering {
+  background: var(--background-secondary);
+  border-bottom-color: transparent;
+  border-radius: 6px;
+}
+
+.icard-export-page-row.is-rendering .icard-export-page-state {
+  font-weight: 600;
+  color: var(--interactive-accent);
+}
+
+/* 失败行：语义色只落在这一行 */
+.icard-export-page-row.is-failed {
+  background: rgba(255, 59, 48, 0.08);
+  border-bottom-color: transparent;
+  border-radius: 6px;
+}
+
+.icard-export-page-row.is-failed .icard-export-page-name,
+.icard-export-page-row.is-failed .icard-export-page-state,
+.icard-export-page-row.is-failed .icard-export-page-reason {
+  color: var(--apple-error, #ff3b30);
+}
+
+.theme-dark .icard-export-page-row.is-failed .icard-export-page-name,
+.theme-dark .icard-export-page-row.is-failed .icard-export-page-state,
+.theme-dark .icard-export-page-row.is-failed .icard-export-page-reason {
+  color: #ff7b72;
+}
+
+.icard-export-page-name {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-normal);
+}
+
+.icard-export-page-state {
+  flex: 1 1 auto;
+  color: var(--text-muted);
+}
+
+.icard-export-page-reason,
+.icard-export-page-size {
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+}
+
+/* 状态徽标（明细摘要右侧） */
+.icard-export-chip {
+  flex: 0 0 auto;
+  padding: 2px 9px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--background-secondary);
+  border-radius: 999px;
+}
+
+.icard-export-chip.is-success {
+  color: #2a8c46;
+  background: rgba(52, 199, 89, 0.14);
+}
+
+.icard-export-chip.is-warning {
+  color: #9a6400;
+  background: rgba(255, 149, 0, 0.16);
+}
+
+.icard-export-chip.is-error {
+  color: #c0392b;
+  background: rgba(255, 59, 48, 0.13);
+}
+
+.icard-export-chip.is-accent {
+  color: var(--interactive-accent);
+}
+
+.theme-dark .icard-export-chip.is-success { color: #5fd97e; }
+.theme-dark .icard-export-chip.is-warning { color: #ffb340; }
+.theme-dark .icard-export-chip.is-error { color: #ff7b72; }
+/*
+## 核心功能
+
+图片卡片导出弹窗结果、表单、进度条与操作区样式分片。选择器统一 icard-export- 前缀。
+
+## 输入
+
+接收 Obsidian 主题变量与项目苹果配色 token。
+
+## 输出
+
+输出卡片导出结果展示、选页表单、进度条、省略警告和操作按钮样式。
+
+## 定位
+
+位于 styles/，为 card-export.css 的进度与表单子分片；构建后合并至 styles.css。
+
+## 依赖
+
+关键依赖：Obsidian 主题变量、styles/card-export.css。
+
+## 维护规则
+
+- 配色规则：颜色只表达异常与当前进行中的行。
+- 修改样式后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+*/
+
+/* ========================================
+   结果卡片（表头：标签 + 操作；路径独占整行、过长换行）
+   ======================================== */
+.icard-export-result {
+  padding: 10px 12px;
+  background: var(--background-secondary);
+  border-radius: var(--apple-radius-md, 8px);
+}
+
+.icard-export-result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 26px;
+}
+
+.icard-export-result-label {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* 路径必须能被看全：占满整行，过长时换行（不用省略号，否则用户永远看不到要去的目录）。
+   换行优先发生在目录分隔符处（渲染层插入了 <wbr>），单个超长目录名才允许词内断开。 */
+.icard-export-result-path {
+  margin-top: 2px;
+  font-family: var(--apple-font-code, var(--font-monospace));
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-normal);
+  overflow-wrap: break-word;
+  word-break: normal;
+  /* 避免末行只剩一个短片段（孤立词）；不支持的版本会忽略，不影响可读性。 */
+  text-wrap: pretty;
+}
+
+.icard-export-result-copy {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.icard-export-result-copy:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.icard-export-result-copy.is-copied {
+  color: var(--apple-success, #34c759);
+}
+
+.icard-export-result-copy .svg-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.icard-export-result-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.icard-export-result-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px;
+  color: var(--text-normal);
+  font-size: 12px;
+  background: var(--background-modifier-border);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.icard-export-result-open:hover {
+  background: var(--background-modifier-hover);
+}
+
+.icard-export-result-open .svg-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.icard-export-result-hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.icard-export-result-hint:empty {
+  display: none;
+}
+
+/* ========================================
+   表单（摘要 / 倍率 / 目录 / 省略提示）
+   ======================================== */
+.icard-export-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.icard-export-info-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.icard-export-info-label {
+  flex: 0 0 44px;
+  color: var(--text-muted);
+}
+
+.icard-export-info-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-normal);
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icard-export-divider {
+  height: 1px;
+  background: var(--background-modifier-border);
+}
+
+.icard-export-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.icard-export-field.is-stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.icard-export-field-label {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.icard-export-field-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* 倍率：分段控件（轨道内一枚高亮胶囊），不是三枚浮空圆角按钮 */
+.icard-export-segmented {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: 2px;
+  background: var(--background-secondary);
+  border-radius: 999px;
+}
+
+.icard-export-scale-btn {
+  min-width: 46px;
+  padding: 5px 12px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.icard-export-scale-btn:hover {
+  color: var(--text-normal);
+}
+
+.icard-export-scale-btn.is-active {
+  color: var(--text-normal);
+  background: var(--background-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
+}
+
+.theme-dark .icard-export-scale-btn.is-active {
+  background: var(--background-modifier-hover);
+}
+
+/* 导出范围：与倍率同款分段控件，标签更长（「全部 N 页 / 自选页」） */
+.icard-export-scope-btn {
+  min-width: 78px;
+  padding: 5px 12px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.icard-export-scope-btn:hover {
+  color: var(--text-normal);
+}
+
+.icard-export-scope-btn.is-active {
+  color: var(--text-normal);
+  background: var(--background-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
+}
+
+.theme-dark .icard-export-scope-btn.is-active {
+  background: var(--background-modifier-hover);
+}
+
+/* 范围字段：标签行 +（「自选页」时的）自选清单 */
+.icard-export-field.is-scope {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.icard-export-field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* 自选页清单（2026-09-20）：挑页从预览缩略图移到这里。
+   行是整行可点的按钮而非原生 checkbox——状态由 is-on 与 aria-pressed 双表达；
+   一页未选时计数处就地说明（is-empty），不把问题留到开始按钮的禁用提示里。 */
+.icard-export-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+  background: var(--background-secondary);
+}
+
+.icard-export-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.icard-export-picker-count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.icard-export-picker-count.is-empty {
+  color: var(--apple-warning, #ff9500);
+}
+
+.icard-export-picker-quick {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
+.icard-export-picker-quick-btn {
+  padding: 3px 10px;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 999px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.icard-export-picker-quick-btn:hover {
+  color: var(--text-normal);
+  border-color: var(--interactive-accent);
+}
+
+/* 清单限高内滚：页数多时不能把「倍率 / 目录 / 开始」挤出视野 */
+.icard-export-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 208px;
+  overflow-y: auto;
+}
+
+.icard-export-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-normal);
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.icard-export-picker-row:hover {
+  background: var(--background-modifier-hover);
+}
+
+.icard-export-picker-row:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: -2px;
+}
+
+.icard-export-picker-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: transparent;
+  border: 1.5px solid var(--background-modifier-border);
+  border-radius: 5px;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.icard-export-picker-row.is-on .icard-export-picker-mark {
+  color: var(--text-on-accent, #fff);
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+}
+
+.icard-export-picker-mark .svg-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.icard-export-root-input {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-normal);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--apple-radius-md, 8px);
+}
+
+.icard-export-root-input:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb, 0, 113, 227), 0.18);
+}
+
+/* ========================================
+   提示条（省略摘要 / 图片加载失败 / 未就绪）
+   ======================================== */
+.icard-export-note,
+.icard-export-omission {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  background: var(--background-secondary);
+  border-radius: var(--apple-radius-md, 8px);
+}
+
+.icard-export-note.is-warning,
+.icard-export-omission.is-warning {
+  color: var(--text-normal);
+  background: rgba(255, 149, 0, 0.13);
+}
+
+.icard-export-note-icon,
+.icard-export-omission-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--text-faint);
+}
+
+.icard-export-note.is-warning .icard-export-note-icon,
+.icard-export-omission.is-warning .icard-export-omission-icon {
+  color: var(--apple-warning, #ff9500);
+}
+
+.icard-export-note-icon .svg-icon,
+.icard-export-omission-icon .svg-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.icard-export-note-text,
+.icard-export-omission-text {
+  min-width: 0;
+}
+
+.icard-export-notice {
+  padding: 12px 14px;
+  background: var(--background-secondary);
+  border-radius: var(--apple-radius-md, 8px);
+}
+
+.icard-export-notice.is-error {
+  background: rgba(255, 59, 48, 0.1);
+}
+
+.icard-export-notice-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.icard-export-notice-desc {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* ========================================
+   操作区与页脚
+   ======================================== */
+.icard-export-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icard-export-actions button {
+  flex: 1 1 0;
+}
+
+.icard-export-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+/* 进行中页脚的左侧提示：解释「关闭 ≠ 取消」，避免用户不敢关窗 */
+.icard-export-footer-hint {
+  margin-right: auto;
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icard-export-spinner {
+    animation: none;
+  }
+
+  .icard-export-progress-bar,
+  .icard-export-pages-caret,
+  .icard-export-scale-btn {
+    transition: none;
+  }
+}
+/*
+## 核心功能
+
 插件设置页的分组、标签和表单样式
 
 ## 输入
@@ -3395,12 +5269,10 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   background: color-mix(in srgb, var(--text-error, #d33) 15%, transparent);
   color: var(--text-error, #d33);
 }
-
 .wechat-multiplatform-token-status-dot.is-unknown {
   background: color-mix(in srgb, var(--text-warning, #d99300) 18%, transparent);
   color: var(--text-warning, #d99300);
 }
-
 .wechat-multiplatform-token-status-dot.is-ok {
   background: color-mix(in srgb, var(--text-success, #2c9c4c) 18%, transparent);
   color: var(--text-success, #2c9c4c);
@@ -3409,13 +5281,11 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 .wechat-multiplatform-token-status-text {
   color: var(--text-muted, #666);
 }
-
 .wechat-bridge-browser-icon {
   display: inline-block;
   vertical-align: middle;
   flex-shrink: 0;
 }
-
 .wechat-bridge-status-body {
   display: flex;
   align-items: center;
@@ -3424,20 +5294,17 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   min-width: 0;
   color: var(--text-muted, #666);
 }
-
 .wechat-bridge-pairing-panel {
   margin: 8px 0 14px;
   padding: 10px 12px;
   border-left: 3px solid var(--color-yellow);
   background: var(--background-secondary);
 }
-
 .wechat-bridge-pairing-panel > p {
   margin: 4px 0 8px;
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
 }
-
 .wechat-bridge-pairing-row {
   display: flex;
   align-items: center;
@@ -3445,21 +5312,35 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   gap: 12px;
   min-height: 32px;
 }
-
 .wechat-bridge-pairing-row > span {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+.wechat-bridge-pairing-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .wechat-bridge-paired-panel {
   margin: 6px 0 14px;
 }
-
 .wechat-bridge-paired-panel > strong {
   display: block;
   margin-bottom: 4px;
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
+}
+.wechat-bridge-paired-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.wechat-bridge-paired-info .wechat-bridge-status-time {
+  margin-left: 0;
 }
 
 .wechat-bridge-status-profile {
@@ -3815,6 +5696,92 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   border-color: var(--interactive-accent);
   box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.15);
 }
+
+/* 设置页提示与中转卡片样式 */
+.wechat-settings-empty-tip {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.wechat-settings-max-tip {
+  color: var(--text-muted);
+}
+
+.wechat-proxy-card {
+  margin-top: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background-color: var(--background-primary-alt);
+  font-size: 12px;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wechat-proxy-row {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.wechat-proxy-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  color: var(--text-muted);
+}
+
+.wechat-proxy-title {
+  color: var(--text-normal);
+  font-weight: 600;
+}
+
+.wechat-proxy-title.is-warning {
+  color: var(--text-warning);
+}
+
+.wechat-proxy-desc {
+  color: var(--text-muted);
+}
+
+.wechat-proxy-link {
+  margin-left: 6px;
+  color: var(--text-muted);
+  text-decoration: underline;
+}
+
+.owc-custom-css-warning {
+  margin-top: 8px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--background-modifier-border);
+  border-left: 3px solid var(--text-warning);
+  border-radius: 6px;
+  background-color: var(--background-primary-alt);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.owc-custom-css-warning-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.owc-custom-css-warning-title { color: var(--text-warning); font-weight: 600; font-size: 13px; }
+.owc-custom-css-warning-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 15px; height: 15px; color: var(--text-warning); }
+.owc-custom-css-warning-list { display: flex; flex-direction: column; gap: 6px; }
+.owc-custom-css-warning-item { position: relative; padding-left: 14px; color: var(--text-muted); font-size: 12px; line-height: 1.55; }
+.owc-custom-css-warning-item::before { content: '•'; position: absolute; left: 2px; top: 0; color: var(--text-warning); font-size: 13px; line-height: 1.4; }
+.owc-custom-css-warning-item strong { color: var(--text-normal); font-weight: 600; }
+.owc-custom-css-warning-item code { padding: 1px 5px; margin: 0 2px; border-radius: 3px; font-size: 11px; background-color: var(--background-modifier-form-field); color: var(--text-accent); }
+.wechat-proxy-icon .svg-icon,
+.owc-custom-css-warning-icon .svg-icon {
+  width: 15px;
+  height: 15px;
+}
+
 /*
 ## 核心功能
 
@@ -5311,6 +7278,121 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   border-color: var(--interactive-accent);
   color: var(--interactive-accent);
 }
+/* ───── 平台清单照片墙 (Platform Wall) ───── */
+.wechat-platform-wall-card {
+  margin: 16px 0 20px;
+  padding: 16px 18px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+}
+
+.wechat-platform-wall-header { margin-bottom: 12px; }
+
+.wechat-platform-wall-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.wechat-platform-wall-title-wrap { display: inline-flex; align-items: center; gap: 8px; }
+
+.wechat-platform-wall-title {
+  color: var(--text-normal);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.wechat-platform-wall-badge {
+  flex: 0 0 auto;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-accent);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.wechat-platform-wall-desc {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.wechat-platform-wall-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 6px 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wechat-platform-wall-grid.is-selectable {
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 8px 10px;
+}
+
+.wechat-platform-wall-tile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  box-sizing: border-box;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.wechat-platform-wall-tile:hover {
+  background: var(--background-modifier-hover);
+  border-color: color-mix(in srgb, var(--interactive-accent) 40%, var(--background-modifier-border));
+}
+
+.wechat-platform-wall-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  overflow: hidden;
+  border-radius: 3px;
+}
+
+.wechat-platform-wall-icon { width: 16px; height: 16px; object-fit: contain; }
+
+.wechat-platform-wall-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.wechat-platform-wall-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-normal);
+  font-size: 12px;
+  font-weight: 500;
+}
 /*
 ## 核心功能
 
@@ -5506,6 +7588,101 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   color: var(--text-accent);
   border-bottom-color: var(--text-accent);
 }
+
+/* 平台墙头部操作区与折叠展开交互 */
+.wechat-platform-wall-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wechat-platform-wall-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  padding: 2px 9px;
+  height: 24px;
+  line-height: 1;
+  background: transparent;
+  color: var(--text-accent);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wechat-platform-wall-refresh-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.wechat-platform-wall-refresh-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wechat-platform-wall-refresh-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.wechat-platform-wall-refresh-btn.is-loading .wechat-platform-wall-refresh-icon svg {
+  animation: wechat-spin 0.8s linear infinite;
+}
+
+@keyframes wechat-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.wechat-platform-wall-tile.is-collapsed-hidden {
+  display: none;
+}
+
+.wechat-platform-wall-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--background-modifier-border);
+}
+
+.wechat-platform-wall-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 4px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.wechat-platform-wall-expand-btn:hover {
+  color: var(--text-accent);
+  background-color: var(--background-modifier-hover);
+}
+
+.wechat-platform-wall-expand-btn .wechat-platform-wall-expand-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.wechat-platform-wall-expand-btn .wechat-platform-wall-expand-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
 /*
 ## 核心功能
 
@@ -6440,6 +8617,748 @@ div.modal.wechat-material-picker-modal-mobile {
   }
 }
 /*
+ * ## 核心功能
+ *
+ * 小红书卡片封面独立选图工作台（Media Picker Modal）专属样式。
+ * 提供弹窗外壳、分段导航胶囊、Unsplash 摄影候选网格、笔记插图平铺、本地拖拽上传区与 AI 风格大卡片布局。
+ *
+ * ## 定位
+ *
+ * 位于 styles/，遵循 Apple 设计系统与 Obsidian 原生暗色/亮色适配，严禁使用覆盖增强。
+ */
+
+.card-media-picker-modal {
+  width: 580px;
+  max-width: 90vw;
+  min-height: 280px;
+  max-height: min(78vh, 680px);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-l, 0 20px 48px rgba(0, 0, 0, 0.22));
+}
+
+.card-media-picker-modal .modal-content {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.card-media-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 58px 12px 20px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  flex-shrink: 0;
+}
+
+.card-media-picker-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.card-media-picker-tabs {
+  display: flex;
+  background: var(--background-modifier-form-field);
+  padding: 3px;
+  border-radius: 8px;
+  gap: 2px;
+}
+
+.card-media-picker-tab-btn {
+  background: transparent;
+  border: none;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.card-media-picker-tab-btn:hover {
+  color: var(--text-normal);
+}
+
+.card-media-picker-tab-btn.is-active {
+  background: var(--background-primary);
+  color: var(--text-accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-weight: 600;
+}
+
+.card-media-picker-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-media-picker-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  min-height: 0;
+}
+
+.card-media-picker-pane.is-hidden {
+  display: none;
+}
+
+
+/* =========================================================================
+   Unsplash Tab 样式
+   ========================================================================= */
+
+.card-media-picker-search-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.card-media-picker-search-input {
+  flex: 1;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 13px;
+}
+
+.card-media-picker-search-btn {
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.card-media-picker-refresh-btn {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-normal);
+  transition: background 0.12s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.card-media-picker-refresh-btn:hover {
+  background: var(--background-modifier-hover);
+}
+
+.card-media-picker-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.card-media-picker-chip-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-right: 2px;
+}
+
+.card-media-picker-chip {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  background: var(--background-secondary);
+  color: var(--text-muted);
+  border: 1px solid var(--background-modifier-border);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.card-media-picker-chip:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.card-media-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.card-media-picker-item {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: var(--background-secondary);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.card-media-picker-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--interactive-accent);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.14);
+}
+
+.card-media-picker-item.is-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.card-media-picker-item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.card-media-picker-item-author {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 8px 6px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, transparent 100%);
+  color: #ffffff;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.card-media-picker-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  gap: 12px;
+  margin: auto 0;
+}
+
+.card-media-picker-empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.card-media-picker-empty-desc {
+  font-size: 12px;
+  line-height: 1.6;
+  max-width: 440px;
+}
+
+.card-media-picker-empty-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* =========================================================================
+   笔记插图与本地上传 Tab 样式
+   ========================================================================= */
+
+.card-media-picker-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin-top: 4px;
+}
+
+.card-media-picker-dropzone {
+  border: 1.5px dashed var(--background-modifier-border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  background: var(--background-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  flex-shrink: 0;
+}
+
+.card-media-picker-dropzone:hover,
+.card-media-picker-dropzone.is-dragover {
+  border-color: var(--interactive-accent);
+  background: var(--background-modifier-hover);
+}
+
+.card-media-picker-dropzone-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.card-media-picker-dropzone-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-normal);
+}
+
+.card-media-picker-dropzone-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.card-media-picker-dropzone-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-normal);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.card-media-picker-dropzone-btn:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+}
+
+/* =========================================================================
+   AI 灵感生图 Tab 样式
+   ========================================================================= */
+
+.card-media-picker-ai-styles {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.card-media-picker-ai-card {
+  padding: 6px 4px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.card-media-picker-ai-card:hover {
+  border-color: var(--interactive-accent);
+}
+
+.card-media-picker-ai-card.is-selected {
+  border-color: var(--interactive-accent);
+  background: color-mix(in srgb, var(--interactive-accent) 12%, var(--background-secondary));
+  box-shadow: 0 0 0 1px var(--interactive-accent);
+}
+
+.card-media-picker-ai-card-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-normal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-media-picker-topic-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+
+.card-media-picker-ai-extract-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--interactive-accent) 10%, var(--background-secondary));
+  border: 1px solid color-mix(in srgb, var(--interactive-accent) 25%, var(--background-modifier-border));
+  color: var(--interactive-accent);
+  transition: all 0.15s ease;
+}
+
+.card-media-picker-ai-extract-btn:hover {
+  background: color-mix(in srgb, var(--interactive-accent) 18%, var(--background-secondary));
+  border-color: var(--interactive-accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.card-media-picker-ai-extract-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.card-media-picker-ai-extract-btn.is-unconfigured {
+  background: var(--background-secondary);
+  border-color: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.card-media-picker-ai-extract-btn.is-unconfigured:hover {
+  color: var(--text-normal);
+  border-color: var(--interactive-accent);
+}
+
+.card-media-picker-ai-extract-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+}
+
+.card-media-picker-ai-extract-icon svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.2;
+}
+
+.card-media-picker-topic-input {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 12px;
+  font-family: inherit;
+  box-sizing: border-box;
+  margin-bottom: 6px;
+}
+
+.card-media-picker-topic-input:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+.card-media-picker-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 0;
+  margin-top: 2px;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.card-media-picker-hint.is-hidden {
+  display: none;
+}
+
+.card-media-picker-hint-var {
+  display: inline-block;
+  padding: 1px 4px;
+  margin: 0 2px;
+  border-radius: 4px;
+  background: var(--background-modifier-hover);
+  border: 1px solid var(--background-modifier-border);
+  font-family: var(--font-monospace);
+  font-size: 10.5px;
+  cursor: pointer;
+  color: var(--text-normal);
+  transition: all 0.15s ease;
+}
+
+.card-media-picker-hint-var:hover {
+  background: color-mix(in srgb, var(--interactive-accent) 15%, var(--background-secondary));
+  border-color: var(--interactive-accent);
+  color: var(--interactive-accent);
+}
+
+.card-media-picker-prompt-textarea {
+  width: 100%;
+  min-height: 52px;
+  max-height: 90px;
+  resize: vertical;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 12px;
+  font-family: inherit;
+  line-height: 1.45;
+  box-sizing: border-box;
+}
+
+.card-media-picker-prompt-textarea:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+.card-media-picker-ai-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  margin-bottom: 10px;
+}
+
+.card-media-picker-progress-wrap {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  margin-top: 8px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.card-media-picker-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.card-media-picker-progress-stage {
+  color: var(--text-normal);
+  font-weight: 500;
+}
+
+.card-media-picker-progress-time {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.card-media-picker-progress-bar-bg {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--background-modifier-border);
+  overflow: hidden;
+}
+
+.card-media-picker-progress-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--interactive-accent);
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.card-media-picker-ai-actions.is-hidden,
+.card-media-picker-ai-actions.hidden,
+.card-media-picker-progress-wrap.is-hidden,
+.card-media-picker-progress-wrap.hidden,
+.card-media-picker-history-section.is-hidden,
+.card-media-picker-history-section.hidden {
+  display: none;
+}
+
+.card-media-picker-history-section {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.card-media-picker-history-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin-bottom: 8px;
+}
+
+.card-media-picker-history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 10px;
+}
+
+.card-media-picker-history-item {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.card-media-picker-history-item:hover {
+  border-color: var(--interactive-accent);
+  transform: translateY(-1px);
+}
+
+.card-media-picker-history-item.is-selected {
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 1px var(--interactive-accent);
+}
+
+.card-media-picker-history-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-media-picker-history-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent, #ffffff);
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 600;
+  pointer-events: none;
+}
+/*
+## 核心功能
+
+AI Provider 配置面板与弹窗样式片段（ai-tab 与 ai-provider-modal）。
+
+## 定位
+
+位于 styles/，由 scripts/build-styles.mjs 统一编译合并至 styles.css。
+*/
+
+/* 列表空白态 */
+.ai-settings-empty-tip {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* 徽标颜色变体 */
+.wechat-account-badge.is-default-image {
+  background: var(--apple-purple);
+}
+
+.wechat-account-badge.is-disabled {
+  background: var(--text-faint);
+}
+
+.wechat-account-badge.is-runnable {
+  background: var(--apple-success);
+}
+
+.wechat-account-badge.is-pending {
+  background: var(--apple-warning);
+}
+
+/* 能力徽标行与标签 */
+.ai-capability-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.ai-cap-tag {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--background-modifier-border);
+  color: var(--text-normal);
+}
+
+.ai-cap-tag.is-accent {
+  color: var(--text-accent);
+}
+
+.ai-cap-tag.is-error {
+  color: var(--text-error);
+}
+
+.ai-provider-notes {
+  font-size: 11px;
+  margin-top: 2px;
+  color: var(--text-muted);
+}
+
+.ai-provider-status {
+  margin-top: 2px;
+}
+
+/* 弹窗：API Key 字段 */
+.ai-api-key-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ai-api-key-input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.ai-api-key-toggle-btn {
+  position: absolute;
+  right: 4px;
+  padding: 2px 8px;
+}
+
+/* 弹窗：能力区分区 */
+.ai-modal-cap-section {
+  margin: 12px 0;
+  padding: 12px;
+  background: var(--background-secondary);
+  border-radius: 6px;
+}
+
+.ai-modal-cap-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.ai-modal-cap-wrap {
+  margin-bottom: 10px;
+}
+
+.ai-modal-cap-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ai-modal-model-group {
+  margin: 6px 0 0 24px;
+}
+
+.ai-modal-input-full {
+  width: 100%;
+}
+/*
 ## 核心功能
 
 插件“关于”设置页的视觉样式，包含插件名片、支持与赞助、赞助鸣谢榜等模块。
@@ -6759,8 +9678,9 @@ div.modal.wechat-material-picker-modal-mobile {
   flex-shrink: 0;
 }
 
-/* 交流讨论群模块 */
-.apple-settings-community-card {
+/* 交流讨论群与配置快照卡片模块 */
+.apple-settings-community-card,
+.apple-settings-backup-card {
   padding: 14px 18px;
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
@@ -6770,21 +9690,59 @@ div.modal.wechat-material-picker-modal-mobile {
   line-height: 1.7;
 }
 
-.apple-settings-community-card p {
+.apple-settings-community-card p,
+.apple-settings-backup-card p {
   margin: 0 0 8px 0;
 }
 
-.apple-settings-community-card p:last-child {
-  margin-bottom: 0;
+.apple-settings-community-content {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--background-modifier-border);
+}
+
+@media (max-width: 540px) {
+  .apple-settings-community-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+.apple-settings-community-qr-wrapper {
+  width: 130px;
+  height: 130px;
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.apple-settings-community-qr-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.apple-settings-community-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .apple-settings-community-wechat-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--background-modifier-border);
 }
 
 .apple-settings-community-wechat-row code {
@@ -6803,6 +9761,12 @@ div.modal.wechat-material-picker-modal-mobile {
   padding: 2px 10px;
   height: 26px;
   cursor: pointer;
+}
+
+.apple-settings-community-hint {
+  font-size: 12px;
+  color: var(--text-faint);
+  line-height: 1.5;
 }
 
 /* 作者模块 */

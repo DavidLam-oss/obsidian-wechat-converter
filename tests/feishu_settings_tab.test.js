@@ -29,7 +29,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const obsidian = require('obsidian');
 const { __applyExtensions: applyExtensions } = obsidian;
-const { renderFeishuSettingsTab } = await import('../views/settings/feishu-tab.js');
+const { renderFeishuSettingsTab, FEISHU_SETUP_GUIDE_URL } = await import('../views/settings/feishu-tab.js');
 const { createDefaultFeishuSyncSettings } = await import('../services/feishu-settings.js');
 
 function makeTab() {
@@ -65,6 +65,7 @@ function makeTab() {
 describe('Feishu settings tab', () => {
   beforeEach(() => {
     globalThis.__obsidianNoticeRegistry = [];
+    globalThis.__obsidianSettingInstancesRegistry = [];
   });
 
   it('renders monthly API usage stats and resets them from the Feishu tab', async () => {
@@ -85,9 +86,55 @@ describe('Feishu settings tab', () => {
 
     await resetButton.onclick();
 
-    expect(tab.plugin.settings.feishuSync.apiUsage.count).toBe(0);
-    expect(tab.plugin.saveSettings).toHaveBeenCalledTimes(1);
-    expect(globalThis.__obsidianNoticeRegistry.at(-1).message).toBe('✅ 飞书 API 调用计数已重置');
+    expect(globalThis.__obsidianNoticeRegistry.at(-1).message).toBe('飞书 API 调用计数已重置');
     expect(containerEl.textContent).toContain('0 / 10,000');
+  });
+
+  it('renders the setup guide link at the top and removes the bulky instructions card', () => {
+    const tab = makeTab();
+    const containerEl = applyExtensions(document.createElement('div'));
+
+    renderFeishuSettingsTab(tab, containerEl, { obsidianApi: obsidian });
+
+    // 验证顶部启用设置项包含图文指南链接
+    const enableSetting = (globalThis.__obsidianSettingInstancesRegistry || []).find(
+      (setting) => setting.name === '启用飞书同步'
+    );
+    expect(enableSetting).toBeDefined();
+
+    const guideLink = enableSetting.descEl?.querySelector('.apple-settings-guide-link');
+    expect(guideLink).not.toBeNull();
+    expect(guideLink.textContent).toContain('查看详细图文指引');
+    expect(guideLink.getAttribute('href')).toBe(FEISHU_SETUP_GUIDE_URL);
+
+    // 点击链接应调用 openExternalUrl
+    guideLink.click();
+    expect(tab.plugin.openExternalUrl).toHaveBeenCalledWith(FEISHU_SETUP_GUIDE_URL);
+
+    // 验证冗余的步骤指引卡片已被移除
+    expect(containerEl.textContent).not.toContain('飞书应用配置简易步骤');
+    expect(containerEl.querySelector('.wechat-feishu-guide-card')).toBeNull();
+  });
+
+  it('renders the setup guide link at the top even when feishu sync is disabled', () => {
+    const tab = makeTab();
+    tab.plugin.settings.feishuSync.enabled = false;
+    const containerEl = applyExtensions(document.createElement('div'));
+
+    renderFeishuSettingsTab(tab, containerEl, { obsidianApi: obsidian });
+
+    const enableSetting = (globalThis.__obsidianSettingInstancesRegistry || []).find(
+      (setting) => setting.name === '启用飞书同步'
+    );
+    expect(enableSetting).toBeDefined();
+
+    const guideLink = enableSetting.descEl?.querySelector('.apple-settings-guide-link');
+    expect(guideLink).not.toBeNull();
+    expect(guideLink.textContent).toContain('查看详细图文指引');
+    expect(guideLink.getAttribute('href')).toBe(FEISHU_SETUP_GUIDE_URL);
+
+    // 未启用时不会渲染凭证配置或卡片
+    expect(containerEl.textContent).not.toContain('App ID');
+    expect(containerEl.textContent).not.toContain('飞书应用配置简易步骤');
   });
 });

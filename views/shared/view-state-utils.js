@@ -59,14 +59,144 @@ function getPluginSettings(plugin) {
 }
 
 /**
+ * 递归就地同步数组元素：若元素为对象且具备 id，按 id 匹配并原地合并；无 id 则按位置匹配；
+ * 保持持有数组元素（如 ai.providers[i]）的 UI 内存引用不丢失。
+ * @param {unknown[]} tgtArr
+ * @param {unknown[]} srcArr
+ */
+function syncArrayInPlace(tgtArr, srcArr) {
+  /** @type {Map<string, Record<string, unknown>>} */
+  const existingById = new Map();
+  /** @type {Array<Record<string, unknown>>} */
+  const existingOthers = [];
+
+  for (const item of tgtArr) {
+    if (item && typeof item === 'object' && !Array.isArray(item)) {
+      const obj = /** @type {Record<string, unknown>} */ (item);
+      if (obj.id !== undefined && obj.id !== null) {
+        existingById.set(String(obj.id), obj);
+      } else {
+        existingOthers.push(obj);
+      }
+    }
+  }
+
+  /**
+   * 无 id 对象：优先尝试语义键（key/name/title/path/code）精确匹配，
+   * 避免数组乱序或中间插入时导致旧对象被错位覆盖。
+   * @param {Record<string, unknown>} srcObj
+   * @returns {Record<string, unknown> | null}
+   */
+  const findCandidateBySemanticKey = (srcObj) => {
+    for (const key of ['key', 'name', 'title', 'path', 'code']) {
+      const val = srcObj[key];
+      if (val !== undefined && val !== null && val !== '') {
+        const strVal = String(val);
+        const idx = existingOthers.findIndex((cand) => String(cand[key]) === strVal);
+        if (idx !== -1) {
+          const [found] = existingOthers.splice(idx, 1);
+          return found;
+        }
+      }
+    }
+    return null;
+  };
+
+  const newItems = [];
+  for (let i = 0; i < srcArr.length; i++) {
+    const srcItem = srcArr[i];
+    if (srcItem && typeof srcItem === 'object' && !Array.isArray(srcItem)) {
+      const srcObj = /** @type {Record<string, unknown>} */ (srcItem);
+      /** @type {Record<string, unknown> | null} */
+      let matched = null;
+      if (srcObj.id !== undefined && srcObj.id !== null) {
+        matched = existingById.get(String(srcObj.id)) || null;
+        if (matched) {
+          existingById.delete(String(srcObj.id));
+        }
+      } else {
+        matched = findCandidateBySemanticKey(srcObj);
+        if (!matched && existingOthers.length > 0) {
+          matched = existingOthers.shift() || null;
+        }
+      }
+
+      if (matched) {
+        syncInPlace(matched, srcObj);
+        newItems.push(matched);
+      } else {
+        newItems.push(JSON.parse(JSON.stringify(srcObj)));
+      }
+    } else if (Array.isArray(srcItem)) {
+      const matched = Array.isArray(tgtArr[i]) ? tgtArr[i] : [];
+      syncArrayInPlace(matched, srcItem);
+      newItems.push(matched);
+    } else {
+      newItems.push(srcItem);
+    }
+  }
+
+  tgtArr.length = newItems.length;
+  for (let i = 0; i < newItems.length; i++) {
+    tgtArr[i] = newItems[i];
+  }
+}
+
+/**
+ * 递归深度就地同步对象属性，保持目标根对象与嵌套子对象/数组及数组内对象的内存引用稳定
+ * @param {Record<string, unknown>} target
+ * @param {Record<string, unknown>} source
+ */
+function syncInPlace(target, source) {
+  if (!target || typeof target !== 'object' || !source || typeof source !== 'object') {
+    return;
+  }
+
+  // 1. 移除 target 中存在但 source 中已被删除的键
+  for (const key of Object.keys(target)) {
+    if (!Object.prototype.hasOwnProperty.call(source, key)) {
+      delete target[key];
+    }
+  }
+
+  // 2. 将 source 中的字段同步至 target，对象与数组就地维护引用
+  for (const key of Object.keys(source)) {
+    const srcVal = source[key];
+    const tgtVal = target[key];
+
+    if (
+      srcVal &&
+      typeof srcVal === 'object' &&
+      !Array.isArray(srcVal) &&
+      tgtVal &&
+      typeof tgtVal === 'object' &&
+      !Array.isArray(tgtVal)
+    ) {
+      // 嵌套纯对象就地同步
+      syncInPlace(tgtVal, srcVal);
+    } else if (Array.isArray(srcVal) && Array.isArray(tgtVal)) {
+      // 数组及数组内元素就地同步
+      syncArrayInPlace(tgtVal, srcVal);
+    } else {
+      // 基本类型或结构变更时直接赋值（对象深拷贝防污染）
+      target[key] = srcVal && typeof srcVal === 'object' ? JSON.parse(JSON.stringify(srcVal)) : srcVal;
+    }
+  }
+}
+
+/**
  * @param {PluginWithSettingsLike | null | undefined} plugin
  * @param {Record<string, unknown>} settings
  * @returns {Record<string, unknown>}
  */
 function setPluginSettings(plugin, settings) {
   if (!plugin || typeof plugin !== 'object') return settings;
-  plugin.settings = settings;
-  return settings;
+  if (!plugin.settings || typeof plugin.settings !== 'object') {
+    plugin.settings = settings;
+    return settings;
+  }
+  syncInPlace(plugin.settings, settings);
+  return plugin.settings;
 }
 
 /**
@@ -125,6 +255,7 @@ export {
   revealLeafCompat,
   getPluginSettings,
   setPluginSettings,
+  syncInPlace,
   setDestructiveButtonCompat,
   refreshSettingTabCompat,
   isMobileClient,

@@ -25,17 +25,18 @@
 - 版本号动态读取 manifest.json，严禁硬编码。
 */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access -- reason: JS file handles dynamic Obsidian app and plugin manifest structures without strict typescript annotations */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call -- reason: JS file handles dynamic Obsidian app and plugin manifest structures without strict typescript annotations */
 
 import {
   GITHUB_REPOSITORY_URL,
   OBSIDIAN_PUBLISHER_GUIDE_URL,
-  getObsidianSetIcon,
+  attachIcon,
 } from '../apple-style-view-shared.js';
 import { SPONSORS } from '../../services/sponsors-data.js';
 import {
   WECHAT_SPONSOR_QR_DATA_URL,
   ALIPAY_SPONSOR_QR_DATA_URL,
+  AUTHOR_WECHAT_QR_DATA_URL,
 } from '../../services/sponsor-assets.js';
 
 const DOCS_URL = 'https://github.com/DavidLam-oss/obsidian-wechat-converter/blob/main/README.md';
@@ -53,18 +54,6 @@ function openUrl(plugin, url) {
   }
   if (typeof window !== 'undefined' && typeof window.open === 'function') {
     window.open(url, '_blank');
-  }
-}
-
-/**
- * 辅助添加 Lucide 图标
- * @param {HTMLElement} element
- * @param {string} iconName
- */
-function attachIcon(element, iconName) {
-  const setIcon = getObsidianSetIcon();
-  if (typeof setIcon === 'function') {
-    setIcon(element, iconName);
   }
 }
 
@@ -100,6 +89,7 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
   const linksContainer = headerEl.createDiv({ cls: 'apple-settings-about-links' });
 
   const linkItems = [
+    { label: '检查更新', icon: 'refresh-cw', url: 'obsidian://show-plugin?id=obsidian-wechat-converter' },
     { label: 'GitHub 仓库', icon: 'star', url: GITHUB_REPOSITORY_URL },
     { label: '使用文档', icon: 'book-open', url: DOCS_URL },
     { label: '问题反馈', icon: 'message-square', url: ISSUES_URL },
@@ -120,7 +110,94 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
     };
   });
 
-  // 2. 支持与赞助 (Support & Sponsor)
+  // 2. 配置安全与灾备恢复 (Disaster Recovery)
+  const backupSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
+  const backupHeader = backupSection.createDiv({ cls: 'apple-settings-about-section-header' });
+  const backupIcon = backupHeader.createSpan({ cls: 'apple-settings-about-section-icon' });
+  attachIcon(backupIcon, 'shield-check');
+  backupHeader.createSpan({ text: '配置安全与受控快照' });
+
+  const backupCard = backupSection.createDiv({ cls: 'apple-settings-backup-card' });
+  backupCard.createEl('p', {
+    text: '插件在每次保存配置实质变更前会自动生成受控快照 (data.json.bak)，并受实体级防清空凭据守卫保护。如遇意外或多端同步冲突，可一键从快照恢复配置。',
+  });
+  const restoreBtn = backupCard.createEl('button', {
+    text: '从 .bak 快照恢复配置',
+    cls: 'mod-cta',
+  });
+  restoreBtn.onclick = async () => {
+    if (typeof tabInstance.plugin.restoreFromBackup === 'function') {
+      await tabInstance.plugin.restoreFromBackup();
+    }
+  };
+
+  // 3. Obsidian 与 AI 交流社群
+  const communitySection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
+
+  const communityHeader = communitySection.createDiv({ cls: 'apple-settings-about-section-header' });
+  const communityIcon = communityHeader.createSpan({ cls: 'apple-settings-about-section-icon' });
+  attachIcon(communityIcon, 'users');
+  communityHeader.createSpan({ text: 'Obsidian 与 AI 交流社群' });
+
+  const communityCard = communitySection.createDiv({ cls: 'apple-settings-community-card' });
+  communityCard.createEl('p', {
+    text: '作者创建了一个专注于 Obsidian 与 AI 深度探索的实践交流群。',
+  });
+  communityCard.createEl('p', {
+    text: '群内日常交流探讨 Obsidian 高阶工作流、个人知识库（PKM）搭建、AI Agent 与自动化落地、前沿效率工具折腾与经验心得等（非单一插件售后群）。',
+  });
+  communityCard.createEl('p', {
+    text: '目前社群成员已超过 400 人，受微信规则限制已无法通过扫描群二维码直接加入。如果您对 Obsidian 与 AI 实践感兴趣想入群交流，欢迎扫描下方微信二维码或添加作者微信（备注「OB 入群」），作者将手动拉您进群：',
+  });
+
+  const communityContent = communityCard.createDiv({ cls: 'apple-settings-community-content' });
+
+  const qrWrap = communityContent.createDiv({ cls: 'apple-settings-community-qr-wrapper' });
+  const qrImg = qrWrap.createEl('img', { cls: 'apple-settings-community-qr-img' });
+  qrImg.src = AUTHOR_WECHAT_QR_DATA_URL;
+  qrImg.alt = '作者个人微信二维码';
+
+  const infoWrap = communityContent.createDiv({ cls: 'apple-settings-community-info' });
+
+  const wechatRow = infoWrap.createDiv({ cls: 'apple-settings-community-wechat-row' });
+  wechatRow.createSpan({ text: '作者微信号：' });
+  wechatRow.createEl('code', { text: 'linauwawa' });
+
+  const copyBtn = wechatRow.createEl('button', {
+    text: '复制微信号',
+    cls: 'apple-settings-community-copy-btn',
+  });
+  copyBtn.onclick = async () => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText('linauwawa');
+      }
+      copyBtn.textContent = '已复制';
+      window.setTimeout(() => {
+        copyBtn.textContent = '复制微信号';
+      }, 2000);
+    } catch {
+      // ignore clipboard error
+    }
+  };
+
+  const communityHintEl = infoWrap.createDiv({ cls: 'apple-settings-community-hint' });
+  communityHintEl.createSpan({ text: '微信扫码或搜索微信号添加均可，添加时请备注「OB 入群」' });
+
+  // 4. 关于作者
+  const authorSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
+
+  const authorHeader = authorSection.createDiv({ cls: 'apple-settings-about-section-header' });
+  const authorIcon = authorHeader.createSpan({ cls: 'apple-settings-about-section-icon' });
+  attachIcon(authorIcon, 'user');
+  authorHeader.createSpan({ text: '关于作者' });
+
+  const authorCard = authorSection.createDiv({ cls: 'apple-settings-author-card' });
+  authorCard.createEl('p', {
+    text: '作者：林小卫很行 (DavidLam)。一名热衷于提升生产力工具体验的开发者与创作者。相信工具的力量，让写作更优雅，让创作更自由。',
+  });
+
+  // 5. 支持与赞助 (Support & Sponsor)
   const sponsorSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
 
   const sponsorHeader = sponsorSection.createDiv({ cls: 'apple-settings-about-section-header' });
@@ -163,7 +240,7 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
     text: '提示：扫码赞助时请在转账备注中填写您的【昵称】与【留言寄语】。作者将在下一版本更新时，将您的名字永久收录至下方的赞助鸣谢榜！',
   });
 
-  // 3. 赞助鸣谢榜 (Hall of Fame)
+  // 6. 赞助鸣谢榜 (Hall of Fame)
   const fameSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
 
   const fameHeader = fameSection.createDiv({ cls: 'apple-settings-about-section-header' });
@@ -201,57 +278,6 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
 
     item.createSpan({ text: sponsor.date, cls: 'apple-settings-fame-item-date' });
   });
-
-  // 4. 交流讨论群
-  const communitySection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
-
-  const communityHeader = communitySection.createDiv({ cls: 'apple-settings-about-section-header' });
-  const communityIcon = communityHeader.createSpan({ cls: 'apple-settings-about-section-icon' });
-  attachIcon(communityIcon, 'users');
-  communityHeader.createSpan({ text: '交流讨论群' });
-
-  const communityCard = communitySection.createDiv({ cls: 'apple-settings-community-card' });
-  communityCard.createEl('p', {
-    text: '为了方便大家交流技术写作与多平台排版心得、探讨新功能与反馈使用问题，作者创建了「Obsidian 发布助手」用户交流群。',
-  });
-  communityCard.createEl('p', {
-    text: '目前社群成员已超过 400 人，受微信规则限制已无法通过扫描群二维码直接加入。如果您想入群交流，欢迎添加作者个人微信（备注「入群」），作者将手动拉您进群：',
-  });
-
-  const wechatRow = communityCard.createDiv({ cls: 'apple-settings-community-wechat-row' });
-  wechatRow.createSpan({ text: '作者微信号：' });
-  wechatRow.createEl('code', { text: 'linauwawa' });
-
-  const copyBtn = wechatRow.createEl('button', {
-    text: '复制微信号',
-    cls: 'apple-settings-community-copy-btn',
-  });
-  copyBtn.onclick = async () => {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText('linauwawa');
-      }
-      copyBtn.textContent = '已复制';
-      setTimeout(() => {
-        copyBtn.textContent = '复制微信号';
-      }, 2000);
-    } catch {
-      // ignore clipboard error
-    }
-  };
-
-  // 5. 关于作者
-  const authorSection = containerEl.createDiv({ cls: 'apple-settings-about-section' });
-
-  const authorHeader = authorSection.createDiv({ cls: 'apple-settings-about-section-header' });
-  const authorIcon = authorHeader.createSpan({ cls: 'apple-settings-about-section-icon' });
-  attachIcon(authorIcon, 'user');
-  authorHeader.createSpan({ text: '关于作者' });
-
-  const authorCard = authorSection.createDiv({ cls: 'apple-settings-author-card' });
-  authorCard.createEl('p', {
-    text: '作者：林小卫很行 (DavidLam)。一名热衷于提升生产力工具体验的开发者与创作者。相信工具的力量，让写作更优雅，让创作更自由。',
-  });
 }
 
-/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access -- reason: resume typed linting after the dynamic Obsidian settings UI boundary */
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call -- reason: resume typed linting after the dynamic Obsidian settings UI boundary */

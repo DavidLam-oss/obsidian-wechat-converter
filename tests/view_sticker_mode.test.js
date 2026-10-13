@@ -72,6 +72,29 @@ describe('AppleStyleView - Sticker Mode Integration', () => {
     expect(view.convertCurrent).toHaveBeenCalled();
   });
 
+  it('resolveStickerImageSrc 必须以 vault 为 this 调用 getResourcePath', () => {
+    // 线上实锤（2026-09-20）：把 Vault#getResourcePath 摘下来裸调用会丢 this，
+    // Obsidian 内部读 this.adapter 直接抛 TypeError，整条贴图渲染静默失败。
+    // 这个 mock 故意依赖 this.adapter——裸调用必炸，才能锁住回归。
+    const view = new AppleStyleView({ view: null }, { settings: { wechatAccounts: [] } });
+    const linkFile = { path: 'attachments/img-a.png' };
+    view.app = {
+      metadataCache: { getFirstLinkpathDest: () => linkFile },
+      vault: {
+        adapter: {},
+        getResourcePath: function getResourcePath(file) {
+          if (!this || !this.adapter) {
+            throw new TypeError("Cannot read properties of undefined (reading 'adapter')");
+          }
+          return `app://mock/${file.path}`;
+        },
+      },
+    };
+
+    const resolved = view.resolveStickerImageSrc('attachments/img-a.png', 'a.md');
+    expect(resolved).toBe('app://mock/attachments/img-a.png');
+  });
+
   it('should describe semantic conversions with user-facing labels', async () => {
     const leaf = { view: null };
     const plugin = { settings: { wechatAccounts: [] } };

@@ -1,52 +1,60 @@
 node_modules/
 .DS_Store
 data.json
+*.bak
 workspace.json
 xgplayer/
 *.zip
 coverage/
 
-ClaudeFix.md
+# Environment and sensitive files
+.env
+.env.*
+*.env
 
+# Logs and runtime databases
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.db
+*.sqlite*
+
+# Local review notes and scratchpads
 review.md
-
-# Local Obsidian review / scanner fix notes
+*review*.md
+HANDOVER-*.md
+baseline-before.log
+ClaudeFix.md
 OBSIDIAN_REVIEW_*.md
+OBSIDIAN_COMMUNITY_REVIEW_FIXES.md
 *_review.txt
 *_review
 
+# Docs ignore with public white-list
 docs/*
 !docs/support.md
 !docs/basic/
 !docs/basic/**
-!docs/plans/
-docs/plans/*
-!docs/plans/2026-07-28-sticker-publishing-ui-refinement.md
+docs/plans/
+docs/plans/**
+docs/research/
+docs/research/**
 
-# Local skill directories
-.codex/*
-!.codex/config.toml
-!.codex/hooks.json
-!.codex/hooks/
-!.codex/hooks/**
-!.codex/prompts/
-!.codex/prompts/**
-!.codex/skills/
-!.codex/skills/**
-.codex/**/.DS_Store
-.codex/skills/project-release
-.claude/skills/project-release/
+# Local skill, assistant and editor directories
+.codex/
+.claude/
+.cursor/
+.vscode/
+.idea/
 
 # Generated vendored dependencies
 lib/markdown-it.min.js
 lib/highlight.min.js
 lib/mathjax-plugin.js
-.openprd/harness/
-.openprd/learning/
-.openprd/quality/reports/
-.openprd/knowledge/candidates/
-.openprd/knowledge/drafts/
-.openprd/knowledge/review-signals.jsonl
-.openprd/growth/preferences.local.json
-.qoder/
+
+# Local assistant / tool working dirs (memory logs, review boards, screenshots)
+.openprd/
 .workbuddy/
+.qoder/
+

@@ -51,7 +51,7 @@ describe('AppleStyleView - HTML Cleaning', () => {
     `;
     const outputHtml = view.cleanHtmlForDraft(inputHtml);
     expect(outputHtml).not.toContain('margin-left: 20px');
-    expect(outputHtml).toContain('margin: 0');
+    expect(outputHtml).toContain('padding-left: 40px');
   });
 
   it('should remove empty list items', () => {
@@ -67,10 +67,10 @@ describe('AppleStyleView - HTML Cleaning', () => {
     // Use jsdom to parse output
     const div = document.createElement('div');
     div.innerHTML = outputHtml;
-    const lis = div.querySelectorAll('li');
+    const items = div.querySelectorAll('p');
 
-    expect(lis.length).toBe(1);
-    expect(lis[0].textContent).toBe('Valid');
+    expect(items.length).toBe(1);
+    expect(items[0].textContent).toContain('Valid');
   });
 
   it('should unwrap paragraphs inside list items (when nested list exists)', () => {

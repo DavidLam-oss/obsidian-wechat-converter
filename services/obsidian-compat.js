@@ -77,6 +77,21 @@ export function getObsidianSetIcon() {
   return obsidianApi.setIcon;
 }
 
+/**
+ * 辅助挂载 Obsidian 原生 Lucide 图标
+ * @param {HTMLElement} element
+ * @param {string} iconName
+ * @param {string} [fallbackText]
+ */
+export function attachIcon(element, iconName, fallbackText) {
+  const setIcon = getObsidianSetIcon();
+  if (typeof setIcon === 'function') {
+    setIcon(element, iconName);
+  } else if (fallbackText && typeof element?.setText === 'function') {
+    element.setText(fallbackText);
+  }
+}
+
 /** @returns {typeof import('obsidian').requestUrl} */
 export function getObsidianRequestUrl() {
   return obsidianApi.requestUrl;
@@ -86,3 +101,4 @@ export function getObsidianRequestUrl() {
 export function getObsidianRequest() {
   return obsidianApi.request;
 }
+

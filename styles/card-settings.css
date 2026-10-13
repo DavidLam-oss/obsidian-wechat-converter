@@ -1,0 +1,597 @@
+/*
+## 核心功能
+
+图片卡片排版设置浮层的自有样式（B03）。控件本体已与文章模式对齐：
+滑块复用 style-controls.css 的 apple-slider，按钮复用 style-panel.css 的
+apple-btn-row/apple-btn-size；分节间距由本文件的
+  `.apple-settings-card-wrapper .apple-setting-section` 覆盖块对齐文章模式设置面板。
+子 Tab 导航（.icard-settings-nav）置顶吸顶，其上的分段控件 .icard-settings-segmented
+用「灰轨道 + 白胶囊」把导航与取值区分开，见该块的注释。
+本分片只保留卡片设置特有的少量样式。作用域 icard-settings- 前缀，
+仅作用于卡片模式设置浮层（.apple-settings-card-wrapper），不污染文章/贴图设置。
+
+## 维护规则
+
+- 修改逻辑后同步更新本文件说明书，并检查 styles 的文件夹 README 是否仍准确。
+- 新增选择器必须以 icard-settings- 前缀作用域，避免污染宿主 UI。
+- 沿用 Obsidian 宿主变量（--background-* / --text-* / --apple-*），不覆盖宿主配色。
+- 给 button 写样式要提防宿主全局规则 `button:not(.clickable-icon)`（特异性 0-1-1）：
+  单个类选择器（0-1-0）盖不住它的 background-color / box-shadow，需加前缀凑到 0-2-0，
+  并写成 background-color / box-shadow 长写（简写与长写在层叠里是逐条属性比对的）。
+*/
+
+/* 滑块数值标签（右对齐，与文章模式「页面两侧留白」同款口径） */
+.icard-settings-slider-value {
+  font-size: 12px;
+  color: var(--apple-secondary, var(--text-muted));
+  min-width: 36px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 选项说明文案（水印软上限等提示） */
+.icard-settings-note {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* 文本输入（封面字段 / 水印文案；C01③） */
+.icard-settings-text {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 6px;
+  padding: 5px 8px;
+  font-size: 12.5px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+.icard-settings-text:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+/* 封面字段行（label + 输入，C01③）
+   2026-09-21 改版：分区与主次见 docs/plans/2026-09-21-cover-settings-redesign.md。
+   分节内容容器（.apple-setting-content）是普通块级元素、不吃 flex gap，
+   所以节内节奏继续靠子元素自己的 margin-top。 */
+.icard-settings-cover-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+/* ⚠️ min-width: 0 是必需的：`<input>` 的 min-content 宽约 20 字符（≈187px），而 flex 子项
+   默认 min-width: auto 会拒绝收缩到该值以下 —— 输入框顶出容器宽度后被卡片边缘裁掉
+   （2026-09-21 评审图实测：143px 的列里塞进 187px 的输入框）。
+   `.icard-settings-cover-duo`（作者/日期并排两列）已于同日真机回归后删除，规则一并清掉。 */
+.icard-settings-cover-row .icard-settings-text { margin-top: 0; flex: 1 1 auto; min-width: 0; }
+/* 标签列 42px：原来 34px 时中文双字标签刚好占满，标签与输入框之间没有留白 */
+.icard-settings-cover-label {
+  flex: 0 0 42px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* —— 以下三个按钮类一律带 .apple-settings-card-wrapper 前缀凑 0-2-0 ——
+   ⚠️ 宿主基础规则 `button:not(.clickable-icon)` 是 **0-1-1**，单个类选择器（0-1-0）
+   写的 color / background-color / box-shadow / height / padding / border-radius
+   全都会被它盖掉（按钮被刷成白底 + 固定 30px 高 + 居中）。背景写 background-color 长写。 */
+
+/* 「按当前笔记重新填入」：低频补救动作，降级为文字按钮，不与主操作抢重量 */
+.apple-settings-card-wrapper .icard-settings-cover-link {
+  display: block;
+  width: fit-content;
+  height: auto;
+  margin: 8px 0 0 auto;
+  padding: 2px 0;
+  border: none;
+  background-color: transparent;
+  box-shadow: none;
+  color: var(--apple-accent);
+  font-size: 12px;
+  cursor: pointer;
+}
+.apple-settings-card-wrapper .icard-settings-cover-link:hover {
+  color: var(--apple-primary);
+  background-color: transparent;
+}
+
+/* 主操作（AI 生成封面图）：本页唯一蓝色实底按钮。
+   改版前它和「移除配图」「重新填入」同为 .apple-btn-size，主操作完全被淹没。 */
+.apple-settings-card-wrapper .icard-settings-cover-primary {
+  width: 100%;
+  height: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--apple-accent);
+  border-radius: 7px;
+  background-color: var(--apple-accent);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: normal;
+  box-shadow: none;
+  cursor: pointer;
+}
+.apple-settings-card-wrapper .icard-settings-cover-primary:hover { filter: brightness(1.06); }
+.apple-settings-card-wrapper .icard-settings-cover-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+  filter: none;
+}
+
+/* 配图卡里的小号「移除」：破坏性但可恢复的动作，压到最低重量（不与主操作同款） */
+.apple-settings-card-wrapper .icard-settings-cover-remove {
+  flex: 0 0 auto;
+  height: auto;
+  padding: 3px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  box-shadow: none;
+  cursor: pointer;
+}
+.apple-settings-card-wrapper .icard-settings-cover-remove:hover { color: var(--text-normal); }
+
+/* 封面配图工具组（非纯文字排版时渐进展开） */
+.apple-settings-card-wrapper .icard-settings-cover-tools-wrap:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* 「添加封面配图」快速唤起按钮（纯文字模式下展示） */
+.apple-settings-card-wrapper .icard-settings-cover-add-btn:not(.hidden) {
+  width: 100%;
+  height: 32px;
+  margin-top: 8px;
+  padding: 0 12px;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 6px;
+  background-color: var(--background-secondary);
+  color: var(--apple-accent, var(--text-accent));
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.apple-settings-card-wrapper .icard-settings-cover-add-btn:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--apple-accent, var(--text-accent));
+}
+
+/* 渐进披露通用隐藏规则（使用类特异性，禁止 !important） */
+.apple-settings-card-wrapper .hidden,
+.apple-settings-card-wrapper [hidden] {
+  display: none;
+}
+
+/* 封面搜索与快捷图源操作工具行 */
+.icard-settings-cover-search-row {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  margin-top: 0;
+  align-items: center;
+}
+.icard-settings-cover-search-row .icard-settings-text {
+  flex: 1 1 auto;
+  width: 0;
+  min-width: 0;
+  margin-top: 0;
+}
+.apple-settings-card-wrapper .icard-settings-cover-btn.icard-settings-cover-search-btn {
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  width: auto;
+  min-width: 58px;
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* 封面图源操作工具行（随机摄影 / 搜 Unsplash / 笔记/本地） */
+.icard-settings-cover-tools {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  margin-top: 0;
+}
+
+.apple-settings-card-wrapper .icard-settings-cover-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 30px;
+  padding: 0 4px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.apple-settings-card-wrapper .icard-settings-cover-btn:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--apple-accent);
+}
+
+.apple-settings-card-wrapper .icard-settings-cover-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* —— 侧边栏双子 Tab 导航（排版 Token vs 封面设置）——
+   纯净透明无白底，自然融入浮层磨砂画布之上。 */
+.icard-settings-nav {
+  margin: 0 0 12px 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.theme-dark .icard-settings-nav {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* 移动端浮层间距对齐 */
+.apple-converter-container.apple-converter-mobile .icard-settings-nav {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* —— 子 Tab 分段控件（排版 Token vs 封面设置）——
+   沿用预览区「模式胶囊」（.apple-preview-mode-segment）的同一套语汇：灰轨道 + 白色胶囊。
+   不用 .apple-btn-size 的蓝底选中态，是因为蓝色在本页已经被用来表达「这个值被选中」
+   （主题、比例、页码三处），导航再占一次就分不清「我在哪个页签」和「选了哪个值」。
+   蓝色只留给取值，导航只表达位置。
+   轨道撑满整行，两个分段各占一半；高度与下方 .apple-btn-size 对齐（约 30px）。 */
+.icard-settings-segmented {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+}
+
+.theme-dark .icard-settings-segmented {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ⚠️ 选择器必须带 .icard-settings-segmented 前缀（凑到 0-2-0）。
+   宿主有一条全局规则：button:not(.clickable-icon) { background-color: var(--interactive-normal);
+   box-shadow: var(--input-shadow); }，特异性 0-**1-1**，**高于**单个类选择器（0-1-0）。
+   亮色默认主题里 --interactive-normal 就是白，于是「未选中」也被刷成白底 + 宿主投影，
+   和选中的白胶囊一模一样 —— 选中态等于不存在（2026-09-20 真机复现）。
+   另外这里用 background-color / box-shadow 长写，别只写 background 简写：
+   简写与长写在层叠里是**逐条属性**比特异性的，写简写并不能一并盖掉宿主的长写。 */
+.icard-settings-segmented .icard-settings-segment {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 28px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.icard-settings-segmented .icard-settings-segment:hover {
+  color: var(--text-normal);
+  background-color: rgba(0, 0, 0, 0.045);
+}
+
+.theme-dark .icard-settings-segmented .icard-settings-segment:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* 选中段：亮色是「白胶囊浮在灰轨道上」，暗色改成提亮胶囊（整段铺白在暗色里太扎眼）。
+   底色差 + 描边 + 投影三层一起给，少一层在深色主题里就会被吃掉。 */
+.icard-settings-segmented .icard-settings-segment.is-active {
+  color: var(--text-normal);
+  font-weight: 600;
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+.theme-dark .icard-settings-segmented .icard-settings-segment.is-active {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* 主题网格（2026-09-20 David）：2 行 × 3 列。单行挤 6 枚时每枚被压得很窄，显得小气；
+   网格铺满整行后每枚宽度一致、字号不再受挤压。 */
+.icard-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.icard-grid-3 .apple-btn-size {
+  width: 100%;
+  text-align: center;
+  padding: 7px 4px;
+  white-space: nowrap;
+}
+
+/* 比例卡片（2026-09-20 David，参考微信工具样式）：形状示意 + 数值。
+   形状即说明，「竖版/长竖版」文字降级为 hover title。
+   前缀凑 0-2-0（宿主 button:not(.clickable-icon) 是 0-1-1，单类会被盖），背景写 background-color 长写。
+   ⚠️ 必须显式写 height: auto：宿主基础 button 规则带固定 height: var(--input-height)=30px
+   且 align-items/justify-content 居中，不声明高度时内容（形状 26 + 间距 5 + 文字 12 + 内边距 16 ≈ 63px）
+   会上下双向溢出——形状顶出卡片、数值压到卡底（2026-09-20 真机复现）。 */
+.icard-settings-ratios {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.icard-settings-ratios .icard-ratio-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: auto;
+  padding: 9px 4px 7px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: normal;
+  color: var(--apple-secondary);
+  background-color: var(--apple-background);
+  border: 1px solid var(--apple-border);
+  border-radius: 8px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.icard-settings-ratios .icard-ratio-option:hover {
+  color: var(--apple-primary);
+  border-color: var(--apple-accent);
+}
+
+/* 选中态与同面板的「主题」按钮（.apple-btn-size.active）同一套语言：
+   苹果蓝底纹 + 蓝字 + 蓝描边。不用宿主 --interactive-accent——它跟随用户主题（可能偏紫），
+   与面板既有的蓝色取值语汇不一致（2026-09-20 真机反馈）。 */
+.icard-settings-ratios .icard-ratio-option.active {
+  background-color: rgba(0, 113, 227, 0.1);
+  color: var(--apple-accent);
+  border-color: rgba(0, 113, 227, 0.3);
+}
+
+/* 形状示意：等高、宽度按真实比例（aspect-ratio），一眼看出三档的高矮差异 */
+.icard-ratio-shape {
+  display: block;
+  flex: 0 0 auto;
+  height: 26px;
+  width: auto;
+  border: 1.5px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.85;
+}
+
+.icard-ratio-shape[data-ratio="3:4"] { aspect-ratio: 3 / 4; }
+.icard-ratio-shape[data-ratio="3:5"] { aspect-ratio: 3 / 5; }
+.icard-ratio-shape[data-ratio="9:16"] { aspect-ratio: 9 / 16; }
+
+.icard-ratio-text {
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* 折叠摘要右侧的当前值回显（字号 / 行高 / 边距），与文章模式「排版间距」摘要同款口径 */
+.icard-settings-tune-values {
+  margin-left: auto;
+  margin-right: 8px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--apple-secondary, var(--text-muted));
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 折叠区是「排版 Token」页签的最后一节。上面各节靠 .apple-setting-section 的 padding 收尾，
+   而 details 自带 margin-bottom:16px，和浮层自身的下内边距叠起来会多出一截，所以归零。
+   ⚠️ 不要在这里补 padding「留呼吸」：details 有自己的背景色（比摘要浅），收起时那点 padding
+   会渲染成摘要下面的一条白框（2026-09-20 真机复现）。底部呼吸交给浮层的内边距。 */
+.apple-settings-card-wrapper .icard-settings-tune {
+  margin-bottom: 0;
+}
+
+/* 折叠组内的行距由 .icard-settings-cover-ai-area 的 gap 负责，
+   这里只给「主操作与上方 Prompt」留一点额外呼吸 */
+.icard-settings-cover-actions {
+  margin-top: 2px;
+}
+
+/* —— 折叠组「封面画面」（2026-09-21）——
+   AI 相关控件属低频（只在换风格/重生成时用），常驻会把高频的文案编辑压下去。
+   与「排版 Token」页的「字号与间距」同款：details 自带卡框，摘要右侧回显当前值。 */
+.apple-settings-card-wrapper .icard-settings-cover-ai {
+  margin-bottom: 0;
+}
+
+/* 折叠区内容容器：覆盖 .apple-settings-area 的 24px gap 与「320px 居中窄栏」
+   （那套是给独立设置页用的，塞进折叠组会既挤又宽窄不一）。
+   前缀凑到 0-3-0，稳定盖过 `.apple-settings-details .apple-settings-area`。 */
+.apple-settings-card-wrapper .apple-settings-details .icard-settings-cover-ai-area {
+  gap: 8px;
+  max-width: none;
+  margin: 0;
+}
+
+/* 配图卡主行 = 风格名；次行是尺寸/状态，复用 .icard-settings-note */
+.icard-settings-cover-preview-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-normal);
+}
+
+/* 开关行（正文页码）：左侧说明 + 右侧 .apple-toggle 开关，整行可点。
+   与贴图模式「配图序号」（.apple-sticker-toggle-*）同一套口径，只是作用域换成卡片前缀。 */
+.icard-settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  cursor: pointer;
+  user-select: none;
+}
+
+.icard-settings-toggle-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.icard-settings-toggle-label {
+  font-size: 12px;
+  color: var(--text-normal);
+}
+
+.icard-settings-toggle-desc {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+/* AI 封面控件与提示词域 */
+.icard-settings-select {
+  width: 100%;
+  box-sizing: border-box;
+  /* 与 .icard-settings-text 同理：下拉的 min-content 由最宽的 option 决定（风格项带
+     一长串描述），不归零 min-width 就会被顶出容器、被卡片边缘裁掉。 */
+  min-width: 0;
+  margin-top: 6px;
+  /* 右内边距给自绘箭头让位（与 .apple-select 同款口径） */
+  padding: 5px 26px 5px 8px;
+  font-size: 12.5px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  /* ⚠️ 必须写 background-color 长写：`background` 简写会把下面那张箭头图一并清空，
+     表现就是「下拉框没有箭头、用户不知道能展开」（2026-09-21 真机反馈）。
+     箭头与 .apple-select 用的是同一张图，改一处要两处对齐。 */
+  background-color: var(--background-primary);
+  color: var(--text-normal);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236e6e73' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px;
+}
+
+/* 暗色主题下箭头要更亮，否则深底上看不见（与 .apple-select 同款取值） */
+.theme-dark .icard-settings-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23b3b3b3' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+}
+.icard-settings-prompt-area {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  resize: vertical;
+  min-height: 54px;
+}
+.apple-settings-card-wrapper .icard-settings-cover-preview-box:not(.hidden) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+}
+.icard-settings-cover-thumb {
+  width: 44px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+}
+.icard-settings-cover-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* —— 分节间距对齐文章模式设置面板 ——
+   文章模式的「分节留白 + 细分隔线」来自 `.apple-settings-details .apple-setting-section`
+   （见 styles/style-panel.css）：padding 12px + 顶部 1px 细线 + gap 8px。卡片浮层的分节
+   不在 .apple-settings-details 内，只吃到 .apple-setting-section 的基础规则（仅 flex + gap:8px），
+   于是各分节之间没有任何留白、视觉上糊成一片。这里复用同一套口径。 */
+.apple-settings-card-wrapper:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+}
+
+.apple-settings-card-wrapper .apple-setting-section {
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid color-mix(in srgb, var(--background-modifier-border) 82%, transparent);
+}
+
+.apple-settings-card-wrapper .apple-setting-section:first-child {
+  border-top: none;
+  padding-top: 0;
+}

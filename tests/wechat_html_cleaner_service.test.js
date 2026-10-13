@@ -64,4 +64,136 @@ describe('Wechat HTML Cleaner Service', () => {
     expect(output).toContain('#执业医师');
     expect(output).not.toContain('href="#%E6%89%A7%E4%B8%9A%E5%8C%BB%E5%B8%88"');
   });
+
+  it('should convert blockquote to section with identical inline styles to avoid WeChat default border', () => {
+    const input = '<blockquote style="font-size: 16px; border-left: 3px solid #8a2be2; background: #f8fafc; padding: 16px;"><p>这是一个引用</p></blockquote>';
+    const output = cleanHtmlForDraft(input);
+
+    expect(output).not.toContain('<blockquote');
+    expect(output).not.toContain('</blockquote>');
+    expect(output).toContain('<section');
+    expect(output).toContain('border-left: 3px solid #8a2be2');
+    expect(output).toContain('background: #f8fafc');
+    expect(output).toContain('<p>这是一个引用</p>');
+    expect(output).toContain('</section>');
+  });
+
+  describe('issue #78 - unordered list hanging indent conversion', () => {
+    it('should convert single-level unordered list into hanging indent paragraphs', () => {
+      const input = `
+        <ul style="font-size: 16px; line-height: 1.8; color: #3b4648; margin: 12px 0; padding-left: 20px; list-style-type: disc;">
+          <li style="font-size: 16px; line-height: 1.8; color: #3b4648; margin: 4px 0;">第一项内容</li>
+          <li style="font-size: 16px; line-height: 1.8; color: #3b4648; margin: 4px 0;">第二项长内容，用于测试悬挂缩进排版</li>
+        </ul>
+      `;
+      const output = cleanHtmlForDraft(input);
+
+      expect(output).not.toContain('<ul');
+      expect(output).not.toContain('</ul>');
+      expect(output).not.toContain('<li');
+      expect(output).not.toContain('</li>');
+      expect(output).toContain('padding-left: 20px');
+      expect(output).toContain('text-indent: -14px');
+      expect(output).toContain('<span>• </span>第一项内容');
+      expect(output).toContain('<span>• </span>第二项长内容，用于测试悬挂缩进排版');
+    });
+
+    it('should convert nested unordered lists with increasing indentation per level', () => {
+      const input = `
+        <ul>
+          <li>顶级父项
+            <ul>
+              <li>二级子项 A</li>
+              <li>二级子项 B</li>
+            </ul>
+          </li>
+        </ul>
+      `;
+      const output = cleanHtmlForDraft(input);
+
+      expect(output).not.toContain('<ul');
+      expect(output).not.toContain('<li');
+      expect(output).toContain('padding-left: 20px');
+      expect(output).toContain('padding-left: 40px');
+      expect(output).toContain('<span>• </span>顶级父项');
+      expect(output).toContain('<span>• </span>二级子项 A');
+      expect(output).toContain('<span>• </span>二级子项 B');
+    });
+
+    it('should preserve task item checkboxes without adding duplicate bullet markers', () => {
+      const input = `
+        <ul>
+          <li style="list-style-type: none; margin-left: -20px;"><span style="color: #576b95;">☐</span> 待办任务项</li>
+          <li style="list-style-type: none; margin-left: -20px;"><span style="color: #8f959e;">☑</span> 已完成任务项</li>
+        </ul>
+      `;
+      const output = cleanHtmlForDraft(input);
+
+      expect(output).not.toContain('<ul');
+      expect(output).not.toContain('<span>• </span>');
+      expect(output).toContain('text-indent: -20px');
+      expect(output).toContain('待办任务项');
+      expect(output).toContain('已完成任务项');
+    });
+
+    it('should keep leading strong label and list text in same paragraph flow', () => {
+      const input = `
+        <ul>
+          <li><strong>核心指标：</strong>准确率达到 99%</li>
+        </ul>
+      `;
+      const output = cleanHtmlForDraft(input);
+
+      expect(output).not.toContain('<ul');
+      expect(output).toContain('padding-left: 20px');
+      expect(output).toContain('text-indent: -14px');
+      expect(output).toContain('<span>• </span>');
+      expect(output).toContain('核心指标：');
+      expect(output).toContain('准确率达到 99%');
+    });
+
+    it('遇列表内代码块/表格等块级元素，解构为同级兄弟并保持缩进，避免 p 标签提前闭合', () => {
+      const input = `
+        <ul>
+          <li>示例文本：<pre><code>const a = 1;</code></pre>尾部说明</li>
+        </ul>
+      `;
+      const output = cleanHtmlForDraft(input);
+
+      expect(output).not.toContain('<ul');
+      expect(output).not.toContain('<li');
+      // pre 不应被包裹在 p 内部
+      const dom = document.createElement('div');
+      dom.innerHTML = output;
+      expect(dom.querySelector('p pre')).toBeNull();
+      // pre 作为同级存在并具有 margin-left 缩进
+      expect(output).toContain('<pre style=" margin-left: 20px;">');
+      // 首段有标点与文本
+      expect(output).toContain('<span>• </span>示例文本：');
+      // 尾段为独立段落
+      expect(output).toContain('尾部说明');
+    });
+
+    it('遇列表内嵌套 div 与 hr 等长尾块级元素，解构为同级兄弟，避免 p 标签提前闭合', () => {
+      const input = `
+        <ul>
+          <li>第一行<div>块级内容</div><hr>第二行</li>
+        </ul>
+      `;
+      const output = cleanHtmlForDraft(input);
+
+      expect(output).not.toContain('<ul');
+      expect(output).not.toContain('<li');
+      const dom = document.createElement('div');
+      dom.innerHTML = output;
+      expect(dom.querySelector('p div')).toBeNull();
+      expect(dom.querySelector('p hr')).toBeNull();
+      expect(output).toContain('<div style=" margin-left: 20px;">块级内容</div>');
+      expect(output).toContain('<hr style=" margin-left: 20px;">');
+      expect(output).toContain('<span>• </span>第一行');
+      expect(output).toContain('第二行');
+    });
+  });
 });
+
+

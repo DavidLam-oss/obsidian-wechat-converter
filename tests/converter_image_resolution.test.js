@@ -28,13 +28,16 @@
 import { describe, it, expect, vi } from 'vitest';
 const { createLegacyConverter } = require('./helpers/render-runtime');
 
-function makeApp(files = {}) {
+function makeApp(files = {}, adapter = {}) {
   const byPath = new Map(Object.entries(files));
   return {
     metadataCache: {
       getFirstLinkpathDest: vi.fn(() => null),
     },
     vault: {
+      adapter: {
+        basePath: adapter.basePath || '',
+      },
       getAbstractFileByPath: vi.fn((filePath) => byPath.get(filePath) || null),
       getResourcePath: vi.fn((file) => `app://local/${encodeURIComponent(file.path)}`),
     },
@@ -70,5 +73,82 @@ describe('converter local image resolution', () => {
     const src = converter.resolveImagePath('images/%E4%B8%AD%E6%96%87%20%E5%9B%BE(1).png');
 
     expect(src).toBe('app://local/notes%2Fimages%2F%E4%B8%AD%E6%96%87%20%E5%9B%BE(1).png');
+  });
+
+  it('resolves parent-relative markdown image paths', async () => {
+    const imageFile = { path: 'assets/pic.png', name: 'pic.png', extension: 'png' };
+    const converter = await createLegacyConverter({ sourcePath: 'notes/deep/post.md' });
+    converter.app = makeApp({ [imageFile.path]: imageFile });
+
+    const src = converter.resolveImagePath('../../assets/pic.png');
+
+    expect(src).toBe('app://local/assets%2Fpic.png');
+  });
+
+  it('resolves local file url paths', async () => {
+    const imageFile = { path: 'notes/images/photo.png', name: 'photo.png', extension: 'png' };
+    const converter = await createLegacyConverter({ sourcePath: 'notes/post.md' });
+    converter.app = makeApp({ [imageFile.path]: imageFile });
+
+    const src = converter.resolveImagePath('file:///notes/images/photo.png');
+
+    expect(src).toBe('app://local/notes%2Fimages%2Fphoto.png');
+  });
+
+  it('resolves vault-absolute local file url paths using adapter basePath', async () => {
+    const imageFile = { path: 'notes/images/photo.png', name: 'photo.png', extension: 'png' };
+    const converter = await createLegacyConverter({ sourcePath: 'notes/post.md' });
+    converter.app = makeApp(
+      { [imageFile.path]: imageFile },
+      { basePath: '/Users/david/MyVault' }
+    );
+
+    const src = converter.resolveImagePath('file:///Users/david/MyVault/notes/images/photo.png');
+
+    expect(src).toBe('app://local/notes%2Fimages%2Fphoto.png');
+  });
+
+  it('does not incorrectly match vault root file when note at root references ../photo.png', async () => {
+    const imageFile = { path: 'photo.png', name: 'photo.png', extension: 'png' };
+    const converter = await createLegacyConverter({ sourcePath: 'post.md' });
+    converter.app = makeApp({ [imageFile.path]: imageFile });
+
+    const src = converter.resolveImagePath('../photo.png');
+
+    // 不应错误折叠成 photo.png 并命中根目录文件
+    expect(src).toBe('../photo.png');
+  });
+
+  describe('H7 回归：resolveVaultImageFile 健壮性', () => {
+    const { resolveVaultImageFile } = require('../services/image-source-utils.js');
+
+    it('排除 TFolder：遇到目录对象时不误判为图片文件', () => {
+      const folderRecord = { path: 'assets/images', name: 'images', children: [] };
+      const app = {
+        metadataCache: { getFirstLinkpathDest: vi.fn(() => null) },
+        vault: { getAbstractFileByPath: vi.fn((p) => p === 'assets/images' ? folderRecord : null) },
+      };
+
+      const result = resolveVaultImageFile(app, 'assets/images', 'notes/post.md');
+      expect(result).toBeNull();
+    });
+
+    it('移除 Step 4：多级不存在相对路径不会跨目录静默匹配到 vault 中同名图片', () => {
+      const unrelatedPhoto = { path: 'archive/2021/cover.png', name: 'cover.png', extension: 'png' };
+      const app = {
+        metadataCache: {
+          getFirstLinkpathDest: vi.fn((link) => {
+            // 如果传入纯 basename "cover.png"，模拟全局附件匹配；但完整相对路径时不命中
+            if (link === 'cover.png') return unrelatedPhoto;
+            return null;
+          }),
+        },
+        vault: { getAbstractFileByPath: vi.fn(() => null) },
+      };
+
+      // 用户引用了一个不存在的相对路径 ../nonexistent/assets/cover.png
+      const result = resolveVaultImageFile(app, '../nonexistent/assets/cover.png', 'notes/post.md');
+      expect(result).toBeNull();
+    });
   });
 });

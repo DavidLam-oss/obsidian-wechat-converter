@@ -26,7 +26,7 @@
 */
 
 import { describe, it, expect } from 'vitest';
-const { normalizeVaultPath, isAbsolutePathLike } = require('../services/path-utils');
+const { normalizeVaultPath, isAbsolutePathLike, collapsePathSegments } = require('../services/path-utils');
 
 describe('Path Utils Service', () => {
   it('normalizeVaultPath should normalize separators, duplicate slashes and edges', () => {
@@ -42,5 +42,15 @@ describe('Path Utils Service', () => {
     expect(isAbsolutePathLike('relative/path')).toBe(false);
     expect(isAbsolutePathLike('')).toBe(false);
     expect(isAbsolutePathLike(null)).toBe(false);
+  });
+
+  it('collapsePathSegments should resolve dot and dot-dot segments correctly', () => {
+    expect(collapsePathSegments('a/b/../c')).toBe('a/c');
+    expect(collapsePathSegments('./a/./b')).toBe('a/b');
+    expect(collapsePathSegments('../a/b')).toBe('../a/b');
+    expect(collapsePathSegments('docs/notes/../../images/pic.png')).toBe('images/pic.png');
+    expect(collapsePathSegments('/folder/pic.png')).toBe('folder/pic.png');
+    expect(collapsePathSegments('')).toBe('');
+    expect(collapsePathSegments(null)).toBe('');
   });
 });

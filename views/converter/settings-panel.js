@@ -95,8 +95,18 @@ createSettingsPanel(container) {
     setIcon(btnStk, 'layout-grid');
   }
 
+  selfRec.btnCardMode = segment.createEl('button', {
+    cls: 'apple-mode-btn',
+    attr: { 'aria-label': '图片卡片模式', 'title': '图片卡片模式' }
+  });
+  const btnCard = /** @type {HTMLElement} */ (selfRec.btnCardMode);
+  if (typeof setIcon === 'function') {
+    setIcon(btnCard, 'image');
+  }
+
   btnArt.addEventListener('click', () => this.switchPreviewMode('article'));
   btnStk.addEventListener('click', () => this.switchPreviewMode('sticker'));
+  btnCard.addEventListener('click', () => this.switchPreviewMode('card'));
 
   // 1.2.2 第二行右侧：操作按钮组
   const actions = bottomRow.createEl('div', { cls: 'apple-toolbar-actions' });
@@ -135,8 +145,15 @@ createSettingsPanel(container) {
     this.copyBtn = null;
   }
 
-  // [同步] 按钮（始终显示；未配置账号时点击后引导去设置）
-  createIconBtn('send', '发布与分发', () => this.showSyncModal());
+  // [卡片导出] 按钮（仅卡片模式显示；B05 接入导出弹窗）
+  const cardExportBtn = createIconBtn('download', '图片卡片导出', () => {
+    if (typeof this.openCardExportModal === 'function') this.openCardExportModal();
+  });
+  cardExportBtn.addClass('hidden');
+  this.cardExportBtn = cardExportBtn;
+
+  // [同步] 按钮（始终显示；未配置账号时点击后引导去设置；卡片模式隐藏）
+  this.publishBtn = createIconBtn('send', '发布与分发', () => this.showSyncModal());
 
   // 2. 创建悬浮设置层 (初始隐藏)
   this.settingsOverlay = container.createEl('div', { cls: 'apple-settings-overlay' });
@@ -148,6 +165,13 @@ createSettingsPanel(container) {
 
   const stickerSettingsWrapper = /** @type {ObsidianElementLike} */ (settingsArea.createEl('div', { cls: 'apple-settings-sticker-wrapper hidden' }));
   this.stickerSettingsWrapper = stickerSettingsWrapper;
+
+  // 卡片设置浮层（B03）：DOM 由 card-settings.js 构建
+  const cardSettingsWrapper = /** @type {ObsidianElementLike} */ (settingsArea.createEl('div', { cls: 'apple-settings-card-wrapper hidden' }));
+  this.cardSettingsWrapper = cardSettingsWrapper;
+  if (typeof this.buildCardSettingsPanel === 'function') {
+    this.buildCardSettingsPanel();
+  }
 
   const targetArea = articleSettingsWrapper;
 
@@ -316,9 +340,7 @@ createSettingsPanel(container) {
   const spacingSummary = spacingGroup.createEl('summary', { cls: 'apple-settings-summary' });
   spacingSummary.createEl('span', { text: '排版间距' });
   this.settingsSpacingValues = spacingSummary.createEl('span', {
-    attr: {
-      style: 'margin-left: auto; margin-right: 8px; font-size: 11px; font-weight: 400; color: var(--apple-secondary);'
-    }
+    cls: 'apple-settings-summary-value',
   });
   const spacingArea = spacingGroup.createDiv({ cls: 'apple-settings-area apple-settings-advanced-area' });
   this.updateSpacingSummary();
@@ -417,9 +439,7 @@ createSettingsPanel(container) {
 
     section.createEl('span', {
       text: '中性灰更适合长文阅读；经典主题色兼容现有风格。',
-      attr: {
-        style: 'font-size: 11px; color: var(--apple-secondary); margin-top: 8px; opacity: 0.8; font-weight: 500; display: block;'
-      }
+      cls: 'apple-settings-inline-tip is-spaced',
     });
   });
   quoteStyleSection.classList.add('apple-settings-featured');
@@ -435,9 +455,7 @@ createSettingsPanel(container) {
 
     section.createEl('span', {
       text: '标题使用加深主题色',
-      attr: {
-        style: 'font-size: 11px; color: var(--apple-secondary); opacity: 0.8; font-weight: 500; display: block;'
-      }
+      cls: 'apple-settings-inline-tip',
     });
 
     checkbox.addEventListener('change', async () => {
@@ -462,9 +480,7 @@ createSettingsPanel(container) {
 
     section.createEl('span', {
       text: '仅作用于预览 / 复制 / 同步结果',
-      attr: {
-        style: 'font-size: 11px; color: var(--apple-secondary); opacity: 0.8; font-weight: 500; display: block;'
-      }
+      cls: 'apple-settings-inline-tip',
     });
 
     checkbox.addEventListener('change', async () => {
@@ -507,9 +523,7 @@ createSettingsPanel(container) {
 
     section.createEl('span', {
       text: '关闭水印时，在图片下方显示说明文字',
-      attr: {
-        style: 'font-size: 11px; color: var(--apple-secondary); opacity: 0.8; font-weight: 500; display: block;'
-      }
+      cls: 'apple-settings-inline-tip',
     });
 
     checkbox.addEventListener('change', async () => {
@@ -532,9 +546,7 @@ createSettingsPanel(container) {
     const sensitiveImageBlockCommand = getImageSwipeCommandCopy(this.app, 'image-sensitive').name;
     section.createEl('span', {
       text: `选中多张图片，打开命令面板，运行「${imageBlockCommand}」或「${sensitiveImageBlockCommand}」。`,
-      attr: {
-        style: 'font-size: 11px; color: var(--apple-secondary); opacity: 0.78; font-weight: 500; line-height: 1.6; display: block;'
-      }
+      cls: 'apple-settings-inline-tip is-loose',
     });
   });
 

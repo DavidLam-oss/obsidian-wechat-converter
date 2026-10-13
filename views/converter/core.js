@@ -117,6 +117,27 @@ async onOpen() {
   }
 
   this.setPlaceholder();
+  // 占位页（Landing Page）要承载引导信息，不能被打开时的自动渲染顶掉：
+  // 挂上门控，保留到用户真正点开一篇笔记为止（见 active-leaf-change 处理器）。
+  // 解除门控还要求一次真实用户交互（指针/键盘）：侧栏展开触发布局归位，
+  // Obsidian 可能补发 leaf 事件或 onResize，纯自动事件一律不放行。
+  this.landingGateActive = true;
+  this.landingGateUserInteracted = false;
+  if (this.landingPointerArmListener) {
+    document.removeEventListener('pointerdown', this.landingPointerArmListener, true);
+    document.removeEventListener('keydown', this.landingPointerArmListener, true);
+  }
+  this.landingPointerArmListener = () => {
+    this.landingGateUserInteracted = true;
+    if (this.landingGateActive && this.lastActiveFile) {
+      this.landingGateActive = false;
+      if (this.converter && typeof this.convertCurrent === 'function') {
+        this.convertCurrent(true);
+      }
+    }
+  };
+  document.addEventListener('pointerdown', this.landingPointerArmListener, true);
+  document.addEventListener('keydown', this.landingPointerArmListener, true);
 
   // 加载依赖
   await this.loadDependencies();
@@ -150,22 +171,6 @@ async onOpen() {
   // 初始化同步滚动
   const activeView = initialContext.view;
   if (activeView) this.registerScrollSync(activeView);
-
-  // 自动转换当前文档
-  window.setTimeout(async () => {
-    const currentContext = resolveMarkdownContext({
-      app: this.app,
-      lastActiveFile: this.lastActiveFile,
-      MarkdownViewType: MarkdownView,
-    });
-    if (currentContext.file) {
-      this.lastActiveFile = currentContext.file;
-      this.updateCurrentDoc();
-    }
-    if (currentContext.file && this.converter) {
-      await this.convertCurrent(true);
-    }
-  }, 500);
 }
 ,
 
@@ -189,7 +194,16 @@ registerActiveFileChange() {
         }
       }
       if (context.file && this.converter) {
-        this.scheduleActiveLeafRender(activeView);
+        // Landing 门控：占位页保留到用户真正点开一篇笔记为止。
+        // 双条件解除：①事件 leaf 是 Markdown 视图（= 点了笔记，而非侧栏
+        // 抢焦点/布局归位的自动事件回落）；②此前有过真实用户交互
+        // （指针按下或键盘按键，覆盖快捷键切换笔记的场景）。
+        if (eventView && this.landingGateUserInteracted) {
+          this.landingGateActive = false;
+        }
+        if (!this.landingGateActive) {
+          this.scheduleActiveLeafRender(activeView);
+        }
       }
       this.updateCurrentDoc();
 
@@ -663,6 +677,7 @@ async refreshCustomCssPreview() {
     || baseHtml !== this.baseRenderedHtml
     || articleSourceHash !== this.lastResolvedSourceHash
     || this.aiPreviewApplied
+    || (this.previewMode || 'article') !== 'article'
   ) {
     return false;
   }
@@ -794,14 +809,15 @@ updateCurrentDoc() {
 
   this.updateAiToolbarState();
 
-  if (this.previewMode === 'sticker') {
+  // 三模式操作按钮显隐统一由 panel-shell 的集中方法管理（B02 ①）
+  if (typeof this.applyModeActionVisibility === 'function') {
+    this.applyModeActionVisibility();
+  } else if (this.previewMode === 'sticker') {
     if (this.copyBtn && typeof this.copyBtn.classList === 'object') {
       this.copyBtn.classList.add('hidden');
     }
-  } else {
-    if (this.copyBtn && typeof this.copyBtn.classList === 'object') {
-      this.copyBtn.classList.remove('hidden');
-    }
+  } else if (this.copyBtn && typeof this.copyBtn.classList === 'object') {
+    this.copyBtn.classList.remove('hidden');
   }
 }
 ,
@@ -869,6 +885,10 @@ getMissingRenderNotice() {
 async convertCurrent(silent = false, options = {}) {
   if (this.previewMode === 'sticker') {
     this.renderStickerPreview();
+    return;
+  }
+  if (this.previewMode === 'card') {
+    this.scheduleCardPreviewUpdate();
     return;
   }
   const {
@@ -948,7 +968,10 @@ async convertCurrent(silent = false, options = {}) {
     const baseHtml = await this.renderMarkdownForPreview(markdown, sourcePath);
     const html = await this.deriveNativePreviewHtml(baseHtml);
 
-    if (generation !== this.renderGeneration) return;
+    // 提交守卫有两道：①仍是最新一轮文章渲染；②用户没有在渲染途中切到贴图/卡片模式。
+    // 少了第二道，一次在途的文章渲染落地时会把新模式的预览覆盖回文章排版——
+    // 贴图模式尤其明显：它的渲染是快路径，先画出来，随后被慢一步的文章结果压掉。
+    if (generation !== this.renderGeneration || (this.previewMode || 'article') !== 'article') return;
 
     // 只有渲染成功并且仍是最新一轮渲染时，才提交当前文章源。
     // 这样切换文章时 AI 面板不会在渲染中途用临时 hash 误判缓存状态。
@@ -996,7 +1019,8 @@ async convertCurrent(silent = false, options = {}) {
 
   } catch (error) {
     console.error('转换失败:', error);
-    if (generation !== this.renderGeneration) return;
+    // 失败态同样是「文章模式的呈现」，切到贴图/卡片后不得再落地（否则预览被渲染失败占位符顶掉）。
+    if (generation !== this.renderGeneration || (this.previewMode || 'article') !== 'article') return;
 
     this.currentHtml = null;
     this.baseRenderedHtml = null;
@@ -1035,6 +1059,10 @@ onResize() {
   // 检查是否可见 (以防万一)
   if (!this.containerEl.offsetParent) return;
 
+  // Landing 门控期间忽略 resize：侧栏展开/布局归位会触发视图 resize，
+  // 不能让这次自动渲染把占位页顶掉；用户点开笔记后行为照旧。
+  if (this.landingGateActive) return;
+
   this.resizeTimeout = window.setTimeout(() => {
     this.convertCurrent(true);
   }, 300);
@@ -1058,6 +1086,14 @@ async onClose() {
     window.clearTimeout(this.aiLayoutStaleSuppressTimer);
     this.aiLayoutStaleSuppressTimer = null;
   }
+  // Landing 门控的臂动监听随视图关闭一并摘除
+  if (this.landingPointerArmListener) {
+    document.removeEventListener('pointerdown', this.landingPointerArmListener, true);
+    document.removeEventListener('keydown', this.landingPointerArmListener, true);
+    this.landingPointerArmListener = null;
+  }
+  this.landingGateActive = false;
+  this.landingGateUserInteracted = false;
   this.customCssRefreshGeneration = (this.customCssRefreshGeneration || 0) + 1;
   this._customCssLastValidBySource.clear();
   this.setPreviewLoading(false);
@@ -1077,27 +1113,26 @@ async onClose() {
   }
   this.expectedEditorScrollTop = null;
   this.expectedPreviewScrollTop = null;
+  // 卡片会话与资源随视图生命周期释放（B01/B02）
+  if (typeof this.disposeCardPreview === 'function') {
+    this.disposeCardPreview();
+  }
+  // 卡片导出弹窗 DOM 与键盘监听随视图释放（B05；任务生命周期由会话 dispose 负责）
+  if (typeof this.disposeCardExportModal === 'function') {
+    this.disposeCardExportModal();
+  }
   this.previewContainer?.empty();
   this.closeTransientPanels();
   this.aiLayoutBtn = null;
   this.settingsBtn = null;
 
   // 清理文章状态缓存
-  if (this.articleStates) {
-    this.articleStates.clear();
-  }
-  if (this.svgUploadCache) {
-    this.svgUploadCache.clear();
-  }
-  if (this.imageUploadCache) {
-    this.imageUploadCache.clear();
-  }
-  if (this.coverUploadCache) {
-    this.coverUploadCache.clear();
-  }
-  if (this.mermaidImageCache) {
-    this.mermaidImageCache.clear();
-  }
+  if (this.articleStates) this.articleStates.clear();
+  if (this.svgUploadCache) this.svgUploadCache.clear();
+  if (this.imageUploadCache) this.imageUploadCache.clear();
+  if (this.coverUploadCache) this.coverUploadCache.clear();
+  if (this.mermaidImageCache) this.mermaidImageCache.clear();
+  this._cardAiImageHistory = null;
   if (this.stickerUiStates) {
     for (const state of this.stickerUiStates.values()) {
       if (!state?.objectUrls) continue;

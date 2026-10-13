@@ -34,7 +34,9 @@ import {
   MAX_ACCOUNTS,
   WechatAPI,
   toReadableError,
+  attachIcon,
 } from '../apple-style-view-shared.js';
+import { renderSectionHeader } from './platform-wall.js';
 import { resolveCustomCssSource } from '../../services/custom-css-source.js';
 import { compileCustomCss } from '../../services/custom-css-compiler.js';
 
@@ -42,6 +44,7 @@ const WECHAT_ACCOUNT_SETUP_GUIDE_URL =
   'https://xiaoweibox.top/obsidian-publisher/guide#wechat-api';
 const CUSTOM_CSS_GUIDE_URL =
   'https://xiaoweibox.top/obsidian-publisher/guide/custom-css';
+
 
 /**
  * Obsidian 1.13.4 may stringify a DocumentFragment passed to Setting.setDesc()
@@ -129,10 +132,8 @@ const wechatSettingsMethods = {
       '配置公众号账号、封面摘要和微信预览相关选项。'
     );
 
-    // 预览模式设置
-    new Setting(containerEl)
-      .setName('预览模式')
-      .setHeading();
+    // 1. 界面与预览设置
+    renderSectionHeader(containerEl, 'layout', '界面与预览模式');
 
     new Setting(containerEl)
       .setName('使用手机仿真框')
@@ -145,10 +146,8 @@ const wechatSettingsMethods = {
           new Notice('设置已保存，请关闭并重新打开发布助手面板以生效');
         }));
 
-    // 图片水印设置
-    new Setting(containerEl)
-      .setName('图片水印')
-      .setHeading();
+    // 2. 图片水印与头像设置
+    renderSectionHeader(containerEl, 'image', '图片水印与头像');
 
     new Setting(containerEl)
       .setName('启用图片水印')
@@ -164,7 +163,7 @@ const wechatSettingsMethods = {
     // 本地头像上传
     const uploadSetting = new Setting(containerEl)
       .setName('上传本地头像')
-      .setDesc(this.plugin.settings.avatarBase64 ? '✅ 已上传本地头像（优先使用）' : '选择本地图片，转换为 Base64 存储，无需网络请求');
+      .setDesc(this.plugin.settings.avatarBase64 ? '已上传本地头像（优先使用）' : '选择本地图片，转换为 Base64 存储，无需网络请求');
 
     uploadSetting.addButton(button => button
       .setButtonText(this.plugin.settings.avatarBase64 ? '重新上传' : '选择图片')
@@ -220,19 +219,19 @@ const wechatSettingsMethods = {
           await this.plugin.saveSettings();
         }));
 
-    const accountHeadingSetting = new Setting(containerEl)
-      .setName('微信公众号账号');
-    setMutedGuideDescription(
-      accountHeadingSetting,
-      containerEl.ownerDocument || getActiveDocumentCompat(),
-      '添加用于同步草稿的公众号 AppID 和 AppSecret。首次配置请先完成 IP 白名单设置。',
-      '查看图文指南 →',
-      WECHAT_ACCOUNT_SETUP_GUIDE_URL,
-      () => {
-        this.plugin.openExternalUrl(WECHAT_ACCOUNT_SETUP_GUIDE_URL);
-      }
-    );
-    accountHeadingSetting.setHeading();
+    // 3. 微信公众号账号
+    renderSectionHeader(containerEl, 'users', '微信公众号账号');
+    const accountDesc = containerEl.createDiv({ cls: 'apple-settings-about-section-desc' });
+    accountDesc.createSpan({ text: '添加用于同步草稿的公众号 AppID 和 AppSecret。首次配置请先完成 IP 白名单设置。 ' });
+    const guideLink = accountDesc.createEl('a', {
+      text: '查看图文指南 →',
+      href: WECHAT_ACCOUNT_SETUP_GUIDE_URL,
+      cls: 'apple-settings-guide-link',
+    });
+    guideLink.onclick = (e) => {
+      e.preventDefault();
+      this.plugin.openExternalUrl(WECHAT_ACCOUNT_SETUP_GUIDE_URL);
+    };
 
     // 账号列表
     const accounts = this.plugin.settings.wechatAccounts || [];
@@ -241,8 +240,7 @@ const wechatSettingsMethods = {
     if (accounts.length === 0) {
       containerEl.createEl('p', {
         text: '暂无账号，请点击下方按钮添加',
-        cls: 'setting-item-description',
-        attr: { style: 'color: var(--text-muted); font-style: italic;' }
+        cls: 'setting-item-description wechat-settings-empty-tip',
       });
     } else {
       const listContainer = containerEl.createDiv({ cls: 'wechat-account-list' });
@@ -301,14 +299,21 @@ const wechatSettingsMethods = {
             confirmText: '删除',
           });
           if (!confirmed) return;
-          this.plugin.settings.wechatAccounts = accounts.filter(a => a.id !== account.id);
-          // 如果删除的是默认账号，自动选择第一个
-          if (account.id === defaultId && this.plugin.settings.wechatAccounts.length > 0) {
-            this.plugin.settings.defaultAccountId = this.plugin.settings.wechatAccounts[0].id;
-          } else if (this.plugin.settings.wechatAccounts.length === 0) {
-            this.plugin.settings.defaultAccountId = '';
+          /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- reason: dynamic plugin invocation for account deletion API with backward compatibility fallback */
+          let res;
+          if (typeof (/** @type {any} */ (this.plugin)).deleteWechatAccount === "function") {
+            res = await (/** @type {any} */ (this.plugin)).deleteWechatAccount(account.id);
+          } else {
+            this.plugin.settings.wechatAccounts = accounts.filter((a) => a.id !== account.id);
+            if (account.id === defaultId && this.plugin.settings.wechatAccounts.length > 0) {
+              this.plugin.settings.defaultAccountId = this.plugin.settings.wechatAccounts[0].id;
+            } else if (this.plugin.settings.wechatAccounts.length === 0) {
+              this.plugin.settings.defaultAccountId = '';
+            }
+            res = await this.plugin.saveSettings();
           }
-          await this.plugin.saveSettings();
+          if (!res || res.success === false) return;
+          /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- reason: close the scoped disable block above */
           refreshSettingTabCompat(this);
         };
       }
@@ -325,17 +330,12 @@ const wechatSettingsMethods = {
     } else {
       addBtnContainer.createEl('p', {
         text: `已达到最大账号数量 (${MAX_ACCOUNTS})`,
-        cls: 'setting-item-description',
-        attr: { style: 'color: var(--text-muted);' }
+        cls: 'setting-item-description wechat-settings-max-tip',
       });
     }
 
-    this.renderAiSettingsSection(containerEl);
-
-    // 高级设置
-    new Setting(containerEl)
-      .setName('高级设置')
-      .setHeading();
+    // 4. 高级设置与同步清理
+    renderSectionHeader(containerEl, 'settings-2', '高级设置与同步清理');
 
     new Setting(containerEl)
       .setName('发送成功后自动清理资源')
@@ -379,6 +379,9 @@ const wechatSettingsMethods = {
           await this.plugin.saveSettings();
         }));
 
+    // 5. API 网络代理
+    renderSectionHeader(containerEl, 'shield', 'API 网络代理');
+
     let hasWarnedInsecureProxy = false;
     new Setting(containerEl)
       .setName('API 代理地址')
@@ -408,59 +411,59 @@ const wechatSettingsMethods = {
 
     // 独立于 Setting 结构之外的说明卡片，自动独占一行并横跨 100% 宽度
     const card = containerEl.createDiv({
-      cls: 'wechat-proxy-info-card',
-      attr: {
-        style: 'margin-top: 8px; margin-bottom: 16px; padding: 12px; border: 1px solid var(--background-modifier-border); border-radius: 6px; background-color: var(--background-primary-alt); font-size: 12px; line-height: 1.6; display: flex; flex-direction: column; gap: 8px;'
-      }
+      cls: 'wechat-proxy-info-card wechat-proxy-card',
     });
 
     // 1. 官方免自建服务行
-    const officialRow = card.createDiv({ attr: { style: 'display: flex; gap: 6px; align-items: flex-start;' } });
-    officialRow.createSpan({ text: '💡', attr: { style: 'flex-shrink: 0; line-height: 1.6;' } });
+    const officialRow = card.createDiv({ cls: 'wechat-proxy-row' });
+    const officialIcon = officialRow.createSpan({ cls: 'wechat-proxy-icon' });
+    attachIcon(officialIcon, 'info');
     const officialText = officialRow.createDiv();
     officialText.createEl('strong', {
       text: '官方中转',
-      attr: { style: 'color: var(--text-normal); font-weight: 600;' }
+      cls: 'wechat-proxy-title',
     });
     officialText.createSpan({
       text: '：已上线稳定中转代理，彻底解决微信 IP 白名单频繁漂移问题。',
-      attr: { style: 'color: var(--text-muted);' }
+      cls: 'wechat-proxy-desc',
     });
     officialText.createEl('a', {
       text: '获取官方中转 Token ➔',
       href: 'https://xiaoweibox.top/chats/wechat-proxy-service',
-      attr: { style: 'margin-left: 6px; color: var(--text-muted); text-decoration: underline;' }
+      cls: 'wechat-proxy-link',
     });
 
     // 2. 自建指南行
-    const selfHostedRow = card.createDiv({ attr: { style: 'display: flex; gap: 6px; align-items: flex-start;' } });
-    selfHostedRow.createSpan({ text: '🛠️', attr: { style: 'flex-shrink: 0; line-height: 1.6;' } });
+    const selfHostedRow = card.createDiv({ cls: 'wechat-proxy-row' });
+    const selfHostedIcon = selfHostedRow.createSpan({ cls: 'wechat-proxy-icon' });
+    attachIcon(selfHostedIcon, 'wrench');
     const selfHostedText = selfHostedRow.createDiv();
     selfHostedText.createEl('strong', {
       text: '手工自建',
-      attr: { style: 'color: var(--text-normal); font-weight: 600;' }
+      cls: 'wechat-proxy-title',
     });
     selfHostedText.createSpan({
       text: '：如果您想拥有完全自主的控制权，也可以基于 Cloudflare Worker 或个人 VPS 自建。',
-      attr: { style: 'color: var(--text-muted);' }
+      cls: 'wechat-proxy-desc',
     });
     selfHostedText.createEl('a', {
       text: '查看自建部署指南 ➔',
       href: 'https://xiaoweibox.top/chats/wechat-proxy',
-      attr: { style: 'margin-left: 6px; color: var(--text-muted); text-decoration: underline;' }
+      cls: 'wechat-proxy-link',
     });
 
     // 3. 安全与隐私提示
-    const securityRow = card.createDiv({ attr: { style: 'display: flex; gap: 6px; align-items: flex-start;' } });
-    securityRow.createSpan({ text: '🔒', attr: { style: 'flex-shrink: 0; line-height: 1.6;' } });
+    const securityRow = card.createDiv({ cls: 'wechat-proxy-row' });
+    const securityIcon = securityRow.createSpan({ cls: 'wechat-proxy-icon' });
+    attachIcon(securityIcon, 'shield');
     const securityText = securityRow.createDiv();
     securityText.createEl('strong', {
       text: '安全声明',
-      attr: { style: 'color: var(--text-warning); font-weight: 600;' }
+      cls: 'wechat-proxy-title is-warning',
     });
     securityText.createSpan({
       text: '：代理服务将中转您的请求。请确保使用受信任的代理（自建或官方），以保护 AppSecret 安全。中转服务仅在内存中转发，不存储您的任何敏感凭证。',
-      attr: { style: 'color: var(--text-muted);' }
+      cls: 'wechat-proxy-desc',
     });
 
     this.renderCustomCssSection(containerEl);
@@ -472,20 +475,41 @@ const wechatSettingsMethods = {
    * @param {ObsidianElementLike} containerEl
    */
   renderCustomCssSection(containerEl) {
-    new Setting(containerEl)
-      .setName('自定义 CSS')
-      .setHeading();
+    renderSectionHeader(containerEl, 'palette', '自定义 CSS');
 
     const warningCard = containerEl.createDiv({
       cls: 'owc-custom-css-warning',
-      attr: {
-        style: 'margin-bottom: 12px; padding: 10px 12px; border-left: 3px solid var(--text-warning); border-radius: 4px; background-color: var(--background-primary-alt); font-size: 13px; line-height: 1.6; color: var(--text-muted);'
-      }
     });
-    warningCard.createEl('strong', { text: '⚠️ 高阶功能', attr: { style: 'color: var(--text-warning);' } });
-    warningCard.createSpan({
-      text: '：需要您自己编写 CSS。插件会自动把选择器样式内联到元素上，但微信仍可能清洗部分复杂样式；当文章已使用 AI 编排结果时，自定义 CSS 不生效（两者为独立的样式系统）。启用前建议先用「复制到公众号」小范围测试。'
-    });
+    const warningHeader = warningCard.createDiv({ cls: 'owc-custom-css-warning-header' });
+    const warningIcon = warningHeader.createSpan({ cls: 'owc-custom-css-warning-icon' });
+    attachIcon(warningIcon, 'alert-triangle');
+    warningHeader.createSpan({ text: '高阶功能与排版须知', cls: 'owc-custom-css-warning-title' });
+
+    const warningList = warningCard.createDiv({ cls: 'owc-custom-css-warning-list' });
+
+    // 条目 1：覆盖规则
+    const item1 = warningList.createDiv({ cls: 'owc-custom-css-warning-item' });
+    item1.createEl('strong', { text: '覆盖默认样式：' });
+    item1.createSpan({ text: '主题样式已直接内联注入各元素。若要覆盖排版（如对齐方式、字号、正文字色等），声明后请添加 ' });
+    item1.createEl('code', { text: '!important' });
+    item1.createSpan({ text: '（例如 ' });
+    item1.createEl('code', { text: 'text-align: left !important;' });
+    item1.createSpan({ text: '）。' });
+
+    // 条目 2：微信平台样式清洗
+    const item2 = warningList.createDiv({ cls: 'owc-custom-css-warning-item' });
+    item2.createEl('strong', { text: '平台兼容过滤：' });
+    item2.createSpan({ text: '插件会自动将 CSS 选择器内联到元素，但微信后台仍可能清洗部分伪类、动画等复杂样式。' });
+
+    // 条目 3：与 AI 编排互斥
+    const item3 = warningList.createDiv({ cls: 'owc-custom-css-warning-item' });
+    item3.createEl('strong', { text: 'AI 编排独立：' });
+    item3.createSpan({ text: '当文章已使用「AI 视觉编排」结果时，自定义 CSS 不生效（两者为互不干扰的独立排版系统）。' });
+
+    // 条目 4：建议先测后发
+    const item4 = warningList.createDiv({ cls: 'owc-custom-css-warning-item' });
+    item4.createEl('strong', { text: '测试建议：' });
+    item4.createSpan({ text: '编写新规则后，建议先用「复制到公众号」或「同步草稿箱」在微信端预览确认排版效果。' });
 
     // 使用指南外链
     const customCssGuideSetting = new Setting(containerEl)
@@ -512,7 +536,7 @@ const wechatSettingsMethods = {
           customCssEnabled = value;
           this.plugin.settings.enableCustomCss = value;
           const saved = await this.plugin.saveSettings();
-          if (saved) this.plugin.scheduleCustomCssPreviewNotice?.();
+          if (saved && saved.success !== false) this.plugin.scheduleCustomCssPreviewNotice?.();
           refreshSettingTabCompat(this);
         }));
 
@@ -554,17 +578,17 @@ const wechatSettingsMethods = {
     // CSS textarea
     const textareaSetting = new Setting(containerEl)
       .setName('自定义 CSS 内容')
-      .setDesc('直接粘贴 CSS，例如 p { color: #333; }。无需写 .owc-article-root 前缀，插件会自动限定作用域。');
+      .setDesc('直接粘贴 CSS。覆盖主题内置样式（如对齐、字号、颜色）时请加 !important，例如：p { text-align: left !important; }。无需写 .owc-article-root 前缀，插件会自动限定作用域。');
 
     textareaSetting.settingEl?.setCssStyles?.({ flexWrap: 'wrap' });
     textareaSetting.addTextArea(text => {
       text
-        .setPlaceholder('/* 在此输入你的自定义 CSS */\np { color: #333; }')
+        .setPlaceholder('/* 在此输入你的自定义 CSS，覆盖主题内置样式需加 !important */\n/* 示例：将内容改为左对齐 */\nsection.owc-article-root, p, li, blockquote {\n  text-align: left !important;\n}')
         .setValue(this.plugin.settings.customCss || '')
         .onChange(async (value) => {
           this.plugin.settings.customCss = value;
           const saved = await this.plugin.saveSettings();
-          if (saved) {
+          if (saved && saved.success !== false) {
             this.plugin.scheduleCustomCssPreviewNotice?.();
             refreshCustomCssStatus(800);
           }
@@ -590,7 +614,7 @@ const wechatSettingsMethods = {
         .onChange(async (value) => {
           this.plugin.settings.customCssNote = value.trim();
           const saved = await this.plugin.saveSettings();
-          if (saved) {
+          if (saved && saved.success !== false) {
             this.plugin.scheduleCustomCssPreviewNotice?.();
             refreshCustomCssStatus(800);
           }

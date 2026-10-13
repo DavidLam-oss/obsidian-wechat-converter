@@ -501,6 +501,8 @@ interface AppleStyleSettingTabContract extends SettingTabBaseLike {
      */
     isAbsolutePathLike(vaultPath: string): boolean;
     refreshOpenConverterAiState(): void;
+    /** 宿主入口覆写：转交给 settingsTabShellMethods.renderSettingsContent 渲染自定义多 Tab 页 */
+    display(): void;
     /**
      * @param {{ title?: string, message?: string, confirmText?: string, cancelText?: string }} options
      * @returns {Promise<boolean>}
@@ -530,6 +532,11 @@ interface AppleStyleSettingTabContract extends SettingTabBaseLike {
      * @param {ObsidianElementLike} containerEl
      */
     renderAiSettingsSection(containerEl: ObsidianElementLike): void;
+    /**
+     * Obsidian 1.13+ 兼容别名（与 renderAiSettingsSection 同实现）
+     * @param {ObsidianElementLike} containerEl
+     */
+    renderAiSettingsTab(containerEl: ObsidianElementLike): void;
     /**
      * 显示添加/编辑账号的模态框
      */
