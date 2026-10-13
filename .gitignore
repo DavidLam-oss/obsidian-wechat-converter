@@ -7,15 +7,29 @@ xgplayer/
 *.zip
 coverage/
 
-ClaudeFix.md
+# Environment and sensitive files
+.env
+.env.*
+*.env
 
+# Logs and runtime databases
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.db
+*.sqlite*
+
+# Local review notes and scratchpads
 review.md
-
-# Local Obsidian review / scanner fix notes
+*review*.md
+ClaudeFix.md
 OBSIDIAN_REVIEW_*.md
+OBSIDIAN_COMMUNITY_REVIEW_FIXES.md
 *_review.txt
 *_review
 
+# Docs ignore with public white-list
 docs/*
 !docs/support.md
 !docs/basic/
@@ -25,10 +39,12 @@ docs/plans/**
 docs/research/
 docs/research/**
 
-# Local skill and assistant directories
+# Local skill, assistant and editor directories
 .codex/
-.claude/skills/project-release/
+.claude/
 .cursor/
+.vscode/
+.idea/
 
 # Generated vendored dependencies
 lib/markdown-it.min.js
@@ -39,4 +55,4 @@ lib/mathjax-plugin.js
 .openprd/
 .workbuddy/
 .qoder/
-OBSIDIAN_COMMUNITY_REVIEW_FIXES.md
+
