@@ -1,11 +1,11 @@
 /*
 ## 核心功能
 
-定义仓库 ESLint 规则、扫描边界和 Obsidian review 风险约束。
+定义仓库 ESLint 规则、扫描边界、Obsidian review 风险约束并接入上游 `eslint-plugin-obsidianmd` recommended 配置。
 
 ## 输入
 
-接收 ESLint flat config 运行上下文、源码路径和项目 lint 脚本。
+接收 ESLint flat config 运行上下文、源码路径、上游推荐规则与项目 lint 脚本。
 
 ## 输出
 
@@ -23,6 +23,7 @@
 
 - 修改逻辑后同步更新本文件说明书，并检查 根目录 的文件夹 README 是否仍准确。
 - 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
+- 遵循 disable-reason 规范，任何规则例外与目录 override 均须提供清晰的原因注释。
 */
 
 import js from "@eslint/js";
@@ -56,8 +57,17 @@ const typedParserOptions = {
   tsconfigRootDir: import.meta.dirname,
 };
 
+const upstream = normalizePluginModule(/** @type {unknown} */ (obsidianmd));
+const upstreamRecommended = Array.isArray(upstream.configs?.recommended)
+  ? upstream.configs.recommended
+  : [];
+
 export default [
-  js.configs.recommended,
+  {
+    files: ["**/*.{js,mjs,cjs,ts}"],
+    rules: js.configs.recommended.rules,
+  },
+  ...upstreamRecommended,
   {
     plugins: {
       obsidianmd: normalizePluginModule(/** @type {unknown} */ (obsidianmd)),
@@ -191,7 +201,20 @@ export default [
 	      "services/feishu-sync.js",
       "services/path-utils.js",
       "services/markdown-source.js",
+      "services/markdown-cleaner.js",
+      "services/publish-cleanup.js",
       "services/render-pipeline.js",
+      "services/settings-guard.js",
+      "services/sponsor-assets.js",
+      "services/sponsors-data.js",
+      "services/sticker-constants.js",
+      "services/sticker-extractor.js",
+      "services/sticker-image-items.js",
+      "services/sticker-media-resolver.js",
+      "services/sticker-publish-state.js",
+      "themes/apple-theme-config.js",
+      "themes/apple-theme-headings.js",
+      "themes/apple-theme.js",
       "services/obsidian-fetch-adapter.js",
       "services/native-renderer.js",
       "services/obsidian-triplet-renderer.js",
@@ -219,6 +242,7 @@ export default [
       "views/connection-status-bar.js",
       "views/apple-style-view.js",
       "views/apple-style-view-shared.js",
+      "views/shared/sticker-image-list.js",
       "views/shared/view-constants.js",
       "views/shared/view-dom-helpers.js",
       "views/shared/view-state-utils.js",
@@ -238,10 +262,19 @@ export default [
       "views/converter/card-settings.js",
       "views/converter/clipboard.js",
       "views/converter/core.js",
+      "views/converter/panel-shell.js",
+      "views/converter/settings-panel.js",
+      "views/converter/sticker-preview.js",
       "views/converter/style-panel.js",
       "views/publish-modal/feishu.js",
       "views/publish-modal/material-picker.js",
       "views/publish-modal/multi-platform.js",
+      "views/publish-modal/multi-platform-cover-assets.js",
+      "views/publish-modal/multi-platform-data.js",
+      "views/publish-modal/multi-platform-modal-ui.js",
+      "views/publish-modal/multi-platform-policy.js",
+      "views/publish-modal/publish-context.js",
+      "views/publish-modal/sticker-publish-content.js",
       "views/publish-modal/wechat.js",
       "views/publish-modal/wechat-account-state.js",
       "views/publish-modal/wechat-modal-shell.js",
@@ -249,11 +282,14 @@ export default [
       "views/publish-modal/wechat-preview-export.js",
       "views/publish-modal/wechat-sync-action.js",
       "views/publish-modal/wechat-sync-modal.js",
+      "views/settings/about-tab.js",
       "views/settings/apple-style-setting-tab.js",
       "views/settings/ai-provider-modal.js",
       "views/settings/ai-tab.js",
       "views/settings/confirm-modal.js",
       "views/settings/feishu-tab.js",
+      "views/settings/platform-icons.js",
+      "views/settings/platform-wall.js",
       "views/settings/settings-tab-shell.js",
       "views/settings/multi-platform-tab.js",
       "views/settings/wechat-account-modal.js",
@@ -376,6 +412,62 @@ export default [
       "no-control-regex": "off",
     }
   },
+  // Tooling, tests, mocks, scripts, and type declarations overrides
+  {
+    files: [
+      "tests/**",
+      "__mocks__/**",
+      "scripts/**",
+      "ai-layout-skill/scripts/**",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.d.ts",
+    ],
+    rules: {
+      "obsidianmd/no-global-this": "off", // -- reason: test harnesses and tooling rely on globalThis in jsdom/Node environments
+      "@typescript-eslint/no-require-imports": "off", // -- reason: test fixtures and scripts dynamically load modules using CommonJS require
+      "@microsoft/sdl/no-inner-html": "off", // -- reason: test assertions construct and inspect direct HTML fixtures
+      "no-unsanitized/property": "off", // -- reason: test fixtures directly assign HTML properties
+      "no-unsanitized/method": "off", // -- reason: test fixtures use DOM insertion methods
+      "no-eval": "off", // -- reason: tests evaluate runtime snippets to verify generated bundles
+      "obsidianmd/hardcoded-config-path": "off", // -- reason: tests and mocks verify paths containing .obsidian configuration folder
+      "obsidianmd/no-nodejs-modules": "off", // -- reason: test suites, benchmarks, and build scripts run in Node.js environment
+      "obsidianmd/prefer-window-timers": "off", // -- reason: tests and tooling scripts use Node.js timer globals
+      "obsidianmd/rule-custom-message": "off", // -- reason: scripts and tests define or inspect custom error messages
+      "no-implicit-globals": "off", // -- reason: mocks and top-level scripts run in isolated script contexts
+    },
+  },
+  // Legacy CommonJS conversion core override
+  {
+    files: ["converter.js"],
+    rules: {
+      "no-implicit-globals": "off", // -- reason: legacy markdown-it conversion core runs inside CommonJS module scope
+    },
+  },
+  // Targeted UI sentence-case overrides for Chinese UI text
+  {
+    files: [
+      "views/converter/ai-layout-debug.js",
+      "views/converter/ai-layout-panel.js",
+      "views/converter/card-media-picker-unsplash.js",
+      "views/converter/settings-panel.js",
+      "views/publish-modal/feishu.js",
+      "views/publish-modal/multi-platform-modal-ui.js",
+      "views/publish-modal/wechat-account-state.js",
+      "views/publish-modal/wechat-multiplatform-actions.js",
+      "views/settings/about-tab.js",
+      "views/settings/ai-provider-modal.js",
+      "views/settings/ai-tab.js",
+      "views/settings/feishu-tab.js",
+      "views/settings/multi-platform-tab.js",
+      "views/settings/settings-tab-shell.js",
+      "views/settings/wechat-account-modal.js",
+      "views/settings/wechat-tab.js",
+    ],
+    rules: {
+      "obsidianmd/ui/sentence-case": "off", // -- reason: Chinese UI copy triggers high false positives on technical acronyms and terms; copy review scheduled separately
+    },
+  },
   {
     linterOptions: {
       reportUnusedDisableDirectives: "error",
@@ -395,6 +487,7 @@ export default [
       // skip linting so their generated code does not pollute CI output.
       ".codex/",
       ".openprd/",
+      ".workbuddy/",
     ],
   }
 ];

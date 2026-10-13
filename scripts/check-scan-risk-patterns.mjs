@@ -1,7 +1,24 @@
 /*
 ## 核心功能
 
-提供 check scan risk patterns 开发脚本，服务构建、校验、生成或发布前检查。
+提供 check scan risk patterns 检查脚本，阻断高危 API、Node 内置静态导入、样式兼容风险与无效 eslint-disable。
+包含规则清单：
+- `no-static-node-builtin-import`: 禁止运行时源码静态 import/export Node.js 内置模块
+- `no-clipboard-read`: 禁止读取系统剪贴板
+- `no-direct-html-write`: 禁止直接写入 innerHTML/outerHTML/insertAdjacentHTML
+- `no-static-style-property-write`: 禁止对 element.style.foo 进行静态赋值，推荐 setCssStyles
+- `no-inline-style-attr`: 禁止 `attr: { style }` 内联样式
+- `no-native-blocking-dialog`: 禁止 confirm/alert/prompt 原生阻塞弹窗，推荐 Obsidian Modal/Notice
+- `no-fetch-data-url`: 禁止 fetch(data:)，须本地解析 data URL
+- `no-global-this-production`: 禁止在生产插件代码中使用 globalThis
+- `no-document-create-element`: 禁止直接 document.createElement，推荐 getActiveDocumentCompat()
+- `no-active-window-timers`: 禁止 activeWindow.setTimeout/clearTimeout
+- `no-return-dynamic-bound-function`: 禁止动态 .call/.bind 生成的函数
+- `require-eslint-disable-reason`: eslint-disable 注释必须带有 `-- reason`
+- `no-css-important`: 禁止样式表出现 !important
+- `no-css-has`: 禁止 CSS 出现 :has() 选择器（移动端 webview 兼容限制）
+- `manifest-desc-no-obsidian`: manifest.json 描述不得包含冗余词汇 "Obsidian"
+- `manifest-desc-punctuation`: manifest.json 描述必须以标点结尾
 
 ## 输入
 
@@ -17,7 +34,7 @@
 
 ## 依赖
 
-关键依赖：`node:fs/promises`、`node:path`、`node:module`。
+关键依赖：`node:fs/promises`、`node:path`、`node:module`、`node:url`。
 
 ## 维护规则
 
@@ -28,6 +45,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { builtinModules } from 'node:module';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const ROOT = process.cwd();
 const SCANNED_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.css']);
@@ -106,6 +124,7 @@ const RULES = [
     message: 'Avoid globalThis in production plugin code. Prefer window or active-window helpers for Obsidian popout compatibility.',
     pattern: /\bglobalThis\b/,
     extensions: new Set(['.js', '.mjs', '.cjs']),
+    ignoredPathPrefixes: ['eslint.config.mjs'],
   },
   {
     id: 'no-document-create-element',
@@ -135,6 +154,12 @@ const RULES = [
     id: 'no-css-important',
     message: 'Avoid stylesheet !important. Increase selector specificity, use CSS variables, or keep compatibility-critical inline styles narrowly scoped.',
     pattern: /!important\b/,
+    extensions: new Set(['.css']),
+  },
+  {
+    id: 'no-css-has',
+    message: 'CSS :has() has limited mobile webview support; gate behind a fallback or use a simpler selector.',
+    pattern: /:has\s*\(/,
     extensions: new Set(['.css']),
   },
 ];
@@ -240,78 +265,133 @@ function runRuleSelfTests() {
       throw new Error(`Scan guard self-test rejected an allowed pattern: ${source}`);
     }
   }
-}
 
-const findings = [];
-runRuleSelfTests();
-const files = await collectFiles(ROOT);
-
-for (const relativePath of files) {
-  const source = await readFile(path.join(ROOT, relativePath), 'utf8');
-  const lines = source.split('\n');
-
-  for (const rule of RULES) {
-    if (!ruleAppliesToFile(rule, relativePath)) continue;
-    for (const match of findMatches(source, rule.pattern)) {
-      const lineNumber = getLineNumber(source, match.index);
-      const line = lines[lineNumber - 1] || '';
-      if (rule.id !== 'require-eslint-disable-reason' && isCommentOnlyLine(line)) continue;
-      findings.push({
-        ...rule,
-        file: relativePath,
-        line: lineNumber,
-        code: line.trim(),
-      });
+  const noCssHasRule = RULES.find((r) => r.id === 'no-css-has');
+  if (noCssHasRule) {
+    const blockedCss = [
+      '.card:has(.badge) { color: red; }',
+      'div:has( > span) { margin: 0; }',
+    ];
+    const allowedCss = [
+      '.card.has-badge { color: red; }',
+      ':hover { color: blue; }',
+    ];
+    for (const source of blockedCss) {
+      if (findMatches(source, noCssHasRule.pattern).length === 0) {
+        throw new Error(`Scan guard self-test failed to block: ${source}`);
+      }
+    }
+    for (const source of allowedCss) {
+      if (findMatches(source, noCssHasRule.pattern).length > 0) {
+        throw new Error(`Scan guard self-test rejected an allowed pattern: ${source}`);
+      }
     }
   }
 }
 
-// Validate manifest.json description rules
-try {
-  const manifestPath = path.join(ROOT, 'manifest.json');
-  const manifestRaw = await readFile(manifestPath, 'utf8');
-  const manifest = JSON.parse(manifestRaw);
-  const desc = manifest.description || '';
-  const manifestLines = manifestRaw.split('\n');
-  const descLineNum = manifestLines.findIndex(l => l.includes('"description"')) + 1 || 1;
-  const descLineContent = manifestLines[descLineNum - 1] || '';
+/**
+ * @param {string} [rootDir]
+ * @returns {Promise<{ findings: Array<Record<string, unknown>>, fileCount: number }>}
+ */
+async function runScan(rootDir = ROOT) {
+  const findings = [];
+  const files = await collectFiles(rootDir);
 
-  if (/\bobsidian\b/i.test(desc)) {
+  for (const relativePath of files) {
+    const source = await readFile(path.join(rootDir, relativePath), 'utf8');
+    const lines = source.split('\n');
+
+    for (const rule of RULES) {
+      if (!ruleAppliesToFile(rule, relativePath)) continue;
+      for (const match of findMatches(source, rule.pattern)) {
+        const lineNumber = getLineNumber(source, match.index);
+        const line = lines[lineNumber - 1] || '';
+        if (rule.id !== 'require-eslint-disable-reason' && isCommentOnlyLine(line)) continue;
+        findings.push({
+          ...rule,
+          file: relativePath,
+          line: lineNumber,
+          code: line.trim(),
+        });
+      }
+    }
+  }
+
+  // Validate manifest.json description rules
+  try {
+    const manifestPath = path.join(rootDir, 'manifest.json');
+    const manifestRaw = await readFile(manifestPath, 'utf8');
+    const manifest = JSON.parse(manifestRaw);
+    const desc = manifest.description || '';
+    const manifestLines = manifestRaw.split('\n');
+    const descLineNum = manifestLines.findIndex((l) => l.includes('"description"')) + 1 || 1;
+    const descLineContent = manifestLines[descLineNum - 1] || '';
+
+    if (/\bobsidian\b/i.test(desc)) {
+      findings.push({
+        id: 'manifest-desc-no-obsidian',
+        message: 'Plugin description must not include the word "Obsidian" (redundant).',
+        file: 'manifest.json',
+        line: descLineNum,
+        code: descLineContent.trim(),
+      });
+    }
+    if (!/[.!?]$/.test(desc)) {
+      findings.push({
+        id: 'manifest-desc-punctuation',
+        message: 'Plugin description should end with punctuation (., !, or ?).',
+        file: 'manifest.json',
+        line: descLineNum,
+        code: descLineContent.trim(),
+      });
+    }
+  } catch (e) {
     findings.push({
-      id: 'manifest-desc-no-obsidian',
-      message: 'Plugin description must not include the word "Obsidian" (redundant).',
+      id: 'manifest-read-error',
+      message: `Failed to read or parse manifest.json: ${e.message}`,
       file: 'manifest.json',
-      line: descLineNum,
-      code: descLineContent.trim(),
+      line: 1,
+      code: '',
     });
   }
-  if (!/[.!?]$/.test(desc)) {
-    findings.push({
-      id: 'manifest-desc-punctuation',
-      message: 'Plugin description should end with punctuation (., !, or ?).',
-      file: 'manifest.json',
-      line: descLineNum,
-      code: descLineContent.trim(),
-    });
-  }
-} catch (e) {
-  findings.push({
-    id: 'manifest-read-error',
-    message: `Failed to read or parse manifest.json: ${e.message}`,
-    file: 'manifest.json',
-    line: 1,
-    code: '',
-  });
+
+  return { findings, fileCount: files.length };
 }
 
-if (findings.length > 0) {
-  console.error('Obsidian scan risk guard found risky patterns:\n');
-  for (const finding of findings) {
-    console.error(`${finding.file}:${finding.line} ${finding.id}`);
-    console.error(`  ${finding.message}`);
-    console.error(`  ${finding.code}\n`);
+const isDirectExecution = Boolean(
+  process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
+);
+
+if (isDirectExecution) {
+  runRuleSelfTests();
+  const { findings, fileCount } = await runScan(ROOT);
+
+  if (findings.length > 0) {
+    console.error('Obsidian scan risk guard found risky patterns:\n');
+    for (const finding of findings) {
+      console.error(`${finding.file}:${finding.line} ${finding.id}`);
+      console.error(`  ${finding.message}`);
+      console.error(`  ${finding.code}\n`);
+    }
+    process.exit(1);
   }
-  process.exit(1);
+
+  console.log(`Obsidian scan risk guard passed (${fileCount} files checked).`);
 }
 
-console.log(`Obsidian scan risk guard passed (${files.length} files checked).`);
+export {
+  RULES,
+  ROOT,
+  SCANNED_EXTENSIONS,
+  IGNORED_DIRS,
+  IGNORED_FILES,
+  STATIC_NODE_BUILTIN_IMPORT_PATTERN,
+  shouldScanFile,
+  ruleAppliesToFile,
+  collectFiles,
+  getLineNumber,
+  isCommentOnlyLine,
+  findMatches,
+  runRuleSelfTests,
+  runScan,
+};
