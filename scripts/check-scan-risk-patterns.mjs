@@ -152,6 +152,7 @@ const RULES = [
     message: 'eslint-disable comments must include a "-- reason" explanation for Obsidian scan exceptions.',
     pattern: /eslint-disable(?:-next-line|-line)?(?![^\n]*--)/,
     extensions: new Set(['.js', '.mjs', '.cjs']),
+    scanComments: true,
   },
   {
     id: 'no-css-important',
@@ -170,6 +171,7 @@ const RULES = [
     message: 'Disabling no-console is forbidden. Use console.warn/error/debug (allowed by repo config) or remove the console statement.',
     pattern: /eslint-disable(?:-next-line|-line)?\s+(?:(?!--|\*\/)[^\n])*\bno-console\b/,
     extensions: new Set(['.js', '.mjs', '.cjs']),
+    scanComments: true,
   },
   {
     id: 'no-this-alias',
@@ -208,18 +210,19 @@ function ruleAppliesToFile(rule, relativePath) {
 
 /**
  * @param {string} dir
+ * @param {string} [baseDir]
  * @returns {Promise<string[]>}
  */
-async function collectFiles(dir) {
+async function collectFiles(dir, baseDir = dir) {
   const entries = await readdir(dir, { withFileTypes: true });
   const files = [];
 
   for (const entry of entries) {
     const absolutePath = path.join(dir, entry.name);
-    const relativePath = path.relative(ROOT, absolutePath);
+    const relativePath = path.relative(baseDir, absolutePath);
     if (entry.isDirectory()) {
       if (IGNORED_DIRS.has(entry.name)) continue;
-      files.push(...await collectFiles(absolutePath));
+      files.push(...await collectFiles(absolutePath, baseDir));
       continue;
     }
     if (entry.isFile() && shouldScanFile(relativePath)) {
@@ -442,7 +445,7 @@ function checkUnbalancedEslintDisable(source, relativePath) {
  */
 async function runScan(rootDir = ROOT) {
   const findings = [];
-  const files = await collectFiles(rootDir);
+  const files = await collectFiles(rootDir, rootDir);
 
   for (const relativePath of files) {
     const source = await readFile(path.join(rootDir, relativePath), 'utf8');
@@ -453,7 +456,7 @@ async function runScan(rootDir = ROOT) {
       for (const match of findMatches(source, rule.pattern)) {
         const lineNumber = getLineNumber(source, match.index);
         const line = lines[lineNumber - 1] || '';
-        if (rule.id !== 'require-eslint-disable-reason' && isCommentOnlyLine(line)) continue;
+        if (!rule.scanComments && isCommentOnlyLine(line)) continue;
         findings.push({
           ...rule,
           file: relativePath,
@@ -497,13 +500,15 @@ async function runScan(rootDir = ROOT) {
       });
     }
   } catch (e) {
-    findings.push({
-      id: 'manifest-read-error',
-      message: `Failed to read or parse manifest.json: ${e.message}`,
-      file: 'manifest.json',
-      line: 1,
-      code: '',
-    });
+    if (rootDir === ROOT || e.code !== 'ENOENT') {
+      findings.push({
+        id: 'manifest-read-error',
+        message: `Failed to read or parse manifest.json: ${e.message}`,
+        file: 'manifest.json',
+        line: 1,
+        code: '',
+      });
+    }
   }
 
   return { findings, fileCount: files.length };

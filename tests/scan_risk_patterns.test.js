@@ -16,7 +16,10 @@
 位于 tests/，是工程质量防护与审查门禁的单元测试。
 */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import {
   RULES,
   findMatches,
@@ -24,6 +27,7 @@ import {
   shouldScanFile,
   runRuleSelfTests,
   checkUnbalancedEslintDisable,
+  runScan,
 } from '../scripts/check-scan-risk-patterns.mjs';
 
 describe('Scan Risk Patterns Guard', () => {
@@ -327,6 +331,95 @@ describe('Scan Risk Patterns Guard', () => {
       expect(shouldScanFile('services/render.js')).toBe(true);
       expect(shouldScanFile('styles/theme.css')).toBe(true);
       expect(shouldScanFile('styles/theme.png')).toBe(false);
+    });
+  });
+
+  describe('runScan integration tests (isolated fixture directory)', () => {
+    let tempDir;
+
+    beforeEach(async () => {
+      tempDir = await mkdtemp(path.join(os.tmpdir(), 'scan-guard-fixture-'));
+    });
+
+    afterEach(async () => {
+      if (tempDir) {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
+
+    it('detects block-level /* eslint-disable no-console */ on comment-only line via runScan', async () => {
+      const filePath = path.join(tempDir, 'sample.js');
+      await writeFile(
+        filePath,
+        '/* eslint-disable no-console -- reason: test */\nconsole.log(1);\n/* eslint-enable no-console -- reason: resume */\n'
+      );
+
+      const result = await runScan(tempDir);
+      expect(result.fileCount).toBe(1);
+      const finding = result.findings.find((f) => f.id === 'no-console-disable');
+      expect(finding).toBeDefined();
+      expect(finding?.line).toBe(1);
+    });
+
+    it('detects line-level // eslint-disable-next-line no-console on comment-only line via runScan', async () => {
+      const filePath = path.join(tempDir, 'sample.js');
+      await writeFile(
+        filePath,
+        '// eslint-disable-next-line no-console -- reason: test\nconsole.log(1);\n'
+      );
+
+      const result = await runScan(tempDir);
+      expect(result.fileCount).toBe(1);
+      const finding = result.findings.find((f) => f.id === 'no-console-disable');
+      expect(finding).toBeDefined();
+      expect(finding?.line).toBe(1);
+    });
+
+    it('detects unclosed block-level disable via runScan', async () => {
+      const filePath = path.join(tempDir, 'unclosed.js');
+      await writeFile(
+        filePath,
+        '/* eslint-disable no-unused-vars -- reason: test */\nconst x = 1;\n'
+      );
+
+      const result = await runScan(tempDir);
+      const finding = result.findings.find((f) => f.id === 'no-unbalanced-eslint-disable');
+      expect(finding).toBeDefined();
+      expect(finding?.line).toBe(1);
+    });
+
+    it('detects no-this-alias via runScan', async () => {
+      const filePath = path.join(tempDir, 'alias.js');
+      await writeFile(
+        filePath,
+        'function run() {\n  const self = this;\n  return self;\n}\n'
+      );
+
+      const result = await runScan(tempDir);
+      const finding = result.findings.find((f) => f.id === 'no-this-alias');
+      expect(finding).toBeDefined();
+      expect(finding?.line).toBe(2);
+    });
+
+    it('detects CSS :has() via runScan', async () => {
+      const filePath = path.join(tempDir, 'theme.css');
+      await writeFile(filePath, '.card:has(.badge) { color: red; }\n');
+
+      const result = await runScan(tempDir);
+      const finding = result.findings.find((f) => f.id === 'no-css-has');
+      expect(finding).toBeDefined();
+      expect(finding?.line).toBe(1);
+    });
+
+    it('passes clean code without findings via runScan', async () => {
+      const filePath = path.join(tempDir, 'clean.js');
+      await writeFile(
+        filePath,
+        '/* eslint-disable no-unused-vars -- reason: test */\nconst x = 1;\n/* eslint-enable no-unused-vars -- reason: resume */\nconsole.warn("clean");\n'
+      );
+
+      const result = await runScan(tempDir);
+      expect(result.findings).toHaveLength(0);
     });
   });
 });
