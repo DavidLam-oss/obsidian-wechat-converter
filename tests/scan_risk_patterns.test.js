@@ -23,6 +23,7 @@ import {
   ruleAppliesToFile,
   shouldScanFile,
   runRuleSelfTests,
+  checkUnbalancedEslintDisable,
 } from '../scripts/check-scan-risk-patterns.mjs';
 
 describe('Scan Risk Patterns Guard', () => {
@@ -168,6 +169,149 @@ describe('Scan Risk Patterns Guard', () => {
     it('ignores eslint.config.mjs via ignoredPathPrefixes', () => {
       expect(ruleAppliesToFile(rule, 'eslint.config.mjs')).toBe(false);
       expect(ruleAppliesToFile(rule, 'services/native-renderer.js')).toBe(true);
+    });
+  });
+
+  describe('no-console-disable rule', () => {
+    const rule = RULES.find((r) => r.id === 'no-console-disable');
+
+    it('exists in RULES configuration', () => {
+      expect(rule).toBeDefined();
+      expect(rule?.extensions).toEqual(new Set(['.js', '.mjs', '.cjs']));
+    });
+
+    it('blocks eslint-disable that targets no-console', () => {
+      const invalidSnippets = [
+        '/* eslint-disable no-console */',
+        '/* eslint-disable no-console, no-debugger -- reason: cli output */',
+        '/* eslint-disable no-unused-vars, no-console -- reason: note */',
+        '// eslint-disable-next-line no-console -- reason: temporary log',
+        '// eslint-disable-line no-console',
+      ];
+      for (const snippet of invalidSnippets) {
+        const matches = findMatches(snippet, rule.pattern);
+        expect(matches.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('allows disabling other rules and allows normal console usage', () => {
+      const validSnippets = [
+        '/* eslint-disable no-debugger -- reason: cli debugging */',
+        '// eslint-disable-next-line @typescript-eslint/no-explicit-any -- reason: dynamic object',
+        '// eslint-disable-next-line no-unused-vars -- reason: test no-console mention in explanation',
+        'console.warn("warning is allowed");',
+        'console.error("error is allowed");',
+      ];
+      for (const snippet of validSnippets) {
+        const matches = findMatches(snippet, rule.pattern);
+        expect(matches.length).toBe(0);
+      }
+    });
+  });
+
+  describe('no-this-alias rule', () => {
+    const rule = RULES.find((r) => r.id === 'no-this-alias');
+
+    it('exists in RULES configuration', () => {
+      expect(rule).toBeDefined();
+      expect(rule?.extensions).toEqual(new Set(['.js', '.mjs', '.cjs']));
+    });
+
+    it('blocks aliasing this to self, that, or _this', () => {
+      const invalidSnippets = [
+        'const self = this;',
+        'const that = this.prop;',
+        'const _this = this  ;',
+        'let self = this;',
+        'var that = this;',
+      ];
+      for (const snippet of invalidSnippets) {
+        const matches = findMatches(snippet, rule.pattern);
+        expect(matches.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('allows object literals with this key, other variable names, or arrow functions', () => {
+      const validSnippets = [
+        'const self = { this: "not-alias" };',
+        'const selfie = this;',
+        'const foo = this;',
+        'const that = { value: 42 };',
+        'const callback = () => this.doSomething();',
+      ];
+      for (const snippet of validSnippets) {
+        const matches = findMatches(snippet, rule.pattern);
+        expect(matches.length).toBe(0);
+      }
+    });
+  });
+
+  describe('no-unbalanced-eslint-disable rule', () => {
+    const rule = RULES.find((r) => r.id === 'no-unbalanced-eslint-disable');
+
+    it('exists in RULES configuration', () => {
+      expect(rule).toBeDefined();
+      expect(rule?.extensions).toEqual(new Set(['.js', '.mjs', '.cjs']));
+    });
+
+    it('detects unclosed block-level eslint-disable comments', () => {
+      const unclosedSource = [
+        '/* eslint-disable no-unused-vars -- reason: fixture */',
+        'const a = 1;',
+        'console.log(a);',
+      ].join('\n');
+
+      const issues = checkUnbalancedEslintDisable(unclosedSource, 'sample.js');
+      expect(issues.length).toBe(1);
+      expect(issues[0].id).toBe('no-unbalanced-eslint-disable');
+      expect(issues[0].line).toBe(1);
+      expect(issues[0].message).toContain('no-unused-vars');
+    });
+
+    it('detects mismatched eslint-enable comments', () => {
+      const mismatchedSource = [
+        '/* eslint-disable no-console -- reason: test */',
+        'console.log("hi");',
+        '/* eslint-enable no-debugger -- reason: wrong rule */',
+      ].join('\n');
+
+      const issues = checkUnbalancedEslintDisable(mismatchedSource, 'sample.js');
+      expect(issues.length).toBe(2);
+      expect(issues.some((i) => i.message.includes("eslint-enable for 'no-debugger' has no matching"))).toBe(true);
+      expect(issues.some((i) => i.message.includes("missing matching eslint-enable for 'no-console'"))).toBe(true);
+    });
+
+    it('allows properly paired eslint-disable and eslint-enable blocks', () => {
+      const balancedSource = [
+        '/* eslint-disable no-console -- reason: debug */',
+        'console.log("hello");',
+        '/* eslint-enable no-console -- reason: resume */',
+      ].join('\n');
+
+      const issues = checkUnbalancedEslintDisable(balancedSource, 'sample.js');
+      expect(issues.length).toBe(0);
+    });
+
+    it('ignores single-line eslint-disable-next-line and eslint-disable-line', () => {
+      const inlineSource = [
+        '// eslint-disable-next-line no-console -- reason: inline line',
+        'console.log("line");',
+        '/* eslint-disable-line no-unused-vars -- reason: inline */',
+      ].join('\n');
+
+      const issues = checkUnbalancedEslintDisable(inlineSource, 'sample.js');
+      expect(issues.length).toBe(0);
+    });
+
+    it('handles multiple rules in a single disable/enable comment', () => {
+      const multiRuleSource = [
+        '/* eslint-disable ruleA, ruleB -- reason: multi */',
+        'doSomething();',
+        '/* eslint-enable ruleA, ruleB -- reason: resume */',
+      ].join('\n');
+
+      const issues = checkUnbalancedEslintDisable(multiRuleSource, 'sample.js');
+      expect(issues.length).toBe(0);
     });
   });
 

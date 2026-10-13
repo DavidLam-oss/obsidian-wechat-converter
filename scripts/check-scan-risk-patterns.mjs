@@ -1,7 +1,7 @@
 /*
 ## 核心功能
 
-提供 check scan risk patterns 检查脚本，阻断高危 API、Node 内置静态导入、样式兼容风险与无效 eslint-disable。
+提供 check scan risk patterns 检查脚本，阻断高危 API、Node 内置静态导入、样式兼容风险、非法与未闭合 eslint-disable 及 this 别名。
 包含规则清单：
 - `no-static-node-builtin-import`: 禁止运行时源码静态 import/export Node.js 内置模块
 - `no-clipboard-read`: 禁止读取系统剪贴板
@@ -15,6 +15,9 @@
 - `no-active-window-timers`: 禁止 activeWindow.setTimeout/clearTimeout
 - `no-return-dynamic-bound-function`: 禁止动态 .call/.bind 生成的函数
 - `require-eslint-disable-reason`: eslint-disable 注释必须带有 `-- reason`
+- `no-console-disable`: 禁止任何形式的 eslint-disable 禁用 no-console
+- `no-this-alias`: 禁止使用 self/that/_this 别名 this（推荐箭头函数或显式 .bind）
+- `no-unbalanced-eslint-disable`: 块级 eslint-disable 必须有成对匹配相同规则的 eslint-enable
 - `no-css-important`: 禁止样式表出现 !important
 - `no-css-has`: 禁止 CSS 出现 :has() 选择器（移动端 webview 兼容限制）
 - `manifest-desc-no-obsidian`: manifest.json 描述不得包含冗余词汇 "Obsidian"
@@ -162,6 +165,23 @@ const RULES = [
     pattern: /:has\s*\(/,
     extensions: new Set(['.css']),
   },
+  {
+    id: 'no-console-disable',
+    message: 'Disabling no-console is forbidden. Use console.warn/error/debug (allowed by repo config) or remove the console statement.',
+    pattern: /eslint-disable(?:-next-line|-line)?\s+(?:(?!--|\*\/)[^\n])*\bno-console\b/,
+    extensions: new Set(['.js', '.mjs', '.cjs']),
+  },
+  {
+    id: 'no-this-alias',
+    message: 'Avoid aliasing "this" as self/that/_this. Use arrow functions or explicit .bind() instead.',
+    pattern: /\b(?:const|let|var)\s+(?:self|that|_this)\s*=\s*this(?:\.\w+|\s|;|$)/,
+    extensions: new Set(['.js', '.mjs', '.cjs']),
+  },
+  {
+    id: 'no-unbalanced-eslint-disable',
+    message: 'Block-level eslint-disable must have a matching eslint-enable with the same rule(s).',
+    extensions: new Set(['.js', '.mjs', '.cjs']),
+  },
 ];
 
 /**
@@ -287,6 +307,133 @@ function runRuleSelfTests() {
       }
     }
   }
+
+  const noConsoleDisableRule = RULES.find((r) => r.id === 'no-console-disable');
+  if (noConsoleDisableRule) {
+    const blocked = [
+      '/* eslint-disable no-console */',
+      '/* eslint-disable no-console, no-debugger -- reason: cli */',
+      '// eslint-disable-next-line no-console -- reason: test',
+      '// eslint-disable-line no-console',
+    ];
+    const allowed = [
+      '/* eslint-disable no-debugger -- reason: test */',
+      '// eslint-disable-next-line no-unused-vars -- reason: test no-console note',
+      'console.log("no-console is allowed in tests");',
+    ];
+    for (const source of blocked) {
+      if (findMatches(source, noConsoleDisableRule.pattern).length === 0) {
+        throw new Error(`Scan guard self-test failed to block: ${source}`);
+      }
+    }
+    for (const source of allowed) {
+      if (findMatches(source, noConsoleDisableRule.pattern).length > 0) {
+        throw new Error(`Scan guard self-test rejected an allowed pattern: ${source}`);
+      }
+    }
+  }
+
+  const noThisAliasRule = RULES.find((r) => r.id === 'no-this-alias');
+  if (noThisAliasRule) {
+    const blocked = [
+      'const self = this;',
+      'const that = this.prop;',
+      'const _this = this  ;',
+      'let self = this;',
+      'var that = this;',
+    ];
+    const allowed = [
+      'const self = { this: "not-alias" };',
+      'const selfie = this;',
+      'const foo = this;',
+    ];
+    for (const source of blocked) {
+      if (findMatches(source, noThisAliasRule.pattern).length === 0) {
+        throw new Error(`Scan guard self-test failed to block: ${source}`);
+      }
+    }
+    for (const source of allowed) {
+      if (findMatches(source, noThisAliasRule.pattern).length > 0) {
+        throw new Error(`Scan guard self-test rejected an allowed pattern: ${source}`);
+      }
+    }
+  }
+
+  const unbalancedIssues = checkUnbalancedEslintDisable(
+    '/* eslint-disable no-unused-vars */\nconst x = 1;',
+    'test.js'
+  );
+  if (unbalancedIssues.length === 0) {
+    throw new Error('Scan guard self-test failed to detect unbalanced eslint-disable');
+  }
+
+  const balancedSample = '/* eslint-disable no-unused-vars */\nconst x = 1;\n/* eslint-enable no-unused-vars */';
+  if (checkUnbalancedEslintDisable(balancedSample, 'test.js').length > 0) {
+    throw new Error('Scan guard self-test false-positive on balanced eslint-disable');
+  }
+}
+
+/**
+ * @param {string} source
+ * @param {string} relativePath
+ * @returns {Array<{ id: string, message: string, file: string, line: number, code: string }>}
+ */
+function checkUnbalancedEslintDisable(source, relativePath) {
+  const lines = source.split('\n');
+  const regex = /\/\*\s*eslint-(disable|enable)(?!-(?:next-)?line)\b\s*([^*]*?)\*\//g;
+  const stack = [];
+  const findings = [];
+  let match;
+
+  while ((match = regex.exec(source)) !== null) {
+    const type = match[1];
+    const rest = match[2];
+    const lineNumber = getLineNumber(source, match.index);
+    const lineText = lines[lineNumber - 1] || '';
+    const rulePart = rest.split('--')[0].trim();
+    const rules = rulePart.length > 0
+      ? rulePart.split(',').map((r) => r.trim()).filter(Boolean)
+      : ['*'];
+
+    if (type === 'disable') {
+      for (const r of rules) {
+        stack.push({ rule: r, line: lineNumber, code: lineText.trim() });
+      }
+    } else {
+      for (const r of rules) {
+        let foundIdx = -1;
+        for (let i = stack.length - 1; i >= 0; i--) {
+          if (stack[i].rule === r || stack[i].rule === '*' || r === '*') {
+            foundIdx = i;
+            break;
+          }
+        }
+        if (foundIdx !== -1) {
+          stack.splice(foundIdx, 1);
+        } else {
+          findings.push({
+            id: 'no-unbalanced-eslint-disable',
+            message: `eslint-enable for '${r}' has no matching eslint-disable.`,
+            file: relativePath,
+            line: lineNumber,
+            code: lineText.trim(),
+          });
+        }
+      }
+    }
+  }
+
+  for (const item of stack) {
+    findings.push({
+      id: 'no-unbalanced-eslint-disable',
+      message: `Unbalanced eslint-disable: missing matching eslint-enable for '${item.rule}'.`,
+      file: relativePath,
+      line: item.line,
+      code: item.code,
+    });
+  }
+
+  return findings;
 }
 
 /**
@@ -302,7 +449,7 @@ async function runScan(rootDir = ROOT) {
     const lines = source.split('\n');
 
     for (const rule of RULES) {
-      if (!ruleAppliesToFile(rule, relativePath)) continue;
+      if (!rule.pattern || !ruleAppliesToFile(rule, relativePath)) continue;
       for (const match of findMatches(source, rule.pattern)) {
         const lineNumber = getLineNumber(source, match.index);
         const line = lines[lineNumber - 1] || '';
@@ -314,6 +461,10 @@ async function runScan(rootDir = ROOT) {
           code: line.trim(),
         });
       }
+    }
+
+    if (['.js', '.mjs', '.cjs'].includes(path.extname(relativePath))) {
+      findings.push(...checkUnbalancedEslintDisable(source, relativePath));
     }
   }
 
@@ -393,5 +544,6 @@ export {
   isCommentOnlyLine,
   findMatches,
   runRuleSelfTests,
+  checkUnbalancedEslintDisable,
   runScan,
 };
