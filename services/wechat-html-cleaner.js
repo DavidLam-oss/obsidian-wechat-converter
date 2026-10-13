@@ -26,6 +26,7 @@
 */
 
 import { createHtmlContainer, getActiveDocument } from './dom-utils.js';
+import { resolveDraftListIndent } from './wechat-list-indent.js';
 
 /**
  * @typedef {{ firstElementIdx: number, prefixEndIdx: number }} InlineLabelPrefixInfo
@@ -45,6 +46,9 @@ export function cleanHtmlForDraft(html) {
     if (!activeDocument) return html;
     const div = createHtmlContainer('div', html);
     if (!div) return html;
+
+    // 从渲染产物里的 font-family 探测列表缩进，与 themes/apple-theme.js 共用同一份数据
+    const listIndent = resolveDraftListIndent(div);
 
     /**
      * @param {string} value
@@ -640,8 +644,10 @@ export function cleanHtmlForDraft(html) {
           .trim();
         if (cleanStyle && !cleanStyle.endsWith(';')) cleanStyle += ';';
 
+        // 列表缩进取自共享的 resolveListIndent（与 themes/apple-theme.js 同源），
+        // 保证预览与公众号发布后缩进一致；等宽字体自动获得更大的左内边距。
         const hangingIndent = isTask ? -20 : (isOrdered ? -18 : -14);
-        const paddingLeft = Math.max(1, depth) * 20;
+        const paddingLeft = Math.max(1, depth) * listIndent;
 
         /** @type {ChildNode[]} */
         const contentNodes = [];

@@ -88,6 +88,48 @@ const FONTS = {
 };
 
 /**
+ * 📐 列表缩进（px）——列表的悬挂标记由 ol/ul 的 padding-left 撑开。
+ * 等宽字体的字符推进宽度约为比例字体的 2 倍，同样的 padding-left 会让
+ * 两位数标记（如 "12."）越过正文左边缘，在移动端被裁切。
+ * 因此等宽字体需要更大的 padding-left。该值同时被 themes/apple-theme.js
+ * （预览渲染）与 services/wechat-html-cleaner.js（复制/发布清洗）引用，
+ * 以保证同一篇列表在预览与公众号中的缩进完全一致。
+ */
+/** @type {Record<AppleFontFamilyName, number>} */
+const LIST_INDENT = {
+  'sans-serif': 20,
+  'serif': 20,
+  'monospace': 32,
+};
+
+const DEFAULT_LIST_INDENT = LIST_INDENT['sans-serif'];
+
+/**
+ * 判断一段 font-family 声明是否指向等宽字体。
+ * @param {string} fontStack
+ * @returns {boolean}
+ */
+function isMonospaceFontStack(fontStack) {
+  return /monospace|mono|courier|consolas|menlo/i.test(fontStack || '');
+}
+
+/**
+ * 解析列表缩进：优先按 fontFamily 枚举取值；否则从 font-family 字符串探测。
+ * 主题层传枚举名，清洗层传渲染产物里的 font-family 声明，两条路径共用同一份数据。
+ * @param {string} [fontFamilyOrStack]
+ * @returns {number}
+ */
+function resolveListIndent(fontFamilyOrStack) {
+  const key = /** @type {AppleFontFamilyName} */ (fontFamilyOrStack);
+  if (key && Object.prototype.hasOwnProperty.call(LIST_INDENT, key)) {
+    return LIST_INDENT[key];
+  }
+  return isMonospaceFontStack(fontFamilyOrStack || '')
+    ? LIST_INDENT['monospace']
+    : DEFAULT_LIST_INDENT;
+}
+
+/**
  * 🎨 主题配置 - 每种主题的独特配色和规则
  */
 /** @type {Record<AppleThemeName, AppleThemeConfig>} */
@@ -309,6 +351,8 @@ export {
   THEME_COLORS_DEEP,
   FONT_SIZES,
   FONTS,
+  LIST_INDENT,
+  resolveListIndent,
   THEME_CONFIGS,
   SPACING,
   RADIUS,

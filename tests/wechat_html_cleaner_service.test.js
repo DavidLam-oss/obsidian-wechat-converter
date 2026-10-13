@@ -194,6 +194,59 @@ describe('Wechat HTML Cleaner Service', () => {
       expect(output).toContain('第二行');
     });
   });
+
+  describe('等宽字体的列表缩进与主题共享同一份数据', () => {
+    it('比例字体第 1 层列表使用 20px 缩进', () => {
+      const input = '<section style="font-family: -apple-system, BlinkMacSystemFont, sans-serif;"><ul><li>条目</li></ul></section>';
+      const output = cleanHtmlForDraft(input);
+
+      expect(output).toContain('padding-left: 20px');
+    });
+
+    it('等宽字体的第 1 层列表使用更大的 32px 缩进，避免标记越过正文左缘', () => {
+      const input = `<section style="font-family: 'SF Mono', Consolas, Menlo, Courier, monospace;"><ul><li>条目</li></ul></section>`;
+      const output = cleanHtmlForDraft(input);
+
+      expect(output).toContain('padding-left: 32px');
+      expect(output).not.toContain('padding-left: 20px');
+    });
+
+    it('等宽字体的嵌套层级按层累加同一基准缩进（32 / 64）', () => {
+      const input = `<section style="font-family: 'SF Mono', Consolas, monospace;"><ul><li>父项<ul><li>子项</li></ul></li></ul></section>`;
+      const output = cleanHtmlForDraft(input);
+
+      expect(output).toContain('padding-left: 32px');
+      expect(output).toContain('padding-left: 64px');
+    });
+
+    it('无 section / 未声明字体时回退到 20px 基准缩进', () => {
+      const output = cleanHtmlForDraft('<ul><li>条目</li></ul>');
+
+      expect(output).toContain('padding-left: 20px');
+    });
+
+    it('预览（主题）与发布（清洗）对等宽列表使用同一缩进值，保证两处一致', () => {
+      const { LIST_INDENT, resolveListIndent } = require('../themes/apple-theme-config');
+      const AppleTheme = require('../themes/apple-theme.js').default || require('../themes/apple-theme.js');
+
+      // 主题：预览渲染路径
+      const theme = new AppleTheme({ fontFamily: 'monospace' });
+      const olStyle = theme.getStyle('ol');
+      const themePx = Number(olStyle.match(/padding-left:\s*(\d+)px/)?.[1]);
+
+      // 清洗：复制/发布路径（从渲染产物的 font-family 探测）
+      const monospaceStack = AppleTheme.FONTS.monospace;
+      const cleaned = cleanHtmlForDraft(
+        `<section style="font-family: ${monospaceStack};"><ul><li>条目</li></ul></section>`
+      );
+      const cleanPx = Number(cleaned.match(/padding-left:\s*(\d+)px/)?.[1]);
+
+      expect(themePx).toBe(LIST_INDENT.monospace);
+      expect(cleanPx).toBe(themePx);
+      expect(resolveListIndent('monospace')).toBe(LIST_INDENT.monospace);
+      expect(resolveListIndent(monospaceStack)).toBe(LIST_INDENT.monospace);
+    });
+  });
 });
 
 

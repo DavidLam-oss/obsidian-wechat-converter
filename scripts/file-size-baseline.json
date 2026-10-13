@@ -10,6 +10,7 @@
     "services/feishu-api.js": 801,
     "services/obsidian-triplet-renderer-images.js": 814,
     "services/obsidian-triplet-renderer.js": 1023,
+    "services/wechat-html-cleaner.js": 800,
     "services/wechatsync-bridge.js": 1524,
     "styles/ai-layout.css": 835,
     "styles/multi-platform.css": 815,
@@ -20,9 +21,9 @@
     "views/settings/multi-platform-tab.js": 934
   },
   "generatedBytes": {
-    "main.js": 4298289,
+    "main.js": 4298950,
     "services/ai-layout-runtime/generated-skills.js": 47423,
-    "services/generated-embedded-deps.js": 2685245,
+    "services/generated-embedded-deps.js": 2685974,
     "styles.css": 234809
   }
 }

@@ -232,6 +232,7 @@ export default [
       "services/wechat-api-utils.js",
       "services/wechat-image-transcoder.js",
       "services/wechat-html-cleaner.js",
+      "services/wechat-list-indent.js",
       "services/wechat-media.js",
       "services/wechat-sync.js",
       "services/wechatsync-bridge.js",

@@ -99,6 +99,7 @@ import {
   RADIUS,
   QUOTE_CALLOUT_NEUTRAL_BG,
   QUOTE_NEUTRAL_BORDER,
+  resolveListIndent,
 } from './apple-theme-config.js';
 import {
   buildH1Style,
@@ -382,9 +383,10 @@ class AppleTheme {
         return `background: ${color}1A; color: ${color}; padding: 2px 4px; border-radius: 3px; font-family: ${AppleTheme.FONTS.monospace}; font-size: ${sizes.code}px;`;
 
       case 'ul':
-        return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 12px 0; padding-left: 20px; list-style-type: disc;`;
+        // 等宽字体字符更宽，用共享的 LIST_INDENT 撑开左边距以容纳列表标记
+        return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 12px 0; padding-left: ${resolveListIndent(this.fontFamily)}px; list-style-type: disc;`;
       case 'ol':
-        return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 12px 0; padding-left: 20px; list-style-type: decimal;`;
+        return `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 12px 0; padding-left: ${resolveListIndent(this.fontFamily)}px; list-style-type: decimal;`;
       case 'li':
         return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 4px 0;${effectiveLetterSpacing ? ` letter-spacing: ${effectiveLetterSpacing}px;` : ''}`;
       case 'li-task':
