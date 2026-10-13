@@ -23,6 +23,8 @@ yarn-error.log*
 # Local review notes and scratchpads
 review.md
 *review*.md
+HANDOVER-*.md
+baseline-before.log
 ClaudeFix.md
 OBSIDIAN_REVIEW_*.md
 OBSIDIAN_COMMUNITY_REVIEW_FIXES.md
