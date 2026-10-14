@@ -187,7 +187,8 @@ describe('AI Provider Capabilities (C06.1)', () => {
     const defaultSettings = createDefaultAiSettings();
     expect(defaultSettings.defaultImageProviderId).toBe('');
     expect(defaultSettings.cardCoverImageStyle).toBe('3d-clay');
-    expect(defaultSettings.cardCoverMode).toBe('mixed');
+    // 默认「主题自适应版式」：新卡片有图融入主题，无图显示占位框
+    expect(defaultSettings.cardCoverMode).toBe('adaptive');
 
     const custom = normalizeAiSettings({
       providers: [{
@@ -206,6 +207,10 @@ describe('AI Provider Capabilities (C06.1)', () => {
     expect(custom.cardCoverImageStyle).toBe('editorial-magazine');
     expect(custom.cardCoverMode).toBe('full-bleed');
 
+    // 老用户已存的显式 mixed 必须原样保留（改默认值不得改写既有配置）
+    const explicitMixed = normalizeAiSettings({ cardCoverMode: 'mixed' });
+    expect(explicitMixed.cardCoverMode).toBe('mixed');
+
     const adaptive = normalizeAiSettings({
       cardCoverMode: 'adaptive',
     });
@@ -214,6 +219,6 @@ describe('AI Provider Capabilities (C06.1)', () => {
     const invalid = normalizeAiSettings({
       cardCoverMode: 'invalid-mode',
     });
-    expect(invalid.cardCoverMode).toBe('mixed');
+    expect(invalid.cardCoverMode).toBe('adaptive');
   });
 });

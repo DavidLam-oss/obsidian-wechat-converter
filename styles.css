@@ -3454,6 +3454,98 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   color: var(--text-muted);
 }
 
+/* 同一区块内的首条说明：与上一区块不用再叠一层间距 */
+.icard-settings-note.is-spaced {
+  margin-top: 0;
+}
+
+/* 纯说明区块（无控件，只有一行文字）：
+   .apple-settings-details .apple-setting-section 给的是 12px 上下内边距 + 8px 行间距，
+   这套留白是给「控件 + 说明」两行结构预留的；只放一行文字时会在下方空出约 12px，
+   整行显得发虚。这里把留白改成「靠自己控制的一档」：
+   去掉大内边距与行间距，再补一个与相邻区块 gap 相称的纵向呼吸，
+   既不再发虚，也不会与上下区块贴死。
+   选择器需带 .apple-settings-details 前缀才能压过原规则（同权重、后定义生效）。 */
+.apple-settings-details .apple-setting-section.icard-settings-note-section {
+  gap: 0;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+/* 说明开头的「手动分页：」承担标题职责：
+   本区块不渲染 .apple-setting-label，用行内引导词替代，保持与相邻区块可扫读。 */
+.icard-settings-note-lead {
+  color: var(--text-normal);
+  font-weight: 600;
+}
+
+/* 提示句里可点击复制的行内标记（「手动分页」的 `===`）。
+
+   ⚠️ 必须用 `.icard-settings-note` 前缀把特异性抬到 (0,2,0)。
+   Obsidian 基础样式里有一条 `button:not(.clickable-icon)`，特异性 (0,1,1)，
+   **高于单类名 (0,1,0)**，会照常给它刷上 `--interactive-normal` 底色与 input-shadow；
+   同时基础 `button` 规则带 `height: var(--input-height)`（约 30px）与 `display: inline-flex`，
+   若不复位就会在句子里撑起一个又高又白的方块（实测 30px 高、底色 #f2f2f5）。
+   所以这里做两件事：① 提高特异性压过原生按钮外观；② 逐项复位尺寸与盒模型，
+   让它退回普通行内文字流，由内层 `code` 承担唯一的「标记」视觉。 */
+.icard-settings-note .icard-settings-inline-copy {
+  display: inline;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  background-color: transparent;
+  border: 0;
+  box-shadow: none;
+  white-space: normal;
+  vertical-align: baseline;
+  cursor: pointer;
+}
+
+/* 真正的「标记」外观只落在这一层：等宽 + 极浅底色的小色块。
+   等宽是为了让三个等号分得开、数得清（比例字体里它们几乎粘成一个符号）；
+   line-height 控制在 1.5 × 10.5px ≈ 15.8px，小于说明行的 16px，
+   因此不会把行高撑开，整行仍与相邻提示同节奏。 */
+.icard-settings-note .icard-settings-inline-copy-mark {
+  padding: 0 5px;
+  font-family: var(--font-monospace);
+  font-size: 10.5px;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+  border-radius: 4px;
+}
+
+/* 「（点击复制）」是弱提示：静止时用次级灰，悬停才明确。
+   它放在括号里，因此不会把文案读成「…写一行 === 复制，即可…」这种断句。 */
+.icard-settings-note .icard-settings-inline-copy-hint {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.icard-settings-note .icard-settings-inline-copy:hover .icard-settings-inline-copy-mark,
+.icard-settings-note .icard-settings-inline-copy.is-copied .icard-settings-inline-copy-mark {
+  color: var(--text-on-accent, #fff);
+  background: var(--interactive-accent);
+}
+
+.icard-settings-note .icard-settings-inline-copy:hover .icard-settings-inline-copy-hint {
+  color: var(--text-normal);
+}
+
+.icard-settings-note .icard-settings-inline-copy.is-copied .icard-settings-inline-copy-hint {
+  color: var(--interactive-accent);
+}
+
+.icard-settings-note .icard-settings-inline-copy:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
 /* 文本输入（封面字段 / 水印文案；C01③） */
 .icard-settings-text {
   width: 100%;
@@ -4352,8 +4444,13 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   color: #ff7b72;
 }
 
+/* 页名列：定宽，让右侧状态文字在所有行都从同一 x 起步。
+   不定宽时「封面」(2 字) / 「第 1 页」(3 字) / 「第 12 页」(4 字) 长度不一，
+   后面的「已保存 / 渲染中…」就会逐行错位——用户读的是整列，不是单行。
+   宽度按最长形态「第 12 页」量级取值；tabular-nums 让数字等宽，位数变化不抖动。 */
 .icard-export-page-name {
   flex: 0 0 auto;
+  width: 5.5em;
   font-variant-numeric: tabular-nums;
   color: var(--text-normal);
 }
@@ -4678,15 +4775,28 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 
 /* 自选页清单（2026-09-20）：挑页从预览缩略图移到这里。
    行是整行可点的按钮而非原生 checkbox——状态由 is-on 与 aria-pressed 双表达；
-   一页未选时计数处就地说明（is-empty），不把问题留到开始按钮的禁用提示里。 */
+   一页未选时计数处就地说明（is-empty），不把问题留到开始按钮的禁用提示里。
+
+   对齐口径（2026-10-14 定稿）：**行铺满整宽（悬停装饰横贯两侧）＋ 行内固定宽度内容列居中**。
+   内容列（.icard-export-picker-col）宽度固定并 margin:auto 居中，列内一律左对齐，
+   因此「封面」（两字）与「第 12 页」的勾选框、文字起点严格成列；
+   居中的是这一列，不是每行各自居中。
+   反例（勿改）：① 行去掉 width:100% → 悬停底色缩成贴着文字的一小块；
+   ② 给行 text-align:center → 短行「封面」自己飘到中间。两者都破坏视觉。 */
 .icard-export-picker {
+  --icard-picker-mark-col: 16px;
+  --icard-picker-gap: 9px;
+  /* 内容列宽：按最长的「第 12 页」量级取值，3 位数页号也不会挤动布局 */
+  --icard-picker-col-w: 8.5em;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 8px;
   padding: 10px 12px;
   border: 1px solid var(--background-modifier-border);
   border-radius: 10px;
   background: var(--background-secondary);
+  text-align: left;
 }
 
 .icard-export-picker-head {
@@ -4729,7 +4839,9 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   border-color: var(--interactive-accent);
 }
 
-/* 清单限高内滚：页数多时不能把「倍率 / 目录 / 开始」挤出视野 */
+/* 清单限高内滚：页数多时不能把「倍率 / 目录 / 开始」挤出视野。
+   行保持 width:100%（悬停装饰底色要横贯整行、覆盖到两侧），
+   居中靠行内的固定宽度内容列 + margin 自动居中实现，而不是把行本身缩窄。 */
 .icard-export-picker-list {
   display: flex;
   flex-direction: column;
@@ -4741,7 +4853,10 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 .icard-export-picker-row {
   display: flex;
   align-items: center;
-  gap: 9px;
+  justify-content: flex-start;
+  gap: var(--icard-picker-gap, 9px);
+  /* 行铺满整宽：悬停 / 聚焦装饰底色横贯两侧（2026-10-14 还原；
+     此前误改成内容宽，装饰框缩成贴着文字的一小块，不再覆盖两边） */
   width: 100%;
   padding: 6px 8px;
   font-family: inherit;
@@ -4756,6 +4871,28 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   transition: background 0.15s ease;
 }
 
+/* 行内容列：固定宽度 + 左右 auto 居中 → 整列（复选框 + 页名）在行内居中，
+   而列内部一律左对齐，所以「封面」「第 1 页」「第 12 页」的复选框与
+   文字起点仍然严格成列。宽度取「第 12 页」量级（约 8em）以免 3 位数换行。 */
+.icard-export-picker-col {
+  display: flex;
+  align-items: center;
+  gap: var(--icard-picker-gap, 9px);
+  width: var(--icard-picker-col-w, 8.5em);
+  flex: 0 0 auto;
+  margin: 0 auto;
+  text-align: left;
+}
+
+/* 页名左对齐；给足宽度以便页号位数变化时（第 1 页 / 第 12 页）不挤动布局。
+   等宽数字让不同位数的页号在视觉上占同样宽度，行与行看起来更齐。 */
+.icard-export-picker-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
 .icard-export-picker-row:hover {
   background: var(--background-modifier-hover);
 }
@@ -4765,13 +4902,14 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   outline-offset: -2px;
 }
 
+/* 勾选框是唯一的左侧列锚点：定宽，保证「封面」与「第 N 页」的方框严格成列 */
 .icard-export-picker-mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
+  width: var(--icard-picker-mark-col, 16px);
+  height: var(--icard-picker-mark-col, 16px);
   color: transparent;
   border: 1.5px solid var(--background-modifier-border);
   border-radius: 5px;

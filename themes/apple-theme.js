@@ -85,6 +85,7 @@
  *   lineHeight?: number | null,
  *   paragraphGap?: number | null,
  *   letterSpacing?: number | null,
+ *   justifyText?: boolean,
  *   coloredHeader?: boolean,
  * }} AppleThemeOptions
  */
@@ -157,9 +158,17 @@ class AppleTheme {
     this.paragraphGap = options.paragraphGap;
     /** @type {number | null | undefined} */
     this.letterSpacing = options.letterSpacing;
+    // 两端对齐：默认关闭（正文字号下 justify 会拉开汉字间距）；独立于主题
+    /** @type {boolean} */
+    this.justifyText = Boolean(options.justifyText);
     // 标题染色设置
     /** @type {boolean} */
     this.coloredHeader = Boolean(options.coloredHeader);
+  }
+
+  /** 正文对齐：开启两端对齐时末行仍左对齐；关闭时复位 text-align-last @returns {string} */
+  getBodyTextAlign() {
+    return this.justifyText ? 'text-align: justify; text-align-last: left' : 'text-align: left; text-align-last: auto';
   }
 
   /**
@@ -283,12 +292,12 @@ class AppleTheme {
         // 使用配置的 sidePadding
         if (config.sectionBgStyle !== 'grid') {
           return this.joinStyleStrings(
-            `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; background: ${config.sectionBg || '#ffffff'}; ${this.getSectionBoxSizingStyle(config)}max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; text-align: justify`
+            `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; background: ${config.sectionBg || '#ffffff'}; ${this.getSectionBoxSizingStyle(config)}max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; ${this.getBodyTextAlign()}`
           );
         }
 
         return this.joinStyleStrings(
-          `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; box-sizing: border-box; max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; text-align: justify`,
+          `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; padding: 20px ${sectionSidePadding}px; box-sizing: border-box; max-width: 100%; word-wrap: break-word; word-break: normal; overflow-wrap: break-word; line-break: strict; ${this.getBodyTextAlign()}`,
           `background-color: ${config.sectionBg || '#ffffff'}`,
           `background-image: linear-gradient(${this.hexToRgba(color, config.gridLineAlpha || '09')} 1px, transparent 1px), linear-gradient(90deg, ${this.hexToRgba(color, config.gridLineAlpha || '09')} 1px, transparent 1px)`,
           config.sectionBgSize ? `background-size: ${config.sectionBgSize}` : ''
@@ -315,7 +324,7 @@ class AppleTheme {
 
       case 'p':
         return this.joinStyleStrings(
-          `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 0 0 ${effectiveParagraphGap}px 0; text-align: justify; text-align-last: left;${effectiveLetterSpacing ? ` letter-spacing: ${effectiveLetterSpacing}px;` : ' letter-spacing: 0;'} word-break: normal; overflow-wrap: break-word; line-break: strict`,
+          `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 0 0 ${effectiveParagraphGap}px 0; ${this.getBodyTextAlign()};${effectiveLetterSpacing ? ` letter-spacing: ${effectiveLetterSpacing}px;` : ' letter-spacing: 0;'} word-break: normal; overflow-wrap: break-word; line-break: strict`,
           config.paragraphTextIndent ? `text-indent: ${config.paragraphTextIndent}` : ''
         );
 
@@ -331,7 +340,7 @@ class AppleTheme {
           const centeredRuleColor = quoteCalloutStyleMode === 'neutral'
             ? AppleTheme.QUOTE_NEUTRAL_BORDER
             : `${color}55`;
-          return `font-family: ${AppleTheme.FONTS.serif}; font-size: ${sizes.base}px; line-height: 1.85; color: #4f4a45; background: ${centeredBackground}; width: 92%; box-sizing: border-box; margin: 24px auto; padding: 18px 20px; text-align: justify; border-top: 1px solid ${centeredRuleColor}; border-bottom: 1px solid ${centeredRuleColor}; border-left: none; border-right: none; border-radius: ${r.sm}px;`;
+          return `font-family: ${AppleTheme.FONTS.serif}; font-size: ${sizes.base}px; line-height: 1.85; color: #4f4a45; background: ${centeredBackground}; width: 92%; box-sizing: border-box; margin: 24px auto; padding: 18px 20px; ${this.getBodyTextAlign()}; border-top: 1px solid ${centeredRuleColor}; border-bottom: 1px solid ${centeredRuleColor}; border-left: none; border-right: none; border-radius: ${r.sm}px;`;
         }
         if (config.blockquoteStyle === 'paper') {
           const paperBg = quoteCalloutStyleMode === 'neutral'
@@ -340,7 +349,7 @@ class AppleTheme {
           const paperBorder = quoteCalloutStyleMode === 'neutral'
             ? AppleTheme.QUOTE_NEUTRAL_BORDER
             : `${color}99`;
-          return `font-family: ${AppleTheme.FONTS.serif}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #5f574c; background: ${paperBg}; margin: 22px 0 22px 8px; padding: 16px 18px; border-left: 3px solid ${paperBorder}; border-radius: ${r.sm}px; text-align: justify;`;
+          return `font-family: ${AppleTheme.FONTS.serif}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #5f574c; background: ${paperBg}; margin: 22px 0 22px 8px; padding: 16px 18px; border-left: 3px solid ${paperBorder}; border-radius: ${r.sm}px; ${this.getBodyTextAlign()};`;
         }
         if (config.blockquoteStyle === 'soft') {
           const softBg = quoteCalloutStyleMode === 'neutral'
@@ -594,6 +603,8 @@ class AppleTheme {
     if (options.lineHeight !== undefined) this.lineHeight = options.lineHeight;
     if (options.paragraphGap !== undefined) this.paragraphGap = options.paragraphGap;
     if (options.letterSpacing !== undefined) this.letterSpacing = options.letterSpacing;
+    // 两端对齐：独立于主题，切换主题时不会被重置
+    if (options.justifyText !== undefined) this.justifyText = Boolean(options.justifyText);
     if (options.coloredHeader !== undefined) this.coloredHeader = Boolean(options.coloredHeader);
   }
 

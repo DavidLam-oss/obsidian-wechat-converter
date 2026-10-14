@@ -469,10 +469,12 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
     .setName("默认呈现模式")
     .setDesc("新建卡片时的默认版式（侧边栏可针对单篇随时切换）。")
     .addDropdown((dropdown) => {
-      dropdown.addOption("mixed", "图文混排（AI 背景 + 插件精准中文排版，推荐）");
-      dropdown.addOption("full-bleed", "纯全图封面（AI 生成纯海报，无文字层）");
+      // 选项顺序即推荐度：默认（adaptive）放首位。老用户已存的显式选择不受影响，
+      // 这里的 || 兜底只在字段缺失（新装 / 旧数据未带该键）时生效。
       dropdown.addOption("adaptive", "自适应融入主题（卡片主题推荐版式）");
-      dropdown.setValue(tab.plugin.settings.ai.cardCoverMode || "mixed");
+      dropdown.addOption("mixed", "图文混排（AI 背景 + 插件精准中文排版）");
+      dropdown.addOption("full-bleed", "纯全图封面（AI 生成纯海报，无文字层）");
+      dropdown.setValue(tab.plugin.settings.ai.cardCoverMode || "adaptive");
       dropdown.onChange(async (value) => {
         tab.plugin.settings.ai.cardCoverMode = value;
         await tab.plugin.saveSettings();

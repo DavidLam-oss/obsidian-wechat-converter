@@ -36,6 +36,98 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   color: var(--text-muted);
 }
 
+/* 同一区块内的首条说明：与上一区块不用再叠一层间距 */
+.icard-settings-note.is-spaced {
+  margin-top: 0;
+}
+
+/* 纯说明区块（无控件，只有一行文字）：
+   .apple-settings-details .apple-setting-section 给的是 12px 上下内边距 + 8px 行间距，
+   这套留白是给「控件 + 说明」两行结构预留的；只放一行文字时会在下方空出约 12px，
+   整行显得发虚。这里把留白改成「靠自己控制的一档」：
+   去掉大内边距与行间距，再补一个与相邻区块 gap 相称的纵向呼吸，
+   既不再发虚，也不会与上下区块贴死。
+   选择器需带 .apple-settings-details 前缀才能压过原规则（同权重、后定义生效）。 */
+.apple-settings-details .apple-setting-section.icard-settings-note-section {
+  gap: 0;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+/* 说明开头的「手动分页：」承担标题职责：
+   本区块不渲染 .apple-setting-label，用行内引导词替代，保持与相邻区块可扫读。 */
+.icard-settings-note-lead {
+  color: var(--text-normal);
+  font-weight: 600;
+}
+
+/* 提示句里可点击复制的行内标记（「手动分页」的 `===`）。
+
+   ⚠️ 必须用 `.icard-settings-note` 前缀把特异性抬到 (0,2,0)。
+   Obsidian 基础样式里有一条 `button:not(.clickable-icon)`，特异性 (0,1,1)，
+   **高于单类名 (0,1,0)**，会照常给它刷上 `--interactive-normal` 底色与 input-shadow；
+   同时基础 `button` 规则带 `height: var(--input-height)`（约 30px）与 `display: inline-flex`，
+   若不复位就会在句子里撑起一个又高又白的方块（实测 30px 高、底色 #f2f2f5）。
+   所以这里做两件事：① 提高特异性压过原生按钮外观；② 逐项复位尺寸与盒模型，
+   让它退回普通行内文字流，由内层 `code` 承担唯一的「标记」视觉。 */
+.icard-settings-note .icard-settings-inline-copy {
+  display: inline;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  background-color: transparent;
+  border: 0;
+  box-shadow: none;
+  white-space: normal;
+  vertical-align: baseline;
+  cursor: pointer;
+}
+
+/* 真正的「标记」外观只落在这一层：等宽 + 极浅底色的小色块。
+   等宽是为了让三个等号分得开、数得清（比例字体里它们几乎粘成一个符号）；
+   line-height 控制在 1.5 × 10.5px ≈ 15.8px，小于说明行的 16px，
+   因此不会把行高撑开，整行仍与相邻提示同节奏。 */
+.icard-settings-note .icard-settings-inline-copy-mark {
+  padding: 0 5px;
+  font-family: var(--font-monospace);
+  font-size: 10.5px;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+  border-radius: 4px;
+}
+
+/* 「（点击复制）」是弱提示：静止时用次级灰，悬停才明确。
+   它放在括号里，因此不会把文案读成「…写一行 === 复制，即可…」这种断句。 */
+.icard-settings-note .icard-settings-inline-copy-hint {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.icard-settings-note .icard-settings-inline-copy:hover .icard-settings-inline-copy-mark,
+.icard-settings-note .icard-settings-inline-copy.is-copied .icard-settings-inline-copy-mark {
+  color: var(--text-on-accent, #fff);
+  background: var(--interactive-accent);
+}
+
+.icard-settings-note .icard-settings-inline-copy:hover .icard-settings-inline-copy-hint {
+  color: var(--text-normal);
+}
+
+.icard-settings-note .icard-settings-inline-copy.is-copied .icard-settings-inline-copy-hint {
+  color: var(--interactive-accent);
+}
+
+.icard-settings-note .icard-settings-inline-copy:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
 /* 文本输入（封面字段 / 水印文案；C01③） */
 .icard-settings-text {
   width: 100%;

@@ -470,6 +470,30 @@ createSettingsPanel(container) {
   });
   headingStyleSection.classList.add('apple-settings-inline-toggle');
 
+  // === 两端对齐 ===
+  // 与「字体 → 等宽」的区别：等宽的对齐感来自字体本身，本开关直接改 text-align，
+  // 因此衬线 / 无衬线主题也能拿到两端对齐效果。开关独立于主题，切主题不重置。
+  const justifySection = this.createSection(advancedArea, '两端对齐', (section) => {
+    const row = section.createEl('div', { cls: 'apple-settings-inline-row' });
+    const toggle = row.createEl('label', { cls: 'apple-toggle' });
+    const checkbox = /** @type {ObsidianInputLike} */ (toggle.createEl('input', { type: 'checkbox', cls: 'apple-toggle-input' }));
+    checkbox.checked = this.plugin.settings.justifyText === true;
+    toggle.createEl('span', { cls: 'apple-toggle-slider' });
+
+    section.createEl('span', {
+      text: '正文左右两端对齐（末行仍左对齐）',
+      cls: 'apple-settings-inline-tip',
+    });
+
+    checkbox.addEventListener('change', async () => {
+      this.plugin.settings.justifyText = checkbox.checked;
+      await this.plugin.saveSettings();
+      this.theme?.update({ justifyText: checkbox.checked });
+      await this.convertCurrent(true);
+    });
+  });
+  justifySection.classList.add('apple-settings-inline-toggle');
+
   // === 正文标点标准化 ===
   const punctuationSection = this.createSection(advancedArea, '正文标点标准化', (section) => {
     const row = section.createEl('div', { cls: 'apple-settings-inline-row' });

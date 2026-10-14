@@ -18,6 +18,7 @@
 */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { readFileSync } from "node:fs";
 import { getCardThemeDefaultTypography } from "../services/card-settings-model.js";
 
 const { loadInputModule } = require("./helpers/input-module.cjs");
@@ -153,6 +154,81 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
         (b) => b.textContent === "恢复默认排版"
       );
       expect(resetBtn).toBeUndefined();
+    });
+
+    it("排版样式面板提示 `===` 手动分页能力（能力可发现性）", () => {
+      const tokenSection = view.cardSettingsWrapper.querySelector(".icard-settings-subpanel-token");
+      // `===` 分页符早已支持，但此前界面无任何提示 = 隐藏能力
+      const mark = tokenSection.querySelector(".icard-settings-inline-copy-mark");
+      expect(mark).toBeTruthy();
+      expect(mark.textContent).toBe("===");
+      // 必须是三个 ASCII 等号（U+003D），与 card-document.js 的判定字面量一致；
+      // 全角「＝」不会触发分页，复制错字符等于给了个假能力
+      expect(mark.textContent).toHaveLength(3);
+      expect([...mark.textContent].map((c) => c.codePointAt(0))).toEqual([0x3d, 0x3d, 0x3d]);
+      // 提示要能独立成句读懂（写在哪、起什么作用）
+      const text = tokenSection.textContent;
+      expect(text).toContain("单独写一行");
+      expect(text).toContain("另起一张卡片");
+      // 复制提示放进括号，避免断句成「…写一行 === 复制，即可…」
+      expect(text).toContain("（点击复制）");
+    });
+
+    it("手动分页是纯说明区块：不占独立控件行，也不留出空白档", () => {
+      const tokenSection = view.cardSettingsWrapper.querySelector(".icard-settings-subpanel-token");
+      const section = tokenSection.querySelector(".icard-settings-note-section");
+      expect(section).toBeTruthy();
+      // 该区块只有一句说明，没有任何原生表单控件（开关/输入框）
+      expect(section.querySelectorAll("input")).toHaveLength(0);
+      expect(section.querySelector(".icard-settings-inline-copy")).toBeTruthy();
+      // createSection 生成的空 label 被移除：留着仍会占掉 gap 的 8px，
+      // 让单行说明在下方空出一档（这正是「显得比较空」的根因）
+      expect(section.querySelector(".apple-setting-label")).toBeNull();
+      // 引导词承担标题职责，保持与相邻区块可扫读
+      expect(section.querySelector(".icard-settings-note-lead").textContent).toContain("手动分页");
+    });
+
+    it("手动分页标记可点击复制，复制内容即三个 ASCII 等号", async () => {
+      const tokenSection = view.cardSettingsWrapper.querySelector(".icard-settings-subpanel-token");
+      const marker = tokenSection.querySelector(".icard-settings-inline-copy");
+      expect(marker).toBeTruthy();
+      expect(marker.tagName).toBe("BUTTON");
+      expect(marker.getAttribute("title")).toContain("复制");
+      // 静止态是句子里的一段灰字，不是一枚常驻按钮：不得用主题色实底
+      expect(marker.classList.contains("is-copied")).toBe(false);
+
+      const writeText = vi.fn(async () => undefined);
+      Object.defineProperty(global.navigator, "clipboard", { configurable: true, value: { writeText } });
+
+      marker.dispatchEvent(new window.Event("click"));
+      // 复制是异步的，等微任务队列清空
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(writeText).toHaveBeenCalledWith("===");
+      expect(marker.classList.contains("is-copied")).toBe(true);
+      expect(marker.querySelector(".icard-settings-inline-copy-hint").textContent).toBe("（已复制）");
+    });
+
+    it("手动分页标记的样式必须压过 Obsidian 原生按钮外观（防「高白框」回归）", () => {
+      // 回归背景：Obsidian 基础样式 `button:not(.clickable-icon)` 特异性为 (0,1,1)，
+      // 高于单类名 (0,1,0)，会给行内标记刷上原生底色；基础 `button` 又带
+      // height: var(--input-height)，于是句子里出现一个又高又白的方块。
+      // 修法是①把选择器套在 .icard-settings-note 下提升特异性②复位尺寸与外观。
+      const css = readFileSync("styles/card-settings.css", "utf8");
+      // ① 特异性必须高过 (0,1,1)：选择器需同时含 .icard-settings-note 与标记类
+      expect(css).toMatch(/\.icard-settings-note\s+\.icard-settings-inline-copy\s*\{/);
+      // ② 不得存在只用单类名的规则（那会被原生按钮样式盖掉）
+      expect(css).not.toMatch(/^\.icard-settings-inline-copy\s*\{/m);
+      // ③ 逐项复位：高度不再继承输入框高度，底色 / 阴影 / 边框均清空
+      const block = css.slice(
+        css.indexOf(".icard-settings-note .icard-settings-inline-copy {")
+      );
+      const rule = block.slice(0, block.indexOf("}"));
+      expect(rule).toMatch(/height:\s*auto/);
+      expect(rule).toMatch(/min-height:\s*0/);
+      expect(rule).toMatch(/background:\s*transparent/);
+      expect(rule).toMatch(/box-shadow:\s*none/);
+      expect(rule).toMatch(/border:\s*0/);
     });
 
     it("封面设置面板包含封面开关、四字段输入与按当前笔记重新填入", () => {

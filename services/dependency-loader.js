@@ -146,6 +146,7 @@ function toThemeOptions(settings = {}) {
     lineHeight: settings.lineHeight,
     paragraphGap: settings.paragraphGap,
     letterSpacing: settings.letterSpacing,
+    justifyText: settings.justifyText,
     coloredHeader: settings.coloredHeader,
   };
 }

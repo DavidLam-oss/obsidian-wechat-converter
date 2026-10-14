@@ -131,6 +131,10 @@ export function createDefaultSettings() {
     lineHeight: null,
     paragraphGap: null,
     letterSpacing: null,
+    // 两端对齐（text-align: justify）。默认关闭：正文字号下 justify 会在汉字间
+    // 拉出不自然的空隙，只在用户明确想要「两端对齐」排版时才开。
+    // 独立于主题——切主题不重置（它是排版意图，不是主题风格）。
+    justifyText: false,
     coloredHeader: false,
     cleanupAfterSync: false,
     cleanupUseSystemTrash: true,
@@ -255,6 +259,8 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
   settings.lineHeight = normalizeSpacingValue(settings.lineHeight, 1.4, 2.2);
   settings.paragraphGap = normalizeSpacingValue(settings.paragraphGap, 8, 40);
   settings.letterSpacing = normalizeSpacingValue(settings.letterSpacing, 0, 2);
+  // 两端对齐：非布尔一律按关闭处理（缺键的旧数据也走这里 → false，不改变既有观感）
+  settings.justifyText = settings.justifyText === true;
 
   // Unsplash Access Key：去除多余空白字符
   const rawUnsplashKey = settings.unsplashAccessKey;

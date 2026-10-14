@@ -422,9 +422,12 @@ renderCardExportJob(body, job) {
   const failed = results.filter((r) => r.status === 'failed').length;
   const canceled = results.filter((r) => r.status === 'canceled').length;
 
-  // 当前阶段（来自导出器的进度事件）：资源准备中 / 正在渲染第 N 页
+  // 当前阶段（来自导出器的进度事件）：资源准备中 / 正在渲染第 N 页。
+  // `stage === 'page'` 时 current 才是有效页序；封面 current=0（有效值），
+  // 故用是否收到过 page 事件来区分「正在渲染封面」与「还没开始渲染」。
   const progressEvent = (/** @type {any} */ (this)).cardExportProgress;
-  const currentOrdinal = progressEvent && Number(progressEvent.current) > 0 ? Number(progressEvent.current) : 0;
+  const renderingPage = Boolean(progressEvent) && progressEvent.stage === 'page';
+  const currentOrdinal = renderingPage ? Number(progressEvent.current) || 0 : -1;
 
   const tone = EXPORT_STATE_TONES[state] || 'muted';
   const status = body.createEl('div', { cls: `icard-export-status is-${tone}` });
@@ -572,11 +575,14 @@ renderCardExportPages(body, input) {
     const status = result ? result.status : 'pending';
     // 页号取 pageId 的原始页序：子集导出时 page-3 必须显示「第 3 页」，
     // 不能按批次内序号显示成「第 1 页」（否则与预览里的页号对不上）。
+    // 封面 ordinal=0，行名走 pageRowLabel 显示为「封面」而不是「第 1 页」。
     const ordinal = pageOrdinal(pageId, index + 1);
-    // 当前正在渲染的页（进度事件的 current 就是原始页序，与 ordinal 对齐）
-    const isCurrent = running && status === 'pending' && currentOrdinal > 0 && ordinal === currentOrdinal;
+    // 当前正在渲染的页（进度事件的 current 就是原始页序，与 ordinal 对齐）。
+    // currentOrdinal 为 -1 表示尚未进入渲染阶段；封面 ordinal=0 与 current=0 相等，
+    // 因此这里不能用 `currentOrdinal > 0` 作门槛，否则封面永远不会被标成「渲染中」。
+    const isCurrent = running && status === 'pending' && currentOrdinal >= 0 && ordinal === currentOrdinal;
     const row = list.createEl('div', { cls: `icard-export-page-row is-${isCurrent ? 'rendering' : status}` });
-    row.createEl('span', { cls: 'icard-export-page-name', text: `第 ${ordinal} 页` });
+    row.createEl('span', { cls: 'icard-export-page-name', text: pageRowLabel(pageId, index + 1) });
     row.createEl('span', {
       cls: 'icard-export-page-state',
       text: isCurrent ? '渲染中…' : (EXPORT_PAGE_LABELS[status] || status),
@@ -711,7 +717,9 @@ function jobStatusDescription({ state, running, progressEvent, currentOrdinal, s
     return base;
   }
   if (progressEvent && progressEvent.stage === 'preparing') return '正在下载并内联笔记图片（图片多时首次较慢）…';
+  // currentOrdinal < 0 表示还没进入渲染阶段；0 表示正在渲染封面（封面不是「第 0 页」）
   if (currentOrdinal > 0) return `已保存 ${saved} / ${total} 张 · 正在渲染第 ${currentOrdinal} 页`;
+  if (currentOrdinal === 0) return `已保存 ${saved} / ${total} 张 · 正在渲染封面`;
   return `已保存 ${saved} / ${total} 张 · 正在准备…`;
 }
 
@@ -734,11 +742,25 @@ function pageChipTone({ running, failed, canceled }) {
 /**
  * 页号（1-based）：取自 pageId（`page-N`），非法 id 回落批次内序号。
  * 子集导出必须用原始页序，否则「第 N 页」会与预览里的页号对不上。
+ * 封面返回 0（与导出口径一致：card-export-bridge 用 `{ pageId:'cover', ordinal:0 }`）。
  * @param {string} pageId @param {number} fallback
  */
 function pageOrdinal(pageId, fallback) {
+  if (String(pageId || '') === 'cover') return 0;
   const match = /^page-(\d+)$/.exec(String(pageId || ''));
   return match ? Number(match[1]) : fallback;
+}
+
+/**
+ * 逐页明细里的页名：封面就叫「封面」，正文才叫「第 N 页」。
+ * 封面不是「第 1 页」——它有独立的 pageId/ordinal(0)，若按批次内序号回落，
+ * 就会与紧随其后的 page-1 双双显示成「第 1 页」，用户看到两行同名。
+ * 与自选清单（card-page-selection.js 的 pageRowLabel）保持同一口径。
+ * @param {string} pageId @param {number} fallback
+ */
+function pageRowLabel(pageId, fallback) {
+  const ordinal = pageOrdinal(pageId, fallback);
+  return ordinal > 0 ? `第 ${ordinal} 页` : '封面';
 }
 
 /**

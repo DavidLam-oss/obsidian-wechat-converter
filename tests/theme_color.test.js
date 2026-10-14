@@ -145,7 +145,9 @@ describe('AppleTheme Color Logic', () => {
       const paragraphStyle = theme.getStyle('p');
       const sectionStyle = theme.getStyle('section');
 
-      expect(paragraphStyle).toContain('text-align-last: left');
+      // 本用例保护的是 CJK 断行（不在标点前断行），与对齐无关。
+      // 对齐自 2026-10-14 起由 justifyText 开关控制（默认关闭 = 左对齐），
+      // 单独由「两端对齐开关」用例覆盖，这里只断言断行相关属性。
       expect(paragraphStyle).toContain('word-break: normal');
       expect(paragraphStyle).toContain('overflow-wrap: break-word');
       expect(paragraphStyle).toContain('line-break: strict');
@@ -457,6 +459,50 @@ describe('AppleTheme Color Logic', () => {
       expect(theme.getStyle('p')).toContain('margin: 0 0 30px 0');
       expect(theme.getStyle('p')).toContain('letter-spacing: 1px');
       expect(theme.getStyle('li')).toContain('letter-spacing: 1px');
+    });
+  });
+
+  describe('两端对齐开关（justifyText）', () => {
+    it('默认关闭：正文左对齐，不带 justify 残留', () => {
+      const theme = new AppleTheme({ theme: 'serif' });
+      expect(theme.justifyText).toBe(false);
+      const pStyle = theme.getStyle('p');
+      expect(pStyle).toContain('text-align: left');
+      expect(pStyle).not.toContain('justify');
+      // section 也要跟随，否则段落被外层 justify 拉回两端对齐
+      expect(theme.getStyle('section')).not.toContain('justify');
+    });
+
+    it('开启时：段落与 section 均为两端对齐，末行仍左对齐', () => {
+      const theme = new AppleTheme({ theme: 'serif', justifyText: true });
+      expect(theme.getStyle('p')).toContain('text-align: justify');
+      expect(theme.getStyle('p')).toContain('text-align-last: left');
+      expect(theme.getStyle('section')).toContain('text-align: justify');
+    });
+
+    it('衬线主题也能拿到两端对齐（这正是该开关存在的理由）', () => {
+      // 「字体 → 等宽」靠字体自带对齐感，衬线主题此前无法实现两端对齐
+      const serif = new AppleTheme({ theme: 'serif', fontFamily: 'serif', justifyText: true });
+      expect(serif.getStyle('p')).toContain('text-align: justify');
+      const mono = new AppleTheme({ theme: 'serif', fontFamily: 'monospace', justifyText: true });
+      expect(mono.getStyle('p')).toContain('text-align: justify');
+    });
+
+    it('update() 可开可关，且关闭后不残留上一态', () => {
+      const theme = new AppleTheme({ theme: 'github' });
+      theme.update({ justifyText: true });
+      expect(theme.getStyle('p')).toContain('text-align: justify');
+      theme.update({ justifyText: false });
+      expect(theme.getStyle('p')).not.toContain('justify');
+      expect(theme.getStyle('p')).toContain('text-align-last: auto');
+    });
+
+    it('不受主题切换影响（切主题只重置间距微调，不重置对齐意图）', () => {
+      const theme = new AppleTheme({ theme: 'github', justifyText: true });
+      // 模拟 onThemeChange：只重置间距三项
+      theme.update({ theme: 'serif', lineHeight: null, paragraphGap: null, letterSpacing: null });
+      expect(theme.justifyText).toBe(true);
+      expect(theme.getStyle('p')).toContain('text-align: justify');
     });
   });
 });

@@ -337,8 +337,13 @@
   color: #ff7b72;
 }
 
+/* 页名列：定宽，让右侧状态文字在所有行都从同一 x 起步。
+   不定宽时「封面」(2 字) / 「第 1 页」(3 字) / 「第 12 页」(4 字) 长度不一，
+   后面的「已保存 / 渲染中…」就会逐行错位——用户读的是整列，不是单行。
+   宽度按最长形态「第 12 页」量级取值；tabular-nums 让数字等宽，位数变化不抖动。 */
 .icard-export-page-name {
   flex: 0 0 auto;
+  width: 5.5em;
   font-variant-numeric: tabular-nums;
   color: var(--text-normal);
 }

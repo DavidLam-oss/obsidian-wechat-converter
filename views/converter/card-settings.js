@@ -79,6 +79,27 @@ import {
 } from './card-cover-settings.js';
 
 /**
+ * 手动分页标记：三个 **ASCII 等号**（U+003D）。
+ * 与 services/card-document.js 的判定字面量必须完全一致——那边用 `lines[i].trim() !== "==="`，
+ * 是半角等号，不是全角「＝」。复制给用户的也必须是同一串，否则粘进去不生效。
+ */
+const CARD_MANUAL_BREAK_MARKER = '===';
+
+/** 复制文本到剪贴板（不支持时静默失败，界面不谎报成功；与导出弹窗同一口径） */
+async function writeClipboard(text) {
+  try {
+    const clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : null;
+    if (clipboard && typeof clipboard.writeText === 'function') {
+      await clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // 权限或运行环境不支持：交给调用方保持原样
+  }
+  return false;
+}
+
+/**
  * 卡片设置视图状态（d.ts 合同以 unknown 持有，这里给运行时访问形状）。
  * @typedef {{
  *   cardSettingsWrapper?: ObsidianElementLike | null,
@@ -260,6 +281,55 @@ buildCardSettingsPanel() {
       checkbox.dispatchEvent(new Event('change'));
     });
   });
+
+  // 手动分页（能力发现）：`===` 分页符早已支持（services/card-document.js），
+  // 但此前插件界面里没有任何地方告诉用户，等于隐藏能力。放在「正文页码」旁边——
+  // 两者都关于「卡片怎么分页 / 怎么编号」，用户在这一带正好在想这件事。
+  //
+  // 标记做成**可点击复制**：`===` 在界面上容易被看成「一个特殊符号」，
+  // 光靠看数不清是几个等号、也不用去数——点一下就拿到，粘进正文即可。
+  // 判定字符是三个 ASCII 等号（U+003D，非全角），故复制内容即字面量 `===`。
+  //
+  // 版式：本条没有可操作的控件，只有一句说明，因此**不占用独立的 content 块**——
+  // 区块默认 gap:8px + 12px 上下内边距是为「控件 + 说明」两行准备的，
+  // 只放一行文字会在下方留出明显的空档（实测区块高 66px，其中内容仅 16px）。
+  // 改为说明直接并入标签行，整块收回单行节奏。
+  const breakSection = this.createSection(tokenSection, '', (section) => {
+    const note = section.createEl('div', { cls: 'icard-settings-note is-spaced' });
+    note.createEl('span', { cls: 'icard-settings-note-lead', text: '手动分页：' });
+    note.createEl('span', { text: '在正文里单独写一行 ' });
+
+    const marker = note.createEl('button', {
+      cls: 'icard-settings-inline-copy',
+      attr: {
+        type: 'button',
+        title: '点击复制',
+        'aria-label': `复制手动分页标记：${CARD_MANUAL_BREAK_MARKER}`,
+      },
+    });
+    marker.createEl('code', { cls: 'icard-settings-inline-copy-mark', text: CARD_MANUAL_BREAK_MARKER });
+    // 复制提示放进括号并与标记同处一个点击区域：
+    // 既扩大命中范围，又不会把句子断成「…写一行 === 复制，即可…」。
+    const copyHint = marker.createEl('span', { cls: 'icard-settings-inline-copy-hint', text: '（点击复制）' });
+
+    marker.addEventListener('click', async () => {
+      const ok = await writeClipboard(CARD_MANUAL_BREAK_MARKER);
+      if (!ok) return; // 复制不可用时不谎报成功（与导出弹窗同一口径）
+      marker.toggleClass('is-copied', true);
+      copyHint.setText('（已复制）');
+      const win = typeof window !== 'undefined' ? window : null;
+      win?.setTimeout?.(() => {
+        marker.toggleClass('is-copied', false);
+        if (copyHint.textContent === '（已复制）') copyHint.setText('（点击复制）');
+      }, 1600);
+    });
+
+    note.createEl('span', { text: '，即可另起一张卡片。' });
+  });
+  // 说明条：本区块没有控件，也不需要独立标题行——去掉区块纵向内边距与行间距，
+  // 并移除 createSection 生成的空 label（它仍会占掉 gap 的 8px）。
+  breakSection.addClass('icard-settings-note-section');
+  breakSection.querySelector('.apple-setting-label')?.remove();
 
   // 水印
   this.createSection(tokenSection, '水印', (section) => {

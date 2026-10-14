@@ -50,7 +50,9 @@ function createDefaultAiSettings() {
     defaultProviderId: '',
     defaultImageProviderId: '',
     cardCoverImageStyle: '3d-clay',
-    cardCoverMode: 'mixed',
+    // 新卡片默认「主题自适应版式」：有图融入卡片主题（相框/拱门/杂志），
+    // 无图显示精致占位框而非硬套一张全屏大图。用户可在 AI 设置里改回 mixed。
+    cardCoverMode: 'adaptive',
     defaultLayoutFamily: AI_LAYOUT_SELECTION_AUTO,
     defaultColorPalette: AI_LAYOUT_SELECTION_AUTO,
     defaultStylePack: AI_LAYOUT_DEFAULT_COLOR_PALETTE,

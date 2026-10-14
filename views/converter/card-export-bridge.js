@@ -19,6 +19,9 @@ AppleStyleView 实例（app / 会话 / 当前渲染负载）与用户在弹窗�
 - `createCardCaptureCallback({ pageId, ordinal, settings, markdown, sourcePath, scale, resources })`：B04 的 `capturePageBytes`。
 - `collectCardExportInput({ rootPath, scale, pageIds })`：组装 exportCards 入参（含资格预检）。
 - `resolveCardExportAbsPath(vaultRelativePath)`：把 vault 相对路径解析成系统绝对路径（不可解析返回 null）。
+  **返回值一律归一为当前平台原生分隔符**（Windows `\`）——混合分隔符会让
+  `shell.showItemInFolder` 在 Windows 上静默失败（点「打开所在文件夹」没反应），
+  macOS / Linux 只用 `/` 所以本地测不出来。
 - `canRevealCardExportOutput()`：当前环境能否在系统文件管理器中定位目录（桌面端且有 electron shell）。
 - `revealCardExportOutput(vaultRelativePath)`：在访达 / 资源管理器中选中该批次目录，返回 `{ ok, absPath, reason? }`。
 
@@ -60,6 +63,7 @@ import {
 import { renderCardPages, releasePageStyle, RATIO_PRESETS, capturePage, CAPTURE_LIBRARY_IDS } from '../../services/card-render-engine.js';
 import { DEFAULT_CARD_THEME_ID, getCardTheme } from '../../services/card-themes.js';
 import { loadCommonJsDependency } from '../../services/obsidian-compat.js';
+import { getActiveWindowValue } from '../../services/dom-utils.js';
 
 /** 导出倍率白名单（§5.5；C01 扩展比例时同步） */
 export const CARD_EXPORT_SCALES = /** @type {const} */ ([1, 2, 3]);
@@ -508,8 +512,15 @@ createCardExportController(session, context) {
 
 /**
  * 把 vault 相对路径换算成系统绝对路径（失败返回 null）。
- * 优先走 `adapter.getFullPath`（Obsidian 官方换算，跨平台分隔符正确）；
- * 退化用 `getBasePath` 拼接；两者都不可用返回 null（调用方据此隐藏「打开所在文件夹」）。
+ * 优先走 `adapter.getFullPath`（Obsidian 官方换算）；退化用 `getBasePath` 拼接；
+ * 两者都不可用返回 null（调用方据此隐藏「打开所在文件夹」）。
+ *
+ * 分隔符必须归一到**当前平台的原生形态**再交给 electron：
+ * Windows 上 `getBasePath()` 返回 `C:\...\Vault`，若直接用 `/` 拼接会得到
+ * `C:\Users\me\Vault/卡片导出/...` 这种混合分隔符路径，`shell.showItemInFolder`
+ * 在 Windows 下会解析失败（按钮点了没反应）；macOS / Linux 只用 `/`，所以本地无感。
+ * Electron 亦为此专门打过补丁（normalize path before calling showItemInFolder），
+ * 此处不依赖宿主版本，自行归一。
  * @param {string} vaultRelativePath
  * @returns {string | null}
  */
@@ -520,7 +531,8 @@ resolveCardExportAbsPath(vaultRelativePath) {
   if (typeof adapter?.getFullPath === 'function') {
     try {
       const abs = adapter.getFullPath(rel);
-      if (abs) return String(abs);
+      // 官方换算也归一：不同 Obsidian 版本 / 平台实现的分隔符口径并不一致
+      if (abs) return toNativePath(String(abs));
     } catch {
       // 换算失败：继续尝试 getBasePath 拼接
     }
@@ -528,7 +540,7 @@ resolveCardExportAbsPath(vaultRelativePath) {
   if (typeof adapter?.getBasePath === 'function') {
     try {
       const base = String(adapter.getBasePath() || '').replace(/[/\\]+$/, '');
-      if (base) return `${base}/${rel}`;
+      if (base) return toNativePath(`${base}/${rel}`);
     } catch {
       // 无绝对路径能力：调用方降级为复制 vault 相对路径
     }
@@ -566,6 +578,47 @@ revealCardExportOutput(vaultRelativePath) {
 ,
 
 };
+
+/**
+ * 当前平台是否为 Windows。
+ * `process.platform` 经 active-window 的 `require` 取（Electron 渲染进程可用），
+ * 拿不到时退化为 UA 探测；两者都拿不到按非 Windows 处理
+ * （macOS / Linux 用 `/`，是安全默认）。
+ * @returns {boolean}
+ */
+function isWindowsPlatform() {
+  try {
+    const requireFn = getActiveWindowValue('require');
+    if (typeof requireFn === 'function') {
+      const processModule = /** @type {any} */ (/** @type {(s: string) => unknown} */ (requireFn))('process');
+      const platform = processModule?.platform;
+      if (typeof platform === 'string') return platform === 'win32';
+    }
+  } catch {
+    // 无 process 能力：继续走 UA
+  }
+  try {
+    const nav = /** @type {any} */ (getActiveWindowValue('navigator'));
+    return typeof nav?.userAgent === 'string' && /windows/i.test(nav.userAgent);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 把路径分隔符归一成当前平台的原生形态。
+ * Windows 输出 `\`，其余平台输出 `/`；已混合的串（`C:\a/b`）也会被统一。
+ * 不动盘符与 UNC 前缀（`C:` / `\\server\share` 本身不含可替换的 `/`）。
+ * @param {string} pathLike
+ * @returns {string}
+ */
+function toNativePath(pathLike) {
+  const value = String(pathLike ?? '');
+  if (!value) return value;
+  return isWindowsPlatform()
+    ? value.replace(/\//g, '\\')
+    : value.replace(/\\/g, '/');
+}
 
 /** @type {{ showItemInFolder(path: string): void } | null | undefined} */
 let revealShellCache;

@@ -50,7 +50,11 @@ AppleStyleView 实例（会话注册表、`cardPreviewPendingInput` 的源路径
   导出时被过滤掉」的静默少页。
 - `renderCardExportPicker` 是纯展示：不自己攒选择状态，行内切换 / 全选 / 清空一律
   交给回调写回会话，再由调用方重绘。本模块不碰任何预览 DOM（缩略图已无选择态）。
-- 样式在 styles/card-export.css（icard-export-picker- 前缀）。
+- 对齐口径：清单行内容**一律左对齐**，勾选框（.icard-export-picker-mark，定宽 16px）
+  是唯一的左侧列锚点，行文字从同一 x 起步——「封面」与「第 N 页」成列，
+  不随行宽或页名长短漂移。按钮默认会继承主题的居中，靠 CSS 显式 text-align: left 压回。
+- 样式在 styles/card-export.css（icard-export-picker- 前缀）；
+  实际规则落在 styles/card-export-progress.css。
 */
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument -- reason: AppleStyleView 方法组跨模块动态组合（同 card-preview），会话合同字段以 unknown 持有，运行时语义由 B01 契约测试约束 */
@@ -195,10 +199,13 @@ renderCardExportPicker(container, options) {
       cls: `icard-export-picker-row${on ? ' is-on' : ''}`,
       attr: { type: 'button', 'data-page': pageId, 'aria-pressed': on ? 'true' : 'false' },
     });
-    const mark = row.createEl('span', { cls: 'icard-export-picker-mark' });
+    // 行铺满整宽（悬停底色横贯两侧），内容收进固定宽度、自动居中的列里：
+    // 列内一律左对齐，所以「封面」「第 1 页」「第 12 页」的勾选框与文字严格成列。
+    const col = row.createEl('span', { cls: 'icard-export-picker-col' });
+    const mark = col.createEl('span', { cls: 'icard-export-picker-mark' });
     // 关态只留一个空框（CSS 画），开态才注入对勾：图标缺失时靠 is-on 区分
     if (on) applyIcon(mark, 'check');
-    row.createEl('span', { cls: 'icard-export-picker-name', text: pageRowLabel(pageId) });
+    col.createEl('span', { cls: 'icard-export-picker-name', text: pageRowLabel(pageId) });
     row.addEventListener('click', () => options.onToggle(pageId));
   }
 }

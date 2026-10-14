@@ -683,6 +683,45 @@ describe('Card export bridge - fs adapter (B05/§6.1)', () => {
     expect(view.resolveCardExportAbsPath('')).toBeNull();
   });
 
+  it('resolveCardExportAbsPath：Windows 下分隔符归一为反斜杠（混合分隔符会让 showItemInFolder 静默失败）', () => {
+    const view = new AppleStyleView({ view: null }, { settings: { wechatAccounts: [] } });
+    // 生产代码经 active-window 的 require('process') 判定平台，这里按同样方式注入
+    const originalRequire = window.require;
+    window.require = (name) => (name === 'process' ? { platform: 'win32' } : originalRequire?.(name));
+    try {
+      // getBasePath 返回带盘符的原生 Windows 路径：拼接后不得出现 `C:\...\Vault/卡片导出`
+      view.app = { vault: { adapter: { getBasePath: () => 'C:\\Users\\me\\Vault\\' } } };
+      const viaBasePath = view.resolveCardExportAbsPath('卡片导出/我的笔记/batch');
+      expect(viaBasePath).toBe('C:\\Users\\me\\Vault\\卡片导出\\我的笔记\\batch');
+      expect(viaBasePath).not.toContain('/');
+
+      // 入参是反斜杠形态（本机 vault 相对路径在 Windows 上可能带 `\`）也要能归一
+      view.app = { vault: { adapter: { getBasePath: () => 'C:\\Users\\me\\Vault' } } };
+      expect(view.resolveCardExportAbsPath('卡片导出\\b')).toBe('C:\\Users\\me\\Vault\\卡片导出\\b');
+
+      // getFullPath 分支同样归一：不同 Obsidian 版本可能回传混合分隔符
+      view.app = { vault: { adapter: { getFullPath: (p) => `D:\\vault\\${p}` } } };
+      expect(view.resolveCardExportAbsPath('a/b')).toBe('D:\\vault\\a\\b');
+    } finally {
+      if (originalRequire === undefined) delete window.require;
+      else window.require = originalRequire;
+    }
+  });
+
+  it('resolveCardExportAbsPath：非 Windows 平台保持正斜杠（macOS / Linux 行为不变）', () => {
+    const view = new AppleStyleView({ view: null }, { settings: { wechatAccounts: [] } });
+    const originalRequire = window.require;
+    window.require = (name) => (name === 'process' ? { platform: 'darwin' } : originalRequire?.(name));
+    try {
+      // getBasePath 若回传反斜杠（异常实现），非 Windows 下也要归一回 `/`
+      view.app = { vault: { adapter: { getBasePath: () => '\\Users\\me\\Vault\\' } } };
+      expect(view.resolveCardExportAbsPath('a/b')).toBe('/Users/me/Vault/a/b');
+    } finally {
+      if (originalRequire === undefined) delete window.require;
+      else window.require = originalRequire;
+    }
+  });
+
   it('canRevealCardExportOutput：无 electron shell（移动端 / 测试环境）→ false', () => {
     const view = new AppleStyleView({ view: null }, { settings: { wechatAccounts: [] } });
     view.app = { vault: { adapter: fakeAdapter() } };
@@ -770,6 +809,14 @@ describe('AppleStyleView - Card Export Scope (B05 全部 / 自选页)', () => {
     const rows = [...overlay.querySelectorAll('.icard-export-picker-row')];
     expect(rows.map((r) => r.querySelector('.icard-export-picker-name').textContent)).toEqual(['第 1 页', '第 2 页']);
     expect(rows.every((r) => r.classList.contains('is-on'))).toBe(true);
+    // 行内内容收在固定宽度的列里（列内左对齐 + 列整体居中）：
+    // 勾选框与页名必须同在该列内，否则「封面」与「第 12 页」的方框对不上。
+    for (const row of rows) {
+      const col = row.querySelector(':scope > .icard-export-picker-col');
+      expect(col).not.toBeNull();
+      expect(col.querySelector('.icard-export-picker-mark')).not.toBeNull();
+      expect(col.querySelector('.icard-export-picker-name')).not.toBeNull();
+    }
     expect(overlay.querySelector('.icard-export-picker-count').textContent).toBe('已选 2 页');
     // 全选此刻无事可做 → 不渲染无效按钮
     expect(quickLabels(overlay)).toEqual(['清空']);
@@ -872,5 +919,46 @@ describe('AppleStyleView - Card Export Scope (B05 全部 / 自选页)', () => {
     const rendering = overlay.querySelectorAll('.icard-export-page-row.is-rendering');
     expect(rendering).toHaveLength(1);
     expect(rendering[0].querySelector('.icard-export-page-name')?.textContent).toBe('第 4 页');
+  });
+
+  it('有封面时逐页明细首行是「封面」而不是「第 1 页」（不与 page-1 重名）', () => {
+    const view = readyView(AppleStyleView);
+    view.cardPreviewOutcome = {
+      ...view.cardPreviewOutcome,
+      hasCover: true,
+      coverPage: document.createElement('div'),
+    };
+    const { session, snapshot } = withSession(view, 2);
+    session.beginExportJob({ snapshotId: snapshot.snapshotId, pageIds: ['cover', 'page-1', 'page-2'], scale: 2 });
+
+    view.openCardExportModal();
+    const overlay = view.cardExportModal.contentEl;
+    const names = [...overlay.querySelectorAll('.icard-export-page-name')].map((el) => el.textContent);
+    // 封面有独立 pageId/ordinal(0)：按批次内序号回落会得到两行「第 1 页」
+    expect(names).toEqual(['封面', '第 1 页', '第 2 页']);
+    expect(names.filter((n) => n === '第 1 页')).toHaveLength(1);
+  });
+
+  it('渲染封面时：状态文案说「正在渲染封面」，且封面行被标为进行中', () => {
+    const view = readyView(AppleStyleView);
+    view.cardPreviewOutcome = {
+      ...view.cardPreviewOutcome,
+      hasCover: true,
+      coverPage: document.createElement('div'),
+    };
+    const { session, snapshot } = withSession(view, 1);
+    session.beginExportJob({ snapshotId: snapshot.snapshotId, pageIds: ['cover', 'page-1'], scale: 2 });
+    view.openCardExportModal();
+    // 封面 ordinal=0：进度事件 current 为 0，不能被当成「还没开始」
+    view.handleCardExportProgress({ stage: 'page', total: 2, settled: 0, saved: 0, failed: 0, current: 0 });
+
+    const overlay = view.cardExportModal.contentEl;
+    expect(overlay.querySelector('.icard-export-status-desc')?.textContent).toContain('正在渲染封面');
+    const rendering = overlay.querySelectorAll('.icard-export-page-row.is-rendering');
+    expect(rendering).toHaveLength(1);
+    expect(rendering[0].querySelector('.icard-export-page-name')?.textContent).toBe('封面');
+    // 封面渲染中不得把 page-1 也标成进行中
+    expect(overlay.querySelector('.icard-export-page-row.is-rendering .icard-export-page-name')?.textContent)
+      .not.toBe('第 1 页');
   });
 });
