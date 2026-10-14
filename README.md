@@ -47,14 +47,14 @@ Obsidian 笔记 ──────┼─ 🎴 知识卡片模式 ──► 多�
 
 <table>
   <tr>
-    <td align="center" width="33%"><b>极简白 · Simple White</b><br/><img src="images/card-mode/theme_simple_white.png" /></td>
-    <td align="center" width="33%"><b>渐变蓝 · Gradient Blue</b><br/><img src="images/card-mode/theme_gradient_blue.png" /></td>
-    <td align="center" width="33%"><b>黑金 · Dark Gold</b><br/><img src="images/card-mode/theme_dark_gold.png" /></td>
+    <td align="center" width="33%"><b>极简白 · Simple White</b><br/><img src="images/card-mode/theme_simple_white.webp" /></td>
+    <td align="center" width="33%"><b>渐变蓝 · Gradient Blue</b><br/><img src="images/card-mode/theme_gradient_blue.webp" /></td>
+    <td align="center" width="33%"><b>黑金 · Dark Gold</b><br/><img src="images/card-mode/theme_dark_gold.webp" /></td>
   </tr>
   <tr>
-    <td align="center" width="33%"><b>森林绿 · Forest Green</b><br/><img src="images/card-mode/theme_forest_green.png" /></td>
-    <td align="center" width="33%"><b>霓虹紫 · Neon Purple</b><br/><img src="images/card-mode/theme_neon_purple.png" /></td>
-    <td align="center" width="33%"><b>玫瑰金 · Rose Gold</b><br/><img src="images/card-mode/theme_rose_gold.png" /></td>
+    <td align="center" width="33%"><b>森林绿 · Forest Green</b><br/><img src="images/card-mode/theme_forest_green.webp" /></td>
+    <td align="center" width="33%"><b>霓虹紫 · Neon Purple</b><br/><img src="images/card-mode/theme_neon_purple.webp" /></td>
+    <td align="center" width="33%"><b>玫瑰金 · Rose Gold</b><br/><img src="images/card-mode/theme_rose_gold.webp" /></td>
   </tr>
 </table>
 
@@ -74,9 +74,9 @@ Obsidian 笔记 ──────┼─ 🎴 知识卡片模式 ──► 多�
     <th align="center">有界逐页导出弹窗</th>
   </tr>
   <tr>
-    <td align="center"><img src="images/card-mode/card_settings_style.png" height="420" /></td>
-    <td align="center"><img src="images/card-mode/card_ai_cover.png" height="420" /></td>
-    <td align="center"><img src="images/card-mode/card_export_dialog.png" height="420" /></td>
+    <td align="center"><img src="images/card-mode/card_settings_style.webp" height="420" /></td>
+    <td align="center"><img src="images/card-mode/card_ai_cover.webp" height="420" /></td>
+    <td align="center"><img src="images/card-mode/card_export_dialog.webp" height="420" /></td>
   </tr>
 </table>
 

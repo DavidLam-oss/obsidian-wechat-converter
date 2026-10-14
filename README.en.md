@@ -47,14 +47,14 @@ Designed with rich contrast and typography for social sharing:
 
 <table>
   <tr>
-    <td align="center" width="33%"><b>Simple White</b><br/><img src="images/card-mode/theme_simple_white.png" /></td>
-    <td align="center" width="33%"><b>Gradient Blue</b><br/><img src="images/card-mode/theme_gradient_blue.png" /></td>
-    <td align="center" width="33%"><b>Dark Gold</b><br/><img src="images/card-mode/theme_dark_gold.png" /></td>
+    <td align="center" width="33%"><b>Simple White</b><br/><img src="images/card-mode/theme_simple_white.webp" /></td>
+    <td align="center" width="33%"><b>Gradient Blue</b><br/><img src="images/card-mode/theme_gradient_blue.webp" /></td>
+    <td align="center" width="33%"><b>Dark Gold</b><br/><img src="images/card-mode/theme_dark_gold.webp" /></td>
   </tr>
   <tr>
-    <td align="center" width="33%"><b>Forest Green</b><br/><img src="images/card-mode/theme_forest_green.png" /></td>
-    <td align="center" width="33%"><b>Neon Purple</b><br/><img src="images/card-mode/theme_neon_purple.png" /></td>
-    <td align="center" width="33%"><b>Rose Gold</b><br/><img src="images/card-mode/theme_rose_gold.png" /></td>
+    <td align="center" width="33%"><b>Forest Green</b><br/><img src="images/card-mode/theme_forest_green.webp" /></td>
+    <td align="center" width="33%"><b>Neon Purple</b><br/><img src="images/card-mode/theme_neon_purple.webp" /></td>
+    <td align="center" width="33%"><b>Rose Gold</b><br/><img src="images/card-mode/theme_rose_gold.webp" /></td>
   </tr>
 </table>
 
@@ -74,9 +74,9 @@ Designed with rich contrast and typography for social sharing:
     <th align="center">Batch Export Modal</th>
   </tr>
   <tr>
-    <td align="center"><img src="images/card-mode/card_settings_style.png" height="420" /></td>
-    <td align="center"><img src="images/card-mode/card_ai_cover.png" height="420" /></td>
-    <td align="center"><img src="images/card-mode/card_export_dialog.png" height="420" /></td>
+    <td align="center"><img src="images/card-mode/card_settings_style.webp" height="420" /></td>
+    <td align="center"><img src="images/card-mode/card_ai_cover.webp" height="420" /></td>
+    <td align="center"><img src="images/card-mode/card_export_dialog.webp" height="420" /></td>
   </tr>
 </table>
 
