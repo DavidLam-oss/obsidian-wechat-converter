@@ -489,6 +489,7 @@ export default [
       ".codex/",
       ".openprd/",
       ".workbuddy/",
+      ".alma-snapshots/",
     ],
   }
 ];

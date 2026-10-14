@@ -31,11 +31,13 @@ OBSIDIAN_COMMUNITY_REVIEW_FIXES.md
 *_review.txt
 *_review
 
+# Internal design and product specs
+DESIGN.md
+PRODUCT.md
+
 # Docs ignore with public white-list
 docs/*
 !docs/support.md
-!docs/basic/
-!docs/basic/**
 docs/plans/
 docs/plans/**
 docs/research/
@@ -58,3 +60,4 @@ lib/mathjax-plugin.js
 .workbuddy/
 .qoder/
 
+.alma-snapshots

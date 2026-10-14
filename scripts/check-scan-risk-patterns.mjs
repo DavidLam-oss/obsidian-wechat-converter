@@ -53,6 +53,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = process.cwd();
 const SCANNED_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.css']);
 const IGNORED_DIRS = new Set([
+  '.alma-snapshots',
   '.git',
   '.github',
   '__mocks__',

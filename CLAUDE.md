@@ -126,9 +126,16 @@ Image card generation follows a multi-stage pipeline with session-based state ma
 
 ### 2. WeChat Compatibility
 - **Zero-CSS Strategy**: WeChat strips `<style>` and class-based styling. All visual elements must be inline styles or self-contained SVGs.
+- **List Rendering Dual-Pipeline** (critical for v2.11.0+ list fixes):
+    - **Preview path**: `views/converter/core.js` → `deriveNativePreviewHtml()` → theme styles (`themes/apple-theme.js`) apply `padding-left` via `resolveListIndent(fontFamily)` shared constant
+    - **Copy/Publish path**: `views/converter/clipboard.js` → `enhanceHtmlForWechatPublishing` → `applyCustomCss({target:'wechat-copy'})` → `services/wechat-html-cleaner.js` `cleanHtmlForDraft(html)` → **ul/ol → hanging-indent pseudo-paragraphs** (WeChat editor rewrites `<ul>/<li>` and breaks alignment; fake paragraphs with `padding-left: Npx; text-indent: -14px/-18px/-20px` + `<span>• </span>` markers defeat this)
+    - Top-level `<ol>` preserved (native numbering); all `<ul>` and nested `<ol>` become pseudo-paragraphs (`if (!isUl && depth < 2) return;` at `wechat-html-cleaner.js:767`)
+    - `LIST_INDENT` in `themes/apple-theme-config.js` (sans/serif 20px, monospace 32px) is the **single source of truth** consumed by both theme (enum name) and cleaner (font-family string) via `resolveListIndent()` / `resolveDraftListIndent()`
+    - Test guard: `tests/wechat_html_cleaner_service.test.js` "预览（主题）与发布（清洗）对等宽列表使用同一缩进值"
 - **Math Formula Strategy**:
     - **Upload as Image**: WeChat API has strict content length limits. Complex SVGs (MathJax) must be converted to PNGs and uploaded to WeChat servers to bypass this limit.
     - **Smart Recoloring**: MathJax formulas should be recolored (e.g., `#333333`) for better readability, but non-formula SVGs (e.g., Mermaid) must retain their original colors.
+    - **MathJax 3→4 Compatibility**: Obsidian 1.14.4 upgraded to MathJax 4.1.3, which renamed `Loader.preLoad()` → `Loader.preLoaded()`. `scripts/generate-embedded-deps.mjs:118-139` sanitizes the bundled MathJax to call both names safely via runtime fallback, preventing plugin load failures on either version.
 - **Circuit Breaker**: Implement fail-fast logic for API rate limits (`45009`) and quota limits (`45001`) to prevent wasted retries and poor UX.
 
 ### 3. Architecture (Dynamic Loading)
@@ -159,10 +166,23 @@ Image card generation follows a multi-stage pipeline with session-based state ma
 - Example: `VALID_DEFAULT_CARD_COVER_MODES` in `services/card-cover-model.js` is used by both `normalizeAiSettings` and `deriveCoverFields`.
 - This prevents silent regressions where one site is updated but others are missed.
 
-### 8. Settings Persistence & Reference Stability
-- Use `syncInPlace()` (from `views/shared/view-state-utils.js`) to update settings objects without breaking UI component references.
-- It recursively merges new values into existing objects and preserves array element identities where possible (via `id` field or semantic keys like `name`/`key`/`title`).
-- Never replace the root `plugin.settings` object; always sync in place via `setPluginSettings(plugin, newSettings)`.
+### 8. Settings Persistence & Safety (ADR-5)
+- **Empty-Read Protection** (`input.js:452`): When `loadSettings()` reads an existing `data.json` but gets empty content, the plugin enters `SAFE_MODE_LOCKED` and refuses all writes (`saveSettings` returns `{success:false, reason:'SAFE_MODE_LOCKED'}`). This prevents accidental whitening of user settings/credentials due to transient file system errors or plugin conflicts (e.g., MathJax loader issues on Obsidian 1.14.x).
+- **Controlled `.bak` Snapshots** (`input.js:627`): Before any **structural change** (adding/removing top-level keys, array elements, nested objects), `saveSettings` writes `${dataPath}.bak` (Fail-Safe ADR-5). The "配置安全与受控快照" section in `views/settings/about-tab.js:113-125` shows a "从 .bak 快照恢复配置" button that calls `restoreFromBackup()` with safe-mode override.
+- **Obsidian Sync Conflict Handling**: `onExternalSettingsChange()` reloads settings when Obsidian's sync writes `data.json` externally. Never skip this hook — conflicting writes from other devices can otherwise corrupt in-memory state.
+- **Reference Stability**: Use `syncInPlace()` (from `views/shared/view-state-utils.js`) to update settings objects without breaking UI component references. It recursively merges new values into existing objects and preserves array element identities where possible (via `id` field or semantic keys like `name`/`key`/`title`). Never replace the root `plugin.settings` object; always sync in place via `setPluginSettings(plugin, newSettings)`.
+
+### 9. Lint Rules & Architecture Enforcement
+- **Custom ESLint Rules** (`.eslintrc.js` + `eslint-local-rules.js`):
+    - `no-this-alias`: Prevents detaching methods from their receiver (e.g., `const fn = obj.method; fn()` loses `this`). Enforces `.call(receiver, ...)` or arrow wrappers. Guards against bugs like #81 (`vault.getResourcePath` called without `vault` as receiver → `Cannot read properties of undefined (reading 'adapter')`).
+    - `no-console-disable`: Forbids inline `// eslint-disable-next-line no-console` — console statements must be removed, not silenced.
+    - `no-unbalanced-eslint-disable`: Ensures every `eslint-disable` has a matching `eslint-enable` within 20 lines. Prevents runaway suppression.
+    - `no-css-has`: Bans `:has()` pseudo-class (unsupported in Obsidian's Chromium version at plugin inception).
+- **Frozen File Size Guard** (`scripts/check-file-size-baseline.mjs`):
+    - Enforces 800-line soft limit on files in `frozen_files_size_baseline.json` (e.g., `services/wechat-html-cleaner.js`, `converter.js`).
+    - `npm run check:build-artifacts` fails if any frozen file exceeds its baseline.
+    - `npm run check:build-artifacts -- --update` can **only LOWER** bounds, add newly-qualifying files, or prune missing files — it **cannot raise** bounds. This prevents accidental bloat and enforces refactoring discipline.
+    - Rationale: Legacy monoliths like `converter.js` are deliberately kept frozen at their current size to signal "do not pile more logic here; extract to services instead."
 
 ## Release
 
