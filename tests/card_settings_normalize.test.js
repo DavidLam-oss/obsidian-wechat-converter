@@ -215,3 +215,29 @@ describe('卡片全局默认：会话创建注入（C02④）', () => {
     );
   });
 });
+
+describe('两端对齐默认值（justifyText）', () => {
+  // 背景：主题自 2.5.5 起对 p / section 硬编码 text-align: justify，正文一直是
+  // 两端对齐的。该开关把它参数化后，默认值必须保持「开启」，否则会让老用户
+  // 升级后发现正文排版变了（实测差异明显）。
+  it('默认开启', () => {
+    expect(createDefaultSettings().justifyText).toBe(true);
+  });
+
+  it('缺键的旧数据 → 开启（不能把老用户悄悄改成左对齐）', () => {
+    const { settings } = normalizeLoadedSettings({ clientId: 'c1' });
+    expect(settings.justifyText).toBe(true);
+  });
+
+  it('显式 false 才关闭，关闭意图被保留', () => {
+    const { settings } = normalizeLoadedSettings({ clientId: 'c1', justifyText: false });
+    expect(settings.justifyText).toBe(false);
+  });
+
+  it('非布尔的脏数据 → 回落默认开启（只有显式 false 算关闭）', () => {
+    for (const bad of [null, 0, 'false', {}, []]) {
+      const { settings } = normalizeLoadedSettings({ clientId: 'c1', justifyText: bad });
+      expect(settings.justifyText).toBe(true);
+    }
+  });
+});

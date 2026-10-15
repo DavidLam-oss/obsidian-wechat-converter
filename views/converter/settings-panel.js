@@ -477,7 +477,9 @@ createSettingsPanel(container) {
     const row = section.createEl('div', { cls: 'apple-settings-inline-row' });
     const toggle = row.createEl('label', { cls: 'apple-toggle' });
     const checkbox = /** @type {ObsidianInputLike} */ (toggle.createEl('input', { type: 'checkbox', cls: 'apple-toggle-input' }));
-    checkbox.checked = this.plugin.settings.justifyText === true;
+    // 缺键（旧数据）→ 视为开启，与默认值 / 归一化口径一致，避免开关显示与
+    // 实际渲染不一致（主题侧同样是「只有显式 false 才关闭」）
+    checkbox.checked = this.plugin.settings.justifyText !== false;
     toggle.createEl('span', { cls: 'apple-toggle-slider' });
 
     section.createEl('span', {

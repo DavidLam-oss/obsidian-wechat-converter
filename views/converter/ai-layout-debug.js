@@ -48,6 +48,7 @@ import {
   getObsidianRequestUrl,
   getObsidianRequest,
 } from '../apple-style-view-shared.js';
+import { writeClipboardText } from '../shared/clipboard.js';
 
 /** @param {unknown} errorText @returns {boolean} */
 function isAiLayoutTimeoutMessage(errorText) {
@@ -204,11 +205,7 @@ buildAiLayoutPromptContext({ state, context, providerLabel, modelLabel, isStale 
 
 async copyPlainTextSnapshot(text) {
   if (!text) return false;
-  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-    await navigator.clipboard.writeText(text);
-    return true;
-  }
-  return false;
+  return writeClipboardText(text);
 }
 ,
 

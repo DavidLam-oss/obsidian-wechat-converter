@@ -131,10 +131,11 @@ export function createDefaultSettings() {
     lineHeight: null,
     paragraphGap: null,
     letterSpacing: null,
-    // 两端对齐（text-align: justify）。默认关闭：正文字号下 justify 会在汉字间
-    // 拉出不自然的空隙，只在用户明确想要「两端对齐」排版时才开。
+    // 两端对齐（text-align: justify）。默认开启：这是 2.5.5 起延续至今的既有观感
+    // （主题里 p / section 一直硬编码 justify），关掉会让正文变成普通左对齐，
+    // 实测观感差异明显。仅当用户明确关闭时才输出 text-align: left。
     // 独立于主题——切主题不重置（它是排版意图，不是主题风格）。
-    justifyText: false,
+    justifyText: true,
     coloredHeader: false,
     cleanupAfterSync: false,
     cleanupUseSystemTrash: true,
@@ -259,8 +260,10 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
   settings.lineHeight = normalizeSpacingValue(settings.lineHeight, 1.4, 2.2);
   settings.paragraphGap = normalizeSpacingValue(settings.paragraphGap, 8, 40);
   settings.letterSpacing = normalizeSpacingValue(settings.letterSpacing, 0, 2);
-  // 两端对齐：非布尔一律按关闭处理（缺键的旧数据也走这里 → false，不改变既有观感）
-  settings.justifyText = settings.justifyText === true;
+  // 两端对齐：只有显式 false 才关闭；缺键的旧数据一律按默认「开启」处理。
+  // 注意不能写成 `=== true`：那会让缺键的旧数据落到 false，而 2.11.2 之前
+  // 主题是硬编码 justify 的，等于凭空改变了老用户的正文观感。
+  settings.justifyText = settings.justifyText !== false;
 
   // Unsplash Access Key：去除多余空白字符
   const rawUnsplashKey = settings.unsplashAccessKey;

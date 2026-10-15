@@ -83,6 +83,45 @@ Before asking users to scan or before publishing:
 - `obsidian-wechat-converter.zip` contains only `main.js`, `manifest.json`, and `styles.css`.
 - Remaining scan warnings are documented as intentional residuals if they involve accepted compatibility tradeoffs such as CommonJS, local bridge `http`, WebSocket SHA-1, or clipboard fallback behavior.
 
+### Known accepted residual: `Clipboard Access` (Recommendation)
+
+The community scan reports: *"Clipboard Access: Reads or writes the system clipboard.
+May expose content copied from outside Obsidian."*
+
+This is **accepted rather than fixed**, for these reasons:
+
+- The finding fires on **any** use of the Clipboard API ("reads **or** writes"), and
+  writing rendered HTML to the clipboard is the plugin's core "copy for WeChat" feature.
+  Removing it would remove the product.
+- Obsidian exposes **no** official clipboard API (`obsidian.d.ts` has no clipboard
+  member), so `navigator.clipboard` is the only supported transport.
+- The actual privacy risk implied by the wording is clipboard **reads**, and reads are
+  never used. Audited 2026-10-15: zero `clipboard.read*` call sites.
+- Clipboard writes are funnelled through **two** auditable entry points (since
+  2026-10-15; previously five views each carried their own `navigator.clipboard` check):
+
+  | Entry point | API | Used for |
+  | --- | --- | --- |
+  | `views/shared/clipboard.js` | `clipboard.writeText` | all plain-text copies: official-account ID, AI debug snapshot, export path, manual page-break marker, Feishu document URL |
+  | `views/converter/clipboard.js` | `clipboard.write` + `ClipboardItem` | rendered rich HTML (core feature) |
+
+  Keeping the rich-HTML path separate is deliberate: it needs `text/html` + `text/plain`
+  blobs, which is a different API surface from `writeText`.
+
+Three guards keep it that way:
+
+- the `no-clipboard-read` rule in `scripts/check-scan-risk-patterns.mjs` (all sources);
+- `CLIPBOARD_READ_PATTERN` in `scripts/release-validate.mjs` (built `main.js`);
+- `tests/clipboard_shared.test.js`, which asserts across `views/`, `services/` and
+  `input.js` that (a) no source reads the clipboard and (b) no file outside the two
+  entry points above touches `navigator.clipboard`.
+
+Deliberately **not** done: switching to another copy mechanism only to hide the API from
+the scanner. That would not change the privacy facts, only the report.
+
+> Note: when auditing the bundle, `readText` occurrences in `main.js` are Vault adapter
+> file reads (`adapter.readText(path)`), not clipboard reads.
+
 ## CI/CD Gatekeeper
 
 GitHub Actions should run the same guard used locally:

@@ -15,15 +15,15 @@
     "styles/ai-layout.css": 835,
     "styles/multi-platform.css": 815,
     "styles/wechat-settings.css": 797,
-    "views/converter/ai-layout-debug.js": 926,
+    "views/converter/ai-layout-debug.js": 923,
     "views/converter/ai-layout-panel.js": 1041,
     "views/converter/core.js": 1164,
     "views/settings/multi-platform-tab.js": 934
   },
   "generatedBytes": {
-    "main.js": 4302133,
+    "main.js": 4301729,
     "services/ai-layout-runtime/generated-skills.js": 47423,
-    "services/generated-embedded-deps.js": 2686422,
+    "services/generated-embedded-deps.js": 2687603,
     "styles.css": 241335
   }
 }

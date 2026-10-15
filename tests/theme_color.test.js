@@ -146,7 +146,7 @@ describe('AppleTheme Color Logic', () => {
       const sectionStyle = theme.getStyle('section');
 
       // 本用例保护的是 CJK 断行（不在标点前断行），与对齐无关。
-      // 对齐自 2026-10-14 起由 justifyText 开关控制（默认关闭 = 左对齐），
+      // 对齐由 justifyText 开关控制（默认开启 = 两端对齐），
       // 单独由「两端对齐开关」用例覆盖，这里只断言断行相关属性。
       expect(paragraphStyle).toContain('word-break: normal');
       expect(paragraphStyle).toContain('overflow-wrap: break-word');
@@ -463,13 +463,20 @@ describe('AppleTheme Color Logic', () => {
   });
 
   describe('两端对齐开关（justifyText）', () => {
-    it('默认关闭：正文左对齐，不带 justify 残留', () => {
+    it('默认开启：正文两端对齐（延续 2.5.5 起主题硬编码 justify 的既有观感）', () => {
       const theme = new AppleTheme({ theme: 'serif' });
+      expect(theme.justifyText).toBe(true);
+      expect(theme.getStyle('p')).toContain('text-align: justify');
+      // section 也要跟随，否则段落被外层 left 拉回普通左对齐
+      expect(theme.getStyle('section')).toContain('text-align: justify');
+    });
+
+    it('显式关闭才左对齐，且不带 justify 残留', () => {
+      const theme = new AppleTheme({ theme: 'serif', justifyText: false });
       expect(theme.justifyText).toBe(false);
       const pStyle = theme.getStyle('p');
       expect(pStyle).toContain('text-align: left');
       expect(pStyle).not.toContain('justify');
-      // section 也要跟随，否则段落被外层 justify 拉回两端对齐
       expect(theme.getStyle('section')).not.toContain('justify');
     });
 
@@ -478,6 +485,28 @@ describe('AppleTheme Color Logic', () => {
       expect(theme.getStyle('p')).toContain('text-align: justify');
       expect(theme.getStyle('p')).toContain('text-align-last: left');
       expect(theme.getStyle('section')).toContain('text-align: justify');
+    });
+
+    it('容器级对齐不得带 text-align-last: left（否则居中标题被拽到左边）', () => {
+      // 回归背景：text-align-last 可继承，而标题 / 图注 / 图片容器自带 text-align: center。
+      // 曾在 section、blockquote 上写 text-align-last: left，导致这些居中元素的唯一一行
+      // 被按 left 排版（实测居中标题左右留白 21/21 → 0/42）。
+      // 规则：容器只允许中性 auto；left 仅可用于 p 这类文本叶子。
+      for (const justifyText of [true, false]) {
+        const theme = new AppleTheme({ theme: 'serif', justifyText });
+        for (const tag of ['section', 'blockquote']) {
+          expect(theme.getStyle(tag)).not.toContain('text-align-last: left');
+        }
+        // 段落是叶子，保留 left 是安全的（且与历史输出一致）
+        if (justifyText) expect(theme.getStyle('p')).toContain('text-align-last: left');
+      }
+    });
+
+    it('两端对齐与标题居中互不干扰：标题自身仍是居中', () => {
+      // 标题样式来自 apple-theme-headings.js，自带 text-align: center；
+      // 容器的对齐只会影响未自行声明 text-align 的后代。
+      const h1 = new AppleTheme({ theme: 'serif', justifyText: true }).getStyle('h1');
+      expect(h1).toContain('text-align: center');
     });
 
     it('衬线主题也能拿到两端对齐（这正是该开关存在的理由）', () => {

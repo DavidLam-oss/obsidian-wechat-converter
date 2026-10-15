@@ -66,6 +66,7 @@ import {
   listCardExportPageIds,
 } from './card-export-bridge.js';
 import { computeCardPixelSize } from '../../services/card-render-capture.js';
+import { writeClipboardText } from '../shared/clipboard.js';
 
 /** 导出任务状态 → 中文标签 */
 const EXPORT_STATE_LABELS = {
@@ -120,20 +121,6 @@ function applyIcon(el, name) {
   }
   el?.setAttribute?.('aria-hidden', 'true');
   return el;
-}
-
-/** 复制文本到剪贴板（不支持时静默失败，界面不谎报成功） */
-async function writeClipboard(text) {
-  try {
-    const clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : null;
-    if (clipboard && typeof clipboard.writeText === 'function') {
-      await clipboard.writeText(text);
-      return true;
-    }
-  } catch {
-    // 权限或运行环境不支持：交给调用方保持原样
-  }
-  return false;
 }
 
 /**
@@ -658,7 +645,7 @@ renderCardExportResultLinks(body) {
         return;
       }
       // 打开失败：退回复制路径，并把真实原因说清楚（不假装成功）
-      void writeClipboard((outcome && outcome.absPath) || copyText).then((ok) => {
+      void writeClipboardText((outcome && outcome.absPath) || copyText).then((ok) => {
         flash(ok ? '无法打开文件夹，已复制路径' : '无法打开文件夹');
       });
     });
@@ -670,7 +657,7 @@ renderCardExportResultLinks(body) {
     });
     const copyIcon = applyIcon(copyBtn.createEl('span', { cls: 'icard-export-result-copy-icon' }), 'copy');
     copyBtn.addEventListener('click', () => {
-      void writeClipboard(copyText).then((ok) => {
+      void writeClipboardText(copyText).then((ok) => {
         if (!ok) return; // 复制不可用时不谎报成功
         copyBtn.toggleClass('is-copied', true);
         copyBtn.setAttribute('title', '已复制');

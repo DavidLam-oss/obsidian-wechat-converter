@@ -77,6 +77,7 @@ import {
   renderCardCoverValues,
   renderCardCoverGroupEcho,
 } from './card-cover-settings.js';
+import { writeClipboardText } from '../shared/clipboard.js';
 
 /**
  * 手动分页标记：三个 **ASCII 等号**（U+003D）。
@@ -84,20 +85,6 @@ import {
  * 是半角等号，不是全角「＝」。复制给用户的也必须是同一串，否则粘进去不生效。
  */
 const CARD_MANUAL_BREAK_MARKER = '===';
-
-/** 复制文本到剪贴板（不支持时静默失败，界面不谎报成功；与导出弹窗同一口径） */
-async function writeClipboard(text) {
-  try {
-    const clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : null;
-    if (clipboard && typeof clipboard.writeText === 'function') {
-      await clipboard.writeText(text);
-      return true;
-    }
-  } catch {
-    // 权限或运行环境不支持：交给调用方保持原样
-  }
-  return false;
-}
 
 /**
  * 卡片设置视图状态（d.ts 合同以 unknown 持有，这里给运行时访问形状）。
@@ -313,7 +300,7 @@ buildCardSettingsPanel() {
     const copyHint = marker.createEl('span', { cls: 'icard-settings-inline-copy-hint', text: '（点击复制）' });
 
     marker.addEventListener('click', async () => {
-      const ok = await writeClipboard(CARD_MANUAL_BREAK_MARKER);
+      const ok = await writeClipboardText(CARD_MANUAL_BREAK_MARKER);
       if (!ok) return; // 复制不可用时不谎报成功（与导出弹窗同一口径）
       marker.toggleClass('is-copied', true);
       copyHint.setText('（已复制）');

@@ -158,16 +158,37 @@ class AppleTheme {
     this.paragraphGap = options.paragraphGap;
     /** @type {number | null | undefined} */
     this.letterSpacing = options.letterSpacing;
-    // 两端对齐：默认关闭（正文字号下 justify 会拉开汉字间距）；独立于主题
+    // 两端对齐：默认开启（延续 2.5.5 起主题硬编码 justify 的既有观感）；
+    // 只有显式传 false 才关闭。独立于主题，切主题不重置。
     /** @type {boolean} */
-    this.justifyText = Boolean(options.justifyText);
+    this.justifyText = options.justifyText !== false;
     // 标题染色设置
     /** @type {boolean} */
     this.coloredHeader = Boolean(options.coloredHeader);
   }
 
-  /** 正文对齐：开启两端对齐时末行仍左对齐；关闭时复位 text-align-last @returns {string} */
+  /**
+   * 正文对齐（**容器级**：section / blockquote）：text-align-last 一律用中性的 auto。
+   *
+   * ⚠️ 这里绝不能写成 `text-align-last: left`。`text-align-last` 是**可继承**属性，
+   * 而标题（见 apple-theme-headings.js）、图注、图片容器都自带 `text-align: center`；
+   * 它们本身不设 text-align-last，于是会继承容器上的 left，导致那块居中内容唯一的一行
+   * 被按 left 排版、整体被拽到左边（实测：居中标题左右留白由 21/21 变成 0/42，
+   * 居中图注由 100/100 变成 0/200）。
+   * auto 是初始值，不会覆盖子元素自身的 text-align；而 text-align: justify 下的末行
+   * 本来就会按 auto 靠左，因此两种状态都无需、也不该显式写 left。
+   * @returns {string}
+   */
   getBodyTextAlign() {
+    return this.justifyText ? 'text-align: justify; text-align-last: auto' : 'text-align: left; text-align-last: auto';
+  }
+
+  /**
+   * 正文对齐（**叶子级**：p）：段落是文本叶子，text-align-last 只作用于它自己的
+   * 末行，不会外溢到别处，因此可以安全地保留 `left`（与历史输出保持一致）。
+   * @returns {string}
+   */
+  getBodyParagraphAlign() {
     return this.justifyText ? 'text-align: justify; text-align-last: left' : 'text-align: left; text-align-last: auto';
   }
 
@@ -324,7 +345,7 @@ class AppleTheme {
 
       case 'p':
         return this.joinStyleStrings(
-          `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 0 0 ${effectiveParagraphGap}px 0; ${this.getBodyTextAlign()};${effectiveLetterSpacing ? ` letter-spacing: ${effectiveLetterSpacing}px;` : ' letter-spacing: 0;'} word-break: normal; overflow-wrap: break-word; line-break: strict`,
+          `font-family: ${font}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${textColor}; margin: 0 0 ${effectiveParagraphGap}px 0; ${this.getBodyParagraphAlign()};${effectiveLetterSpacing ? ` letter-spacing: ${effectiveLetterSpacing}px;` : ' letter-spacing: 0;'} word-break: normal; overflow-wrap: break-word; line-break: strict`,
           config.paragraphTextIndent ? `text-indent: ${config.paragraphTextIndent}` : ''
         );
 
@@ -603,8 +624,8 @@ class AppleTheme {
     if (options.lineHeight !== undefined) this.lineHeight = options.lineHeight;
     if (options.paragraphGap !== undefined) this.paragraphGap = options.paragraphGap;
     if (options.letterSpacing !== undefined) this.letterSpacing = options.letterSpacing;
-    // 两端对齐：独立于主题，切换主题时不会被重置
-    if (options.justifyText !== undefined) this.justifyText = Boolean(options.justifyText);
+    // 两端对齐：独立于主题，切换主题时不会被重置（只有显式传入才改）
+    if (options.justifyText !== undefined) this.justifyText = options.justifyText !== false;
     if (options.coloredHeader !== undefined) this.coloredHeader = Boolean(options.coloredHeader);
   }
 

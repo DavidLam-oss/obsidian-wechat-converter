@@ -243,6 +243,7 @@ export default [
       "views/connection-status-bar.js",
       "views/apple-style-view.js",
       "views/apple-style-view-shared.js",
+      "views/shared/clipboard.js",
       "views/shared/sticker-image-list.js",
       "views/shared/view-constants.js",
       "views/shared/view-dom-helpers.js",

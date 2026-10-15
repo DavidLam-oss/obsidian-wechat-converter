@@ -35,6 +35,7 @@
 import { getActiveWindowValue } from '../../services/dom-utils.js';
 import { syncNoteToFeishu } from '../../services/feishu-sync.js';
 import { collectMermaidFences } from '../../services/feishu-mermaid-renderer.js';
+import { writeClipboardText } from '../shared/clipboard.js';
 import {
   findFeishuHistoryByPath,
   getFeishuMermaidPreferenceByPath,
@@ -495,11 +496,10 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
 
       const copyBtn = resultActions.createEl('button', { text: '复制链接' });
       copyBtn.onclick = async () => {
-        try {
-          await navigator.clipboard.writeText(result.url);
+        const ok = await writeClipboardText(result.url);
+        if (ok) {
           showFeishuNotice(Notice, '✅ 链接已复制到剪贴板');
-        } catch (copyError) {
-          console.warn('[飞书同步] 复制链接失败:', copyError);
+        } else {
           showFeishuNotice(Notice, '❌ 复制链接失败，请手动打开后复制');
         }
       };

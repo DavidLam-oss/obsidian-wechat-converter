@@ -33,6 +33,7 @@ import {
   attachIcon,
 } from '../apple-style-view-shared.js';
 import { SPONSORS } from '../../services/sponsors-data.js';
+import { writeClipboardText } from '../shared/clipboard.js';
 import {
   WECHAT_SPONSOR_QR_DATA_URL,
   ALIPAY_SPONSOR_QR_DATA_URL,
@@ -168,17 +169,12 @@ export function renderAboutSettingsTab(tabInstance, containerEl) {
     cls: 'apple-settings-community-copy-btn',
   });
   copyBtn.onclick = async () => {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText('linauwawa');
-      }
-      copyBtn.textContent = '已复制';
-      window.setTimeout(() => {
-        copyBtn.textContent = '复制微信号';
-      }, 2000);
-    } catch {
-      // ignore clipboard error
-    }
+    const ok = await writeClipboardText('linauwawa');
+    if (!ok) return; // 剪贴板不可用时不谎报成功
+    copyBtn.textContent = '已复制';
+    window.setTimeout(() => {
+      copyBtn.textContent = '复制微信号';
+    }, 2000);
   };
 
   const communityHintEl = infoWrap.createDiv({ cls: 'apple-settings-community-hint' });
