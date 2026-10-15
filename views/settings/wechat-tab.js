@@ -487,29 +487,42 @@ const wechatSettingsMethods = {
 
     const warningList = warningCard.createDiv({ cls: 'owc-custom-css-warning-list' });
 
-    // 条目 1：覆盖规则
+    // 条目 1：覆盖规则与优先级
     const item1 = warningList.createDiv({ cls: 'owc-custom-css-warning-item' });
     item1.createEl('strong', { text: '覆盖默认样式：' });
     item1.createSpan({ text: '主题样式已直接内联注入各元素。若要覆盖排版（如对齐方式、字号、正文字色等），声明后请添加 ' });
     item1.createEl('code', { text: '!important' });
     item1.createSpan({ text: '（例如 ' });
     item1.createEl('code', { text: 'text-align: left !important;' });
-    item1.createSpan({ text: '）。' });
+    item1.createSpan({ text: '）。但切勿大面积滥用，以免破坏微信移动端深色模式的自动反色调校。' });
 
-    // 条目 2：微信平台样式清洗
+    // 条目 2：移动端排版避坑（依据微信官方编辑器规范）
     const item2 = warningList.createDiv({ cls: 'owc-custom-css-warning-item' });
-    item2.createEl('strong', { text: '平台兼容过滤：' });
-    item2.createSpan({ text: '插件会自动将 CSS 选择器内联到元素，但微信后台仍可能清洗部分伪类、动画等复杂样式。' });
+    item2.createEl('strong', { text: '移动端排版避坑：' });
+    item2.createSpan({ text: '容器请优先使用百分比或流式宽度（如 ' });
+    item2.createEl('code', { text: 'width: 100%' });
+    item2.createSpan({ text: '），切勿写死固定像素宽（如 ' });
+    item2.createEl('code', { text: '700px' });
+    item2.createSpan({ text: '）导致小屏手机横向溢出截断；文本对齐推荐使用标准的 ' });
+    item2.createEl('code', { text: 'left / center / right' });
+    item2.createSpan({ text: '，避免使用在 iOS 上易现兼容偏差的 ' });
+    item2.createEl('code', { text: 'start / end' });
+    item2.createSpan({ text: '。' });
 
-    // 条目 3：与 AI 编排互斥
+    // 条目 3：微信平台样式清洗与深色模式
     const item3 = warningList.createDiv({ cls: 'owc-custom-css-warning-item' });
-    item3.createEl('strong', { text: 'AI 编排独立：' });
-    item3.createSpan({ text: '当文章已使用「AI 视觉编排」结果时，自定义 CSS 不生效（两者为互不干扰的独立排版系统）。' });
+    item3.createEl('strong', { text: '平台兼容过滤：' });
+    item3.createSpan({ text: '插件会自动将 CSS 选择器内联注入元素，但微信仍会过滤外部网络字体与部分动画；文字背景尽量避免使用复杂渐变色（深色模式下会被微信强制混合压平）。' });
 
-    // 条目 4：建议先测后发
+    // 条目 4：与 AI 编排互斥
     const item4 = warningList.createDiv({ cls: 'owc-custom-css-warning-item' });
-    item4.createEl('strong', { text: '测试建议：' });
-    item4.createSpan({ text: '编写新规则后，建议先用「复制到公众号」或「同步草稿箱」在微信端预览确认排版效果。' });
+    item4.createEl('strong', { text: 'AI 编排独立：' });
+    item4.createSpan({ text: '当文章已使用「AI 视觉编排」结果时，自定义 CSS 不生效（两者为互不干扰的独立排版系统）。' });
+
+    // 条目 5：建议先测后发
+    const item5 = warningList.createDiv({ cls: 'owc-custom-css-warning-item' });
+    item5.createEl('strong', { text: '测试建议：' });
+    item5.createSpan({ text: '编写新规则后，建议先用「复制到公众号」或「同步草稿箱」在微信端预览确认排版效果。' });
 
     // 使用指南外链
     const customCssGuideSetting = new Setting(containerEl)
