@@ -1,5 +1,6 @@
 {
-  "note": "Auto-maintained by scripts/check-file-size-baseline.mjs. Values are frozen upper bounds for first-party source files at or above the soft limit. This check never lets a file grow past its bound; `--update` can only lower bounds, add newly-qualifying files, or prune deleted files.",
+  "note": "Auto-maintained by scripts/check-file-size-baseline.mjs. Values are frozen upper bounds for first-party source files at or above the soft limit. Without a matching entry in `waivers`, this check never lets a file grow past its bound and `--update` can only lower bounds, add newly-qualifying files, or prune deleted files.",
+  "waiverNote": "`waivers` is the only sanctioned escape hatch for raising a bound. Each entry needs `max` (the new ceiling, must be >= the intended value) and `reason` (>= 10 chars). Adding one is an explicit, reviewable decision: the diff is the audit trail. Entries whose reason is missing or too short are ignored, and the bound stays frozen.",
   "softLimit": 800,
   "files": {
     "converter.js": 1554,
@@ -21,9 +22,31 @@
     "views/settings/multi-platform-tab.js": 934
   },
   "generatedBytes": {
-    "main.js": 4302939,
-    "services/ai-layout-runtime/generated-skills.js": 47423,
-    "services/generated-embedded-deps.js": 2687603,
-    "styles.css": 241335
+    "main.js": 4740000,
+    "services/ai-layout-runtime/generated-skills.js": 52200,
+    "services/generated-embedded-deps.js": 2960000,
+    "styles.css": 266000
+  },
+  "waivers": {
+    "main.js": {
+      "max": 4740000,
+      "reason": "生成物随功能增长。天花板按当前值预留约 10% 余量，超出后需重新评估并更新本条；此前每次改动都靠手改本文件绕过，本豁免替代那种无声放宽。",
+      "date": "2026-10-16"
+    },
+    "services/ai-layout-runtime/generated-skills.js": {
+      "max": 52200,
+      "reason": "AI 排版内置技能快照随技能库增长。预留约 10% 余量，避免每新增一个技能都触发上限告警。",
+      "date": "2026-10-16"
+    },
+    "services/generated-embedded-deps.js": {
+      "max": 2960000,
+      "reason": "内联运行时依赖快照随源码增长。预留约 10% 余量，避免每次功能改动都触发上限告警。",
+      "date": "2026-10-16"
+    },
+    "styles.css": {
+      "max": 266000,
+      "reason": "聚合样式表随界面改版增长。预留约 10% 余量，避免每次样式微调都触发上限告警。",
+      "date": "2026-10-16"
+    }
   }
 }
