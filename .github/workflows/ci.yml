@@ -16,6 +16,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v6
+      with:
+        # 需要完整历史：体量护栏的「上限未被无声调高」检查要读 base 提交里那份基线文件。
+        fetch-depth: 0
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v6
@@ -30,6 +33,26 @@ jobs:
       run: |
         mkdir -p node_modules/obsidian
         cp __mocks__/obsidian.js node_modules/obsidian/index.js
+
+    # 与本地 pre-commit 钩子互补的第二道闸机：
+    # pre-commit 只拦「提交之前」的无声放宽；若有人用 --no-verify 跳过，
+    # 或直接在 GitHub 网页端改文件提交，就只有这里能发现。
+    - name: Guard against silently raised size bounds
+      run: |
+        BASE_SHA="${{ github.event.pull_request.base.sha }}"
+        if [ -z "$BASE_SHA" ]; then BASE_SHA="${{ github.event.before }}"; fi
+        case "$BASE_SHA" in
+          ""|0000000000000000000000000000000000000000)
+            echo "No comparable base commit for this event — skipping the raised-bound gate."
+            exit 0
+            ;;
+        esac
+        if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+          echo "Base commit $BASE_SHA is not available locally — skipping the raised-bound gate."
+          exit 0
+        fi
+        echo "Comparing frozen size bounds against $BASE_SHA"
+        node scripts/check-file-size-baseline.mjs --against "$BASE_SHA"
 
     - name: Fast Obsidian source and mobile compatibility guard
       if: github.event_name == 'push' && github.ref_name != 'main' && github.ref_name != 'master'

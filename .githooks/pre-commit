@@ -1,0 +1,15 @@
+#!/bin/sh
+# 体量护栏的「自动闸机」（版本化钩子，由 core.hooksPath 指向本目录）。
+#
+# 为什么必须卡在提交前：
+#   check-file-size-baseline.mjs 的「上限被无声调高」检查，是拿「工作区基线」和某个已提交 ref 做对比的。
+#   一旦把抬高的基线提交进去，那个差异就永久消失了 —— 之后无论怎么跑检查都看不出来。
+#   pre-commit 是提交发生前唯一的稳定拦截点。
+#
+# 逃生阀：仅在明确知情时使用 git commit --no-verify。
+#   （如果是为了合法放宽上限，正确做法是在 scripts/file-size-baseline.json 的 waivers 里声明，不是跳过钩子。）
+
+set -e
+
+echo "[pre-commit] checking frozen size bounds (body size guard + no silently raised bound) ..."
+node scripts/check-file-size-baseline.mjs
