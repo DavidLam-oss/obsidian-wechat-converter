@@ -129,13 +129,13 @@ async function ensureOrGenerateDeps() {
       targetPattern,
       '(typeof MathJax.loader.preLoaded === "function" ? MathJax.loader.preLoaded : (typeof MathJax.loader.preLoad === "function" ? MathJax.loader.preLoad : function(){})).call(MathJax.loader, '
     );
-
-    if (/MathJax\.loader\.preLoad\(/.test(sanitized)) {
-      throw new Error('[Build Error] 产物中仍存在未净化的 MathJax.loader.preLoad 裸调用！');
-    }
     console.log(`[generate-embedded-deps] Successfully applied safe loader shim (${matchCount} hits) to lib/mathjax-plugin.js`);
   } else {
     console.log('[generate-embedded-deps] No MathJax.loader.preLoad found in bundle, skipping shim.');
+  }
+
+  if (/MathJax\.loader\.preLoad\(/.test(sanitized)) {
+    throw new Error('[Build Error] 产物中仍存在未净化的 MathJax.loader.preLoad 裸调用！');
   }
 
   fs.writeFileSync(mathDest, sanitized, 'utf8');

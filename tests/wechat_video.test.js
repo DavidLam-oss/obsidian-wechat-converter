@@ -256,5 +256,50 @@ describe('WeChat Video Service (services/wechat-video.js)', () => {
         ])
       );
     });
+
+    it('should download online MP4 via injected requestUrl and embed mpvideo tag', async () => {
+      const html = `
+        <div>
+          <video src="https://example.com/tutorials/intro.mp4"></video>
+        </div>
+      `;
+
+      const fakeBinary = new Uint8Array([0, 0, 0, 32, 102, 116, 121, 112]).buffer;
+      const mockRequestUrl = vi.fn().mockImplementation(async (opts) => {
+        if (opts.method === 'HEAD') {
+          return {
+            status: 200,
+            headers: {
+              'content-type': 'video/mp4',
+              'content-length': String(fakeBinary.byteLength),
+            },
+          };
+        }
+        return {
+          status: 200,
+          headers: { 'content-type': 'video/mp4' },
+          arrayBuffer: fakeBinary,
+        };
+      });
+
+      const mockApi = {
+        uploadVideo: vi.fn().mockResolvedValue({ media_id: 'online_vid_999' }),
+      };
+
+      const resultHtml = await processAllVideos(html, mockApi, null, {
+        accountId: 'wx_acc_online',
+        requestUrl: mockRequestUrl,
+      });
+
+      expect(resultHtml).toContain('<mpvideo data-pluginname="insertvideo" data-mediaid="online_vid_999" data-title="intro"></mpvideo>');
+      expect(resultHtml).not.toContain('<video');
+      expect(mockRequestUrl).toHaveBeenCalled();
+      expect(mockApi.uploadVideo).toHaveBeenCalledTimes(1);
+      expect(mockApi.uploadVideo).toHaveBeenCalledWith(
+        expect.any(Blob),
+        expect.objectContaining({ title: 'intro' })
+      );
+    });
   });
 });
+

@@ -102,7 +102,7 @@ showSyncFailureActions(message, options = {}) {
   let hintText = '可以重试同步，或先检查账号配置。';
   if (isIpWhitelist) {
     if (isOfficialProxy) {
-      hintText = '请检查您的 API 代理地址和 Token 配置是否正确。若服务已到期，请联系作者续费。';
+      hintText = '官方中转出口 IP 变动或未在白名单中，请稍后重试或联系作者。';
     } else {
       const ipMatch = String(message).match(/invalid ip\s+([0-9.]+)/i);
       const ipText = ipMatch ? `当前 IP（${ipMatch[1]}）` : '当前网络 IP';

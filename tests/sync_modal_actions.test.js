@@ -268,12 +268,12 @@ describe('AppleStyleView - sync action modal flows', () => {
     expect(modal.contentEl.textContent).toContain('检测到当前网络 IP未在微信白名单中');
   });
 
-  it('showSyncFailureActions should show renewal hint when IP is not in whitelist and user configured official proxy', () => {
+  it('showSyncFailureActions should show proxy egress IP notice when IP is not in whitelist and user configured official proxy', () => {
     view.showSyncFailureActions('获取 Token 失败: invalid ip 111.192.170.183, not in whitelist (40164)', {
       proxyUrl: 'https://wechat-api.xiaoweibox.top/proxy?token=wp_user_bbb123f65bc81771',
     });
 
     const modal = getLastModal();
-    expect(modal.contentEl.textContent).toContain('请检查您的 API 代理地址和 Token 配置是否正确。若服务已到期，请联系作者续费。');
+    expect(modal.contentEl.textContent).toContain('官方中转出口 IP 变动或未在白名单中，请稍后重试或联系作者。');
   });
 });

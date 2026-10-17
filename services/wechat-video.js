@@ -224,6 +224,7 @@ export async function fetchOnlineVideo(url, customRequestUrl) {
  * @param {string} [params.introduction]
  * @param {Function} params.requestWithRetry
  * @param {Function} [params.validateProxyUrl]
+ * @param {Function} [params.requestUrl] 可选请求执行器
  * @returns {Promise<WechatVideoUploadResult>}
  */
 export async function uploadVideoMultipartCore({
@@ -353,6 +354,7 @@ export async function uploadVideoMultipartCore({
  * @param {Map<string, VideoCacheEntry>} [options.videoUploadCache]
  * @param {(src: string) => Promise<Blob>} [options.srcToBlob]
  * @param {(failures: FailedVideoInfo[]) => void} [options.onVideoFailure]
+ * @param {Function} [options.requestUrl] 可选请求执行器
  * @returns {Promise<string>}
  */
 export const processAllVideos = async (
@@ -411,6 +413,7 @@ export const processAllVideos = async (
   const cacheNamespace = options.accountId || '';
   const videoCache = options.videoUploadCache || null;
   const srcToBlobFn = options.srcToBlob;
+  const requestUrlFn = options.requestUrl;
 
   for (const src of uniqueSources) {
     const videoTitle = extractVideoTitleFromSrc(src);
@@ -420,7 +423,7 @@ export const processAllVideos = async (
     try {
       let blob;
       if (/^https?:\/\//i.test(src)) {
-        blob = await fetchOnlineVideo(src);
+        blob = await fetchOnlineVideo(src, requestUrlFn);
       } else if (typeof srcToBlobFn === 'function') {
         blob = await srcToBlobFn(src);
       } else {
