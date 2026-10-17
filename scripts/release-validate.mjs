@@ -33,6 +33,7 @@ const ROOT = process.cwd();
 const MAIN_JS_MAX_BYTES = 5_000_000;
 const DIRECT_FS_IMPORT_PATTERN = /require\(\s*["'](?:node:)?fs["']\s*\)/;
 const CLIPBOARD_READ_PATTERN = /\.clipboard\??\.(?:read|readText)\s*\(/;
+const BUNDLE_TOOLTIP_PATTERN = /\bsetTooltip\s*\(|data-tooltip\b/;
 
 function fail(message) {
   console.error(`[ERROR] ${message}`);
@@ -93,6 +94,20 @@ function main() {
   );
   ok(`versions.json mapping OK: ${manifest.version} -> ${manifest.minAppVersion}`);
 
+  const pkg = readJson(path.join(ROOT, "package.json"));
+  assert(pkg.version === manifest.version, `package.json version (${pkg.version}) does not match manifest.json (${manifest.version})`);
+  ok(`package.json version OK: ${pkg.version}`);
+
+  const lockPath = path.join(ROOT, "package-lock.json");
+  if (fs.existsSync(lockPath)) {
+    const lock = readJson(lockPath);
+    assert(lock.version === manifest.version, `package-lock.json root version (${lock.version}) does not match manifest.json (${manifest.version})`);
+    if (lock.packages && lock.packages[""]) {
+      assert(lock.packages[""].version === manifest.version, `package-lock.json packages[""].version (${lock.packages[""].version}) does not match manifest.json (${manifest.version})`);
+    }
+    ok(`package-lock.json version OK: ${lock.version}`);
+  }
+
   const mainJsPath = path.join(ROOT, "main.js");
   assert(fs.existsSync(mainJsPath), `Missing production bundle: ${mainJsPath}. Run npm run build first.`);
   const mainJsSize = fs.statSync(mainJsPath).size;
@@ -113,6 +128,11 @@ function main() {
     "main.js reads the system clipboard. Clipboard access must be limited to user-initiated writes."
   );
   ok("main.js contains no system clipboard reads");
+  assert(
+    !BUNDLE_TOOLTIP_PATTERN.test(mainJsSource),
+    "main.js contains setTooltip() or data-tooltip attributes. Obsidian creates hover bubble popups from these. Use visible text labels or aria-labelledby instead."
+  );
+  ok("main.js contains no setTooltip/data-tooltip markers");
 
   const zipPath = path.join(ROOT, resolveZipPath());
   assert(fs.existsSync(zipPath), `Missing release zip: ${zipPath}. Run npm run release:pack first.`);
