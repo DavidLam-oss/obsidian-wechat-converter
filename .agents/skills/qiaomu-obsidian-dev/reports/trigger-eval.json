@@ -1,0 +1,324 @@
+{
+  "ok": true,
+  "threshold": 0.67,
+  "description_concepts": [
+    "action",
+    "domain",
+    "plugin"
+  ],
+  "missing_description_concepts": [],
+  "summary": {
+    "total": 22,
+    "passed": 22,
+    "false_positive": 0,
+    "false_negative": 0,
+    "pass_rate": 1.0
+  },
+  "failures": [],
+  "results": {
+    "should_trigger": [
+      {
+        "prompt": "开发 Obsidian 插件",
+        "family": "default",
+        "expected_trigger": true,
+        "predicted_trigger": true,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "修复 Obsidian 阅读器字体",
+        "family": "default",
+        "expected_trigger": true,
+        "predicted_trigger": true,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "审查 Obsidian plugin release",
+        "family": "default",
+        "expected_trigger": true,
+        "predicted_trigger": true,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "Obsidian 插件设置重复 tab",
+        "family": "default",
+        "expected_trigger": true,
+        "predicted_trigger": true,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "Obsidian 阅读器回跳修复",
+        "family": "default",
+        "expected_trigger": true,
+        "predicted_trigger": true,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "Obsidian 插件官方审核发布",
+        "family": "default",
+        "expected_trigger": true,
+        "predicted_trigger": true,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "开发 Obsidian 日历任务视图插件",
+        "family": "default",
+        "expected_trigger": true,
+        "predicted_trigger": true,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "修复 Obsidian CM6 编辑器扩展中文输入错位",
+        "family": "default",
+        "expected_trigger": true,
+        "predicted_trigger": true,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "审查 Obsidian CSV 导入导出插件的数据安全",
+        "family": "default",
+        "expected_trigger": true,
+        "predicted_trigger": true,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "优化 Obsidian 全库索引插件的启动性能",
+        "family": "default",
+        "expected_trigger": true,
+        "predicted_trigger": true,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "调试 Obsidian 与外部任务服务的同步插件",
+        "family": "default",
+        "expected_trigger": true,
+        "predicted_trigger": true,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "批量修复 Obsidian 插件的问题并一次发版",
+        "family": "default",
+        "expected_trigger": true,
+        "predicted_trigger": true,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "Obsidian 插件发版总被预扫描卡住，怎么更快上架",
+        "family": "default",
+        "expected_trigger": true,
+        "predicted_trigger": true,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": null
+      }
+    ],
+    "should_not_trigger": [
+      {
+        "prompt": "帮我写普通 Markdown",
+        "family": "default",
+        "expected_trigger": false,
+        "predicted_trigger": false,
+        "passed": true,
+        "score": 0.0,
+        "matched_concepts": [],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "推荐插件给 Obsidian",
+        "family": "default",
+        "expected_trigger": false,
+        "predicted_trigger": false,
+        "passed": true,
+        "score": 0.667,
+        "matched_concepts": [
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": "推荐插件"
+      },
+      {
+        "prompt": "Obsidian 只写笔记，不要开发插件",
+        "family": "default",
+        "expected_trigger": false,
+        "predicted_trigger": false,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": "只写笔记"
+      },
+      {
+        "prompt": "创建 skill 教人 Obsidian 插件开发",
+        "family": "default",
+        "expected_trigger": false,
+        "predicted_trigger": false,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": "创建 skill"
+      }
+    ],
+    "near_neighbor": [
+      {
+        "prompt": "开发 VSCode 插件",
+        "family": "default",
+        "expected_trigger": false,
+        "predicted_trigger": false,
+        "passed": true,
+        "score": 0.667,
+        "matched_concepts": [
+          "action",
+          "plugin"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "修复网页阅读器字体",
+        "family": "default",
+        "expected_trigger": false,
+        "predicted_trigger": false,
+        "passed": true,
+        "score": 0.667,
+        "matched_concepts": [
+          "action",
+          "plugin"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "翻译文档 Obsidian plugin release",
+        "family": "default",
+        "expected_trigger": false,
+        "predicted_trigger": false,
+        "passed": true,
+        "score": 1.0,
+        "matched_concepts": [
+          "action",
+          "domain",
+          "plugin"
+        ],
+        "negative_pattern": "翻译文档"
+      },
+      {
+        "prompt": "Obsidian 笔记整理",
+        "family": "default",
+        "expected_trigger": false,
+        "predicted_trigger": false,
+        "passed": true,
+        "score": 0.333,
+        "matched_concepts": [
+          "domain"
+        ],
+        "negative_pattern": null
+      },
+      {
+        "prompt": "VSCode 扩展怎么更快发版",
+        "family": "default",
+        "expected_trigger": false,
+        "predicted_trigger": false,
+        "passed": true,
+        "score": 0.667,
+        "matched_concepts": [
+          "action",
+          "plugin"
+        ],
+        "negative_pattern": null
+      }
+    ]
+  }
+}

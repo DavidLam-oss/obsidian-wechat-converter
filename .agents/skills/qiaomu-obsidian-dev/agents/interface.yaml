@@ -1,0 +1,11 @@
+interface:
+  display_name: "乔木 Obsidian 开发"
+  short_description: "通用 Obsidian 插件架构、原生交互与真实发布验证"
+  default_prompt: "Use $qiaomu-obsidian-dev to classify, develop or review this Obsidian plugin. Identify its state ownership, side effects and highest-risk user path, follow only the relevant references, verify in a QA vault, and report evidence and release stages separately. Publish only when authorized."
+compatibility:
+  adapter_targets: [openai, claude, generic, agent-skills-compatible]
+  trust:
+    remote_inline_execution: forbid
+  permissions:
+    file_write: "authorized repository and QA vault only"
+    network: "official documentation and authorized publication"

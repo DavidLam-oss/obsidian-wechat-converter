@@ -1,0 +1,71 @@
+{
+  "recommended_threshold": 0.67,
+  "description_required_concepts": [
+    "domain",
+    "plugin",
+    "action"
+  ],
+  "positive_concepts": {
+    "domain": [
+      "Obsidian"
+    ],
+    "plugin": [
+      "plugin",
+      "插件",
+      "阅读器",
+      "扩展"
+    ],
+    "action": [
+      "develop",
+      "debug",
+      "review",
+      "release",
+      "开发",
+      "修复",
+      "审查",
+      "发布",
+      "优化",
+      "调试",
+      "设置",
+      "字体",
+      "审核",
+      "发版",
+      "上架"
+    ]
+  },
+  "negative_patterns": [
+    "只写笔记",
+    "不要开发插件",
+    "翻译文档",
+    "推荐插件",
+    "创建 skill"
+  ],
+  "should_trigger": [
+    "开发 Obsidian 插件",
+    "修复 Obsidian 阅读器字体",
+    "审查 Obsidian plugin release",
+    "Obsidian 插件设置重复 tab",
+    "Obsidian 阅读器回跳修复",
+    "Obsidian 插件官方审核发布",
+    "开发 Obsidian 日历任务视图插件",
+    "修复 Obsidian CM6 编辑器扩展中文输入错位",
+    "审查 Obsidian CSV 导入导出插件的数据安全",
+    "优化 Obsidian 全库索引插件的启动性能",
+    "调试 Obsidian 与外部任务服务的同步插件",
+    "批量修复 Obsidian 插件的问题并一次发版",
+    "Obsidian 插件发版总被预扫描卡住，怎么更快上架"
+  ],
+  "should_not_trigger": [
+    "帮我写普通 Markdown",
+    "推荐插件给 Obsidian",
+    "Obsidian 只写笔记，不要开发插件",
+    "创建 skill 教人 Obsidian 插件开发"
+  ],
+  "near_neighbor": [
+    "开发 VSCode 插件",
+    "修复网页阅读器字体",
+    "翻译文档 Obsidian plugin release",
+    "Obsidian 笔记整理",
+    "VSCode 扩展怎么更快发版"
+  ]
+}

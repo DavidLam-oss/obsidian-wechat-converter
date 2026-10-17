@@ -485,8 +485,9 @@ export default [
       "services/generated-embedded-deps.js",
       "dist/",
       "server/",
-      // Tool-generated working dirs (OpenPRD / Codex): not project source,
+      // Tool-generated working dirs and agent skills: not project source,
       // skip linting so their generated code does not pollute CI output.
+      ".agents/",
       ".codex/",
       ".openprd/",
       ".workbuddy/",

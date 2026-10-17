@@ -1,0 +1,132 @@
+{
+  "schema_version": "2.0.0-qiaomu-lite",
+  "generated_at": "2026-09-27",
+  "package": {
+    "name": "qiaomu-obsidian-dev",
+    "version": "1.10.0",
+    "owner": "向阳乔木",
+    "maturity_tier": "governed",
+    "lifecycle_stage": null,
+    "upstream_inspiration": null,
+    "upstream_sync": {}
+  },
+  "intent": {
+    "description": "Develop, debug, review, test and release any Obsidian plugin with current native APIs and evidence-based engineering. Use for commands, editor extensions, custom views, search/indexing, import/export, sync/network integrations, media/reading, AI tools, settings, mobile compatibility and official releases. Also use for lifecycle, data, performance, race-condition and release failures. Exclude ordinary vault note writing, generic Markdown formatting, plugin recommendations, non-Obsidian app development, and skill authoring itself.\n",
+    "job_to_be_done": "Develop, debug, review, test and release any Obsidian plugin with current native APIs and evidence-based engineering. Use for commands, editor extensions, custom views, search/indexing, import/export, sync/network integrations, media/reading, AI tools, settings, mobile compatibility and official releases. Also use for lifecycle, data, performance, race-condition and release failures. Exclude ordinary vault note writing, generic Markdown formatting, plugin recommendations, non-Obsidian app development, and skill authoring itself.\n",
+    "target_users": [
+      "Qiaomu operator"
+    ],
+    "inputs": [],
+    "outputs": [],
+    "exclusions": [],
+    "qiaomu_defaults": {}
+  },
+  "triggers": {
+    "should_trigger": [
+      "开发 Obsidian 插件",
+      "修复 Obsidian 阅读器字体",
+      "审查 Obsidian plugin release",
+      "Obsidian 插件设置重复 tab",
+      "Obsidian 阅读器回跳修复",
+      "Obsidian 插件官方审核发布",
+      "开发 Obsidian 日历任务视图插件",
+      "修复 Obsidian CM6 编辑器扩展中文输入错位",
+      "审查 Obsidian CSV 导入导出插件的数据安全",
+      "优化 Obsidian 全库索引插件的启动性能",
+      "调试 Obsidian 与外部任务服务的同步插件",
+      "批量修复 Obsidian 插件的问题并一次发版",
+      "Obsidian 插件发版总被预扫描卡住，怎么更快上架"
+    ],
+    "should_not_trigger": [
+      "帮我写普通 Markdown",
+      "推荐插件给 Obsidian",
+      "Obsidian 只写笔记，不要开发插件",
+      "创建 skill 教人 Obsidian 插件开发"
+    ],
+    "near_neighbor": [
+      "开发 VSCode 插件",
+      "修复网页阅读器字体",
+      "翻译文档 Obsidian plugin release",
+      "Obsidian 笔记整理",
+      "VSCode 扩展怎么更快发版"
+    ]
+  },
+  "workflow": {
+    "router_rules": [],
+    "compact_workflow": [],
+    "gate_ladder": [],
+    "output_contract": []
+  },
+  "resources": {
+    "references": [
+      "references/ai-integrations.md",
+      "references/capture-navigation.md",
+      "references/data-reliability.md",
+      "references/editor-lifecycle.md",
+      "references/engineering.md",
+      "references/fonts-media.md",
+      "references/lessons.md",
+      "references/performance-large-files.md",
+      "references/platform-patterns.md",
+      "references/plugin-architecture.md",
+      "references/prior-art-evaluation.md",
+      "references/product-ux.md",
+      "references/qiaomu-family.md",
+      "references/reader-workflows.md",
+      "references/release.md",
+      "references/settings-gui.md",
+      "references/speed-playbook.md",
+      "references/submission-failures.md",
+      "references/testing-troubleshooting.md"
+    ],
+    "scripts": [
+      "scripts/audit_release.py",
+      "scripts/check_public_release.py",
+      "scripts/host_eval.py",
+      "scripts/validate_skill.py"
+    ],
+    "evals": [
+      "evals/output-cases.md",
+      "evals/trigger_cases.json"
+    ],
+    "reports": [
+      "reports/creation-handoff.md",
+      "reports/prior-art-candidates.json",
+      "reports/prior-art-research.md",
+      "reports/research-2026-09-08.md",
+      "reports/research-v1.2.0.md",
+      "reports/retrospective-2026-09-08-to-15.md",
+      "reports/retrospective-2026-09-16-to-27.md",
+      "reports/skill-ir.json",
+      "reports/trigger-eval.json",
+      "reports/validation-2026-09-27.md",
+      "reports/validation.md"
+    ]
+  },
+  "portability": {
+    "canonical_format": null,
+    "adapter_targets": [
+      "openai",
+      "claude",
+      "generic",
+      "agent-skills-compatible"
+    ],
+    "activation": {},
+    "execution": {},
+    "trust": {
+      "remote_inline_execution": "forbid"
+    },
+    "permissions": {
+      "file_write": "authorized repository and QA vault only",
+      "network": "official documentation and authorized publication"
+    },
+    "degradation": {}
+  },
+  "gates": {},
+  "evidence_boundary": {
+    "generated_reports_are_evidence": true,
+    "planned_work_is_evidence": false,
+    "missing_external_or_human_evidence_label": "missing evidence",
+    "public_claim_policy": "claim only what local validation, install proof, human review, or provider-backed evidence actually supports"
+  }
+}

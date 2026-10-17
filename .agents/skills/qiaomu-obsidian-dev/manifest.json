@@ -1,0 +1,18 @@
+{
+  "name": "qiaomu-obsidian-dev",
+  "version": "1.10.0",
+  "owner": "向阳乔木",
+  "updated_at": "2026-09-27",
+  "status": "active",
+  "maturity_tier": "governed",
+  "context_budget_tier": "production",
+  "license": "GPL-3.0-only",
+  "release_gates": [
+    "package",
+    "trigger",
+    "unit_tests",
+    "sources",
+    "clean_install",
+    "pr_release"
+  ]
+}
