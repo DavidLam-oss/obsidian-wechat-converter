@@ -31,6 +31,7 @@ import {
   STICKER_MAX_IMAGES,
   STICKER_MAX_TITLE_LENGTH,
 } from './sticker-constants.js';
+import { processAllVideos as defaultProcessAllVideos } from './wechat-video.js';
 
 /**
  * @typedef {{ mediaId: string, fingerprint?: string, uploadedAt?: number }} CoverCacheEntry
@@ -57,7 +58,9 @@ import {
  *   createApi: (appId: string, appSecret: string, proxyUrl?: string) => WechatDraftApiLike,
  *   srcToBlob: (src: string) => Promise<Blob>,
  *   coverUploadCache?: Map<string, string | CoverCacheEntry> | null,
+ *   videoUploadCache?: Map<string, unknown> | null,
  *   processAllImages: (html: string, api: WechatDraftApiLike, progressCallback: (current: number, total: number) => void, options: { accountId: string, onImageFailure: (failures: ImageUploadFailure[]) => void }) => Promise<string>,
+ *   processAllVideos?: typeof defaultProcessAllVideos,
  *   processMathFormulas: (html: string, api: WechatDraftApiLike, progressCallback: (current: number, total: number) => void) => Promise<string>,
  *   prepareHtmlForDraft?: (html: string) => Promise<string>,
  *   cleanHtmlForDraft: (html: string) => string,
@@ -77,6 +80,7 @@ import {
  *   draftMediaId?: string,
  *   draftIndex?: number,
  *   onStatus?: (stage: string) => void,
+ *   onVideoProgress?: (current: number, total: number) => void,
  *   onImageProgress?: (current: number, total: number) => void,
  *   onMathProgress?: (current: number, total: number) => void,
  * }} SyncToDraftOptions
@@ -347,7 +351,9 @@ export function createWechatSyncService(deps) {
     createApi,
     srcToBlob,
     coverUploadCache = null,
+    videoUploadCache = null,
     processAllImages,
+    processAllVideos = defaultProcessAllVideos,
     processMathFormulas,
     prepareHtmlForDraft = async (html) => html,
     cleanHtmlForDraft,
@@ -373,11 +379,14 @@ export function createWechatSyncService(deps) {
       draftIndex = 0,
       onStatus,
       onImageProgress,
+      onVideoProgress,
       onMathProgress,
     }) {
       const api = createApi(account.appId, account.appSecret, proxyUrl);
       /** @type {ImageUploadFailure[]} */
       const imageUploadFailures = [];
+      /** @type {import('./wechat-video.js').FailedVideoInfo[]} */
+      const videoUploadFailures = [];
 
       let thumbMediaId = typeof sessionThumbMediaId === 'string'
         ? sessionThumbMediaId.trim()
@@ -415,6 +424,20 @@ export function createWechatSyncService(deps) {
       }
 
       let draftHtml = await prepareHtmlForDraft(currentHtml);
+
+      if (typeof processAllVideos === 'function' && (draftHtml.includes('<video') || draftHtml.includes('.mp4'))) {
+        if (onStatus) onStatus('videos');
+        draftHtml = await processAllVideos(draftHtml, /** @type {any} */ (api), (current, total) => {
+          if (onVideoProgress) onVideoProgress(current, total);
+        }, {
+          accountId: account.id || '',
+          videoUploadCache: /** @type {Map<string, import('./wechat-video.js').VideoCacheEntry> | undefined} */ (videoUploadCache || undefined),
+          srcToBlob,
+          onVideoFailure: (/** @type {import('./wechat-video.js').FailedVideoInfo[]} */ failures) => {
+            if (Array.isArray(failures)) videoUploadFailures.push(...failures);
+          },
+        });
+      }
 
       if (onStatus) onStatus('images');
       let processedHtml = await processAllImages(draftHtml, api, (current, total) => {
@@ -481,6 +504,7 @@ export function createWechatSyncService(deps) {
         draftIndex,
         cleanupResult,
         imageUploadFailures,
+        videoUploadFailures,
         placeholderImageSources: cleanedResult.imageSources,
         draftWarnings: draftInspection.warnings,
       };

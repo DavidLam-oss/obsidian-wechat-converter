@@ -29,6 +29,7 @@ import { getObsidianRequestUrl } from './obsidian-compat.js';
 import { sleep } from './concurrency.js';
 import { STICKER_MAX_IMAGES } from './sticker-constants.js';
 import { normalizeWechatUploadImageBlob } from './wechat-image-transcoder.js';
+import { uploadVideoMultipartCore } from './wechat-video.js';
 
 /** @param {unknown} error @returns {ReadableErrorLike} */
 function toReadableError(error) {
@@ -421,6 +422,50 @@ export class WechatAPI {
     return this.actionWithTokenRetry(async (token) => {
       const url = `https://api.weixin.qq.com/cgi-bin/media/uploadimg?access_token=${token}`;
       return await this.uploadMultipart(url, blob, 'media');
+    });
+  }
+
+  /**
+   * 上传视频素材到微信公众号素材库 (永久素材)
+   * 接口: POST https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=ACCESS_TOKEN&type=video
+   * 限制: 最大 10MB，仅限 MP4 格式
+   * @param {Blob} blob
+   * @param {{ title?: string, introduction?: string, fileName?: string }} [options]
+   * @returns {Promise<{ media_id: string, url?: string }>}
+   */
+  async uploadVideo(blob, options = {}) {
+    if (!blob) {
+      throw new Error('未提供有效的视频文件');
+    }
+
+    const MAX_VIDEO_SIZE = 10 * 1024 * 1024;
+    if (blob.size > MAX_VIDEO_SIZE) {
+      const sizeMb = (blob.size / (1024 * 1024)).toFixed(1);
+      throw new Error(`视频超过 10MB（大小约为 ${sizeMb}MB，微信接口上限为 10MB），请压缩后重试`);
+    }
+
+    const fileName = String(options.fileName || 'video.mp4');
+    const ext = (fileName.split(/[?#]/)[0].split('.').pop() || '').toLowerCase();
+    const mimeType = String(blob.type || '').toLowerCase();
+
+    if (ext && ext !== 'mp4') {
+      throw new Error(`微信仅支持 MP4 格式视频（检测到格式为 .${ext}）`);
+    }
+    if (mimeType && !mimeType.includes('mp4') && mimeType !== 'application/octet-stream') {
+      throw new Error(`微信仅支持 MP4 格式视频（检测到类型为 ${mimeType}）`);
+    }
+
+    return this.actionWithTokenRetry(async (token) => {
+      const url = `https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=${token}&type=video`;
+      return await uploadVideoMultipartCore({
+        url,
+        blob,
+        proxyUrl: this.proxyUrl,
+        clientId: this.clientId,
+        requestWithRetry: (/** @type {() => Promise<any>} */ fn) => this.requestWithRetry(fn),
+        validateProxyUrl: (proxyUrlToCheck) => this.validateProxyUrl(proxyUrlToCheck),
+        ...options,
+      });
     });
   }
 

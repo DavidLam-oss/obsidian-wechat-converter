@@ -64,8 +64,8 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
   }
 });
 
-// 解析 JSON 体 (限制为 15MB 兼容大图上传)
-app.use(express.json({ limit: '15mb' }));
+// 解析 JSON 体 (限制为 25MB 兼容视频与大图上传)
+app.use(express.json({ limit: '25mb' }));
 
 // CORS 跨域请求头处理与 OPTIONS 快速响应
 app.use((req, res, next) => {
@@ -164,7 +164,7 @@ async function checkAccess(req, res, next) {
 
 // 核心转发路由
 app.post('/proxy', checkAccess, async (req, res) => {
-  const { url, method = 'GET', data, fileData, fileName, mimeType, fieldName = 'media' } = req.body;
+  const { url, method = 'GET', data, fileData, fileName, mimeType, fieldName = 'media', extraFields } = req.body;
 
   if (!url || !url.startsWith('https://api.weixin.qq.com/')) {
     return res.status(400).json({ error: '非法 URL。只允许访问微信官方 API (api.weixin.qq.com)' });
@@ -175,18 +175,27 @@ app.post('/proxy', checkAccess, async (req, res) => {
     let response;
 
     if (normalizedMethod === 'UPLOAD') {
-      // 1. 处理图片上传请求 (Base64 -> Buffer -> FormData)
+      // 1. 处理文件上传请求 (Base64 -> Buffer -> FormData)
       if (!fileData) {
-        return res.status(400).json({ error: '缺少图片二进制数据 fileData' });
+        return res.status(400).json({ error: '缺少二进制数据 fileData' });
       }
 
       const buffer = Buffer.from(fileData, 'base64');
       const formData = new FormData();
       // 使用 form-data 附加 Buffer
       formData.append(fieldName, buffer, {
-        filename: fileName || 'image.jpg',
-        contentType: mimeType || 'image/jpeg'
+        filename: fileName || 'file.bin',
+        contentType: mimeType || 'application/octet-stream'
       });
+
+      // 附加额外表单字段（如视频素材所需的 description JSON）
+      if (extraFields && typeof extraFields === 'object') {
+        for (const [key, value] of Object.entries(extraFields)) {
+          if (value !== undefined && value !== null) {
+            formData.append(key, typeof value === 'string' ? value : JSON.stringify(value));
+          }
+        }
+      }
 
       response = await fetch(url, {
         method: 'POST',
