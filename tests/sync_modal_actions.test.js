@@ -238,14 +238,34 @@ describe('AppleStyleView - sync action modal flows', () => {
   });
 
   it('showSyncFailureActions should show WeChat IP whitelist guidance when IP is not in whitelist and not official proxy', () => {
+    let openedUrl = null;
+    view.openExternalUrl = (url) => {
+      openedUrl = url;
+    };
+
     view.showSyncFailureActions('获取 Token 失败: invalid ip 111.192.170.183 ipv6 ::ffff:111.192.170.183, not in whitelist rid: 69c (40164)', {
       proxyUrl: '',
     });
 
     const modal = getLastModal();
-    expect(modal.contentEl.textContent).toContain('检测到当前 IP 未在微信白名单中');
-    expect(modal.contentEl.textContent).toContain('mp.weixin.qq.com');
+    expect(modal.contentEl.textContent).toContain('检测到当前 IP（111.192.170.183）未在微信白名单中');
+    expect(modal.contentEl.textContent).toContain('developers.weixin.qq.com/platform');
     expect(modal.contentEl.textContent).not.toContain('请联系作者续费');
+    const guideBtn = findButtonByText(modal.contentEl, '查看配置指南');
+    expect(guideBtn).not.toBeNull();
+
+    guideBtn.onclick();
+    expect(openedUrl).toContain('xiaoweibox.top/obsidian-publisher/guide');
+    expect(openedUrl).toContain('#wechat-api');
+  });
+
+  it('showSyncFailureActions should fallback to generic IP text when IP cannot be extracted', () => {
+    view.showSyncFailureActions('获取 Token 失败: 40164 not in whitelist', {
+      proxyUrl: '',
+    });
+
+    const modal = getLastModal();
+    expect(modal.contentEl.textContent).toContain('检测到当前网络 IP未在微信白名单中');
   });
 
   it('showSyncFailureActions should show renewal hint when IP is not in whitelist and user configured official proxy', () => {
