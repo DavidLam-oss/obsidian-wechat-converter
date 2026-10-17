@@ -104,6 +104,7 @@ export {
 export {
   resolveSyncAccount,
   toSyncFriendlyMessage,
+  isOfficialProxyUrl,
 } from '../services/sync-context.js';
 export {
   createEmptyDraftCache,

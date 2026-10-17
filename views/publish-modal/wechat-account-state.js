@@ -31,6 +31,7 @@ import {
   getObsidianModalClass,
   createObsidianModal,
   isMobileClient,
+  isOfficialProxyUrl,
 } from '../apple-style-view-shared.js';
 
 /** @type {WechatAccountStateMethodsContract & ThisType<AppleStyleViewContract>} */
@@ -89,12 +90,25 @@ showSyncFailureActions(message, options = {}) {
   const body = modal.contentEl.createDiv({ cls: 'wechat-sync-failure-state' });
   body.createEl('p', { cls: 'wechat-sync-failure-message', text: message });
   
-  const isProxyAuth = !!options.isProxyAuth;
-  const hasDraftAssociation = !isProxyAuth && !!options.draftAssociation?.mediaId && !!options.draftAssociation?.sourcePath;
-  
+  const proxyUrl = options.proxyUrl !== undefined ? options.proxyUrl : (this.plugin?.settings?.proxyUrl || '');
+  const isOfficialProxy = isOfficialProxyUrl(proxyUrl);
+  const isIpWhitelist = options.isIpWhitelist !== undefined
+    ? !!options.isIpWhitelist
+    : /40164|not in whitelist|invalid ip/i.test(message);
+  const isProxyAuth = !isIpWhitelist && !!options.isProxyAuth;
+  const hasDraftAssociation = !isProxyAuth && !isIpWhitelist && !!options.draftAssociation?.mediaId && !!options.draftAssociation?.sourcePath;
+
   let hintText = '可以重试同步，或先检查账号配置。';
-  if (isProxyAuth) {
-    hintText = '请检查您的 API 代理地址和 Token 配置是否正确。若服务已到期，请联系作者续费。';
+  if (isIpWhitelist) {
+    if (isOfficialProxy) {
+      hintText = '请检查您的 API 代理地址和 Token 配置是否正确。若服务已到期，请联系作者续费。';
+    } else {
+      hintText = '检测到当前 IP 未在微信白名单中。请登录微信公众平台（mp.weixin.qq.com），进入「开发」-「基本配置」-「IP白名单」，将报错提示中的 IP 添加至白名单；或在设置中配置官方 API 代理中转服务。';
+    }
+  } else if (isProxyAuth) {
+    hintText = isOfficialProxy
+      ? '请检查您的 API 代理地址和 Token 配置是否正确。若服务已到期，请联系作者续费。'
+      : '请检查您的 API 代理地址和 Token 配置是否正确。';
   } else if (hasDraftAssociation) {
     hintText = '可以重试同步；如果微信后台草稿已被删除或无法更新，也可以取消关联后新建草稿。';
   }

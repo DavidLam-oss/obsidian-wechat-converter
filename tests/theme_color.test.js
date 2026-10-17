@@ -247,11 +247,11 @@ describe('AppleTheme Color Logic', () => {
       expect(grid.getStyle('p')).toContain('color: #344054;');
       expect(grid.getStyle('p')).not.toContain('light-dark(');
       expect(grid.getStyle('li p')).not.toContain('color:');
-      expect(grid.getStyle('blockquote')).toContain('border-left: 4px solid #20c99799;');
+      expect(grid.getStyle('blockquote')).toContain('border-left: 2px solid #20c99799;');
       expect(grid.getStyle('blockquote')).toContain('color: #4b5565;');
       expect(grid.getStyle('blockquote')).not.toContain('light-dark(');
-      expect(media.getStyle('blockquote')).toContain('border-left: 3px solid #fd7e1499;');
-      expect(colorful.getStyle('blockquote')).toContain('border-left: 4px solid #6f42c199;');
+      expect(media.getStyle('blockquote')).toContain('border-left: 2px solid #fd7e1499;');
+      expect(colorful.getStyle('blockquote')).toContain('border-left: 2px solid #6f42c199;');
       expect(grid.getStyle('blockquote')).not.toContain('border: 1px solid');
       expect(media.getStyle('blockquote')).not.toContain('border: 1px solid');
       expect(colorful.getStyle('blockquote')).not.toContain('border: 1px solid');
@@ -300,7 +300,7 @@ describe('AppleTheme Color Logic', () => {
 
       const blockquoteStyle = theme.getStyle('blockquote');
 
-      expect(blockquoteStyle).toContain('border-left: 3px solid #d9d9d9');
+      expect(blockquoteStyle).toContain('border-left: 2px solid #d9d9d9');
       expect(blockquoteStyle).toContain('margin: 16px 0 16px 8px');
       expect(blockquoteStyle).not.toContain('border: 1px solid #d9d9d9');
     });

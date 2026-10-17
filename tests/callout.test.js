@@ -587,7 +587,7 @@ describe('Classic Theme Blockquote Style Differentiation', () => {
     const h3Style = theme.getStyle('h3');
 
     expect(blockquoteStyle).toContain('background: #f8fafc');
-    expect(blockquoteStyle).toContain('border-left: 3px solid #0366d699');
+    expect(blockquoteStyle).toContain('border-left: 2px solid #0366d699');
     expect(blockquoteStyle).not.toContain('border: 1px solid');
 
     expect(h3Style).toContain('border-left: 3px solid #0366d6');
@@ -638,7 +638,7 @@ describe('Classic Theme Blockquote Style Differentiation', () => {
     const greenColor = window.AppleTheme.THEME_COLORS.green;
     const blockquoteStyle = theme.getStyle('blockquote');
 
-    expect(blockquoteStyle).toContain(`border-left: 3px solid ${greenColor}99`);
+    expect(blockquoteStyle).toContain(`border-left: 2px solid ${greenColor}99`);
   });
 
   it('should differentiate blockquote from H3 visually in wechat theme', () => {
@@ -652,7 +652,7 @@ describe('Classic Theme Blockquote Style Differentiation', () => {
     const h3Style = theme.getStyle('h3');
 
     expect(blockquoteStyle).toContain('background: #f8fafc');
-    expect(blockquoteStyle).toContain('border-left: 3px solid #0366d699');
+    expect(blockquoteStyle).toContain('border-left: 2px solid #0366d699');
     expect(blockquoteStyle).not.toContain('border: 1px solid');
     expect(h3Style).toContain('border-left: 3px solid #0366d6');
     expect(h3Style).toContain('background: #0366d60A');
@@ -673,7 +673,7 @@ describe('Neutral Quote And Callout Style Mode', () => {
 
     expect(blockquoteStyle).toContain('background: #f9f9f9');
     expect(blockquoteStyle).toContain('margin: 16px 0 16px 8px');
-    expect(blockquoteStyle).toContain('border-left: 3px solid #d9d9d9');
+    expect(blockquoteStyle).toContain('border-left: 2px solid #d9d9d9');
     expect(blockquoteStyle).not.toContain('99');
   });
 

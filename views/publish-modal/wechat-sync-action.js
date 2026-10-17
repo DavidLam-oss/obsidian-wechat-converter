@@ -161,10 +161,18 @@ async onSyncToWechat() {
     notice.hide();
     console.error('Wechat Sync Error:', error);
     const readableError = toReadableError(error);
-    const isProxyAuth = readableError.isProxyAuth || /token|服务已于|安全警报/i.test(readableError.message);
+    const proxyUrl = this.plugin?.settings?.proxyUrl || '';
+    const isIpWhitelist = /40164|not in whitelist|invalid ip/i.test(readableError.message);
+    const isProxyAuth = !isIpWhitelist && (
+      readableError.isProxyAuth === true ||
+      /服务已于|安全警报/i.test(readableError.message) ||
+      (/token/i.test(readableError.message) && !/获取\s*Token\s*失败/i.test(readableError.message))
+    );
     const friendlyMsg = toSyncFriendlyMessage(readableError.message);
     this.showSyncFailureActions(friendlyMsg, {
       isProxyAuth,
+      isIpWhitelist,
+      proxyUrl,
       draftAssociation: (this.sessionDraftMediaId && activeFile) ? {
         sourcePath: activeFile.path,
         mediaId: this.sessionDraftMediaId,
