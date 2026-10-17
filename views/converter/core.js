@@ -53,22 +53,29 @@ import { applyCompiledCustomCss } from '../../services/custom-css-inliner.js';
 import { compileCustomCss } from '../../services/custom-css-compiler.js';
 import { resolveCustomCssSource } from '../../services/custom-css-source.js';
 
+/**
+ * @param {AppleStyleViewContract} view
+ */
+function unbindLandingArmListener(view) {
+  if (!view.landingPointerArmListener) return;
+  document.removeEventListener('pointerdown', view.landingPointerArmListener, true);
+  document.removeEventListener('keydown', view.landingPointerArmListener, true);
+  view.landingPointerArmListener = null;
+}
+
 /** @type {CoreMethodsContract & ThisType<AppleStyleViewContract>} */
 export const coreMethods = {
 getViewType() {
   return APPLE_STYLE_VIEW;
-}
-,
+},
 
 getDisplayText() {
   return APPLE_STYLE_VIEW_TITLE;
-}
-,
+},
 
 getIcon() {
   return 'wand';
-}
-,
+},
 
 async onOpen() {
   console.debug('🍎 发布助手面板打开');
@@ -123,12 +130,10 @@ async onOpen() {
   // Obsidian 可能补发 leaf 事件或 onResize，纯自动事件一律不放行。
   this.landingGateActive = true;
   this.landingGateUserInteracted = false;
-  if (this.landingPointerArmListener) {
-    document.removeEventListener('pointerdown', this.landingPointerArmListener, true);
-    document.removeEventListener('keydown', this.landingPointerArmListener, true);
-  }
-  this.landingPointerArmListener = () => {
+  unbindLandingArmListener(this);
+  const armListener = () => {
     this.landingGateUserInteracted = true;
+    unbindLandingArmListener(this);
     if (this.landingGateActive && this.lastActiveFile) {
       this.landingGateActive = false;
       if (this.converter && typeof this.convertCurrent === 'function') {
@@ -136,8 +141,9 @@ async onOpen() {
       }
     }
   };
-  document.addEventListener('pointerdown', this.landingPointerArmListener, true);
-  document.addEventListener('keydown', this.landingPointerArmListener, true);
+  this.landingPointerArmListener = armListener;
+  document.addEventListener('pointerdown', armListener, true);
+  document.addEventListener('keydown', armListener, true);
 
   // 加载依赖
   await this.loadDependencies();
@@ -1066,8 +1072,7 @@ onResize() {
   this.resizeTimeout = window.setTimeout(() => {
     this.convertCurrent(true);
   }, 300);
-}
-,
+},
 
 async onClose() {
   if (this.activeLeafRenderTimer) {
@@ -1087,11 +1092,7 @@ async onClose() {
     this.aiLayoutStaleSuppressTimer = null;
   }
   // Landing 门控的臂动监听随视图关闭一并摘除
-  if (this.landingPointerArmListener) {
-    document.removeEventListener('pointerdown', this.landingPointerArmListener, true);
-    document.removeEventListener('keydown', this.landingPointerArmListener, true);
-    this.landingPointerArmListener = null;
-  }
+  unbindLandingArmListener(this);
   this.landingGateActive = false;
   this.landingGateUserInteracted = false;
   this.customCssRefreshGeneration = (this.customCssRefreshGeneration || 0) + 1;
@@ -1150,8 +1151,7 @@ async onClose() {
   this.sessionStickerSourcePath = '';
 
   console.debug('🍎 发布助手面板已关闭');
-}
-,
+},
 
 simpleHash(str) {
   let hash = 5381;
@@ -1159,6 +1159,5 @@ simpleHash(str) {
     hash = (hash * 33) ^ str.charCodeAt(i);
   }
   return hash >>> 0; // Ensure unsigned 32-bit integer
-}
-,
+},
 };
