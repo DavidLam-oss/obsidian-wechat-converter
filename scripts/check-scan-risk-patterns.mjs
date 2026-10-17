@@ -20,8 +20,12 @@
 - `no-unbalanced-eslint-disable`: 块级 eslint-disable 必须有成对匹配相同规则的 eslint-enable
 - `no-css-important`: 禁止样式表出现 !important
 - `no-css-has`: 禁止 CSS 出现 :has() 选择器（移动端 webview 兼容限制）
+- `no-vault-getfiles-find`: 禁止使用 app.vault.getFiles().find(...) 进行路径查找（强制推荐 getAbstractFileByPath）
+- `no-view-lifecycle-collision`: 禁止在 View/ItemView 类或视图方法上定义保留生命周期名（open, close, load, unload, onload, onunload, setState, getState）
+- `no-setting-implicit-return`: 禁止在 Promise 或箭头函数中隐式返回 Setting 实例（防止 .then 属性引发死锁）
 - `manifest-desc-no-obsidian`: manifest.json 描述不得包含冗余词汇 "Obsidian"
 - `manifest-desc-punctuation`: manifest.json 描述必须以标点结尾
+- `version-consistency`: 确保 manifest.json、package.json、package-lock.json、versions.json 版本号四位一体一致且格式严格为 x.y.z
 
 ## 输入
 
@@ -185,6 +189,25 @@ const RULES = [
     message: 'Block-level eslint-disable must have a matching eslint-enable with the same rule(s).',
     extensions: new Set(['.js', '.mjs', '.cjs']),
   },
+  {
+    id: 'no-vault-getfiles-find',
+    message: 'Do not use app.vault.getFiles().find(...) for path lookups; this is an O(N) linear scan over all vault files. Use app.vault.getAbstractFileByPath(...) instead.',
+    pattern: /\b(?:app\.)?vault\.getFiles\s*\(\s*\)\.find\b/,
+    extensions: new Set(['.js', '.mjs', '.cjs']),
+  },
+  {
+    id: 'no-view-lifecycle-collision',
+    message: 'Do not define lifecycle methods (open, close, load, unload, onload, onunload, setState, getState) on View/ItemView classes or view method objects; this silently overrides Obsidian component/view lifecycle and breaks rendering. Use onOpen/onClose.',
+    pattern: /(?:^|\n)\s*(?:async\s+)?(?:open|close|load|unload|onload|onunload|setState|getState)\s*\([^)]*\)\s*\{/,
+    extensions: new Set(['.js']),
+    includedPathPrefixes: ['views/'],
+  },
+  {
+    id: 'no-setting-implicit-return',
+    message: 'Do not return Setting instances from callbacks or arrow functions; Setting defines a .then method in Obsidian and returning it causes an unexpected promise resolution deadlock.',
+    pattern: /(?:=>|\breturn)\s+(?:new\s+Setting\b|[A-Za-z_$][\w$]*\.addSetting\b)/,
+    extensions: new Set(['.js', '.mjs', '.cjs']),
+  },
 ];
 
 /**
@@ -199,13 +222,16 @@ function shouldScanFile(relativePath) {
 }
 
 /**
- * @param {{ extensions?: Set<string> }} rule
+ * @param {{ extensions?: Set<string>, includedPathPrefixes?: string[], ignoredPathPrefixes?: string[] }} rule
  * @param {string} relativePath
  * @returns {boolean}
  */
 function ruleAppliesToFile(rule, relativePath) {
   if (rule.extensions && !rule.extensions.has(path.extname(relativePath))) return false;
   const normalizedPath = relativePath.split(path.sep).join('/');
+  if (rule.includedPathPrefixes && !rule.includedPathPrefixes.some((prefix) => normalizedPath.startsWith(prefix))) {
+    return false;
+  }
   return !(rule.ignoredPathPrefixes || []).some((prefix) => normalizedPath.startsWith(prefix));
 }
 
@@ -363,6 +389,85 @@ function runRuleSelfTests() {
     }
   }
 
+  const noVaultGetFilesRule = RULES.find((r) => r.id === 'no-vault-getfiles-find');
+  if (noVaultGetFilesRule) {
+    const blocked = [
+      'const f = app.vault.getFiles().find(f => f.path === p);',
+      'vault.getFiles().find(fn);',
+    ];
+    const allowed = [
+      'const f = app.vault.getAbstractFileByPath(p);',
+      'const all = app.vault.getFiles();',
+    ];
+    for (const source of blocked) {
+      if (findMatches(source, noVaultGetFilesRule.pattern).length === 0) {
+        throw new Error(`Scan guard self-test failed to block: ${source}`);
+      }
+    }
+    for (const source of allowed) {
+      if (findMatches(source, noVaultGetFilesRule.pattern).length > 0) {
+        throw new Error(`Scan guard self-test rejected an allowed pattern: ${source}`);
+      }
+    }
+  }
+
+  const noLifecycleCollisionRule = RULES.find((r) => r.id === 'no-view-lifecycle-collision');
+  if (noLifecycleCollisionRule) {
+    const blocked = [
+      'open() {',
+      'async close() {',
+      'load() {',
+      'unload() {',
+      'onload() {',
+      'onunload() {',
+      'async setState(state) {',
+      'getState() {',
+    ];
+    const allowed = [
+      'async onOpen() {',
+      'async onClose() {',
+      'openModal() {',
+      'this.close();',
+      'const open = true;',
+    ];
+    for (const source of blocked) {
+      if (findMatches(source, noLifecycleCollisionRule.pattern).length === 0) {
+        throw new Error(`Scan guard self-test failed to block: ${source}`);
+      }
+    }
+    for (const source of allowed) {
+      if (findMatches(source, noLifecycleCollisionRule.pattern).length > 0) {
+        throw new Error(`Scan guard self-test rejected an allowed pattern: ${source}`);
+      }
+    }
+  }
+
+  const noSettingReturnRule = RULES.find((r) => r.id === 'no-setting-implicit-return');
+  if (noSettingReturnRule) {
+    const blocked = [
+      '() => new Setting(containerEl)',
+      'return new Setting(container);',
+      'return this.addSetting(s);',
+      '() => card.addSetting(item)',
+    ];
+    const allowed = [
+      'new Setting(containerEl).setName("title");',
+      'const s = new Setting(container);',
+      'return setting;',
+      'return this;',
+    ];
+    for (const source of blocked) {
+      if (findMatches(source, noSettingReturnRule.pattern).length === 0) {
+        throw new Error(`Scan guard self-test failed to block: ${source}`);
+      }
+    }
+    for (const source of allowed) {
+      if (findMatches(source, noSettingReturnRule.pattern).length > 0) {
+        throw new Error(`Scan guard self-test rejected an allowed pattern: ${source}`);
+      }
+    }
+  }
+
   const unbalancedIssues = checkUnbalancedEslintDisable(
     '/* eslint-disable no-unused-vars */\nconst x = 1;',
     'test.js'
@@ -512,7 +617,107 @@ async function runScan(rootDir = ROOT) {
     }
   }
 
+  // Validate version consistency across manifest, package, package-lock, versions.json
+  findings.push(...await checkVersionConsistency(rootDir));
+
   return { findings, fileCount: files.length };
+}
+
+/**
+ * 校验 manifest.json、package.json、package-lock.json、versions.json 版本号四位一体一致性
+ * @param {string} rootDir
+ * @returns {Promise<Array<{ id: string, message: string, file: string, line: number, code: string }>>}
+ */
+async function checkVersionConsistency(rootDir = ROOT) {
+  const findings = [];
+  const safeReadJson = async (file) => {
+    try {
+      return JSON.parse(await readFile(path.join(rootDir, file), 'utf8'));
+    } catch {
+      return null;
+    }
+  };
+
+  const manifest = await safeReadJson('manifest.json');
+  if (!manifest) return findings;
+
+  const version = manifest.version;
+  if (!version || !/^\d+\.\d+\.\d+$/.test(version)) {
+    findings.push({
+      id: 'manifest-version-invalid',
+      message: `manifest.json version must be strictly semantic (x.y.z, no prefix): found "${version}"`,
+      file: 'manifest.json',
+      line: 1,
+      code: `"version": "${version}"`,
+    });
+    return findings;
+  }
+
+  if (typeof manifest.minAppVersion !== 'string' || !manifest.minAppVersion.trim()) {
+    findings.push({
+      id: 'manifest-min-app-version-missing',
+      message: 'manifest.json missing required minAppVersion field.',
+      file: 'manifest.json',
+      line: 1,
+      code: '',
+    });
+  }
+
+  const pkg = await safeReadJson('package.json');
+  if (pkg && pkg.version !== version) {
+    findings.push({
+      id: 'version-mismatch-package',
+      message: `package.json version (${pkg.version}) does not match manifest.json (${version})`,
+      file: 'package.json',
+      line: 1,
+      code: `"version": "${pkg.version}"`,
+    });
+  }
+
+  const lock = await safeReadJson('package-lock.json');
+  if (lock) {
+    if (lock.version !== version) {
+      findings.push({
+        id: 'version-mismatch-package-lock-root',
+        message: `package-lock.json root version (${lock.version}) does not match manifest.json (${version})`,
+        file: 'package-lock.json',
+        line: 1,
+        code: `"version": "${lock.version}"`,
+      });
+    }
+    if (lock.packages?.['']?.version && lock.packages[''].version !== version) {
+      findings.push({
+        id: 'version-mismatch-package-lock-packages',
+        message: `package-lock.json packages[""].version (${lock.packages[''].version}) does not match manifest.json (${version})`,
+        file: 'package-lock.json',
+        line: 1,
+        code: `"version": "${lock.packages[''].version}"`,
+      });
+    }
+  }
+
+  const versions = await safeReadJson('versions.json');
+  if (versions) {
+    if (!versions[version]) {
+      findings.push({
+        id: 'version-missing-versions-json',
+        message: `versions.json missing mapping for current version ${version}`,
+        file: 'versions.json',
+        line: 1,
+        code: `"${version}": "${manifest.minAppVersion || ''}"`,
+      });
+    } else if (manifest.minAppVersion && versions[version] !== manifest.minAppVersion) {
+      findings.push({
+        id: 'version-mismatch-versions-json',
+        message: `versions.json maps ${version} to ${versions[version]}, but manifest minAppVersion is ${manifest.minAppVersion}`,
+        file: 'versions.json',
+        line: 1,
+        code: `"${version}": "${versions[version]}"`,
+      });
+    }
+  }
+
+  return findings;
 }
 
 const isDirectExecution = Boolean(
@@ -551,5 +756,6 @@ export {
   findMatches,
   runRuleSelfTests,
   checkUnbalancedEslintDisable,
+  checkVersionConsistency,
   runScan,
 };

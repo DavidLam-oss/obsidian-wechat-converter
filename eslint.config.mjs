@@ -235,6 +235,7 @@ export default [
       "services/wechat-list-indent.js",
       "services/wechat-media.js",
       "services/wechat-sync.js",
+      "services/wechat-video.js",
       "services/wechatsync-bridge.js",
       "services/wechatsync-bridge-runtime.js",
       "services/wechatsync-constants.js",
@@ -485,8 +486,9 @@ export default [
       "services/generated-embedded-deps.js",
       "dist/",
       "server/",
-      // Tool-generated working dirs (OpenPRD / Codex): not project source,
+      // Tool-generated working dirs and agent skills: not project source,
       // skip linting so their generated code does not pollute CI output.
+      ".agents/",
       ".codex/",
       ".openprd/",
       ".workbuddy/",

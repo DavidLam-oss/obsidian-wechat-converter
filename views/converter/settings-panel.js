@@ -79,7 +79,7 @@ createSettingsPanel(container) {
 
   selfRec.btnArticleMode = segment.createEl('button', {
     cls: 'apple-mode-btn active',
-    attr: { 'aria-label': '文章排版模式', 'title': '文章排版模式' }
+    attr: { 'aria-label': '文章排版模式' }
   });
   const btnArt = /** @type {HTMLElement} */ (selfRec.btnArticleMode);
   if (typeof setIcon === 'function') {
@@ -88,7 +88,7 @@ createSettingsPanel(container) {
 
   selfRec.btnStickerMode = segment.createEl('button', {
     cls: 'apple-mode-btn',
-    attr: { 'aria-label': '微信贴图模式', 'title': '微信贴图模式' }
+    attr: { 'aria-label': '微信贴图模式' }
   });
   const btnStk = /** @type {HTMLElement} */ (selfRec.btnStickerMode);
   if (typeof setIcon === 'function') {
@@ -97,7 +97,7 @@ createSettingsPanel(container) {
 
   selfRec.btnCardMode = segment.createEl('button', {
     cls: 'apple-mode-btn',
-    attr: { 'aria-label': '图片卡片模式', 'title': '图片卡片模式' }
+    attr: { 'aria-label': '图片卡片模式' }
   });
   const btnCard = /** @type {HTMLElement} */ (selfRec.btnCardMode);
   if (typeof setIcon === 'function') {
@@ -121,7 +121,7 @@ createSettingsPanel(container) {
   const createIconBtn = (icon, title, onClick) => {
     const btn = actions.createEl('div', {
       cls: 'apple-icon-btn',
-      attr: { 'aria-label': title, 'title': title } // Tooltip
+      attr: { 'aria-label': title } // Tooltip 由 Obsidian 原生根据 aria-label 呈现
     });
     if (typeof setIcon === 'function') {
       setIcon(btn, icon);
@@ -184,7 +184,6 @@ createSettingsPanel(container) {
       const btn = grid.createEl('button', {
         cls: `apple-btn-theme ${this.plugin.settings.theme === t.value ? 'active' : ''}`,
         text: t.label,
-        attr: { title: t.label },
       });
       btn.dataset.value = t.value;
       btn.addEventListener('click', () => this.onThemeChange(t.value, grid));
@@ -246,7 +245,7 @@ createSettingsPanel(container) {
     const customBtn = grid.createEl('button', {
       cls: `apple-btn-custom-text ${this.plugin.settings.themeColor === 'custom' ? 'active' : ''}`,
       text: '自定义',
-      title: '自定义颜色'
+      attr: { 'aria-label': '自定义颜色' }
     });
     customBtn.dataset.value = 'custom';
 

@@ -9,7 +9,7 @@
 
 ## 输出
 
-输出 `resolveSyncAccount`、`toSyncFriendlyMessage`，供项目内其他模块复用。
+输出 `resolveSyncAccount`、`toSyncFriendlyMessage`、`isOfficialProxyUrl`，供项目内其他模块复用。
 
 ## 定位
 
@@ -74,4 +74,21 @@ export function toSyncFriendlyMessage(errorMessage = '') {
     return '访问中转代理服务器未授权 (HTTP 401)。请检查您的代理地址和 Token 是否正确。';
   }
   return message;
+}
+
+/**
+ * 判断是否为官方自营的微信 API 中转代理服务
+ * 特征：固定前缀 https://wechat-api.xiaoweibox.top/proxy，后接 ?token=...
+ * @param {unknown} proxyUrl
+ * @returns {boolean}
+ */
+export function isOfficialProxyUrl(proxyUrl = '') {
+  if (!proxyUrl || typeof proxyUrl !== 'string') return false;
+  const trimmed = proxyUrl.trim();
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.hostname.toLowerCase() === 'wechat-api.xiaoweibox.top' && parsed.pathname.replace(/\/+$/, '') === '/proxy';
+  } catch {
+    return /^https?:\/\/wechat-api\.xiaoweibox\.top\/proxy(?:\/|\?|$)/i.test(trimmed);
+  }
 }

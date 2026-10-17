@@ -104,7 +104,7 @@ export function renderNoteMediaPickerTab({ container, view, onSelect }) {
 
   const fileInput = /** @type {HTMLInputElement} */ (
     /** @type {unknown} */ (container.createEl('input', {
-      attr: { type: 'file', accept: 'image/png,image/jpeg,image/webp,image/gif' },
+      attr: { type: 'file', accept: 'image/png,image/jpeg,image/webp' },
       cls: 'hidden',
     }))
   );
@@ -139,6 +139,13 @@ export function renderNoteMediaPickerTab({ container, view, onSelect }) {
   });
 
   const handleLocalFile = async (file) => {
+    if (!file) return;
+    const name = String(file.name || '').toLowerCase();
+    const type = String(file.type || '').toLowerCase();
+    if (name.endsWith('.gif') || type === 'image/gif') {
+      new Notice('卡片封面不支持 GIF 动图，请选择静态图片');
+      return;
+    }
     try {
       new Notice('正在读取本地图片...');
       const dataUrl = await readLocalFileAsDataUrl(file);
@@ -161,14 +168,18 @@ export function renderNoteMediaPickerTab({ container, view, onSelect }) {
   const renderImages = (markdown, sourcePath) => {
     noteListContainer.empty();
 
-    // 1. 提取 frontmatter 封面图片
+    // 1. 提取 frontmatter 封面图片（排除 GIF）
     const frontmatter = parseCardFrontmatter(markdown);
-    const frontmatterCover = normalizeFrontmatterImagePath(
+    const rawFrontmatterCover = normalizeFrontmatterImagePath(
       frontmatter.cover || frontmatter.banner || frontmatter.image || ''
     );
+    const frontmatterCover = rawFrontmatterCover && !/\.gif([?#]|$)/i.test(rawFrontmatterCover)
+      ? rawFrontmatterCover
+      : '';
 
-    // 2. 提取正文图片引用
-    const bodyImages = extractNoteImageReferences(markdown);
+    // 2. 提取正文图片引用（排除 GIF）
+    const rawBodyImages = extractNoteImageReferences(markdown);
+    const bodyImages = rawBodyImages.filter((img) => !/\.gif([?#]|$)/i.test(img.path));
 
     // 3. 合并：frontmatter 封面在前，正文图片在后（去重）
     const allImages = [];

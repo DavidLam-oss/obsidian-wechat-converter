@@ -345,7 +345,6 @@ updateSettingsButtonLabel() {
   const label = this.previewMode === 'card' ? '图片卡片排版设置' : '公众号排版样式设置';
   const el = /** @type {Element} */ (btn);
   el.setAttribute('aria-label', label);
-  el.setAttribute('title', label);
 }
 ,
 };

@@ -43,8 +43,8 @@
 
 import { stripNonBodyImageRegions } from './sticker-extractor.js';
 
-const IMAGE_EXT_REGEX = /\.(jpe?g|png|gif|webp|svg|bmp|avif)$/i;
-const NON_IMAGE_EXT_REGEX = /\.(md|markdown|txt|pdf|docx?|xlsx?|pptx?|zip|rar|tar|gz|mp4|mov|avi|mp3|wav)$/i;
+const IMAGE_EXT_REGEX = /\.(jpe?g|png|webp|svg|bmp|avif)$/i;
+const NON_IMAGE_EXT_REGEX = /\.(md|markdown|txt|pdf|docx?|xlsx?|pptx?|zip|rar|tar|gz|mp4|mov|avi|mp3|wav|gif)$/i;
 
 /** 封面字段（C01③ 文字封面 + C06 AI 封面配图） */
 /** @typedef {{ title: string, author: string, date: string, excerpt: string, coverImage?: string, coverMode?: 'none' | 'adaptive' | 'mixed' | 'full-bleed', coverImageStyle?: string, coverPrompt?: string, coverImageSource?: string }} CardCoverFields */
@@ -237,6 +237,11 @@ export function isLikelyContentImage(imgRef) {
   const n = (imgRef.name || '').toLowerCase();
   const a = (imgRef.alias || '').toLowerCase();
 
+  // 0. 过滤 GIF 动图（卡片封面不支持动图）
+  if (/\.gif([?#]|$)/i.test(p) || p.endsWith('.gif')) {
+    return false;
+  }
+
   // 1. 过滤常见徽章与数据打标服务
   if (
     p.includes('shields.io') ||
@@ -285,8 +290,10 @@ export function isLikelyContentImage(imgRef) {
 export function findFirstContentImage(markdown) {
   const images = extractNoteImageReferences(markdown);
   if (!images || images.length === 0) return null;
-  const contentImg = images.find(isLikelyContentImage);
-  return contentImg || images[0];
+  const nonGifImages = images.filter((img) => !/\.gif([?#]|$)/i.test(img.path));
+  if (nonGifImages.length === 0) return null;
+  const contentImg = nonGifImages.find(isLikelyContentImage);
+  return contentImg || nonGifImages[0];
 }
 
 /**
@@ -347,6 +354,9 @@ export function deriveCoverFields(input = {}) {
   // 1. 封面配图初值派生
   const rawCover = String(meta.cover || meta.banner || meta.image || "").trim();
   let coverImage = normalizeFrontmatterImagePath(rawCover);
+  if (coverImage && /\.gif([?#]|$)/i.test(coverImage)) {
+    coverImage = '';
+  }
   let coverImageSource = String(meta.coverImageSource || "").trim();
 
   if (!coverImage) {

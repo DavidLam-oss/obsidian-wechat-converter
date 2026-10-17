@@ -1,0 +1,693 @@
+{
+  "ok": false,
+  "complete": false,
+  "researched_at": "2026-09-07",
+  "queries": [
+    "obsidian plugin development",
+    "obsidian plugin release validation"
+  ],
+  "metric_semantics": {
+    "skills_sh_installs": "ecosystem install telemetry; not ratings or correctness",
+    "skillsmp_repo_stars": "GitHub repository stars; not installs, ratings, or skill-specific quality",
+    "cross_catalog_score": "not calculated; metrics remain separate"
+  },
+  "query_runs": [
+    {
+      "query": "obsidian plugin development",
+      "skills_sh": "error",
+      "skillsmp": "ok",
+      "skills_sh_error": "Command '['npx', '--yes', 'skills', 'find', 'obsidian plugin development']' timed out after 30.0 seconds",
+      "skillsmp_candidates": 9
+    },
+    {
+      "query": "obsidian plugin release validation",
+      "skills_sh": "ok",
+      "skillsmp": "ok",
+      "skills_sh_candidates": 19,
+      "skillsmp_candidates": 9
+    }
+  ],
+  "candidate_family_count": 28,
+  "candidates": [
+    {
+      "family_key": "ruvnet/ruflo:validate-plugin",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "ruvnet/ruflo",
+        "skill_name": "validate-plugin",
+        "family_key": "ruvnet/ruflo:validate-plugin",
+        "skills_sh_installs": 735,
+        "skills_sh_installs_display": "735",
+        "skills_sh_url": "https://skills.sh/ruvnet/ruflo/validate-plugin"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "akillness/jeo-skills:obsidian-plugin",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "akillness/jeo-skills",
+        "skill_name": "obsidian-plugin",
+        "family_key": "akillness/jeo-skills:obsidian-plugin",
+        "skills_sh_installs": 216,
+        "skills_sh_installs_display": "216",
+        "skills_sh_url": "https://skills.sh/akillness/jeo-skills/obsidian-plugin"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "terrylica/cc-skills:plugin-validator",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "terrylica/cc-skills",
+        "skill_name": "plugin-validator",
+        "family_key": "terrylica/cc-skills:plugin-validator",
+        "skills_sh_installs": 117,
+        "skills_sh_installs_display": "117",
+        "skills_sh_url": "https://skills.sh/terrylica/cc-skills/plugin-validator"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "oh-my-dsh/dsh-plugin-upgrade-skill:plugin-release",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "oh-my-dsh/dsh-plugin-upgrade-skill",
+        "skill_name": "plugin-release",
+        "family_key": "oh-my-dsh/dsh-plugin-upgrade-skill:plugin-release",
+        "skills_sh_installs": 51,
+        "skills_sh_installs_display": "51",
+        "skills_sh_url": "https://skills.sh/oh-my-dsh/dsh-plugin-upgrade-skill/plugin-release"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "jeremylongshore/tons-of-skills-marketplace:obsidian-ci-integration",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "jeremylongshore/tons-of-skills-marketplace",
+        "skill_name": "obsidian-ci-integration",
+        "family_key": "jeremylongshore/tons-of-skills-marketplace:obsidian-ci-integration",
+        "skills_sh_installs": 27,
+        "skills_sh_installs_display": "27",
+        "skills_sh_url": "https://skills.sh/jeremylongshore/tons-of-skills-marketplace/obsidian-ci-integration"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "oliver-kriska/claude-elixir-phoenix:release",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "oliver-kriska/claude-elixir-phoenix",
+        "skill_name": "release",
+        "family_key": "oliver-kriska/claude-elixir-phoenix:release",
+        "skills_sh_installs": 19,
+        "skills_sh_installs_display": "19",
+        "skills_sh_url": "https://skills.sh/oliver-kriska/claude-elixir-phoenix/release"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "crafter-station/skills:obsidian-plugin-release",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "crafter-station/skills",
+        "skill_name": "obsidian-plugin-release",
+        "family_key": "crafter-station/skills:obsidian-plugin-release",
+        "skills_sh_installs": 10,
+        "skills_sh_installs_display": "10",
+        "skills_sh_url": "https://skills.sh/crafter-station/skills/obsidian-plugin-release"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "kriss-spy/obsidian-skills:obsidian-plugin-bootstrap",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "kriss-spy/obsidian-skills",
+        "skill_name": "obsidian-plugin-bootstrap",
+        "family_key": "kriss-spy/obsidian-skills:obsidian-plugin-bootstrap",
+        "skills_sh_installs": 10,
+        "skills_sh_installs_display": "10",
+        "skills_sh_url": "https://skills.sh/kriss-spy/obsidian-skills/obsidian-plugin-bootstrap"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "kriss-spy/obsidian-skills:obsidian-plugin-commands",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "kriss-spy/obsidian-skills",
+        "skill_name": "obsidian-plugin-commands",
+        "family_key": "kriss-spy/obsidian-skills:obsidian-plugin-commands",
+        "skills_sh_installs": 10,
+        "skills_sh_installs_display": "10",
+        "skills_sh_url": "https://skills.sh/kriss-spy/obsidian-skills/obsidian-plugin-commands"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "poindexter12/waypoint:plugin-validator",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "poindexter12/waypoint",
+        "skill_name": "plugin-validator",
+        "family_key": "poindexter12/waypoint:plugin-validator",
+        "skills_sh_installs": 10,
+        "skills_sh_installs_display": "10",
+        "skills_sh_url": "https://skills.sh/poindexter12/waypoint/plugin-validator"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "kriss-spy/obsidian-skills:obsidian-plugin-release",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "kriss-spy/obsidian-skills",
+        "skill_name": "obsidian-plugin-release",
+        "family_key": "kriss-spy/obsidian-skills:obsidian-plugin-release",
+        "skills_sh_installs": 9,
+        "skills_sh_installs_display": "9",
+        "skills_sh_url": "https://skills.sh/kriss-spy/obsidian-skills/obsidian-plugin-release"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "kriss-spy/obsidian-skills:obsidian-plugin-review",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "kriss-spy/obsidian-skills",
+        "skill_name": "obsidian-plugin-review",
+        "family_key": "kriss-spy/obsidian-skills:obsidian-plugin-review",
+        "skills_sh_installs": 9,
+        "skills_sh_installs_display": "9",
+        "skills_sh_url": "https://skills.sh/kriss-spy/obsidian-skills/obsidian-plugin-review"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "majesticlabs-dev/majestic-marketplace:release",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "majesticlabs-dev/majestic-marketplace",
+        "skill_name": "release",
+        "family_key": "majesticlabs-dev/majestic-marketplace:release",
+        "skills_sh_installs": 9,
+        "skills_sh_installs_display": "9",
+        "skills_sh_url": "https://skills.sh/majesticlabs-dev/majestic-marketplace/release"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "acaprino/daodan:obsidian-check",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "acaprino/daodan",
+        "skill_name": "obsidian-check",
+        "family_key": "acaprino/daodan:obsidian-check",
+        "skills_sh_installs": 6,
+        "skills_sh_installs_display": "6",
+        "skills_sh_url": "https://skills.sh/acaprino/daodan/obsidian-check"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "acaprino/daodan:obsidian-plugin-development",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "acaprino/daodan",
+        "skill_name": "obsidian-plugin-development",
+        "family_key": "acaprino/daodan:obsidian-plugin-development",
+        "skills_sh_installs": 6,
+        "skills_sh_installs_display": "6",
+        "skills_sh_url": "https://skills.sh/acaprino/daodan/obsidian-plugin-development"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "acaprino/daodan:obsidian-scaffold",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "acaprino/daodan",
+        "skill_name": "obsidian-scaffold",
+        "family_key": "acaprino/daodan:obsidian-scaffold",
+        "skills_sh_installs": 6,
+        "skills_sh_installs_display": "6",
+        "skills_sh_url": "https://skills.sh/acaprino/daodan/obsidian-scaffold"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "alisonaquinas/llm-doc-skills:obsidian-plugins",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "alisonaquinas/llm-doc-skills",
+        "skill_name": "obsidian-plugins",
+        "family_key": "alisonaquinas/llm-doc-skills:obsidian-plugins",
+        "skills_sh_installs": 6,
+        "skills_sh_installs_display": "6",
+        "skills_sh_url": "https://skills.sh/alisonaquinas/llm-doc-skills/obsidian-plugins"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "firstsun-dev/skills:obsidian-development",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "firstsun-dev/skills",
+        "skill_name": "obsidian-development",
+        "family_key": "firstsun-dev/skills:obsidian-development",
+        "skills_sh_installs": 5,
+        "skills_sh_installs_display": "5",
+        "skills_sh_url": "https://skills.sh/firstsun-dev/skills/obsidian-development"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "aresbit/matebot2tg:obsidian-plugin-dev",
+      "queries": [
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": {
+        "source": "skills.sh",
+        "query": "obsidian plugin release validation",
+        "owner_repo": "aresbit/matebot2tg",
+        "skill_name": "obsidian-plugin-dev",
+        "family_key": "aresbit/matebot2tg:obsidian-plugin-dev",
+        "skills_sh_installs": 3,
+        "skills_sh_installs_display": "3",
+        "skills_sh_url": "https://skills.sh/aresbit/matebot2tg/obsidian-plugin-dev"
+      },
+      "skillsmp": null,
+      "catalogs": [
+        "skills.sh"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "openclaw/openclaw:obsidian",
+      "queries": [
+        "obsidian plugin development",
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": null,
+      "skillsmp": {
+        "source": "skillsmp",
+        "name": "obsidian",
+        "author": "openclaw",
+        "description": "Work with Obsidian vaults using the official obsidian CLI: read/search/create/edit notes, tasks, links, properties, plugins.",
+        "content_language": "en",
+        "github_url": "https://github.com/openclaw/openclaw/tree/main/skills/obsidian",
+        "skillsmp_url": "https://skillsmp.com/creators/openclaw/openclaw/skills-obsidian",
+        "repo_stars": 389030,
+        "catalog_updated_at": "2026-05-17T11:09:34+00:00",
+        "source_key": "openclaw/openclaw:skills/obsidian",
+        "family_key": "openclaw/openclaw:obsidian",
+        "aliases": [],
+        "query": "obsidian plugin development"
+      },
+      "catalogs": [
+        "skillsmp"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "openclaw/openclaw:obsidian-vault-maintainer",
+      "queries": [
+        "obsidian plugin development",
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": null,
+      "skillsmp": {
+        "source": "skillsmp",
+        "name": "obsidian-vault-maintainer",
+        "author": "openclaw",
+        "description": "Maintain an Obsidian-friendly memory wiki vault with wikilinks, frontmatter, and official Obsidian CLI awareness.",
+        "content_language": "en",
+        "github_url": "https://github.com/openclaw/openclaw/tree/main/extensions/memory-wiki/skills/obsidian-vault-maintainer",
+        "skillsmp_url": "https://skillsmp.com/creators/openclaw/openclaw/extensions-memory-wiki-skills-obsidian-vault-maintainer",
+        "repo_stars": 389030,
+        "catalog_updated_at": "2026-04-06T03:56:52+00:00",
+        "source_key": "openclaw/openclaw:extensions/memory-wiki/skills/obsidian-vault-maintainer",
+        "family_key": "openclaw/openclaw:obsidian-vault-maintainer",
+        "aliases": [],
+        "query": "obsidian plugin development"
+      },
+      "catalogs": [
+        "skillsmp"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "nousresearch/hermes-agent:obsidian",
+      "queries": [
+        "obsidian plugin development",
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": null,
+      "skillsmp": {
+        "source": "skillsmp",
+        "name": "obsidian",
+        "author": "NousResearch",
+        "description": "Read, search, create, and edit notes in the Obsidian vault.",
+        "content_language": "en",
+        "github_url": "https://github.com/NousResearch/hermes-agent/tree/main/skills/note-taking/obsidian",
+        "skillsmp_url": "https://skillsmp.com/creators/nousresearch/hermes-agent/skills-note-taking-obsidian",
+        "repo_stars": 240005,
+        "catalog_updated_at": "2026-08-08T22:27:29+00:00",
+        "source_key": "nousresearch/hermes-agent:skills/note-taking/obsidian",
+        "family_key": "nousresearch/hermes-agent:obsidian",
+        "aliases": [],
+        "query": "obsidian plugin development"
+      },
+      "catalogs": [
+        "skillsmp"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "nexu-io/open-design:html-ppt-obsidian-claude-gradient",
+      "queries": [
+        "obsidian plugin development",
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": null,
+      "skillsmp": {
+        "source": "skillsmp",
+        "name": "html-ppt-obsidian-claude-gradient",
+        "author": "nexu-io",
+        "description": "OpenDesign's enterprise AI-adoption brief: local-first agents at work, the risk controls, the ROI, and the rollout plan. Built as a decision-grade AI literacy deck for leadership, IT, security.",
+        "content_language": "en",
+        "github_url": "https://github.com/nexu-io/open-design/tree/main/design-templates/html-ppt-obsidian-claude-gradient",
+        "skillsmp_url": "https://skillsmp.com/creators/nexu-io/open-design/design-templates-html-ppt-obsidian-claude-gradient",
+        "repo_stars": 93587,
+        "catalog_updated_at": "2026-08-18T07:09:45+00:00",
+        "source_key": "nexu-io/open-design:design-templates/html-ppt-obsidian-claude-gradient",
+        "family_key": "nexu-io/open-design:html-ppt-obsidian-claude-gradient",
+        "aliases": [
+          {
+            "language": "en",
+            "github_url": "https://github.com/nexu-io/open-design/tree/main/plugins/_official/examples/html-ppt-obsidian-claude-gradient"
+          },
+          {
+            "language": "en",
+            "github_url": "https://github.com/nexu-io/open-design/tree/main/plugins/_official/examples/html-ppt-obsidian-claude-gradient"
+          }
+        ],
+        "query": "obsidian plugin development"
+      },
+      "catalogs": [
+        "skillsmp"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "hkuds/cli-anything:cli-anything-obsidian",
+      "queries": [
+        "obsidian plugin development",
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": null,
+      "skillsmp": {
+        "source": "skillsmp",
+        "name": "cli-anything-obsidian",
+        "author": "HKUDS",
+        "description": "Command-line interface for Obsidian — Knowledge management and note-taking via Obsidian Local REST API. Designed for AI agents and power users who need to manage notes, search the vault, and execute commands without the GUI.",
+        "content_language": "en",
+        "github_url": "https://github.com/HKUDS/CLI-Anything/tree/main/skills/cli-anything-obsidian",
+        "skillsmp_url": "https://skillsmp.com/creators/hkuds/cli-anything/skills-cli-anything-obsidian",
+        "repo_stars": 49057,
+        "catalog_updated_at": "2026-05-18T21:56:53+00:00",
+        "source_key": "hkuds/cli-anything:skills/cli-anything-obsidian",
+        "family_key": "hkuds/cli-anything:cli-anything-obsidian",
+        "aliases": [],
+        "query": "obsidian plugin development"
+      },
+      "catalogs": [
+        "skillsmp"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "kepano/obsidian-skills:json-canvas",
+      "queries": [
+        "obsidian plugin development",
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": null,
+      "skillsmp": {
+        "source": "skillsmp",
+        "name": "json-canvas",
+        "author": "kepano",
+        "description": "Create and edit JSON Canvas files (.canvas) with nodes, edges, groups, and connections. Use when working with .canvas files, creating visual canvases, mind maps, flowcharts, or when the user mentions Canvas files in Obsidian.",
+        "content_language": "en",
+        "github_url": "https://github.com/kepano/obsidian-skills/tree/main/skills/json-canvas",
+        "skillsmp_url": "https://skillsmp.com/creators/kepano/obsidian-skills/skills-json-canvas",
+        "repo_stars": 47747,
+        "catalog_updated_at": "2026-02-25T11:32:59+00:00",
+        "source_key": "kepano/obsidian-skills:skills/json-canvas",
+        "family_key": "kepano/obsidian-skills:json-canvas",
+        "aliases": [],
+        "query": "obsidian plugin development"
+      },
+      "catalogs": [
+        "skillsmp"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "kepano/obsidian-skills:obsidian-bases",
+      "queries": [
+        "obsidian plugin development",
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": null,
+      "skillsmp": {
+        "source": "skillsmp",
+        "name": "obsidian-bases",
+        "author": "kepano",
+        "description": "Create and edit Obsidian Bases (.base files) with views, filters, formulas, and summaries. Use when working with .base files, creating database-like views of notes, or when the user mentions Bases, table views, card views, filters, or formulas in Obsidian.",
+        "content_language": "en",
+        "github_url": "https://github.com/kepano/obsidian-skills/tree/main/skills/obsidian-bases",
+        "skillsmp_url": "https://skillsmp.com/creators/kepano/obsidian-skills/skills-obsidian-bases",
+        "repo_stars": 47747,
+        "catalog_updated_at": "2026-04-07T08:34:35+00:00",
+        "source_key": "kepano/obsidian-skills:skills/obsidian-bases",
+        "family_key": "kepano/obsidian-skills:obsidian-bases",
+        "aliases": [],
+        "query": "obsidian plugin development"
+      },
+      "catalogs": [
+        "skillsmp"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "kepano/obsidian-skills:obsidian-cli",
+      "queries": [
+        "obsidian plugin development",
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": null,
+      "skillsmp": {
+        "source": "skillsmp",
+        "name": "obsidian-cli",
+        "author": "kepano",
+        "description": "Interact with Obsidian vaults using the Obsidian CLI to read, create, search, and manage notes, tasks, properties, and more. Also supports plugin and theme development with commands to reload plugins, run JavaScript, capture errors, take screenshots, and inspect the DOM. Use when the user asks to interact with their Obsidian vault, manage notes, search vault content, perform vault operations from the command line, or develop and debug Obsidian plugins and themes.",
+        "content_language": "en",
+        "github_url": "https://github.com/kepano/obsidian-skills/tree/main/skills/obsidian-cli",
+        "skillsmp_url": "https://skillsmp.com/creators/kepano/obsidian-skills/skills-obsidian-cli",
+        "repo_stars": 47747,
+        "catalog_updated_at": "2026-02-25T11:32:59+00:00",
+        "source_key": "kepano/obsidian-skills:skills/obsidian-cli",
+        "family_key": "kepano/obsidian-skills:obsidian-cli",
+        "aliases": [],
+        "query": "obsidian plugin development"
+      },
+      "catalogs": [
+        "skillsmp"
+      ],
+      "requires_source_review": true
+    },
+    {
+      "family_key": "kepano/obsidian-skills:obsidian-markdown",
+      "queries": [
+        "obsidian plugin development",
+        "obsidian plugin release validation"
+      ],
+      "skills_sh": null,
+      "skillsmp": {
+        "source": "skillsmp",
+        "name": "obsidian-markdown",
+        "author": "kepano",
+        "description": "Create and edit Obsidian Flavored Markdown with wikilinks, embeds, callouts, properties, and other Obsidian-specific syntax. Use when working with .md files in Obsidian, or when the user mentions wikilinks, callouts, frontmatter, tags, embeds, or Obsidian notes.",
+        "content_language": "en",
+        "github_url": "https://github.com/kepano/obsidian-skills/tree/main/skills/obsidian-markdown",
+        "skillsmp_url": "https://skillsmp.com/creators/kepano/obsidian-skills/skills-obsidian-markdown",
+        "repo_stars": 47747,
+        "catalog_updated_at": "2026-03-22T15:03:48+00:00",
+        "source_key": "kepano/obsidian-skills:skills/obsidian-markdown",
+        "family_key": "kepano/obsidian-skills:obsidian-markdown",
+        "aliases": [],
+        "query": "obsidian plugin development"
+      },
+      "catalogs": [
+        "skillsmp"
+      ],
+      "requires_source_review": true
+    }
+  ],
+  "missing_evidence": [
+    "skills.sh `obsidian plugin development`: Command '['npx', '--yes', 'skills', 'find', 'obsidian plugin development']' timed out after 30.0 seconds"
+  ],
+  "next_steps": [
+    "shortlist by job relevance and role coverage, not combined popularity",
+    "open canonical GitHub source and inspect SKILL.md before adoption",
+    "verify license, maintenance, permissions, security, duplication, and rating evidence",
+    "write keep/adapt/reject/invent synthesis before authoring"
+  ]
+}

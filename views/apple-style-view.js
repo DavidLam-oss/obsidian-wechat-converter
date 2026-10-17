@@ -150,6 +150,10 @@ class AppleStyleView extends ItemView {
     // 复用同一封面图的 thumb_media_id，封面内容变化时会自动重新上传。
     /** @type {Map<string, string | CoverCacheEntry>} */
     this.coverUploadCache = new Map();
+    // 视频上传缓存：Map<accountId::video::src, { mediaId, fingerprint, uploadedAt }>
+    // 复用同一视频的 media_id，避免重复上传高达 10MB 的视频文件
+    /** @type {Map<string, unknown>} */
+    this.videoUploadCache = new Map();
     // Mermaid 导出缓存：Map<Hash, { dataUrl, width, height, style }>
     // 复制与同步复用同一份本地导出结果，避免重复栅格化
     /** @type {Map<string, unknown>} */

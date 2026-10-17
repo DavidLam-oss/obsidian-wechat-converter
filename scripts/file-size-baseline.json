@@ -18,20 +18,20 @@
     "styles/wechat-settings.css": 797,
     "views/converter/ai-layout-debug.js": 923,
     "views/converter/ai-layout-panel.js": 1041,
-    "views/converter/core.js": 1164,
+    "views/converter/core.js": 1163,
     "views/settings/multi-platform-tab.js": 934
   },
   "generatedBytes": {
-    "main.js": 4740000,
+    "main.js": 4100000,
     "services/ai-layout-runtime/generated-skills.js": 52200,
-    "services/generated-embedded-deps.js": 2960000,
+    "services/generated-embedded-deps.js": 2350000,
     "styles.css": 266000
   },
   "waivers": {
     "main.js": {
-      "max": 4740000,
-      "reason": "生成物随功能增长。天花板按当前值预留约 10% 余量，超出后需重新评估并更新本条；此前每次改动都靠手改本文件绕过，本豁免替代那种无声放宽。",
-      "date": "2026-10-16"
+      "max": 4100000,
+      "reason": "Phase 3 裁减 MathJax 及 Juice 依赖后收紧天花板，在当前 ~3.79MB 基础上预留约 8% 余量。",
+      "date": "2026-10-17"
     },
     "services/ai-layout-runtime/generated-skills.js": {
       "max": 52200,
@@ -39,9 +39,9 @@
       "date": "2026-10-16"
     },
     "services/generated-embedded-deps.js": {
-      "max": 2960000,
-      "reason": "内联运行时依赖快照随源码增长。预留约 10% 余量，避免每次功能改动都触发上限告警。",
-      "date": "2026-10-16"
+      "max": 2350000,
+      "reason": "Phase 3 裁剪 MathJax 宏包与 Juice 客户端后收紧快照天花板，在当前 ~2.15MB 基础上预留约 9% 余量。",
+      "date": "2026-10-17"
     },
     "styles.css": {
       "max": 266000,

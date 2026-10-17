@@ -161,6 +161,37 @@ describe('deriveCoverFields：初值派生', () => {
     expect(fields.coverImageSource).toBe('note');
   });
 
+  it('智能跳过 GIF 动图，绝不将 GIF 识别为卡片封面', () => {
+    const mdWithStatic = [
+      '# 动图测试笔记',
+      '![[animation.gif]]',
+      '![GIF 演示](https://example.com/demo.gif)',
+      '![真正的静态配图](img/static_hero.png)',
+    ].join('\n');
+    const fields1 = deriveCoverFields({ markdown: mdWithStatic, sourcePath: 'GifNote.md' });
+    expect(fields1.coverImage).toBe('img/static_hero.png');
+    expect(fields1.coverMode).toBe('adaptive');
+
+    const mdOnlyGif = [
+      '# 仅有动图的笔记',
+      '![[animation.gif]]',
+      '<img src="demo.gif">',
+    ].join('\n');
+    const fields2 = deriveCoverFields({ markdown: mdOnlyGif, sourcePath: 'GifOnly.md' });
+    expect(fields2.coverImage).toBe('');
+    expect(fields2.coverMode).toBe('none');
+
+    const mdFrontmatterGif = [
+      '---',
+      'cover: hero.gif',
+      '---',
+      '# Frontmatter 动图',
+      '![[static.jpg]]',
+    ].join('\n');
+    const fields3 = deriveCoverFields({ markdown: mdFrontmatterGif, sourcePath: 'FmGif.md' });
+    expect(fields3.coverImage).toBe('static.jpg');
+  });
+
   it('能够解包 Frontmatter 中使用 Wikilink 或 Markdown 语法填写的 banner/cover', () => {
     const mdWiki = [
       '---',
