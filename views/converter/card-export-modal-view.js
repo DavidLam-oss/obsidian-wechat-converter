@@ -653,19 +653,19 @@ renderCardExportResultLinks(body) {
     // 无文件管理器能力（移动端 / 受限环境）：复制是取得路径的唯一方式，必须保留。
     const copyBtn = actions.createEl('button', {
       cls: 'icard-export-result-copy',
-      attr: { type: 'button', 'aria-label': '复制完整路径', title: '复制完整路径' },
+      attr: { type: 'button', 'aria-label': '复制完整路径' },
     });
     const copyIcon = applyIcon(copyBtn.createEl('span', { cls: 'icard-export-result-copy-icon' }), 'copy');
     copyBtn.addEventListener('click', () => {
       void writeClipboardText(copyText).then((ok) => {
         if (!ok) return; // 复制不可用时不谎报成功
         copyBtn.toggleClass('is-copied', true);
-        copyBtn.setAttribute('title', '已复制');
+        copyBtn.setAttribute('aria-label', '已复制');
         applyIcon(copyIcon, 'check');
         const win = typeof window !== 'undefined' ? window : null;
         win?.setTimeout?.(() => {
           copyBtn.toggleClass('is-copied', false);
-          copyBtn.setAttribute('title', '复制完整路径');
+          copyBtn.setAttribute('aria-label', '复制完整路径');
           applyIcon(copyIcon, 'copy');
         }, 1500);
       });

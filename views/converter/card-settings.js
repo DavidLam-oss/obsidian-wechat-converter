@@ -171,12 +171,12 @@ buildCardSettingsPanel() {
   const tokenTabBtn = navRow.createEl('button', {
     cls: 'icard-settings-segment is-active',
     text: '排版样式',
-    attr: { type: 'button', 'data-tab': 'token', 'aria-pressed': 'true', 'title': '主题、比例、字号、边距、页脚排版参数' },
+    attr: { type: 'button', 'data-tab': 'token', 'aria-pressed': 'true', 'aria-label': '主题、比例、字号、边距、页脚排版参数' },
   });
   const coverTabBtn = navRow.createEl('button', {
     cls: 'icard-settings-segment',
     text: '封面设置',
-    attr: { type: 'button', 'data-tab': 'cover', 'aria-pressed': 'false', 'title': '封面开关、主标题、作者、日期与摘要' },
+    attr: { type: 'button', 'data-tab': 'cover', 'aria-pressed': 'false', 'aria-label': '封面开关、主标题、作者、日期与摘要' },
   });
 
   tokenTabBtn.addEventListener('click', () => { this.switchCardSettingsSubTab('token'); });
@@ -220,7 +220,7 @@ buildCardSettingsPanel() {
       const btn = grid.createEl('button', {
         cls: 'apple-btn-size',
         text: theme.name,
-        attr: { 'data-value': themeId, 'title': `${theme.name}（切换主题会一并恢复该主题的字号 / 行高 / 边距默认值）` },
+        attr: { 'data-value': themeId, 'aria-label': `${theme.name}（切换主题会一并恢复该主题的字号 / 行高 / 边距默认值）` },
       });
       btn.addEventListener('click', () => { this.applyCardTheme(themeId); });
     }
@@ -235,7 +235,7 @@ buildCardSettingsPanel() {
       const label = CARD_RATIO_LABELS[ratioId] || ratioId;
       const btn = grid.createEl('button', {
         cls: 'icard-ratio-option',
-        attr: { 'data-value': ratioId, 'title': label },
+        attr: { 'data-value': ratioId, 'aria-label': label },
       });
       btn.createEl('span', { cls: 'icard-ratio-shape', attr: { 'data-ratio': ratioId } });
       btn.createEl('span', { cls: 'icard-ratio-text', text: ratioId });
