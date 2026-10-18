@@ -6,7 +6,7 @@
 
 An all-in-one publishing and formatting plugin for Obsidian. It not only solves the "last mile" problem of formatting notes for WeChat Official Accounts and Feishu Cloud Documents, but now also introduces the **Multi-page Image Card Studio (Card Mode)** and one-click multi-platform distribution to Zhihu, Juejin, Xiaohongshu, and CSDN via the companion browser extension.
 
-![Version](https://img.shields.io/badge/version-2.11.3-blue)
+![Version](https://img.shields.io/badge/version-2.11.4-blue)
 ![Obsidian](https://img.shields.io/badge/Obsidian-1.4.0+-purple)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Chrome Companion](https://img.shields.io/badge/Chrome%20Companion-Obsidian%20Publisher%20%E2%80%A2%20Available-7c3aed)

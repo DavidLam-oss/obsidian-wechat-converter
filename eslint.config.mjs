@@ -267,6 +267,7 @@ export default [
       "views/converter/clipboard.js",
       "views/converter/core.js",
       "views/converter/panel-shell.js",
+      "views/converter/phone-frame.js",
       "views/converter/settings-panel.js",
       "views/converter/sticker-preview.js",
       "views/converter/style-panel.js",

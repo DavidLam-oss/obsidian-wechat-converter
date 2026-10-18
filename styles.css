@@ -404,6 +404,14 @@
   color: var(--apple-secondary);
 }
 
+/* 针对 13 寸笔记本等较矮视口，收敛顶部工具栏上下间距，留出更多预览空间 */
+@media (max-height: 760px) {
+  .apple-preview-header {
+    padding: 10px 16px 8px 16px;
+    gap: 8px;
+  }
+}
+
 /*
 ## 核心功能
 
@@ -2241,13 +2249,16 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
    ======================================== */
 .apple-preview-wrapper {
   flex: 1;
+  min-height: 0;
   display: flex;
-  /* 使用 grid 布局特性或 margin:auto 实现完美的居中+滚动体验 */
+  /* 使用 margin:auto 实现居中与紧凑视口贴合 */
   justify-content: center;
-  align-items: flex-start; /* 关键：防止高度不够时顶部被裁剪 */
+  align-items: center;
   background: var(--apple-surface);
-  overflow: auto; /* 开启画布滚动 */
-  padding: 40px;
+  overflow-x: auto;
+  overflow-y: hidden; /* 由手机内部独立平滑滚动，避免外层画布出现多余纵向滚动条 */
+  padding: clamp(12px, 2.5vh, 24px) 16px;
+  box-sizing: border-box;
 }
 
 /* 深色模式下背景适配 */
@@ -2259,27 +2270,30 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 .theme-dark .apple-phone-frame {
   box-shadow:
     inset 0 0 0 2px #e5e5e5,
-    0 0 0 10px #1d1d1f,
-    0 0 0 11px rgba(255, 255, 255, 0.1), /* 1px 微弱高光外描边 */
-    0 40px 80px -20px rgba(0, 0, 0, 0.8); /* 更深的投影 */
+    0 0 0 8px #1d1d1f,
+    0 0 0 9px rgba(255, 255, 255, 0.1), /* 1px 微弱高光外描边 */
+    0 20px 40px -10px rgba(0, 0, 0, 0.8); /* 更深的投影 */
 }
 
 .apple-phone-frame {
-  /* === 核心修复：严格锁定尺寸，禁止变形 === */
-  width: 375px;
-  height: 812px;
-  min-width: 375px;
-  min-height: 812px;
-  flex: 0 0 auto; /* 禁止 Flex 压缩或拉伸 */
+  /* === 宽度收窄至 340px，比例更修长；高度自适应视口并在大屏上限高 740px === */
+  width: 340px;
+  min-width: 340px;
+  max-width: 100%;
+  height: 100%;
+  max-height: 740px;
+  min-height: 320px;
+  box-sizing: border-box;
+  flex: 0 0 auto; /* 禁止水平 Flex 压缩 */
   margin: auto; /* 在 flex 容器中自动居中 */
 
-  border-radius: 56px;
+  border-radius: 44px;
   background: #ffffff;
-  /* 拟态边框 + 深邃阴影 */
+  /* 拟态黑边框 (8px 现代微窄边框) + 柔和立体阴影 */
   box-shadow:
     inset 0 0 0 2px #e5e5e5,
-    0 0 0 10px #1d1d1f,
-    0 40px 80px -20px rgba(0, 0, 0, 0.4);
+    0 0 0 8px #1d1d1f,
+    0 20px 40px -10px rgba(0, 0, 0, 0.35);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -2287,40 +2301,179 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   transition: box-shadow 0.3s ease; /* 仅阴影过渡，尺寸不再过渡 */
 }
 
-/* 手机顶部状态栏/导航栏区域 */
+/* 顶部 iOS 状态栏 (时间、灵动岛、网络与电量) */
+.apple-phone-status-bar {
+  height: 28px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 26px; /* 两侧内收，避开手机顶角圆角弧度 */
+  background: #ffffff;
+  color: #1d1d1f;
+  font-size: 12px;
+  font-weight: 600;
+  user-select: none;
+  z-index: 12;
+  flex-shrink: 0;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.apple-status-time {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: #1d1d1f;
+  width: 44px;
+}
+
+.apple-status-island {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 6px;
+  width: 66px;
+  height: 16px;
+  background: #000000;
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+.apple-status-icons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 44px;
+  justify-content: flex-end;
+}
+
+.apple-status-signal {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 1.5px;
+  height: 10px;
+}
+
+.apple-status-signal span {
+  width: 2px;
+  background: currentColor;
+  border-radius: 0.5px;
+}
+
+.apple-status-signal span:nth-child(1) { height: 3px; }
+.apple-status-signal span:nth-child(2) { height: 5px; }
+.apple-status-signal span:nth-child(3) { height: 7px; }
+.apple-status-signal span:nth-child(4) { height: 9.5px; }
+
+.apple-status-wifi {
+  display: inline-block;
+  color: currentColor;
+  flex-shrink: 0;
+}
+
+.apple-status-battery {
+  width: 20px;
+  height: 10px;
+  border: 1.2px solid currentColor;
+  border-radius: 3px;
+  padding: 1px;
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+
+.apple-status-battery::after {
+  content: '';
+  position: absolute;
+  right: -3px;
+  top: 2px;
+  width: 1.2px;
+  height: 3.5px;
+  background: currentColor;
+  border-radius: 0 1px 1px 0;
+}
+
+.apple-status-battery-level {
+  width: 80%;
+  height: 100%;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+/* 手机顶部微信导航栏 */
 .apple-phone-header {
-  height: 44px;
-  min-height: 44px;
+  height: 36px;
+  min-height: 36px;
   display: flex;
   justify-content: center;
   align-items: center;
   background: #ffffff;
   color: #1d1d1f;
-  font-size: 16px;
+  font-size: 14.5px;
   font-weight: 600;
   position: relative;
-
-  /* UI 微调：大幅上移，贴近刘海 */
-  margin-top: 12px; /* 原 26px -> 12px */
-  border-bottom: 1px solid rgba(0,0,0,0.05);
+  margin-top: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   z-index: 10;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .apple-phone-header .title {
   text-align: center;
-  transform: translateY(-2px);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #1d1d1f;
 }
 
-.apple-phone-header .dots {
+/* 微信小程序 / 网页经典胶囊按钮 */
+.apple-phone-capsule {
   position: absolute;
-  right: 24px;
-  font-size: 20px;
-  line-height: 1;
-  /* 颜色调浅 */
-  color: rgba(0, 0, 0, 0.2);
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 7px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  user-select: none;
+}
+
+.apple-phone-capsule .dots {
+  font-size: 13px;
   letter-spacing: 1px;
-  transform: translateY(-2px);
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.65);
+  transform: translateY(-1px);
+}
+
+.apple-phone-capsule .divider {
+  width: 1px;
+  height: 10px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.apple-phone-capsule .circle {
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid rgba(0, 0, 0, 0.65);
+  border-radius: 50%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.apple-phone-capsule .circle::after {
+  content: '';
+  width: 3px;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 50%;
 }
 
 .apple-phone-header .back {
@@ -2329,8 +2482,8 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 
 /* 底部 Home Indicator */
 .apple-home-indicator {
-  height: 34px;
-  min-height: 34px;
+  height: 24px;
+  min-height: 24px;
   background: #ffffff;
   display: flex;
   justify-content: center;
@@ -2341,18 +2494,20 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 
 .apple-home-indicator::after {
   content: '';
-  width: 134px;
-  height: 5px;
+  width: 110px;
+  height: 4px;
   background: #000000;
   border-radius: 100px;
-  opacity: 0.1; /* 调浅一点，不抢眼 */
+  opacity: 0.16;
 }
 
 .apple-converter-preview {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 20px 16px; /* 恢复边距 */
+  overscroll-behavior: contain; /* 边缘触底/触顶时阻止联动滚动画布 */
+  padding: 16px 14px; /* 优雅边距 */
   background: #ffffff;
   margin: 0;
   border-radius: 0;
@@ -2560,6 +2715,52 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 
   .apple-actions {
     flex-direction: column;
+  }
+}
+
+/* 针对 13 寸笔记本等较矮视口优化 */
+@media (max-height: 760px) {
+  .apple-preview-wrapper {
+    padding: 8px 12px;
+  }
+
+  .apple-phone-frame {
+    border-radius: 38px;
+    box-shadow:
+      inset 0 0 0 2px #e5e5e5,
+      0 0 0 7px #1d1d1f,
+      0 14px 28px -8px rgba(0, 0, 0, 0.35);
+  }
+
+  .theme-dark .apple-phone-frame {
+    box-shadow:
+      inset 0 0 0 2px #e5e5e5,
+      0 0 0 7px #1d1d1f,
+      0 0 0 8px rgba(255, 255, 255, 0.1),
+      0 14px 28px -8px rgba(0, 0, 0, 0.8);
+  }
+
+  .apple-phone-status-bar {
+    height: 24px;
+    min-height: 24px;
+    padding: 0 22px;
+  }
+
+  .apple-status-island {
+    top: 4px;
+    width: 58px;
+    height: 14px;
+  }
+
+  .apple-phone-header {
+    height: 32px;
+    min-height: 32px;
+    font-size: 13.5px;
+  }
+
+  .apple-home-indicator {
+    height: 20px;
+    min-height: 20px;
   }
 }
 

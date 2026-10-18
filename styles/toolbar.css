@@ -290,3 +290,11 @@
   color: var(--apple-secondary);
 }
 
+/* 针对 13 寸笔记本等较矮视口，收敛顶部工具栏上下间距，留出更多预览空间 */
+@media (max-height: 760px) {
+  .apple-preview-header {
+    padding: 10px 16px 8px 16px;
+    gap: 8px;
+  }
+}
+

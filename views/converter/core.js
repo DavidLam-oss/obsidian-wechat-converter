@@ -52,6 +52,7 @@ import {
 import { applyCompiledCustomCss } from '../../services/custom-css-inliner.js';
 import { compileCustomCss } from '../../services/custom-css-compiler.js';
 import { resolveCustomCssSource } from '../../services/custom-css-source.js';
+import { mountPhoneFrame } from './phone-frame.js';
 
 /**
  * @param {AppleStyleViewContract} view
@@ -100,21 +101,7 @@ async onOpen() {
   });
 
   if (usePhoneFrame) {
-    // === 手机仿真模式 ===
-    const phoneFrame = previewWrapper.createEl('div', { cls: 'apple-phone-frame' });
-
-    // 1. 顶部导航栏 (模拟微信)
-    const header = phoneFrame.createEl('div', { cls: 'apple-phone-header' });
-    header.createEl('span', { cls: 'title', text: '公众号预览' });
-    header.createEl('span', { cls: 'dots', text: '•••' });
-
-    // 2. 内容区域 (挂载到手机框内)
-    this.previewContainer = phoneFrame.createEl('div', {
-      cls: 'apple-converter-preview',
-    });
-
-    // 3. 底部 Home Indicator
-    phoneFrame.createEl('div', { cls: 'apple-home-indicator' });
+    this.previewContainer = mountPhoneFrame(previewWrapper);
   } else {
     // === 经典无框模式 ===
     // 直接挂载到 wrapper，且 wrapper 样式会变为填满父容器
