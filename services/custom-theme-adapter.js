@@ -31,10 +31,10 @@ export const BUILTIN_ARTICLE_THEMES = /** @type {const} */ ([
   { value: 'wechat', label: '经典' },
   { value: 'serif', label: '优雅' },
   { value: 'paper', label: '纸张长文' },
-  { value: 'grid', label: '方格图纸' },
-  { value: 'typo', label: '排印风' },
-  { value: 'media', label: '多媒体' },
-  { value: 'colorful', label: '缤纷彩' },
+  { value: 'grid', label: '网格文档' },
+  { value: 'typo', label: 'Typo' },
+  { value: 'media', label: '清爽媒体' },
+  { value: 'colorful', label: '彩色强调' },
 ]);
 
 /**

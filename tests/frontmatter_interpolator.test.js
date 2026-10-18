@@ -23,6 +23,7 @@ import {
   resolveVariableValue,
   findUnresolvedVariables,
   interpolateMarkdownVariables,
+  stripUnresolvedVariableHighlights,
   DEFAULT_UNRESOLVED_TAG_CLASS,
 } from '../services/frontmatter-interpolator.js';
 import { createNoteCardSession } from '../services/card-session.js';
@@ -166,6 +167,16 @@ author: 乔木
     expect(unresolved).toContain('column');
     expect(unresolved).not.toContain('author');
     expect(unresolved).not.toContain('ignore');
+  });
+
+  it('should strip unresolved variable highlights from HTML for export', () => {
+    const inputHtml = `<p>正文内容，所属专栏：<span class="${DEFAULT_UNRESOLVED_TAG_CLASS}" style="background-color: #FEF08A; color: #854D0E;">{{专栏（待填写）}}</span>，结束。</p>`;
+    const stripped = stripUnresolvedVariableHighlights(inputHtml);
+
+    expect(stripped).toBe('<p>正文内容，所属专栏：{{专栏}}，结束。</p>');
+    expect(stripped).not.toContain(DEFAULT_UNRESOLVED_TAG_CLASS);
+    expect(stripped).not.toContain('#FEF08A');
+    expect(stripped).not.toContain('待填写');
   });
 });
 

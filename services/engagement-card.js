@@ -30,7 +30,7 @@
 export const DEFAULT_ENGAGEMENT_CTA_TEXT = '如果对你有启发，欢迎点赞、在看、转发';
 
 /** @type {Record<string, string>} */
-const THEME_PRESET_COLORS = {
+export const THEME_PRESET_COLORS = {
   blue: '#0366d6',
   green: '#28a745',
   purple: '#6f42c1',

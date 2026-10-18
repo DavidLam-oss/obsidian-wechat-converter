@@ -226,7 +226,9 @@ export function findUnresolvedVariables(markdown, options = {}) {
   ) || {};
 
   const mergedVariables = Object.assign({}, fmMap, contextFm, explicitVars);
-  const context = (options.context && typeof options.context === 'object') ? options.context : {};
+  const context = (options.context && typeof options.context === 'object')
+    ? /** @type {Record<string, unknown>} */ (options.context)
+    : {};
 
   const segments = splitMarkdownCodeSegments(body, null);
   /** @type {Set<string>} */
@@ -318,3 +320,21 @@ export function interpolateMarkdownVariables(markdown, options = {}) {
 
   return header + processedSegments.join('');
 }
+
+/**
+ * 从 HTML 中剥离未解析变量的黄色高亮标签，还原为原始的 {{key}} 纯文本
+ * 用于复制到剪贴板或同步微信草稿箱等最终发布出口
+ * @param {string} html
+ * @returns {string}
+ */
+export function stripUnresolvedVariableHighlights(html) {
+  const content = String(html || '');
+  if (!content.includes(DEFAULT_UNRESOLVED_TAG_CLASS)) return content;
+
+  // 匹配类似 <span class="wechat-unresolved-variable" style="...">{{专栏（待填写）}}</span>
+  return content.replace(
+    new RegExp(`<span\\b[^>]*class=["'][^"']*${DEFAULT_UNRESOLVED_TAG_CLASS}[^"']*["'][^>]*>\\s*\\{\\{\\s*([\\w\\u4e00-\\u9fa5_-]+?)(?:（待填写）)?\\s*\\}\\}\\s*<\\/span>`, 'gi'),
+    (_fullMatch, key) => `{{${key}}}`
+  );
+}
+

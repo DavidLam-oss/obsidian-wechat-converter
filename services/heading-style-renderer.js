@@ -53,17 +53,7 @@ export const HEADING_STYLE_LABELS = /** @type {const} */ ({
   [HEADING_STYLES.ZEN]: '留白禅意（Zen）',
 });
 
-/** @type {Record<string, string>} */
-const THEME_PRESET_COLORS = {
-  blue: '#0366d6',
-  green: '#28a745',
-  purple: '#6f42c1',
-  orange: '#fd7e14',
-  teal: '#20c997',
-  rose: '#e83e8c',
-  ruby: '#dc3545',
-  slate: '#6c757d',
-};
+import { THEME_PRESET_COLORS } from './engagement-card.js';
 
 /**
  * 转换 Hex 色值为 RGB 分量

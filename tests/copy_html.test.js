@@ -435,4 +435,14 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
     const lastNotice = globalThis.__obsidianNoticeRegistry?.at(-1);
     expect(lastNotice?.message).toContain('微信不支持直接粘贴视频');
   });
+
+  it('should strip unresolved variable highlight tags during cleanHtmlForDraft for clipboard copy', () => {
+    const inputWithHighlights = '<section><p>所属专栏：<span class="wechat-unresolved-variable" style="background-color: #FEF08A; color: #854D0E;">{{专栏（待填写）}}</span></p></section>';
+    const cleaned = AppleStyleView.prototype.cleanHtmlForDraft.call(view, inputWithHighlights);
+
+    expect(cleaned).not.toContain('wechat-unresolved-variable');
+    expect(cleaned).not.toContain('#FEF08A');
+    expect(cleaned).not.toContain('待填写');
+    expect(cleaned).toContain('{{专栏}}');
+  });
 });

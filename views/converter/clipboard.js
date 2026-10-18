@@ -51,6 +51,7 @@ import {
   getObsidianRequestUrl,
   pMap,
 } from '../apple-style-view-shared.js';
+import { stripUnresolvedVariableHighlights } from '../../services/frontmatter-interpolator.js';
 
 /**
  * Keep syntax-highlight markup while making copied code safe to execute.
@@ -177,7 +178,8 @@ async svgToPngBlob(svgElement, scale = 3) {
 ,
 
 cleanHtmlForDraft(html) {
-  return cleanHtmlForDraftService(html);
+  const cleaned = cleanHtmlForDraftService(html);
+  return stripUnresolvedVariableHighlights(cleaned);
 }
 ,
 
