@@ -400,5 +400,7 @@ type WechatSettingsMethodsContract = Pick<
     AppleStyleSettingTabContract,
     | 'renderWechatSettingsTab'
     | 'renderEngagementCardSection'
+    | 'renderHeadingStyleSection'
+    | 'renderFrontmatterInterpolationSection'
     | 'renderCustomCssSection'
 >;

@@ -46,6 +46,7 @@ import {
   normalizeAiSettings,
 } from './ai-layout.js';
 import { normalizeCustomThemesList } from './theme-token-validator.js';
+import { VALID_HEADING_STYLES } from './heading-style-renderer.js';
 
 /** @param {unknown} value @returns {value is Record<string, unknown>} */
 function isRecord(value) {
@@ -150,6 +151,10 @@ export function createDefaultSettings() {
     engagementCtaText: '',
     // 自定义主题 Token 预设库（Phase 2）
     customThemes: [],
+    // 标题分节样式扩展（Phase 3）
+    headingStyle: 'default',
+    // 动态 Frontmatter 变量插值（Phase 3，默认开启）
+    enableFrontmatterInterpolation: true,
     multiPlatformSync: createDefaultMultiPlatformSyncSettings(),
     feishuSync: createDefaultFeishuSyncSettings(),
     wechatAppId: '',
@@ -279,6 +284,12 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
 
   // 自定义主题 Token 预设库（Phase 2）
   settings.customThemes = normalizeCustomThemesList(settings.customThemes);
+
+  // 标题分节样式扩展与动态变量插值（Phase 3）
+  settings.headingStyle = typeof settings.headingStyle === 'string' && VALID_HEADING_STYLES.includes(/** @type {any} */ (settings.headingStyle))
+    ? settings.headingStyle
+    : 'default';
+  settings.enableFrontmatterInterpolation = settings.enableFrontmatterInterpolation !== false;
 
   // Unsplash Access Key：去除多余空白字符
   const rawUnsplashKey = settings.unsplashAccessKey;

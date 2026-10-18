@@ -527,6 +527,8 @@ interface AppleStyleSettingTabContract extends SettingTabBaseLike {
     renderSettingsContent(): void;
     renderWechatSettingsTab(containerEl: ObsidianElementLike): void;
     renderEngagementCardSection(containerEl: ObsidianElementLike): void;
+    renderHeadingStyleSection(containerEl: ObsidianElementLike): void;
+    renderFrontmatterInterpolationSection(containerEl: ObsidianElementLike): void;
     renderCustomCssSection(containerEl: ObsidianElementLike): void;
     _activeSettingsTab: string;
     /**

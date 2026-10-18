@@ -467,6 +467,8 @@ const wechatSettingsMethods = {
     });
 
     this.renderEngagementCardSection(containerEl);
+    this.renderHeadingStyleSection(containerEl);
+    this.renderFrontmatterInterpolationSection(containerEl);
     this.renderCustomCssSection(containerEl);
 
   },
@@ -502,6 +504,49 @@ const wechatSettingsMethods = {
         .setValue(this.plugin.settings.engagementCtaText || '')
         .onChange(async (value) => {
           this.plugin.settings.engagementCtaText = value.trim();
+          await this.plugin.saveSettings();
+        }));
+  },
+
+  /**
+   * 渲染「文章标题分节样式」设置区块（Phase 3）。
+   * @param {ObsidianElementLike} containerEl
+   */
+  renderHeadingStyleSection(containerEl) {
+    renderSectionHeader(containerEl, 'heading', '文章标题分节样式');
+
+    const currentStyle = this.plugin.settings.headingStyle || 'default';
+    new Setting(containerEl)
+      .setName('标题分节风格')
+      .setDesc('为文章二级标题（h2）应用不同视觉装饰。微信复制与草稿同步均完整保留内联样式。')
+      .addDropdown(dropdown => {
+        dropdown.addOption('default', '经典极简（默认）');
+        dropdown.addOption('serial-number', '大数字序号（01、02）');
+        dropdown.addOption('badge', '胶囊徽标（Badge）');
+        dropdown.addOption('zen', '留白禅意（Zen）');
+        dropdown.setValue(currentStyle);
+        dropdown.onChange(async (value) => {
+          this.plugin.settings.headingStyle = value;
+          await this.plugin.saveSettings();
+        });
+      });
+  },
+
+  /**
+   * 渲染「动态 Frontmatter 变量插值」设置区块（Phase 3）。
+   * @param {ObsidianElementLike} containerEl
+   */
+  renderFrontmatterInterpolationSection(containerEl) {
+    renderSectionHeader(containerEl, 'file-text', '动态 Frontmatter 变量插值');
+
+    const enabled = this.plugin.settings.enableFrontmatterInterpolation !== false;
+    new Setting(containerEl)
+      .setName('启用动态变量插值')
+      .setDesc('支持在正文中使用 {{date}}、{{author}}、{{column}}、{{title}} 等模板变量。预览时标黄提示未填写的变量。')
+      .addToggle(toggle => toggle
+        .setValue(enabled)
+        .onChange(async (value) => {
+          this.plugin.settings.enableFrontmatterInterpolation = value;
           await this.plugin.saveSettings();
         }));
   },

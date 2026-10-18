@@ -187,6 +187,8 @@ export default [
       "services/dependency-loader.js",
       "services/dom-utils.js",
       "services/engagement-card.js",
+      "services/frontmatter-interpolator.js",
+      "services/heading-style-renderer.js",
       "services/image-source-utils.js",
       "services/image-swipe-callout.js",
       "services/obsidian-compat.js",

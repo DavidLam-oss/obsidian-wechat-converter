@@ -97,4 +97,24 @@ describe('Render Pipeline (Native-only)', () => {
     const html = await pipelines.nativePipeline.renderForPreview('x');
     expect(html).toBe('<section>native</section>');
   });
+
+  it('native pipeline should interpolate frontmatter variables and decorate headings', async () => {
+    const nativeRenderer = vi.fn().mockImplementation((md) => `<section><h2>${md}</h2></section>`);
+    const native = new NativeRenderPipeline({ nativeRenderer });
+
+    const inputMd = `---
+column: 深度技术
+---
+欢迎来到{{column}}`;
+
+    const html = await native.renderForPreview(inputMd, {
+      headingStyle: 'serial-number',
+      themeColor: 'green',
+    });
+
+    expect(nativeRenderer).toHaveBeenCalledWith(expect.stringContaining('欢迎来到深度技术'), expect.any(Object));
+    expect(html).toContain('font-size: 34px');
+    expect(html).toContain('01');
+    expect(html).toContain('深度技术');
+  });
 });
