@@ -529,7 +529,6 @@ export function renderAiSettingsTab(tab, containerEl, options = {}) {
   unsplashSetting.addButton((button) => {
     button
       .setButtonText("测试连接")
-      .setTooltip("验证 Access Key 有效性")
       .onClick(async () => {
         const key = (tab.plugin.settings.unsplashAccessKey || "").trim();
         if (!key) {

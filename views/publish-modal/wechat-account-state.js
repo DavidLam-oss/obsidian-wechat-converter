@@ -31,6 +31,8 @@ import {
   getObsidianModalClass,
   createObsidianModal,
   isMobileClient,
+  isOfficialProxyUrl,
+  WECHAT_IP_WHITELIST_GUIDE_URL,
 } from '../apple-style-view-shared.js';
 
 /** @type {WechatAccountStateMethodsContract & ThisType<AppleStyleViewContract>} */
@@ -89,12 +91,27 @@ showSyncFailureActions(message, options = {}) {
   const body = modal.contentEl.createDiv({ cls: 'wechat-sync-failure-state' });
   body.createEl('p', { cls: 'wechat-sync-failure-message', text: message });
   
-  const isProxyAuth = !!options.isProxyAuth;
-  const hasDraftAssociation = !isProxyAuth && !!options.draftAssociation?.mediaId && !!options.draftAssociation?.sourcePath;
-  
+  const proxyUrl = options.proxyUrl !== undefined ? options.proxyUrl : (this.plugin?.settings?.proxyUrl || '');
+  const isOfficialProxy = isOfficialProxyUrl(proxyUrl);
+  const isIpWhitelist = options.isIpWhitelist !== undefined
+    ? !!options.isIpWhitelist
+    : /40164|not in whitelist|invalid ip/i.test(message);
+  const isProxyAuth = !isIpWhitelist && !!options.isProxyAuth;
+  const hasDraftAssociation = !isProxyAuth && !isIpWhitelist && !!options.draftAssociation?.mediaId && !!options.draftAssociation?.sourcePath;
+
   let hintText = '可以重试同步，或先检查账号配置。';
-  if (isProxyAuth) {
-    hintText = '请检查您的 API 代理地址和 Token 配置是否正确。若服务已到期，请联系作者续费。';
+  if (isIpWhitelist) {
+    if (isOfficialProxy) {
+      hintText = '官方中转出口 IP 变动或未在白名单中，请稍后重试或联系作者。';
+    } else {
+      const ipMatch = String(message).match(/invalid ip\s+([0-9.]+)/i);
+      const ipText = ipMatch ? `当前 IP（${ipMatch[1]}）` : '当前网络 IP';
+      hintText = `检测到${ipText}未在微信白名单中。请登录微信开发者平台（developers.weixin.qq.com/platform），进入「我的业务」选择对应公众号，将该 IP 添加至「API IP 白名单」；若网络 IP 经常变动，可在插件设置中配置官方 API 代理中转服务。`;
+    }
+  } else if (isProxyAuth) {
+    hintText = isOfficialProxy
+      ? '请检查您的 API 代理地址和 Token 配置是否正确。若服务已到期，请联系作者续费。'
+      : '请检查您的 API 代理地址和 Token 配置是否正确。';
   } else if (hasDraftAssociation) {
     hintText = '可以重试同步；如果微信后台草稿已被删除或无法更新，也可以取消关联后新建草稿。';
   }
@@ -115,6 +132,18 @@ showSyncFailureActions(message, options = {}) {
       new Notice('请在设置中打开 Obsidian 发布助手并配置公众号账号');
     }
   };
+
+  if (isIpWhitelist && !isOfficialProxy) {
+    const guideBtn = btnRow.createEl('button', { text: '查看配置指南' });
+    guideBtn.onclick = () => {
+      modal.close();
+      if (typeof this.openExternalUrl === 'function') {
+        this.openExternalUrl(WECHAT_IP_WHITELIST_GUIDE_URL);
+      } else if (typeof window !== 'undefined' && typeof window.open === 'function') {
+        window.open(WECHAT_IP_WHITELIST_GUIDE_URL, '_blank', 'noopener');
+      }
+    };
+  }
 
   if (hasDraftAssociation) {
     const resetDraftBtn = btnRow.createEl('button', { text: '取消关联并新建草稿' });

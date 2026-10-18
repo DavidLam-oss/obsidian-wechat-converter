@@ -381,4 +381,31 @@ describe('Obsidian Triplet Renderer math', () => {
     expect(html1).not.toMatch(/\u200B\w+_\d+_[a-z0-9]+_(BLOCK|INLINE)\u200B/);
     expect(html2).not.toMatch(/\u200B\w+_\d+_[a-z0-9]+_(BLOCK|INLINE)\u200B/);
   });
+
+  it('should render matrix/array dividing lines and borders with inlined stroke styles', async () => {
+    const converter = await createLegacyConverter();
+    const input = '$$\\begin{array}{c|c} 1 & 2 \\\\ \\hline 3 & 4 \\end{array}$$';
+    const rendered = converter.md.render(input);
+    expect(rendered).toMatch(/<line[^>]*data-line[^>]*style="[^"]*stroke-width:\s*70px[^"]*"/);
+    expect(rendered).toMatch(/<line[^>]*data-line[^>]*style="[^"]*fill:\s*none[^"]*"/);
+  });
+
+  it('should render cancel and extpfeil macros without undefined error', async () => {
+    const converter = await createLegacyConverter();
+    const input = '$\\cancel{x}$ and $\\xlongequal[below]{above}$';
+    const rendered = converter.md.render(input);
+    expect(rendered).not.toContain('merror');
+    expect(rendered).toMatch(/mjx-container/);
+    expect(rendered).toContain('data-c');
+  });
+
+  it('should isolate newcommand macros across separate converter instances', async () => {
+    const [c1, c2] = await Promise.all([createLegacyConverter(), createLegacyConverter()]);
+    c1.md.render('$$\\newcommand{\\mysecretmacro}{SECRET}$$');
+    const out1 = c1.md.render('$\\mysecretmacro$');
+    const out2 = c2.md.render('$\\mysecretmacro$');
+    expect(out1).toContain('data-c="1D446"'); // Math italic 'S' from SECRET
+    expect(out2).not.toContain('data-c="1D446"');
+  });
 });
+

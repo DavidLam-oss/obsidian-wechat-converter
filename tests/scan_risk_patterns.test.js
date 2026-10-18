@@ -27,6 +27,7 @@ import {
   shouldScanFile,
   runRuleSelfTests,
   checkUnbalancedEslintDisable,
+  checkVersionConsistency,
   runScan,
 } from '../scripts/check-scan-risk-patterns.mjs';
 
@@ -420,6 +421,164 @@ describe('Scan Risk Patterns Guard', () => {
 
       const result = await runScan(tempDir);
       expect(result.findings).toHaveLength(0);
+    });
+  });
+
+  describe('no-vault-getfiles-find rule', () => {
+    const rule = RULES.find((r) => r.id === 'no-vault-getfiles-find');
+
+    it('blocks app.vault.getFiles().find', () => {
+      const invalidSnippets = [
+        'const target = app.vault.getFiles().find((f) => f.path === targetPath);',
+        'const file = vault.getFiles().find(fn);',
+      ];
+      for (const snippet of invalidSnippets) {
+        const matches = findMatches(snippet, rule.pattern);
+        expect(matches.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('allows app.vault.getAbstractFileByPath', () => {
+      const validSnippets = [
+        'const target = app.vault.getAbstractFileByPath(targetPath);',
+        'const files = app.vault.getFiles();',
+      ];
+      for (const snippet of validSnippets) {
+        const matches = findMatches(snippet, rule.pattern);
+        expect(matches.length).toBe(0);
+      }
+    });
+  });
+
+  describe('no-view-lifecycle-collision rule', () => {
+    const rule = RULES.find((r) => r.id === 'no-view-lifecycle-collision');
+
+    it('blocks forbidden lifecycle method declarations', () => {
+      const invalidSnippets = [
+        'open() {\n  return;\n}',
+        'async close() {\n  await something();\n}',
+        'load() {\n}',
+        'unload() {\n}',
+        'onload() {\n}',
+        'onunload() {\n}',
+        'async setState(state) {\n}',
+        'getState() {\n  return {};\n}',
+      ];
+      for (const snippet of invalidSnippets) {
+        const matches = findMatches(snippet, rule.pattern);
+        expect(matches.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('allows valid Obsidian view callbacks and calls', () => {
+      const validSnippets = [
+        'async onOpen() {\n}',
+        'async onClose() {\n}',
+        'openModal() {\n}',
+        'this.close();',
+        'const open = true;',
+      ];
+      for (const snippet of validSnippets) {
+        const matches = findMatches(snippet, rule.pattern);
+        expect(matches.length).toBe(0);
+      }
+    });
+
+    it('only targets views/ directory via includedPathPrefixes', () => {
+      expect(ruleAppliesToFile(rule, 'views/converter/core.js')).toBe(true);
+      expect(ruleAppliesToFile(rule, 'services/wechat-video.js')).toBe(false);
+    });
+  });
+
+  describe('no-setting-implicit-return rule', () => {
+    const rule = RULES.find((r) => r.id === 'no-setting-implicit-return');
+
+    it('blocks implicit or explicit return of Setting instances', () => {
+      const invalidSnippets = [
+        'const fn = (el) => new Setting(el);',
+        'function build(el) {\n  return new Setting(el);\n}',
+        'const add = (card, item) => card.addSetting(item);',
+        'function add(card) {\n  return this.addSetting(card);\n}',
+      ];
+      for (const snippet of invalidSnippets) {
+        const matches = findMatches(snippet, rule.pattern);
+        expect(matches.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('allows standard Setting configuration and non-Setting returns', () => {
+      const validSnippets = [
+        'new Setting(containerEl).setName("Title");',
+        'const setting = new Setting(containerEl);',
+        'return this;',
+        'return settingValue;',
+      ];
+      for (const snippet of validSnippets) {
+        const matches = findMatches(snippet, rule.pattern);
+        expect(matches.length).toBe(0);
+      }
+    });
+  });
+
+  describe('checkVersionConsistency', () => {
+    it('detects mismatched package.json version', async () => {
+      const dir = await mkdtemp(path.join(os.tmpdir(), 'vc-test-'));
+      try {
+        await writeFile(path.join(dir, 'manifest.json'), JSON.stringify({ version: '2.11.2', minAppVersion: '1.4.0' }));
+        await writeFile(path.join(dir, 'package.json'), JSON.stringify({ version: '2.11.1' }));
+        await writeFile(path.join(dir, 'package-lock.json'), JSON.stringify({ version: '2.11.2', packages: { '': { version: '2.11.2' } } }));
+        await writeFile(path.join(dir, 'versions.json'), JSON.stringify({ '2.11.2': '1.4.0' }));
+
+        const findings = await checkVersionConsistency(dir);
+        expect(findings.some((f) => f.id === 'version-mismatch-package')).toBe(true);
+      } finally {
+        await rm(dir, { recursive: true, force: true });
+      }
+    });
+
+    it('detects mismatched package-lock.json root or packages version', async () => {
+      const dir = await mkdtemp(path.join(os.tmpdir(), 'vc-test-'));
+      try {
+        await writeFile(path.join(dir, 'manifest.json'), JSON.stringify({ version: '2.11.2', minAppVersion: '1.4.0' }));
+        await writeFile(path.join(dir, 'package.json'), JSON.stringify({ version: '2.11.2' }));
+        await writeFile(path.join(dir, 'package-lock.json'), JSON.stringify({ version: '2.11.0', packages: { '': { version: '2.11.2' } } }));
+        await writeFile(path.join(dir, 'versions.json'), JSON.stringify({ '2.11.2': '1.4.0' }));
+
+        const findings = await checkVersionConsistency(dir);
+        expect(findings.some((f) => f.id === 'version-mismatch-package-lock-root')).toBe(true);
+      } finally {
+        await rm(dir, { recursive: true, force: true });
+      }
+    });
+
+    it('detects missing versions.json entry', async () => {
+      const dir = await mkdtemp(path.join(os.tmpdir(), 'vc-test-'));
+      try {
+        await writeFile(path.join(dir, 'manifest.json'), JSON.stringify({ version: '2.11.2', minAppVersion: '1.4.0' }));
+        await writeFile(path.join(dir, 'package.json'), JSON.stringify({ version: '2.11.2' }));
+        await writeFile(path.join(dir, 'package-lock.json'), JSON.stringify({ version: '2.11.2', packages: { '': { version: '2.11.2' } } }));
+        await writeFile(path.join(dir, 'versions.json'), JSON.stringify({ '2.11.1': '1.4.0' }));
+
+        const findings = await checkVersionConsistency(dir);
+        expect(findings.some((f) => f.id === 'version-missing-versions-json')).toBe(true);
+      } finally {
+        await rm(dir, { recursive: true, force: true });
+      }
+    });
+
+    it('passes when all versions are aligned', async () => {
+      const dir = await mkdtemp(path.join(os.tmpdir(), 'vc-test-'));
+      try {
+        await writeFile(path.join(dir, 'manifest.json'), JSON.stringify({ version: '2.11.2', minAppVersion: '1.4.0' }));
+        await writeFile(path.join(dir, 'package.json'), JSON.stringify({ version: '2.11.2' }));
+        await writeFile(path.join(dir, 'package-lock.json'), JSON.stringify({ version: '2.11.2', packages: { '': { version: '2.11.2' } } }));
+        await writeFile(path.join(dir, 'versions.json'), JSON.stringify({ '2.11.2': '1.4.0' }));
+
+        const findings = await checkVersionConsistency(dir);
+        expect(findings).toHaveLength(0);
+      } finally {
+        await rm(dir, { recursive: true, force: true });
+      }
     });
   });
 });

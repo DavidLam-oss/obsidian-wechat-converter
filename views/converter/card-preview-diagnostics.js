@@ -64,7 +64,7 @@ renderCardDiagnosticArea(shell, outcome) {
   const toggle = area.createEl('button', {
     cls: 'icard-preview-diagnostics-toggle',
     text: '查看未进入卡片的内容',
-    attr: { 'aria-expanded': 'false', 'title': '展开省略明细' },
+    attr: { 'aria-expanded': 'false' },
   });
   const list = area.createEl('div', { cls: 'icard-preview-diagnostics-list hidden' });
   toggle.addEventListener('click', () => {
@@ -119,7 +119,7 @@ appendCardDiagnosticRow(area, list, item) {
     const locateBtn = row.createEl('button', {
       cls: 'icard-preview-diagnostic-locate',
       text: '定位',
-      attr: { 'aria-label': `定位到原文第 ${item.sourceStart} 行`, 'title': '在编辑器中定位原文' },
+      attr: { 'aria-label': `定位到原文第 ${item.sourceStart} 行` },
     });
     locateBtn.addEventListener('click', () => this.locateCardSourceLine(item.sourceStart));
   }

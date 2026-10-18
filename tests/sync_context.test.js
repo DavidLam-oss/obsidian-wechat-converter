@@ -26,7 +26,7 @@
 */
 
 import { describe, it, expect } from 'vitest';
-const { resolveSyncAccount, toSyncFriendlyMessage } = require('../services/sync-context');
+const { resolveSyncAccount, toSyncFriendlyMessage, isOfficialProxyUrl } = require('../services/sync-context');
 
 describe('Sync Context Service', () => {
   it('resolveSyncAccount should prefer selected account id', () => {
@@ -126,5 +126,21 @@ describe('Sync Context Service', () => {
 
   it('toSyncFriendlyMessage should keep other errors unchanged', () => {
     expect(toSyncFriendlyMessage('network error')).toBe('network error');
+  });
+
+  it('isOfficialProxyUrl should identify official proxy urls with variable tokens', () => {
+    expect(isOfficialProxyUrl('https://wechat-api.xiaoweibox.top/proxy?token=wp_user_bbb123f65bc81771')).toBe(true);
+    expect(isOfficialProxyUrl('http://wechat-api.xiaoweibox.top/proxy?token=any_token')).toBe(true);
+    expect(isOfficialProxyUrl('https://wechat-api.xiaoweibox.top/proxy/')).toBe(true);
+    expect(isOfficialProxyUrl('https://wechat-api.xiaoweibox.top/proxy')).toBe(true);
+  });
+
+  it('isOfficialProxyUrl should return false for custom or invalid urls', () => {
+    expect(isOfficialProxyUrl('https://other-proxy.com/proxy?token=123')).toBe(false);
+    expect(isOfficialProxyUrl('https://wechat-api.xiaoweibox.top/other-endpoint')).toBe(false);
+    expect(isOfficialProxyUrl('')).toBe(false);
+    expect(isOfficialProxyUrl(null)).toBe(false);
+    expect(isOfficialProxyUrl(undefined)).toBe(false);
+    expect(isOfficialProxyUrl('not a url')).toBe(false);
   });
 });

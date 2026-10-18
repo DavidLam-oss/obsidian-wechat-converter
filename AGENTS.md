@@ -58,7 +58,7 @@ This file provides guidance to Codex when working with code in this repository.
 - **Generated embedded dependency snapshot**: `services/generated-embedded-deps.js`
   This is generated. If you change embedded runtime sources such as `converter.js` or `themes/apple-theme.js`, regenerate it before building or testing.
 - **Math bundle**: `lib/mathjax-plugin.js`
-  Built separately via `esbuild.math.mjs` and loaded dynamically.
+  Built via `scripts/generate-embedded-deps.mjs` and embedded into the runtime.
 
 ## Current Product Behavior To Keep In Mind
 - Live preview is a first-class feature; the plugin is expected to feel close to WYSIWYG for WeChat publishing.

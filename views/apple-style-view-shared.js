@@ -104,6 +104,7 @@ export {
 export {
   resolveSyncAccount,
   toSyncFriendlyMessage,
+  isOfficialProxyUrl,
 } from '../services/sync-context.js';
 export {
   createEmptyDraftCache,
@@ -265,6 +266,7 @@ export {
   OBSIDIAN_PUBLISHER_GUIDE_URL,
   OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL,
   OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL,
+  WECHAT_IP_WHITELIST_GUIDE_URL,
   MULTI_PLATFORM_TAB_LABEL,
   MAX_ACCOUNTS,
   AI_LAYOUT_SOURCE_SWITCH_STALE_SUPPRESS_MS,
@@ -336,8 +338,13 @@ function isMobileClient(app) {
 }
 
 export {
+  transformVideosForClipboard,
+} from '../services/wechat-video.js';
+
+export {
   DEFAULT_SETTINGS,
   getWechatAccountPublishOptions,
   normalizeWechatAccountPublishOptions,
   isMobileClient,
 };
+

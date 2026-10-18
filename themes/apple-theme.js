@@ -370,7 +370,7 @@ class AppleTheme {
           const paperBorder = quoteCalloutStyleMode === 'neutral'
             ? AppleTheme.QUOTE_NEUTRAL_BORDER
             : `${color}99`;
-          return `font-family: ${AppleTheme.FONTS.serif}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #5f574c; background: ${paperBg}; margin: 22px 0 22px 8px; padding: 16px 18px; border-left: 3px solid ${paperBorder}; border-radius: ${r.sm}px; ${this.getBodyTextAlign()};`;
+          return `font-family: ${AppleTheme.FONTS.serif}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #5f574c; background: ${paperBg}; margin: 22px 0 22px 8px; padding: 16px 18px; border-left: 2px solid ${paperBorder}; border-radius: ${r.sm}px; ${this.getBodyTextAlign()};`;
         }
         if (config.blockquoteStyle === 'soft') {
           const softBg = quoteCalloutStyleMode === 'neutral'
@@ -381,30 +381,30 @@ class AppleTheme {
             ? AppleTheme.QUOTE_NEUTRAL_BORDER
             : `${color}99`;
           const softBorderWidth = this.themeName === 'wechat'
-            ? 3
-            : (config.blockquoteBorderWidth || 4);
+            ? 2
+            : (config.blockquoteBorderWidth || 2);
           return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${softTextColor}; background: ${softBg}; margin: ${s.md}px 0 ${s.md}px 8px; padding: ${s.md}px; border-left: ${softBorderWidth}px solid ${softBorderColor}; border-radius: ${r.sm}px;`;
         }
 
         if (quoteCalloutStyleMode === 'neutral') {
           const neutralBorderWidth = this.themeName === 'wechat'
-            ? 3
-            : (config.blockquoteBorderWidth || 4);
+            ? 2
+            : (config.blockquoteBorderWidth || 2);
           return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #595959; background: ${AppleTheme.QUOTE_CALLOUT_NEUTRAL_BG}; margin: ${s.md}px 0 ${s.md}px 8px; padding: ${s.md}px; border-left: ${neutralBorderWidth}px solid ${AppleTheme.QUOTE_NEUTRAL_BORDER}; border-radius: ${r.sm}px;`;
         }
 
         // 经典主题（wechat）：使用更细的边框和更浅的颜色，与 H3 区分
         // H3: 4px 主题色 100% 左边框，顶格
-        // 引用块: 3px 主题色 60% 左边框，缩进 4px
+        // 引用块: 2px 主题色 60% 左边框，缩进 4px
         if (this.themeName === 'wechat') {
-          return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #595959; background: ${config.blockquoteBg || color + '1F'}; margin: ${s.md}px 0 ${s.md}px 4px; padding: ${s.md}px; border-left: 3px solid ${color}99; border-radius: 3px;`;
+          return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #595959; background: ${config.blockquoteBg || color + '1F'}; margin: ${s.md}px 0 ${s.md}px 4px; padding: ${s.md}px; border-left: 2px solid ${color}99; border-radius: 3px;`;
         }
 
         // Standard Blockquote: Restoring Italic and adjusting padding/background to match the screenshot
         // Background: Light opacity of theme color (1F) for better visibility
         // Border: Solid theme color
         // Font: Normal (removed italic) for better legibility on mobile
-        return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #595959; background: ${config.blockquoteBg || color + '1F'}; margin: ${s.md}px 0; padding: ${s.md}px; border-left: ${config.blockquoteBorderWidth}px solid ${config.blockquoteBorderColor || color}; border-radius: 3px;`;
+        return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #595959; background: ${config.blockquoteBg || color + '1F'}; margin: ${s.md}px 0; padding: ${s.md}px; border-left: ${config.blockquoteBorderWidth || 2}px solid ${config.blockquoteBorderColor || color}; border-radius: 3px;`;
 
       case 'pre':
         return `background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: ${r.md}px; padding: ${s.md}px; margin: ${s.md}px 0; overflow-x: auto; font-family: ${AppleTheme.FONTS.monospace}; font-size: ${sizes.code}px; line-height: 1.6; color: #24292e;`;

@@ -103,6 +103,8 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     /** @type {Map<string, string | CoverCacheEntry>} */
     coverUploadCache: Map<string, string | CoverCacheEntry>;
     /** @type {Map<string, unknown>} */
+    videoUploadCache: Map<string, unknown>;
+    /** @type {Map<string, unknown>} */
     mermaidImageCache: Map<string, unknown>;
     stickerUiStates: Map<string, StickerUiStateLike>;
     stickerUploadCache: Map<string, string>;

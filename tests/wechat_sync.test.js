@@ -28,7 +28,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-const { inspectWechatDraftContent, replaceUnuploadedDraftImagesWithPlaceholders, createWechatSyncService } = require('../services/wechat-sync');
+import { inspectWechatDraftContent, replaceUnuploadedDraftImagesWithPlaceholders, createWechatSyncService } from '../services/wechat-sync.js';
 
 describe('Wechat Sync Service', () => {
   function createMockApi() {

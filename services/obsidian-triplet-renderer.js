@@ -31,6 +31,7 @@ import { findAllElements, getActiveDocument, getActiveWindowValue } from './dom-
 import { parseFencedBlockDelimiter, splitMarkdownCodeSegments } from './markdown-utils.js';
 import { normalizeAdjacentMarkdownBlockHeadings } from './native-renderer.js';
 import { getImageCaptionFromPath, materializeLocalMarkdownImages, preprocessImageSwipeCallouts } from './obsidian-triplet-renderer-images.js';
+import { preProcessVideoEmbeds } from './obsidian-triplet-renderer-videos.js';
 
 /**
  * @typedef {{ marker: '`' | '~', length: number }} FenceState
@@ -612,15 +613,14 @@ function preRenderMathFormulas(markdown, converter) {
  */
 function preprocessMarkdownForTriplet(markdown, converter) {
   let output = preprocessImageSwipeCallouts(markdown);
-  output = normalizeAdjacentMarkdownBlockHeadings(output);
+  output = normalizeAdjacentMarkdownBlockHeadings(output).replace(/^[\t ]+(\$\$)/gm, '$1');
 
-  // Align with converter.convert preprocessing to reduce non-semantic parity noise.
-  output = output.replace(/^[\t ]+(\$\$)/gm, '$1');
-  output = output.replace(/!\[\[([^[\]|]+)(?:\|([^[\]]+))?]]/g, (match, imagePath, alt) => {
+  // Pre-process and protect video embeds to avoid detached DOM media requests crashing Electron
+  const { markdown: videoProcessed, videos } = preProcessVideoEmbeds(output);
+  output = materializeLocalMarkdownImages(videoProcessed.replace(/!\[\[([^[\]|]+)(?:\|([^[\]]+))?]]/g, (_match, imagePath, alt) => {
     const normalizedPath = String(imagePath || '').trim();
     return `![${alt || getImageCaptionFromPath(normalizedPath)}](${encodeURI(normalizedPath)})`;
-  });
-  output = materializeLocalMarkdownImages(output);
+  }));
 
   if (converter && typeof converter.stripFrontmatter === 'function') {
     output = converter.stripFrontmatter(output);
@@ -629,21 +629,14 @@ function preprocessMarkdownForTriplet(markdown, converter) {
   // Pre-render math formulas using markdown-it + MathJax before Obsidian renders
   // This is needed because Obsidian's MarkdownRenderer.renderMarkdown doesn't render LaTeX
   const { markdown: mathProcessed, formulas: mathFormulas } = preRenderMathFormulas(output, converter);
-  output = mathProcessed;
-  output = normalizeWechatUnsafeTaskListMarkers(output);
-
-  // Escape pseudo-HTML tags that look like HTML but are actually text
-  // For example: <Title>_xxx_MS.pdf should render as text, not as an HTML tag
-  output = escapePseudoHtmlTags(output);
-
-  output = neutralizeUnsafeMarkdownLinks(output);
-  output = neutralizePlainWikilinks(output);
+  output = escapePseudoHtmlTags(normalizeWechatUnsafeTaskListMarkers(mathProcessed));
+  output = neutralizePlainWikilinks(neutralizeUnsafeMarkdownLinks(output));
 
   // Legacy converter runs markdown-it with breaks=true. Normalize soft line breaks
   // so Obsidian renderer emits equivalent <br> in common paragraph text.
   output = injectHardBreaksForLegacyParity(output);
 
-  return { markdown: output, mathFormulas };
+  return { markdown: output, mathFormulas, videos };
 }
 
 /** @param {Element | null | undefined} root */
@@ -967,7 +960,7 @@ async function renderObsidianTripletMarkdown({
   }
 
   const container = activeDocument.createElement('div');
-  const { markdown: preparedMarkdown, mathFormulas } = preprocessMarkdownForTriplet(markdown, converter);
+  const { markdown: preparedMarkdown, mathFormulas, videos } = preprocessMarkdownForTriplet(markdown, converter);
 
   const shouldObserveWindow = shouldObserveAsyncEmbedWindow(markdown) || shouldObserveAsyncEmbedWindow(preparedMarkdown);
   const shouldObserveMermaid = shouldObserveMermaidRenderWindow(preparedMarkdown);
@@ -1002,6 +995,7 @@ async function renderObsidianTripletMarkdown({
     sourcePath,
     app,
     preRenderedMath: mathFormulas,
+    videos,
     preserveSvgStyleTags,
   });
 

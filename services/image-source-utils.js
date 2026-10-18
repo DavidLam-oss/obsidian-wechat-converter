@@ -96,6 +96,7 @@ function inferLocalImageMimeType(filename) {
   if (ext === 'webp') return 'image/webp';
   if (ext === 'svg') return 'image/svg+xml';
   if (ext === 'bmp') return 'image/bmp';
+  if (ext === 'mp4') return 'video/mp4';
   return 'application/octet-stream';
 }
 

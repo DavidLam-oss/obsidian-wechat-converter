@@ -30,6 +30,7 @@ import {
   processAllImagesService,
   processMathFormulasService,
   cleanHtmlForDraftService,
+  transformVideosForClipboard,
   rasterizeSvgToPngBlob,
   mapAppUrlImagesToAssetUrls,
   createHtmlContainer,
@@ -277,6 +278,7 @@ async prepareHtmlForWechatsyncArticle(html) {
   const tempDiv = createHtmlContainer('div', html || '');
   if (!tempDiv) return '';
   await this.processImagesToDataURL(tempDiv);
+  transformVideosForClipboard(tempDiv);
   this.transformCodeBlocksForWechatsync(tempDiv);
   return tempDiv.innerHTML;
 }
@@ -286,6 +288,7 @@ async prepareHtmlForWechatsyncArticleViaBridge(html, assets = []) {
   const mapped = mapAppUrlImagesToAssetUrls(html || '', assets);
   const tempDiv = createHtmlContainer('div', mapped);
   if (!tempDiv) return '';
+  transformVideosForClipboard(tempDiv);
   this.transformCodeBlocksForWechatsync(tempDiv);
   return tempDiv.innerHTML;
 }
@@ -565,6 +568,9 @@ async copyHTML() {
     // 返回 true 表示有图片被处理了
     await this.processImagesToDataURL(tempDiv);
 
+    // 剥离视频元素并替换为微信友好的占位提示卡片（微信不支持直接粘贴视频）
+    const videoCount = transformVideosForClipboard(tempDiv);
+
     // 清理 HTML 以适配微信编辑器（处理嵌套列表等）
     const cleanedHtml = this.cleanHtmlForDraft(tempDiv.innerHTML);
 
@@ -585,7 +591,11 @@ async copyHTML() {
     }
 
     // Success Feedback
-    new Notice('✅ 已复制公众号格式，请直接粘贴到公众号编辑器');
+    if (videoCount > 0) {
+      new Notice('⚠️ 已复制全文。微信不支持直接粘贴视频，已自动转为占位提示卡片；请在公众号后台手动插入视频', 6000);
+    } else {
+      new Notice('✅ 已复制公众号格式，请直接粘贴到公众号编辑器');
+    }
     if (this.copyBtn) {
        this.copyBtn.classList.remove('is-copying');
        this.setCopyButtonIcon('check'); // 变成对勾图标
