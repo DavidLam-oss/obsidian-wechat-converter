@@ -254,47 +254,45 @@ export async function uploadVideoMultipartCore({
     const requestUrlFn = customRequestUrl || getObsidianRequestUrl();
 
     if (proxyUrl) {
-      const base64Data = await readBlobAsBase64Payload(blob);
-      const headers = { 'Content-Type': 'application/json' };
-      if (clientId) {
-        headers['X-Client-Id'] = clientId;
-      }
-
-      const proxyResponse = await requestUrlFn({
-        url: proxyUrl,
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({
-          url: url,
-          method: 'UPLOAD',
-          fileData: base64Data,
-          fileName: fileName,
-          mimeType: 'video/mp4',
-          fieldName: 'media',
-          extraFields: {
-            description,
-          },
-        }),
-        contentType: 'application/json',
-        throw: false,
-      });
-
-      if (proxyResponse.status < 200 || proxyResponse.status >= 300) {
-        const body = typeof proxyResponse.json === 'object' && proxyResponse.json ? proxyResponse.json : {};
-        const msg = body.error || proxyResponse.text || `Proxy request failed with status ${proxyResponse.status}`;
-        const err = new Error(msg);
-        if (proxyResponse.status === 401 || proxyResponse.status === 403) {
-          err.isProxyAuth = true;
-          err.isFatal = true;
+      try {
+        const base64Data = await readBlobAsBase64Payload(blob);
+        const headers = { 'Content-Type': 'application/json' };
+        if (clientId) {
+          headers['X-Client-Id'] = clientId;
         }
-        throw err;
-      }
 
-      const data = typeof proxyResponse.json === 'object' && proxyResponse.json ? proxyResponse.json : {};
-      if (hasWechatUploadResult(data)) {
-        return { media_id: String(data.media_id || ''), url: typeof data.url === 'string' ? data.url : undefined };
+        const proxyResponse = await requestUrlFn({
+          url: proxyUrl,
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({
+            url: url,
+            method: 'UPLOAD',
+            fileData: base64Data,
+            fileName: fileName,
+            mimeType: 'video/mp4',
+            fieldName: 'media',
+            extraFields: {
+              description,
+            },
+          }),
+          contentType: 'application/json',
+          throw: false,
+        });
+
+        if (proxyResponse && proxyResponse.status >= 200 && proxyResponse.status < 300) {
+          const data = typeof proxyResponse.json === 'object' && proxyResponse.json ? proxyResponse.json : {};
+          if (hasWechatUploadResult(data)) {
+            return { media_id: String(data.media_id || ''), url: typeof data.url === 'string' ? data.url : undefined };
+          }
+          console.warn(`[wechat-video] 代理上传未成功 (${formatWechatApiError(data)})，自动降级为直连上传...`);
+        } else {
+          const status = proxyResponse?.status || '异常';
+          console.warn(`[wechat-video] 代理服务响应异常 (HTTP ${status})，自动降级为直连上传...`);
+        }
+      } catch (proxyErr) {
+        console.warn(`[wechat-video] 代理上传网络异常 (${proxyErr?.message || proxyErr})，自动降级为直连上传...`);
       }
-      throw new Error(`微信API报错: ${formatWechatApiError(data)}`);
     }
 
     // 直连通道 (通过 multipart boundary 组装表单数据)
@@ -367,16 +365,30 @@ export const processAllVideos = async (
   const div = createHtmlContainer('div', html || '');
   if (!activeDocument || !div) return html;
 
-  // 收集所有视频元素：<video> 或以 .mp4 结尾的 <img>
+  // 收集所有视频元素：.wechat-video-card, [data-video-src], <video>, 或以 .mp4 结尾的 <img>
   const videoElements = [];
+  const handledNodes = new Set();
+
+  Array.from(div.querySelectorAll('.wechat-video-card, [data-video-src]')).forEach((el) => {
+    if (!handledNodes.has(el)) {
+      videoElements.push({ el, type: 'video-card' });
+      handledNodes.add(el);
+      el.querySelectorAll('*').forEach((child) => handledNodes.add(child));
+    }
+  });
+
   Array.from(div.querySelectorAll('video')).forEach((el) => {
-    videoElements.push({ el, type: 'video' });
+    if (!handledNodes.has(el)) {
+      videoElements.push({ el, type: 'video' });
+      handledNodes.add(el);
+    }
   });
 
   Array.from(div.querySelectorAll('img')).forEach((img) => {
     const src = String(img.getAttribute('src') || '').trim();
-    if (/\.mp4([?#]|$)/i.test(src)) {
+    if (/\.mp4([?#]|$)/i.test(src) && !handledNodes.has(img)) {
       videoElements.push({ el: img, type: 'img-video' });
+      handledNodes.add(img);
     }
   });
 
@@ -386,129 +398,166 @@ export const processAllVideos = async (
 
   // 提取视频的真实源地址
   const getVideoSource = (el) => {
-    let src = el.getAttribute('src') || el.src || '';
-    if (!src && el.tagName === 'VIDEO') {
-      const sourceTag = el.querySelector('source');
-      if (sourceTag) {
-        src = sourceTag.getAttribute('src') || '';
+    let src = el.getAttribute('data-video-src') || el.getAttribute('src') || el.src || '';
+    if (!src && (el.tagName === 'VIDEO' || el.classList?.contains?.('wechat-video-card'))) {
+      const videoTag = el.tagName === 'VIDEO' ? el : el.querySelector('video');
+      if (videoTag) {
+        src = videoTag.getAttribute('data-video-src') || videoTag.getAttribute('src') || videoTag.src || '';
+        const sourceTag = videoTag.querySelector('source');
+        if (!src && sourceTag) {
+          src = sourceTag.getAttribute('data-video-src') || sourceTag.getAttribute('src') || '';
+        }
       }
     }
     return String(src || '').trim();
   };
 
-  /** @type {Set<string>} */
-  const uniqueSources = new Set();
-  videoElements.forEach(({ el }) => {
-    const src = getVideoSource(el);
-    if (src) uniqueSources.add(src);
-  });
-
-  const total = uniqueSources.size;
+  const total = videoElements.length;
   let completed = 0;
-  /** @type {FailedVideoInfo[]} */
-  const failedVideos = [];
-  /** @type {Map<string, { mediaId: string, title: string }>} */
-  const mediaMap = new Map();
 
-  const cacheNamespace = options.accountId || '';
-  const videoCache = options.videoUploadCache || null;
-  const srcToBlobFn = options.srcToBlob;
-  const requestUrlFn = options.requestUrl;
+  for (const { el } of videoElements) {
+    const customTitle = el.getAttribute('data-video-title') || '';
+    const src = getVideoSource(el);
+    const videoTitle = customTitle || extractVideoTitleFromSrc(src) || '视频';
 
-  for (const src of uniqueSources) {
-    const videoTitle = extractVideoTitleFromSrc(src);
-    const cacheKey = `${cacheNamespace}::video::${src}`;
-    const cached = videoCache?.get(cacheKey);
+    const card = activeDocument.createElement('section');
+    card.className = 'wechat-video-draft-placeholder';
+    const cardStyle = [
+      'margin: 18px 0 !important',
+      'padding: 16px 18px !important',
+      'border: 1px dashed #d0d7de !important',
+      'border-radius: 8px !important',
+      'background-color: #f6f8fa !important',
+      'text-align: center !important',
+      'box-sizing: border-box !important',
+      'color: #57606a !important',
+    ].join(';');
+    card.setAttribute('style', cardStyle);
 
-    try {
-      let blob;
-      if (/^https?:\/\//i.test(src)) {
-        blob = await fetchOnlineVideo(src, requestUrlFn);
-      } else if (typeof srcToBlobFn === 'function') {
-        blob = await srcToBlobFn(src);
-      } else {
-        throw new Error(`无法解析视频源: ${src}`);
-      }
+    const titleP = activeDocument.createElement('p');
+    const titleStyle = [
+      'margin: 0 0 6px 0 !important',
+      'font-size: 14px !important',
+      'font-weight: 600 !important',
+      'color: #24292f !important',
+      'line-height: 1.5 !important',
+    ].join(';');
+    titleP.setAttribute('style', titleStyle);
+    titleP.textContent = `🎬 视频：${videoTitle}`;
+    card.appendChild(titleP);
 
-      validateVideoSize(blob.size);
-      validateVideoFormat(src, blob.type);
+    const descP = activeDocument.createElement('p');
+    const descStyle = [
+      'margin: 0 !important',
+      'font-size: 12px !important',
+      'color: #57606a !important',
+      'line-height: 1.5 !important',
+    ].join(';');
+    descP.setAttribute('style', descStyle);
+    descP.textContent = '（微信官方接口不支持直接同步视频，请在微信后台点击上方「视频」按钮上传或选择视频）';
+    card.appendChild(descP);
 
-      const fingerprint = await computeVideoFingerprint(blob);
-
-      if (
-        cached &&
-        cached.fingerprint &&
-        cached.fingerprint === fingerprint &&
-        cached.mediaId
-      ) {
-        mediaMap.set(src, { mediaId: cached.mediaId, title: videoTitle });
-        completed++;
-        if (progressCallback) progressCallback(completed, total);
-        continue;
-      }
-
-      if (typeof api?.uploadVideo !== 'function') {
-        throw new Error('API 客户端未实现 uploadVideo 方法');
-      }
-
-      const res = await api.uploadVideo(blob, {
-        fileName: `${videoTitle}.mp4`,
-        title: videoTitle,
-      });
-
-      if (!res?.media_id) {
-        throw new Error('微信接口未返回有效的 media_id');
-      }
-
-      mediaMap.set(src, { mediaId: res.media_id, title: videoTitle });
-
-      if (videoCache) {
-        videoCache.set(cacheKey, {
-          mediaId: res.media_id,
-          fingerprint,
-          uploadedAt: Date.now(),
-        });
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[wechat-video] 视频处理失败: ${src}`, err);
-      failedVideos.push({ src, message: msg });
-    }
-
+    el.replaceWith(card);
     completed++;
     if (progressCallback) progressCallback(completed, total);
   }
 
-  const failedSrcMap = new Map(failedVideos.map((item) => [item.src, item.message]));
-
-  // 替换 DOM 中的视频节点为微信 <mpvideo> 或错误提示占位
-  videoElements.forEach(({ el }) => {
-    const src = getVideoSource(el);
-    if (!src) return;
-
-    if (mediaMap.has(src)) {
-      const { mediaId, title } = mediaMap.get(src);
-      const mpVideoEl = activeDocument.createElement('mpvideo');
-      mpVideoEl.setAttribute('data-pluginname', 'insertvideo');
-      mpVideoEl.setAttribute('data-mediaid', mediaId);
-      mpVideoEl.setAttribute('data-title', title);
-      el.replaceWith(mpVideoEl);
-    } else if (failedSrcMap.has(src)) {
-      const placeholder = activeDocument.createElement('p');
-      const placeholderStyle = 'margin:12px 0;padding:10px 12px;border:1px dashed #d0d7de;border-radius:6px;color:#8c6d1f;background:#fff8e5;font-size:13px;line-height:1.7;';
-      placeholder.setAttribute('style', placeholderStyle);
-      const reason = failedSrcMap.get(src) || '同步失败';
-      const title = extractVideoTitleFromSrc(src);
-      placeholder.textContent = `视频未同步（${reason}），请在微信后台手动插入视频：${title}`;
-      el.replaceWith(placeholder);
-    }
-  });
-
-  if (failedVideos.length > 0 && typeof options.onVideoFailure === 'function') {
-    options.onVideoFailure(failedVideos);
+  if (typeof options.onVideoCount === 'function') {
+    options.onVideoCount(total);
   }
 
   return div.innerHTML;
 };
+
+/**
+ * 将正文中的视频元素剥离，替换为适合微信公众号编辑器直接粘贴的占位提示卡片。
+ * （微信公众号后台编辑器不支持从富文本剪贴板直接粘贴 HTML5 <video> 标签，粘贴后会变成不可交互的死黑框）
+ * @param {HTMLElement | null | undefined} container
+ * @returns {number} 替换的视频数量
+ */
+export function transformVideosForClipboard(container) {
+  if (!container) return 0;
+  const activeDocument = getActiveDocument();
+  if (!activeDocument) return 0;
+
+  const videoElements = [];
+  const handledNodes = new Set();
+
+  Array.from(container.querySelectorAll('.wechat-video-card, [data-video-src]')).forEach((el) => {
+    videoElements.push(el);
+    handledNodes.add(el);
+    el.querySelectorAll('*').forEach((child) => handledNodes.add(child));
+  });
+
+  Array.from(container.querySelectorAll('video')).forEach((el) => {
+    if (!handledNodes.has(el)) {
+      videoElements.push(el);
+      handledNodes.add(el);
+    }
+  });
+
+  Array.from(container.querySelectorAll('img')).forEach((img) => {
+    const src = String(img.getAttribute('src') || '').trim();
+    if (/\.mp4([?#]|$)/i.test(src) && !handledNodes.has(img)) {
+      videoElements.push(img);
+      handledNodes.add(img);
+    }
+  });
+
+  if (videoElements.length === 0) return 0;
+
+  for (const el of videoElements) {
+    const customTitle = el.getAttribute('data-video-title') || '';
+    let src = el.getAttribute('data-video-src') || el.getAttribute('src') || el.src || '';
+    if (!src && el.querySelector) {
+      const innerVideo = el.querySelector('video') || el.querySelector('source');
+      if (innerVideo) {
+        src = innerVideo.getAttribute('data-video-src') || innerVideo.getAttribute('src') || innerVideo.src || '';
+      }
+    }
+    const title = customTitle || extractVideoTitleFromSrc(src) || '视频';
+
+    const card = activeDocument.createElement('section');
+    card.className = 'wechat-video-clipboard-placeholder';
+    const cardStyle = [
+      'margin: 18px 0 !important',
+      'padding: 16px 18px !important',
+      'border: 1px dashed #d0d7de !important',
+      'border-radius: 8px !important',
+      'background-color: #f6f8fa !important',
+      'text-align: center !important',
+      'box-sizing: border-box !important',
+      'color: #57606a !important',
+    ].join(';');
+    card.setAttribute('style', cardStyle);
+
+    const titleP = activeDocument.createElement('p');
+    const titleStyle = [
+      'margin: 0 0 6px 0 !important',
+      'font-size: 14px !important',
+      'font-weight: 600 !important',
+      'color: #24292f !important',
+      'line-height: 1.5 !important',
+    ].join(';');
+    titleP.setAttribute('style', titleStyle);
+    titleP.textContent = `🎬 视频：${title}`;
+    card.appendChild(titleP);
+
+    const descP = activeDocument.createElement('p');
+    const descStyle = [
+      'margin: 0 !important',
+      'font-size: 12px !important',
+      'color: #57606a !important',
+      'line-height: 1.5 !important',
+    ].join(';');
+    descP.setAttribute('style', descStyle);
+    descP.textContent = '（微信公众号后台不支持直接粘贴视频，请在公众号后台手动插入）';
+    card.appendChild(descP);
+
+    el.replaceWith(card);
+  }
+
+  return videoElements.length;
+}
 
 /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: close the scoped disable block above */

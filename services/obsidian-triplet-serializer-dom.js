@@ -177,11 +177,13 @@ function sanitizeClassList(el, tagName, finalStage = false) {
   let keep = [];
 
   if (tagName === 'section') {
-    keep = classes.filter((cls) => cls === 'code-snippet__fix');
+    keep = classes.filter((cls) => cls === 'code-snippet__fix' || cls === 'wechat-video-card' || cls === 'wechat-video-title');
   } else if (tagName === 'img') {
     keep = classes.filter((cls) => cls === 'math-formula-image' || cls === 'mermaid-diagram-image');
   } else if (tagName === 'svg') {
     keep = classes.filter((cls) => cls === 'owc-mermaid-diagram');
+  } else if (tagName === 'video') {
+    keep = classes.filter((cls) => cls === 'wechat-video-player');
   } else if (!finalStage && (tagName === 'pre' || tagName === 'code')) {
     keep = classes.filter((cls) => cls.startsWith('language-'));
   }
@@ -223,10 +225,17 @@ function pruneObsidianOnlyAttributes(container, { finalStage = false } = {}) {
     if (tagName === 'a') return new Set(['href', 'style']);
     if (tagName === 'img') return new Set(['src', 'alt', 'style', 'width', 'height', 'class', 'referrerpolicy']);
     if (tagName === 'section' && !finalStage) {
-      return new Set(['style', 'class', 'data-owc-image-swipe', 'data-owc-image-swipe-type', 'data-owc-image-swipe-warning', 'data-owc-image-swipe-hint']);
+      return new Set([
+        'style', 'class',
+        'data-owc-image-swipe', 'data-owc-image-swipe-type', 'data-owc-image-swipe-warning', 'data-owc-image-swipe-hint',
+        'data-owc-video-placeholder', 'data-video-src', 'data-video-title',
+      ]);
     }
-    if (tagName === 'section') return new Set(['style', 'class']);
+    if (tagName === 'section') return new Set(['style', 'class', 'data-video-src', 'data-video-title']);
     if (!finalStage && (tagName === 'pre' || tagName === 'code')) return new Set(['style', 'class']);
+    if (tagName === 'video') return new Set(['src', 'controls', 'preload', 'poster', 'style', 'class', 'data-video-src', 'data-video-title', 'width', 'height']);
+    if (tagName === 'source') return new Set(['src', 'type', 'style']);
+    if (tagName === 'mpvideo') return new Set(['data-pluginname', 'data-mediaid', 'data-title', 'style', 'class']);
     if (SVG_TAGS.has(tagName)) return SVG_ALLOWED_ATTRS;
     return new Set(['style']);
   };

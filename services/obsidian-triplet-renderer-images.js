@@ -82,7 +82,7 @@ function getImageCaptionFromPath(imagePath) {
   const value = String(imagePath || '').trim();
   if (!value) return '';
   const filename = value.split('/').pop().split('\\').pop() || value;
-  return filename.replace(/\.(jpg|jpeg|png|gif|webp|svg|bmp|avif)$/i, '');
+  return filename.replace(/\.(jpg|jpeg|png|gif|webp|svg|bmp|avif|mp4|webm|mov|m4v|ogg)$/i, '');
 }
 
 /** @param {string} value */
@@ -93,9 +93,8 @@ function hasExplicitUrlProtocol(value) {
 /** @param {string} src */
 function shouldMaterializeLocalMarkdownImage(src) {
   const value = String(src || '').trim();
-  if (!value) return false;
-  if (/^(?:https?:)?\/\//i.test(value)) return false;
-  if (/^data:image\//i.test(value)) return false;
+  if (!value || /^(?:https?:)?\/\//i.test(value)) return false;
+  if (/^data:image\//i.test(value) || /\.(mp4|webm|mov|m4v|ogg)([?#]|$)/i.test(value)) return false;
   return !hasExplicitUrlProtocol(value);
 }
 

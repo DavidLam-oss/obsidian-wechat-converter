@@ -8,6 +8,7 @@ import {
   fetchOnlineVideo,
   uploadVideoMultipartCore,
   processAllVideos,
+  transformVideosForClipboard,
 } from '../services/wechat-video.js';
 
 describe('WeChat Video Service (services/wechat-video.js)', () => {
@@ -176,10 +177,84 @@ describe('WeChat Video Service (services/wechat-video.js)', () => {
       expect(desc.title).toBe('功能演示');
       expect(desc.introduction).toBe('演示简介');
     });
+
+    it('should fallback to direct upload if proxy fails or returns 41005', async () => {
+      let callCount = 0;
+      let directPayloadOptions = null;
+      const fakeRequestUrl = vi.fn(async (opts) => {
+        callCount++;
+        if (opts.url.includes('proxy.example.com')) {
+          // Proxy returns 41005 (media data missing)
+          return {
+            status: 200,
+            json: { errcode: 41005, errmsg: 'media data missing hint: [test] (41005)' },
+          };
+        }
+        // Direct upload to api.weixin.qq.com
+        directPayloadOptions = opts;
+        return {
+          status: 200,
+          json: { media_id: 'direct_fallback_vid_123' },
+        };
+      });
+
+      const blob = new Blob([new Uint8Array([1, 2, 3, 4])], { type: 'video/mp4' });
+
+      const result = await uploadVideoMultipartCore({
+        url: 'https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=token&type=video',
+        blob,
+        proxyUrl: 'https://proxy.example.com/proxy',
+        fileName: 'fallback.mp4',
+        title: '降级视频',
+        requestWithRetry: async (fn) => fn(),
+        requestUrl: fakeRequestUrl,
+      });
+
+      expect(callCount).toBe(2);
+      expect(result.media_id).toBe('direct_fallback_vid_123');
+      expect(directPayloadOptions).not.toBeNull();
+      expect(directPayloadOptions.url).toContain('api.weixin.qq.com');
+      expect(directPayloadOptions.headers['Content-Type']).toContain('multipart/form-data; boundary=');
+    });
   });
 
-  describe('processAllVideos: DOM Transformation & Caching', () => {
-    it('should replace <video> elements with <mpvideo> tags upon successful upload', async () => {
+  describe('transformVideosForClipboard', () => {
+    it('should replace video elements with WeChat friendly placeholder card', () => {
+      const container = document.createElement('div');
+      container.innerHTML = `
+        <div class="content">
+          <p>Intro</p>
+          <section class="wechat-video-card" data-video-src="attachments/intro.mp4" data-video-title="开篇介绍">
+            <video src="attachments/intro.mp4"></video>
+          </section>
+          <video src="attachments/outro.mp4"></video>
+        </div>
+      `;
+
+      const count = transformVideosForClipboard(container);
+      expect(count).toBe(2);
+      expect(container.querySelectorAll('video').length).toBe(0);
+      expect(container.querySelectorAll('.wechat-video-card').length).toBe(0);
+
+      const placeholders = container.querySelectorAll('.wechat-video-clipboard-placeholder');
+      expect(placeholders.length).toBe(2);
+      expect(placeholders[0].textContent).toContain('🎬 视频：开篇介绍');
+      expect(placeholders[0].textContent).toContain('微信公众号后台不支持直接粘贴视频');
+      expect(placeholders[0].textContent).toContain('请在公众号后台手动插入');
+      expect(placeholders[0].textContent).not.toContain('上方');
+      expect(placeholders[1].textContent).toContain('🎬 视频：outro');
+    });
+
+    it('should return 0 when no videos are present', () => {
+      const container = document.createElement('div');
+      container.innerHTML = '<p>Normal text</p>';
+      const count = transformVideosForClipboard(container);
+      expect(count).toBe(0);
+    });
+  });
+
+  describe('processAllVideos: DOM Transformation to Draft Placeholders', () => {
+    it('should replace <video> elements with draft placeholder card', async () => {
       const html = `
         <div class="content">
           <h1>测试文章</h1>
@@ -188,117 +263,51 @@ describe('WeChat Video Service (services/wechat-video.js)', () => {
         </div>
       `;
 
-      const mockApi = {
-        uploadVideo: vi.fn().mockResolvedValue({ media_id: 'media_mp4_123' }),
-      };
-
-      const mockSrcToBlob = vi.fn().mockResolvedValue(
-        new Blob([new Uint8Array([10, 20, 30])], { type: 'video/mp4' })
-      );
-
-      const cache = new Map();
       const onProgress = vi.fn();
+      let videoCount = 0;
 
-      const resultHtml = await processAllVideos(html, mockApi, onProgress, {
-        accountId: 'wx_acc_1',
-        videoUploadCache: cache,
-        srcToBlob: mockSrcToBlob,
+      const resultHtml = await processAllVideos(html, null, onProgress, {
+        onVideoCount: (count) => {
+          videoCount = count;
+        },
       });
 
-      expect(resultHtml).toContain('<mpvideo data-pluginname="insertvideo" data-mediaid="media_mp4_123" data-title="my-demo"></mpvideo>');
+      expect(resultHtml).toContain('wechat-video-draft-placeholder');
+      expect(resultHtml).toContain('🎬 视频：my-demo');
+      expect(resultHtml).toContain('微信官方接口不支持直接同步视频，请在微信后台点击上方「视频」按钮上传或选择视频');
       expect(resultHtml).not.toContain('<video');
-      expect(mockApi.uploadVideo).toHaveBeenCalledTimes(1);
-      expect(cache.size).toBe(1);
-
-      // Re-run with same cache: should hit cache and NOT call uploadVideo again
-      const secondHtml = await processAllVideos(html, mockApi, onProgress, {
-        accountId: 'wx_acc_1',
-        videoUploadCache: cache,
-        srcToBlob: mockSrcToBlob,
-      });
-
-      expect(secondHtml).toContain('media_mp4_123');
-      expect(mockApi.uploadVideo).toHaveBeenCalledTimes(1); // Still 1!
+      expect(videoCount).toBe(1);
+      expect(onProgress).toHaveBeenCalledWith(1, 1);
     });
 
-    it('should replace failed videos with user-friendly placeholder paragraphs', async () => {
+    it('should detect .wechat-video-card and replace entire card preserving custom title', async () => {
       const html = `
         <div>
-          <video src="attachments/too-large.mp4"></video>
+          <section class="wechat-video-card" data-video-src="attachments/feature-demo.mp4" data-video-title="功能演示">
+            <video controls src="app://local/attachments/feature-demo.mp4" data-video-src="attachments/feature-demo.mp4"></video>
+            <section class="wechat-video-title">🎬 功能演示</section>
+          </section>
         </div>
       `;
 
-      const mockApi = {
-        uploadVideo: vi.fn(),
-      };
-
-      // 11MB file
-      const bigBuffer = new Uint8Array(11 * 1024 * 1024);
-      const mockSrcToBlob = vi.fn().mockResolvedValue(new Blob([bigBuffer], { type: 'video/mp4' }));
-
-      const onFailures = vi.fn();
-      const resultHtml = await processAllVideos(html, mockApi, null, {
-        accountId: 'wx_acc_1',
-        srcToBlob: mockSrcToBlob,
-        onVideoFailure: onFailures,
+      let videoCount = 0;
+      const resultHtml = await processAllVideos(html, null, null, {
+        onVideoCount: (count) => {
+          videoCount = count;
+        },
       });
 
+      expect(resultHtml).toContain('wechat-video-draft-placeholder');
+      expect(resultHtml).toContain('🎬 视频：功能演示');
+      expect(resultHtml).not.toContain('wechat-video-card');
       expect(resultHtml).not.toContain('<video');
-      expect(resultHtml).toContain('视频未同步');
-      expect(resultHtml).toContain('视频超过 10MB');
-      expect(resultHtml).toContain('请在微信后台手动插入视频：too-large');
-      expect(onFailures).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            src: 'attachments/too-large.mp4',
-            message: expect.stringContaining('10MB'),
-          }),
-        ])
-      );
+      expect(videoCount).toBe(1);
     });
 
-    it('should download online MP4 via injected requestUrl and embed mpvideo tag', async () => {
-      const html = `
-        <div>
-          <video src="https://example.com/tutorials/intro.mp4"></video>
-        </div>
-      `;
-
-      const fakeBinary = new Uint8Array([0, 0, 0, 32, 102, 116, 121, 112]).buffer;
-      const mockRequestUrl = vi.fn().mockImplementation(async (opts) => {
-        if (opts.method === 'HEAD') {
-          return {
-            status: 200,
-            headers: {
-              'content-type': 'video/mp4',
-              'content-length': String(fakeBinary.byteLength),
-            },
-          };
-        }
-        return {
-          status: 200,
-          headers: { 'content-type': 'video/mp4' },
-          arrayBuffer: fakeBinary,
-        };
-      });
-
-      const mockApi = {
-        uploadVideo: vi.fn().mockResolvedValue({ media_id: 'online_vid_999' }),
-      };
-
-      const resultHtml = await processAllVideos(html, mockApi, null, {
-        accountId: 'wx_acc_online',
-        requestUrl: mockRequestUrl,
-      });
-
-      expect(resultHtml).toContain('<mpvideo data-pluginname="insertvideo" data-mediaid="online_vid_999" data-title="intro"></mpvideo>');
-      expect(resultHtml).not.toContain('<video');
-      expect(mockRequestUrl).toHaveBeenCalled();
-      expect(mockApi.uploadVideo).toHaveBeenCalledTimes(1);
-      expect(mockApi.uploadVideo).toHaveBeenCalledWith(
-        expect.any(Blob),
-        expect.objectContaining({ title: 'intro' })
-      );
+    it('should return unchanged html when no videos are present', async () => {
+      const html = '<div class="content"><p>纯文本内容</p></div>';
+      const resultHtml = await processAllVideos(html);
+      expect(resultHtml).toBe(html);
     });
   });
 });

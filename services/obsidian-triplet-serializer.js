@@ -58,6 +58,11 @@ import {
   applyLegacyLinkifyParity,
   injectPreRenderedMathFormulas,
 } from './obsidian-triplet-serializer-parity.js';
+import { renderVideoPlaceholders, injectVideoCardHtml } from './obsidian-triplet-renderer-videos.js';
+
+/**
+ * @typedef {import('./obsidian-triplet-renderer-videos.js').PreprocessedVideo} PreprocessedVideo
+ */
 
 /**
  * @typedef {{
@@ -166,7 +171,7 @@ function formatTaskListItems(container, converter) {
   const activeDocument = getActiveDocument();
   if (!activeDocument) return;
 
-  const themeColor = converter.theme.getThemeColorValue() || '#576b95';
+  const themeColor = converter.theme?.getThemeColorValue?.() || '#576b95';
   const liTaskStyle = getTagStyle(converter, 'li-task') || 'list-style-type: none; margin-left: -20px;';
 
   container.querySelectorAll('li').forEach((li) => {
@@ -323,7 +328,10 @@ function wrapTablesForHorizontalScroll(container, converter) {
  * @param {{
  *   root?: Element | null,
  *   converter?: ConverterLike | null,
+ *   sourcePath?: string,
+ *   app?: unknown,
  *   preRenderedMath?: PreRenderedMathLike[],
+ *   videos?: PreprocessedVideo[],
  *   preserveSvgStyleTags?: boolean,
  * }} options
  * @returns {string}
@@ -331,7 +339,10 @@ function wrapTablesForHorizontalScroll(container, converter) {
 function serializeObsidianRenderedHtml({
   root,
   converter,
+  sourcePath = '',
+  app = null,
   preRenderedMath = [],
+  videos = [],
   preserveSvgStyleTags = false,
 }) {
   const activeDocument = getActiveDocument();
@@ -363,6 +374,7 @@ function serializeObsidianRenderedHtml({
   convertPreBlocks(container, converter);
   convertImageSwipeBlocks(container, converter);
   convertStandaloneImages(container, converter);
+  renderVideoPlaceholders(container, videos, { app, sourcePath });
   formatTaskListItems(container, converter);
   applyThemeInlineStyles(container, converter);
   wrapTablesForHorizontalScroll(container, converter);
@@ -375,6 +387,7 @@ function serializeObsidianRenderedHtml({
 
   // Inject pre-rendered math formulas (placeholders were created during preprocessing)
   html = injectPreRenderedMathFormulas(html, preRenderedMath);
+  html = injectVideoCardHtml(html, videos, { app, sourcePath });
 
   if (converter && typeof converter.fixListParagraphs === 'function') {
     html = converter.fixListParagraphs(html);

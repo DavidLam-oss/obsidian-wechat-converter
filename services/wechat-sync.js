@@ -425,7 +425,8 @@ export function createWechatSyncService(deps) {
 
       let draftHtml = await prepareHtmlForDraft(currentHtml);
 
-      if (typeof processAllVideos === 'function' && (draftHtml.includes('<video') || draftHtml.includes('.mp4'))) {
+      let videoCount = 0;
+      if (typeof processAllVideos === 'function' && (draftHtml.includes('<video') || draftHtml.includes('.mp4') || draftHtml.includes('wechat-video-card') || draftHtml.includes('data-video-src'))) {
         if (onStatus) onStatus('videos');
         draftHtml = await processAllVideos(draftHtml, /** @type {any} */ (api), (current, total) => {
           if (onVideoProgress) onVideoProgress(current, total);
@@ -433,6 +434,9 @@ export function createWechatSyncService(deps) {
           accountId: account.id || '',
           videoUploadCache: /** @type {Map<string, import('./wechat-video.js').VideoCacheEntry> | undefined} */ (videoUploadCache || undefined),
           srcToBlob,
+          onVideoCount: (/** @type {number} */ count) => {
+            videoCount = Number(count) || 0;
+          },
           onVideoFailure: (/** @type {import('./wechat-video.js').FailedVideoInfo[]} */ failures) => {
             if (Array.isArray(failures)) videoUploadFailures.push(...failures);
           },
@@ -505,6 +509,7 @@ export function createWechatSyncService(deps) {
         cleanupResult,
         imageUploadFailures,
         videoUploadFailures,
+        videoCount,
         placeholderImageSources: cleanedResult.imageSources,
         draftWarnings: draftInspection.warnings,
       };

@@ -411,4 +411,28 @@ describe('AppleStyleView - copyHTML clipboard behavior', () => {
     expect(view.processImagesToDataURL).not.toHaveBeenCalled();
     expect(writeMock).not.toHaveBeenCalled();
   });
+
+  it('should transform video elements into placeholder cards and notify user during copyHTML', async () => {
+    globalThis.__obsidianNoticeRegistry = [];
+    view.currentHtml = '<div class="content"><section class="wechat-video-card" data-video-src="attachments/my.mp4" data-video-title="我的测试视频"><video src="attachments/my.mp4"></video></section><p>正文</p></div>';
+    view.cleanHtmlForDraft = vi.fn((html) => html);
+    view.resolveArticleHtmlSource = vi.fn(() => ({
+      html: view.currentHtml,
+      layoutMode: 'native',
+      sourceKind: 'base',
+    }));
+
+    await view.copyHTML();
+
+    expect(writeMock).toHaveBeenCalled();
+    const item = writeMock.mock.calls[0][0][0];
+    const html = await blobToText(item.items['text/html']);
+    expect(html).not.toContain('<video');
+    expect(html).not.toContain('wechat-video-card');
+    expect(html).toContain('🎬 视频：我的测试视频');
+    expect(html).toContain('微信公众号后台不支持直接粘贴视频');
+
+    const lastNotice = globalThis.__obsidianNoticeRegistry?.at(-1);
+    expect(lastNotice?.message).toContain('微信不支持直接粘贴视频');
+  });
 });

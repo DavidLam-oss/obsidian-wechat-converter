@@ -338,8 +338,13 @@ function isMobileClient(app) {
 }
 
 export {
+  transformVideosForClipboard,
+} from '../services/wechat-video.js';
+
+export {
   DEFAULT_SETTINGS,
   getWechatAccountPublishOptions,
   normalizeWechatAccountPublishOptions,
   isMobileClient,
 };
+

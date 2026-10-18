@@ -115,13 +115,13 @@ async onSyncToWechat() {
       draftIndex: this.sessionDraftIndex || 0,
       onStatus: (stage) => {
         if (stage === 'cover') notice.setMessage('正在处理封面图...');
-        if (stage === 'videos') notice.setMessage('正在上传正文视频素材...');
+        if (stage === 'videos') notice.setMessage('正在转换正文视频占位...');
         if (stage === 'images') notice.setMessage('正在同步正文图片...');
         if (stage === 'math') notice.setMessage('正在转换矢量图/数学公式...');
         if (stage === 'draft') notice.setMessage(this.sessionDraftMediaId ? '正在更新微信草稿...' : '正在发送到微信草稿箱...');
       },
       onVideoProgress: (current, total) => {
-        notice.setMessage(`正在上传视频素材 (${current}/${total})...`);
+        notice.setMessage(`正在转换正文视频占位 (${current}/${total})...`);
       },
       onImageProgress: (current, total) => {
         notice.setMessage(`正在同步正文图片 (${current}/${total})...`);
@@ -131,7 +131,7 @@ async onSyncToWechat() {
       },
     });
 
-    const { cleanupResult, imageUploadFailures, videoUploadFailures, placeholderImageSources, draftWarnings, mediaId, isUpdate, draftIndex } = result;
+    const { cleanupResult, imageUploadFailures, videoUploadFailures, videoCount, placeholderImageSources, draftWarnings, mediaId, isUpdate, draftIndex } = result;
     if (activeFile && mediaId) {
       setDraftAssociation(this.plugin.settings, {
         sourcePath: activeFile.path,
@@ -155,7 +155,9 @@ async onSyncToWechat() {
       const suffix = failedImageSources.length > 3 ? ` 等 ${failedImageSources.length} 张` : '';
       new Notice(`草稿已创建，但有 ${failedImageSources.length} 张正文图片未同步：${preview}${suffix}。请在微信后台手动补传。`, 10000);
     }
-    if (Array.isArray(videoUploadFailures) && videoUploadFailures.length > 0) {
+    if (videoCount > 0) {
+      new Notice(`草稿已同步。正文包含 ${videoCount} 个视频已转为占位提示，请在微信后台手动插入视频。`, 10000);
+    } else if (Array.isArray(videoUploadFailures) && videoUploadFailures.length > 0) {
       const preview = videoUploadFailures.slice(0, 2).map((item) => `${String(item?.src || '视频')}: ${String(item?.message || '处理失败')}`).join('；');
       const suffix = videoUploadFailures.length > 2 ? ` 等 ${videoUploadFailures.length} 个` : '';
       new Notice(`草稿已创建，但有 ${videoUploadFailures.length} 个视频未同步：${preview}${suffix}。请在微信后台手动插入视频。`, 10000);

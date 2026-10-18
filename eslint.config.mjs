@@ -219,6 +219,7 @@ export default [
       "services/native-renderer.js",
       "services/obsidian-triplet-renderer.js",
       "services/obsidian-triplet-renderer-images.js",
+      "services/obsidian-triplet-renderer-videos.js",
       "services/obsidian-triplet-serializer-images.js",
 	      "services/obsidian-triplet-serializer-dom.js",
 	      "services/obsidian-triplet-serializer-parity.js",
