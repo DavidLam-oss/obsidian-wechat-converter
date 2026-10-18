@@ -423,19 +423,52 @@ export function resolveCoverImageUrl(raw, resolver) {
 }
 
 /**
+ * 应用封面配图的缩放比例与焦点位置（Pan & Zoom）
+ * @param {HTMLElement} el
+ * @param {import('./card-cover-model.js').CardCoverFields} [fields]
+ */
+function applyCoverImageTransform(el, fields) {
+  if (!fields) return;
+  const scale = typeof fields.coverImageScale === 'number' && Number.isFinite(fields.coverImageScale)
+    ? Math.min(3.0, Math.max(1.0, fields.coverImageScale))
+    : 1.0;
+  const posX = typeof fields.coverImagePosition?.x === 'number' && Number.isFinite(fields.coverImagePosition.x)
+    ? Math.min(100, Math.max(0, fields.coverImagePosition.x))
+    : 50;
+  const posY = typeof fields.coverImagePosition?.y === 'number' && Number.isFinite(fields.coverImagePosition.y)
+    ? Math.min(100, Math.max(0, fields.coverImagePosition.y))
+    : 50;
+
+  if (el.tagName.toLowerCase() === 'img') {
+    el.style.setProperty('object-position', `${posX}% ${posY}%`);
+  } else {
+    el.style.setProperty('background-position', `${posX}% ${posY}%`);
+  }
+  if (scale > 1.0) {
+    el.style.setProperty('transform', `scale(${scale})`);
+    el.style.setProperty('transform-origin', `${posX}% ${posY}%`);
+  }
+  el.dataset.scale = String(scale);
+  el.dataset.posX = String(posX);
+  el.dataset.posY = String(posY);
+}
+
+/**
  * 创建带安全降级保护的封面图片元素。
  * 一旦加载失败（404/网络断开等），静默替换为精致占位图，杜绝浏览器死图图标。
  * @param {Document} doc
  * @param {string} src
  * @param {string} alt
  * @param {string} className
+ * @param {import('./card-cover-model.js').CardCoverFields} [fields]
  * @returns {HTMLImageElement}
  */
-function createSafeCoverImage(doc, src, alt, className) {
+function createSafeCoverImage(doc, src, alt, className, fields) {
   const img = doc.createElement('img');
   img.className = className;
   img.src = src;
   img.alt = alt;
+  applyCoverImageTransform(img, fields);
   img.addEventListener('error', () => {
     try {
       const ph = createCoverPlaceholder(doc);
@@ -486,7 +519,7 @@ export function assembleCardCoverPage(args) {
   } else if (mode === 'full-bleed') {
     page.classList.add('icard-cover--full-bleed');
     if (hasImage) {
-      const img = createSafeCoverImage(ownerDoc, coverImageUrl, fields.title || 'Cover', 'icard-cover-full-bleed-img');
+      const img = createSafeCoverImage(ownerDoc, coverImageUrl, fields.title || 'Cover', 'icard-cover-full-bleed-img', fields);
       page.append(img);
     } else {
       const placeholder = createCoverPlaceholder(ownerDoc);
@@ -500,6 +533,7 @@ export function assembleCardCoverPage(args) {
     bg.className = 'icard-cover-bg';
     if (hasImage) {
       bg.style.setProperty('background-image', `url("${coverImageUrl}")`);
+      applyCoverImageTransform(bg, fields);
     } else {
       bg.classList.add('icard-cover-bg--placeholder');
     }
@@ -515,7 +549,7 @@ export function assembleCardCoverPage(args) {
       const hero = ownerDoc.createElement('div');
       hero.className = 'icard-cover-hero';
       if (hasImage) {
-        const heroImg = createSafeCoverImage(ownerDoc, coverImageUrl, fields.title || 'Cover Hero', 'icard-cover-hero-img');
+        const heroImg = createSafeCoverImage(ownerDoc, coverImageUrl, fields.title || 'Cover Hero', 'icard-cover-hero-img', fields);
         hero.append(heroImg);
       } else {
         hero.append(createCoverPlaceholder(ownerDoc));
@@ -527,6 +561,7 @@ export function assembleCardCoverPage(args) {
       bg.className = 'icard-cover-bg';
       if (hasImage) {
         bg.style.setProperty('background-image', `url("${coverImageUrl}")`);
+        applyCoverImageTransform(bg, fields);
       } else {
         bg.classList.add('icard-cover-bg--placeholder');
       }
@@ -552,7 +587,7 @@ export function assembleCardCoverPage(args) {
       const frame = ownerDoc.createElement('div');
       frame.className = 'icard-cover-frame';
       if (hasImage) {
-        const frameImg = createSafeCoverImage(ownerDoc, coverImageUrl, fields.title || 'Cover Frame', 'icard-cover-frame-img');
+        const frameImg = createSafeCoverImage(ownerDoc, coverImageUrl, fields.title || 'Cover Frame', 'icard-cover-frame-img', fields);
         frame.append(frameImg);
       } else {
         frame.append(createCoverPlaceholder(ownerDoc));
@@ -562,7 +597,7 @@ export function assembleCardCoverPage(args) {
       const arch = ownerDoc.createElement('div');
       arch.className = 'icard-cover-arch';
       if (hasImage) {
-        const archImg = createSafeCoverImage(ownerDoc, coverImageUrl, fields.title || 'Cover Arch', 'icard-cover-arch-img');
+        const archImg = createSafeCoverImage(ownerDoc, coverImageUrl, fields.title || 'Cover Arch', 'icard-cover-arch-img', fields);
         arch.append(archImg);
       } else {
         arch.append(createCoverPlaceholder(ownerDoc));

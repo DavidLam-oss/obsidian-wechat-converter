@@ -466,8 +466,44 @@ const wechatSettingsMethods = {
       cls: 'wechat-proxy-desc',
     });
 
+    this.renderEngagementCardSection(containerEl);
     this.renderCustomCssSection(containerEl);
 
+  },
+
+  /**
+   * 渲染「文章末尾互动三连卡」设置区块。
+   * @param {ObsidianElementLike} containerEl
+   */
+  renderEngagementCardSection(containerEl) {
+    renderSectionHeader(containerEl, 'heart', '文章末尾互动三连卡');
+
+    let enabled = !!this.plugin.settings.enableEngagementCard;
+    new Setting(containerEl)
+      .setName('启用文章末尾互动卡')
+      .setDesc('在公众号文章末尾自适应渲染「点赞、在看、转发」三连微卡片（默认关闭）。颜色自动继承当前主题色。')
+      .addToggle(toggle => toggle
+        .setValue(enabled)
+        .onChange(async (value) => {
+          this.plugin.settings.enableEngagementCard = value;
+          await this.plugin.saveSettings();
+          refreshSettingTabCompat(this);
+        }));
+
+    if (!enabled) {
+      return;
+    }
+
+    new Setting(containerEl)
+      .setName('自定义引导文案')
+      .setDesc('互动微卡片上方的引导文字。留空则使用默认文案：“如果对你有启发，欢迎点赞、在看、转发三连”。')
+      .addText(text => text
+        .setPlaceholder('如果对你有启发，欢迎点赞、在看、转发三连')
+        .setValue(this.plugin.settings.engagementCtaText || '')
+        .onChange(async (value) => {
+          this.plugin.settings.engagementCtaText = value.trim();
+          await this.plugin.saveSettings();
+        }));
   },
 
   /**

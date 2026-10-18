@@ -172,8 +172,9 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
    写的 color / background-color / box-shadow / height / padding / border-radius
    全都会被它盖掉（按钮被刷成白底 + 固定 30px 高 + 居中）。背景写 background-color 长写。 */
 
-/* 「按当前笔记重新填入」：低频补救动作，降级为文字按钮，不与主操作抢重量 */
-.apple-settings-card-wrapper .icard-settings-cover-link {
+/* 「按当前笔记重新填入」与「重置构图位置」：低频动作，降级为文字按钮，不与主操作抢重量 */
+.apple-settings-card-wrapper .icard-settings-cover-link,
+.apple-settings-card-wrapper .icard-settings-cover-reset-crop {
   display: block;
   width: fit-content;
   height: auto;
@@ -186,7 +187,8 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   font-size: 12px;
   cursor: pointer;
 }
-.apple-settings-card-wrapper .icard-settings-cover-link:hover {
+.apple-settings-card-wrapper .icard-settings-cover-link:hover,
+.apple-settings-card-wrapper .icard-settings-cover-reset-crop:hover {
   color: var(--apple-primary);
   background-color: transparent;
 }
@@ -443,6 +445,72 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   text-align: center;
   padding: 7px 4px;
   white-space: nowrap;
+}
+
+/* 风格调色盘折叠区（默认折叠后 11 款调色盘，点击展开） */
+.icard-theme-more-wrap {
+  display: none;
+  margin-top: 6px;
+}
+
+.icard-theme-more-wrap.is-expanded {
+  display: block;
+}
+
+.icard-theme-more-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px dashed var(--apple-border);
+  border-radius: var(--apple-radius-sm, 6px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icard-theme-more-toggle:hover {
+  color: var(--text-normal);
+  border-color: var(--interactive-accent);
+  background-color: var(--background-modifier-hover);
+}
+
+/* 封面配图鼠标手势交互（Pan & Zoom） */
+.icard-cover-interactive-image-wrap {
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  position: relative;
+}
+
+.icard-cover-interactive-image-wrap.is-dragging {
+  cursor: grabbing;
+}
+
+.icard-cover-interactive-image-wrap::after {
+  content: "拖拽移动 · 滚轮缩放";
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 3px 7px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.65);
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.icard-cover-interactive-image-wrap:hover::after {
+  opacity: 0.9;
 }
 
 /* 比例卡片（2026-09-20 David，参考微信工具样式）：形状示意 + 数值。

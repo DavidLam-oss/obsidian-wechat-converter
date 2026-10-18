@@ -399,5 +399,6 @@ type WechatAccountModalMethodsContract = Pick<
 type WechatSettingsMethodsContract = Pick<
     AppleStyleSettingTabContract,
     | 'renderWechatSettingsTab'
+    | 'renderEngagementCardSection'
     | 'renderCustomCssSection'
 >;

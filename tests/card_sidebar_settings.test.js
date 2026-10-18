@@ -269,6 +269,38 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       // 暗色主题要换浅色箭头，否则深底上看不见
       expect(css).toMatch(/\.theme-dark\s+\.icard-settings-select\s*\{[^}]*background-image:\s*url\(/);
     });
+
+    it("主题按两行经典款与折叠更多主题分层呈现，无悬浮遮挡提示，支持点击展开/收起", () => {
+      const cardWrapper = view.cardSettingsWrapper;
+      const tokenSection = cardWrapper.querySelector(".icard-settings-subpanel-token");
+
+      const moreWrap = tokenSection.querySelector(".icard-theme-more-wrap");
+      const toggleBtn = tokenSection.querySelector(".icard-theme-more-toggle");
+
+      expect(moreWrap).toBeTruthy();
+      expect(toggleBtn).toBeTruthy();
+      expect(toggleBtn.textContent).toContain("更多主题");
+      expect(moreWrap.classList.contains("is-expanded")).toBe(false);
+
+      // 主题按钮不设 aria-label，防止 Obsidian 默认 hover tooltip 弹窗遮挡其他按钮
+      const allThemeBtns = tokenSection.querySelectorAll(".icard-grid-3 button[data-value]");
+      allThemeBtns.forEach((btn) => {
+        expect(btn.getAttribute("aria-label")).toBeNull();
+      });
+
+      const moreBtns = moreWrap.querySelectorAll("button[data-value]");
+      expect(moreBtns.length).toBe(11);
+
+      // 点击展开
+      toggleBtn.click();
+      expect(moreWrap.classList.contains("is-expanded")).toBe(true);
+      expect(toggleBtn.textContent).toContain("收起更多主题");
+
+      // 点击收起
+      toggleBtn.click();
+      expect(moreWrap.classList.contains("is-expanded")).toBe(false);
+      expect(toggleBtn.textContent).toContain("更多主题");
+    });
   });
 
   describe("子 Tab 切换（switchCardSettingsSubTab）与直通打开（openCardSettingsTab）", () => {
@@ -432,6 +464,20 @@ describe("卡片侧边栏设置面板（card-settings.js）", () => {
       expect(session.getLayoutSettings().themeId).toBe("neon-purple");
       expect(view.renderCardPreview).toHaveBeenCalled();
       expect(themeBtn.classList.contains("active")).toBe(true);
+    });
+
+    it("选择折叠区的调色盘主题时，面板自动保持展开并高亮对应主题", () => {
+      const cardWrapper = view.cardSettingsWrapper;
+      const tokenSection = cardWrapper.querySelector(".icard-settings-subpanel-token");
+      const moreWrap = tokenSection.querySelector(".icard-theme-more-wrap");
+      const cyberBtn = moreWrap.querySelector('button[data-value="cyber"]');
+
+      expect(cyberBtn).toBeTruthy();
+      cyberBtn.click();
+
+      expect(session.getLayoutSettings().themeId).toBe("cyber");
+      expect(moreWrap.classList.contains("is-expanded")).toBe(true);
+      expect(cyberBtn.classList.contains("active")).toBe(true);
     });
 
     it("点击比例按钮触发 session.applyLayoutSettings 并重排版", () => {

@@ -52,6 +52,7 @@ import {
 import { applyCompiledCustomCss } from '../../services/custom-css-inliner.js';
 import { compileCustomCss } from '../../services/custom-css-compiler.js';
 import { resolveCustomCssSource } from '../../services/custom-css-source.js';
+import { decorateArticleWithEngagementCard } from '../../services/engagement-card.js';
 import { mountPhoneFrame } from './phone-frame.js';
 
 /**
@@ -624,13 +625,11 @@ getActiveRenderPipeline() {
 
 async renderMarkdownForPreview(markdown, sourcePath) {
   const pipeline = this.getActiveRenderPipeline();
-  if (!pipeline) {
-    throw new Error('渲染管线未初始化');
-  }
-  return pipeline.renderForPreview(markdown, {
+  if (!pipeline) throw new Error('渲染管线未初始化');
+  return decorateArticleWithEngagementCard(this, await pipeline.renderForPreview(markdown, {
     sourcePath,
     settings: this.plugin.settings,
-  });
+  }));
 }
 ,
 

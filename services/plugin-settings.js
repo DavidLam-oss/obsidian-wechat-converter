@@ -144,6 +144,9 @@ export function createDefaultSettings() {
     enableCustomCss: false,
     customCss: '',
     customCssNote: '',
+    // 文章末尾互动三连卡（Opt-in，默认关闭）
+    enableEngagementCard: false,
+    engagementCtaText: '',
     multiPlatformSync: createDefaultMultiPlatformSyncSettings(),
     feishuSync: createDefaultFeishuSyncSettings(),
     wechatAppId: '',
@@ -264,6 +267,12 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
   // 注意不能写成 `=== true`：那会让缺键的旧数据落到 false，而 2.11.2 之前
   // 主题是硬编码 justify 的，等于凭空改变了老用户的正文观感。
   settings.justifyText = settings.justifyText !== false;
+
+  // 文章末尾互动三连卡（默认关闭）
+  settings.enableEngagementCard = Boolean(settings.enableEngagementCard);
+  settings.engagementCtaText = typeof settings.engagementCtaText === 'string'
+    ? settings.engagementCtaText.trim()
+    : '';
 
   // Unsplash Access Key：去除多余空白字符
   const rawUnsplashKey = settings.unsplashAccessKey;

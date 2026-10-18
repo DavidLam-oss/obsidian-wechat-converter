@@ -46,8 +46,8 @@ import { stripNonBodyImageRegions } from './sticker-extractor.js';
 const IMAGE_EXT_REGEX = /\.(jpe?g|png|webp|svg|bmp|avif)$/i;
 const NON_IMAGE_EXT_REGEX = /\.(md|markdown|txt|pdf|docx?|xlsx?|pptx?|zip|rar|tar|gz|mp4|mov|avi|mp3|wav|gif)$/i;
 
-/** 封面字段（C01③ 文字封面 + C06 AI 封面配图） */
-/** @typedef {{ title: string, author: string, date: string, excerpt: string, coverImage?: string, coverMode?: 'none' | 'adaptive' | 'mixed' | 'full-bleed', coverImageStyle?: string, coverPrompt?: string, coverImageSource?: string }} CardCoverFields */
+/** 封面字段（C01③ 文字封面 + C06 AI 封面配图 + 构图微调） */
+/** @typedef {{ title: string, author: string, date: string, excerpt: string, coverImage?: string, coverMode?: 'none' | 'adaptive' | 'mixed' | 'full-bleed', coverImageStyle?: string, coverPrompt?: string, coverImageSource?: string, coverImageScale?: number, coverImagePosition?: { x: number, y: number } }} CardCoverFields */
 
 /** 呈现版式展示标签 */
 export const COVER_MODE_LABELS = /** @type {const} */ ({
@@ -74,6 +74,8 @@ export const EMPTY_COVER_FIELDS = /** @type {CardCoverFields} */ ({
   coverImageStyle: "3d-clay",
   coverPrompt: "",
   coverImageSource: "",
+  coverImageScale: 1.0,
+  coverImagePosition: { x: 50, y: 50 },
 });
 
 /**
@@ -421,6 +423,29 @@ export function normalizeCoverFields(partial = {}, base = EMPTY_COVER_FIELDS) {
     }
     return base.coverMode || 'none';
   };
+  const resolveScale = () => {
+    const raw = typeof src.coverImageScale === 'number' ? src.coverImageScale : base.coverImageScale;
+    if (typeof raw === 'number' && Number.isFinite(raw)) {
+      return Math.min(3.0, Math.max(1.0, Number(raw.toFixed(2))));
+    }
+    return 1.0;
+  };
+  const resolvePosition = () => {
+    if (!src.coverImagePosition && base.coverImagePosition) {
+      return base.coverImagePosition;
+    }
+    const pos = (src.coverImagePosition && typeof src.coverImagePosition === 'object')
+      ? /** @type {Record<string, unknown>} */ (src.coverImagePosition)
+      : /** @type {Record<string, unknown>} */ (base.coverImagePosition || { x: 50, y: 50 });
+    const rawX = typeof pos.x === 'number' ? pos.x : 50;
+    const rawY = typeof pos.y === 'number' ? pos.y : 50;
+    const x = Number.isFinite(rawX) ? Math.min(100, Math.max(0, Math.round(rawX))) : 50;
+    const y = Number.isFinite(rawY) ? Math.min(100, Math.max(0, Math.round(rawY))) : 50;
+    if (base.coverImagePosition && base.coverImagePosition.x === x && base.coverImagePosition.y === y) {
+      return base.coverImagePosition;
+    }
+    return { x, y };
+  };
   return {
     title: pick("title"),
     author: pick("author"),
@@ -431,6 +456,8 @@ export function normalizeCoverFields(partial = {}, base = EMPTY_COVER_FIELDS) {
     coverImageStyle: typeof src.coverImageStyle === 'string' && src.coverImageStyle.trim() ? src.coverImageStyle.trim() : (base.coverImageStyle || '3d-clay'),
     coverPrompt: typeof src.coverPrompt === 'string' ? src.coverPrompt.trim() : (base.coverPrompt || ''),
     coverImageSource: typeof src.coverImageSource === 'string' ? src.coverImageSource.trim() : (base.coverImageSource || ''),
+    coverImageScale: resolveScale(),
+    coverImagePosition: resolvePosition(),
   };
 }
 

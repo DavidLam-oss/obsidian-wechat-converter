@@ -565,6 +565,27 @@ createSettingsPanel(container) {
   });
   captionSection.classList.add('apple-settings-inline-toggle');
 
+  // === 文章末尾互动三连卡 ===
+  const engagementCardSection = this.createSection(advancedArea, '文章末尾互动三连卡', (section) => {
+    const row = section.createEl('div', { cls: 'apple-settings-inline-row' });
+    const toggle = row.createEl('label', { cls: 'apple-toggle' });
+    const checkbox = /** @type {ObsidianInputLike} */ (toggle.createEl('input', { type: 'checkbox', cls: 'apple-toggle-input' }));
+    checkbox.checked = !!this.plugin.settings.enableEngagementCard;
+    toggle.createEl('span', { cls: 'apple-toggle-slider' });
+
+    section.createEl('span', {
+      text: '在文末展示自适应点赞、在看、转发互动卡',
+      cls: 'apple-settings-inline-tip',
+    });
+
+    checkbox.addEventListener('change', async () => {
+      this.plugin.settings.enableEngagementCard = checkbox.checked;
+      await this.plugin.saveSettings();
+      await this.convertCurrent(true);
+    });
+  });
+  engagementCardSection.classList.add('apple-settings-inline-toggle');
+
   // === 横滑图片块提示 ===
   this.createSection(advancedArea, '横滑图片块', (section) => {
     const imageBlockCommand = getImageSwipeCommandCopy(this.app, 'image-swipe').name;

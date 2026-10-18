@@ -61,3 +61,6 @@ lib/mathjax-plugin.js
 .qoder/
 
 .alma-snapshots
+
+# HyperFrames promo project (large local renders)
+videos/

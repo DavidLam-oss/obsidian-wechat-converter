@@ -68,6 +68,7 @@ import { renderCardPages, RATIO_PRESETS } from '../../services/card-render-engin
 import { DEFAULT_CARD_THEME_ID, getCardTheme } from '../../services/card-themes.js';
 import { releasePageStyle } from '../../services/card-render-assembly.js';
 import { deriveCoverFields, isCoverUsable } from '../../services/card-cover-model.js';
+import { attachCoverImagePanZoom } from '../../services/card-cover-pan-zoom.js';
 import {
   createCardSessionRegistry,
   createPreviewRunner,
@@ -98,7 +99,8 @@ import { OMISSION_LABELS } from './card-preview-diagnostics.js';
  *   cardPreviewShell?: ObsidianElementLike | null,
  *   cardRenderedLayoutKey?: string,
  *   cardContentHashes?: Map<string, string>,
- *   cardResourceBudget?: import('../../services/card-resources.js').CardResourceSession | null
+ *   cardResourceBudget?: import('../../services/card-resources.js').CardResourceSession | null,
+ *   cardPreviewCoverCleanup?: (() => void) | null
  * }} CardViewStateLike
  */
 
@@ -576,6 +578,11 @@ renderCardPreviewDom() {
   // 2026-09-20：缩放控件与封面入口图标已移除——缩放始终按容器自适应（见 maybeAutoFitCardPreviewZoom），
   // 封面与否直接看缩略图；封面设置从侧栏「封面设置」子 Tab 进。
 
+  if (typeof selfRec.cardPreviewCoverCleanup === 'function') {
+    selfRec.cardPreviewCoverCleanup();
+    selfRec.cardPreviewCoverCleanup = null;
+  }
+
   // —— 缩略页（封面在列首、不编号，C01③）——
   // 2026-09-20：不再挂勾选与复制控件。点页面本体就只做源定位（版本安全，见 locateCardPageSource）。
   const pagesWrap = shell.createEl('div', { cls: 'icard-preview-pages' });
@@ -601,6 +608,12 @@ renderCardPreviewDom() {
   };
   if (outcome?.coverPage instanceof HTMLElement) {
     renderPageThumb(outcome.coverPage, 'cover', '封面', null);
+    selfRec.cardPreviewCoverCleanup = attachCoverImagePanZoom(outcome.coverPage, (change) => {
+      session.applyCoverFields(change);
+      if (typeof (/** @type {any} */ (this).renderCardSettingsValues) === 'function') {
+        /** @type {any} */ (this).renderCardSettingsValues();
+      }
+    });
   }
   pages.forEach((pageEl, index) => {
     renderPageThumb(
@@ -695,6 +708,10 @@ disposeCardPreview() {
   if (selfRecord.cardSessionRegistry) {
     selfRecord.cardSessionRegistry.disposeAll();
     selfRecord.cardSessionRegistry = null;
+  }
+  if (typeof selfRecord.cardPreviewCoverCleanup === 'function') {
+    selfRecord.cardPreviewCoverCleanup();
+    selfRecord.cardPreviewCoverCleanup = null;
   }
   const ownerDoc = /** @type {Document | undefined} */ (this.containerEl?.ownerDocument);
   releasePageStyle(ownerDoc, this);

@@ -31,6 +31,8 @@ import { describe, it, expect } from 'vitest';
 
 const {
   CARD_THEME_IDS,
+  CLASSIC_CARD_THEME_IDS,
+  MOOD_PALETTE_THEME_IDS,
   CARD_THEME_ID_ALIASES,
   DEFAULT_CARD_THEME_ID,
   getCardTheme,
@@ -39,11 +41,19 @@ const {
 } = await import('../services/card-themes.js');
 const { VERIFIED_CARD_THEME_IDS, normalizeCardLayoutSettings } = await import('../services/card-settings-model.js');
 
-describe('card themes (red-note 六主题)', () => {
-  it('六套主题全部注册：simple-white / gradient-blue / dark-gold / neon-purple / forest-green / rose-gold', () => {
-    expect([...CARD_THEME_IDS]).toEqual([
+describe('card themes (经典 6 主题 + 11 情绪调色盘)', () => {
+  it('经典 6 主题与 11 情绪调色盘全部注册（共 17 套）', () => {
+    expect([...CLASSIC_CARD_THEME_IDS]).toEqual([
       'simple-white', 'gradient-blue', 'dark-gold', 'neon-purple', 'forest-green', 'rose-gold',
     ]);
+    expect([...MOOD_PALETTE_THEME_IDS]).toEqual([
+      'warm', 'cyber', 'ocean', 'forest', 'elegant', 'sakura', 'metal', 'starry', 'minimal-white', 'yueling', 'dark-night',
+    ]);
+    expect([...CARD_THEME_IDS]).toEqual([
+      ...CLASSIC_CARD_THEME_IDS,
+      ...MOOD_PALETTE_THEME_IDS,
+    ]);
+    expect(CARD_THEME_IDS).toHaveLength(17);
     for (const id of CARD_THEME_IDS) {
       expect(hasCardTheme(id)).toBe(true);
       const theme = getCardTheme(id);
@@ -73,23 +83,23 @@ describe('card themes (red-note 六主题)', () => {
     }
   });
 
-  it('六主题不是六种底色：coverStyle 分组、衬线、字重、强调色均有真实差异', () => {
-    const themes = CARD_THEME_IDS.map((id) => getCardTheme(id));
+  it('经典六主题与情绪调色盘均有真实排版与色彩差异', () => {
+    const classicThemes = CLASSIC_CARD_THEME_IDS.map((id) => getCardTheme(id));
     // coverStyle 四式分组：magazine×1 / centered×2 / luxury×2 / neon×1
-    const styles = themes.map((t) => t.coverStyle);
+    const styles = classicThemes.map((t) => t.coverStyle);
     expect(styles.filter((s) => s === 'luxury')).toHaveLength(2);
     expect(styles.filter((s) => s === 'centered')).toHaveLength(2);
     expect(styles).toContain('magazine');
     expect(styles).toContain('neon');
-    // 衬线主题（黑金/玫瑰金）全卡衬线
-    for (const id of ['dark-gold', 'rose-gold']) {
+    // 衬线主题（黑金/玫瑰金/优雅暗色/悦灵雅棕）全卡衬线
+    for (const id of ['dark-gold', 'rose-gold', 'elegant', 'yueling']) {
       expect(getCardTheme(id).tokens.fontFamily).toContain('Songti');
     }
-    for (const id of ['simple-white', 'neon-purple']) {
+    for (const id of ['simple-white', 'neon-purple', 'cyber']) {
       expect(getCardTheme(id).tokens.fontFamily).not.toContain('Songti');
     }
-    // 强调色互不相同
-    expect(new Set(themes.map((t) => t.tokens.accentColor)).size).toBe(6);
+    // 强调色在经典主题内互不相同
+    expect(new Set(classicThemes.map((t) => t.tokens.accentColor)).size).toBe(6);
   });
 
   it('buildCardPageCss：共享 red-note 骨架 + 双层卡 + 封面四式装饰', () => {
