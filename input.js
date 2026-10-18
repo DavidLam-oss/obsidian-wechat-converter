@@ -27,6 +27,7 @@
 
 import { AppleStyleView } from './views/apple-style-view.js';
 import { AppleStyleSettingTab } from './views/settings/apple-style-setting-tab.js';
+import { showCustomThemeModal } from './views/converter/custom-theme-modal.js';
 import {
   getArticleLayoutStateFromSettings,
   saveArticleLayoutStateToSettings,
@@ -98,47 +99,47 @@ class AppleStylePlugin extends Plugin {
       delete window.AppleStyleConverter;
     }
 
-    this.registerView(
-      APPLE_STYLE_VIEW,
-      (leaf) => new AppleStyleView(leaf, this)
-    );
+    this.registerView(APPLE_STYLE_VIEW, (leaf) => new AppleStyleView(leaf, this));
 
-    this.addRibbonIcon('wand', APPLE_STYLE_VIEW_TITLE, async () => {
-      await this.openConverter();
-    });
+    this.addRibbonIcon('wand', APPLE_STYLE_VIEW_TITLE, () => this.openConverter());
 
     this.addCommand({
       id: 'open-apple-converter',
       name: `打开${APPLE_STYLE_VIEW_TITLE}`,
-      callback: async () => {
-        await this.openConverter();
-      },
+      callback: () => this.openConverter(),
     });
 
     this.addCommand({
       id: 'insert-image-swipe-block',
       name: getImageSwipeCommandCopy(this.app, 'image-swipe').name,
-      callback: () => {
-        this.insertImageSwipeCalloutFromActiveEditor('image-swipe');
-      },
+      callback: () => this.insertImageSwipeCalloutFromActiveEditor('image-swipe'),
     });
 
     this.addCommand({
       id: 'insert-image-sensitive-block',
       name: getImageSwipeCommandCopy(this.app, 'image-sensitive').name,
-      callback: () => {
-        this.insertImageSwipeCalloutFromActiveEditor('image-sensitive');
-      },
+      callback: () => this.insertImageSwipeCalloutFromActiveEditor('image-sensitive'),
     });
 
-    // Command 'convert-to-apple-style' removed as per user request
+    this.addCommand({
+      id: 'open-custom-theme-modal',
+      name: '自定义排版主题管理',
+      callback: () => {
+        showCustomThemeModal({
+          app: this.app,
+          plugin: this,
+          onThemeApplied: () => {
+            const view = /** @type {{ convertCurrent?: (force?: boolean) => Promise<unknown> } | null} */ (this.getConverterView());
+            view?.convertCurrent?.(true);
+          },
+        });
+      },
+    });
 
     this.addSettingTab(new AppleStyleSettingTab(this.app, this));
 
     this.app.workspace.onLayoutReady(() => {
-      this.migrateLegacyConverterLeafTitles().catch((error) => {
-        console.warn('同步转换器标题失败:', error);
-      });
+      this.migrateLegacyConverterLeafTitles().catch((error) => console.warn('同步转换器标题失败:', error));
     });
 
     if (typeof this.app.vault.on === 'function') {

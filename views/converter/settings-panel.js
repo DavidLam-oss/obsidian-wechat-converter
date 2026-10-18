@@ -34,6 +34,11 @@ import {
   getImageSwipeCommandCopy,
   isMobileClient,
 } from '../apple-style-view-shared.js';
+import { showCustomThemeModal } from './custom-theme-modal.js';
+import {
+  compileCustomThemeToAppleConfig,
+  findCustomTheme,
+} from '../../services/custom-theme-adapter.js';
 
 /**
  * @param {AppleThemeApiLike | null} themeApi
@@ -178,16 +183,51 @@ createSettingsPanel(container) {
   // === 主题选择 ===
   this.createSection(targetArea, '主题', (section) => {
     const grid = section.createEl('div', { cls: 'apple-btn-grid' });
-    const themeApi = getAppleThemeApi(this.theme?.constructor);
-    const themes = readThemeOptions(themeApi, 'getThemeList');
-    themes.forEach(t => {
-      const btn = grid.createEl('button', {
-        cls: `apple-btn-theme ${this.plugin.settings.theme === t.value ? 'active' : ''}`,
-        text: t.label,
+    const renderThemes = () => {
+      grid.empty();
+      const themeApi = getAppleThemeApi(this.theme?.constructor);
+      const themes = readThemeOptions(themeApi, 'getThemeList');
+      themes.forEach(t => {
+        const btn = grid.createEl('button', {
+          cls: `apple-btn-theme ${this.plugin.settings.theme === t.value ? 'active' : ''}`,
+          text: t.label,
+        });
+        btn.dataset.value = t.value;
+        btn.addEventListener('click', () => {
+          this.theme?.update({ customThemeConfig: null });
+          this.onThemeChange(t.value, grid);
+        });
       });
-      btn.dataset.value = t.value;
-      btn.addEventListener('click', () => this.onThemeChange(t.value, grid));
-    });
+      /** @type {Array<import('../../services/theme-token-validator.js').CustomThemeToken>} */
+      const customs = Array.isArray(this.plugin.settings.customThemes) ? this.plugin.settings.customThemes : [];
+      customs.forEach(t => {
+        const btn = grid.createEl('button', {
+          cls: `apple-btn-theme ${this.plugin.settings.theme === t.id ? 'active' : ''}`,
+          text: t.name || t.id,
+        });
+        btn.dataset.value = t.id;
+        btn.addEventListener('click', () => {
+          const cfg = compileCustomThemeToAppleConfig(t);
+          this.theme?.update({ customThemeConfig: cfg });
+          this.onThemeChange(t.id, grid);
+        });
+      });
+      const addBtn = grid.createEl('button', { cls: 'apple-btn-theme apple-btn-theme-manage', text: '+ 自定义' });
+      addBtn.addEventListener('click', () => {
+        showCustomThemeModal({
+          app: this.app,
+          plugin: this.plugin,
+          onThemeApplied: (themeId) => {
+            const custom = findCustomTheme(this.plugin.settings.customThemes, themeId);
+            const cfg = custom ? compileCustomThemeToAppleConfig(custom) : null;
+            this.theme?.update({ customThemeConfig: cfg });
+            renderThemes();
+            this.onThemeChange(themeId, grid);
+          },
+        });
+      });
+    };
+    renderThemes();
   });
 
   // === 字体选择 ===

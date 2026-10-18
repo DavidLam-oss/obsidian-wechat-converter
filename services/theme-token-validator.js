@@ -1,0 +1,372 @@
+/*
+## 核心功能
+
+自定义排版主题 Token（Theme Token）Schema 定义、Hex 色值与字段合法性校验器。
+集成高阶 rawCssOverrides 的安全审查白名单过滤，以及开箱即用的 AI 提示词模板。
+
+## 输入
+
+- 用户粘贴或外部导入的 JSON 字符串或原始 JS 对象。
+
+## 输出
+
+- `validateCustomThemeToken(input)`: 结构化校验结果 `{ valid: boolean, errors: string[], token?: CustomThemeToken }`
+- `normalizeCustomThemeToken(input, fallbackId?)`: 归一化后的合法 CustomThemeToken 对象
+- `normalizeCustomThemesList(input)`: 归一化主题 Token 数组
+- `AI_THEME_PROMPT_TEMPLATE`: 一键复制给大模型（DeepSeek/ChatGPT/Claude/Kimi）的 Prompt 模板常量
+
+## 定位
+
+位于 services/，纯逻辑与契约层，无 DOM 与 Obsidian API 依赖，可在 Node 环境下独立单测。
+*/
+
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- reason: Theme token validation and normalization process untrusted and heterogeneous JSON payloads */
+
+/**
+ * @typedef {{
+ *   schemaVersion: 1,
+ *   id: string,
+ *   name: string,
+ *   description?: string,
+ *   author?: string,
+ *   headingStyle?: 'default' | 'serial-number' | 'badge' | 'zen',
+ *   colors: {
+ *     accent: string,
+ *     light?: string,
+ *     highlight?: string,
+ *     title?: string,
+ *     text?: string,
+ *     muted?: string,
+ *     border?: string,
+ *     codeBackground?: string,
+ *   },
+ *   typography?: {
+ *     fontPreset?: 'sans-serif' | 'serif' | 'monospace',
+ *     baseFontSize?: number,
+ *     lineHeight?: number,
+ *     paragraphGap?: number,
+ *     letterSpacing?: number,
+ *   },
+ *   footer?: {
+ *     showEngagementCard?: boolean,
+ *     ctaText?: string,
+ *   },
+ *   rawCssOverrides?: string,
+ * }} CustomThemeToken
+ */
+
+export const HEX_COLOR_REGEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+export const VALID_HEADING_STYLES = /** @type {const} */ (['default', 'serial-number', 'badge', 'zen']);
+export const VALID_FONT_PRESETS = /** @type {const} */ (['sans-serif', 'serif', 'monospace']);
+
+/**
+ * 开箱即用的 AI 主题设计提示词模板
+ */
+export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的排版设计配置生成器。请根据用户的排版风格诉求，生成一份严谨的微信公众号排版 Theme Token JSON。
+
+【严格输出要求】
+1. 只输出合法标准的 JSON 字符串，严禁包含任何 Markdown 代码围栏（例如 \`\`\`json）、前后缀解说或注释。
+2. 颜色值必须严格符合 6 位十六进制格式（#RRGGBB）。
+3. 遵循克制配色五要素：
+   - accent（主色）：醒目品牌色，用于重点引导、徽标、分节与强调；
+   - light（浅底色）：主色极浅淡化版本（通常为 90%~95% 浅度混白），用于引用块与卡片底色；
+   - highlight（点睛色）：辅助提亮点缀色，用于重点短语标注；
+   - title / text / muted：用于标题、正文与次要说明的灰阶；
+   - border：分割线与卡片边框色；
+   - codeBackground：代码块背景底色。
+4. headingStyle 可选："default"（经典极简条） | "serial-number"（大数字序号） | "badge"（胶囊徽标） | "zen"（留白禅意）。
+5. typography 排版建议：baseFontSize 通常在 14~17 之间，lineHeight 在 1.6~2.0 之间。
+
+【标准 JSON 输出格式示范】
+{
+  "schemaVersion": 1,
+  "id": "custom-tech-blue",
+  "name": "科技沉稳蓝",
+  "description": "适合硬核评测与技术解析的理性沉稳排版",
+  "author": "设计师",
+  "headingStyle": "serial-number",
+  "colors": {
+    "accent": "#2563EB",
+    "light": "#EFF6FF",
+    "highlight": "#F59E0B",
+    "title": "#1E293B",
+    "text": "#334155",
+    "muted": "#64748B",
+    "border": "#E2E8F0",
+    "codeBackground": "#F8FAFC"
+  },
+  "typography": {
+    "fontPreset": "sans-serif",
+    "baseFontSize": 15,
+    "lineHeight": 1.75,
+    "paragraphGap": 16,
+    "letterSpacing": 0
+  },
+  "footer": {
+    "showEngagementCard": false,
+    "ctaText": "如果对你有启发，欢迎点赞、在看、转发"
+  }
+}
+`;
+
+/**
+ * 校验十六进制色值格式
+ * @param {unknown} val
+ * @returns {boolean}
+ */
+export function isValidHexColor(val) {
+  return typeof val === 'string' && HEX_COLOR_REGEX.test(val.trim());
+}
+
+/**
+ * 混色辅助：将 Hex 色值与白色混合生成柔和的浅底色（默认 92% 白）
+ * @param {string} hex
+ * @param {number} [whiteRatio=0.92]
+ * @returns {string}
+ */
+export function tintColorWithWhite(hex, whiteRatio = 0.92) {
+  if (!isValidHexColor(hex)) return '#F8FAFC';
+  let clean = hex.trim().replace(/^#/, '');
+  if (clean.length === 3) {
+    clean = clean.split('').map((c) => c + c).join('');
+  }
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+
+  const mixedR = Math.round(r * (1 - whiteRatio) + 255 * whiteRatio);
+  const mixedG = Math.round(g * (1 - whiteRatio) + 255 * whiteRatio);
+  const mixedB = Math.round(b * (1 - whiteRatio) + 255 * whiteRatio);
+
+  /** @param {number} n */
+  const toHex = (n) => n.toString(16).padStart(2, '0');
+  return `#${toHex(mixedR)}${toHex(mixedG)}${toHex(mixedB)}`.toUpperCase();
+}
+
+/**
+ * 清洗并审查 rawCssOverrides 中的高危字符（白名单拦截）
+ * @param {string} rawCss
+ * @returns {{ safe: boolean, error?: string, sanitized: string }}
+ */
+export function sanitizeRawCssOverrides(rawCss) {
+  if (!rawCss || typeof rawCss !== 'string') {
+    return { safe: true, sanitized: '' };
+  }
+  const str = rawCss.trim();
+  if (!str) return { safe: true, sanitized: '' };
+
+  const dangerousPatterns = [
+    { pattern: /<script\b/i, reason: '禁止包含 <script> 标签' },
+    { pattern: /@import\b/i, reason: '禁止外部 @import 规则' },
+    { pattern: /url\s*\(/i, reason: '禁止外部 url() 引用' },
+    { pattern: /expression\s*\(/i, reason: '禁止 IE expression 动态表达式' },
+    { pattern: /-moz-binding\b/i, reason: '禁止 XBL -moz-binding 绑定' },
+    { pattern: /javascript\s*:/i, reason: '禁止 javascript: 伪协议' },
+    { pattern: /vbscript\s*:/i, reason: '禁止 vbscript: 伪协议' },
+    { pattern: /behavior\s*:/i, reason: '禁止 HTC behavior 行为属性' },
+  ];
+
+  for (const { pattern, reason } of dangerousPatterns) {
+    if (pattern.test(str)) {
+      return { safe: false, error: reason, sanitized: '' };
+    }
+  }
+
+  return { safe: true, sanitized: str };
+}
+
+/**
+ * 校验自定义主题 Token
+ * @param {unknown} input JSON 字符串或已解析对象
+ * @returns {{ valid: boolean, errors: string[], token?: CustomThemeToken }}
+ */
+export function validateCustomThemeToken(input) {
+  const errors = [];
+
+  let obj = input;
+  if (typeof input === 'string') {
+    try {
+      // 容错：去除首尾可能由大模型包裹的 Markdown 代码围栏
+      let cleaned = input.trim();
+      if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+      }
+      obj = JSON.parse(cleaned);
+    } catch (e) {
+      return {
+        valid: false,
+        errors: [`JSON 语法解析失败: ${e instanceof Error ? e.message : String(e)}`],
+      };
+    }
+  }
+
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+    return { valid: false, errors: ['配置根节点必须为标准的 JSON 键值对对象'] };
+  }
+
+  const raw = /** @type {Record<string, any>} */ (obj);
+
+  // 1. name 校验
+  if (!raw.name || typeof raw.name !== 'string' || !raw.name.trim()) {
+    errors.push('缺少主题名称 (name)');
+  }
+
+  // 2. colors 校验
+  if (!raw.colors || typeof raw.colors !== 'object' || Array.isArray(raw.colors)) {
+    errors.push('缺少颜色配置对象 (colors)');
+  } else {
+    if (!isValidHexColor(raw.colors.accent)) {
+      errors.push(`主色 (colors.accent) 必须是合法的 16 进制颜色（如 #2563EB），当前值为: "${raw.colors.accent}"`);
+    }
+
+    const optionalColorKeys = ['light', 'highlight', 'title', 'text', 'muted', 'border', 'codeBackground'];
+    for (const key of optionalColorKeys) {
+      if (raw.colors[key] !== undefined && raw.colors[key] !== null && !isValidHexColor(raw.colors[key])) {
+        errors.push(`颜色 colors.${key} 格式无效，必须是 16 进制颜色（如 #FFFFFF），当前值为: "${raw.colors[key]}"`);
+      }
+    }
+  }
+
+  // 3. typography 校验（如果提供）
+  if (raw.typography && typeof raw.typography === 'object') {
+    if (raw.typography.fontPreset && !VALID_FONT_PRESETS.includes(raw.typography.fontPreset)) {
+      errors.push(`字体预设 (typography.fontPreset) 仅支持 ${VALID_FONT_PRESETS.join(' / ')}`);
+    }
+  }
+
+  // 4. headingStyle 校验
+  if (raw.headingStyle && !VALID_HEADING_STYLES.includes(raw.headingStyle)) {
+    errors.push(`标题风格 (headingStyle) 仅支持 ${VALID_HEADING_STYLES.join(' / ')}`);
+  }
+
+  // 5. rawCssOverrides 安全审查
+  if (raw.rawCssOverrides) {
+    const cssCheck = sanitizeRawCssOverrides(String(raw.rawCssOverrides));
+    if (!cssCheck.safe) {
+      errors.push(`自定义 CSS 包含危险规则: ${cssCheck.error}`);
+    }
+  }
+
+  if (errors.length > 0) {
+    return { valid: false, errors };
+  }
+
+  const normalized = normalizeCustomThemeToken(raw);
+  return { valid: true, errors: [], token: normalized };
+}
+
+/**
+ * 归一化自定义主题 Token（补全缺失值与默认派生）
+ * @param {Record<string, any>} raw
+ * @param {string} [fallbackId]
+ * @returns {CustomThemeToken}
+ */
+export function normalizeCustomThemeToken(raw, fallbackId) {
+  const accent = isValidHexColor(raw.colors?.accent) ? raw.colors.accent.trim() : '#2563EB';
+
+  const defaultId = `custom-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
+  let id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim().toLowerCase() : (fallbackId || defaultId);
+  id = id.replace(/[^a-z0-9_-]/g, '-').replace(/^-+|-+$/g, '') || defaultId;
+  if (!id.startsWith('custom-')) {
+    id = `custom-${id}`;
+  }
+
+  const name = typeof raw.name === 'string' && raw.name.trim() ? raw.name.trim() : '自定义主题';
+  const description = typeof raw.description === 'string' ? raw.description.trim() : '';
+  const author = typeof raw.author === 'string' ? raw.author.trim() : '';
+
+  const headingStyle = VALID_HEADING_STYLES.includes(raw.headingStyle) ? raw.headingStyle : 'default';
+
+  const colors = {
+    accent,
+    light: isValidHexColor(raw.colors?.light) ? raw.colors.light.trim() : tintColorWithWhite(accent, 0.94),
+    highlight: isValidHexColor(raw.colors?.highlight) ? raw.colors.highlight.trim() : accent,
+    title: isValidHexColor(raw.colors?.title) ? raw.colors.title.trim() : '#1E293B',
+    text: isValidHexColor(raw.colors?.text) ? raw.colors.text.trim() : '#334155',
+    muted: isValidHexColor(raw.colors?.muted) ? raw.colors.muted.trim() : '#64748B',
+    border: isValidHexColor(raw.colors?.border) ? raw.colors.border.trim() : '#E2E8F0',
+    codeBackground: isValidHexColor(raw.colors?.codeBackground) ? raw.colors.codeBackground.trim() : '#F8FAFC',
+  };
+
+  const typo = raw.typography || {};
+  const typography = {
+    fontPreset: VALID_FONT_PRESETS.includes(typo.fontPreset) ? typo.fontPreset : 'sans-serif',
+    baseFontSize: typeof typo.baseFontSize === 'number' && Number.isFinite(typo.baseFontSize)
+      ? Math.min(22, Math.max(12, Math.round(typo.baseFontSize)))
+      : 15,
+    lineHeight: typeof typo.lineHeight === 'number' && Number.isFinite(typo.lineHeight)
+      ? Math.min(2.4, Math.max(1.4, Number(typo.lineHeight.toFixed(2))))
+      : 1.75,
+    paragraphGap: typeof typo.paragraphGap === 'number' && Number.isFinite(typo.paragraphGap)
+      ? Math.min(40, Math.max(8, Math.round(typo.paragraphGap)))
+      : 16,
+    letterSpacing: typeof typo.letterSpacing === 'number' && Number.isFinite(typo.letterSpacing)
+      ? Math.min(2, Math.max(0, Number(typo.letterSpacing.toFixed(1))))
+      : 0,
+  };
+
+  const footer = {
+    showEngagementCard: Boolean(raw.footer?.showEngagementCard),
+    ctaText: typeof raw.footer?.ctaText === 'string' ? raw.footer.ctaText.trim() : '如果对你有启发，欢迎点赞、在看、转发',
+  };
+
+  const cssCheck = sanitizeRawCssOverrides(String(raw.rawCssOverrides || ''));
+  const rawCssOverrides = cssCheck.safe ? cssCheck.sanitized : '';
+
+  // 严格前向兼容：保留未知外部字段
+  const extraFields = { ...raw };
+  delete extraFields.id;
+  delete extraFields.name;
+  delete extraFields.description;
+  delete extraFields.author;
+  delete extraFields.headingStyle;
+  delete extraFields.colors;
+  delete extraFields.typography;
+  delete extraFields.footer;
+  delete extraFields.rawCssOverrides;
+  delete extraFields.schemaVersion;
+
+  return {
+    schemaVersion: 1,
+    id,
+    name,
+    description,
+    author,
+    headingStyle,
+    colors,
+    typography,
+    footer,
+    rawCssOverrides,
+    ...extraFields,
+  };
+}
+
+/**
+ * 归一化自定义主题 Token 数组列表
+ * @param {unknown} input
+ * @returns {CustomThemeToken[]}
+ */
+export function normalizeCustomThemesList(input) {
+  if (!Array.isArray(input)) return [];
+  const result = [];
+  const seenIds = new Set();
+
+  for (const item of input) {
+    if (item && typeof item === 'object') {
+      const token = normalizeCustomThemeToken(item);
+      let uniqueId = token.id;
+      let counter = 1;
+      while (seenIds.has(uniqueId)) {
+        uniqueId = `${token.id}-${counter++}`;
+      }
+      token.id = uniqueId;
+      seenIds.add(uniqueId);
+      result.push(token);
+    }
+  }
+
+  return result;
+}
+
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- reason: close the scoped disable block above */

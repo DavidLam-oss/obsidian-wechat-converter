@@ -45,6 +45,7 @@ import {
   createDefaultAiSettings,
   normalizeAiSettings,
 } from './ai-layout.js';
+import { normalizeCustomThemesList } from './theme-token-validator.js';
 
 /** @param {unknown} value @returns {value is Record<string, unknown>} */
 function isRecord(value) {
@@ -147,6 +148,8 @@ export function createDefaultSettings() {
     // 文章末尾互动三连卡（Opt-in，默认关闭）
     enableEngagementCard: false,
     engagementCtaText: '',
+    // 自定义主题 Token 预设库（Phase 2）
+    customThemes: [],
     multiPlatformSync: createDefaultMultiPlatformSyncSettings(),
     feishuSync: createDefaultFeishuSyncSettings(),
     wechatAppId: '',
@@ -273,6 +276,9 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
   settings.engagementCtaText = typeof settings.engagementCtaText === 'string'
     ? settings.engagementCtaText.trim()
     : '';
+
+  // 自定义主题 Token 预设库（Phase 2）
+  settings.customThemes = normalizeCustomThemesList(settings.customThemes);
 
   // Unsplash Access Key：去除多余空白字符
   const rawUnsplashKey = settings.unsplashAccessKey;

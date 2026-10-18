@@ -87,6 +87,7 @@
  *   letterSpacing?: number | null,
  *   justifyText?: boolean,
  *   coloredHeader?: boolean,
+ *   customThemeConfig?: AppleThemeConfig | null,
  * }} AppleThemeOptions
  */
 
@@ -165,6 +166,10 @@ class AppleTheme {
     // 标题染色设置
     /** @type {boolean} */
     this.coloredHeader = Boolean(options.coloredHeader);
+    /** @type {AppleThemeConfig | null} */
+    this.customThemeConfig = options.customThemeConfig && typeof options.customThemeConfig === 'object'
+      ? /** @type {AppleThemeConfig} */ (options.customThemeConfig)
+      : null;
   }
 
   /**
@@ -255,6 +260,9 @@ class AppleTheme {
    * @returns {AppleThemeConfig}
    */
   getThemeConfig() {
+    if (this.customThemeConfig) {
+      return this.customThemeConfig;
+    }
     return AppleTheme.THEME_CONFIGS[/** @type {AppleThemeName} */ (this.themeName)] || AppleTheme.THEME_CONFIGS.github;
   }
 
@@ -627,6 +635,11 @@ class AppleTheme {
     // 两端对齐：独立于主题，切换主题时不会被重置（只有显式传入才改）
     if (options.justifyText !== undefined) this.justifyText = options.justifyText !== false;
     if (options.coloredHeader !== undefined) this.coloredHeader = Boolean(options.coloredHeader);
+    if (options.customThemeConfig !== undefined) {
+      this.customThemeConfig = options.customThemeConfig && typeof options.customThemeConfig === 'object'
+        ? /** @type {AppleThemeConfig} */ (options.customThemeConfig)
+        : null;
+    }
   }
 
   /**

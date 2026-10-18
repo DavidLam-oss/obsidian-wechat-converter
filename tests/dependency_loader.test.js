@@ -77,8 +77,29 @@ describe('Dependency Loader Service', () => {
       macCodeBlock: false,
       codeLineNumber: true,
       sidePadding: 24,
+      lineHeight: undefined,
+      paragraphGap: undefined,
+      letterSpacing: undefined,
+      justifyText: undefined,
       coloredHeader: true,
+      customThemeConfig: null,
     });
+  });
+
+  it('toThemeOptions should compile customThemeConfig when active theme is custom', () => {
+    const opts = toThemeOptions({
+      theme: 'my-custom',
+      customThemes: [
+        {
+          id: 'my-custom',
+          name: '我的主题',
+          colors: { accent: '#10B981' },
+        },
+      ],
+    });
+    expect(opts.theme).toBe('my-custom');
+    expect(opts.customThemeConfig).toBeDefined();
+    expect(opts.customThemeConfig?.primaryColor).toBe('#10B981');
   });
 
   it('buildRenderRuntime should construct runtime without dynamic script injection', async () => {
