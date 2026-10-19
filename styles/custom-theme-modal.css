@@ -322,27 +322,21 @@
 .custom-theme-ai-gen-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
   font-size: 12px;
   font-weight: 500;
   padding: 5px 12px;
-  background: linear-gradient(135deg, var(--interactive-accent), #8b5cf6);
-  color: var(--text-on-accent, #ffffff);
-  border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.1s ease;
+  transition: opacity 0.15s ease;
 }
 
 .custom-theme-ai-gen-btn:hover:not(:disabled) {
   opacity: 0.92;
-  transform: translateY(-1px);
 }
 
 .custom-theme-ai-gen-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
 }
 
 .custom-theme-copy-prompt-btn-secondary {

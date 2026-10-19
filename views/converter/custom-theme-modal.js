@@ -230,14 +230,14 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
 
     // 快捷灵感药丸标签
     const pillsRow = step1.createDiv({ cls: 'custom-theme-pills-row' });
-    pillsRow.createEl('span', { cls: 'custom-theme-pills-label', text: '💡 灵感预设：' });
+    pillsRow.createEl('span', { cls: 'custom-theme-pills-label', text: '风格预设：' });
 
     const inspirationPills = [
-      { label: '🍂 秋日森系', desc: '偏暖色调的秋日森林系，主色琥珀黄与松针绿，温润克制，适合户外与手记' },
-      { label: '☕ 暖咖文艺', desc: '焦糖暖咖色调，主色复古咖啡棕与燕麦米白，适合文艺随笔与读书笔记' },
-      { label: '💻 极客科技', desc: '现代深邃科技感，主色赛博深蓝与霓虹青，适合技术文档、代码与前沿观察' },
-      { label: '🌿 极简雅致', desc: '极简素雅白灰黑，主色冷灰与黛青，禅意留白大标题，适合深度思考与散文' },
-      { label: '🧧 喜庆节日', desc: '东方传统喜庆中国红与暖金配比，端庄典雅，适合节日献礼与大事件发布' },
+      { label: '秋日森系', desc: '偏暖色调的秋日森林系，主色琥珀黄与松针绿，温润克制，适合户外与手记' },
+      { label: '暖咖文艺', desc: '焦糖暖咖色调，主色复古咖啡棕与燕麦米白，适合文艺随笔与读书笔记' },
+      { label: '极客科技', desc: '现代深邃科技感，主色赛博深蓝与霓虹青，适合技术文档、代码与前沿观察' },
+      { label: '极简雅致', desc: '极简素雅白灰黑，主色冷灰与黛青，禅意留白大标题，适合深度思考与散文' },
+      { label: '喜庆节日', desc: '东方传统喜庆中国红与暖金配比，端庄典雅，适合节日献礼与大事件发布' },
     ];
 
     inspirationPills.forEach((pill) => {
@@ -256,8 +256,8 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
 
     const hasAiModel = hasRunnableTextProvider(plugin.settings?.ai);
     const aiGenBtn = btnRow.createEl('button', {
-      cls: 'custom-theme-ai-gen-btn',
-      text: '✨ 调用 AI 智能生成',
+      cls: 'mod-cta custom-theme-ai-gen-btn',
+      text: '调用 AI 智能生成',
     });
     if (!hasAiModel) {
       aiGenBtn.title = '未检测到已配置的文本模型 API，点击可查看指引';
@@ -265,7 +265,7 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
 
     const copyPromptBtn = btnRow.createEl('button', {
       cls: 'custom-theme-copy-prompt-btn-secondary',
-      text: '📋 复制提示词 (发给外部 AI)',
+      text: '复制提示词 (发给外部 AI)',
     });
 
     copyPromptBtn.onclick = async () => {
@@ -353,7 +353,7 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
         if (result.success && result.token && result.json) {
           textarea.value = result.json;
           updatePreviewCard(result.token);
-          new Notice(`🎉 AI 已成功为您设计主题「${result.token.name}」！请检查下方配置`);
+          new Notice(`AI 已成功为您设计主题「${result.token.name}」！请检查下方配置`);
         } else {
           errorBox.removeClass('is-hidden');
           errorBox.createEl('strong', { text: 'AI 生成未成功：' });
@@ -367,7 +367,7 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
         errorBox.createEl('strong', { text: '调用异常：' + msg });
       } finally {
         aiGenBtn.disabled = false;
-        aiGenBtn.setText('✨ 调用 AI 智能生成');
+        aiGenBtn.setText('调用 AI 智能生成');
       }
     };
 
