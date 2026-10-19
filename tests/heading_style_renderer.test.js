@@ -38,6 +38,17 @@ describe('Heading Style Renderer - Constants & Helpers', () => {
     expect(resolvePrimaryColor({ themeColor: 'green' })).toBe('#28a745');
     expect(resolvePrimaryColor({ themeColor: 'purple' })).toBe('#6f42c1');
     expect(resolvePrimaryColor({})).toBe('#0366d6');
+    // 关键回归用例：当 settings 中同时存在预设 themeColor 和默认 customColor 时，优先选用 themeColor
+    expect(resolvePrimaryColor({ settings: { themeColor: 'green', customColor: '#0366d6' } })).toBe('#28a745');
+    expect(resolvePrimaryColor({ settings: { themeColor: 'orange', customColor: '#0366d6' } })).toBe('#fd7e14');
+    expect(resolvePrimaryColor({ settings: { themeColor: 'custom', customColor: '#e11d48' } })).toBe('#e11d48');
+    // 自定义主题的 accent 色
+    expect(resolvePrimaryColor({
+      settings: {
+        theme: 'my-gold',
+        customThemes: [{ id: 'my-gold', colors: { accent: '#d97706' } }],
+      },
+    })).toBe('#d97706');
   });
 
   it('should parse leading numbers in heading titles', () => {

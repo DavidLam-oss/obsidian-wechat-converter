@@ -32,6 +32,8 @@
 - 绝不改动冻结文件（converter.js 与 wechatsync-bridge.js）。
 */
 
+import { findCustomTheme } from './custom-theme-adapter.js';
+
 export const HEADING_STYLES = /** @type {const} */ ({
   DEFAULT: 'default',
   SERIAL_NUMBER: 'serial-number',
@@ -86,14 +88,43 @@ export function resolvePrimaryColor(options = {}) {
     return options.primaryColor.trim();
   }
 
-  const customColor = options.customColor || /** @type {string|undefined} */ (options.settings?.customColor);
-  if (typeof customColor === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(customColor.trim())) {
-    return customColor.trim();
+  const settings = options.settings;
+  const themeColor = options.themeColor
+    || (typeof settings?.themeColor === 'string' ? settings.themeColor : undefined);
+
+  // 1. 若使用的是自定义主题，优先读取自定义主题的主色调
+  if (settings && typeof settings.theme === 'string' && settings.customThemes) {
+    const customToken = findCustomTheme(settings.customThemes, settings.theme);
+    const accent = customToken?.colors?.accent;
+    if (typeof accent === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(accent.trim())) {
+      return accent.trim();
+    }
   }
 
-  const themeColor = options.themeColor || /** @type {string|undefined} */ (options.settings?.themeColor);
+  // 2. 若用户选择的是自定义颜色模式，读取 customColor
+  if (themeColor === 'custom') {
+    const customColor = options.customColor
+      || (typeof settings?.customColor === 'string' ? settings.customColor : undefined);
+    if (typeof customColor === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(customColor.trim())) {
+      return customColor.trim();
+    }
+  }
+
+  // 3. 预设颜色（blue, green, purple, orange, teal, rose, ruby, slate 等）
   if (typeof themeColor === 'string' && THEME_PRESET_COLORS[themeColor.toLowerCase()]) {
     return THEME_PRESET_COLORS[themeColor.toLowerCase()];
+  }
+
+  // 4. 若 themeColor 本身就是一个 Hex 颜色值
+  if (typeof themeColor === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(themeColor.trim())) {
+    return themeColor.trim();
+  }
+
+  // 5. 回退检查 customColor
+  const fallbackCustom = options.customColor
+    || (typeof settings?.customColor === 'string' ? settings.customColor : undefined);
+  if (typeof fallbackCustom === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(fallbackCustom.trim())) {
+    return fallbackCustom.trim();
   }
 
   return '#0366d6';

@@ -226,7 +226,7 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
     copyPromptBtn.onclick = async () => {
       const ok = await writeClipboardText(AI_THEME_PROMPT_TEMPLATE);
       if (ok) {
-        new Notice('AI 提示词已复制！可直接发送给 DeepSeek、ChatGPT、Claude 或 Kimi');
+        new Notice('AI 提示词已复制！请在发送给 AI 时补充您的个性化要求（如主色调、文风）');
       } else {
         new Notice('复制失败，请检查剪贴板权限');
       }
@@ -234,7 +234,7 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
 
     step1.createDiv({
       cls: 'custom-theme-card-desc',
-      text: '将提示词发送给 AI 大模型后，让它为你设计独一无二的品牌色系与排版风格，然后将 AI 返回的 JSON 代码粘贴在下方。',
+      text: '点击上方复制标准提示词并发送给 AI（如 DeepSeek、ChatGPT、Claude、Kimi 等）。建议在提示词末尾写上您的个性化风格要求（例如：“偏暖的秋日森林系”、“沉稳极简黑白灰”），AI 生成后将纯 JSON 代码粘贴在下方即可。',
     });
 
     // 步骤 2：粘贴 JSON
