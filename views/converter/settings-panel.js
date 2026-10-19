@@ -35,6 +35,7 @@ import {
   isMobileClient,
 } from '../apple-style-view-shared.js';
 import { showCustomThemeModal } from './custom-theme-modal.js';
+import { buildHeadingStyleSection } from './heading-style-controls.js';
 import {
   compileCustomThemeToAppleConfig,
   findCustomTheme,
@@ -59,7 +60,6 @@ function readThemeOptions(themeApi, method) {
 /** @type {SettingsPanelMethodsContract & ThisType<AppleStyleViewContract>} */
 export const settingsPanelMethods = {
 createSettingsPanel(container) {
-
   // 1. 创建顶部双行 Header 容器
   const header = container.createEl('div', { cls: 'apple-preview-header' });
 
@@ -79,7 +79,6 @@ createSettingsPanel(container) {
   // 1.2.1 第二行左侧：微型 Icon 分段模式切换胶囊
   const segment = bottomRow.createEl('div', { cls: 'apple-preview-mode-segment' });
   const setIcon = getObsidianSetIcon();
-
   const selfRec = toRecord(this);
 
   selfRec.btnArticleMode = segment.createEl('button', {
@@ -140,7 +139,6 @@ createSettingsPanel(container) {
     this.toggleSettingsPanel();
   });
   this.settingsBtn = settingsButton;
-
   this.aiLayoutBtn = createIconBtn('sparkles', 'AI 编排', () => this.onAiLayoutButtonClick());
 
   // [复制] 按钮（移动端隐藏，避免误导）
@@ -323,6 +321,9 @@ createSettingsPanel(container) {
       await this.onColorChange('custom', grid);
     });
   });
+
+  // === 分节标题 ===
+  buildHeadingStyleSection(this, targetArea);
 
   // === 页面两侧留白 ===
   this.createSection(targetArea, '页面两侧留白', (section) => {

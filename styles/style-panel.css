@@ -319,6 +319,11 @@
   border-color: rgba(0, 113, 227, 0.3);
 }
 
+.apple-btn-heading-row .apple-btn-size {
+  flex: 1;
+  text-align: center;
+}
+
 /* === 颜色选择器 === */
 .apple-color-grid {
   display: flex;

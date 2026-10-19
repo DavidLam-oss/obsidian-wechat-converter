@@ -35,6 +35,7 @@ import {
   WechatAPI,
   toReadableError,
   attachIcon,
+  APPLE_STYLE_VIEW,
 } from '../apple-style-view-shared.js';
 import { renderSectionHeader } from './platform-wall.js';
 import { resolveCustomCssSource } from '../../services/custom-css-source.js';
@@ -528,6 +529,22 @@ const wechatSettingsMethods = {
         dropdown.onChange(async (value) => {
           this.plugin.settings.headingStyle = value;
           await this.plugin.saveSettings();
+          /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- reason: dynamic converter view invocation to refresh preview on heading style change */
+          try {
+            const leaves = this.app?.workspace?.getLeavesOfType?.(APPLE_STYLE_VIEW) || [];
+            for (const leaf of leaves) {
+              const view = /** @type {any} */ (leaf?.view);
+              if (view && typeof view.convertCurrent === 'function') {
+                if (view.settingsHeadingStyleGrid && typeof view.updateButtonActive === 'function') {
+                  view.updateButtonActive(view.settingsHeadingStyleGrid, value);
+                }
+                await view.convertCurrent(true);
+              }
+            }
+          } catch (e) {
+            console.warn('刷新转换器预览失败:', e);
+          }
+          /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- reason: close the scoped disable block above */
         });
       });
   },
