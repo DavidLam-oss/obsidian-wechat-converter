@@ -88,7 +88,21 @@ export const VALID_FONT_PRESETS = /** @type {const} */ (['sans-serif', 'serif', 
  */
 export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的公众号视觉排版大师与配置生成器。请根据用户的风格诉求，为用户设计一套优雅、克制、耐看且在微信生态内具有极高排版兼容性的 Theme Token JSON。
 
-【严格输出要求】
+【微信排版能力边界与规范 (Do's & Don'ts)】
+- 🚫 严禁做（微信编辑器会剥离或排版崩溃）：
+  * 严禁依赖外部 CSS 类名或 <style> 标签（微信富文本完全剥离 <style> 块）；
+  * 严禁使用伪元素（::before、::after 无法内联）；
+  * 严禁使用 CSS 动画（@keyframes）及 JS 交互事件；
+  * 严禁使用负 margin 溢出、大宽度绝对定位或浮动（会导致手机端产生水平滚动条或文字截断）；
+  * 严禁在 JSON 外部附带任何额外 Markdown 代码围栏（例如 \`\`\`json）、前导问候或解释说明，必须是合法的纯 JSON 字符串。
+- ✅ 允许并鼓励做（微信富文本完美兼容的标准内联样式）：
+  * 标准内联盒模型：padding、margin、border、border-left、border-bottom、border-radius；
+  * 背景与层次：background（单色、浅底色或 linear-gradient 线性渐变）；
+  * 文本修饰：color、font-size、line-height、font-weight、letter-spacing、text-align；
+  * 标题自由组合：利用 prefix（大序号 01.、徽标 ◆、双斜杠 //、直角引号 「）、边框条与背景色块组合出极具美感的标题样式；
+  * 正文字色保障：正文 text 建议使用 #222222~#333333 保证阅读对比度，辅助色 muted 使用 #666666~#888888。
+
+【严格输出规范】
 1. 只输出合法标准的 JSON 字符串，严禁包含任何 Markdown 代码围栏（例如 \`\`\`json）、前后缀解说或注释。
 2. 颜色值必须严格符合 6 位十六进制格式（#RRGGBB）。
 3. 遵循克制配色五要素：
@@ -99,7 +113,6 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的公众号视觉排
    - border：分割线与卡片边框色；
    - codeBackground：代码块背景底色。
 4. 【二级标题装饰 (heading) —— 拥有充分设计自由】：
-   微信客观排版约束：不支持 <style> 标签、不支持 ::before/::after 伪元素、不支持复杂外部动画与导致横向滚动的负 margin；但完美支持标准内联 CSS 属性（如 border、border-left、border-bottom、background、border-radius、padding 等）。
    你既可以直接使用常用风格："left-border"（左侧装饰条） | "bottom-line"（底边线） | "serial-number"（现代科技大数字） | "badge"（胶囊徽标） | "bubble"（浅色背景卡片） | "zen"（留白禅意） | "default"（经典条），
    也可以在 "heading" 对象中自由定制专属版式：
    - "align": "left" | "center"

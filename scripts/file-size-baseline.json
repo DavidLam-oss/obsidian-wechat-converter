@@ -14,7 +14,7 @@
     "services/wechat-html-cleaner.js": 800,
     "services/wechatsync-bridge.js": 1524,
     "styles/ai-layout.css": 835,
-    "styles/multi-platform.css": 815,
+    "styles/multi-platform.css": 810,
     "styles/wechat-settings.css": 797,
     "views/converter/ai-layout-debug.js": 923,
     "views/converter/ai-layout-panel.js": 1041,

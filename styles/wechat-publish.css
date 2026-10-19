@@ -531,17 +531,11 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
 .wechat-publish-shell .modal-content {
   display: flex;
   flex-direction: column;
-  height: min(72vh, 720px);
-  min-height: 560px;
+  height: min(74vh, 640px);
+  min-height: min(74vh, 520px);
+  max-height: min(74vh, 640px);
   overflow-y: auto;
   padding-top: 2px;
-}
-
-@media (max-height: 640px) {
-  .wechat-publish-shell .modal-content {
-    min-height: 0;
-    height: auto;
-  }
 }
 
 .wechat-publish-shell .modal-content.wechat-feishu-modal-content {

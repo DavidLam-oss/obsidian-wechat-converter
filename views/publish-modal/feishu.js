@@ -196,8 +196,9 @@ function renderFeishuPublishTab(view, modal, containerEl, options = {}) {
 
   const multiTabBtn = tabsWrapper.createEl('button', {
     cls: 'wechat-publish-mode-tab',
+    title: '多平台发布（小红书/知乎/头条/B 站等）',
   });
-  multiTabBtn.createEl('span', { text: '多平台发布（小红书/知乎/头条/B 站等）' });
+  multiTabBtn.createEl('span', { text: '多平台发布' });
   multiTabBtn.onclick = () => {
     view.showMultiPlatformSyncModal({ modal });
   };

@@ -8,8 +8,9 @@
 .custom-theme-modal {
   width: 640px;
   max-width: 92vw;
-  min-height: 380px;
-  max-height: min(84vh, 720px);
+  height: min(82vh, 640px);
+  min-height: min(82vh, 520px);
+  max-height: min(82vh, 640px);
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -45,32 +46,55 @@
 
 .custom-theme-tabs {
   display: flex;
-  background: var(--background-modifier-form-field);
-  padding: 3px;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  padding: 2px;
   border-radius: 8px;
   gap: 2px;
+  box-sizing: border-box;
 }
 
-.custom-theme-tab-btn {
-  background: transparent;
-  border: none;
-  padding: 4px 12px;
+.theme-dark .custom-theme-tabs {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ⚠️ 带 .custom-theme-tabs 前缀凑 0-2-0 覆盖 Obsidian 默认 button:not(.clickable-icon) */
+.custom-theme-tabs .custom-theme-tab-btn {
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 4px 14px;
   border-radius: 6px;
-  font-size: 12px;
+  font-family: inherit;
+  font-size: 12.5px;
   color: var(--text-muted);
+  box-shadow: none;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.custom-theme-tab-btn:hover {
+.custom-theme-tabs .custom-theme-tab-btn:hover {
   color: var(--text-normal);
+  background-color: rgba(0, 0, 0, 0.045);
 }
 
-.custom-theme-tab-btn.is-active {
-  background: var(--background-primary);
+.theme-dark .custom-theme-tabs .custom-theme-tab-btn:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.custom-theme-tabs .custom-theme-tab-btn.is-active {
   color: var(--text-normal);
-  font-weight: 500;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+.theme-dark .custom-theme-tabs .custom-theme-tab-btn.is-active {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .custom-theme-body {

@@ -63,6 +63,9 @@ describe('Custom Theme Modal View', () => {
         addEventListener(event, handler) {
           this[`on${event}`] = handler;
         },
+        setAttribute(name, val) {
+          this[name] = val;
+        },
         focus() {},
       };
       return el;
@@ -196,4 +199,50 @@ describe('Custom Theme Modal View', () => {
     const previewCard = step2.children[1];
     expect(previewCard.hasClass('is-hidden')).toBe(false);
   });
+
+  it('should render saved theme cards without technical ID or default heading label', () => {
+    mockPlugin.settings.customThemes = [
+      {
+        schemaVersion: 1,
+        id: 'custom-autumn-forest-amber-pine',
+        name: '秋林琥珀',
+        description: '以琥珀黄与松针绿构建的温润秋日森林系主题',
+        headingStyle: 'default',
+        colors: {
+          accent: '#d97706',
+          light: '#fef3c7',
+          title: '#78350f',
+          border: '#fde68a',
+        },
+      },
+      {
+        schemaVersion: 1,
+        id: 'custom-modern-capsule',
+        name: '胶囊商务',
+        description: '胶囊徽标排版',
+        headingStyle: 'badge',
+        colors: {
+          accent: '#2563eb',
+        },
+      },
+    ];
+
+    showCustomThemeModal({ app: mockApp, plugin: mockPlugin });
+
+    const body = modalInstance.contentEl.children[1];
+    const listEl = body.children[0];
+    expect(listEl.children.length).toBe(2);
+
+    const firstCard = listEl.children[0];
+    const allTextFirst = JSON.stringify(firstCard);
+    // Should NOT show technical ID or "default"
+    expect(allTextFirst).not.toContain('custom-autumn-forest-amber-pine');
+    expect(allTextFirst).not.toContain('default');
+
+    const secondCard = listEl.children[1];
+    const allTextSecond = JSON.stringify(secondCard);
+    expect(allTextSecond).not.toContain('custom-modern-capsule');
+    expect(allTextSecond).toContain('标题风格: 胶囊徽标');
+  });
 });
+

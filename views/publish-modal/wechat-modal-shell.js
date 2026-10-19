@@ -68,8 +68,9 @@ createPublishModeTabs(modal, activeMode = 'wechat') {
 
   const multiPlatformTab = publishModeTabs.createEl('button', {
     cls: `wechat-publish-mode-tab${activeMode === 'multi' ? ' is-active' : ''}`,
+    title: MULTI_PLATFORM_TAB_LABEL,
   });
-  multiPlatformTab.createEl('span', { text: MULTI_PLATFORM_TAB_LABEL });
+  multiPlatformTab.createEl('span', { text: '多平台发布' });
 
   const feishuTab = publishModeTabs.createEl('button', {
     text: '飞书云文档',

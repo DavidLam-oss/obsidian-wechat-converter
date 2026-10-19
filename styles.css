@@ -6785,17 +6785,11 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
 .wechat-publish-shell .modal-content {
   display: flex;
   flex-direction: column;
-  height: min(72vh, 720px);
-  min-height: 560px;
+  height: min(74vh, 640px);
+  min-height: min(74vh, 520px);
+  max-height: min(74vh, 640px);
   overflow-y: auto;
   padding-top: 2px;
-}
-
-@media (max-height: 640px) {
-  .wechat-publish-shell .modal-content {
-    min-height: 0;
-    height: auto;
-  }
 }
 
 .wechat-publish-shell .modal-content.wechat-feishu-modal-content {
@@ -7095,54 +7089,49 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
 .wechat-sync-modal .wechat-publish-mode-tabs {
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 2px;
   margin: 0 0 18px;
-  padding: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--apple-border) 86%, transparent);
-  background: transparent;
-  white-space: nowrap;
+  padding: 2px;
+  background: rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  box-sizing: border-box;
+  width: 100%;
 }
-
+.theme-dark .wechat-sync-modal .wechat-publish-mode-tabs { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.05); }
 .wechat-sync-modal button.wechat-publish-mode-tab {
-  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 32px;
+  padding: 0 8px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  min-height: 36px;
-  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-muted);
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
   box-shadow: none;
-  border-radius: 0;
-  padding: 8px 20px 9px 0;
-  color: var(--apple-secondary);
-  background: transparent;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.2;
-  transition: color 0.15s ease, border-color 0.15s ease;
-  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
-
-.wechat-sync-modal button.wechat-publish-mode-tab:hover {
-  color: var(--apple-primary);
-}
-
+.wechat-sync-modal button.wechat-publish-mode-tab span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wechat-sync-modal button.wechat-publish-mode-tab:hover { color: var(--text-normal); background-color: rgba(0, 0, 0, 0.045); }
+.theme-dark .wechat-sync-modal button.wechat-publish-mode-tab:hover { background-color: rgba(255, 255, 255, 0.06); }
 .wechat-sync-modal button.wechat-publish-mode-tab.is-active {
-  color: var(--apple-accent);
-  background: transparent;
-  box-shadow: none;
+  color: var(--text-normal);
+  font-weight: 600;
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
 }
-
-.wechat-sync-modal button.wechat-publish-mode-tab.is-active::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  border-radius: 999px;
-  background: var(--apple-accent);
-}
+.theme-dark .wechat-sync-modal button.wechat-publish-mode-tab.is-active { background-color: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.16); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); }
 
 .wechat-multiplatform-intro {
   display: flex;
@@ -9100,8 +9089,9 @@ div.modal.wechat-material-picker-modal-mobile {
 .card-media-picker-modal {
   width: 580px;
   max-width: 90vw;
-  min-height: 280px;
-  max-height: min(78vh, 680px);
+  height: min(78vh, 620px);
+  min-height: min(78vh, 520px);
+  max-height: min(78vh, 620px);
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -9137,33 +9127,55 @@ div.modal.wechat-material-picker-modal-mobile {
 
 .card-media-picker-tabs {
   display: flex;
-  background: var(--background-modifier-form-field);
-  padding: 3px;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  padding: 2px;
   border-radius: 8px;
   gap: 2px;
+  box-sizing: border-box;
 }
 
-.card-media-picker-tab-btn {
-  background: transparent;
-  border: none;
-  padding: 5px 14px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-muted);
+.theme-dark .card-media-picker-tabs {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ⚠️ 带 .card-media-picker-tabs 前缀凑 0-2-0 覆盖 Obsidian 默认 button:not(.clickable-icon) */
+.card-media-picker-tabs .card-media-picker-tab-btn {
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 4px 14px;
   border-radius: 6px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  box-shadow: none;
   cursor: pointer;
-  transition: all 0.15s ease-in-out;
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.card-media-picker-tab-btn:hover {
+.card-media-picker-tabs .card-media-picker-tab-btn:hover {
   color: var(--text-normal);
+  background-color: rgba(0, 0, 0, 0.045);
 }
 
-.card-media-picker-tab-btn.is-active {
-  background: var(--background-primary);
-  color: var(--text-accent);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+.theme-dark .card-media-picker-tabs .card-media-picker-tab-btn:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.card-media-picker-tabs .card-media-picker-tab-btn.is-active {
+  color: var(--text-normal);
   font-weight: 600;
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+.theme-dark .card-media-picker-tabs .card-media-picker-tab-btn.is-active {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .card-media-picker-content {
@@ -9720,8 +9732,9 @@ div.modal.wechat-material-picker-modal-mobile {
 .custom-theme-modal {
   width: 640px;
   max-width: 92vw;
-  min-height: 380px;
-  max-height: min(84vh, 720px);
+  height: min(82vh, 640px);
+  min-height: min(82vh, 520px);
+  max-height: min(82vh, 640px);
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -9757,32 +9770,55 @@ div.modal.wechat-material-picker-modal-mobile {
 
 .custom-theme-tabs {
   display: flex;
-  background: var(--background-modifier-form-field);
-  padding: 3px;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  padding: 2px;
   border-radius: 8px;
   gap: 2px;
+  box-sizing: border-box;
 }
 
-.custom-theme-tab-btn {
-  background: transparent;
-  border: none;
-  padding: 4px 12px;
+.theme-dark .custom-theme-tabs {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ⚠️ 带 .custom-theme-tabs 前缀凑 0-2-0 覆盖 Obsidian 默认 button:not(.clickable-icon) */
+.custom-theme-tabs .custom-theme-tab-btn {
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 4px 14px;
   border-radius: 6px;
-  font-size: 12px;
+  font-family: inherit;
+  font-size: 12.5px;
   color: var(--text-muted);
+  box-shadow: none;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.custom-theme-tab-btn:hover {
+.custom-theme-tabs .custom-theme-tab-btn:hover {
   color: var(--text-normal);
+  background-color: rgba(0, 0, 0, 0.045);
 }
 
-.custom-theme-tab-btn.is-active {
-  background: var(--background-primary);
+.theme-dark .custom-theme-tabs .custom-theme-tab-btn:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.custom-theme-tabs .custom-theme-tab-btn.is-active {
   color: var(--text-normal);
-  font-weight: 500;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+.theme-dark .custom-theme-tabs .custom-theme-tab-btn.is-active {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .custom-theme-body {

@@ -42,6 +42,18 @@ import {
   buildThemePromptWithRequirement,
 } from '../../services/ai-theme-generator.js';
 
+const HEADING_STYLE_LABELS = {
+  'default': '经典条',
+  'serial-number': '现代序号',
+  'badge': '胶囊徽标',
+  'zen': '留白禅意',
+  'left-border': '左侧色块',
+  'bottom-line': '底边线',
+  'bubble': '浅底卡片',
+  'card': '卡片背景',
+  'double-line': '双细线',
+};
+
 /**
  * 打开自定义主题管理弹窗
  *
@@ -200,15 +212,17 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
         if (!c.value) return;
         const swatch = paletteStrip.createDiv({ cls: 'custom-theme-color-swatch' });
         swatch.setCssStyles({ backgroundColor: c.value });
-        swatch.setAttribute('title', `${c.label}: ${c.value}`);
+        if (typeof swatch.setAttribute === 'function') {
+          swatch.setAttribute('title', `${c.label}: ${c.value}`);
+        } else {
+          swatch.title = `${c.label}: ${c.value}`;
+        }
       });
 
-      const meta = paletteStrip.createDiv({ cls: 'custom-theme-palette-meta' });
-      if (theme.headingStyle) {
-        meta.createEl('span', { text: `标题: ${theme.headingStyle}` });
-      }
-      if (theme.id) {
-        meta.createEl('span', { text: `ID: ${theme.id}` });
+      if (theme.headingStyle && theme.headingStyle !== 'default') {
+        const meta = paletteStrip.createDiv({ cls: 'custom-theme-palette-meta' });
+        const friendlyHeading = HEADING_STYLE_LABELS[theme.headingStyle] || theme.headingStyle;
+        meta.createEl('span', { text: `标题风格: ${friendlyHeading}` });
       }
     });
   }
@@ -293,8 +307,7 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
     const previewInfo = previewCard.createDiv({ cls: 'custom-theme-preview-info' });
     const previewSwatch = previewInfo.createDiv({ cls: 'custom-theme-color-swatch' });
     const previewName = previewInfo.createEl('span', { cls: 'custom-theme-preview-name' });
-    const previewHeadingTag = previewInfo.createEl('span', { cls: 'custom-theme-preview-tag' });
-    const previewIdTag = previewInfo.createEl('span', { cls: 'custom-theme-preview-tag' });
+    const previewHeadingTag = previewInfo.createEl('span', { cls: 'custom-theme-preview-tag is-hidden' });
 
     /** @param {any} token */
     const updatePreviewCard = (token) => {
@@ -305,8 +318,13 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
         });
         previewName.setText(token.name || '未命名主题');
         const headingLabel = token.heading?.style || token.headingStyle || 'default';
-        previewHeadingTag.setText(`标题: ${headingLabel}`);
-        previewIdTag.setText(`ID: ${token.id}`);
+        if (headingLabel && headingLabel !== 'default') {
+          previewHeadingTag.removeClass('is-hidden');
+          const friendly = HEADING_STYLE_LABELS[headingLabel] || headingLabel;
+          previewHeadingTag.setText(`标题风格: ${friendly}`);
+        } else {
+          previewHeadingTag.addClass('is-hidden');
+        }
       } else {
         previewCard.addClass('is-hidden');
       }
