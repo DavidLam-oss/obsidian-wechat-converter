@@ -162,7 +162,11 @@ toggleSettingsPanel() {
   /** @param {unknown} wrapper @param {boolean} hidden */
   const setWrapperHidden = (wrapper, hidden) => {
     if (wrapper && typeof wrapper === 'object' && 'classList' in wrapper) {
-      (/** @type {Element} */ (wrapper)).classList.toggle('hidden', hidden);
+      const el = /** @type {HTMLElement} */ (wrapper);
+      el.classList.toggle('hidden', hidden);
+      if ('hidden' in el) {
+        el.hidden = hidden;
+      }
     }
   };
 
@@ -324,7 +328,11 @@ applyModeActionVisibility() {
   /** @param {unknown} btn @param {boolean} visible */
   const setVisible = (btn, visible) => {
     if (btn && typeof btn === 'object' && 'classList' in /** @type {Element} */ (btn)) {
-      (/** @type {Element} */ (btn)).classList.toggle('hidden', !visible);
+      const el = /** @type {HTMLElement} */ (btn);
+      el.classList.toggle('hidden', !visible);
+      if ('hidden' in el) {
+        el.hidden = !visible;
+      }
     }
   };
   setVisible(this.aiLayoutBtn, mode === 'article');

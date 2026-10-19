@@ -112,6 +112,11 @@
   position: relative; /* 为悬浮层提供定位上下文 */
 }
 
+.apple-converter-container .hidden,
+.apple-converter-container [hidden] {
+  display: none;
+}
+
 /*
 ## 核心功能
 
@@ -1460,6 +1465,13 @@ AI layout 面板和生成结果的视觉样式
 }
 
 /* 文章模式引入中间 wrapper 后，仅在设置可见时恢复原纵向节奏。 */
+.apple-settings-area > .hidden,
+.apple-settings-area > [hidden],
+.apple-settings-article-wrapper.hidden,
+.apple-settings-article-wrapper[hidden] {
+  display: none;
+}
+
 .apple-settings-article-wrapper:not(.hidden) {
   display: flex;
   flex-direction: column;
@@ -2204,6 +2216,11 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 */
 
 /* 与文章模式共用同一套分组节奏和标题层级。 */
+.apple-settings-sticker-wrapper.hidden,
+.apple-settings-sticker-wrapper[hidden] {
+  display: none;
+}
+
 .apple-settings-sticker-wrapper:not(.hidden) {
   display: flex;
   flex-direction: column;
@@ -3929,6 +3946,8 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 }
 
 /* 渐进披露通用隐藏规则（使用类特异性，禁止 !important） */
+.apple-settings-card-wrapper.hidden,
+.apple-settings-card-wrapper[hidden],
 .apple-settings-card-wrapper .hidden,
 .apple-settings-card-wrapper [hidden] {
   display: none;

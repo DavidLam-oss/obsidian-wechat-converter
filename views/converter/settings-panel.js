@@ -168,10 +168,12 @@ createSettingsPanel(container) {
   this.articleSettingsWrapper = articleSettingsWrapper;
 
   const stickerSettingsWrapper = /** @type {ObsidianElementLike} */ (settingsArea.createEl('div', { cls: 'apple-settings-sticker-wrapper hidden' }));
+  if ('hidden' in stickerSettingsWrapper) stickerSettingsWrapper.hidden = true;
   this.stickerSettingsWrapper = stickerSettingsWrapper;
 
   // 卡片设置浮层（B03）：DOM 由 card-settings.js 构建
   const cardSettingsWrapper = /** @type {ObsidianElementLike} */ (settingsArea.createEl('div', { cls: 'apple-settings-card-wrapper hidden' }));
+  if ('hidden' in cardSettingsWrapper) cardSettingsWrapper.hidden = true;
   this.cardSettingsWrapper = cardSettingsWrapper;
   if (typeof this.buildCardSettingsPanel === 'function') {
     this.buildCardSettingsPanel();

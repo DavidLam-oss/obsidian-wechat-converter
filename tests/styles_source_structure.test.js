@@ -105,4 +105,16 @@ describe('stylesheet source structure', () => {
     expect(titleRule).not.toMatch(/font-size:\s*18px/);
     expect(titleRule).not.toMatch(/font-weight:\s*800/);
   });
+
+  it('defines explicit display: none for hidden settings wrappers and container elements', () => {
+    const baseCss = readProjectFile('styles/base.css');
+    const stylePanel = readProjectFile('styles/style-panel.css');
+    const stickerSettings = readProjectFile('styles/sticker-settings.css');
+    const cardSettings = readProjectFile('styles/card-settings.css');
+
+    expect(baseCss).toMatch(/\.apple-converter-container\s+\.hidden[\s\S]*display:\s*none/);
+    expect(stylePanel).toMatch(/\.apple-settings-article-wrapper\.hidden[\s\S]*display:\s*none/);
+    expect(stickerSettings).toMatch(/\.apple-settings-sticker-wrapper\.hidden[\s\S]*display:\s*none/);
+    expect(cardSettings).toMatch(/\.apple-settings-card-wrapper\.hidden[\s\S]*display:\s*none/);
+  });
 });

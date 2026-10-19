@@ -647,4 +647,71 @@ describe('AppleStyleView settings panel + toolbar', () => {
     expect(event.defaultPrevented).toBe(true);
     expect(parentWheelSpy).not.toHaveBeenCalled();
   });
+
+  it('toggleSettingsPanel should isolate article, sticker, and card wrappers visibility per mode', () => {
+    const view = new AppleStyleView(null, {
+      settings: {
+        theme: 'github',
+        themeColor: 'blue',
+        customColor: '#0366d6',
+        fontFamily: 'sans-serif',
+        fontSize: 3,
+        coloredHeader: false,
+        macCodeBlock: true,
+        codeLineNumber: true,
+        sidePadding: 16,
+        showImageCaption: true,
+        enableWatermark: false,
+      },
+      saveSettings: vi.fn(),
+    });
+    view.app = { isMobile: false };
+    view.theme = { update: vi.fn() };
+    view.converter = { updateConfig: vi.fn() };
+
+    global.AppleTheme = {
+      getThemeList: () => [{ value: 'github', label: '简约' }],
+      getColorList: () => [{ value: 'blue', color: '#0366d6' }],
+    };
+
+    const container = createObsidianLikeElement();
+    view.createSettingsPanel(container);
+
+    // Initial state after createSettingsPanel
+    expect(view.articleSettingsWrapper.classList.contains('hidden')).toBe(false);
+    expect(view.stickerSettingsWrapper.classList.contains('hidden')).toBe(true);
+    expect(view.cardSettingsWrapper.classList.contains('hidden')).toBe(true);
+    expect(view.stickerSettingsWrapper.hidden).toBe(true);
+    expect(view.cardSettingsWrapper.hidden).toBe(true);
+
+    // In article mode
+    view.previewMode = 'article';
+    view.toggleSettingsPanel();
+    expect(view.articleSettingsWrapper.classList.contains('hidden')).toBe(false);
+    expect(view.stickerSettingsWrapper.classList.contains('hidden')).toBe(true);
+    expect(view.cardSettingsWrapper.classList.contains('hidden')).toBe(true);
+    expect(view.articleSettingsWrapper.hidden).toBe(false);
+    expect(view.stickerSettingsWrapper.hidden).toBe(true);
+    expect(view.cardSettingsWrapper.hidden).toBe(true);
+
+    // In card mode
+    view.previewMode = 'card';
+    view.toggleSettingsPanel();
+    expect(view.articleSettingsWrapper.classList.contains('hidden')).toBe(true);
+    expect(view.stickerSettingsWrapper.classList.contains('hidden')).toBe(true);
+    expect(view.cardSettingsWrapper.classList.contains('hidden')).toBe(false);
+    expect(view.articleSettingsWrapper.hidden).toBe(true);
+    expect(view.stickerSettingsWrapper.hidden).toBe(true);
+    expect(view.cardSettingsWrapper.hidden).toBe(false);
+
+    // In sticker mode
+    view.previewMode = 'sticker';
+    view.toggleSettingsPanel();
+    expect(view.articleSettingsWrapper.classList.contains('hidden')).toBe(true);
+    expect(view.stickerSettingsWrapper.classList.contains('hidden')).toBe(false);
+    expect(view.cardSettingsWrapper.classList.contains('hidden')).toBe(true);
+    expect(view.articleSettingsWrapper.hidden).toBe(true);
+    expect(view.stickerSettingsWrapper.hidden).toBe(false);
+    expect(view.cardSettingsWrapper.hidden).toBe(true);
+  });
 });

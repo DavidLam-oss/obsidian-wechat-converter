@@ -112,3 +112,8 @@
   position: relative; /* 为悬浮层提供定位上下文 */
 }
 
+.apple-converter-container .hidden,
+.apple-converter-container [hidden] {
+  display: none;
+}
+

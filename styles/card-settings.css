@@ -266,6 +266,8 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 }
 
 /* 渐进披露通用隐藏规则（使用类特异性，禁止 !important） */
+.apple-settings-card-wrapper.hidden,
+.apple-settings-card-wrapper[hidden],
 .apple-settings-card-wrapper .hidden,
 .apple-settings-card-wrapper [hidden] {
   display: none;

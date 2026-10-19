@@ -211,6 +211,13 @@
 }
 
 /* 文章模式引入中间 wrapper 后，仅在设置可见时恢复原纵向节奏。 */
+.apple-settings-area > .hidden,
+.apple-settings-area > [hidden],
+.apple-settings-article-wrapper.hidden,
+.apple-settings-article-wrapper[hidden] {
+  display: none;
+}
+
 .apple-settings-article-wrapper:not(.hidden) {
   display: flex;
   flex-direction: column;

@@ -26,6 +26,11 @@
 */
 
 /* 与文章模式共用同一套分组节奏和标题层级。 */
+.apple-settings-sticker-wrapper.hidden,
+.apple-settings-sticker-wrapper[hidden] {
+  display: none;
+}
+
 .apple-settings-sticker-wrapper:not(.hidden) {
   display: flex;
   flex-direction: column;
