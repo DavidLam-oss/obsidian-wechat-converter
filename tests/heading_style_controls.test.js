@@ -72,6 +72,7 @@ describe('文章分节标题风格侧边栏控制组件 (heading-style-controls.
 
     const defaultBtn = buttons.find((b) => b.dataset.value === HEADING_STYLES.DEFAULT);
     expect(defaultBtn).toBeTruthy();
+    expect(defaultBtn.textContent).toBe('跟随主题');
     expect(defaultBtn.classList.contains('active')).toBe(true);
 
     const serialBtn = buttons.find((b) => b.dataset.value === HEADING_STYLES.SERIAL_NUMBER);

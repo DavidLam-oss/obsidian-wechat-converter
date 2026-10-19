@@ -47,7 +47,7 @@ export const VALID_HEADING_STYLES = /** @type {const} */ ([
 ]);
 
 export const HEADING_STYLE_LABELS = /** @type {const} */ ({
-  [HEADING_STYLES.DEFAULT]: '经典极简（默认）',
+  [HEADING_STYLES.DEFAULT]: '跟随主题（默认）',
   [HEADING_STYLES.SERIAL_NUMBER]: '大数字序号（01、02）',
   [HEADING_STYLES.BADGE]: '胶囊徽标（Badge）',
   [HEADING_STYLES.ZEN]: '留白禅意（Zen）',

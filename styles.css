@@ -1571,6 +1571,8 @@ AI layout 面板和生成结果的视觉样式
 .apple-btn-heading-row .apple-btn-size {
   flex: 1;
   text-align: center;
+  padding: 6px 4px;
+  white-space: nowrap;
 }
 
 /* === 颜色选择器 === */

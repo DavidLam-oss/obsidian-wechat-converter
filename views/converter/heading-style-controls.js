@@ -36,7 +36,7 @@ import { HEADING_STYLES } from '../../services/heading-style-renderer.js';
  * 标题风格选项配置
  */
 export const HEADING_STYLE_OPTIONS = [
-  { value: HEADING_STYLES.DEFAULT, label: '默认', title: '经典极简（默认主题样式）' },
+  { value: HEADING_STYLES.DEFAULT, label: '跟随主题', title: '跟随主题（使用主题自带的分节标题样式）' },
   { value: HEADING_STYLES.SERIAL_NUMBER, label: '序号', title: '大数字序号（01、02 分节序号）' },
   { value: HEADING_STYLES.BADGE, label: '徽标', title: '胶囊徽标（Badge 胶囊圆角标签）' },
   { value: HEADING_STYLES.ZEN, label: '禅意', title: '留白禅意（Zen 优雅留白细线）' },

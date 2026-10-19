@@ -521,7 +521,7 @@ const wechatSettingsMethods = {
       .setName('标题分节风格')
       .setDesc('为文章二级标题（h2）应用不同视觉装饰。微信复制与草稿同步均完整保留内联样式。')
       .addDropdown(dropdown => {
-        dropdown.addOption('default', '经典极简（默认）');
+        dropdown.addOption('default', '跟随主题（默认）');
         dropdown.addOption('serial-number', '大数字序号（01、02）');
         dropdown.addOption('badge', '胶囊徽标（Badge）');
         dropdown.addOption('zen', '留白禅意（Zen）');
