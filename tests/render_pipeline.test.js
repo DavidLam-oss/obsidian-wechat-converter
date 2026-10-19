@@ -162,4 +162,33 @@ column: 深度技术
     expect(html).toContain('PART 01');
     expect(html).toContain('章节一');
   });
+
+  it('native pipeline should apply custom theme heading decoration object when headingStyle is default', async () => {
+    const nativeRenderer = vi.fn().mockImplementation(() => `<h2>核心架构</h2>`);
+    const native = new NativeRenderPipeline({ nativeRenderer });
+
+    const settings = {
+      theme: 'custom-forest',
+      headingStyle: 'default',
+      customThemes: [
+        {
+          id: 'custom-forest',
+          name: '森林风',
+          heading: {
+            style: 'left-border',
+            borderLeft: '4px solid #059669',
+            background: '#ECFDF5',
+            prefix: '01. ',
+          },
+          colors: { accent: '#059669' },
+        },
+      ],
+    };
+
+    const html = await native.renderForPreview('test', { settings });
+    expect(html).toContain('border-left: 4px solid #059669');
+    expect(html).toContain('background: #ECFDF5');
+    expect(html).toContain('01. ');
+    expect(html).toContain('核心架构');
+  });
 });

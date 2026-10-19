@@ -24,12 +24,25 @@
 
 /**
  * @typedef {{
+ *   align?: 'left' | 'center',
+ *   style?: string,
+ *   prefix?: string,
+ *   border?: string,
+ *   borderLeft?: string,
+ *   borderBottom?: string,
+ *   background?: string,
+ *   borderRadius?: string,
+ *   customStyle?: string,
+ * }} HeadingDecorationToken
+ *
+ * @typedef {{
  *   schemaVersion: 1,
  *   id: string,
  *   name: string,
  *   description?: string,
  *   author?: string,
- *   headingStyle?: 'default' | 'serial-number' | 'badge' | 'zen',
+ *   headingStyle?: string,
+ *   heading?: HeadingDecorationToken,
  *   colors: {
  *     accent: string,
  *     light?: string,
@@ -57,13 +70,23 @@
 
 export const HEX_COLOR_REGEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
-export const VALID_HEADING_STYLES = /** @type {const} */ (['default', 'serial-number', 'badge', 'zen']);
+export const VALID_HEADING_STYLES = /** @type {const} */ ([
+  'default',
+  'serial-number',
+  'badge',
+  'zen',
+  'left-border',
+  'bottom-line',
+  'bubble',
+  'card',
+  'double-line',
+]);
 export const VALID_FONT_PRESETS = /** @type {const} */ (['sans-serif', 'serif', 'monospace']);
 
 /**
  * 开箱即用的 AI 主题设计提示词模板
  */
-export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的排版设计配置生成器。请根据用户的排版风格诉求，生成一份严谨的微信公众号排版 Theme Token JSON。
+export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的公众号视觉排版大师与配置生成器。请根据用户的风格诉求，为用户设计一套优雅、克制、耐看且在微信生态内具有极高排版兼容性的 Theme Token JSON。
 
 【严格输出要求】
 1. 只输出合法标准的 JSON 字符串，严禁包含任何 Markdown 代码围栏（例如 \`\`\`json）、前后缀解说或注释。
@@ -75,7 +98,16 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的排版设计配置
    - title / text / muted：用于标题、正文与次要说明的灰阶；
    - border：分割线与卡片边框色；
    - codeBackground：代码块背景底色。
-4. headingStyle 可选："default"（经典极简条） | "serial-number"（现代科技大数字序号，推荐教程/评测/清单） | "badge"（胶囊徽标，推荐商业/财经/资讯专栏） | "zen"（留白禅意，推荐文学散文/诗歌随笔）。请根据行业场景理性挑选，切勿盲目默认 zen。
+4. 【二级标题装饰 (heading) —— 拥有充分设计自由】：
+   微信客观排版约束：不支持 <style> 标签、不支持 ::before/::after 伪元素、不支持复杂外部动画与导致横向滚动的负 margin；但完美支持标准内联 CSS 属性（如 border、border-left、border-bottom、background、border-radius、padding 等）。
+   你既可以直接使用常用风格："left-border"（左侧装饰条） | "bottom-line"（底边线） | "serial-number"（现代科技大数字） | "badge"（胶囊徽标） | "bubble"（浅色背景卡片） | "zen"（留白禅意） | "default"（经典条），
+   也可以在 "heading" 对象中自由定制专属版式：
+   - "align": "left" | "center"
+   - "prefix": 自定义前缀修饰或序号（如 "01."、"01 /"、"PART 01"、"◆ "、"// "、"「 "，或空 ""）
+   - "border": 自定义边框（如 "4px solid #2563EB" 或 "2px dashed #93C5FD"）
+   - "background": 背景色或线性渐变（如 "rgba(37, 99, 235, 0.08)"）
+   - "borderRadius": 圆角（如 "4px"）
+   - "customStyle": 可直接给出针对二级标题的微信内联 CSS 声明（例如 "border-left: 4px solid #2563EB; padding: 6px 12px; background: #EFF6FF; border-radius: 0 4px 4px 0;"）
 5. typography 排版建议：baseFontSize 通常在 14~17 之间，lineHeight 在 1.6~2.0 之间。
 
 【标准 JSON 输出格式示范】
@@ -85,7 +117,15 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的排版设计配置
   "name": "科技沉稳蓝",
   "description": "适合硬核评测与技术解析的理性沉稳排版",
   "author": "设计师",
-  "headingStyle": "serial-number",
+  "heading": {
+    "style": "left-border",
+    "align": "left",
+    "prefix": "01.",
+    "borderLeft": "4px solid #2563EB",
+    "background": "rgba(37, 99, 235, 0.08)",
+    "borderRadius": "0 4px 4px 0",
+    "customStyle": "padding: 6px 12px; margin: 32px 0 16px;"
+  },
   "colors": {
     "accent": "#2563EB",
     "light": "#EFF6FF",
@@ -109,9 +149,13 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的排版设计配置
   }
 }
 
+【设计建议与调试提示】：
+AI 生成主题如同定制 CSS，排版效果往往需要结合具体文章反复调试 1~2 轮。首次生成若未完全契合预期，可继续针对标题修饰、色相饱和度或边框粗细与 AI 追问微调。
+
 【我的风格诉求（请在此处输入您的具体要求）】：
-[例如：“我想要一个适合数码测评的理性科技风，主色用深邃蓝，搭配 34px 大数字序号(serial-number)，字号 15px，注重高可读性与现代感。”]
+[例如：“我想要一个日系清新笔记风，主色用森林墨绿，标题左侧有细竖条并带有浅浅的米黄底衬，正文行距调大一些，注重轻松通透的阅读感。”]
 `;
+
 
 /**
  * 校验十六进制色值格式
@@ -238,9 +282,37 @@ export function validateCustomThemeToken(input) {
     }
   }
 
-  // 4. headingStyle 校验
-  if (raw.headingStyle && !VALID_HEADING_STYLES.includes(raw.headingStyle)) {
-    errors.push(`标题风格 (headingStyle) 仅支持 ${VALID_HEADING_STYLES.join(' / ')}`);
+  // 4. headingStyle 与 heading 装饰配置校验
+  if (raw.headingStyle !== undefined && raw.headingStyle !== null) {
+    if (typeof raw.headingStyle !== 'string' || !raw.headingStyle.trim()) {
+      errors.push('标题风格 (headingStyle) 必须是非空字符串');
+    }
+  }
+
+  if (raw.heading !== undefined && raw.heading !== null) {
+    if (typeof raw.heading !== 'object' || Array.isArray(raw.heading)) {
+      errors.push('标题装饰配置 (heading) 必须是对象');
+    } else {
+      const h = raw.heading;
+      if (h.align && !['left', 'center', 'right'].includes(h.align)) {
+        errors.push('标题对齐 (heading.align) 仅支持 left / center / right');
+      }
+      if (h.customStyle) {
+        const check = sanitizeRawCssOverrides(String(h.customStyle));
+        if (!check.safe) {
+          errors.push(`标题自定义样式 (heading.customStyle) 包含危险规则: ${check.error}`);
+        }
+      }
+      const propsToCheck = ['background', 'border', 'borderLeft', 'borderBottom'];
+      for (const prop of propsToCheck) {
+        if (h[prop]) {
+          const check = sanitizeRawCssOverrides(String(h[prop]));
+          if (!check.safe) {
+            errors.push(`标题属性 (heading.${prop}) 包含危险规则: ${check.error}`);
+          }
+        }
+      }
+    }
   }
 
   // 5. rawCssOverrides 安全审查
@@ -279,7 +351,25 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
   const description = typeof raw.description === 'string' ? raw.description.trim() : '';
   const author = typeof raw.author === 'string' ? raw.author.trim() : '';
 
-  const headingStyle = VALID_HEADING_STYLES.includes(raw.headingStyle) ? raw.headingStyle : 'default';
+  const headingStyle = typeof raw.headingStyle === 'string' && raw.headingStyle.trim()
+    ? raw.headingStyle.trim()
+    : 'default';
+
+  let heading = undefined;
+  if (raw.heading && typeof raw.heading === 'object' && !Array.isArray(raw.heading)) {
+    const h = raw.heading;
+    heading = {
+      align: h.align === 'center' ? 'center' : 'left',
+      style: typeof h.style === 'string' ? h.style.trim() : (headingStyle !== 'default' ? headingStyle : ''),
+      prefix: typeof h.prefix === 'string' ? h.prefix.slice(0, 30) : '',
+      border: typeof h.border === 'string' ? sanitizeRawCssOverrides(h.border).sanitized : undefined,
+      borderLeft: typeof h.borderLeft === 'string' ? sanitizeRawCssOverrides(h.borderLeft).sanitized : undefined,
+      borderBottom: typeof h.borderBottom === 'string' ? sanitizeRawCssOverrides(h.borderBottom).sanitized : undefined,
+      background: typeof h.background === 'string' ? sanitizeRawCssOverrides(h.background).sanitized : undefined,
+      borderRadius: typeof h.borderRadius === 'string' ? sanitizeRawCssOverrides(h.borderRadius).sanitized : undefined,
+      customStyle: typeof h.customStyle === 'string' ? sanitizeRawCssOverrides(h.customStyle).sanitized : undefined,
+    };
+  }
 
   const colors = {
     accent,
@@ -324,6 +414,7 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
   delete extraFields.description;
   delete extraFields.author;
   delete extraFields.headingStyle;
+  delete extraFields.heading;
   delete extraFields.colors;
   delete extraFields.typography;
   delete extraFields.footer;
@@ -337,6 +428,7 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
     description,
     author,
     headingStyle,
+    heading,
     colors,
     typography,
     footer,

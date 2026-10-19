@@ -110,15 +110,33 @@ describe('theme-token-validator', () => {
       expect(invalidColorRes.errors.some((e) => e.includes('16 进制颜色'))).toBe(true);
     });
 
-    it('校验非法的标题样式', () => {
-      const invalidHeading = {
+    it('校验非法的标题样式与装饰配置', () => {
+      const invalidHeadingType = {
         name: '标题测试',
         colors: { accent: '#112233' },
-        headingStyle: 'unknown-style',
+        headingStyle: 123,
       };
-      const res = validateCustomThemeToken(invalidHeading);
+      const res = validateCustomThemeToken(invalidHeadingType);
       expect(res.valid).toBe(false);
       expect(res.errors.some((e) => e.includes('headingStyle'))).toBe(true);
+
+      const invalidHeadingAlign = {
+        name: '对齐测试',
+        colors: { accent: '#112233' },
+        heading: { align: 'invalid-align' },
+      };
+      const res2 = validateCustomThemeToken(invalidHeadingAlign);
+      expect(res2.valid).toBe(false);
+      expect(res2.errors.some((e) => e.includes('heading.align'))).toBe(true);
+
+      const dangerousHeadingStyle = {
+        name: '危险样式测试',
+        colors: { accent: '#112233' },
+        heading: { customStyle: 'border: url(http://evil.com/x)' },
+      };
+      const res3 = validateCustomThemeToken(dangerousHeadingStyle);
+      expect(res3.valid).toBe(false);
+      expect(res3.errors.some((e) => e.includes('heading.customStyle'))).toBe(true);
     });
   });
 
@@ -188,7 +206,7 @@ describe('theme-token-validator', () => {
     it('包含有效的 JSON 结构指导和主要字段说明', () => {
       expect(AI_THEME_PROMPT_TEMPLATE).toContain('schemaVersion');
       expect(AI_THEME_PROMPT_TEMPLATE).toContain('colors');
-      expect(AI_THEME_PROMPT_TEMPLATE).toContain('headingStyle');
+      expect(AI_THEME_PROMPT_TEMPLATE).toContain('heading');
     });
   });
 });

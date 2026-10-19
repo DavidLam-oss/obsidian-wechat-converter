@@ -30,7 +30,17 @@ import {
 
 describe('Heading Style Renderer - Constants & Helpers', () => {
   it('should define valid styles', () => {
-    expect(VALID_HEADING_STYLES).toEqual(['default', 'serial-number', 'badge', 'zen']);
+    expect(VALID_HEADING_STYLES).toEqual([
+      'default',
+      'serial-number',
+      'badge',
+      'zen',
+      'left-border',
+      'bottom-line',
+      'bubble',
+      'card',
+      'double-line',
+    ]);
   });
 
   it('should resolve primary color correctly', () => {
@@ -143,5 +153,35 @@ describe('Heading Style Renderer - decorateArticleHeadings', () => {
     // 所有的 h2 都有 style="..."
     const h2Matches = output.match(/<h2[^>]*style="[^"]*"[^>]*>/g);
     expect(h2Matches).toHaveLength(2);
+  });
+
+  it('should render custom left-border heading with custom prefix', () => {
+    const output = decorateArticleHeadings(baseHtml, {
+      customHeading: {
+        style: 'left-border',
+        borderLeft: '5px solid #2563EB',
+        background: '#EFF6FF',
+        prefix: '01. ',
+      },
+    });
+
+    expect(output).toContain('border-left: 5px solid #2563EB');
+    expect(output).toContain('background: #EFF6FF');
+    expect(output).toContain('01. ');
+    expect(output).toContain('02. ');
+  });
+
+  it('should render custom inline CSS when customStyle is provided', () => {
+    const output = decorateArticleHeadings(baseHtml, {
+      customHeading: {
+        customStyle: 'border-bottom: 2px dashed #9333EA; padding-bottom: 4px;',
+        prefix: '◆ ',
+      },
+      primaryColor: '#9333EA',
+    });
+
+    expect(output).toContain('border-bottom: 2px dashed #9333EA');
+    expect(output).toContain('◆ ');
+    expect(output).toContain('导言');
   });
 });

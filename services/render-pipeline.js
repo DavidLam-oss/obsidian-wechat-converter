@@ -80,16 +80,25 @@ export class NativeRenderPipeline {
       || (typeof settings?.headingStyle === 'string' && settings.headingStyle)
       || 'default';
 
-    if (headingStyle === 'default' && settings && typeof settings.theme === 'string') {
+    let customHeadingConfig = null;
+    if (settings && typeof settings.theme === 'string') {
       const customTheme = findCustomTheme(settings.customThemes, settings.theme);
-      if (customTheme?.headingStyle && customTheme.headingStyle !== 'default') {
-        headingStyle = customTheme.headingStyle;
+      if (customTheme) {
+        if (headingStyle === 'default') {
+          if (customTheme.headingStyle && customTheme.headingStyle !== 'default') {
+            headingStyle = customTheme.headingStyle;
+          }
+          if (customTheme.heading) {
+            customHeadingConfig = customTheme.heading;
+          }
+        }
       }
     }
 
-    if (headingStyle && headingStyle !== 'default') {
+    if ((headingStyle && headingStyle !== 'default') || customHeadingConfig) {
       html = decorateArticleHeadings(html, {
         headingStyle,
+        customHeading: customHeadingConfig,
         settings,
         themeColor: typeof context.themeColor === 'string' ? context.themeColor : undefined,
         customColor: typeof context.customColor === 'string' ? context.customColor : undefined,

@@ -49,20 +49,24 @@ export const AI_THEME_SYSTEM_PROMPT = `你是一个专业的微信公众号排�
 
 【极其重要的输出要求】：
 1. 必须输出且仅输出一个合法的 JSON 对象，不要包含任何前导问候、解释说明或结束语。
-2. 严禁使用任何微信不支持的复杂 CSS，所有色值必须是有效的 3 位或 6 位 Hex 颜色值（如 #007AFF 或 #111）。
+2. 严禁使用任何微信不支持的复杂技术（微信不支持外部 <style>、不支持 ::before/::after 伪元素、不支持复杂外部动画、不支持负 margin 溢出；但完美支持标准内联 CSS 属性）。所有色值必须是有效的 3 位或 6 位 Hex 颜色值（如 #007AFF 或 #111）。
 3. 必须包含如下规范字段：
    - "schemaVersion": 1
    - "id": 英文小写连字符命名（如 "autumn-forest"）
    - "name": 主题中文名称（如 "秋日森林"）
    - "description": 主题设计理念与适用文风简述
-   - "headingStyle": "default" | "serial-number" | "badge" | "zen"（必须根据主题文风场景精准挑选，切忌全部盲目设为 zen）：
-     * "serial-number"：醒目大数字序号（34px 现代科技双位数 01、02 分节），极力推荐用于科技数码、代码教程、方法论、步骤清单与硬核评测；
-     * "badge"：精致胶囊徽标（主色圆角徽章标签），极力推荐用于商业财经、深度专栏、新闻资讯与行业周刊；
-     * "default"：经典极简边框（无多余修饰条），推荐用于通用科普、生活方式、日常记叙与轻量阅读；
-     * "zen"：留白禅意（居中 PART 01 纤细线），仅适合东方美学、哲学思辨、文艺散文与诗歌随笔。
+   - "heading": 二级标题装饰对象（拥有充分的设计自由，请根据文风场景自由创造）：
+     * "style": 可选用经典模式或自定义标识，如 "left-border"（左侧色块条）、"bottom-line"（底边线）、"bubble"（浅底色卡片）、"serial-number"（现代大数字）、"badge"（胶囊徽标）、"zen"（居中留白）、"double-line"（双细线）或 "clean"；
+     * "align": "left" | "center"；
+     * "prefix": 前缀修饰或序号（如 "01."、"01 /"、"PART 01"、"◆ "、"// "、"「 "，或 ""）；
+     * "borderLeft": 左边框（如 "4px solid #2563EB"）；
+     * "borderBottom": 底边框（如 "2px solid #2563EB"）；
+     * "background": 背景色或渐变（如 "rgba(37, 99, 235, 0.08)"）；
+     * "borderRadius": 圆角（如 "4px"）；
+     * "customStyle": 可直接给出针对二级标题的微信标准内联 CSS 声明（例如 "border-left: 4px solid #2563EB; padding: 6px 12px; background: #EFF6FF; border-radius: 0 4px 4px 0;"）；
    - "colors": 包含 "accent"（必填主色调）、"light"（浅色背景）、"highlight"（金句高亮底色）、"title"（大标题字色）、"text"（正文字色，推荐 #222222~#333333）、"muted"（辅助弱化字色，推荐 #888888~#999999）、"border"（边框与分割线色）
    - "typography": "fontPreset" ("sans-serif" | "serif" | "monospace")、"baseFontSize" (14~18)、"lineHeight" (1.6~2.0)、"paragraphGap" (12~24)
-   - "footer": "showEngagementCard": true, "ctaText": "..."
+   - "footer": "showEngagementCard": false, "ctaText": "..."
 `;
 
 /**

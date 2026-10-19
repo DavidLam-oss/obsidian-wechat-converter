@@ -279,6 +279,10 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
       }
     };
 
+    // 调试与微调提示信息
+    const tipEl = step1.createDiv({ cls: 'custom-theme-debug-tip' });
+    tipEl.setText('提示：AI 主题设计如同定制 CSS，排版效果往往需要根据具体需求反复调试 2~3 轮。生成后可在右侧预览，若有不满意可继续补充诉求重新生成，或在步骤 2 中直接微调 JSON。');
+
     // 步骤 2：主题 JSON 配置与校验
     const step2 = bodyEl.createDiv({ cls: 'custom-theme-ai-step' });
     const step2Header = step2.createDiv({ cls: 'custom-theme-step-title' });
@@ -300,7 +304,8 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
           backgroundColor: token.colors.accent,
         });
         previewName.setText(token.name || '未命名主题');
-        previewHeadingTag.setText(`标题: ${token.headingStyle || 'default'}`);
+        const headingLabel = token.heading?.style || token.headingStyle || 'default';
+        previewHeadingTag.setText(`标题: ${headingLabel}`);
         previewIdTag.setText(`ID: ${token.id}`);
       } else {
         previewCard.addClass('is-hidden');
@@ -354,7 +359,7 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
         if (result.success && result.token && result.json) {
           textarea.value = result.json;
           updatePreviewCard(result.token);
-          new Notice(`AI 已成功为您设计主题「${result.token.name}」！请检查下方配置`);
+          new Notice(`AI 已成功设计主题「${result.token.name}」！可检查配置或继续微调诉求`);
         } else {
           errorBox.removeClass('is-hidden');
           errorBox.createEl('strong', { text: 'AI 生成未成功：' });

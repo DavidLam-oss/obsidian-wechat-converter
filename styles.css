@@ -10081,6 +10081,17 @@ div.modal.wechat-material-picker-modal-mobile {
   color: var(--text-muted);
 }
 
+.custom-theme-debug-tip {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding: 8px 12px;
+  background: var(--background-secondary);
+  border-left: 3px solid var(--interactive-accent);
+  border-radius: 4px;
+}
+
+
 /*
 ## 核心功能
 

@@ -33,12 +33,18 @@
 */
 
 import { findCustomTheme } from './custom-theme-adapter.js';
+import { sanitizeRawCssOverrides } from './theme-token-validator.js';
 
 export const HEADING_STYLES = /** @type {const} */ ({
   DEFAULT: 'default',
   SERIAL_NUMBER: 'serial-number',
   BADGE: 'badge',
   ZEN: 'zen',
+  LEFT_BORDER: 'left-border',
+  BOTTOM_LINE: 'bottom-line',
+  BUBBLE: 'bubble',
+  CARD: 'card',
+  DOUBLE_LINE: 'double-line',
 });
 
 export const VALID_HEADING_STYLES = /** @type {const} */ ([
@@ -46,6 +52,11 @@ export const VALID_HEADING_STYLES = /** @type {const} */ ([
   HEADING_STYLES.SERIAL_NUMBER,
   HEADING_STYLES.BADGE,
   HEADING_STYLES.ZEN,
+  HEADING_STYLES.LEFT_BORDER,
+  HEADING_STYLES.BOTTOM_LINE,
+  HEADING_STYLES.BUBBLE,
+  HEADING_STYLES.CARD,
+  HEADING_STYLES.DOUBLE_LINE,
 ]);
 
 export const HEADING_STYLE_LABELS = /** @type {const} */ ({
@@ -53,6 +64,11 @@ export const HEADING_STYLE_LABELS = /** @type {const} */ ({
   [HEADING_STYLES.SERIAL_NUMBER]: '大数字序号（01、02）',
   [HEADING_STYLES.BADGE]: '胶囊徽标（Badge）',
   [HEADING_STYLES.ZEN]: '留白禅意（Zen）',
+  [HEADING_STYLES.LEFT_BORDER]: '左侧色块条（Left Border）',
+  [HEADING_STYLES.BOTTOM_LINE]: '底边下划线（Bottom Line）',
+  [HEADING_STYLES.BUBBLE]: '背景浅色卡（Bubble Card）',
+  [HEADING_STYLES.CARD]: '背景浅色卡（Bubble Card）',
+  [HEADING_STYLES.DOUBLE_LINE]: '双细下划线（Double Line）',
 });
 
 import { THEME_PRESET_COLORS } from './engagement-card.js';
@@ -167,10 +183,11 @@ export function parseHeadingNumberAndTitle(innerHtml, fallbackIndex) {
 }
 
 /**
- * 装饰文章标题（对 h2 应用指定分节样式）
+ * 装饰文章标题（对 h2 应用指定分节样式或自定义装饰）
  * @param {string} html
  * @param {{
  *   headingStyle?: string,
+ *   customHeading?: import('./theme-token-validator.js').HeadingDecorationToken,
  *   primaryColor?: string,
  *   themeColor?: string,
  *   customColor?: string,
@@ -184,11 +201,13 @@ export function decorateArticleHeadings(html, options = {}) {
   const content = String(html || '');
   if (!content) return '';
 
+  const customHeading = options.customHeading || null;
   const headingStyle = options.headingStyle
     || /** @type {string|undefined} */ (options.settings?.headingStyle)
-    || HEADING_STYLES.DEFAULT;
+    || (customHeading?.style || HEADING_STYLES.DEFAULT);
 
-  if (headingStyle === HEADING_STYLES.DEFAULT || !VALID_HEADING_STYLES.includes(/** @type {any} */ (headingStyle))) {
+  // 若为默认且没有提供自定义 heading 配置，原样返回
+  if ((headingStyle === HEADING_STYLES.DEFAULT || !headingStyle) && !customHeading) {
     return content;
   }
 
@@ -210,7 +229,26 @@ export function decorateArticleHeadings(html, options = {}) {
     const cleanedAttrs = stripStyleAttr(attrs);
     const attrsPrefix = cleanedAttrs ? ` ${cleanedAttrs}` : '';
 
-    switch (headingStyle) {
+    // 1. 如果 AI 或自定义主题提供了直接的 customStyle 内联样式
+    if (customHeading?.customStyle) {
+      const sanitized = sanitizeRawCssOverrides(String(customHeading.customStyle)).sanitized;
+      let prefixSpan = '';
+      if (customHeading.prefix) {
+        const prefixStr = customHeading.prefix.replace(/01|number|%n/i, numStr);
+        prefixSpan = `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${prefixStr}</span>`;
+      }
+      return (
+        `<h2${attrsPrefix} style="display: block; margin: 32px 0 16px; line-height: 1.4; ${sanitized}">` +
+        prefixSpan +
+        `<span style="color: ${titleColor}; line-height: 1.4;">${cleanTitle}</span>` +
+        `</h2>`
+      );
+    }
+
+    // 2. 匹配有效样式模式
+    const effectiveStyle = customHeading?.style || headingStyle;
+
+    switch (effectiveStyle) {
       case HEADING_STYLES.SERIAL_NUMBER: {
         return (
           `<h2${attrsPrefix} style="display: block; margin: 36px 0 20px; padding: 0 0 10px 0; border: none; border-bottom: 1px solid ${subtleBorderColor}; text-align: left; background: none; line-height: 1.2;">` +
@@ -221,9 +259,11 @@ export function decorateArticleHeadings(html, options = {}) {
       }
 
       case HEADING_STYLES.BADGE: {
+        const bg = customHeading?.background || primaryColor;
+        const radius = customHeading?.borderRadius || '10px';
         return (
           `<h2${attrsPrefix} style="display: block; margin: 34px 0 18px; padding: 0 0 10px 0; border: none; background: none; background-image: linear-gradient(to right, ${primaryColor}, transparent); background-size: 100% 2px; background-repeat: no-repeat; background-position: bottom left; text-align: left; line-height: 1.2;">` +
-          `<span style="display: inline-block; vertical-align: middle; background-color: ${primaryColor}; color: #ffffff; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 10px; margin-right: 10px; line-height: 1.3; letter-spacing: 0.5px;">${numStr}</span>` +
+          `<span style="display: inline-block; vertical-align: middle; background-color: ${bg}; color: #ffffff; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: ${radius}; margin-right: 10px; line-height: 1.3; letter-spacing: 0.5px;">${numStr}</span>` +
           `<span style="display: inline-block; vertical-align: middle; font-size: 18px; font-weight: 700; color: ${titleColor}; line-height: 1.4;">${cleanTitle}</span>` +
           `</h2>`
         );
@@ -239,8 +279,95 @@ export function decorateArticleHeadings(html, options = {}) {
         );
       }
 
-      default:
+      case HEADING_STYLES.LEFT_BORDER: {
+        const borderVal = customHeading?.borderLeft || customHeading?.border || `4px solid ${primaryColor}`;
+        const bgVal = customHeading?.background || 'transparent';
+        const radiusVal = customHeading?.borderRadius || '0';
+        const alignVal = customHeading?.align || 'left';
+        let prefixSpan = '';
+        if (customHeading?.prefix) {
+          const prefixStr = customHeading.prefix.replace(/01|number|%n/i, numStr);
+          prefixSpan = `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${prefixStr}</span>`;
+        }
+        return (
+          `<h2${attrsPrefix} style="display: block; margin: 32px 0 18px; padding: 6px 12px; border: none; border-left: ${borderVal}; background: ${bgVal}; border-radius: ${radiusVal}; text-align: ${alignVal}; line-height: 1.35;">` +
+          prefixSpan +
+          `<span style="display: inline-block; vertical-align: baseline; font-size: 19px; font-weight: 700; color: ${titleColor};">${cleanTitle}</span>` +
+          `</h2>`
+        );
+      }
+
+      case HEADING_STYLES.BOTTOM_LINE: {
+        const borderVal = customHeading?.borderBottom || customHeading?.border || `2px solid ${primaryColor}`;
+        const bgVal = customHeading?.background || 'none';
+        const alignVal = customHeading?.align || 'left';
+        let prefixSpan = '';
+        if (customHeading?.prefix) {
+          const prefixStr = customHeading.prefix.replace(/01|number|%n/i, numStr);
+          prefixSpan = `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${prefixStr}</span>`;
+        }
+        return (
+          `<h2${attrsPrefix} style="display: block; margin: 32px 0 18px; padding: 0 0 8px 0; border: none; border-bottom: ${borderVal}; background: ${bgVal}; text-align: ${alignVal}; line-height: 1.35;">` +
+          prefixSpan +
+          `<span style="display: inline-block; vertical-align: baseline; font-size: 19px; font-weight: 700; color: ${titleColor};">${cleanTitle}</span>` +
+          `</h2>`
+        );
+      }
+
+      case HEADING_STYLES.BUBBLE:
+      case HEADING_STYLES.CARD: {
+        const bgVal = customHeading?.background || `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.08)`;
+        const borderVal = customHeading?.border || `1px solid rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.25)`;
+        const radiusVal = customHeading?.borderRadius || '6px';
+        const alignVal = customHeading?.align || 'left';
+        let prefixSpan = '';
+        if (customHeading?.prefix) {
+          const prefixStr = customHeading.prefix.replace(/01|number|%n/i, numStr);
+          prefixSpan = `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${prefixStr}</span>`;
+        }
+        return (
+          `<h2${attrsPrefix} style="display: block; margin: 30px 0 18px; padding: 8px 14px; border: ${borderVal}; background: ${bgVal}; border-radius: ${radiusVal}; text-align: ${alignVal}; line-height: 1.35;">` +
+          prefixSpan +
+          `<span style="display: inline-block; vertical-align: baseline; font-size: 18px; font-weight: 700; color: ${titleColor};">${cleanTitle}</span>` +
+          `</h2>`
+        );
+      }
+
+      case HEADING_STYLES.DOUBLE_LINE: {
+        const borderVal = customHeading?.borderBottom || `3px double ${primaryColor}`;
+        const alignVal = customHeading?.align || 'left';
+        let prefixSpan = '';
+        if (customHeading?.prefix) {
+          const prefixStr = customHeading.prefix.replace(/01|number|%n/i, numStr);
+          prefixSpan = `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${prefixStr}</span>`;
+        }
+        return (
+          `<h2${attrsPrefix} style="display: block; margin: 32px 0 18px; padding: 0 0 6px 0; border: none; border-bottom: ${borderVal}; text-align: ${alignVal}; line-height: 1.35;">` +
+          prefixSpan +
+          `<span style="display: inline-block; vertical-align: baseline; font-size: 19px; font-weight: 700; color: ${titleColor};">${cleanTitle}</span>` +
+          `</h2>`
+        );
+      }
+
+      default: {
+        if (customHeading) {
+          const borderVal = customHeading.borderLeft || customHeading.border || `3px solid ${primaryColor}`;
+          const bgVal = customHeading.background || 'transparent';
+          const radiusVal = customHeading.borderRadius || '0';
+          let prefixSpan = '';
+          if (customHeading.prefix) {
+            const prefixStr = customHeading.prefix.replace(/01|number|%n/i, numStr);
+            prefixSpan = `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${prefixStr}</span>`;
+          }
+          return (
+            `<h2${attrsPrefix} style="display: block; margin: 32px 0 18px; padding: 6px 12px; border: none; border-left: ${borderVal}; background: ${bgVal}; border-radius: ${radiusVal}; text-align: ${customHeading.align || 'left'}; line-height: 1.35;">` +
+            prefixSpan +
+            `<span style="display: inline-block; vertical-align: baseline; font-size: 19px; font-weight: 700; color: ${titleColor};">${cleanTitle}</span>` +
+            `</h2>`
+          );
+        }
         return _fullMatch;
+      }
     }
   });
 }
