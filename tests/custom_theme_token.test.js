@@ -185,6 +185,20 @@ describe('theme-token-validator', () => {
       expect(normalized.futureFeatureFlag).toBe(true);
       expect(normalized.nestedCustomMeta).toEqual({ version: '2.0' });
     });
+
+    it('对 heading.prefix 进行 HTML 转义，防止标签注入', () => {
+      const raw = {
+        name: '注入防护测试',
+        colors: { accent: '#2563EB' },
+        heading: {
+          style: 'left-border',
+          prefix: '<img src=x onerror=alert(1)>',
+        },
+      };
+      const normalized = normalizeCustomThemeToken(raw);
+      expect(normalized.heading.prefix).not.toContain('<img');
+      expect(normalized.heading.prefix).toContain('&lt;img');
+    });
   });
 
   describe('normalizeCustomThemesList', () => {

@@ -106,6 +106,7 @@ export function compileCustomThemeToAppleConfig(token) {
     tableCellPadding: 10,
     figurePadding: 8,
     figureBorderColor: colors.border || '#E2E8F0',
+    // 预留前向兼容字段（由于微信剥离外部样式表与 style 标签，本字段保持惰性，定制样式统一走 Token/heading 内联）
     rawCssOverrides: token.rawCssOverrides || '',
   };
 }

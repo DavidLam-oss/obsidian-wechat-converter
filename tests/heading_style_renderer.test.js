@@ -184,4 +184,47 @@ describe('Heading Style Renderer - decorateArticleHeadings', () => {
     expect(output).toContain('◆ ');
     expect(output).toContain('导言');
   });
+
+  it('should HTML escape malicious prefix to prevent tag injection (XSS)', () => {
+    const maliciousPrefixes = [
+      '<img src=x onerror=alert(1)>',
+      '<script>alert("xss")</script>',
+      '"><a href="javascript:alert(1)">click</a>',
+    ];
+
+    for (const prefix of maliciousPrefixes) {
+      const output = decorateArticleHeadings('<h2>测试标题</h2>', {
+        customHeading: {
+          style: 'left-border',
+          prefix,
+        },
+      });
+
+      // 绝不能包含未经转义的原始 HTML 标签
+      expect(output).not.toContain('<img');
+      expect(output).not.toContain('<script');
+      expect(output).not.toContain('<a href');
+      // 必须被转义为安全 HTML 实体
+      expect(output).toContain('&lt;');
+      expect(output).toContain('&gt;');
+    }
+  });
+
+  it('should support placeholder replacements (%n, {number}, 01) in prefix', () => {
+    const testCases = [
+      { prefix: 'PART %n // ', expected: 'PART 01 // ' },
+      { prefix: '第 {number} 讲 ', expected: '第 01 讲 ' },
+      { prefix: '01. ', expected: '01. ' },
+    ];
+
+    for (const { prefix, expected } of testCases) {
+      const output = decorateArticleHeadings('<h2>测试标题</h2>', {
+        customHeading: {
+          style: 'left-border',
+          prefix,
+        },
+      });
+      expect(output).toContain(expected);
+    }
+  });
 });

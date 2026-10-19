@@ -33,7 +33,7 @@
 */
 
 import { findCustomTheme } from './custom-theme-adapter.js';
-import { sanitizeRawCssOverrides } from './theme-token-validator.js';
+import { sanitizeRawCssOverrides, escapeHtml } from './theme-token-validator.js';
 
 export const HEADING_STYLES = /** @type {const} */ ({
   DEFAULT: 'default',
@@ -183,6 +183,21 @@ export function parseHeadingNumberAndTitle(innerHtml, fallbackIndex) {
 }
 
 /**
+ * 渲染经过 HTML 转义的标题前缀 span（支持 %n、{number}、number、01 序号占位符替换，杜绝 HTML 注入）
+ * @param {import('./theme-token-validator.js').HeadingDecorationToken | null | undefined} customHeading
+ * @param {string} numStr
+ * @param {string} primaryColor
+ * @returns {string}
+ */
+export function renderPrefixSpan(customHeading, numStr, primaryColor) {
+  if (!customHeading?.prefix) return '';
+  // 占位符替换优先级：%n > {number} > number > 01
+  const prefixRaw = customHeading.prefix.replace(/%n|\{number\}|number|01/i, numStr);
+  const safePrefix = escapeHtml(prefixRaw);
+  return `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${safePrefix}</span>`;
+}
+
+/**
  * 装饰文章标题（对 h2 应用指定分节样式或自定义装饰）
  * @param {string} html
  * @param {{
@@ -232,11 +247,7 @@ export function decorateArticleHeadings(html, options = {}) {
     // 1. 如果 AI 或自定义主题提供了直接的 customStyle 内联样式
     if (customHeading?.customStyle) {
       const sanitized = sanitizeRawCssOverrides(String(customHeading.customStyle)).sanitized;
-      let prefixSpan = '';
-      if (customHeading.prefix) {
-        const prefixStr = customHeading.prefix.replace(/01|number|%n/i, numStr);
-        prefixSpan = `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${prefixStr}</span>`;
-      }
+      const prefixSpan = renderPrefixSpan(customHeading, numStr, primaryColor);
       return (
         `<h2${attrsPrefix} style="display: block; margin: 32px 0 16px; line-height: 1.4; ${sanitized}">` +
         prefixSpan +
@@ -284,11 +295,7 @@ export function decorateArticleHeadings(html, options = {}) {
         const bgVal = customHeading?.background || 'transparent';
         const radiusVal = customHeading?.borderRadius || '0';
         const alignVal = customHeading?.align || 'left';
-        let prefixSpan = '';
-        if (customHeading?.prefix) {
-          const prefixStr = customHeading.prefix.replace(/01|number|%n/i, numStr);
-          prefixSpan = `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${prefixStr}</span>`;
-        }
+        const prefixSpan = renderPrefixSpan(customHeading, numStr, primaryColor);
         return (
           `<h2${attrsPrefix} style="display: block; margin: 32px 0 18px; padding: 6px 12px; border: none; border-left: ${borderVal}; background: ${bgVal}; border-radius: ${radiusVal}; text-align: ${alignVal}; line-height: 1.35;">` +
           prefixSpan +
@@ -301,11 +308,7 @@ export function decorateArticleHeadings(html, options = {}) {
         const borderVal = customHeading?.borderBottom || customHeading?.border || `2px solid ${primaryColor}`;
         const bgVal = customHeading?.background || 'none';
         const alignVal = customHeading?.align || 'left';
-        let prefixSpan = '';
-        if (customHeading?.prefix) {
-          const prefixStr = customHeading.prefix.replace(/01|number|%n/i, numStr);
-          prefixSpan = `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${prefixStr}</span>`;
-        }
+        const prefixSpan = renderPrefixSpan(customHeading, numStr, primaryColor);
         return (
           `<h2${attrsPrefix} style="display: block; margin: 32px 0 18px; padding: 0 0 8px 0; border: none; border-bottom: ${borderVal}; background: ${bgVal}; text-align: ${alignVal}; line-height: 1.35;">` +
           prefixSpan +
@@ -320,11 +323,7 @@ export function decorateArticleHeadings(html, options = {}) {
         const borderVal = customHeading?.border || `1px solid rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.25)`;
         const radiusVal = customHeading?.borderRadius || '6px';
         const alignVal = customHeading?.align || 'left';
-        let prefixSpan = '';
-        if (customHeading?.prefix) {
-          const prefixStr = customHeading.prefix.replace(/01|number|%n/i, numStr);
-          prefixSpan = `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${prefixStr}</span>`;
-        }
+        const prefixSpan = renderPrefixSpan(customHeading, numStr, primaryColor);
         return (
           `<h2${attrsPrefix} style="display: block; margin: 30px 0 18px; padding: 8px 14px; border: ${borderVal}; background: ${bgVal}; border-radius: ${radiusVal}; text-align: ${alignVal}; line-height: 1.35;">` +
           prefixSpan +
@@ -336,11 +335,7 @@ export function decorateArticleHeadings(html, options = {}) {
       case HEADING_STYLES.DOUBLE_LINE: {
         const borderVal = customHeading?.borderBottom || `3px double ${primaryColor}`;
         const alignVal = customHeading?.align || 'left';
-        let prefixSpan = '';
-        if (customHeading?.prefix) {
-          const prefixStr = customHeading.prefix.replace(/01|number|%n/i, numStr);
-          prefixSpan = `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${prefixStr}</span>`;
-        }
+        const prefixSpan = renderPrefixSpan(customHeading, numStr, primaryColor);
         return (
           `<h2${attrsPrefix} style="display: block; margin: 32px 0 18px; padding: 0 0 6px 0; border: none; border-bottom: ${borderVal}; text-align: ${alignVal}; line-height: 1.35;">` +
           prefixSpan +
@@ -354,11 +349,7 @@ export function decorateArticleHeadings(html, options = {}) {
           const borderVal = customHeading.borderLeft || customHeading.border || `3px solid ${primaryColor}`;
           const bgVal = customHeading.background || 'transparent';
           const radiusVal = customHeading.borderRadius || '0';
-          let prefixSpan = '';
-          if (customHeading.prefix) {
-            const prefixStr = customHeading.prefix.replace(/01|number|%n/i, numStr);
-            prefixSpan = `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${prefixStr}</span>`;
-          }
+          const prefixSpan = renderPrefixSpan(customHeading, numStr, primaryColor);
           return (
             `<h2${attrsPrefix} style="display: block; margin: 32px 0 18px; padding: 6px 12px; border: none; border-left: ${borderVal}; background: ${bgVal}; border-radius: ${radiusVal}; text-align: ${customHeading.align || 'left'}; line-height: 1.35;">` +
             prefixSpan +

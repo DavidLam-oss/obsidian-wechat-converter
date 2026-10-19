@@ -26,7 +26,7 @@
  * @typedef {{
  *   align?: 'left' | 'center',
  *   style?: string,
- *   prefix?: string,
+ *   prefix?: string, // 序号或前缀文本（支持 %n、{number} 或 01 占位符自动替换为当前二级标题序号；纯文本无占位符则原样呈现）
  *   border?: string,
  *   borderLeft?: string,
  *   borderBottom?: string,
@@ -64,7 +64,7 @@
  *     showEngagementCard?: boolean,
  *     ctaText?: string,
  *   },
- *   rawCssOverrides?: string,
+ *   rawCssOverrides?: string, // 预留前向兼容字段；由于微信富文本编辑器强制剥离所有 <style> 块与外部类名，该字段在文章排版转译中保持惰性，样式定制统一走 Token/heading 内联
  * }} CustomThemeToken
  */
 
@@ -202,6 +202,20 @@ export function tintColorWithWhite(hex, whiteRatio = 0.92) {
   /** @param {number} n */
   const toHex = (n) => n.toString(16).padStart(2, '0');
   return `#${toHex(mixedR)}${toHex(mixedG)}${toHex(mixedB)}`.toUpperCase();
+}
+
+/**
+ * 转义 HTML 关键字符，防止 XSS 或恶意 HTML 标签注入
+ * @param {string} str
+ * @returns {string}
+ */
+export function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 /**
@@ -372,9 +386,9 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
   if (raw.heading && typeof raw.heading === 'object' && !Array.isArray(raw.heading)) {
     const h = raw.heading;
     heading = {
-      align: h.align === 'center' ? 'center' : 'left',
+      align: /** @type {'left' | 'center'} */ (h.align === 'center' ? 'center' : 'left'),
       style: typeof h.style === 'string' ? h.style.trim() : (headingStyle !== 'default' ? headingStyle : ''),
-      prefix: typeof h.prefix === 'string' ? h.prefix.slice(0, 30) : '',
+      prefix: typeof h.prefix === 'string' ? escapeHtml(h.prefix.slice(0, 30)) : '',
       border: typeof h.border === 'string' ? sanitizeRawCssOverrides(h.border).sanitized : undefined,
       borderLeft: typeof h.borderLeft === 'string' ? sanitizeRawCssOverrides(h.borderLeft).sanitized : undefined,
       borderBottom: typeof h.borderBottom === 'string' ? sanitizeRawCssOverrides(h.borderBottom).sanitized : undefined,
