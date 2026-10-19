@@ -9919,6 +9919,137 @@ div.modal.wechat-material-picker-modal-mobile {
   gap: 8px;
   margin-top: 4px;
 }
+
+.custom-theme-req-textarea {
+  width: 100%;
+  height: 56px;
+  box-sizing: border-box;
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 8px 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  resize: none;
+}
+
+.custom-theme-req-textarea:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+.custom-theme-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.custom-theme-pills-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.custom-theme-pill-btn {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.custom-theme-pill-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  border-color: var(--interactive-accent);
+}
+
+.custom-theme-btn-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.custom-theme-ai-gen-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  background: linear-gradient(135deg, var(--interactive-accent), #8b5cf6);
+  color: var(--text-on-accent, #ffffff);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.custom-theme-ai-gen-btn:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.custom-theme-ai-gen-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.custom-theme-copy-prompt-btn-secondary {
+  font-size: 12px;
+  padding: 5px 12px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  color: var(--text-normal);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.custom-theme-copy-prompt-btn-secondary:hover {
+  background: var(--background-modifier-hover);
+}
+
+.custom-theme-preview-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.custom-theme-preview-card.is-hidden {
+  display: none;
+}
+
+.custom-theme-preview-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.custom-theme-preview-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.custom-theme-preview-tag {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
 /*
 ## 核心功能
 

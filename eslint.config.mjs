@@ -220,6 +220,7 @@ export default [
       "services/sticker-media-resolver.js",
       "services/sticker-publish-state.js",
       "services/theme-token-validator.js",
+      "services/ai-theme-generator.js",
       "themes/apple-theme-config.js",
       "themes/apple-theme-headings.js",
       "themes/apple-theme.js",

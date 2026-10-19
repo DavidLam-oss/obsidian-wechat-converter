@@ -33,10 +33,14 @@ import {
 } from '../apple-style-view-shared.js';
 import { writeClipboardText } from '../shared/clipboard.js';
 import {
-  AI_THEME_PROMPT_TEMPLATE,
   validateCustomThemeToken,
   normalizeCustomThemeToken,
 } from '../../services/theme-token-validator.js';
+import {
+  generateCustomThemeWithAi,
+  hasRunnableTextProvider,
+  buildThemePromptWithRequirement,
+} from '../../services/ai-theme-generator.js';
 
 /**
  * 打开自定义主题管理弹窗
@@ -214,46 +218,158 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
   function renderImportView() {
     bodyEl.empty();
 
-    // 步骤 1：复制 AI 提示词
+    // 步骤 1：排版风格诉求与 AI 智能设计
     const step1 = bodyEl.createDiv({ cls: 'custom-theme-ai-step' });
     const step1Header = step1.createDiv({ cls: 'custom-theme-step-title' });
-    step1Header.createEl('span', { text: '步骤 1：复制 AI 提示词并发送给 AI' });
+    step1Header.createEl('span', { text: '步骤 1：描述排版风格诉求并生成' });
 
-    const copyPromptBtn = step1Header.createEl('button', {
-      cls: 'custom-theme-copy-prompt-btn',
-      text: '一键复制 AI 提示词',
+    const reqTextarea = step1.createEl('textarea', {
+      cls: 'custom-theme-req-textarea',
+      placeholder: '输入您的主题风格诉求（如：“偏暖的秋日森林系，主色用琥珀黄或松针绿，整体温润克制，适合读书手记与深度长文”）...',
     });
+
+    // 快捷灵感药丸标签
+    const pillsRow = step1.createDiv({ cls: 'custom-theme-pills-row' });
+    pillsRow.createEl('span', { cls: 'custom-theme-pills-label', text: '💡 灵感预设：' });
+
+    const inspirationPills = [
+      { label: '🍂 秋日森系', desc: '偏暖色调的秋日森林系，主色琥珀黄与松针绿，温润克制，适合户外与手记' },
+      { label: '☕ 暖咖文艺', desc: '焦糖暖咖色调，主色复古咖啡棕与燕麦米白，适合文艺随笔与读书笔记' },
+      { label: '💻 极客科技', desc: '现代深邃科技感，主色赛博深蓝与霓虹青，适合技术文档、代码与前沿观察' },
+      { label: '🌿 极简雅致', desc: '极简素雅白灰黑，主色冷灰与黛青，禅意留白大标题，适合深度思考与散文' },
+      { label: '🧧 喜庆节日', desc: '东方传统喜庆中国红与暖金配比，端庄典雅，适合节日献礼与大事件发布' },
+    ];
+
+    inspirationPills.forEach((pill) => {
+      const btn = pillsRow.createEl('button', {
+        cls: 'custom-theme-pill-btn',
+        text: pill.label,
+      });
+      btn.onclick = () => {
+        reqTextarea.value = pill.desc;
+        reqTextarea.focus();
+      };
+    });
+
+    // 双通道按钮栏
+    const btnRow = step1.createDiv({ cls: 'custom-theme-btn-row' });
+
+    const hasAiModel = hasRunnableTextProvider(plugin.settings?.ai);
+    const aiGenBtn = btnRow.createEl('button', {
+      cls: 'custom-theme-ai-gen-btn',
+      text: '✨ 调用 AI 智能生成',
+    });
+    if (!hasAiModel) {
+      aiGenBtn.title = '未检测到已配置的文本模型 API，点击可查看指引';
+    }
+
+    const copyPromptBtn = btnRow.createEl('button', {
+      cls: 'custom-theme-copy-prompt-btn-secondary',
+      text: '📋 复制提示词 (发给外部 AI)',
+    });
+
     copyPromptBtn.onclick = async () => {
-      const ok = await writeClipboardText(AI_THEME_PROMPT_TEMPLATE);
+      const promptToCopy = buildThemePromptWithRequirement(reqTextarea.value);
+      const ok = await writeClipboardText(promptToCopy);
       if (ok) {
-        new Notice('AI 提示词已复制！请在发送给 AI 时补充您的个性化要求（如主色调、文风）');
+        new Notice('AI 提示词已复制！已附带您的个性化诉求，可直接粘贴给 ChatGPT、DeepSeek、Claude 或 Kimi');
       } else {
         new Notice('复制失败，请检查剪贴板权限');
       }
     };
 
-    step1.createDiv({
-      cls: 'custom-theme-card-desc',
-      text: '点击上方复制标准提示词并发送给 AI（如 DeepSeek、ChatGPT、Claude、Kimi 等）。建议在提示词末尾写上您的个性化风格要求（例如：“偏暖的秋日森林系”、“沉稳极简黑白灰”），AI 生成后将纯 JSON 代码粘贴在下方即可。',
-    });
-
-    // 步骤 2：粘贴 JSON
+    // 步骤 2：主题 JSON 配置与校验
     const step2 = bodyEl.createDiv({ cls: 'custom-theme-ai-step' });
     const step2Header = step2.createDiv({ cls: 'custom-theme-step-title' });
-    step2Header.createEl('span', { text: '步骤 2：粘贴主题 JSON 配置' });
+    step2Header.createEl('span', { text: '步骤 2：检查/微调主题 JSON 配置' });
+
+    // 实时主题轻量预览卡片
+    const previewCard = step2.createDiv({ cls: 'custom-theme-preview-card is-hidden' });
+    const previewInfo = previewCard.createDiv({ cls: 'custom-theme-preview-info' });
+    const previewSwatch = previewInfo.createDiv({ cls: 'custom-theme-color-swatch' });
+    const previewName = previewInfo.createEl('span', { cls: 'custom-theme-preview-name' });
+    const previewHeadingTag = previewInfo.createEl('span', { cls: 'custom-theme-preview-tag' });
+    const previewIdTag = previewInfo.createEl('span', { cls: 'custom-theme-preview-tag' });
+
+    /** @param {any} token */
+    const updatePreviewCard = (token) => {
+      if (token && token.colors?.accent) {
+        previewCard.removeClass('is-hidden');
+        previewSwatch.setCssStyles({
+          backgroundColor: token.colors.accent,
+        });
+        previewName.setText(token.name || '未命名主题');
+        previewHeadingTag.setText(`标题: ${token.headingStyle || 'default'}`);
+        previewIdTag.setText(`ID: ${token.id}`);
+      } else {
+        previewCard.addClass('is-hidden');
+      }
+    };
 
     const textarea = step2.createEl('textarea', {
       cls: 'custom-theme-json-textarea',
       placeholder: '{\n  "id": "my-brand",\n  "name": "品牌专属风",\n  "colors": {\n    "accent": "#007AFF",\n    "light": "#F2F5FB",\n    "title": "#1D1D1F"\n  }\n}',
     });
 
+    textarea.addEventListener('input', () => {
+      const val = validateCustomThemeToken(textarea.value);
+      if (val.valid && val.token) {
+        updatePreviewCard(val.token);
+      } else {
+        previewCard.addClass('is-hidden');
+      }
+    });
+
     if (editingInitialJson) {
       textarea.value = editingInitialJson;
       editingInitialJson = '';
+      const initialVal = validateCustomThemeToken(textarea.value);
+      if (initialVal.valid && initialVal.token) {
+        updatePreviewCard(initialVal.token);
+      }
     }
 
     // 错误信息显示区（默认隐藏）
     const errorBox = step2.createDiv({ cls: 'custom-theme-error-box is-hidden' });
+
+    // 点击 AI 智能生成
+    aiGenBtn.onclick = async () => {
+      if (!hasRunnableTextProvider(plugin.settings?.ai)) {
+        new Notice('请先在插件设置的「AI 自动排版」中配置可用的文本模型（如 DeepSeek、OpenAI、SiliconFlow 等）');
+        return;
+      }
+
+      errorBox.empty();
+      errorBox.addClass('is-hidden');
+      aiGenBtn.disabled = true;
+      aiGenBtn.setText('AI 正在构思与设计中...');
+
+      try {
+        const result = await generateCustomThemeWithAi({
+          aiSettings: plugin.settings?.ai,
+          userRequirement: reqTextarea.value,
+        });
+
+        if (result.success && result.token && result.json) {
+          textarea.value = result.json;
+          updatePreviewCard(result.token);
+          new Notice(`🎉 AI 已成功为您设计主题「${result.token.name}」！请检查下方配置`);
+        } else {
+          errorBox.removeClass('is-hidden');
+          errorBox.createEl('strong', { text: 'AI 生成未成功：' });
+          const ul = errorBox.createEl('ul');
+          ul.createEl('li', { text: result.error || '未知错误' });
+          new Notice(`AI 生成失败: ${result.error || '请重试'}`);
+        }
+      } catch (err) {
+        errorBox.removeClass('is-hidden');
+        const msg = err instanceof Error ? err.message : String(err);
+        errorBox.createEl('strong', { text: '调用异常：' + msg });
+      } finally {
+        aiGenBtn.disabled = false;
+        aiGenBtn.setText('✨ 调用 AI 智能生成');
+      }
+    };
 
     // 底部操作按钮
     const actions = step2.createDiv({ cls: 'custom-theme-ai-actions' });
