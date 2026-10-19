@@ -55,7 +55,11 @@ export const AI_THEME_SYSTEM_PROMPT = `你是一个专业的微信公众号排�
    - "id": 英文小写连字符命名（如 "autumn-forest"）
    - "name": 主题中文名称（如 "秋日森林"）
    - "description": 主题设计理念与适用文风简述
-   - "headingStyle": "default" | "serial-number" | "badge" | "zen"（根据主题气质四选一）
+   - "headingStyle": "default" | "serial-number" | "badge" | "zen"（必须根据主题文风场景精准挑选，切忌全部盲目设为 zen）：
+     * "serial-number"：醒目大数字序号（34px 现代科技双位数 01、02 分节），极力推荐用于科技数码、代码教程、方法论、步骤清单与硬核评测；
+     * "badge"：精致胶囊徽标（主色圆角徽章标签），极力推荐用于商业财经、深度专栏、新闻资讯与行业周刊；
+     * "default"：经典极简边框（无多余修饰条），推荐用于通用科普、生活方式、日常记叙与轻量阅读；
+     * "zen"：留白禅意（居中 PART 01 纤细线），仅适合东方美学、哲学思辨、文艺散文与诗歌随笔。
    - "colors": 包含 "accent"（必填主色调）、"light"（浅色背景）、"highlight"（金句高亮底色）、"title"（大标题字色）、"text"（正文字色，推荐 #222222~#333333）、"muted"（辅助弱化字色，推荐 #888888~#999999）、"border"（边框与分割线色）
    - "typography": "fontPreset" ("sans-serif" | "serif" | "monospace")、"baseFontSize" (14~18)、"lineHeight" (1.6~2.0)、"paragraphGap" (12~24)
    - "footer": "showEngagementCard": true, "ctaText": "..."
@@ -70,7 +74,7 @@ export function buildThemePromptWithRequirement(userRequirement = '') {
   const req = String(userRequirement || '').trim();
   const reqText = req
     ? `【用户具体风格诉求】：\n${req}`
-    : '【用户风格诉求】：\n请自由设计一套优雅克制、视觉舒适、适合长文精读的经典排版主题。';
+    : '【用户风格诉求】：\n请自由设计一套优雅克制、具有鲜明行业场景辨识度的排版主题（如科技数码、现代商业、清新生活、或深度人文等，根据你构思的主题定位自由发挥，展现丰富的版式与色彩搭配）。';
 
   return `${reqText}\n\n请严格依据上述诉求生成纯 JSON，格式参考规范如下：\n${AI_THEME_PROMPT_TEMPLATE}`;
 }

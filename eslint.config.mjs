@@ -282,6 +282,7 @@ export default [
       "views/converter/settings-panel.js",
       "views/converter/sticker-preview.js",
       "views/converter/style-panel.js",
+      "views/converter/theme-color-controls.js",
       "views/publish-modal/feishu.js",
       "views/publish-modal/material-picker.js",
       "views/publish-modal/multi-platform.js",

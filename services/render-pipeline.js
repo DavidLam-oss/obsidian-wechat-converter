@@ -28,6 +28,7 @@
 
 import { interpolateMarkdownVariables } from './frontmatter-interpolator.js';
 import { decorateArticleHeadings } from './heading-style-renderer.js';
+import { findCustomTheme } from './custom-theme-adapter.js';
 
 /**
  * @typedef {{
@@ -75,9 +76,16 @@ export class NativeRenderPipeline {
 
     let html = String(await this.nativeRenderer(inputMarkdown, context));
 
-    const headingStyle = (typeof context.headingStyle === 'string' && context.headingStyle)
+    let headingStyle = (typeof context.headingStyle === 'string' && context.headingStyle)
       || (typeof settings?.headingStyle === 'string' && settings.headingStyle)
       || 'default';
+
+    if (headingStyle === 'default' && settings && typeof settings.theme === 'string') {
+      const customTheme = findCustomTheme(settings.customThemes, settings.theme);
+      if (customTheme?.headingStyle && customTheme.headingStyle !== 'default') {
+        headingStyle = customTheme.headingStyle;
+      }
+    }
 
     if (headingStyle && headingStyle !== 'default') {
       html = decorateArticleHeadings(html, {

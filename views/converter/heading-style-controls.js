@@ -71,7 +71,22 @@ export function buildHeadingStyleSection(view, parent) {
         await onHeadingStyleChange(view, opt.value, grid);
       });
     });
+    // 挂载刷新引用
+    view._refreshHeadingStyleSection = () => refreshHeadingStyleSection(view);
+    view.refreshHeadingStyleSection = view._refreshHeadingStyleSection;
   });
+}
+
+/**
+ * 刷新分节标题按钮高亮状态
+ * @param {any} view AppleStyleView 实例
+ */
+export function refreshHeadingStyleSection(view) {
+  if (!view?.settingsHeadingStyleGrid) return;
+  const currentStyle = view.plugin?.settings?.headingStyle || HEADING_STYLES.DEFAULT;
+  if (typeof view.updateButtonActive === 'function') {
+    view.updateButtonActive(view.settingsHeadingStyleGrid, currentStyle);
+  }
 }
 
 /**

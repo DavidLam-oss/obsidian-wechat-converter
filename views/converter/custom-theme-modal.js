@@ -136,6 +136,7 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
         const applyBtn = actions.createEl('button', { cls: 'mod-cta', text: '应用' });
         applyBtn.onclick = async () => {
           plugin.settings.theme = theme.id;
+          plugin.settings.headingStyle = 'default';
           await plugin.saveSettings();
           if (typeof onThemeApplied === 'function') {
             onThemeApplied(theme.id);
@@ -203,8 +204,8 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
       });
 
       const meta = paletteStrip.createDiv({ cls: 'custom-theme-palette-meta' });
-      if (theme.typography?.headingStyle) {
-        meta.createEl('span', { text: `标题: ${theme.typography.headingStyle}` });
+      if (theme.headingStyle) {
+        meta.createEl('span', { text: `标题: ${theme.headingStyle}` });
       }
       if (theme.id) {
         meta.createEl('span', { text: `ID: ${theme.id}` });
@@ -225,7 +226,7 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
 
     const reqTextarea = step1.createEl('textarea', {
       cls: 'custom-theme-req-textarea',
-      placeholder: '输入您的主题风格诉求（如：“偏暖的秋日森林系，主色用琥珀黄或松针绿，整体温润克制，适合读书手记与深度长文”）...',
+      placeholder: '输入您的主题风格诉求（如：“偏暖的秋日森林系，主色用琥珀黄或松针绿，标题风格采用现代科技大数字序号或胶囊徽标”）...',
     });
 
     // 快捷灵感药丸标签
@@ -233,11 +234,11 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
     pillsRow.createEl('span', { cls: 'custom-theme-pills-label', text: '风格预设：' });
 
     const inspirationPills = [
-      { label: '秋日森系', desc: '偏暖色调的秋日森林系，主色琥珀黄与松针绿，温润克制，适合户外与手记' },
-      { label: '暖咖文艺', desc: '焦糖暖咖色调，主色复古咖啡棕与燕麦米白，适合文艺随笔与读书笔记' },
-      { label: '极客科技', desc: '现代深邃科技感，主色赛博深蓝与霓虹青，适合技术文档、代码与前沿观察' },
-      { label: '极简雅致', desc: '极简素雅白灰黑，主色冷灰与黛青，禅意留白大标题，适合深度思考与散文' },
-      { label: '喜庆节日', desc: '东方传统喜庆中国红与暖金配比，端庄典雅，适合节日献礼与大事件发布' },
+      { label: '秋日森系', desc: '偏暖色调的秋日森林系，主色琥珀黄与松针绿，温润克制，标题风格采用极简边框(default)，适合户外与生活手记' },
+      { label: '极客科技', desc: '理性科技数码风，主色沉稳科技蓝，适合硬核评测与技术教程，标题风格采用现代大数字序号(serial-number)' },
+      { label: '商业财经', desc: '现代商业资讯风，主色深邃绀蓝与活力点睛橙，精致商务感，标题风格采用胶囊徽标(badge)' },
+      { label: '人文禅意', desc: '东方极简素雅白灰黑，主色冷灰与黛青，适合哲学散文与深度随笔，标题风格采用留白禅意(zen)' },
+      { label: '赤红特刊', desc: '东方传统喜庆中国红与暖金配比，端庄典雅，适合大事件发布、节日特刊与精选周报，标题风格采用胶囊徽标(badge)' },
     ];
 
     inspirationPills.forEach((pill) => {
@@ -411,6 +412,7 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
 
       plugin.settings.customThemes = existingThemes;
       plugin.settings.theme = normalized.id;
+      plugin.settings.headingStyle = 'default';
       await plugin.saveSettings();
 
       if (typeof onThemeApplied === 'function') {

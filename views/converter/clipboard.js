@@ -594,9 +594,9 @@ async copyHTML() {
 
     // Success Feedback
     if (videoCount > 0) {
-      new Notice('⚠️ 已复制全文。微信不支持直接粘贴视频，已自动转为占位提示卡片；请在公众号后台手动插入视频', 6000);
+      new Notice('已复制全文。微信不支持直接粘贴视频，已自动转为占位提示卡片；请在公众号后台手动插入视频', 6000);
     } else {
-      new Notice('✅ 已复制公众号格式，请直接粘贴到公众号编辑器');
+      new Notice('已复制公众号格式，请直接粘贴到公众号编辑器');
     }
     if (this.copyBtn) {
        this.copyBtn.classList.remove('is-copying');
@@ -611,7 +611,7 @@ async copyHTML() {
 
   } catch (error) {
     console.error('复制失败:', error);
-    new Notice('❌ 复制失败，请使用「发布与分发」发送文章');
+    new Notice('复制失败，请使用「发布与分发」发送文章');
     if (this.copyBtn) {
       this.copyBtn.classList.remove('is-copying');
       this.setCopyButtonIcon('copy');
@@ -658,7 +658,7 @@ async convertImageToLocally(img) {
 
     // 检查大小警告
     if (blob.size > 10 * 1024 * 1024) {
-      new Notice(`⚠️ 发现大图 (${(blob.size / 1024 / 1024).toFixed(1)}MB)，处理可能较慢`, 5000);
+      new Notice(`发现大图 (${(blob.size / 1024 / 1024).toFixed(1)}MB)，处理可能较慢`, 5000);
     }
 
     /** @type {string} */

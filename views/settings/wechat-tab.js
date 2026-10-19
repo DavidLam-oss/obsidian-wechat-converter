@@ -180,7 +180,7 @@ const wechatSettingsMethods = {
           if (!file) return;
 
           if (file.size > 100 * 1024) {
-            new Notice('❌ 图片太大，请选择小于 100KB 的图片');
+            new Notice('图片太大，请选择小于 100KB 的图片');
             return;
           }
 
@@ -189,7 +189,7 @@ const wechatSettingsMethods = {
             const result = event.target?.result;
             this.plugin.settings.avatarBase64 = typeof result === 'string' ? result : '';
             await this.plugin.saveSettings();
-            new Notice('✅ 头像已上传');
+            new Notice('头像已上传');
             refreshSettingTabCompat(this);
           };
           reader.readAsDataURL(file);
@@ -284,9 +284,9 @@ const wechatSettingsMethods = {
           try {
             const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
             await api.getAccessToken();
-            new Notice(`✅ ${account.name} 连接成功！`);
+            new Notice(`${account.name} 连接成功！`);
           } catch (err) {
-            new Notice(`❌ ${account.name} 连接失败: ${toReadableError(err).message}`);
+            new Notice(`${account.name} 连接失败: ${toReadableError(err).message}`);
           }
           testBtn.disabled = false;
           testBtn.textContent = '测试';
@@ -358,7 +358,7 @@ const wechatSettingsMethods = {
         .onChange(async (value) => {
           if (this.isAbsolutePathLike(value)) {
             if (!hasWarnedAbsoluteCleanupPath) {
-              new Notice('⚠️ 清理目录请填写 vault 内相对路径，不要使用绝对路径（如 /Users/... 或 C:\\...）');
+              new Notice('清理目录请填写 vault 内相对路径，不要使用绝对路径（如 /Users/... 或 C:\\...）');
               hasWarnedAbsoluteCleanupPath = true;
             }
           } else {
@@ -395,7 +395,7 @@ const wechatSettingsMethods = {
             const trimmedValue = value.trim();
             if (trimmedValue && !trimmedValue.toLowerCase().startsWith('https://')) {
               if (!hasWarnedInsecureProxy) {
-                new Notice('⚠️ 安全风险：代理地址必须使用 HTTPS 以保护您的 AppSecret。');
+                new Notice('安全风险：代理地址必须使用 HTTPS 以保护您的 AppSecret。');
                 hasWarnedInsecureProxy = true;
               }
             } else {

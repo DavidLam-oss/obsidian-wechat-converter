@@ -539,7 +539,7 @@ async onThemeChange(value, grid) {
   await this.plugin.saveSettings();
   this.updateButtonActive(grid, value);
   this.theme?.update({ theme: value, lineHeight: null, paragraphGap: null, letterSpacing: null });
-  this.refreshSpacingSliders?.();
+  this.refreshSpacingSliders?.(); this.refreshThemeColorSection?.();
   await this.convertCurrent(true);
 }
 ,
@@ -956,7 +956,7 @@ async convertCurrent(silent = false, options = {}) {
   }
 
   try {
-    if (!silent) new Notice('⚡ 正在转换...');
+    if (!silent) new Notice('正在转换...');
     const baseHtml = await this.renderMarkdownForPreview(markdown, sourcePath);
     const html = await this.deriveNativePreviewHtml(baseHtml);
 
@@ -1007,7 +1007,7 @@ async convertCurrent(silent = false, options = {}) {
       }
       this.refreshAiLayoutPanel();
     }
-    if (!silent) new Notice('✅ 转换成功！');
+    if (!silent) new Notice('转换成功！');
 
   } catch (error) {
     console.error('转换失败:', error);
@@ -1028,7 +1028,7 @@ async convertCurrent(silent = false, options = {}) {
 
     const noticeKey = `${sourcePath || ''}:${this.lastRenderError}`;
     if (!silent || this.lastRenderFailureNoticeKey !== noticeKey) {
-      new Notice('❌ 转换失败: ' + this.lastRenderError);
+      new Notice('转换失败: ' + this.lastRenderError);
       this.lastRenderFailureNoticeKey = noticeKey;
     }
   } finally {

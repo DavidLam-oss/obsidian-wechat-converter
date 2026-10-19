@@ -57,6 +57,7 @@ function installSetCssStylesPrototype(Ctor) {
   if (!Ctor || Ctor.prototype.setCssStyles) return;
   Object.defineProperty(Ctor.prototype, 'setCssStyles', {
     configurable: true,
+    writable: true,
     value(styles = {}) {
       Object.entries(styles || {}).forEach(([key, value]) => {
         if (value === undefined || value === null) return;

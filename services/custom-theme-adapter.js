@@ -56,33 +56,18 @@ export function compileCustomThemeToAppleConfig(token) {
 
   switch (token.headingStyle) {
     case 'serial-number':
-      h1Decoration = 'classic-title';
-      h2Decoration = 'classic-title';
-      h3Decoration = 'classic-subhead';
-      h4Decoration = 'classic-minor';
       headingWeight = 800;
       break;
     case 'badge':
-      h1Decoration = 'editorial-h1';
-      h2Decoration = 'editorial-h1';
-      h3Decoration = 'editorial-h2';
-      h4Decoration = 'editorial-h3';
       headingWeight = 700;
       break;
     case 'zen':
-      h1Decoration = 'paper-title';
-      h2Decoration = 'paper-chapter';
-      h3Decoration = 'paper-section';
-      h4Decoration = 'none';
       headingWeight = 600;
-      blockquoteStyle = 'center';
+      h3Decoration = 'bottom-line-center';
+      blockquoteStyle = 'soft';
       break;
     case 'default':
     default:
-      h1Decoration = 'none';
-      h2Decoration = 'none';
-      h3Decoration = 'bottom-line-left';
-      h4Decoration = 'none';
       headingWeight = 700;
       break;
   }

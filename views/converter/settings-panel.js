@@ -36,6 +36,7 @@ import {
 } from '../apple-style-view-shared.js';
 import { showCustomThemeModal } from './custom-theme-modal.js';
 import { buildHeadingStyleSection } from './heading-style-controls.js';
+import { buildThemeColorSection } from './theme-color-controls.js';
 import {
   compileCustomThemeToAppleConfig,
   findCustomTheme,
@@ -220,6 +221,7 @@ createSettingsPanel(container) {
             const cfg = custom ? compileCustomThemeToAppleConfig(custom) : null;
             this.theme?.update({ customThemeConfig: cfg });
             renderThemes();
+            this.refreshHeadingStyleSection?.();
             this.onThemeChange(themeId, grid);
           },
         });
@@ -264,63 +266,7 @@ createSettingsPanel(container) {
   });
 
   // === 主题色 (移到标题样式上方) ===
-  this.createSection(targetArea, '主题色', (section) => {
-    const grid = section.createEl('div', { cls: 'apple-color-grid' });
-    const themeApi = getAppleThemeApi(this.theme?.constructor);
-    const colors = readThemeOptions(themeApi, 'getColorList');
-
-    // 预设颜色
-    colors.forEach(c => {
-      const btn = grid.createEl('button', {
-        cls: `apple-btn-color ${this.plugin.settings.themeColor === c.value ? 'active' : ''}`,
-      });
-      btn.dataset.value = c.value;
-      btn.style.setProperty('--btn-color', c.color);
-      btn.addEventListener('click', () => this.onColorChange(c.value, grid));
-    });
-
-    // 自定义颜色
-    const customBtn = grid.createEl('button', {
-      cls: `apple-btn-custom-text ${this.plugin.settings.themeColor === 'custom' ? 'active' : ''}`,
-      text: '自定义',
-      attr: { 'aria-label': '自定义颜色' }
-    });
-    customBtn.dataset.value = 'custom';
-
-    // 隐藏的颜色选择器
-    const colorInput = /** @type {ObsidianInputLike} */ (grid.createEl('input', {
-      type: 'color',
-      cls: 'apple-color-picker-hidden'
-    }));
-    colorInput.value = this.plugin.settings.customColor || '#000000';
-    colorInput.setCssStyles({
-      visibility: 'hidden',
-      width: '0',
-      height: '0',
-      position: 'absolute',
-    });
-
-    // 点击按钮触发颜色选择
-    customBtn.addEventListener('click', () => {
-      colorInput.click();
-    });
-
-    // 颜色改变实时预览
-    colorInput.addEventListener('input', (e) => {
-      customBtn.style.setProperty('--btn-color', getEventTargetValue(e, this.plugin.settings.customColor));
-    });
-
-    // 颜色确认后保存
-    colorInput.addEventListener('change', async (e) => {
-      const newColor = getEventTargetValue(e, this.plugin.settings.customColor);
-      customBtn.style.setProperty('--btn-color', newColor);
-
-      // 更新设置
-      this.plugin.settings.customColor = newColor;
-      this.theme.update({ customColor: newColor });
-      await this.onColorChange('custom', grid);
-    });
-  });
+  buildThemeColorSection(this, targetArea);
 
   // === 分节标题 ===
   buildHeadingStyleSection(this, targetArea);
@@ -784,6 +730,20 @@ refreshSpacingSliders() {
     valueLabel.setText(this.formatSpacingValue(v));
   });
   this.updateSpacingSummary();
+}
+,
+
+refreshThemeColorSection() {
+  if (typeof this._refreshThemeColorSection === 'function') {
+    this._refreshThemeColorSection();
+  }
+}
+,
+
+refreshHeadingStyleSection() {
+  if (typeof this._refreshHeadingStyleSection === 'function') {
+    this._refreshHeadingStyleSection();
+  }
 }
 ,
 };

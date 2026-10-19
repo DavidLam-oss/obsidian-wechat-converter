@@ -75,7 +75,7 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的排版设计配置
    - title / text / muted：用于标题、正文与次要说明的灰阶；
    - border：分割线与卡片边框色；
    - codeBackground：代码块背景底色。
-4. headingStyle 可选："default"（经典极简条） | "serial-number"（大数字序号） | "badge"（胶囊徽标） | "zen"（留白禅意）。
+4. headingStyle 可选："default"（经典极简条） | "serial-number"（现代科技大数字序号，推荐教程/评测/清单） | "badge"（胶囊徽标，推荐商业/财经/资讯专栏） | "zen"（留白禅意，推荐文学散文/诗歌随笔）。请根据行业场景理性挑选，切勿盲目默认 zen。
 5. typography 排版建议：baseFontSize 通常在 14~17 之间，lineHeight 在 1.6~2.0 之间。
 
 【标准 JSON 输出格式示范】
@@ -110,7 +110,7 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的排版设计配置
 }
 
 【我的风格诉求（请在此处输入您的具体要求）】：
-[例如：“我想要一个偏暖色调的秋日森林系排版，主色用琥珀黄或松针绿，整体温润克制，适合户外探险与读书手记。”]
+[例如：“我想要一个适合数码测评的理性科技风，主色用深邃蓝，搭配 34px 大数字序号(serial-number)，字号 15px，注重高可读性与现代感。”]
 `;
 
 /**

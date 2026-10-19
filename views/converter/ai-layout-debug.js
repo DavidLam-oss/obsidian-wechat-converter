@@ -233,9 +233,9 @@ async copyAiLayoutDebugSnapshot() {
   try {
     const copied = await this.copyPlainTextSnapshot(payload);
     if (!copied) throw new Error('clipboard unavailable');
-    new Notice('✅ 调试快照已复制');
+    new Notice('调试快照已复制');
   } catch {
-    new Notice('❌ 调试快照复制失败，请检查剪贴板权限');
+    new Notice('调试快照复制失败，请检查剪贴板权限');
   }
 }
 ,
@@ -263,9 +263,9 @@ async copyAiLayoutPromptContext() {
   try {
     const copied = await this.copyPlainTextSnapshot(payload);
     if (!copied) throw new Error('clipboard unavailable');
-    new Notice('✅ Prompt 上下文已复制');
+    new Notice('Prompt 上下文已复制');
   } catch {
-    new Notice('❌ Prompt 上下文复制失败，请检查剪贴板权限');
+    new Notice('Prompt 上下文复制失败，请检查剪贴板权限');
   }
 }
 ,
