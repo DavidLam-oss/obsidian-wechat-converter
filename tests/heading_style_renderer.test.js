@@ -210,6 +210,19 @@ describe('Heading Style Renderer - decorateArticleHeadings', () => {
     }
   });
 
+  it('should render normal prefixes with & without double escaping', () => {
+    const output = decorateArticleHeadings('<h2>测试标题</h2>', {
+      customHeading: {
+        style: 'left-border',
+        prefix: 'Q&A 专栏 // ',
+      },
+    });
+
+    // 应该只做一次 HTML 转义成 &amp;，绝不能出现双重转义 &amp;amp;
+    expect(output).toContain('Q&amp;A 专栏 // ');
+    expect(output).not.toContain('&amp;amp;');
+  });
+
   it('should support placeholder replacements (%n, {number}, 01) in prefix', () => {
     const testCases = [
       { prefix: 'PART %n // ', expected: 'PART 01 // ' },

@@ -219,7 +219,7 @@ export function escapeHtml(str) {
 }
 
 /**
- * 清洗并审查 rawCssOverrides 中的高危字符（白名单拦截）
+ * 清洗并审查 rawCssOverrides 中的高危字符（黑名单特征拦截）
  * @param {string} rawCss
  * @returns {{ safe: boolean, error?: string, sanitized: string }}
  */
@@ -388,7 +388,7 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
     heading = {
       align: /** @type {'left' | 'center'} */ (h.align === 'center' ? 'center' : 'left'),
       style: typeof h.style === 'string' ? h.style.trim() : (headingStyle !== 'default' ? headingStyle : ''),
-      prefix: typeof h.prefix === 'string' ? escapeHtml(h.prefix.slice(0, 30)) : '',
+      prefix: typeof h.prefix === 'string' ? h.prefix.slice(0, 30) : '',
       border: typeof h.border === 'string' ? sanitizeRawCssOverrides(h.border).sanitized : undefined,
       borderLeft: typeof h.borderLeft === 'string' ? sanitizeRawCssOverrides(h.borderLeft).sanitized : undefined,
       borderBottom: typeof h.borderBottom === 'string' ? sanitizeRawCssOverrides(h.borderBottom).sanitized : undefined,

@@ -186,18 +186,20 @@ describe('theme-token-validator', () => {
       expect(normalized.nestedCustomMeta).toEqual({ version: '2.0' });
     });
 
-    it('对 heading.prefix 进行 HTML 转义，防止标签注入', () => {
+    it('对 heading.prefix 进行 30 字符长度截断并保留原文字符（转义由渲染边界负责）', () => {
       const raw = {
-        name: '注入防护测试',
+        name: '字符保留测试',
         colors: { accent: '#2563EB' },
         heading: {
           style: 'left-border',
-          prefix: '<img src=x onerror=alert(1)>',
+          prefix: 'Q&A 专栏 // 超长内容截断 1234567890 额外文字',
         },
       };
       const normalized = normalizeCustomThemeToken(raw);
-      expect(normalized.heading.prefix).not.toContain('<img');
-      expect(normalized.heading.prefix).toContain('&lt;img');
+      expect(normalized.heading.prefix.length).toBeLessThanOrEqual(30);
+      expect(normalized.heading.prefix).toContain('Q&A 专栏');
+      // 不在此处进行 HTML 转义，避免与 renderer 产生双重转义 (&amp;amp;)
+      expect(normalized.heading.prefix).not.toContain('&amp;');
     });
   });
 
