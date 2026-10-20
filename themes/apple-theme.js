@@ -52,6 +52,7 @@
  *   textColor: string,
  *   headingColor?: string,
  *   mutedTextColor?: string,
+ *   borderColor?: string,
  *   sectionBg?: string,
  *   sectionBgStyle?: string,
  *   sectionBgSize?: string,
@@ -71,6 +72,7 @@
  *   figureBorderColor?: string,
  *   paragraphTextIndent?: string,
  *   strongBg?: boolean,
+ *   strongStyle?: string,
  * }} AppleThemeConfig
  * @typedef {{
  *   theme?: AppleThemeName | string,
@@ -380,6 +382,12 @@ class AppleTheme {
             : `${color}99`;
           return `font-family: ${AppleTheme.FONTS.serif}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #5f574c; background: ${paperBg}; margin: 22px 0 22px 8px; padding: 16px 18px; border-left: 2px solid ${paperBorder}; border-radius: ${r.sm}px; ${this.getBodyTextAlign()};`;
         }
+        if (config.blockquoteStyle === 'minimal') {
+          const minimalBorder = quoteCalloutStyleMode === 'neutral'
+            ? AppleTheme.QUOTE_NEUTRAL_BORDER
+            : (config.borderColor || `${color}55`);
+          return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${config.blockquoteTextColor || '#595959'}; background: transparent; margin: ${s.md}px 0 ${s.md}px 8px; padding: 6px 14px; border-left: 2px solid ${minimalBorder};`;
+        }
         if (config.blockquoteStyle === 'soft') {
           const softBg = quoteCalloutStyleMode === 'neutral'
             ? AppleTheme.QUOTE_CALLOUT_NEUTRAL_BG
@@ -464,9 +472,13 @@ class AppleTheme {
         return `border: 0; border-top: 1px solid rgba(0,0,0,0.08); margin: 40px 0;`;
 
       case 'strong':
-        return config.strongBg
-          ? `font-weight: bold; color: ${color}; background: ${color}18; padding: 0 3px; border-radius: 3px;`
-          : `font-weight: bold; color: ${color};`;
+        if (config.strongStyle === 'neutral') {
+          return `font-weight: bold; color: ${headingColor || textColor || '#222222'};`;
+        }
+        if (config.strongStyle === 'highlight' || config.strongStyle === 'marker' || config.strongBg) {
+          return `font-weight: bold; color: ${color}; background: ${color}18; padding: 0 3px; border-radius: 3px;`;
+        }
+        return `font-weight: bold; color: ${color};`;
       case 'em':
         return `font-style: italic;`;
       case 'del':

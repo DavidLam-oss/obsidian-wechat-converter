@@ -137,6 +137,33 @@ describe('theme-token-validator', () => {
       const res3 = validateCustomThemeToken(dangerousHeadingStyle);
       expect(res3.valid).toBe(false);
       expect(res3.errors.some((e) => e.includes('heading.customStyle'))).toBe(true);
+
+      const invalidBlockquote = {
+        name: '引用测试',
+        colors: { accent: '#112233' },
+        blockquote: { style: 'non-existent-style' },
+      };
+      const res4 = validateCustomThemeToken(invalidBlockquote);
+      expect(res4.valid).toBe(false);
+      expect(res4.errors.some((e) => e.includes('blockquoteStyle'))).toBe(true);
+
+      const invalidStrong = {
+        name: '加粗测试',
+        colors: { accent: '#112233' },
+        strongStyle: 'not-supported',
+      };
+      const res5 = validateCustomThemeToken(invalidStrong);
+      expect(res5.valid).toBe(false);
+      expect(res5.errors.some((e) => e.includes('strongStyle'))).toBe(true);
+
+      const invalidH3 = {
+        name: 'H3测试',
+        colors: { accent: '#112233' },
+        h3Style: 'not-supported-h3',
+      };
+      const res6 = validateCustomThemeToken(invalidH3);
+      expect(res6.valid).toBe(false);
+      expect(res6.errors.some((e) => e.includes('h3Style'))).toBe(true);
     });
   });
 
@@ -200,6 +227,27 @@ describe('theme-token-validator', () => {
       expect(normalized.heading.prefix).toContain('Q&A 专栏');
       // 不在此处进行 HTML 转义，避免与 renderer 产生双重转义 (&amp;amp;)
       expect(normalized.heading.prefix).not.toContain('&amp;');
+    });
+
+    it('正确解析并归一化 blockquote、strongStyle、h3Style 与 canvas 字段', () => {
+      const raw = {
+        name: '全面拓展',
+        colors: {
+          accent: '#007AFF',
+          canvas: '#FAF8F5',
+        },
+        blockquote: { style: 'center' },
+        typography: { strongStyle: 'highlight' },
+        heading: {
+          style: 'left-border',
+          h3Style: 'classic',
+        },
+      };
+      const normalized = normalizeCustomThemeToken(raw);
+      expect(normalized.colors.canvas).toBe('#FAF8F5');
+      expect(normalized.blockquote?.style).toBe('center');
+      expect(normalized.typography?.strongStyle).toBe('highlight');
+      expect(normalized.heading?.h3Style).toBe('classic');
     });
   });
 

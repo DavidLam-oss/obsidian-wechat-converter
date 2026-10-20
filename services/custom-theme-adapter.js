@@ -72,6 +72,33 @@ export function compileCustomThemeToAppleConfig(token) {
       break;
   }
 
+  // 1. 自定义 H3 风格覆盖（注意命名差异：Token 侧只认 'classic'，引擎侧对应装饰值叫 'classic-subhead'，勿把引擎值当 Token 值反向比对）
+  const customH3 = token.heading?.h3Style || token.h3Style;
+  if (customH3 === 'left-border') {
+    h3Decoration = 'left-border';
+  } else if (customH3 === 'classic') {
+    h3Decoration = 'classic-subhead';
+  } else if (customH3 === 'simple') {
+    h3Decoration = 'simple';
+  } else if (customH3 === 'bottom-line') {
+    h3Decoration = 'bottom-line-left';
+  }
+
+  // 2. 引用块风格覆盖
+  const customBlockquote = token.blockquote?.style || token.blockquoteStyle;
+  if (customBlockquote === 'center') {
+    blockquoteStyle = 'center';
+  } else if (customBlockquote === 'paper') {
+    blockquoteStyle = 'paper';
+  } else if (customBlockquote === 'minimal') {
+    blockquoteStyle = 'minimal';
+  } else if (customBlockquote === 'soft') {
+    blockquoteStyle = 'soft';
+  }
+
+  // 3. 加粗强调风格
+  const strongStyle = typography.strongStyle || token.strongStyle || 'color';
+
   return {
     name: token.name || '自定义主题',
     primaryColor: colors.accent,
@@ -79,6 +106,7 @@ export function compileCustomThemeToAppleConfig(token) {
     titleColor: colors.title || '#1E293B',
     borderColor: colors.border || '#E2E8F0',
     codeBackground: colors.codeBackground || '#F1F5F9',
+    sectionBg: colors.canvas || '#ffffff',
     headingStyle: token.headingStyle || token.heading?.style || 'default',
     heading: token.heading,
     fontFamily: typography.fontPreset || 'sans-serif',
@@ -101,6 +129,8 @@ export function compileCustomThemeToAppleConfig(token) {
     blockquoteBg: colors.light || '#F8FAFC',
     blockquoteStyle,
     blockquoteTextColor: colors.muted || '#64748B',
+    strongStyle,
+    strongBg: strongStyle === 'highlight',
     tableHeaderBg: colors.light || '#F8FAFC',
     tableBorderColor: colors.border || '#E2E8F0',
     tableCellPadding: 10,

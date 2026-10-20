@@ -78,6 +78,48 @@ describe('custom-theme-adapter', () => {
       expect(config.primaryColor).toBe('#123456');
       expect(config.lightColor).toBeDefined();
       expect(config.headingStyle).toBe('default');
+      expect(config.blockquoteStyle).toBe('soft');
+      expect(config.h3Decoration).toBe('bottom-line-left');
+      expect(config.strongStyle).toBe('color');
+      expect(config.sectionBg).toBe('#ffffff');
+    });
+
+    it('正确映射自定义 blockquoteStyle、h3Style、strongStyle 与 canvas 背景色', () => {
+      const advancedToken = {
+        name: '复古人文',
+        colors: {
+          accent: '#8C6239',
+          canvas: '#FAF8F5',
+        },
+        blockquote: {
+          style: 'center',
+        },
+        heading: {
+          h3Style: 'left-border',
+        },
+        typography: {
+          strongStyle: 'highlight',
+        },
+      };
+      const config = compileCustomThemeToAppleConfig(advancedToken);
+      expect(config.sectionBg).toBe('#FAF8F5');
+      expect(config.blockquoteStyle).toBe('center');
+      expect(config.h3Decoration).toBe('left-border');
+      expect(config.strongStyle).toBe('highlight');
+      expect(config.strongBg).toBe(true);
+
+      const minimalStyleToken = {
+        name: '极简冷色',
+        colors: { accent: '#2563EB' },
+        blockquoteStyle: 'minimal',
+        h3Style: 'simple',
+        strongStyle: 'neutral',
+      };
+      const config2 = compileCustomThemeToAppleConfig(minimalStyleToken);
+      expect(config2.blockquoteStyle).toBe('minimal');
+      expect(config2.h3Decoration).toBe('simple');
+      expect(config2.strongStyle).toBe('neutral');
+      expect(config2.strongBg).toBe(false);
     });
   });
 

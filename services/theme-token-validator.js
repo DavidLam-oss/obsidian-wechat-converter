@@ -2,7 +2,7 @@
 ## 核心功能
 
 自定义排版主题 Token（Theme Token）Schema 定义、Hex 色值与字段合法性校验器。
-集成高阶 rawCssOverrides 的安全审查白名单过滤，以及开箱即用的 AI 提示词模板。
+集成高阶 rawCssOverrides 的安全审查（危险模式**黑名单拦截**，非白名单枚举），以及开箱即用的 AI 提示词模板。
 
 ## 输入
 
@@ -18,6 +18,15 @@
 ## 定位
 
 位于 services/，纯逻辑与契约层，无 DOM 与 Obsidian API 依赖，可在 Node 环境下独立单测。
+
+## 版本与迁移策略
+
+`schemaVersion` 当前固定为 1，字段已多轮增量扩展（heading / h3Style / blockquote / blockquoteStyle / strongStyle / colors.canvas …）。
+- 新增字段一律 optional，旧 Token 缺字段时由 adapter / 引擎给默认值，**不升版本、不改写用户已存数据**；
+- 未知外部字段在 normalize 时按 `extraFields` 原样保留（无损导入导出），已知字段先从 extraFields 删除再写回校验后的值，
+  因此不会出现「未校验原值经展开符覆盖已校验值」；
+- 仅当发生**语义不兼容变更**（字段重命名、枚举收窄致旧值失效、单位口径变化）时才升 `schemaVersion`，
+  届时必须同时补 `migrateTokenVxToVy()` 与旧数据迁移测试，并同步 AI 提示词模板里的版本号。
 */
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- reason: Theme token validation and normalization process untrusted and heterogeneous JSON payloads */
@@ -33,6 +42,7 @@
  *   background?: string,
  *   borderRadius?: string,
  *   customStyle?: string,
+ *   h3Style?: 'bottom-line' | 'left-border' | 'classic' | 'simple',
  * }} HeadingDecorationToken
  *
  * @typedef {{
@@ -43,8 +53,14 @@
  *   author?: string,
  *   headingStyle?: string,
  *   heading?: HeadingDecorationToken,
+ *   h3Style?: 'bottom-line' | 'left-border' | 'classic' | 'simple',
+ *   blockquoteStyle?: 'soft' | 'center' | 'paper' | 'minimal',
+ *   blockquote?: {
+ *     style?: 'soft' | 'center' | 'paper' | 'minimal',
+ *   },
  *   colors: {
  *     accent: string,
+ *     canvas?: string,
  *     light?: string,
  *     highlight?: string,
  *     title?: string,
@@ -59,7 +75,9 @@
  *     lineHeight?: number,
  *     paragraphGap?: number,
  *     letterSpacing?: number,
+ *     strongStyle?: 'color' | 'neutral' | 'highlight',
  *   },
+ *   strongStyle?: 'color' | 'neutral' | 'highlight',
  *   footer?: {
  *     showEngagementCard?: boolean,
  *     ctaText?: string,
@@ -82,6 +100,9 @@ export const VALID_HEADING_STYLES = /** @type {const} */ ([
   'double-line',
 ]);
 export const VALID_FONT_PRESETS = /** @type {const} */ (['sans-serif', 'serif', 'monospace']);
+export const VALID_BLOCKQUOTE_STYLES = /** @type {const} */ (['soft', 'center', 'paper', 'minimal']);
+export const VALID_STRONG_STYLES = /** @type {const} */ (['color', 'neutral', 'highlight']);
+export const VALID_H3_STYLES = /** @type {const} */ (['bottom-line', 'left-border', 'classic', 'simple']);
 
 /**
  * 开箱即用的 AI 主题设计提示词模板
@@ -105,8 +126,9 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的公众号视觉排
 【严格输出规范】
 1. 只输出合法标准的 JSON 字符串，严禁包含任何 Markdown 代码围栏（例如 \`\`\`json）、前后缀解说或注释。
 2. 颜色值必须严格符合 6 位十六进制格式（#RRGGBB）。
-3. 遵循克制配色五要素：
+3. 遵循克制配色要素：
    - accent（主色）：醒目品牌色，用于重点引导、徽标、分节与强调；
+   - canvas（可选整篇底色）：如 "#FAF8F5"（护眼暖白）、"#FDFBF7"（复古纸张米黄）或纯白 "#FFFFFF"；
    - light（浅底色）：主色极浅淡化版本（通常为 90%~95% 浅度混白），用于引用块与卡片底色；
    - highlight（点睛色）：辅助提亮点缀色，用于重点短语标注；
    - title / text / muted：用于标题、正文与次要说明的灰阶；
@@ -121,7 +143,12 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的公众号视觉排
    - "background": 背景色或线性渐变（如 "rgba(37, 99, 235, 0.08)"）
    - "borderRadius": 圆角（如 "4px"）
    - "customStyle": 可直接给出针对二级标题的微信内联 CSS 声明（例如 "border-left: 4px solid #2563EB; padding: 6px 12px; background: #EFF6FF; border-radius: 0 4px 4px 0;"）
-5. typography 排版建议：baseFontSize 通常在 14~17 之间，lineHeight 在 1.6~2.0 之间。
+   - "h3Style": 三级标题联动风格，可选 "bottom-line"（默认短底线） | "left-border"（左侧竖条） | "classic"（浅底色小条） | "simple"（纯加粗小标）
+5. 【引用块与正文强调】：
+   - blockquote.style: 可选 "soft"（默认：左侧色条 + 浅底） | "center"（名言金句：居中 + 上下细线） | "paper"（纸张复古：细边条无背景） | "minimal"（极简：浅灰细边无底色）
+   - typography.strongStyle: 可选 "color"（默认：主题色加粗） | "neutral"（传统纯深黑加粗） | "highlight"（加粗且带淡色荧光笔底衬）
+   - 注意：代码块（code blocks）请保持默认黑色高亮，无需自定义。
+6. typography 排版建议：baseFontSize 通常在 14~17 之间，lineHeight 在 1.6~2.0 之间。
 
 【标准 JSON 输出格式示范】
 {
@@ -137,10 +164,15 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的公众号视觉排
     "borderLeft": "4px solid #2563EB",
     "background": "rgba(37, 99, 235, 0.08)",
     "borderRadius": "0 4px 4px 0",
-    "customStyle": "padding: 6px 12px; margin: 32px 0 16px;"
+    "customStyle": "padding: 6px 12px; margin: 32px 0 16px;",
+    "h3Style": "bottom-line"
+  },
+  "blockquote": {
+    "style": "soft"
   },
   "colors": {
     "accent": "#2563EB",
+    "canvas": "#FFFFFF",
     "light": "#EFF6FF",
     "highlight": "#F59E0B",
     "title": "#1E293B",
@@ -154,7 +186,8 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的公众号视觉排
     "baseFontSize": 15,
     "lineHeight": 1.75,
     "paragraphGap": 16,
-    "letterSpacing": 0
+    "letterSpacing": 0,
+    "strongStyle": "color"
   },
   "footer": {
     "showEngagementCard": false,
@@ -294,7 +327,7 @@ export function validateCustomThemeToken(input) {
       errors.push(`主色 (colors.accent) 必须是合法的 16 进制颜色（如 #2563EB），当前值为: "${raw.colors.accent}"`);
     }
 
-    const optionalColorKeys = ['light', 'highlight', 'title', 'text', 'muted', 'border', 'codeBackground'];
+    const optionalColorKeys = ['canvas', 'light', 'highlight', 'title', 'text', 'muted', 'border', 'codeBackground'];
     for (const key of optionalColorKeys) {
       if (raw.colors[key] !== undefined && raw.colors[key] !== null && !isValidHexColor(raw.colors[key])) {
         errors.push(`颜色 colors.${key} 格式无效，必须是 16 进制颜色（如 #FFFFFF），当前值为: "${raw.colors[key]}"`);
@@ -307,6 +340,24 @@ export function validateCustomThemeToken(input) {
     if (raw.typography.fontPreset && !VALID_FONT_PRESETS.includes(raw.typography.fontPreset)) {
       errors.push(`字体预设 (typography.fontPreset) 仅支持 ${VALID_FONT_PRESETS.join(' / ')}`);
     }
+  }
+
+  // 加粗强调风格校验
+  const strongCandidate = raw.typography?.strongStyle || raw.strongStyle;
+  if (strongCandidate && !VALID_STRONG_STYLES.includes(strongCandidate)) {
+    errors.push(`加粗强调风格 (strongStyle) 仅支持 ${VALID_STRONG_STYLES.join(' / ')}`);
+  }
+
+  // 引用块风格校验
+  const blockquoteCandidate = raw.blockquote?.style || raw.blockquoteStyle;
+  if (blockquoteCandidate && !VALID_BLOCKQUOTE_STYLES.includes(blockquoteCandidate)) {
+    errors.push(`引用块风格 (blockquoteStyle) 仅支持 ${VALID_BLOCKQUOTE_STYLES.join(' / ')}`);
+  }
+
+  // 三级标题风格校验
+  const h3Candidate = raw.heading?.h3Style || raw.h3Style;
+  if (h3Candidate && !VALID_H3_STYLES.includes(h3Candidate)) {
+    errors.push(`三级标题风格 (h3Style) 仅支持 ${VALID_H3_STYLES.join(' / ')}`);
   }
 
   // 4. headingStyle 与 heading 装饰配置校验
@@ -382,6 +433,16 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
     ? raw.headingStyle.trim()
     : 'default';
 
+  const bCandidate = raw.blockquote?.style || raw.blockquoteStyle;
+  const blockquoteStyle = VALID_BLOCKQUOTE_STYLES.includes(bCandidate) ? bCandidate : undefined;
+  const blockquote = blockquoteStyle ? { style: blockquoteStyle } : undefined;
+
+  const sCandidate = raw.typography?.strongStyle || raw.strongStyle;
+  const strongStyle = VALID_STRONG_STYLES.includes(sCandidate) ? sCandidate : undefined;
+
+  const h3Candidate = raw.heading?.h3Style || raw.h3Style;
+  const h3Style = VALID_H3_STYLES.includes(h3Candidate) ? h3Candidate : undefined;
+
   let heading = undefined;
   if (raw.heading && typeof raw.heading === 'object' && !Array.isArray(raw.heading)) {
     const h = raw.heading;
@@ -395,11 +456,14 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
       background: typeof h.background === 'string' ? sanitizeRawCssOverrides(h.background).sanitized : undefined,
       borderRadius: typeof h.borderRadius === 'string' ? sanitizeRawCssOverrides(h.borderRadius).sanitized : undefined,
       customStyle: typeof h.customStyle === 'string' ? sanitizeRawCssOverrides(h.customStyle).sanitized : undefined,
+      ...(h3Style ? { h3Style } : {}),
     };
   }
 
+  const canvas = isValidHexColor(raw.colors?.canvas) ? raw.colors.canvas.trim() : undefined;
   const colors = {
     accent,
+    ...(canvas ? { canvas } : {}),
     light: isValidHexColor(raw.colors?.light) ? raw.colors.light.trim() : tintColorWithWhite(accent, 0.94),
     highlight: isValidHexColor(raw.colors?.highlight) ? raw.colors.highlight.trim() : accent,
     title: isValidHexColor(raw.colors?.title) ? raw.colors.title.trim() : '#1E293B',
@@ -424,6 +488,7 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
     letterSpacing: typeof typo.letterSpacing === 'number' && Number.isFinite(typo.letterSpacing)
       ? Math.min(2, Math.max(0, Number(typo.letterSpacing.toFixed(1))))
       : 0,
+    ...(strongStyle ? { strongStyle } : {}),
   };
 
   const footer = {
@@ -442,6 +507,10 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
   delete extraFields.author;
   delete extraFields.headingStyle;
   delete extraFields.heading;
+  delete extraFields.h3Style;
+  delete extraFields.blockquote;
+  delete extraFields.blockquoteStyle;
+  delete extraFields.strongStyle;
   delete extraFields.colors;
   delete extraFields.typography;
   delete extraFields.footer;
@@ -456,6 +525,9 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
     author,
     headingStyle,
     heading,
+    ...(blockquote ? { blockquote } : {}),
+    ...(strongStyle ? { strongStyle } : {}),
+    ...(h3Style ? { h3Style } : {}),
     colors,
     typography,
     footer,

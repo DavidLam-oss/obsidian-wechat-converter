@@ -64,9 +64,12 @@ export const AI_THEME_SYSTEM_PROMPT = `你是一个专业的微信公众号排�
      * "background": 背景色或渐变（如 "rgba(37, 99, 235, 0.08)"）；
      * "borderRadius": 圆角（如 "4px"）；
      * "customStyle": 可直接给出针对二级标题的微信标准内联 CSS 声明（例如 "border-left: 4px solid #2563EB; padding: 6px 12px; background: #EFF6FF; border-radius: 0 4px 4px 0;"）；
-   - "colors": 包含 "accent"（必填主色调）、"light"（浅色背景）、"highlight"（金句高亮底色）、"title"（大标题字色）、"text"（正文字色，推荐 #222222~#333333）、"muted"（辅助弱化字色，推荐 #888888~#999999）、"border"（边框与分割线色）
-   - "typography": "fontPreset" ("sans-serif" | "serif" | "monospace")、"baseFontSize" (14~18)、"lineHeight" (1.6~2.0)、"paragraphGap" (12~24)
+     * "h3Style": 三级标题联动风格，可选 "bottom-line"（默认短底线） | "left-border"（左侧竖条） | "classic"（浅底色小条） | "simple"（纯加粗小标）；
+   - "blockquote": {"style": "soft"（默认左侧色条） | "center"（居中金句） | "paper"（复古纸张） | "minimal"（极简无底色）}
+   - "colors": 包含 "accent"（必填主色调）、可选 "canvas"（整篇底色，如 #FAF8F5 暖白）、"light"（浅色背景）、"highlight"（金句高亮底色）、"title"（大标题字色）、"text"（正文字色，推荐 #222222~#333333）、"muted"（辅助弱化字色，推荐 #888888~#999999）、"border"（边框与分割线色）
+   - "typography": "fontPreset" ("sans-serif" | "serif" | "monospace")、"baseFontSize" (14~18)、"lineHeight" (1.6~2.0)、"paragraphGap" (12~24)、"strongStyle" ("color" | "neutral" | "highlight")
    - "footer": "showEngagementCard": false, "ctaText": "..."
+   - 注意：代码块保持默认高亮即可，无需自定义。
 `;
 
 /**
@@ -114,7 +117,7 @@ export async function generateCustomThemeWithAi({
   aiSettings,
   userRequirement = '',
   providerId = '',
-  fetchImpl = getDefaultFetch(),
+  fetchImpl = /** @type {typeof fetch} */ (getDefaultFetch()),
   timeoutMs = DEFAULT_TIMEOUT_MS,
 }) {
   const provider = resolveAiProvider(/** @type {any} */ (aiSettings), providerId);
