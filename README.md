@@ -6,7 +6,7 @@
 
 一款专为 Obsidian 打造的多合一排版与全平台发布增强插件。不仅解决了 Obsidian 到微信公众号文章与飞书云文档排版的“最后一公里”，更重磅推出了**多页图文卡片导出（Card Mode）**，并支持通过浏览器插件一键分发到知乎、掘金、小红书、CSDN 等平台。让您专注于内容创作，告别繁琐的格式调试与多端搬运。
 
-![Version](https://img.shields.io/badge/version-2.11.4-blue)
+![Version](https://img.shields.io/badge/version-2.12.0-blue)
 ![Obsidian](https://img.shields.io/badge/Obsidian-1.4.0+-purple)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Chrome Companion](https://img.shields.io/badge/Chrome%20%E5%8D%8F%E5%90%8C%E6%89%A9%E5%B1%95-Obsidian%20%E5%8F%91%E5%B8%83%E5%8A%A9%E6%89%8B%E2%80%A2%E5%B7%B2%E4%B8%8A%E7%BA%BF-7c3aed)
