@@ -39,14 +39,19 @@ import {
   clearBridgeTimeout,
 } from '../services/wechatsync-bridge.js';
 
-const TEST_PORT_START = 45000;
+const TEST_PORT_START = 20000;
 let nextPortCandidate = TEST_PORT_START;
 
-function listenOnPort(port) {
+// 端口段必须避开操作系统的临时端口段（Linux 默认 32768–60999，macOS / Windows
+// 默认 49152–65535）：落在里面时，跑测试的机器上任何一条出站连接都可能临时占住
+// 某个端口。探针只看得见自己绑的那个地址 —— 若探完判「空闲」、真正 bind 时已经
+// 被别的连接占了，CI 就会偶发 EADDRINUSE。
+
+function listenOnPort(port, host = '127.0.0.1') {
   return new Promise((resolve) => {
     const server = net.createServer();
     server.once('error', () => resolve(null));
-    server.listen({ port, host: '127.0.0.1' }, () => resolve(server));
+    server.listen({ port, host }, () => resolve(server));
   });
 }
 
@@ -54,21 +59,23 @@ function closeServer(server) {
   return new Promise((resolve) => server.close(resolve));
 }
 
-async function canUseBridgePortPair(port) {
-  const wsServer = await listenOnPort(port);
+// 探针必须探「待会儿真正要绑的那个地址」：默认绑 127.0.0.1，allowRemote 时绑
+// 0.0.0.0。只探回环时其他网卡上的占用看不见，绑定范围一放大就撞车。
+async function canUseBridgePortPair(port, host = '127.0.0.1') {
+  const wsServer = await listenOnPort(port, host);
   if (!wsServer) return false;
-  const httpServer = await listenOnPort(port + 1);
+  const httpServer = await listenOnPort(port + 1, host);
   await closeServer(wsServer);
   if (!httpServer) return false;
   await closeServer(httpServer);
   return true;
 }
 
-async function getFreePort() {
+async function getFreePort(host = '127.0.0.1') {
   for (let attempt = 0; attempt < 100; attempt += 1) {
     const port = nextPortCandidate;
     nextPortCandidate += 2;
-    if (await canUseBridgePortPair(port)) return port;
+    if (await canUseBridgePortPair(port, host)) return port;
   }
   throw new Error('Unable to find available bridge test port pair');
 }
