@@ -277,6 +277,7 @@ export default [
       "views/converter/core.js",
       "views/converter/custom-theme-modal.js",
       "views/converter/heading-style-controls.js",
+      "views/converter/pane-min-width.js",
       "views/converter/panel-shell.js",
       "views/converter/phone-frame.js",
       "views/converter/settings-panel.js",

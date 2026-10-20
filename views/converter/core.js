@@ -54,6 +54,7 @@ import { compileCustomCss } from '../../services/custom-css-compiler.js';
 import { resolveCustomCssSource } from '../../services/custom-css-source.js';
 import { decorateArticleWithEngagementCard } from '../../services/engagement-card.js';
 import { mountPhoneFrame } from './phone-frame.js';
+import { lockPaneMinWidth, unlockPaneMinWidth } from './pane-min-width.js';
 
 /**
  * @param {AppleStyleViewContract} view
@@ -87,6 +88,10 @@ async onOpen() {
   if (isMobileClient(this.app)) {
     container.addClass('apple-converter-mobile');
   }
+
+  // 侧栏宽度闸门：用户把面板拖得比预览所需更窄时顶住（规则在 styles/base.css）。
+  // 挂在 onOpen 而不是 onLayoutReady：越早生效，首帧越不会出现「先被压扁再弹回」。
+  lockPaneMinWidth(this);
 
   // 先创建预览壳和占位内容。设置控件属于辅助能力，不能因为某个
   // 运行时 API 或 Obsidian 窗口兼容问题而阻断正文预览的挂载。
@@ -1135,6 +1140,9 @@ async onClose() {
   }
   this.stickerModalGeneration = (this.stickerModalGeneration || 0) + 1;
   this.sessionStickerSourcePath = '';
+
+  // 撤锁要放在最后：同侧栏若还有本插件的其它标签页，它会自己保住这条下限。
+  unlockPaneMinWidth(this);
 
   console.debug('🍎 发布助手面板已关闭');
 },

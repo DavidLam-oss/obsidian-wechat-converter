@@ -117,3 +117,14 @@
   display: none;
 }
 
+/* ========================================
+   侧栏宽度下限（views/converter/pane-min-width.js 负责加类）
+   ======================================== */
+/* 用户拖的是侧栏，所以闸门必须下在侧栏上：这里用 min-width 盖住 Obsidian
+   写进来的行内 width（拖窄时宽度被顶住不动），内容层不再需要自己抗裁切。
+   实测：面板 396px 时机身刚好放得下，380px 起出现横向滚动 → 取 400。
+   窄窗口兜底：给自己留 360px 编辑区的余量，避免小窗下侧栏把正文挤没。 */
+.workspace-split.owc-pane-min-width:not(.is-sidedock-collapsed) {
+  min-width: min(var(--owc-pane-min-width, 400px), calc(100vw - 360px));
+}
+
