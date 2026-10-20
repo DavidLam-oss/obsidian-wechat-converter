@@ -203,7 +203,7 @@ export function resolveVariableValue(key, variables, context = {}) {
 /**
  * 模板变量正则：匹配 {{ key }}
  */
-const VARIABLE_REGEX = /\{\{\s*([a-zA-Z0-9_\u4e00-\u9fa5\-]+)\s*\}\}/g;
+const VARIABLE_REGEX = /\{\{\s*([a-zA-Z0-9_\u4e00-\u9fa5-]+)\s*\}\}/g;
 
 /**
  * 扫描 Markdown 非代码区域中所有未被解析的变量名

@@ -105,7 +105,9 @@ export default [
       "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
       "no-empty": "warn",
       "no-prototype-builtins": "off",
-      "no-useless-escape": "off",
+      // 社区扫描用 ESLint 内置规则默认值跑一遍，会把这些报成 "Unnecessary escape character"。
+      // 本地关掉它等于把问题留到提交后才暴露（Round 20 就是这么漏的），所以三处规则块统一开启。
+      "no-useless-escape": "error",
       "no-constant-condition": "off",
       "no-cond-assign": "off",
       "no-redeclare": "off",
@@ -325,7 +327,7 @@ export default [
       "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
       "no-empty": "warn",
       "no-prototype-builtins": "off",
-      "no-useless-escape": "off",
+      "no-useless-escape": "error",
       "no-constant-condition": "off",
       "no-cond-assign": "off",
       "no-extra-semi": "off",
@@ -362,7 +364,7 @@ export default [
       "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
       "no-empty": "warn",
       "no-prototype-builtins": "off",
-      "no-useless-escape": "off",
+      "no-useless-escape": "error",
       "no-constant-condition": "off",
       "no-cond-assign": "off",
       "no-extra-semi": "off",

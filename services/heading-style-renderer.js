@@ -152,7 +152,7 @@ export function resolvePrimaryColor(options = {}) {
  * @returns {string}
  */
 function stripStyleAttr(rawAttrs) {
-  return String(rawAttrs || '').replace(/\s*style\s*=\s*(['\"]).*?\1/gi, '').trim();
+  return String(rawAttrs || '').replace(/\s*style\s*=\s*(['"]).*?\1/gi, '').trim();
 }
 
 /**
