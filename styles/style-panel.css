@@ -211,6 +211,13 @@
 }
 
 /* 文章模式引入中间 wrapper 后，仅在设置可见时恢复原纵向节奏。 */
+.apple-settings-area > .hidden,
+.apple-settings-area > [hidden],
+.apple-settings-article-wrapper.hidden,
+.apple-settings-article-wrapper[hidden] {
+  display: none;
+}
+
 .apple-settings-article-wrapper:not(.hidden) {
   display: flex;
   flex-direction: column;
@@ -319,6 +326,13 @@
   border-color: rgba(0, 113, 227, 0.3);
 }
 
+.apple-btn-heading-row .apple-btn-size {
+  flex: 1;
+  text-align: center;
+  padding: 6px 4px;
+  white-space: nowrap;
+}
+
 /* === 颜色选择器 === */
 .apple-color-grid {
   display: flex;
@@ -388,6 +402,43 @@
 .apple-btn-color.active {
   border-color: var(--btn-color);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom theme color locked indicator */
+.apple-custom-theme-color-locked {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--background-secondary, rgba(0, 0, 0, 0.03));
+  border: 1px dashed var(--apple-border, rgba(0, 0, 0, 0.15));
+  border-radius: var(--apple-radius-sm, 8px);
+}
+
+.apple-custom-theme-color-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.apple-custom-theme-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.apple-custom-theme-color-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--apple-primary, var(--text-normal));
+}
+
+.apple-custom-theme-color-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 /* === Settings Collapsible === */

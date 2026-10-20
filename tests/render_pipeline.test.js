@@ -97,4 +97,98 @@ describe('Render Pipeline (Native-only)', () => {
     const html = await pipelines.nativePipeline.renderForPreview('x');
     expect(html).toBe('<section>native</section>');
   });
+
+  it('native pipeline should interpolate frontmatter variables and decorate headings', async () => {
+    const nativeRenderer = vi.fn().mockImplementation((md) => `<section><h2>${md}</h2></section>`);
+    const native = new NativeRenderPipeline({ nativeRenderer });
+
+    const inputMd = `---
+column: 深度技术
+---
+欢迎来到{{column}}`;
+
+    const html = await native.renderForPreview(inputMd, {
+      headingStyle: 'serial-number',
+      themeColor: 'green',
+    });
+
+    expect(nativeRenderer).toHaveBeenCalledWith(expect.stringContaining('欢迎来到深度技术'), expect.any(Object));
+    expect(html).toContain('font-size: 34px');
+    expect(html).toContain('01');
+    expect(html).toContain('深度技术');
+  });
+
+  it('native pipeline should follow custom theme headingStyle when headingStyle is default', async () => {
+    const nativeRenderer = vi.fn().mockImplementation(() => `<h2>章节一</h2>`);
+    const native = new NativeRenderPipeline({ nativeRenderer });
+
+    const settings = {
+      theme: 'custom-tech',
+      headingStyle: 'default',
+      customThemes: [
+        {
+          id: 'custom-tech',
+          name: '科技风',
+          headingStyle: 'badge',
+          colors: { accent: '#2563EB' },
+        },
+      ],
+    };
+
+    const html = await native.renderForPreview('test', { settings });
+    expect(html).toContain('background-color: #2563EB');
+    expect(html).toContain('01');
+    expect(html).toContain('章节一');
+  });
+
+  it('native pipeline should respect explicit user headingStyle override over custom theme', async () => {
+    const nativeRenderer = vi.fn().mockImplementation(() => `<h2>章节一</h2>`);
+    const native = new NativeRenderPipeline({ nativeRenderer });
+
+    const settings = {
+      theme: 'custom-tech',
+      headingStyle: 'zen',
+      customThemes: [
+        {
+          id: 'custom-tech',
+          name: '科技风',
+          headingStyle: 'badge',
+          colors: { accent: '#2563EB' },
+        },
+      ],
+    };
+
+    const html = await native.renderForPreview('test', { settings });
+    expect(html).toContain('PART 01');
+    expect(html).toContain('章节一');
+  });
+
+  it('native pipeline should apply custom theme heading decoration object when headingStyle is default', async () => {
+    const nativeRenderer = vi.fn().mockImplementation(() => `<h2>核心架构</h2>`);
+    const native = new NativeRenderPipeline({ nativeRenderer });
+
+    const settings = {
+      theme: 'custom-forest',
+      headingStyle: 'default',
+      customThemes: [
+        {
+          id: 'custom-forest',
+          name: '森林风',
+          heading: {
+            style: 'left-border',
+            borderLeft: '4px solid #059669',
+            background: '#ECFDF5',
+            prefix: '01. ',
+          },
+          colors: { accent: '#059669' },
+        },
+      ],
+    };
+
+    const html = await native.renderForPreview('test', { settings });
+    expect(html).toContain('border-left: 4px solid #059669');
+    expect(html).toContain('background: #ECFDF5');
+    expect(html).toContain('01. ');
+    expect(html).toContain('核心架构');
+  });
 });

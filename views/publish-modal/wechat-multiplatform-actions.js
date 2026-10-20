@@ -180,7 +180,7 @@ showWechatsyncEnqueueAcceptedModal({
     const quotaText = skippedPlatformIds.length
       ? `已跳过 ${skippedPlatformIds.length} 个超出今日额度的平台。`
       : '';
-    new Notice(`✅ 已发送到浏览器插件${syncIdText}。${fallbackText}${quotaText}请在浏览器插件的历史或目标平台草稿箱查看结果。`, 10000);
+    new Notice(`已发送到浏览器插件${syncIdText}。${fallbackText}${quotaText}请在浏览器插件的历史或目标平台草稿箱查看结果。`, 10000);
     return;
   }
 

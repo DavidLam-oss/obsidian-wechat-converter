@@ -122,6 +122,15 @@ the scanner. That would not change the privacy facts, only the report.
 > Note: when auditing the bundle, `readText` occurrences in `main.js` are Vault adapter
 > file reads (`adapter.readText(path)`), not clipboard reads.
 
+### Known accepted residual: `window.fetch` for AI Services (Streaming)
+
+The review may notice `fetch` calls in AI services (`services/ai-layout/` and `services/ai-theme-generator.js`).
+This is **accepted rather than fixed**, for these reasons:
+
+- Obsidian's built-in `requestUrl` buffers the entire HTTP response in memory and does not support streaming `ReadableStream` chunks (Server-Sent Events / SSE) from AI model endpoints.
+- `window.fetch` is used solely to communicate with user-configured AI model API endpoints (such as OpenAI/Claude/Kimi/DeepSeek compatible endpoints), identical to the existing `ai-layout` runtime.
+- Standard requests for WeChat API, Feishu API, Unsplash, and image downloads strictly use Obsidian's `requestUrl`.
+
 ## CI/CD Gatekeeper
 
 GitHub Actions should run the same guard used locally:

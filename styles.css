@@ -112,6 +112,22 @@
   position: relative; /* 为悬浮层提供定位上下文 */
 }
 
+.apple-converter-container .hidden,
+.apple-converter-container [hidden] {
+  display: none;
+}
+
+/* ========================================
+   侧栏宽度下限（views/converter/pane-min-width.js 负责加类）
+   ======================================== */
+/* 用户拖的是侧栏，所以闸门必须下在侧栏上：这里用 min-width 盖住 Obsidian
+   写进来的行内 width（拖窄时宽度被顶住不动），内容层不再需要自己抗裁切。
+   实测：面板 396px 时机身刚好放得下，380px 起出现横向滚动 → 取 400。
+   窄窗口兜底：给自己留 360px 编辑区的余量，避免小窗下侧栏把正文挤没。 */
+.workspace-split.owc-pane-min-width:not(.is-sidedock-collapsed) {
+  min-width: min(var(--owc-pane-min-width, 400px), calc(100vw - 360px));
+}
+
 /*
 ## 核心功能
 
@@ -1460,6 +1476,13 @@ AI layout 面板和生成结果的视觉样式
 }
 
 /* 文章模式引入中间 wrapper 后，仅在设置可见时恢复原纵向节奏。 */
+.apple-settings-area > .hidden,
+.apple-settings-area > [hidden],
+.apple-settings-article-wrapper.hidden,
+.apple-settings-article-wrapper[hidden] {
+  display: none;
+}
+
 .apple-settings-article-wrapper:not(.hidden) {
   display: flex;
   flex-direction: column;
@@ -1568,6 +1591,13 @@ AI layout 面板和生成结果的视觉样式
   border-color: rgba(0, 113, 227, 0.3);
 }
 
+.apple-btn-heading-row .apple-btn-size {
+  flex: 1;
+  text-align: center;
+  padding: 6px 4px;
+  white-space: nowrap;
+}
+
 /* === 颜色选择器 === */
 .apple-color-grid {
   display: flex;
@@ -1637,6 +1667,43 @@ AI layout 面板和生成结果的视觉样式
 .apple-btn-color.active {
   border-color: var(--btn-color);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom theme color locked indicator */
+.apple-custom-theme-color-locked {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--background-secondary, rgba(0, 0, 0, 0.03));
+  border: 1px dashed var(--apple-border, rgba(0, 0, 0, 0.15));
+  border-radius: var(--apple-radius-sm, 8px);
+}
+
+.apple-custom-theme-color-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.apple-custom-theme-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.apple-custom-theme-color-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--apple-primary, var(--text-normal));
+}
+
+.apple-custom-theme-color-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 /* === Settings Collapsible === */
@@ -2160,6 +2227,11 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 */
 
 /* 与文章模式共用同一套分组节奏和标题层级。 */
+.apple-settings-sticker-wrapper.hidden,
+.apple-settings-sticker-wrapper[hidden] {
+  display: none;
+}
+
 .apple-settings-sticker-wrapper:not(.hidden) {
   display: flex;
   flex-direction: column;
@@ -3791,8 +3863,9 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
    写的 color / background-color / box-shadow / height / padding / border-radius
    全都会被它盖掉（按钮被刷成白底 + 固定 30px 高 + 居中）。背景写 background-color 长写。 */
 
-/* 「按当前笔记重新填入」：低频补救动作，降级为文字按钮，不与主操作抢重量 */
-.apple-settings-card-wrapper .icard-settings-cover-link {
+/* 「按当前笔记重新填入」与「重置构图位置」：低频动作，降级为文字按钮，不与主操作抢重量 */
+.apple-settings-card-wrapper .icard-settings-cover-link,
+.apple-settings-card-wrapper .icard-settings-cover-reset-crop {
   display: block;
   width: fit-content;
   height: auto;
@@ -3805,7 +3878,8 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   font-size: 12px;
   cursor: pointer;
 }
-.apple-settings-card-wrapper .icard-settings-cover-link:hover {
+.apple-settings-card-wrapper .icard-settings-cover-link:hover,
+.apple-settings-card-wrapper .icard-settings-cover-reset-crop:hover {
   color: var(--apple-primary);
   background-color: transparent;
 }
@@ -3883,6 +3957,8 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 }
 
 /* 渐进披露通用隐藏规则（使用类特异性，禁止 !important） */
+.apple-settings-card-wrapper.hidden,
+.apple-settings-card-wrapper[hidden],
 .apple-settings-card-wrapper .hidden,
 .apple-settings-card-wrapper [hidden] {
   display: none;
@@ -4062,6 +4138,72 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   text-align: center;
   padding: 7px 4px;
   white-space: nowrap;
+}
+
+/* 风格调色盘折叠区（默认折叠后 11 款调色盘，点击展开） */
+.icard-theme-more-wrap {
+  display: none;
+  margin-top: 6px;
+}
+
+.icard-theme-more-wrap.is-expanded {
+  display: block;
+}
+
+.icard-theme-more-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px dashed var(--apple-border);
+  border-radius: var(--apple-radius-sm, 6px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icard-theme-more-toggle:hover {
+  color: var(--text-normal);
+  border-color: var(--interactive-accent);
+  background-color: var(--background-modifier-hover);
+}
+
+/* 封面配图鼠标手势交互（Pan & Zoom） */
+.icard-cover-interactive-image-wrap {
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  position: relative;
+}
+
+.icard-cover-interactive-image-wrap.is-dragging {
+  cursor: grabbing;
+}
+
+.icard-cover-interactive-image-wrap::after {
+  content: "拖拽移动 · 滚轮缩放";
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 3px 7px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.65);
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.icard-cover-interactive-image-wrap:hover::after {
+  opacity: 0.9;
 }
 
 /* 比例卡片（2026-09-20 David，参考微信工具样式）：形状示意 + 数值。
@@ -6654,17 +6796,11 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
 .wechat-publish-shell .modal-content {
   display: flex;
   flex-direction: column;
-  height: min(72vh, 720px);
-  min-height: 560px;
+  height: min(74vh, 640px);
+  min-height: min(74vh, 520px);
+  max-height: min(74vh, 640px);
   overflow-y: auto;
   padding-top: 2px;
-}
-
-@media (max-height: 640px) {
-  .wechat-publish-shell .modal-content {
-    min-height: 0;
-    height: auto;
-  }
 }
 
 .wechat-publish-shell .modal-content.wechat-feishu-modal-content {
@@ -6964,54 +7100,49 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
 .wechat-sync-modal .wechat-publish-mode-tabs {
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 2px;
   margin: 0 0 18px;
-  padding: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--apple-border) 86%, transparent);
-  background: transparent;
-  white-space: nowrap;
+  padding: 2px;
+  background: rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  box-sizing: border-box;
+  width: 100%;
 }
-
+.theme-dark .wechat-sync-modal .wechat-publish-mode-tabs { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.05); }
 .wechat-sync-modal button.wechat-publish-mode-tab {
-  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 32px;
+  padding: 0 8px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  min-height: 36px;
-  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-muted);
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
   box-shadow: none;
-  border-radius: 0;
-  padding: 8px 20px 9px 0;
-  color: var(--apple-secondary);
-  background: transparent;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.2;
-  transition: color 0.15s ease, border-color 0.15s ease;
-  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
-
-.wechat-sync-modal button.wechat-publish-mode-tab:hover {
-  color: var(--apple-primary);
-}
-
+.wechat-sync-modal button.wechat-publish-mode-tab span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wechat-sync-modal button.wechat-publish-mode-tab:hover { color: var(--text-normal); background-color: rgba(0, 0, 0, 0.045); }
+.theme-dark .wechat-sync-modal button.wechat-publish-mode-tab:hover { background-color: rgba(255, 255, 255, 0.06); }
 .wechat-sync-modal button.wechat-publish-mode-tab.is-active {
-  color: var(--apple-accent);
-  background: transparent;
-  box-shadow: none;
+  color: var(--text-normal);
+  font-weight: 600;
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
 }
-
-.wechat-sync-modal button.wechat-publish-mode-tab.is-active::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  border-radius: 999px;
-  background: var(--apple-accent);
-}
+.theme-dark .wechat-sync-modal button.wechat-publish-mode-tab.is-active { background-color: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.16); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); }
 
 .wechat-multiplatform-intro {
   display: flex;
@@ -8969,8 +9100,9 @@ div.modal.wechat-material-picker-modal-mobile {
 .card-media-picker-modal {
   width: 580px;
   max-width: 90vw;
-  min-height: 280px;
-  max-height: min(78vh, 680px);
+  height: min(78vh, 620px);
+  min-height: min(78vh, 520px);
+  max-height: min(78vh, 620px);
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -9006,33 +9138,55 @@ div.modal.wechat-material-picker-modal-mobile {
 
 .card-media-picker-tabs {
   display: flex;
-  background: var(--background-modifier-form-field);
-  padding: 3px;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  padding: 2px;
   border-radius: 8px;
   gap: 2px;
+  box-sizing: border-box;
 }
 
-.card-media-picker-tab-btn {
-  background: transparent;
-  border: none;
-  padding: 5px 14px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-muted);
+.theme-dark .card-media-picker-tabs {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ⚠️ 带 .card-media-picker-tabs 前缀凑 0-2-0 覆盖 Obsidian 默认 button:not(.clickable-icon) */
+.card-media-picker-tabs .card-media-picker-tab-btn {
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 4px 14px;
   border-radius: 6px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  box-shadow: none;
   cursor: pointer;
-  transition: all 0.15s ease-in-out;
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.card-media-picker-tab-btn:hover {
+.card-media-picker-tabs .card-media-picker-tab-btn:hover {
   color: var(--text-normal);
+  background-color: rgba(0, 0, 0, 0.045);
 }
 
-.card-media-picker-tab-btn.is-active {
-  background: var(--background-primary);
-  color: var(--text-accent);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+.theme-dark .card-media-picker-tabs .card-media-picker-tab-btn:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.card-media-picker-tabs .card-media-picker-tab-btn.is-active {
+  color: var(--text-normal);
   font-weight: 600;
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+.theme-dark .card-media-picker-tabs .card-media-picker-tab-btn.is-active {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .card-media-picker-content {
@@ -9579,6 +9733,431 @@ div.modal.wechat-material-picker-modal-mobile {
   font-weight: 600;
   pointer-events: none;
 }
+/*
+ * ## 核心功能
+ *
+ * 自定义主题管理与 AI 生成配置弹窗专属样式。
+ * 遵循 Apple 设计系统与 Obsidian 原生暗色/亮色规范，无 emoji，轻量纯粹。
+ */
+
+.custom-theme-modal {
+  width: 640px;
+  max-width: 92vw;
+  height: min(82vh, 640px);
+  min-height: min(82vh, 520px);
+  max-height: min(82vh, 640px);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-l, 0 20px 48px rgba(0, 0, 0, 0.22));
+}
+
+.custom-theme-modal .modal-content {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.custom-theme-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 58px 12px 20px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  flex-shrink: 0;
+}
+
+.custom-theme-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.custom-theme-tabs {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  padding: 2px;
+  border-radius: 8px;
+  gap: 2px;
+  box-sizing: border-box;
+}
+
+.theme-dark .custom-theme-tabs {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ⚠️ 带 .custom-theme-tabs 前缀凑 0-2-0 覆盖 Obsidian 默认 button:not(.clickable-icon) */
+.custom-theme-tabs .custom-theme-tab-btn {
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 4px 14px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  box-shadow: none;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.custom-theme-tabs .custom-theme-tab-btn:hover {
+  color: var(--text-normal);
+  background-color: rgba(0, 0, 0, 0.045);
+}
+
+.theme-dark .custom-theme-tabs .custom-theme-tab-btn:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.custom-theme-tabs .custom-theme-tab-btn.is-active {
+  color: var(--text-normal);
+  font-weight: 600;
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+.theme-dark .custom-theme-tabs .custom-theme-tab-btn.is-active {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.custom-theme-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* 列表 Tab */
+.custom-theme-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.custom-theme-card {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+  background: var(--background-secondary);
+  transition: border-color 0.15s ease;
+  gap: 8px;
+}
+
+.custom-theme-card:hover {
+  border-color: var(--interactive-accent);
+}
+
+.custom-theme-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.custom-theme-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.custom-theme-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.custom-theme-card-active-tag {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent, #ffffff);
+}
+
+.custom-theme-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.custom-theme-card-actions button {
+  font-size: 11.5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  height: 26px;
+}
+
+.custom-theme-card-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.custom-theme-palette-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--background-primary);
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.custom-theme-color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+
+.custom-theme-palette-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.custom-theme-empty {
+  text-align: center;
+  padding: 36px 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.custom-theme-empty button {
+  margin-top: 12px;
+}
+
+/* AI 导入 Tab */
+.custom-theme-ai-step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.custom-theme-step-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-normal);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.custom-theme-copy-prompt-btn {
+  font-size: 12px;
+  padding: 5px 12px;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent, #ffffff);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.custom-theme-copy-prompt-btn:hover {
+  opacity: 0.9;
+}
+
+.custom-theme-json-textarea {
+  width: 100%;
+  height: 190px;
+  box-sizing: border-box;
+  font-family: var(--font-monospace);
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  resize: vertical;
+}
+
+.custom-theme-json-textarea:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+.custom-theme-error-box {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--background-modifier-error-hover, rgba(239, 68, 68, 0.1));
+  border: 1px solid var(--background-modifier-error, #ef4444);
+  color: var(--text-error, #ef4444);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.custom-theme-error-box.is-hidden {
+  display: none;
+}
+
+.custom-theme-error-box ul {
+  margin: 4px 0 0 16px;
+  padding: 0;
+}
+
+.custom-theme-ai-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.custom-theme-req-textarea {
+  width: 100%;
+  height: 56px;
+  box-sizing: border-box;
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 8px 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  resize: none;
+}
+
+.custom-theme-req-textarea:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+.custom-theme-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.custom-theme-pills-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.custom-theme-pill-btn {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.custom-theme-pill-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  border-color: var(--interactive-accent);
+}
+
+.custom-theme-btn-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.custom-theme-ai-gen-btn {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.custom-theme-ai-gen-btn:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.custom-theme-ai-gen-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.custom-theme-copy-prompt-btn-secondary {
+  font-size: 12px;
+  padding: 5px 12px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  color: var(--text-normal);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.custom-theme-copy-prompt-btn-secondary:hover {
+  background: var(--background-modifier-hover);
+}
+
+.custom-theme-preview-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.custom-theme-preview-card.is-hidden {
+  display: none;
+}
+
+.custom-theme-preview-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.custom-theme-preview-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.custom-theme-preview-tag {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.custom-theme-debug-tip {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding: 8px 12px;
+  background: var(--background-secondary);
+  border-left: 3px solid var(--interactive-accent);
+  border-radius: 4px;
+}
+
+
 /*
 ## 核心功能
 

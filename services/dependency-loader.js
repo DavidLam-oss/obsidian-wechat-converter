@@ -28,6 +28,7 @@
 import markdownit from '../lib/markdown-it.min.js';
 import hljs from '../lib/highlight.min.js';
 import '../lib/mathjax-plugin.js';
+import { findCustomTheme, compileCustomThemeToAppleConfig } from './custom-theme-adapter.js';
 
 /**
  * @typedef {Record<string, unknown> & { window?: RuntimeGlobal }} RuntimeGlobal
@@ -133,10 +134,14 @@ function getAvatarSrc(settings = {}) {
  * @returns {Record<string, unknown>}
  */
 function toThemeOptions(settings = {}) {
+  const customToken = findCustomTheme(settings.customThemes, String(settings.theme || ''));
+  const customConfig = customToken ? compileCustomThemeToAppleConfig(customToken) : null;
+
   return {
     theme: settings.theme,
-    themeColor: settings.themeColor,
-    customColor: settings.customColor,
+    themeColor: customToken ? 'custom' : settings.themeColor,
+    customColor: customToken ? customToken.colors.accent : settings.customColor,
+    customThemeConfig: customConfig,
     quoteCalloutStyleMode: settings.quoteCalloutStyleMode,
     fontFamily: settings.fontFamily,
     fontSize: settings.fontSize,

@@ -173,6 +173,25 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       view.applyCardCoverField('coverImageSource', '');
       view.applyCardCoverField('coverMode', 'none');
     });
+
+    const resetCropBtn = toolsWrap.createEl('button', {
+      cls: 'icard-settings-cover-reset-crop',
+      text: '重置构图位置',
+      attr: { type: 'button', title: '将封面图的缩放与平移位置恢复为默认居中' },
+    });
+    resetCropBtn.addEventListener('click', () => {
+      const session = typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession() : null;
+      if (session && typeof session.applyCoverFields === 'function') {
+        session.applyCoverFields({ coverImagePosition: { x: 50, y: 50 }, coverImageScale: 1.0 });
+        if (typeof view.renderCardSettingsValues === 'function') {
+          view.renderCardSettingsValues();
+        }
+        if (typeof view.renderCardPreview === 'function') {
+          void view.renderCardPreview();
+        }
+        new Notice('已重置封面图构图位置');
+      }
+    });
   });
 
   refs.coverFieldsHidden.push(coverImageSection);

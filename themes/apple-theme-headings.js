@@ -131,10 +131,16 @@ function buildH3Style(themeClass, type, color, fontSize, font, headingColor, con
          border-bottom: 1px solid ${color}; padding-bottom: 4px; display: inline-block; width: auto; letter-spacing: 0.5px;`;
     case 'left-border':
       return `${base} border-left: 4px solid ${color}; padding-left: 10px;`;
+    case 'bottom-line':
     case 'bottom-line-left':
       return `${base} display: inline-block; border-bottom: 2px solid ${color}; padding-bottom: 2px; margin-right: auto;`;
+    case 'bottom-line-center':
+      return `${base} display: block; border-bottom: 1px solid ${color}55; padding-bottom: 4px; margin: 24px auto 12px; text-align: center; width: fit-content;`;
+    case 'classic':
     case 'classic-subhead':
       return `${base} border-left: 3px solid ${color}; background: ${color}0A; padding: 6px 10px; margin: 24px 0 12px;`;
+    case 'simple':
+      return `${base}`;
     case 'paper-section':
       return `font-family: ${themeClass.FONTS.serif}; display: block; font-size: ${fontSize}px; font-weight: bold; margin: 28px 0 14px; color: ${headingColor}; text-align: left; line-height: 1.35; border-top: 1px solid ${color}55; padding-top: 8px;`;
     case 'grid-section':

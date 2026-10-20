@@ -7,18 +7,18 @@
     "services/ai-layout/generation.js": 1041,
     "services/ai-layout/prompt-context.js": 927,
     "services/article-image-assets.js": 1067,
-    "services/card-themes.js": 997,
+    "services/card-themes.js": 861,
     "services/feishu-api.js": 801,
     "services/obsidian-triplet-renderer-images.js": 813,
     "services/obsidian-triplet-renderer.js": 1017,
     "services/wechat-html-cleaner.js": 800,
     "services/wechatsync-bridge.js": 1524,
     "styles/ai-layout.css": 835,
-    "styles/multi-platform.css": 815,
+    "styles/multi-platform.css": 810,
     "styles/wechat-settings.css": 797,
     "views/converter/ai-layout-debug.js": 923,
     "views/converter/ai-layout-panel.js": 1041,
-    "views/converter/core.js": 1150,
+    "views/converter/core.js": 1157,
     "views/settings/multi-platform-tab.js": 934
   },
   "generatedBytes": {
@@ -47,6 +47,11 @@
       "max": 266000,
       "reason": "聚合样式表随界面改版增长。预留约 10% 余量，避免每次样式微调都触发上限告警。",
       "date": "2026-10-16"
+    },
+    "views/converter/core.js": {
+      "max": 1157,
+      "reason": "视图生命周期只在这里：侧栏最小宽度锁必须在 onOpen/onClose 各加一行调用（含一行说明），能力本体已落在新文件 views/converter/pane-min-width.js。",
+      "date": "2026-10-20"
     }
   }
 }

@@ -345,7 +345,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
       );
       if (!pluginPolicyGate.allowed) {
         notice.hide();
-        new Notice(`❌ ${pluginPolicyGate.message || '当前 Obsidian 插件版本过低，请升级后继续发布。'}`, 10000);
+        new Notice(`${pluginPolicyGate.message || '当前 Obsidian 插件版本过低，请升级后继续发布。'}`, 10000);
         return;
       }
       const extensionPolicyGate = checkExtensionPolicyGate(effectivePolicy.payload, {
@@ -354,7 +354,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
       });
       if (!extensionPolicyGate.allowed) {
         notice.hide();
-        new Notice(`❌ ${extensionPolicyGate.message || '当前浏览器扩展版本过低，请升级后继续发布。'}`, 10000);
+        new Notice(`${extensionPolicyGate.message || '当前浏览器扩展版本过低，请升级后继续发布。'}`, 10000);
         return;
       }
       if (pluginPolicyGate.warning) {
@@ -617,7 +617,7 @@ async function showMultiPlatformPublishModal(view, options = {}) {
         await view.plugin.saveSettings();
       }
       modal.close();
-      new Notice(`❌ 发送到浏览器插件失败：${displayMessage}`, 10000);
+      new Notice(`发送到浏览器插件失败：${displayMessage}`, 10000);
       view.showMultiPlatformSyncResultModal({
         requestedPlatformIds,
         fatalError: error,

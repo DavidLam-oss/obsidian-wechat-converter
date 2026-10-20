@@ -52,7 +52,9 @@ import {
 import { applyCompiledCustomCss } from '../../services/custom-css-inliner.js';
 import { compileCustomCss } from '../../services/custom-css-compiler.js';
 import { resolveCustomCssSource } from '../../services/custom-css-source.js';
+import { decorateArticleWithEngagementCard } from '../../services/engagement-card.js';
 import { mountPhoneFrame } from './phone-frame.js';
+import { lockPaneMinWidth, unlockPaneMinWidth } from './pane-min-width.js';
 
 /**
  * @param {AppleStyleViewContract} view
@@ -86,6 +88,10 @@ async onOpen() {
   if (isMobileClient(this.app)) {
     container.addClass('apple-converter-mobile');
   }
+
+  // 侧栏宽度闸门：用户把面板拖得比预览所需更窄时顶住（规则在 styles/base.css）。
+  // 挂在 onOpen 而不是 onLayoutReady：越早生效，首帧越不会出现「先被压扁再弹回」。
+  lockPaneMinWidth(this);
 
   // 先创建预览壳和占位内容。设置控件属于辅助能力，不能因为某个
   // 运行时 API 或 Obsidian 窗口兼容问题而阻断正文预览的挂载。
@@ -538,7 +544,7 @@ async onThemeChange(value, grid) {
   await this.plugin.saveSettings();
   this.updateButtonActive(grid, value);
   this.theme?.update({ theme: value, lineHeight: null, paragraphGap: null, letterSpacing: null });
-  this.refreshSpacingSliders?.();
+  this.refreshSpacingSliders?.(); this.refreshThemeColorSection?.();
   await this.convertCurrent(true);
 }
 ,
@@ -624,13 +630,11 @@ getActiveRenderPipeline() {
 
 async renderMarkdownForPreview(markdown, sourcePath) {
   const pipeline = this.getActiveRenderPipeline();
-  if (!pipeline) {
-    throw new Error('渲染管线未初始化');
-  }
-  return pipeline.renderForPreview(markdown, {
+  if (!pipeline) throw new Error('渲染管线未初始化');
+  return decorateArticleWithEngagementCard(this, await pipeline.renderForPreview(markdown, {
     sourcePath,
     settings: this.plugin.settings,
-  });
+  }));
 }
 ,
 
@@ -957,7 +961,7 @@ async convertCurrent(silent = false, options = {}) {
   }
 
   try {
-    if (!silent) new Notice('⚡ 正在转换...');
+    if (!silent) new Notice('正在转换...');
     const baseHtml = await this.renderMarkdownForPreview(markdown, sourcePath);
     const html = await this.deriveNativePreviewHtml(baseHtml);
 
@@ -1008,7 +1012,7 @@ async convertCurrent(silent = false, options = {}) {
       }
       this.refreshAiLayoutPanel();
     }
-    if (!silent) new Notice('✅ 转换成功！');
+    if (!silent) new Notice('转换成功！');
 
   } catch (error) {
     console.error('转换失败:', error);
@@ -1029,7 +1033,7 @@ async convertCurrent(silent = false, options = {}) {
 
     const noticeKey = `${sourcePath || ''}:${this.lastRenderError}`;
     if (!silent || this.lastRenderFailureNoticeKey !== noticeKey) {
-      new Notice('❌ 转换失败: ' + this.lastRenderError);
+      new Notice('转换失败: ' + this.lastRenderError);
       this.lastRenderFailureNoticeKey = noticeKey;
     }
   } finally {
@@ -1136,6 +1140,9 @@ async onClose() {
   }
   this.stickerModalGeneration = (this.stickerModalGeneration || 0) + 1;
   this.sessionStickerSourcePath = '';
+
+  // 撤锁要放在最后：同侧栏若还有本插件的其它标签页，它会自己保住这条下限。
+  unlockPaneMinWidth(this);
 
   console.debug('🍎 发布助手面板已关闭');
 },

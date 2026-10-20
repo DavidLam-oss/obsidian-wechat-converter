@@ -67,11 +67,14 @@ import {
   CARD_RATIO_LABELS,
   DEFAULT_CARD_LAYOUT_SETTINGS,
   VERIFIED_CARD_RATIOS,
-  VERIFIED_CARD_THEME_IDS,
   getCardThemeDefaultTypography,
   normalizeCardLayoutSettings,
 } from '../../services/card-settings-model.js';
-import { getCardTheme } from '../../services/card-themes.js';
+import {
+  CLASSIC_CARD_THEME_IDS,
+  MOOD_PALETTE_THEME_IDS,
+  getCardTheme,
+} from '../../services/card-themes.js';
 import {
   buildCardCoverSettingsSubpanel,
   renderCardCoverValues,
@@ -97,6 +100,9 @@ const CARD_MANUAL_BREAK_MARKER = '===';
  *     tokenSection?: ObsidianElementLike | null,
  *     coverSection?: ObsidianElementLike | null,
  *     themeGrid?: ObsidianElementLike | null,
+ *     themeMoreWrap?: ObsidianElementLike | null,
+ *     themeMoreToggle?: HTMLButtonElement | null,
+ *     themeMoreUserExpanded?: boolean,
  *     ratioGrid?: ObsidianElementLike | null,
  *     pageToggleInput?: HTMLInputElement | null,
  *     watermarkInput?: HTMLInputElement | null,
@@ -192,6 +198,9 @@ buildCardSettingsPanel() {
     tokenSection,
     coverSection,
     themeGrid: null,
+    themeMoreWrap: null,
+    themeMoreToggle: null,
+    themeMoreUserExpanded: false,
     ratioGrid: null,
     pageToggleInput: null,
     watermarkInput: null,
@@ -211,19 +220,56 @@ buildCardSettingsPanel() {
   cardSettingsStateOf(this).activeCardSubTab = 'token';
 
   // ========== 子 Tab 1：排版 Token 设置 ==========
-  // 主题（2026-09-20 David）：2 行 × 3 列网格，单行挤 6 枚显得小气
+  // 主题：默认展示 2 行 × 3 列经典基础主题（6 款），折叠收纳 11 款风格调色盘
   this.createSection(tokenSection, '主题', (section) => {
-    const grid = section.createEl('div', { cls: 'apple-btn-row icard-grid-3' });
-    refs.themeGrid = grid;
-    for (const themeId of VERIFIED_CARD_THEME_IDS) {
+    // 经典主题（2 行 × 3 列）
+    const classicGrid = section.createEl('div', { cls: 'apple-btn-row icard-grid-3' });
+    for (const themeId of CLASSIC_CARD_THEME_IDS) {
       const theme = getCardTheme(themeId);
-      const btn = grid.createEl('button', {
+      const btn = classicGrid.createEl('button', {
         cls: 'apple-btn-size',
         text: theme.name,
-        attr: { 'data-value': themeId, 'aria-label': `${theme.name}（切换主题会一并恢复该主题的字号 / 行高 / 边距默认值）` },
+        attr: { 'data-value': themeId },
       });
       btn.addEventListener('click', () => { this.applyCardTheme(themeId); });
     }
+
+    // 更多主题（折叠区，共 11 款）
+    const moreWrap = section.createEl('div', { cls: 'icard-theme-more-wrap' });
+    const moreGrid = moreWrap.createEl('div', { cls: 'apple-btn-row icard-grid-3' });
+    for (const themeId of MOOD_PALETTE_THEME_IDS) {
+      const theme = getCardTheme(themeId);
+      const btn = moreGrid.createEl('button', {
+        cls: 'apple-btn-size',
+        text: theme.name,
+        attr: { 'data-value': themeId },
+      });
+      btn.addEventListener('click', () => { this.applyCardTheme(themeId); });
+    }
+
+    // 展开/收起切换按钮
+    const toggleBtn = /** @type {HTMLButtonElement} */ (
+      section.createEl('button', {
+        cls: 'icard-theme-more-toggle',
+        text: `更多主题 (${MOOD_PALETTE_THEME_IDS.length}) ▾`,
+        attr: { type: 'button' },
+      })
+    );
+
+    toggleBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const isExpanded = moreWrap.classList.contains('is-expanded');
+      const nextExpanded = !isExpanded;
+      moreWrap.classList.toggle('is-expanded', nextExpanded);
+      toggleBtn.textContent = nextExpanded
+        ? '收起更多主题 ▴'
+        : `更多主题 (${MOOD_PALETTE_THEME_IDS.length}) ▾`;
+      refs.themeMoreUserExpanded = nextExpanded;
+    });
+
+    refs.themeGrid = section;
+    refs.themeMoreWrap = moreWrap;
+    refs.themeMoreToggle = toggleBtn;
   });
 
   // 比例（2026-09-20 David）：参考微信工具的「形状示意 + 数值」卡片——
@@ -582,6 +628,16 @@ renderCardSettingsValues() {
         (/** @type {HTMLElement} */ (el)).dataset.value === settings.themeId,
       );
     });
+
+    // 若当前激活的主题属于 11 款调色盘，或用户手动展开过，则自动保持展开
+    const isMoodPalette = /** @type {readonly string[]} */ (MOOD_PALETTE_THEME_IDS).includes(settings.themeId);
+    if (refs.themeMoreWrap && refs.themeMoreToggle) {
+      const shouldExpand = isMoodPalette || Boolean(refs.themeMoreUserExpanded);
+      refs.themeMoreWrap.classList.toggle('is-expanded', shouldExpand);
+      refs.themeMoreToggle.textContent = shouldExpand
+        ? '收起更多主题 ▴'
+        : `更多主题 (${MOOD_PALETTE_THEME_IDS.length}) ▾`;
+    }
   }
   if (refs.ratioGrid) {
     refs.ratioGrid.querySelectorAll('.icard-ratio-option').forEach((el) => {

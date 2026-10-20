@@ -148,9 +148,9 @@ const wechatAccountModalMethods = {
       try {
         const api = new WechatAPI(appIdInput.value.trim(), secretInput.value.trim(), this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
         await api.getAccessToken();
-        new Notice('✅ 连接成功！');
+        new Notice('连接成功！');
       } catch (err) {
-        new Notice(`❌ 连接失败: ${toReadableError(err).message}`);
+        new Notice(`连接失败: ${toReadableError(err).message}`);
       }
       testBtn.disabled = false;
       testBtn.textContent = '测试连接';
@@ -212,7 +212,7 @@ const wechatAccountModalMethods = {
       if (!res || res.success === false) return;
       modal.close();
       refreshSettingTabCompat(this);
-      new Notice(account ? '✅ 账号已更新' : '✅ 账号已添加');
+      new Notice(account ? '账号已更新' : '账号已添加');
     };
 
     modal.open();

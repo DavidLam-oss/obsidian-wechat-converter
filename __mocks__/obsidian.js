@@ -56,6 +56,9 @@ if (!globalThis.__obsidianSettingInstancesRegistry) {
 if (!globalThis.__obsidianMenuRegistry) {
   globalThis.__obsidianMenuRegistry = [];
 }
+if (!globalThis.__obsidianDropdownRegistry) {
+  globalThis.__obsidianDropdownRegistry = [];
+}
 
 // Sentinel exposed on globalThis so tests can assert that the resolver patch
 // is wired up correctly: `expect(globalThis.__obsidianMockLoaded).toBe(true)`.
@@ -119,6 +122,29 @@ function makeButtonMock() {
   }
   globalThis.__obsidianButtonRegistry.push(button);
   return button;
+}
+
+function makeDropdownMock() {
+  const dropdown = {
+    options: {},
+    value: '',
+    changeHandler: null,
+    addOption(val, display) {
+      this.options[val] = display;
+      return this;
+    },
+    setValue(val) {
+      this.value = val;
+      return this;
+    },
+    onChange(handler) {
+      this.changeHandler = handler;
+      return this;
+    },
+    then: undefined,
+  };
+  globalThis.__obsidianDropdownRegistry?.push(dropdown);
+  return dropdown;
 }
 
 function applyExtensions(el) {
@@ -211,7 +237,7 @@ class SettingMock {
   addText(cb) { if (cb) cb(makeChainProxy()); return this; }
   addTextArea(cb) { if (cb) cb(makeChainProxy()); return this; }
   addButton(cb) { if (cb) cb(makeButtonMock()); return this; }
-  addDropdown(cb) { if (cb) cb(makeChainProxy()); return this; }
+  addDropdown(cb) { if (cb) cb(makeDropdownMock()); return this; }
   addSlider(cb) { if (cb) cb(makeChainProxy()); return this; }
   addColorPicker(cb) { if (cb) cb(makeChainProxy()); return this; }
   addExtraButton(cb) { if (cb) cb(makeChainProxy()); return this; }

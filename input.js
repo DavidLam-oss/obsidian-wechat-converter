@@ -27,6 +27,7 @@
 
 import { AppleStyleView } from './views/apple-style-view.js';
 import { AppleStyleSettingTab } from './views/settings/apple-style-setting-tab.js';
+import { showCustomThemeModal } from './views/converter/custom-theme-modal.js';
 import {
   getArticleLayoutStateFromSettings,
   saveArticleLayoutStateToSettings,
@@ -98,47 +99,47 @@ class AppleStylePlugin extends Plugin {
       delete window.AppleStyleConverter;
     }
 
-    this.registerView(
-      APPLE_STYLE_VIEW,
-      (leaf) => new AppleStyleView(leaf, this)
-    );
+    this.registerView(APPLE_STYLE_VIEW, (leaf) => new AppleStyleView(leaf, this));
 
-    this.addRibbonIcon('wand', APPLE_STYLE_VIEW_TITLE, async () => {
-      await this.openConverter();
-    });
+    this.addRibbonIcon('wand', APPLE_STYLE_VIEW_TITLE, () => this.openConverter());
 
     this.addCommand({
       id: 'open-apple-converter',
       name: `打开${APPLE_STYLE_VIEW_TITLE}`,
-      callback: async () => {
-        await this.openConverter();
-      },
+      callback: () => this.openConverter(),
     });
 
     this.addCommand({
       id: 'insert-image-swipe-block',
       name: getImageSwipeCommandCopy(this.app, 'image-swipe').name,
-      callback: () => {
-        this.insertImageSwipeCalloutFromActiveEditor('image-swipe');
-      },
+      callback: () => this.insertImageSwipeCalloutFromActiveEditor('image-swipe'),
     });
 
     this.addCommand({
       id: 'insert-image-sensitive-block',
       name: getImageSwipeCommandCopy(this.app, 'image-sensitive').name,
-      callback: () => {
-        this.insertImageSwipeCalloutFromActiveEditor('image-sensitive');
-      },
+      callback: () => this.insertImageSwipeCalloutFromActiveEditor('image-sensitive'),
     });
 
-    // Command 'convert-to-apple-style' removed as per user request
+    this.addCommand({
+      id: 'open-custom-theme-modal',
+      name: '自定义排版主题管理',
+      callback: () => {
+        showCustomThemeModal({
+          app: this.app,
+          plugin: this,
+          onThemeApplied: () => {
+            const view = /** @type {{ convertCurrent?: (force?: boolean) => Promise<unknown> } | null} */ (this.getConverterView());
+            view?.convertCurrent?.(true);
+          },
+        });
+      },
+    });
 
     this.addSettingTab(new AppleStyleSettingTab(this.app, this));
 
     this.app.workspace.onLayoutReady(() => {
-      this.migrateLegacyConverterLeafTitles().catch((error) => {
-        console.warn('同步转换器标题失败:', error);
-      });
+      this.migrateLegacyConverterLeafTitles().catch((error) => console.warn('同步转换器标题失败:', error));
     });
 
     if (typeof this.app.vault.on === 'function') {
@@ -465,7 +466,7 @@ class AppleStylePlugin extends Plugin {
       const { settings } = normalizeLoadedSettings(isRecord(rawFallback) ? rawFallback : null, { isVirginInstall: false });
       this._committedSettings = JSON.parse(JSON.stringify(settings));
       setPluginSettings(this, settings);
-      new Notice('⚠️ 微信发布助手：存储适配器不可用，已进入安全保护模式');
+      new Notice('微信发布助手：存储适配器不可用，已进入安全保护模式');
       return;
     }
 
@@ -544,7 +545,7 @@ class AppleStylePlugin extends Plugin {
     const { settings } = normalizeLoadedSettings(isRecord(loadedRaw) ? loadedRaw : null, { isVirginInstall: false });
     this._committedSettings = JSON.parse(JSON.stringify(settings));
     setPluginSettings(this, settings);
-    new Notice('⚠️ 微信发布助手：检测到配置文件读取异常，已进入安全保护模式，原文件已受保护');
+    new Notice('微信发布助手：检测到配置文件读取异常，已进入安全保护模式，原文件已受保护');
   }
   /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument -- reason: close the scoped disable block above */
 
@@ -572,7 +573,7 @@ class AppleStylePlugin extends Plugin {
     const candidate = JSON.parse(JSON.stringify(draftSettings || getPluginSettings(this)));
 
     if (this._settingsSafeMode && !options.isSafeModeOverride) {
-      new Notice('⚠️ 当前处于安全保护模式，已阻止写入以防历史配置受损');
+      new Notice('当前处于安全保护模式，已阻止写入以防历史配置受损');
       if (this._committedSettings) {
         setPluginSettings(this, JSON.parse(JSON.stringify(this._committedSettings)));
       }
@@ -583,7 +584,7 @@ class AppleStylePlugin extends Plugin {
     const dataPath = this.getPluginDataPath();
 
     if (!adapter || !dataPath || (this._storageState === 'unknown' && !options.isSafeModeOverride)) {
-      new Notice('⛔ 存储状态未知，已阻止保存以防覆盖数据');
+      new Notice('存储状态未知，已阻止保存以防覆盖数据');
       if (this._committedSettings) {
         setPluginSettings(this, JSON.parse(JSON.stringify(this._committedSettings)));
       }
@@ -605,7 +606,7 @@ class AppleStylePlugin extends Plugin {
         }
       } catch (err) {
         console.error('[Settings] 保存预检失败:', err);
-        new Notice('⛔ 磁盘文件无法读取或损坏，已拦截保存以防旧配置被覆盖');
+        new Notice('磁盘文件无法读取或损坏，已拦截保存以防旧配置被覆盖');
         if (this._committedSettings) {
           setPluginSettings(this, JSON.parse(JSON.stringify(this._committedSettings)));
         }
@@ -617,7 +618,7 @@ class AppleStylePlugin extends Plugin {
     if (diskSettings) {
       const downgrade = checkCredentialDowngrade(diskSettings, candidate, options.intent);
       if (downgrade.isDowngrade) {
-        new Notice(`⛔ 已阻止保存：${downgrade.reason}`);
+        new Notice(`已阻止保存：${downgrade.reason}`);
         if (this._committedSettings) {
           setPluginSettings(this, JSON.parse(JSON.stringify(this._committedSettings)));
         }
@@ -656,7 +657,7 @@ class AppleStylePlugin extends Plugin {
       const now = Date.now();
       if (!this._lastSaveSettingsErrorAt || now - this._lastSaveSettingsErrorAt > 3000) {
         this._lastSaveSettingsErrorAt = now;
-        new Notice('⚠️ 设置保存失败，本次修改仅在当前会话生效');
+        new Notice('设置保存失败，本次修改仅在当前会话生效');
       }
       return { success: false, reason: 'SAVE_FAILED' };
     }
@@ -701,29 +702,29 @@ class AppleStylePlugin extends Plugin {
     const adapter = this.app?.vault?.adapter;
     const dataPath = this.getPluginDataPath();
     if (!adapter || !dataPath) {
-      new Notice('❌ 存储适配器不可用，无法恢复备份');
+      new Notice('存储适配器不可用，无法恢复备份');
       return { success: false, reason: 'STORAGE_UNAVAILABLE' };
     }
     const bakPath = `${dataPath}.bak`;
     try {
       if (typeof adapter.exists !== 'function' || !(await adapter.exists(bakPath))) {
-        new Notice('ℹ️ 未找到配置备份文件 (.bak)');
+        new Notice('未找到配置备份文件 (.bak)');
         return { success: false, reason: 'BACKUP_NOT_FOUND' };
       }
       const backupJson = JSON.parse(await adapter.read(bakPath));
       if (!isRecord(backupJson) || Object.keys(backupJson).length === 0) {
-        new Notice('❌ 备份文件内容损坏或为空，无法恢复');
+        new Notice('备份文件内容损坏或为空，无法恢复');
         return { success: false, reason: 'BACKUP_CORRUPTED' };
       }
       const saveRes = await this.saveSettings(backupJson, { isSafeModeOverride: true });
       if (saveRes?.success) {
-        new Notice('✅ 已成功从备份文件恢复配置并解除保护模式！');
+        new Notice('已成功从备份文件恢复配置并解除保护模式！');
         return { success: true };
       }
       return { success: false, reason: saveRes?.reason || 'RESTORE_SAVE_FAILED' };
     } catch (err) {
       console.error('[Settings] 从备份恢复配置失败:', err);
-      new Notice('❌ 恢复备份失败：' + (err instanceof Error ? err.message : String(err)));
+      new Notice('恢复备份失败：' + (err instanceof Error ? err.message : String(err)));
       return { success: false, reason: 'RESTORE_ERROR' };
     }
   }

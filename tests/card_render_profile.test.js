@@ -37,9 +37,10 @@ const SAMPLE = [
 const theme = getCardTheme(DEFAULT_CARD_THEME_ID);
 
 describe("card-themes", () => {
-  it("六主题 id 已声明且全部可用（red-note 照搬）；未知 id 回落默认", () => {
+  it("经典与情绪调色盘主题 id 已声明且全部可用（17 套）；未知 id 回落默认", () => {
     expect(CARD_THEME_IDS).toEqual([
       "simple-white", "gradient-blue", "dark-gold", "neon-purple", "forest-green", "rose-gold",
+      "warm", "cyber", "ocean", "forest", "elegant", "sakura", "metal", "starry", "minimal-white", "yueling", "dark-night",
     ]);
     for (const id of CARD_THEME_IDS) expect(hasCardTheme(id)).toBe(true);
     expect(getCardTheme("not-exist").id).toBe(DEFAULT_CARD_THEME_ID);

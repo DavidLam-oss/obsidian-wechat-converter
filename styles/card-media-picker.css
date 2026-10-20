@@ -12,8 +12,9 @@
 .card-media-picker-modal {
   width: 580px;
   max-width: 90vw;
-  min-height: 280px;
-  max-height: min(78vh, 680px);
+  height: min(78vh, 620px);
+  min-height: min(78vh, 520px);
+  max-height: min(78vh, 620px);
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -49,33 +50,55 @@
 
 .card-media-picker-tabs {
   display: flex;
-  background: var(--background-modifier-form-field);
-  padding: 3px;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  padding: 2px;
   border-radius: 8px;
   gap: 2px;
+  box-sizing: border-box;
 }
 
-.card-media-picker-tab-btn {
-  background: transparent;
-  border: none;
-  padding: 5px 14px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-muted);
+.theme-dark .card-media-picker-tabs {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ⚠️ 带 .card-media-picker-tabs 前缀凑 0-2-0 覆盖 Obsidian 默认 button:not(.clickable-icon) */
+.card-media-picker-tabs .card-media-picker-tab-btn {
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 4px 14px;
   border-radius: 6px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  box-shadow: none;
   cursor: pointer;
-  transition: all 0.15s ease-in-out;
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.card-media-picker-tab-btn:hover {
+.card-media-picker-tabs .card-media-picker-tab-btn:hover {
   color: var(--text-normal);
+  background-color: rgba(0, 0, 0, 0.045);
 }
 
-.card-media-picker-tab-btn.is-active {
-  background: var(--background-primary);
-  color: var(--text-accent);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+.theme-dark .card-media-picker-tabs .card-media-picker-tab-btn:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.card-media-picker-tabs .card-media-picker-tab-btn.is-active {
+  color: var(--text-normal);
   font-weight: 600;
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+.theme-dark .card-media-picker-tabs .card-media-picker-tab-btn.is-active {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .card-media-picker-content {

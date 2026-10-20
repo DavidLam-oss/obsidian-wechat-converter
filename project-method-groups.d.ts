@@ -171,6 +171,8 @@ type SettingsPanelMethodsContract = Pick<
     | 'formatSpacingValue'
     | 'updateSpacingSummary'
     | 'refreshSpacingSliders'
+    | 'refreshThemeColorSection'
+    | 'refreshHeadingStyleSection'
 >;
 
 type PanelShellMethodsContract = Pick<
@@ -399,5 +401,8 @@ type WechatAccountModalMethodsContract = Pick<
 type WechatSettingsMethodsContract = Pick<
     AppleStyleSettingTabContract,
     | 'renderWechatSettingsTab'
+    | 'renderEngagementCardSection'
+    | 'renderHeadingStyleSection'
+    | 'renderFrontmatterInterpolationSection'
     | 'renderCustomCssSection'
 >;

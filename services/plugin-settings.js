@@ -45,6 +45,8 @@ import {
   createDefaultAiSettings,
   normalizeAiSettings,
 } from './ai-layout.js';
+import { normalizeCustomThemesList } from './theme-token-validator.js';
+import { VALID_HEADING_STYLES } from './heading-style-renderer.js';
 
 /** @param {unknown} value @returns {value is Record<string, unknown>} */
 function isRecord(value) {
@@ -144,6 +146,15 @@ export function createDefaultSettings() {
     enableCustomCss: false,
     customCss: '',
     customCssNote: '',
+    // 文章末尾互动三连卡（Opt-in，默认关闭）
+    enableEngagementCard: false,
+    engagementCtaText: '',
+    // 自定义主题 Token 预设库（Phase 2）
+    customThemes: [],
+    // 标题分节样式扩展（Phase 3）
+    headingStyle: 'default',
+    // 动态 Frontmatter 变量插值（Phase 3，默认开启）
+    enableFrontmatterInterpolation: true,
     multiPlatformSync: createDefaultMultiPlatformSyncSettings(),
     feishuSync: createDefaultFeishuSyncSettings(),
     wechatAppId: '',
@@ -264,6 +275,21 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
   // 注意不能写成 `=== true`：那会让缺键的旧数据落到 false，而 2.11.2 之前
   // 主题是硬编码 justify 的，等于凭空改变了老用户的正文观感。
   settings.justifyText = settings.justifyText !== false;
+
+  // 文章末尾互动三连卡（默认关闭）
+  settings.enableEngagementCard = Boolean(settings.enableEngagementCard);
+  settings.engagementCtaText = typeof settings.engagementCtaText === 'string'
+    ? settings.engagementCtaText.trim()
+    : '';
+
+  // 自定义主题 Token 预设库（Phase 2）
+  settings.customThemes = normalizeCustomThemesList(settings.customThemes);
+
+  // 标题分节样式扩展与动态变量插值（Phase 3）
+  settings.headingStyle = typeof settings.headingStyle === 'string' && VALID_HEADING_STYLES.includes(/** @type {any} */ (settings.headingStyle))
+    ? settings.headingStyle
+    : 'default';
+  settings.enableFrontmatterInterpolation = settings.enableFrontmatterInterpolation !== false;
 
   // Unsplash Access Key：去除多余空白字符
   const rawUnsplashKey = settings.unsplashAccessKey;

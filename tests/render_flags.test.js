@@ -57,4 +57,54 @@ describe('Render Pipeline Wiring (Native-only)', () => {
 
     await expect(view.renderMarkdownForPreview('# title', 'notes/a.md')).rejects.toThrow('渲染管线未初始化');
   });
+
+  it('互动三连卡：默认关闭时不附加，开启时自动附加并继承主题色', async () => {
+    const plugin = new AppleStylePlugin();
+    plugin.settings = { enableEngagementCard: false, themeColor: 'green' };
+    const view = new AppleStyleView({}, plugin);
+    const renderForPreview = vi.fn().mockResolvedValue('<section class="owc-article-root"><p>正文</p></section>');
+    view.nativeRenderPipeline = { renderForPreview };
+
+    // 默认关闭
+    const htmlOff = await view.renderMarkdownForPreview('# title', 'notes/a.md');
+    expect(htmlOff).not.toContain('class="owc-engagement-card"');
+
+    // 开启
+    plugin.settings.enableEngagementCard = true;
+    const htmlOn = await view.renderMarkdownForPreview('# title', 'notes/a.md');
+    expect(htmlOn).toContain('class="owc-engagement-card"');
+    expect(htmlOn).toContain('#28a745'); // 绿色
+    expect(htmlOn).toContain('点赞');
+  });
+
+  it('互动三连卡：frontmatter 单篇覆盖（opt-in / opt-out）生效', async () => {
+    const plugin = new AppleStylePlugin();
+    plugin.settings = { enableEngagementCard: false, themeColor: 'blue' };
+    const fakeFile = { path: 'notes/special.md' };
+    const app = {
+      metadataCache: {
+        getFileCache: vi.fn(() => ({
+          frontmatter: { engagement_card: true },
+        })),
+      },
+    };
+    const view = new AppleStyleView({}, plugin);
+    view.app = app;
+    view.getPublishContextFile = vi.fn(() => fakeFile);
+    view.nativeRenderPipeline = {
+      renderForPreview: vi.fn().mockResolvedValue('<section class="owc-article-root"><p>内容</p></section>'),
+    };
+
+    // 全局关，单篇 frontmatter 开启 -> 附加
+    const htmlFmOn = await view.renderMarkdownForPreview('# title', 'notes/special.md');
+    expect(htmlFmOn).toContain('class="owc-engagement-card"');
+
+    // 全局开，单篇 frontmatter 关闭 -> 不附加
+    plugin.settings.enableEngagementCard = true;
+    app.metadataCache.getFileCache.mockReturnValue({
+      frontmatter: { engagement_card: false },
+    });
+    const htmlFmOff = await view.renderMarkdownForPreview('# title', 'notes/special.md');
+    expect(htmlFmOff).not.toContain('class="owc-engagement-card"');
+  });
 });

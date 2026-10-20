@@ -34,6 +34,13 @@ import {
   getImageSwipeCommandCopy,
   isMobileClient,
 } from '../apple-style-view-shared.js';
+import { showCustomThemeModal } from './custom-theme-modal.js';
+import { buildHeadingStyleSection } from './heading-style-controls.js';
+import { buildThemeColorSection } from './theme-color-controls.js';
+import {
+  compileCustomThemeToAppleConfig,
+  findCustomTheme,
+} from '../../services/custom-theme-adapter.js';
 
 /**
  * @param {AppleThemeApiLike | null} themeApi
@@ -54,7 +61,6 @@ function readThemeOptions(themeApi, method) {
 /** @type {SettingsPanelMethodsContract & ThisType<AppleStyleViewContract>} */
 export const settingsPanelMethods = {
 createSettingsPanel(container) {
-
   // 1. 创建顶部双行 Header 容器
   const header = container.createEl('div', { cls: 'apple-preview-header' });
 
@@ -74,7 +80,6 @@ createSettingsPanel(container) {
   // 1.2.1 第二行左侧：微型 Icon 分段模式切换胶囊
   const segment = bottomRow.createEl('div', { cls: 'apple-preview-mode-segment' });
   const setIcon = getObsidianSetIcon();
-
   const selfRec = toRecord(this);
 
   selfRec.btnArticleMode = segment.createEl('button', {
@@ -135,7 +140,6 @@ createSettingsPanel(container) {
     this.toggleSettingsPanel();
   });
   this.settingsBtn = settingsButton;
-
   this.aiLayoutBtn = createIconBtn('sparkles', 'AI 编排', () => this.onAiLayoutButtonClick());
 
   // [复制] 按钮（移动端隐藏，避免误导）
@@ -164,10 +168,12 @@ createSettingsPanel(container) {
   this.articleSettingsWrapper = articleSettingsWrapper;
 
   const stickerSettingsWrapper = /** @type {ObsidianElementLike} */ (settingsArea.createEl('div', { cls: 'apple-settings-sticker-wrapper hidden' }));
+  if ('hidden' in stickerSettingsWrapper) stickerSettingsWrapper.hidden = true;
   this.stickerSettingsWrapper = stickerSettingsWrapper;
 
   // 卡片设置浮层（B03）：DOM 由 card-settings.js 构建
   const cardSettingsWrapper = /** @type {ObsidianElementLike} */ (settingsArea.createEl('div', { cls: 'apple-settings-card-wrapper hidden' }));
+  if ('hidden' in cardSettingsWrapper) cardSettingsWrapper.hidden = true;
   this.cardSettingsWrapper = cardSettingsWrapper;
   if (typeof this.buildCardSettingsPanel === 'function') {
     this.buildCardSettingsPanel();
@@ -178,16 +184,52 @@ createSettingsPanel(container) {
   // === 主题选择 ===
   this.createSection(targetArea, '主题', (section) => {
     const grid = section.createEl('div', { cls: 'apple-btn-grid' });
-    const themeApi = getAppleThemeApi(this.theme?.constructor);
-    const themes = readThemeOptions(themeApi, 'getThemeList');
-    themes.forEach(t => {
-      const btn = grid.createEl('button', {
-        cls: `apple-btn-theme ${this.plugin.settings.theme === t.value ? 'active' : ''}`,
-        text: t.label,
+    const renderThemes = () => {
+      grid.empty();
+      const themeApi = getAppleThemeApi(this.theme?.constructor);
+      const themes = readThemeOptions(themeApi, 'getThemeList');
+      themes.forEach(t => {
+        const btn = grid.createEl('button', {
+          cls: `apple-btn-theme ${this.plugin.settings.theme === t.value ? 'active' : ''}`,
+          text: t.label,
+        });
+        btn.dataset.value = t.value;
+        btn.addEventListener('click', () => {
+          this.theme?.update({ customThemeConfig: null });
+          this.onThemeChange(t.value, grid);
+        });
       });
-      btn.dataset.value = t.value;
-      btn.addEventListener('click', () => this.onThemeChange(t.value, grid));
-    });
+      /** @type {Array<import('../../services/theme-token-validator.js').CustomThemeToken>} */
+      const customs = Array.isArray(this.plugin.settings.customThemes) ? this.plugin.settings.customThemes : [];
+      customs.forEach(t => {
+        const btn = grid.createEl('button', {
+          cls: `apple-btn-theme ${this.plugin.settings.theme === t.id ? 'active' : ''}`,
+          text: t.name || t.id,
+        });
+        btn.dataset.value = t.id;
+        btn.addEventListener('click', () => {
+          const cfg = compileCustomThemeToAppleConfig(t);
+          this.theme?.update({ customThemeConfig: cfg });
+          this.onThemeChange(t.id, grid);
+        });
+      });
+      const addBtn = grid.createEl('button', { cls: 'apple-btn-theme apple-btn-theme-manage', text: '+ 自定义' });
+      addBtn.addEventListener('click', () => {
+        showCustomThemeModal({
+          app: this.app,
+          plugin: this.plugin,
+          onThemeApplied: (themeId) => {
+            const custom = findCustomTheme(this.plugin.settings.customThemes, themeId);
+            const cfg = custom ? compileCustomThemeToAppleConfig(custom) : null;
+            this.theme?.update({ customThemeConfig: cfg });
+            renderThemes();
+            this.refreshHeadingStyleSection?.();
+            this.onThemeChange(themeId, grid);
+          },
+        });
+      });
+    };
+    renderThemes();
   });
 
   // === 字体选择 ===
@@ -226,63 +268,10 @@ createSettingsPanel(container) {
   });
 
   // === 主题色 (移到标题样式上方) ===
-  this.createSection(targetArea, '主题色', (section) => {
-    const grid = section.createEl('div', { cls: 'apple-color-grid' });
-    const themeApi = getAppleThemeApi(this.theme?.constructor);
-    const colors = readThemeOptions(themeApi, 'getColorList');
+  buildThemeColorSection(this, targetArea);
 
-    // 预设颜色
-    colors.forEach(c => {
-      const btn = grid.createEl('button', {
-        cls: `apple-btn-color ${this.plugin.settings.themeColor === c.value ? 'active' : ''}`,
-      });
-      btn.dataset.value = c.value;
-      btn.style.setProperty('--btn-color', c.color);
-      btn.addEventListener('click', () => this.onColorChange(c.value, grid));
-    });
-
-    // 自定义颜色
-    const customBtn = grid.createEl('button', {
-      cls: `apple-btn-custom-text ${this.plugin.settings.themeColor === 'custom' ? 'active' : ''}`,
-      text: '自定义',
-      attr: { 'aria-label': '自定义颜色' }
-    });
-    customBtn.dataset.value = 'custom';
-
-    // 隐藏的颜色选择器
-    const colorInput = /** @type {ObsidianInputLike} */ (grid.createEl('input', {
-      type: 'color',
-      cls: 'apple-color-picker-hidden'
-    }));
-    colorInput.value = this.plugin.settings.customColor || '#000000';
-    colorInput.setCssStyles({
-      visibility: 'hidden',
-      width: '0',
-      height: '0',
-      position: 'absolute',
-    });
-
-    // 点击按钮触发颜色选择
-    customBtn.addEventListener('click', () => {
-      colorInput.click();
-    });
-
-    // 颜色改变实时预览
-    colorInput.addEventListener('input', (e) => {
-      customBtn.style.setProperty('--btn-color', getEventTargetValue(e, this.plugin.settings.customColor));
-    });
-
-    // 颜色确认后保存
-    colorInput.addEventListener('change', async (e) => {
-      const newColor = getEventTargetValue(e, this.plugin.settings.customColor);
-      customBtn.style.setProperty('--btn-color', newColor);
-
-      // 更新设置
-      this.plugin.settings.customColor = newColor;
-      this.theme.update({ customColor: newColor });
-      await this.onColorChange('custom', grid);
-    });
-  });
+  // === 分节标题 ===
+  buildHeadingStyleSection(this, targetArea);
 
   // === 页面两侧留白 ===
   this.createSection(targetArea, '页面两侧留白', (section) => {
@@ -565,6 +554,27 @@ createSettingsPanel(container) {
   });
   captionSection.classList.add('apple-settings-inline-toggle');
 
+  // === 文章末尾互动三连卡 ===
+  const engagementCardSection = this.createSection(advancedArea, '文章末尾互动三连卡', (section) => {
+    const row = section.createEl('div', { cls: 'apple-settings-inline-row' });
+    const toggle = row.createEl('label', { cls: 'apple-toggle' });
+    const checkbox = /** @type {ObsidianInputLike} */ (toggle.createEl('input', { type: 'checkbox', cls: 'apple-toggle-input' }));
+    checkbox.checked = !!this.plugin.settings.enableEngagementCard;
+    toggle.createEl('span', { cls: 'apple-toggle-slider' });
+
+    section.createEl('span', {
+      text: '在文末展示自适应点赞、在看、转发互动卡',
+      cls: 'apple-settings-inline-tip',
+    });
+
+    checkbox.addEventListener('change', async () => {
+      this.plugin.settings.enableEngagementCard = checkbox.checked;
+      await this.plugin.saveSettings();
+      await this.convertCurrent(true);
+    });
+  });
+  engagementCardSection.classList.add('apple-settings-inline-toggle');
+
   // === 横滑图片块提示 ===
   this.createSection(advancedArea, '横滑图片块', (section) => {
     const imageBlockCommand = getImageSwipeCommandCopy(this.app, 'image-swipe').name;
@@ -722,6 +732,20 @@ refreshSpacingSliders() {
     valueLabel.setText(this.formatSpacingValue(v));
   });
   this.updateSpacingSummary();
+}
+,
+
+refreshThemeColorSection() {
+  if (typeof this._refreshThemeColorSection === 'function') {
+    this._refreshThemeColorSection();
+  }
+}
+,
+
+refreshHeadingStyleSection() {
+  if (typeof this._refreshHeadingStyleSection === 'function') {
+    this._refreshHeadingStyleSection();
+  }
 }
 ,
 };

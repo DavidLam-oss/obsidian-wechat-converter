@@ -35,6 +35,7 @@ import {
   WechatAPI,
   toReadableError,
   attachIcon,
+  APPLE_STYLE_VIEW,
 } from '../apple-style-view-shared.js';
 import { renderSectionHeader } from './platform-wall.js';
 import { resolveCustomCssSource } from '../../services/custom-css-source.js';
@@ -179,7 +180,7 @@ const wechatSettingsMethods = {
           if (!file) return;
 
           if (file.size > 100 * 1024) {
-            new Notice('❌ 图片太大，请选择小于 100KB 的图片');
+            new Notice('图片太大，请选择小于 100KB 的图片');
             return;
           }
 
@@ -188,7 +189,7 @@ const wechatSettingsMethods = {
             const result = event.target?.result;
             this.plugin.settings.avatarBase64 = typeof result === 'string' ? result : '';
             await this.plugin.saveSettings();
-            new Notice('✅ 头像已上传');
+            new Notice('头像已上传');
             refreshSettingTabCompat(this);
           };
           reader.readAsDataURL(file);
@@ -283,9 +284,9 @@ const wechatSettingsMethods = {
           try {
             const api = new WechatAPI(account.appId, account.appSecret, this.plugin.settings.proxyUrl, this.plugin.settings.clientId);
             await api.getAccessToken();
-            new Notice(`✅ ${account.name} 连接成功！`);
+            new Notice(`${account.name} 连接成功！`);
           } catch (err) {
-            new Notice(`❌ ${account.name} 连接失败: ${toReadableError(err).message}`);
+            new Notice(`${account.name} 连接失败: ${toReadableError(err).message}`);
           }
           testBtn.disabled = false;
           testBtn.textContent = '测试';
@@ -357,7 +358,7 @@ const wechatSettingsMethods = {
         .onChange(async (value) => {
           if (this.isAbsolutePathLike(value)) {
             if (!hasWarnedAbsoluteCleanupPath) {
-              new Notice('⚠️ 清理目录请填写 vault 内相对路径，不要使用绝对路径（如 /Users/... 或 C:\\...）');
+              new Notice('清理目录请填写 vault 内相对路径，不要使用绝对路径（如 /Users/... 或 C:\\...）');
               hasWarnedAbsoluteCleanupPath = true;
             }
           } else {
@@ -394,7 +395,7 @@ const wechatSettingsMethods = {
             const trimmedValue = value.trim();
             if (trimmedValue && !trimmedValue.toLowerCase().startsWith('https://')) {
               if (!hasWarnedInsecureProxy) {
-                new Notice('⚠️ 安全风险：代理地址必须使用 HTTPS 以保护您的 AppSecret。');
+                new Notice('安全风险：代理地址必须使用 HTTPS 以保护您的 AppSecret。');
                 hasWarnedInsecureProxy = true;
               }
             } else {
@@ -466,8 +467,105 @@ const wechatSettingsMethods = {
       cls: 'wechat-proxy-desc',
     });
 
+    this.renderEngagementCardSection(containerEl);
+    this.renderHeadingStyleSection(containerEl);
+    this.renderFrontmatterInterpolationSection(containerEl);
     this.renderCustomCssSection(containerEl);
 
+  },
+
+  /**
+   * 渲染「文章末尾互动三连卡」设置区块。
+   * @param {ObsidianElementLike} containerEl
+   */
+  renderEngagementCardSection(containerEl) {
+    renderSectionHeader(containerEl, 'heart', '文章末尾互动三连卡');
+
+    let enabled = !!this.plugin.settings.enableEngagementCard;
+    new Setting(containerEl)
+      .setName('启用文章末尾互动卡')
+      .setDesc('在公众号文章末尾自适应渲染「点赞、在看、转发」三连微卡片（默认关闭）。颜色自动继承当前主题色。')
+      .addToggle(toggle => toggle
+        .setValue(enabled)
+        .onChange(async (value) => {
+          this.plugin.settings.enableEngagementCard = value;
+          await this.plugin.saveSettings();
+          refreshSettingTabCompat(this);
+        }));
+
+    if (!enabled) {
+      return;
+    }
+
+    new Setting(containerEl)
+      .setName('自定义引导文案')
+      .setDesc('互动微卡片上方的引导文字。留空则使用默认文案：“如果对你有启发，欢迎点赞、在看、转发三连”。')
+      .addText(text => text
+        .setPlaceholder('如果对你有启发，欢迎点赞、在看、转发三连')
+        .setValue(this.plugin.settings.engagementCtaText || '')
+        .onChange(async (value) => {
+          this.plugin.settings.engagementCtaText = value.trim();
+          await this.plugin.saveSettings();
+        }));
+  },
+
+  /**
+   * 渲染「文章标题分节样式」设置区块（Phase 3）。
+   * @param {ObsidianElementLike} containerEl
+   */
+  renderHeadingStyleSection(containerEl) {
+    renderSectionHeader(containerEl, 'heading', '文章标题分节样式');
+
+    const currentStyle = this.plugin.settings.headingStyle || 'default';
+    new Setting(containerEl)
+      .setName('标题分节风格')
+      .setDesc('为文章二级标题（h2）应用不同视觉装饰。微信复制与草稿同步均完整保留内联样式。')
+      .addDropdown(dropdown => {
+        dropdown.addOption('default', '跟随主题（默认）');
+        dropdown.addOption('serial-number', '大数字序号（01、02）');
+        dropdown.addOption('badge', '胶囊徽标（Badge）');
+        dropdown.addOption('zen', '留白禅意（Zen）');
+        dropdown.setValue(currentStyle);
+        dropdown.onChange(async (value) => {
+          this.plugin.settings.headingStyle = value;
+          await this.plugin.saveSettings();
+          /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- reason: dynamic converter view invocation to refresh preview on heading style change */
+          try {
+            const leaves = this.app?.workspace?.getLeavesOfType?.(APPLE_STYLE_VIEW) || [];
+            for (const leaf of leaves) {
+              const view = /** @type {any} */ (leaf?.view);
+              if (view && typeof view.convertCurrent === 'function') {
+                if (view.settingsHeadingStyleGrid && typeof view.updateButtonActive === 'function') {
+                  view.updateButtonActive(view.settingsHeadingStyleGrid, value);
+                }
+                await view.convertCurrent(true);
+              }
+            }
+          } catch (e) {
+            console.warn('刷新转换器预览失败:', e);
+          }
+          /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- reason: close the scoped disable block above */
+        });
+      });
+  },
+
+  /**
+   * 渲染「动态 Frontmatter 变量插值」设置区块（Phase 3）。
+   * @param {ObsidianElementLike} containerEl
+   */
+  renderFrontmatterInterpolationSection(containerEl) {
+    renderSectionHeader(containerEl, 'file-text', '动态 Frontmatter 变量插值');
+
+    const enabled = this.plugin.settings.enableFrontmatterInterpolation !== false;
+    new Setting(containerEl)
+      .setName('启用动态变量插值')
+      .setDesc('支持在正文中使用 {{date}}、{{author}}、{{column}}、{{title}} 等模板变量。预览时标黄提示未填写的变量。')
+      .addToggle(toggle => toggle
+        .setValue(enabled)
+        .onChange(async (value) => {
+          this.plugin.settings.enableFrontmatterInterpolation = value;
+          await this.plugin.saveSettings();
+        }));
   },
 
   /**
