@@ -55,6 +55,11 @@ lib/markdown-it.min.js
 lib/highlight.min.js
 lib/mathjax-plugin.js
 
+# Build output — distributed via GitHub Release assets, not tracked in Git.
+# 源码仓库不含构建产物：用户安装走 Release，贡献者 clone 后执行 npm run build。
+/main.js
+/services/generated-embedded-deps.js
+
 # Local assistant / tool working dirs (memory logs, review boards, screenshots)
 .openprd/
 .workbuddy/
