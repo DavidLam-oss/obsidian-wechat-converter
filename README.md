@@ -14,6 +14,8 @@
 
 > ☕ **开源不易，如果这个插件帮您节省了排版与内容发布的时间，欢迎 [👉 扫码请作者喝杯咖啡](#support) 支持项目持续迭代！**
 
+> 📦 **本仓库不包含构建产物。** 直接使用请从 [Releases](https://github.com/DavidLam-oss/obsidian-wechat-converter/releases) 下载安装；本地开发请克隆后执行 `npm install && npm run build`。
+
 ---
 
 ## 🌟 三大核心创作与发布形态
