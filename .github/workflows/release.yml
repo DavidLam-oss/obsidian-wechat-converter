@@ -117,3 +117,76 @@ jobs:
             styles.css
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 国内镜像：把三个安装资产同步到 Gitee 的 Release。
+      # Gitee 单独对 GitHub 不可达的用户提供安装包，GitHub 仍是唯一发布源。
+      # 失败不阻塞主流程（continue-on-error），Gitee 侧可稍后手动补传。
+      - name: Sync release assets to Gitee
+        if: startsWith(github.ref, 'refs/tags/')
+        continue-on-error: true
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          GITEE_OWNER: david_lin1002
+          GITEE_REPO: obsidian-wechat-converter
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "${GITEE_TOKEN:-}" ]; then
+            echo "::warning::GITEE_TOKEN is not configured — skipping Gitee release sync."
+            exit 0
+          fi
+
+          API="https://gitee.com/api/v5/repos/${GITEE_OWNER}/${GITEE_REPO}"
+
+          # 发行版标题与说明：复用 GitHub 侧已解析出的 release notes。
+          TITLE="$(node -p "require('./manifest.json').version")"
+          NOTES_FILE="${GITHUB_WORKSPACE}/RELEASE_NOTES/v${TITLE}.md"
+          if [ -f "$NOTES_FILE" ]; then
+            BODY="$(awk '/^---$/{n++;next} n>=2' "$NOTES_FILE")"
+          else
+            BODY="Release ${TITLE}"
+          fi
+
+          # 1) 创建或复用 Gitee Release（幂等：已存在则取回其 id）。
+          PAYLOAD="$(node -e '
+            const [tag, title, body] = process.argv.slice(1);
+            process.stdout.write(JSON.stringify({
+              tag_name: tag, name: title, body, prerelease: false, target_commitish: "main"
+            }));
+          ' "$RELEASE_TAG" "$TITLE" "$BODY")"
+
+          RESP="$(curl -sS -X POST "${API}/releases?access_token=${GITEE_TOKEN}" \
+            -H "Content-Type: application/json;charset=UTF-8" -d "$PAYLOAD")"
+
+          RELEASE_ID="$(printf '%s' "$RESP" | node -e '
+            let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{
+              try{const j=JSON.parse(s);process.stdout.write(String(j.id||""))}catch{process.stdout.write("")}
+            });')"
+
+          if [ -z "$RELEASE_ID" ]; then
+            echo "::warning::Failed to create Gitee release. Response: $RESP"
+            exit 0
+          fi
+          echo "Gitee release id: $RELEASE_ID"
+
+          # 2) 逐个上传三个安装资产（已存在同名附件时先删后传，保证内容与 GitHub 一致）。
+          for FILE in main.js manifest.json styles.css; do
+            EXISTING_ID="$(curl -sS "${API}/releases/${RELEASE_ID}/attach_files?access_token=${GITEE_TOKEN}" \
+              | node -e '
+                let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{
+                  const name=process.argv[1];let out="";
+                  try{const arr=JSON.parse(s);const hit=arr.find(f=>f.name===name);if(hit)out=String(hit.id)}catch{}
+                  process.stdout.write(out);
+                });' "$FILE")"
+
+            if [ -n "$EXISTING_ID" ]; then
+              curl -sS -X DELETE "${API}/releases/${RELEASE_ID}/attach_files/${EXISTING_ID}?access_token=${GITEE_TOKEN}" >/dev/null || true
+            fi
+
+            echo "Uploading $FILE ..."
+            curl -sS -X POST "${API}/releases/${RELEASE_ID}/attach_files?access_token=${GITEE_TOKEN}" \
+              -F "file=@${FILE}" >/dev/null || echo "::warning::Upload failed for $FILE"
+          done
+
+          echo "Gitee release sync finished for ${RELEASE_TAG}."
