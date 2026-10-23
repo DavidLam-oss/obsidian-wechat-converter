@@ -24,6 +24,7 @@
 		"measure:latency:stability": "node scripts/measure-native-latency.mjs --rounds 5",
 		"release:pack": "bash package-release.sh",
 		"release:validate": "node scripts/release-validate.mjs",
+		"release:verify-gitee": "node scripts/verify-gitee-release.mjs",
 		"release:dryrun": "npm run review:guard",
 		"scan:guard": "npm run lint && node scripts/check-scan-risk-patterns.mjs && npm run check:size",
 		"review:guard": "npm run scan:guard && npm run check:styles && npm run check:build-artifacts && npm test -- --run && npm run release:pack && npm run release:validate",

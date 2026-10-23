@@ -108,6 +108,33 @@ title: 简短标题（会显示为 "v{version} - 标题"）
   - release artifact 校验
 - 创建 GitHub Release（从 release notes 文件读取内容）
 - 上传 release 文件
+- **同步安装资产到 Gitee Release**（`main.js` / `manifest.json` / `styles.css`，供国内无法访问 GitHub 的用户下载）
+
+## 发版后验证 Gitee 镜像
+
+GitHub Release 创建后，CI 会调用 Gitee OpenAPI 创建同名发行版并上传三个安装资产。
+推送 tag 后约 1-2 分钟，用以下命令确认镜像侧产物齐全：
+
+```bash
+npm run release:verify-gitee <version>
+# 例：npm run release:verify-gitee 2.12.1
+```
+
+预期输出：
+
+```
+tag      : 2.12.1
+assets   : styles.css, main.js, manifest.json, 2.12.1.zip, 2.12.1.tar.gz
+✅ 三个安装资产齐全
+```
+
+说明：
+
+- Gitee 会自动为每个发行版生成 `<tag>.zip` / `<tag>.tar.gz` 源码包，它们**不算**安装资产，无需理会。
+- 校验失败（exit 1）时，先去 GitHub Actions 的 `Sync release assets to Gitee` 步骤看日志；
+  该步骤配置了 `continue-on-error: true`，即使失败也不会阻塞 GitHub 主发布流程。
+- 若确认同步失败，可手动到 Gitee 发行版页补齐三个文件（从 GitHub Release 下载，SHA256 应与 GitHub 报告一致）。
+- 未配置 `GITEE_TOKEN` secret 时，该同步步骤会打印 warning 并跳过，属预期行为。
 
 ## Obsidian 社区插件注意事项
 
@@ -118,4 +145,5 @@ title: 简短标题（会显示为 "v{version} - 标题"）
   - `main.js`
   - `manifest.json`
   - `styles.css`
+- Gitee 镜像 Release 需包含**完全相同**的三个资产（同一份发布产物的副本）
 - 如果 `scan:guard` 失败，不要直接进入 release 流程
