@@ -140,6 +140,7 @@ describe('Heading Style Renderer - decorateArticleHeadings', () => {
     expect(output).toContain('letter-spacing: 3px');
     expect(output).toContain('text-transform: uppercase');
     expect(output).toContain('width: 42px; height: 1px');
+    expect(output).toContain('<section style="display: block; width: 42px; height: 1px; margin: 14px auto 0; background-color: rgba(16, 185, 129, 0.6); border: none; line-height: 1px; font-size: 0; overflow: hidden;">&nbsp;</section>');
     expect(output).toContain('Songti SC');
     expect(output).toContain('text-align: center');
   });

@@ -281,11 +281,12 @@ export function decorateArticleHeadings(html, options = {}) {
       }
 
       case HEADING_STYLES.ZEN: {
+        const zenLineColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.6)`;
         return (
           `<h2${attrsPrefix} style="display: block; margin: 40px auto 24px; padding: 0; border: none; background: none; text-align: center; line-height: 1.2;">` +
           `<span style="display: block; font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 600; color: ${primaryColor}; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px;">PART ${numStr}</span>` +
           `<span style="display: block; font-family: 'Songti SC', 'Source Han Serif SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: 21px; font-weight: 700; color: ${titleColor}; line-height: 1.4; letter-spacing: 1px;">${cleanTitle}</span>` +
-          `<span style="display: block; width: 42px; height: 1px; margin: 14px auto 0; background-color: ${primaryColor}; opacity: 0.6;"></span>` +
+          `<section style="display: block; width: 42px; height: 1px; margin: 14px auto 0; background-color: ${zenLineColor}; border: none; line-height: 1px; font-size: 0; overflow: hidden;">&nbsp;</section>` +
           `</h2>`
         );
       }
