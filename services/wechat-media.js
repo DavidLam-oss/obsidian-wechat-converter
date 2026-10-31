@@ -9,7 +9,7 @@
 
 ## 输出
 
-输出 同文件内副作用、配置对象、测试断言或样式规则，用于草稿创建/更新、素材上传、清洗、缓存或错误呈现。
+输出 `processAllImages`、`processMathFormulas` 与 `normalizeWechatImageUrl`，用于草稿创建/更新、素材上传、清晰度元数据补齐、清洗、缓存或错误呈现。
 
 ## 定位
 
@@ -114,6 +114,32 @@ function getCachedEntry(cache, key) {
     };
   }
   return null;
+}
+
+/**
+ * 规范化微信公众号图片 URL 并识别类型
+ * 针对微信 CDN 图片补充 wx_fmt 与 from=appmsg，确保手机微信客户端点击放大时能拉取全分辨率高清大图（见 #86）
+ * @param {string} wechatUrl
+ * @returns {{ url: string, type: string | null }}
+ */
+export function normalizeWechatImageUrl(wechatUrl) {
+  const match = String(wechatUrl || '').match(
+    /^https?:\/\/mmbiz\.qpic\.cn\/(?:sz_)?mmbiz_(png|jpe?g|gif)\//i
+  );
+  if (!match) return { url: wechatUrl, type: null };
+
+  try {
+    const url = new URL(wechatUrl);
+    const rawType = match[1].toLowerCase();
+    const type = rawType === 'jpg' ? 'jpeg' : rawType;
+    url.searchParams.set('wx_fmt', type);
+    if (!url.searchParams.has('from')) {
+      url.searchParams.set('from', 'appmsg');
+    }
+    return { url: url.href, type };
+  } catch {
+    return { url: wechatUrl, type: null };
+  }
 }
 
 /**
@@ -227,7 +253,17 @@ export async function processAllImages({
       if (!(img instanceof HTMLImageElement)) continue;
       const src = getImageSourceKey(img);
       if (urlMap.has(src)) {
-        img.setAttribute('src', urlMap.get(src) || src);
+        const rawUrl = urlMap.get(src) || src;
+        const normalized = normalizeWechatImageUrl(rawUrl);
+        if (normalized.type) {
+          if (!img.hasAttribute('data-s')) {
+            img.setAttribute('data-s', '300,640');
+          }
+          if (!img.hasAttribute('data-type')) {
+            img.setAttribute('data-type', normalized.type);
+          }
+        }
+        img.setAttribute('src', normalized.url);
       } else if (failedSrcs.has(src)) {
         const placeholder = activeDocument.createElement('p');
         const failedImagePlaceholderStyle = 'margin:12px 0;padding:10px 12px;border:1px dashed #d0d7de;border-radius:6px;color:#8c6d1f;background:#fff8e5;font-size:13px;line-height:1.7;';

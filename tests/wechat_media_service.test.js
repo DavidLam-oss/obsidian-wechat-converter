@@ -26,7 +26,7 @@
 */
 
 import { describe, it, expect, vi } from 'vitest';
-const { processAllImages, processMathFormulas } = require('../services/wechat-media');
+const { processAllImages, processMathFormulas, normalizeWechatImageUrl } = require('../services/wechat-media');
 
 describe('Wechat Media Service', () => {
   const serialPMap = async (items, mapper) => {
@@ -286,5 +286,46 @@ describe('Wechat Media Service', () => {
     expect(output).toContain('图片上传失败，请在微信后台手动补传：images/missing.png');
     expect(output).not.toContain('<img');
     errorSpy.mockRestore();
+  });
+
+  describe('normalizeWechatImageUrl (#86)', () => {
+    it('should normalize standard PNG, JPG, and GIF URLs from WeChat CDN', () => {
+      const pngRes = normalizeWechatImageUrl('http://mmbiz.qpic.cn/mmbiz_png/abc123/0');
+      expect(pngRes.type).toBe('png');
+      expect(pngRes.url).toBe('http://mmbiz.qpic.cn/mmbiz_png/abc123/0?wx_fmt=png&from=appmsg');
+
+      const jpgRes = normalizeWechatImageUrl('https://mmbiz.qpic.cn/sz_mmbiz_jpg/def456/640');
+      expect(jpgRes.type).toBe('jpeg');
+      expect(jpgRes.url).toBe('https://mmbiz.qpic.cn/sz_mmbiz_jpg/def456/640?wx_fmt=jpeg&from=appmsg');
+
+      const gifRes = normalizeWechatImageUrl('https://mmbiz.qpic.cn/mmbiz_gif/ghi789/0?from=custom');
+      expect(gifRes.type).toBe('gif');
+      expect(gifRes.url).toBe('https://mmbiz.qpic.cn/mmbiz_gif/ghi789/0?from=custom&wx_fmt=gif');
+    });
+
+    it('should leave non-WeChat URLs intact', () => {
+      const external = 'https://example.com/images/sample.png';
+      expect(normalizeWechatImageUrl(external)).toEqual({ url: external, type: null });
+    });
+  });
+
+  it('processAllImages should inject data-s="300,640" and data-type for WeChat CDN images (#86)', async () => {
+    const html = '<p><img src="app://photo.png" alt="测试图"></p>';
+    const srcToBlob = vi.fn(async () => new Blob(['x'], { type: 'image/png' }));
+    const uploadImage = vi.fn(async () => ({ url: 'https://mmbiz.qpic.cn/mmbiz_png/hash123/0' }));
+
+    const output = await processAllImages({
+      html,
+      api: { uploadImage },
+      progressCallback: null,
+      pMap: serialPMap,
+      srcToBlob,
+    });
+
+    expect(output).toContain('data-s="300,640"');
+    expect(output).toContain('data-type="png"');
+    expect(output).toContain('wx_fmt=png');
+    expect(output).toContain('from=appmsg');
+    expect(output).toContain('alt="测试图"');
   });
 });
