@@ -8782,39 +8782,56 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
 .wechat-material-toolbar button,
 .wechat-material-footer button {
   min-height: 32px;
-  padding: 5px 12px;
+  padding: 5px 14px;
   border: 1px solid color-mix(in srgb, var(--apple-border) 88%, transparent);
-  border-radius: 999px;
+  border-radius: var(--button-radius, 6px);
   background: var(--apple-background);
   color: var(--apple-secondary);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .wechat-material-toolbar button:hover,
 .wechat-material-footer button:hover {
   color: var(--apple-primary);
-  border-color: var(--apple-accent);
-  background: color-mix(in srgb, var(--apple-accent) 5%, var(--apple-background));
+  border-color: var(--interactive-accent);
+  background: color-mix(in srgb, var(--interactive-accent) 6%, var(--apple-background));
 }
 
 .wechat-material-footer .mod-cta {
-  border-color: var(--apple-accent);
-  background: var(--apple-accent);
+  border: 1px solid var(--interactive-accent);
+  background: var(--interactive-accent);
   color: var(--text-on-accent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
-.wechat-material-footer .mod-cta:hover {
-  background: color-mix(in srgb, var(--apple-accent) 90%, var(--apple-primary));
+.wechat-material-footer .mod-cta:hover:not(:disabled) {
+  background: var(--interactive-accent-hover, var(--interactive-accent));
+  border-color: var(--interactive-accent-hover, var(--interactive-accent));
   color: var(--text-on-accent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--interactive-accent) 25%, transparent);
+}
+
+.wechat-material-footer .mod-cta:active:not(:disabled) {
+  opacity: 0.9;
 }
 
 .wechat-material-toolbar button:disabled,
 .wechat-material-footer button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+.wechat-material-footer .mod-cta:disabled,
+.wechat-material-footer .mod-cta[disabled] {
+  background: var(--background-modifier-border);
+  border-color: transparent;
+  color: var(--text-muted);
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .wechat-material-toolbar-meta {
@@ -8903,7 +8920,7 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
 .wechat-material-cell:focus-visible,
 .wechat-material-cell.is-selected {
   border-color: var(--text-accent);
-  background: color-mix(in srgb, var(--apple-accent) 5%, var(--apple-background));
+  background: color-mix(in srgb, var(--interactive-accent) 5%, var(--apple-background));
 }
 
 .wechat-material-cell:hover {
@@ -8923,7 +8940,7 @@ div.modal.wechat-sync-shell-mobile div.modal-content.wechat-sync-modal-mobile {
   width: 22px;
   height: 22px;
   border-radius: 999px;
-  background: var(--apple-accent);
+  background: var(--interactive-accent);
   color: var(--text-on-accent);
   font-size: 13px;
   font-weight: 700;
