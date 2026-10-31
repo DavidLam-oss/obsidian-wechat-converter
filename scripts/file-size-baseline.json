@@ -11,7 +11,7 @@
     "services/feishu-api.js": 801,
     "services/obsidian-triplet-renderer-images.js": 813,
     "services/obsidian-triplet-renderer.js": 1017,
-    "services/wechat-html-cleaner.js": 800,
+    "services/wechat-html-cleaner.js": 799,
     "services/wechatsync-bridge.js": 1524,
     "styles/ai-layout.css": 835,
     "styles/multi-platform.css": 810,

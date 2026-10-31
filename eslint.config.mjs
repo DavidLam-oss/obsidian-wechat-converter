@@ -248,6 +248,7 @@ export default [
       "services/wechat-media.js",
       "services/wechat-sync.js",
       "services/wechat-video.js",
+      "services/wechat-whitespace-cleaner.js",
       "services/wechatsync-bridge.js",
       "services/wechatsync-bridge-runtime.js",
       "services/wechatsync-constants.js",

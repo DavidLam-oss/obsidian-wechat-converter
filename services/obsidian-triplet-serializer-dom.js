@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`./dom-utils.js`。
+关键依赖：`./dom-utils.js`、`./wechat-whitespace-cleaner.js`。
 
 ## 维护规则
 
@@ -26,6 +26,10 @@
 */
 
 import { createHtmlContainer, getActiveDocument } from './dom-utils.js';
+import {
+  collapseWhitespaceAroundBreak,
+  trimBlockEdgeWhitespace,
+} from './wechat-whitespace-cleaner.js';
 
 /**
  * @typedef {{
@@ -521,60 +525,15 @@ function convertPreBlocks(container, converter) {
  * @param {Element | null | undefined} container
  */
 function trimTrailingWhitespaceInBlockText(container) {
-  if (!container) return;
-  const selector = 'p,li,blockquote,h1,h2,h3,h4,h5,h6,figcaption,td,th';
-  const blocks = Array.from(container.querySelectorAll(selector));
-
-  for (const block of blocks) {
-    let node = block.lastChild;
-    while (node) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const original = String(node.textContent || '');
-        const trimmed = original.replace(/[ \t\u00a0]+$/g, '');
-        if (trimmed !== original) {
-          if (trimmed) {
-            node.textContent = trimmed;
-            break;
-          }
-          const prev = node.previousSibling;
-          node.remove();
-          node = prev;
-          continue;
-        }
-      }
-      break;
-    }
-  }
+  trimBlockEdgeWhitespace(container);
 }
 
 /**
  * @param {Element | null | undefined} container
  */
 function trimLeadingWhitespaceInBlockText(container) {
-  if (!container) return;
-  const selector = 'p,li,blockquote,h1,h2,h3,h4,h5,h6,figcaption,td,th';
-  const blocks = Array.from(container.querySelectorAll(selector));
-
-  for (const block of blocks) {
-    let node = block.firstChild;
-    while (node) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const original = String(node.textContent || '');
-        const trimmed = original.replace(/^[ \t\u00a0]+/g, '');
-        if (trimmed !== original) {
-          if (trimmed) {
-            node.textContent = trimmed;
-            break;
-          }
-          const next = node.nextSibling;
-          node.remove();
-          node = next;
-          continue;
-        }
-      }
-      break;
-    }
-  }
+  collapseWhitespaceAroundBreak(container);
+  trimBlockEdgeWhitespace(container);
 }
 
 /**

@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`./dom-utils.js`。
+关键依赖：`./dom-utils.js`、`./wechat-whitespace-cleaner.js`。
 
 ## 维护规则
 
@@ -27,6 +27,7 @@
 
 import { createHtmlContainer, getActiveDocument } from './dom-utils.js';
 import { resolveDraftListIndent } from './wechat-list-indent.js';
+import { cleanHtmlWhitespaceForWechat } from './wechat-whitespace-cleaner.js';
 
 /**
  * @typedef {{ firstElementIdx: number, prefixEndIdx: number }} InlineLabelPrefixInfo
@@ -41,7 +42,6 @@ const LIST_DISMANTLE_BLOCK_TAGS = new Set([
  * @returns {string}
  */
 export function cleanHtmlForDraft(html) {
-
     const activeDocument = getActiveDocument();
     if (!activeDocument) return html;
     const div = createHtmlContainer('div', html);
@@ -750,10 +750,8 @@ export function cleanHtmlForDraft(html) {
         nestedLists.forEach(nested => {
           fragment.appendChild(buildPseudoItems(nested, depth + 1));
         });
-
         index += 1;
       });
-
       return fragment;
     };
 
@@ -777,7 +775,6 @@ export function cleanHtmlForDraft(html) {
       let style = (nestedList.getAttribute('style') || '').replace(/margin(-[a-z]+)?:\s*[^;]+;?/gi, '');
       nestedList.setAttribute('style', `margin: 0; ${style}`);
     });
-
     // 4. 移除空的 li 元素与纯空白文本节点
     div.querySelectorAll('li').forEach(li => {
       if (!li.textContent.trim() && li.querySelectorAll('img, ul, ol').length === 0) li.remove();
@@ -787,7 +784,6 @@ export function cleanHtmlForDraft(html) {
         if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) node.remove();
       });
     });
-
     // 8. 微信公众号兼容：将 blockquote 转换为带有完全相同样式的 section 标签
     div.querySelectorAll('blockquote').forEach(bq => {
       const section = activeDocument.createElement('section');
@@ -795,6 +791,9 @@ export function cleanHtmlForDraft(html) {
       while (bq.firstChild) section.appendChild(bq.firstChild);
       bq.replaceWith(section);
     });
+
+    // 9. 移除 <br> 周围无意引入的换行符与多余空白，消除微信编辑器行首缩进错位
+    cleanHtmlWhitespaceForWechat(div);
 
     return div.innerHTML;
   }
