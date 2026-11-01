@@ -28,7 +28,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import { inspectWechatDraftContent, replaceUnuploadedDraftImagesWithPlaceholders, createWechatSyncService } from '../services/wechat-sync.js';
+import { inspectWechatDraftContent, replaceUnuploadedDraftImagesWithPlaceholders, createWechatSyncService, isWechatDraftImageSrc } from '../services/wechat-sync.js';
 
 describe('Wechat Sync Service', () => {
   function createMockApi() {
@@ -478,11 +478,26 @@ describe('Wechat Sync Service', () => {
     }));
   });
 
+  it('isWechatDraftImageSrc should recognize all WeChat CDN image domains including mmecoa', () => {
+    expect(isWechatDraftImageSrc('https://mmbiz.qpic.cn/mmbiz_png/ok/0')).toBe(true);
+    expect(isWechatDraftImageSrc('http://mmbiz.qlogo.cn/logo/0')).toBe(true);
+    expect(isWechatDraftImageSrc('http://mmecoa.qpic.cn/mmecoa_png/WAZic7VxrbDz/0?from=appmsg')).toBe(true);
+    expect(isWechatDraftImageSrc('http://mmecoa.qpic.cn/sz_mmecoa_png/WAZic7VxrbDz/0')).toBe(true);
+    expect(isWechatDraftImageSrc('https://sz_mmbiz.qpic.cn/sz_mmbiz_png/abc/0')).toBe(true);
+    expect(isWechatDraftImageSrc('https://wx.qlogo.cn/mmhead/abc/0')).toBe(true);
+    expect(isWechatDraftImageSrc('https://thirdwx.qlogo.cn/mmopen/abc/0')).toBe(true);
+    expect(isWechatDraftImageSrc('https://example.com/not-uploaded.png')).toBe(false);
+    expect(isWechatDraftImageSrc('assets/local.png')).toBe(false);
+    expect(isWechatDraftImageSrc('app://vault/image.png')).toBe(false);
+  });
+
   it('replaceUnuploadedDraftImagesWithPlaceholders should allow WeChat CDN images only', () => {
     const output = replaceUnuploadedDraftImagesWithPlaceholders([
       '<p>',
       '<img src="https://mmbiz.qpic.cn/mmbiz_png/ok/0">',
       '<img src="http://mmbiz.qlogo.cn/logo/0">',
+      '<img src="http://mmecoa.qpic.cn/mmecoa_png/ecoa_ok/0">',
+      '<img src="http://mmecoa.qpic.cn/sz_mmecoa_png/sticker/0">',
       '<img src="https://example.com/not-uploaded.png">',
       '<img src="assets/local.png">',
       '</p>',
@@ -494,6 +509,8 @@ describe('Wechat Sync Service', () => {
     ]);
     expect(output.html).toContain('https://mmbiz.qpic.cn/mmbiz_png/ok/0');
     expect(output.html).toContain('http://mmbiz.qlogo.cn/logo/0');
+    expect(output.html).toContain('http://mmecoa.qpic.cn/mmecoa_png/ecoa_ok/0');
+    expect(output.html).toContain('http://mmecoa.qpic.cn/sz_mmecoa_png/sticker/0');
     expect(output.html).not.toContain('https://example.com/not-uploaded.png"');
     expect(output.html).toContain('图片未同步，请在微信后台手动补传');
   });

@@ -124,7 +124,7 @@ function getCachedEntry(cache, key) {
  */
 export function normalizeWechatImageUrl(wechatUrl) {
   const match = String(wechatUrl || '').match(
-    /^https?:\/\/mmbiz\.qpic\.cn\/(?:sz_)?mmbiz_(png|jpe?g|gif)\//i
+    /^https?:\/\/(?:[a-zA-Z0-9_.-]+\.)?qpic\.cn\/(?:sz_)?[a-zA-Z0-9]+_(png|jpe?g|gif)\//i
   );
   if (!match) return { url: wechatUrl, type: null };
 

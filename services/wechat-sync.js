@@ -104,10 +104,10 @@ function createDraftContentIssue(code, message, value = '') {
  * @param {unknown} src
  * @returns {boolean}
  */
-function isWechatDraftImageSrc(src) {
+export function isWechatDraftImageSrc(src) {
   const value = String(src || '').trim();
-  return /^https?:\/\/mmbiz\.qpic\.cn\//i.test(value)
-    || /^https?:\/\/mmbiz\.qlogo\.cn\//i.test(value);
+  return /^https?:\/\/(?:[a-zA-Z0-9_.-]+\.)?qpic\.cn\//i.test(value)
+    || /^https?:\/\/(?:[a-zA-Z0-9_.-]+\.)?qlogo\.cn\//i.test(value);
 }
 
 /**

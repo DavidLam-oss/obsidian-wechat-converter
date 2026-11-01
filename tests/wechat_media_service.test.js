@@ -301,6 +301,14 @@ describe('Wechat Media Service', () => {
       const gifRes = normalizeWechatImageUrl('https://mmbiz.qpic.cn/mmbiz_gif/ghi789/0?from=custom');
       expect(gifRes.type).toBe('gif');
       expect(gifRes.url).toBe('https://mmbiz.qpic.cn/mmbiz_gif/ghi789/0?from=custom&wx_fmt=gif');
+
+      const ecoaPngRes = normalizeWechatImageUrl('http://mmecoa.qpic.cn/mmecoa_png/WAZic7VxrbDz/0?from=appmsg');
+      expect(ecoaPngRes.type).toBe('png');
+      expect(ecoaPngRes.url).toBe('http://mmecoa.qpic.cn/mmecoa_png/WAZic7VxrbDz/0?from=appmsg&wx_fmt=png');
+
+      const szEcoaPngRes = normalizeWechatImageUrl('http://mmecoa.qpic.cn/sz_mmecoa_png/WAZic7VxrbDz/0');
+      expect(szEcoaPngRes.type).toBe('png');
+      expect(szEcoaPngRes.url).toBe('http://mmecoa.qpic.cn/sz_mmecoa_png/WAZic7VxrbDz/0?wx_fmt=png&from=appmsg');
     });
 
     it('should leave non-WeChat URLs intact', () => {
