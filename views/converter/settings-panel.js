@@ -665,22 +665,6 @@ createSettingsPanel(container) {
   this.updateAiToolbarState();
 }
 ,
-refreshPromoBanner() {
-  const selfRec = toRecord(this);
-  const slotRaw = selfRec.promoSlot;
-  if (slotRaw && typeof slotRaw === 'object' && 'appendChild' in slotRaw) {
-    const slot = /** @type {HTMLElement & { empty?: () => void }} */ (slotRaw);
-    if (typeof slot.empty === 'function') {
-      slot.empty();
-    } else {
-      while (slot.firstChild) {
-        slot.removeChild(slot.firstChild);
-      }
-    }
-    mountPromoBanner(slot, this.plugin).catch(() => {});
-  }
-}
-,
 createSection(parent, label, builder) {
   const section = parent.createEl('div', { cls: 'apple-setting-section' });
   section.createEl('label', { cls: 'apple-setting-label', text: label });
