@@ -9459,6 +9459,11 @@ div.modal.wechat-material-picker-modal-mobile {
   border-color: var(--interactive-accent);
 }
 
+.card-media-picker-file-input,
+.card-media-picker-modal input[type="file"] {
+  display: none;
+}
+
 /* =========================================================================
    AI 灵感生图 Tab 样式
    ========================================================================= */

@@ -414,6 +414,13 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
       expect(dropzone).not.toBeNull();
       expect(dropzone.textContent).toContain('拖拽本地图片至此处，或点击浏览文件');
       expect(dropzone.querySelector('.card-media-picker-dropzone-btn')?.textContent).toBe('浏览文件');
+
+      // 回归保护：隐式 file input 必须显式通过 hidden 属性与 display:none 隐藏，不可裸露
+      const fileInput = container.querySelector('input[type="file"]');
+      expect(fileInput).not.toBeNull();
+      expect(fileInput?.getAttribute('hidden')).toBe('true');
+      expect(fileInput?.style.display).toBe('none');
+      expect(fileInput?.className).toContain('card-media-picker-file-input');
     });
 
     it('能够优先从 cardPreviewPendingInput 中读取当前活跃 Markdown 正文', () => {

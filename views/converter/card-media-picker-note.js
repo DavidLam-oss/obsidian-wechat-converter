@@ -104,10 +104,19 @@ export function renderNoteMediaPickerTab({ container, view, onSelect }) {
 
   const fileInput = /** @type {HTMLInputElement} */ (
     /** @type {unknown} */ (container.createEl('input', {
-      attr: { type: 'file', accept: 'image/png,image/jpeg,image/webp' },
-      cls: 'hidden',
+      attr: {
+        type: 'file',
+        accept: 'image/png,image/jpeg,image/webp',
+        hidden: 'true',
+        'aria-hidden': 'true',
+        tabindex: '-1',
+      },
+      cls: 'card-media-picker-file-input hidden',
     }))
   );
+  if (typeof fileInput.setCssStyles === 'function') {
+    fileInput.setCssStyles({ display: 'none' });
+  }
 
   dropzone.addEventListener('click', () => {
     fileInput.click();

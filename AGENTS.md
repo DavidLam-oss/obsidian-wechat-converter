@@ -106,6 +106,9 @@ This file provides guidance to Codex when working with code in this repository.
 - Prefer Obsidian-native controls and simple layout techniques over brittle CSS tricks.
 - Keep copy/sync behavior aligned with preview behavior as much as possible.
 - For multi-document or multi-account workflows, preserve existing state management patterns unless there is a clear bug.
+- **Modal / Portal Scope & Form Controls**:
+  - Modal 弹窗直接挂载于 `document.body` 顶层，脱离插件侧栏容器（`.apple-converter-container`），绝不要假定存在全局通用的 `.hidden` 样式（Obsidian 官方默认未定义全局 `.hidden`，某些第三方社区主题才会隐式提供）。
+  - 对于隐式辅助控件（例如触发文件选择的 `<input type="file">`），严禁仅依赖 `cls: 'hidden'`；必须通过专属类名、HTML 原生 `hidden: 'true'` 属性以及 `setCssStyles({ display: 'none' })` 显式兜底隐藏，避免在纯净 Vault / 默认主题下原生态裸露。
 
 ### 5. Quality Bar
 - Add tests for core logic changes, especially regex-heavy transformations, sanitizer changes, sync failure handling, path cleanup rules, or rendering edge cases.
