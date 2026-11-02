@@ -19,13 +19,13 @@
     "views/converter/ai-layout-debug.js": 923,
     "views/converter/ai-layout-panel.js": 1041,
     "views/converter/core.js": 1157,
-    "views/settings/multi-platform-tab.js": 934
+    "views/settings/multi-platform-tab.js": 904
   },
   "generatedBytes": {
     "main.js": 4100000,
     "services/ai-layout-runtime/generated-skills.js": 52200,
     "services/generated-embedded-deps.js": 2350000,
-    "styles.css": 266000
+    "styles.css": 275000
   },
   "waivers": {
     "main.js": {
@@ -44,9 +44,9 @@
       "date": "2026-10-17"
     },
     "styles.css": {
-      "max": 266000,
-      "reason": "聚合样式表随界面改版增长。预留约 10% 余量，避免每次样式微调都触发上限告警。",
-      "date": "2026-10-16"
+      "max": 275000,
+      "reason": "双十一特惠卡片与横幅全新样式重构。预留约 3% 余量，避免样式微调触发上限告警。",
+      "date": "2026-11-02"
     },
     "views/converter/core.js": {
       "max": 1157,

@@ -1,0 +1,290 @@
+/*
+## 核心功能
+
+提供侧边栏与设置页限时特惠 (Promo Banner & Promo Card) 视觉样式。
+
+## 输入
+
+无（CSS 规则声明）。
+
+## 输出
+
+输出 `.apple-converter-promo-banner` 及 `.wechat-multiplatform-promo-card` 样式。
+
+## 定位
+
+位于 styles/，属于样式碎片层。
+
+## 维护规则
+
+- 修改后通过 `npm run generate:styles` 聚合入 styles.css。
+- 遵循 Obsidian 社区规范，避免添加强制覆盖标记。
+*/
+
+/* 侧边栏轻量特惠通知条 (Promo Banner) */
+.apple-converter-promo-slot {
+  display: block;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.apple-converter-promo-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin: 8px 14px 4px 14px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, #f59e0b 35%, var(--background-modifier-border));
+  background: color-mix(in srgb, #f59e0b 9%, var(--background-secondary));
+  box-shadow: 0 2px 8px color-mix(in srgb, #f59e0b 8%, transparent);
+  font-size: 12px;
+  line-height: 1.4;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.apple-converter-promo-banner.is-hiding {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.apple-converter-promo-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.apple-converter-promo-icon {
+  display: inline-flex;
+  align-items: center;
+  color: #f59e0b;
+}
+
+.apple-converter-promo-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.apple-converter-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: #f59e0b;
+  color: #000;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.apple-converter-promo-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-normal, #222);
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.apple-converter-promo-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.apple-converter-promo-btn {
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.apple-converter-promo-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted, #888);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.apple-converter-promo-close:hover {
+  color: var(--text-normal, #222);
+  background: color-mix(in srgb, var(--text-normal) 10%, transparent);
+}
+
+.apple-converter-promo-close svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* 多平台发布 Tab 独立限时特惠卡片 (Promo Banner Card) */
+.wechat-multiplatform-promo-card {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, #f59e0b 35%, var(--background-modifier-border));
+  background: linear-gradient(145deg, color-mix(in srgb, #f59e0b 9%, var(--background-secondary)), var(--background-secondary));
+  box-shadow: 0 2px 10px color-mix(in srgb, #f59e0b 10%, transparent);
+  transition: all 0.2s ease;
+}
+
+.wechat-multiplatform-promo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.wechat-multiplatform-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.2px;
+}
+
+.wechat-multiplatform-promo-discount {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.wechat-multiplatform-promo-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.wechat-multiplatform-promo-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.wechat-multiplatform-promo-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-normal);
+}
+
+.wechat-multiplatform-promo-price-group {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.wechat-multiplatform-promo-price-current {
+  font-size: 19px;
+  font-weight: 800;
+  color: #d97706;
+}
+
+.theme-dark .wechat-multiplatform-promo-price-current {
+  color: #fbbf24;
+}
+
+.wechat-multiplatform-promo-price-original {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.wechat-multiplatform-promo-desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.wechat-multiplatform-promo-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 10px;
+  border-top: 1px dashed color-mix(in srgb, #f59e0b 25%, var(--background-modifier-border));
+}
+
+.wechat-multiplatform-promo-coupon-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wechat-multiplatform-promo-coupon-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.wechat-multiplatform-coupon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, #f59e0b 45%, var(--background-modifier-border));
+  background: color-mix(in srgb, #f59e0b 14%, var(--background-primary));
+  color: #b45309;
+  font-family: var(--font-monospace);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.theme-dark .wechat-multiplatform-coupon-btn {
+  color: #fbbf24;
+  border-color: color-mix(in srgb, #f59e0b 50%, transparent);
+}
+
+.wechat-multiplatform-coupon-btn:hover {
+  background: color-mix(in srgb, #f59e0b 24%, var(--background-primary));
+  transform: translateY(-1px);
+}
+
+.wechat-multiplatform-coupon-copy-hint {
+  font-size: 11px;
+  font-weight: normal;
+  opacity: 0.85;
+}
+
+.wechat-multiplatform-promo-footer button.wechat-multiplatform-pro-cta {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, #f59e0b 60%, transparent);
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 600;
+  box-shadow: 0 2px 6px color-mix(in srgb, #f59e0b 35%, transparent);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wechat-multiplatform-promo-footer button.wechat-multiplatform-pro-cta:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}

@@ -37,6 +37,7 @@ import {
 import { showCustomThemeModal } from './custom-theme-modal.js';
 import { buildHeadingStyleSection } from './heading-style-controls.js';
 import { buildThemeColorSection } from './theme-color-controls.js';
+import { mountPromoBanner } from './promo-banner.js';
 import {
   compileCustomThemeToAppleConfig,
   findCustomTheme,
@@ -63,6 +64,11 @@ export const settingsPanelMethods = {
 createSettingsPanel(container) {
   // 1. 创建顶部双行 Header 容器
   const header = container.createEl('div', { cls: 'apple-preview-header' });
+
+  // 1.0 特惠通知插槽 (Promo Banner Slot: 严格固定在 Header 下方与 Preview 之间)
+  const promoSlot = container.createEl('div', { cls: 'apple-converter-promo-slot' });
+  this.promoSlot = promoSlot;
+  mountPromoBanner(promoSlot, this.plugin).catch(() => {});
 
   // 1.1 第一行：Title Row
   const topRow = header.createEl('div', { cls: 'apple-preview-header-top apple-top-toolbar' });
@@ -657,6 +663,22 @@ createSettingsPanel(container) {
   this.aiLayoutOverlay = container.createEl('div', { cls: 'apple-ai-layout-overlay' });
   this.createAiLayoutPanel(this.aiLayoutOverlay);
   this.updateAiToolbarState();
+}
+,
+refreshPromoBanner() {
+  const selfRec = toRecord(this);
+  const slotRaw = selfRec.promoSlot;
+  if (slotRaw && typeof slotRaw === 'object' && 'appendChild' in slotRaw) {
+    const slot = /** @type {HTMLElement & { empty?: () => void }} */ (slotRaw);
+    if (typeof slot.empty === 'function') {
+      slot.empty();
+    } else {
+      while (slot.firstChild) {
+        slot.removeChild(slot.firstChild);
+      }
+    }
+    mountPromoBanner(slot, this.plugin).catch(() => {});
+  }
 }
 ,
 createSection(parent, label, builder) {

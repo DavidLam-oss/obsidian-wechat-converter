@@ -68,10 +68,8 @@ import {
 import { formatWechatsyncCheckedAt } from '../connection-status-bar.js';
 import { getActiveWindowValue } from '../../services/dom-utils.js';
 import { renderPlatformWall, renderSectionHeader } from './platform-wall.js';
+import { renderMultiPlatformOnboardingGuide } from './multi-platform-onboarding.js';
 
-const OBSIDIAN_PUBLISHER_PRO_URL = 'https://xiaoweibox.top/obsidian-publisher/pro/?from=obsidian-plugin';
-const OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL = 'https://xiaoweibox.top/obsidian-publisher/guide/?from=obsidian-plugin#install-extension';
-const OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL = 'https://xiaoweibox.top/obsidian-publisher/guide/?from=obsidian-plugin#bridge';
 const LEGACY_SETTING_RENDER_KEY = ['dis', 'play'].join('');
 
 /**
@@ -437,44 +435,16 @@ function renderMultiPlatformSettingsTab(tab, containerEl, options = {}) {
   // 2. 浏览器配套同步服务 (Onboarding Banner + 启用开关)
   renderSectionHeader(containerEl, 'plug', '浏览器配套同步服务');
 
-  const guide = containerEl.createDiv({
-    cls: `wechat-multiplatform-onboarding${isProLicensed ? ' is-pro' : ''}`,
+  renderMultiPlatformOnboardingGuide(tab, containerEl, {
+    isProLicensed,
+    isProCached,
+    isPublishingEnabled,
+    hasEverConnected,
+    proLicense,
+    formatProLicenseObservedAgo,
+    openExternalUrl,
+    Notice,
   });
-  const cachedLastSeenText = isProCached && proLicense.observedAt
-    ? formatProLicenseObservedAgo(proLicense.observedAt)
-    : '';
-  guide.createEl('div', {
-    cls: 'wechat-multiplatform-onboarding-title',
-    text: isProLicensed
-      ? (isProCached
-        ? `Pro 身份已保留（上次识别：${cachedLastSeenText}）`
-        : (isPublishingEnabled ? 'Pro 已激活' : '上次连接时识别为 Pro'))
-      : '安装浏览器插件并完成配置',
-  });
-  guide.createEl('p', {
-    text: isProLicensed
-      ? (isProCached
-        ? '浏览器插件当前未连接，Obsidian 正在使用上次识别到的 Pro 身份。重新连接浏览器即可刷新状态。'
-        : (isPublishingEnabled
-          ? '当前浏览器插件授权已同步到 Obsidian，发布到其他平台时不再受免费版每日平台数量限制。'
-          : '浏览器插件发布当前已关闭。重新启用并连接后，Obsidian 会再次确认授权状态。'))
-      : (hasEverConnected
-        ? '免费版每天 3 个平台额度。连接浏览器插件即可开启多平台草稿同步。'
-        : '免费版每天 3 个平台额度。已购买 Pro？连接一次浏览器插件即可解锁离线保留，之后浏览器未启动也会保留 Pro 身份。'),
-  });
-  if (isProLicensed) {
-    guide.createEl('span', {
-      text: 'Pro',
-      cls: 'wechat-pro-identity-badge wechat-pro-identity-badge-panel',
-    });
-  }
-  const guideActions = guide.createDiv({ cls: 'wechat-multiplatform-onboarding-actions' });
-  const installGuideBtn = guideActions.createEl('button', { text: '安装浏览器插件', cls: 'mod-cta' });
-  installGuideBtn.onclick = () => openExternalUrl(tab, OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL);
-  const bridgeGuideBtn = guideActions.createEl('button', { text: '查看配置步骤' });
-  bridgeGuideBtn.onclick = () => openExternalUrl(tab, OBSIDIAN_PUBLISHER_BRIDGE_GUIDE_URL);
-  const proGuideBtn = guideActions.createEl('button', { text: isProLicensed ? '查看 Pro 权益' : '了解 Pro' });
-  proGuideBtn.onclick = () => openExternalUrl(tab, OBSIDIAN_PUBLISHER_PRO_URL);
 
   new Setting(containerEl)
     .setName('启用浏览器插件发布')

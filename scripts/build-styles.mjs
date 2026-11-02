@@ -53,6 +53,7 @@ const STYLE_FRAGMENTS = [
   "styles/custom-theme-modal.css",
   "styles/ai-settings.css",
   "styles/about-settings.css",
+  "styles/promo.css",
 ];
 
 async function buildStyles() {

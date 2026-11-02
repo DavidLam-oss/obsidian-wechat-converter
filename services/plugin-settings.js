@@ -163,6 +163,8 @@ export function createDefaultSettings() {
     unsplashAccessKey: '',
     // 图片卡片全局默认（C02）：新会话/新导出的初值，会话内调整不写回
     cardDefaults: createDefaultCardSettings(),
+    // 已关闭的活动通知 ID 列表
+    dismissedPromoIds: [],
   };
 }
 
@@ -201,6 +203,13 @@ export function normalizeLoadedSettings(loadedData, options = {}) {
   if (rawAiSettings !== undefined) {
     const normalizedRawAi = normalizeAiSettings(toRecord(rawAiSettings));
     if (JSON.stringify(normalizedRawAi) !== JSON.stringify(rawAiSettings)) {
+      didMigrate = true;
+    }
+  }
+
+  if (!Array.isArray(settings.dismissedPromoIds)) {
+    settings.dismissedPromoIds = [];
+    if (data.dismissedPromoIds !== undefined) {
       didMigrate = true;
     }
   }
