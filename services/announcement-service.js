@@ -160,9 +160,10 @@ export async function fetchActiveAnnouncement(forceRefresh = false) {
  * @param {AnnouncementPayload | null | undefined} announcement
  * @param {Record<string, unknown> | null | undefined} settings
  * @param {number} [now=Date.now()]
+ * @param {{ ignoreDismissed?: boolean }} [options={}]
  * @returns {boolean}
  */
-export function isAnnouncementEligible(announcement, settings, now = Date.now()) {
+export function isAnnouncementEligible(announcement, settings, now = Date.now(), options = {}) {
   if (!announcement || !announcement.id || !announcement.active) {
     return false;
   }
@@ -183,12 +184,15 @@ export function isAnnouncementEligible(announcement, settings, now = Date.now())
     return false;
   }
 
-  // 3. 用户是否已主动点击关闭
-  const dismissed = (settings && Array.isArray(settings.dismissedPromoIds))
-    ? /** @type {string[]} */ (settings.dismissedPromoIds)
-    : [];
-  if (dismissed.includes(announcement.id)) {
-    return false;
+  // 3. 用户是否已主动点击关闭（在设置页等常驻入口可选择忽略已关闭标记，保持入口可用）
+  const ignoreDismissed = Boolean(options && typeof options === 'object' && options.ignoreDismissed);
+  if (!ignoreDismissed) {
+    const dismissed = (settings && Array.isArray(settings.dismissedPromoIds))
+      ? /** @type {string[]} */ (settings.dismissedPromoIds)
+      : [];
+    if (dismissed.includes(announcement.id)) {
+      return false;
+    }
   }
 
   return true;

@@ -29,16 +29,20 @@ import {
   isAnnouncementEligible,
   dismissAnnouncement,
 } from '../services/announcement-service.js';
-import { renderMultiPlatformOnboardingGuide } from '../views/settings/multi-platform-onboarding.js';
+import {
+  renderMultiPlatformOnboardingGuide,
+  mountPromoCard,
+} from '../views/settings/multi-platform-onboarding.js';
+
+const baseAnnouncement = {
+  id: '2026-double-11',
+  active: true,
+  tag: '🎉 11.11 特惠',
+  startTime: '2026-11-01T00:00:00+08:00',
+  endTime: '2026-11-30T23:59:59+08:00',
+};
 
 describe('announcement-service', () => {
-  const baseAnnouncement = {
-    id: '2026-double-11',
-    active: true,
-    tag: '🎉 11.11 特惠',
-    startTime: '2026-11-01T00:00:00+08:00',
-    endTime: '2026-11-30T23:59:59+08:00',
-  };
 
   it('allows eligible announcement during active period for non-pro user', () => {
     const midNov = new Date('2026-11-15T12:00:00+08:00').getTime();
@@ -132,10 +136,33 @@ describe('multi-platform-onboarding', () => {
     };
   }
 
-  it('renders promo card and CTA button for free users', () => {
-    const container = createMockElement();
+  it('mountPromoCard renders promo card and CTA button driven by announcement data', () => {
+    const slot = createMockElement();
     const openExternalUrl = vi.fn();
-    renderMultiPlatformOnboardingGuide({}, container, {
+    mountPromoCard(slot, baseAnnouncement, {
+      openExternalUrl,
+      tab: {},
+      Notice: class {},
+    });
+
+    const promoCard = slot.children.find((c) => c.cls === 'wechat-multiplatform-promo-card');
+    expect(promoCard).toBeDefined();
+
+    const footer = promoCard.children.find((c) => c.cls === 'wechat-multiplatform-promo-footer');
+    const proBtn = footer.children.find((c) => c.cls?.includes('wechat-multiplatform-pro-cta'));
+    expect(proBtn).toBeDefined();
+
+    proBtn.onclick();
+    expect(openExternalUrl).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining('promo=double11')
+    );
+  });
+
+  it('renders promo slot for free users and skips completely for Pro users', () => {
+    const freeContainer = createMockElement();
+    const openExternalUrl = vi.fn();
+    renderMultiPlatformOnboardingGuide({}, freeContainer, {
       isProLicensed: false,
       isProCached: false,
       isPublishingEnabled: false,
@@ -146,24 +173,11 @@ describe('multi-platform-onboarding', () => {
       Notice: class {},
     });
 
-    const promoCard = container.children.find((c) => c.cls === 'wechat-multiplatform-promo-card');
-    expect(promoCard).toBeDefined();
+    const promoSlot = freeContainer.children.find((c) => c.cls === 'wechat-multiplatform-promo-slot');
+    expect(promoSlot).toBeDefined();
 
-    const footer = promoCard.children.find((c) => c.cls === 'wechat-multiplatform-promo-footer');
-    const proBtn = footer.children.find((c) => c.text === '🚀 立即特惠开通 (¥99) →');
-    expect(proBtn).toBeDefined();
-
-    proBtn.onclick();
-    expect(openExternalUrl).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.stringContaining('promo=double11')
-    );
-  });
-
-  it('does not render promo card for Pro users', () => {
-    const container = createMockElement();
-    const openExternalUrl = vi.fn();
-    renderMultiPlatformOnboardingGuide({}, container, {
+    const proContainer = createMockElement();
+    renderMultiPlatformOnboardingGuide({}, proContainer, {
       isProLicensed: true,
       isProCached: false,
       isPublishingEnabled: true,
@@ -174,10 +188,10 @@ describe('multi-platform-onboarding', () => {
       Notice: class {},
     });
 
-    const promoCard = container.children.find((c) => c.cls === 'wechat-multiplatform-promo-card');
-    expect(promoCard).toBeUndefined();
+    const proPromoSlot = proContainer.children.find((c) => c.cls === 'wechat-multiplatform-promo-slot');
+    expect(proPromoSlot).toBeUndefined();
 
-    const guide = container.children.find((c) => c.cls?.includes('wechat-multiplatform-onboarding'));
+    const guide = proContainer.children.find((c) => c.cls?.includes('wechat-multiplatform-onboarding'));
     const badge = guide.children.find((c) => c.text === 'Pro');
     expect(badge).toBeDefined();
 

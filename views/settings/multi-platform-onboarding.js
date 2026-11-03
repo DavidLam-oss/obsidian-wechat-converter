@@ -26,6 +26,10 @@
 */
 
 import { getActiveWindowValue } from '../../services/dom-utils.js';
+import {
+  fetchActiveAnnouncement,
+  isAnnouncementEligible,
+} from '../../services/announcement-service.js';
 
 const OBSIDIAN_PUBLISHER_PRO_URL = 'https://xiaoweibox.top/obsidian-publisher/pro/?from=obsidian-plugin';
 const OBSIDIAN_PUBLISHER_EXTENSION_GUIDE_URL = 'https://xiaoweibox.top/obsidian-publisher/guide/?from=obsidian-plugin#install-extension';
@@ -39,6 +43,7 @@ const OBSIDIAN_PUBLISHER_PRO_D11_URL = 'https://xiaoweibox.top/obsidian-publishe
  *   createDiv: (options?: ElementCreateOptions) => TargetElement,
  *   createSpan: (options?: ElementCreateOptions) => TargetElement,
  *   createEl: (tag: string, options?: ElementCreateOptions) => TargetElement,
+ *   remove: () => void,
  * }} TargetElement
  * @typedef {{
  *   isProLicensed: boolean,
@@ -51,6 +56,92 @@ const OBSIDIAN_PUBLISHER_PRO_D11_URL = 'https://xiaoweibox.top/obsidian-publishe
  *   Notice: new (msg: string) => unknown,
  * }} OnboardingOptions
  */
+
+/**
+ * 挂载由后台活动信号动态驱动的特惠礼遇卡片
+ * @param {TargetElement} slot
+ * @param {import('../../services/announcement-service.js').AnnouncementPayload} announcement
+ * @param {{ openExternalUrl: (tab: unknown, url: string) => void, tab: unknown, Notice: new (msg: string) => unknown }} ctx
+ */
+export function mountPromoCard(slot, announcement, ctx) {
+  const { openExternalUrl, tab, Notice } = ctx;
+  const promoCard = slot.createDiv({ cls: 'wechat-multiplatform-promo-card' });
+
+  // 1.1 顶部标签行
+  const promoHeader = promoCard.createDiv({ cls: 'wechat-multiplatform-promo-header' });
+  promoHeader.createSpan({
+    cls: 'wechat-multiplatform-promo-badge',
+    text: announcement.tag || '🎉 11.11 限时特惠',
+  });
+  if (announcement.originalPrice) {
+    promoHeader.createSpan({
+      cls: 'wechat-multiplatform-promo-discount',
+      text: `原价 ${announcement.originalPrice} · ${announcement.title || '限时立减'}`,
+    });
+  }
+
+  // 1.2 核心卖点与价格行
+  const promoBody = promoCard.createDiv({ cls: 'wechat-multiplatform-promo-body' });
+  const titleRow = promoBody.createDiv({ cls: 'wechat-multiplatform-promo-title-row' });
+  titleRow.createSpan({
+    cls: 'wechat-multiplatform-promo-title',
+    text: '多平台发布 Pro 终身买断',
+  });
+  const priceGroup = titleRow.createSpan({ cls: 'wechat-multiplatform-promo-price-group' });
+  priceGroup.createEl('strong', {
+    cls: 'wechat-multiplatform-promo-price-current',
+    text: announcement.highlightPrice || '¥99',
+  });
+  if (announcement.originalPrice) {
+    priceGroup.createEl('span', {
+      cls: 'wechat-multiplatform-promo-price-original',
+      text: announcement.originalPrice,
+    });
+  }
+
+  promoBody.createDiv({
+    cls: 'wechat-multiplatform-promo-desc',
+    text: announcement.description || '支持微信/银行卡直接在线支付，结算输入优惠码即可立减。一次购买，终身授权。',
+  });
+
+  // 1.3 操作与优惠码复制行
+  const promoFooter = promoCard.createDiv({ cls: 'wechat-multiplatform-promo-footer' });
+  const couponCode = announcement.couponCode || 'OBPUB11';
+  if (couponCode) {
+    const couponWrap = promoFooter.createDiv({ cls: 'wechat-multiplatform-promo-coupon-wrap' });
+    couponWrap.createSpan({
+      cls: 'wechat-multiplatform-promo-coupon-label',
+      text: '优惠码',
+    });
+    const codeBtn = couponWrap.createEl('button', {
+      cls: 'wechat-multiplatform-coupon-btn',
+      attr: { 'aria-label': '点击一键复制优惠码' },
+    });
+    codeBtn.createSpan({ text: couponCode });
+    codeBtn.createSpan({
+      cls: 'wechat-multiplatform-coupon-copy-hint',
+      text: ' 📋 点击复制',
+    });
+
+    codeBtn.onclick = (e) => {
+      e.stopPropagation();
+      const nav = /** @type {{ clipboard?: { writeText?: (text: string) => Promise<void> } } | undefined} */ (
+        getActiveWindowValue('navigator')
+      );
+      if (nav && nav.clipboard && typeof nav.clipboard.writeText === 'function') {
+        nav.clipboard.writeText(couponCode).catch(() => {});
+      }
+      new Notice(`优惠码 ${couponCode} 已复制，结算时粘贴即可`);
+    };
+  }
+
+  const promoCtaBtn = promoFooter.createEl('button', {
+    cls: 'wechat-multiplatform-pro-cta mod-cta',
+    text: announcement.actionText ? `🚀 ${announcement.actionText} →` : '🚀 立即特惠开通 (¥99) →',
+  });
+  const targetUrl = announcement.actionUrl || OBSIDIAN_PUBLISHER_PRO_D11_URL;
+  promoCtaBtn.onclick = () => openExternalUrl(tab, targetUrl);
+}
 
 /**
  * @param {unknown} tab
@@ -69,76 +160,31 @@ export function renderMultiPlatformOnboardingGuide(tab, containerEl, options) {
     Notice,
   } = options;
 
-  // 1. 未开通用户优先展示独立的 11.11 双十一专属特惠卡片（非嵌套，视觉独立通透）
+  // 1. 未开通用户优先展示独立的专属特惠卡片（受后台活动信号动态控制与驱动）
   if (!isProLicensed) {
-    const promoCard = containerEl.createDiv({ cls: 'wechat-multiplatform-promo-card' });
+    const promoSlot = containerEl.createDiv({ cls: 'wechat-multiplatform-promo-slot' });
 
-    // 1.1 顶部标签行
-    const promoHeader = promoCard.createDiv({ cls: 'wechat-multiplatform-promo-header' });
-    promoHeader.createSpan({
-      cls: 'wechat-multiplatform-promo-badge',
-      text: '🎉 11.11 限时特惠',
-    });
-    promoHeader.createSpan({
-      cls: 'wechat-multiplatform-promo-discount',
-      text: '原价 ¥299 · 限时立减 ¥200',
-    });
+    const pluginSettings = /** @type {Record<string, unknown> | undefined} */ (
+      (tab && typeof tab === 'object' && 'plugin' in tab && tab.plugin && typeof tab.plugin === 'object')
+        ? /** @type {{ settings?: Record<string, unknown> }} */ (tab.plugin).settings
+        : undefined
+    );
 
-    // 1.2 核心卖点与价格行
-    const promoBody = promoCard.createDiv({ cls: 'wechat-multiplatform-promo-body' });
-    const titleRow = promoBody.createDiv({ cls: 'wechat-multiplatform-promo-title-row' });
-    titleRow.createSpan({
-      cls: 'wechat-multiplatform-promo-title',
-      text: '多平台发布 Pro 终身买断',
-    });
-    const priceGroup = titleRow.createSpan({ cls: 'wechat-multiplatform-promo-price-group' });
-    priceGroup.createEl('strong', {
-      cls: 'wechat-multiplatform-promo-price-current',
-      text: '¥99',
-    });
-    priceGroup.createEl('span', {
-      cls: 'wechat-multiplatform-promo-price-original',
-      text: '¥299',
-    });
-
-    promoBody.createDiv({
-      cls: 'wechat-multiplatform-promo-desc',
-      text: '支持微信/银行卡直接在线支付，结算输入优惠码即可立减 ¥200。一次购买，终身授权。',
-    });
-
-    // 1.3 操作与优惠码复制行
-    const promoFooter = promoCard.createDiv({ cls: 'wechat-multiplatform-promo-footer' });
-    const couponWrap = promoFooter.createDiv({ cls: 'wechat-multiplatform-promo-coupon-wrap' });
-    couponWrap.createSpan({
-      cls: 'wechat-multiplatform-promo-coupon-label',
-      text: '优惠码',
-    });
-    const codeBtn = couponWrap.createEl('button', {
-      cls: 'wechat-multiplatform-coupon-btn',
-      attr: { 'aria-label': '点击一键复制优惠码' },
-    });
-    codeBtn.createSpan({ text: 'OBPUB11' });
-    codeBtn.createSpan({
-      cls: 'wechat-multiplatform-coupon-copy-hint',
-      text: ' 📋 点击复制',
-    });
-
-    codeBtn.onclick = (e) => {
-      e.stopPropagation();
-      const nav = /** @type {{ clipboard?: { writeText?: (text: string) => Promise<void> } } | undefined} */ (
-        getActiveWindowValue('navigator')
-      );
-      if (nav && nav.clipboard && typeof nav.clipboard.writeText === 'function') {
-        nav.clipboard.writeText('OBPUB11').catch(() => {});
-      }
-      new Notice('优惠码 OBPUB11 已复制，结算时粘贴即可');
-    };
-
-    const promoCtaBtn = promoFooter.createEl('button', {
-      cls: 'wechat-multiplatform-pro-cta mod-cta',
-      text: '🚀 立即特惠开通 (¥99) →',
-    });
-    promoCtaBtn.onclick = () => openExternalUrl(tab, OBSIDIAN_PUBLISHER_PRO_D11_URL);
+    fetchActiveAnnouncement()
+      .then((announcement) => {
+        if (!announcement || !isAnnouncementEligible(announcement, pluginSettings, Date.now(), { ignoreDismissed: true })) {
+          if (typeof promoSlot.remove === 'function') {
+            promoSlot.remove();
+          }
+          return;
+        }
+        mountPromoCard(promoSlot, announcement, { openExternalUrl, tab, Notice });
+      })
+      .catch(() => {
+        if (typeof promoSlot.remove === 'function') {
+          promoSlot.remove();
+        }
+      });
   }
 
   // 2. 浏览器配套安装与配置引导卡片（纯净、专业，不嵌套促销框）
