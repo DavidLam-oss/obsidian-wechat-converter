@@ -239,6 +239,18 @@
   font-weight: 500;
 }
 
+.wechat-multiplatform-promo-tip-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wechat-multiplatform-promo-tip-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
 .wechat-multiplatform-coupon-btn {
   display: inline-flex;
   align-items: center;
@@ -272,6 +284,7 @@
 }
 
 .wechat-multiplatform-promo-footer button.wechat-multiplatform-pro-cta {
+  margin-left: auto;
   padding: 6px 14px;
   border-radius: 6px;
   border: 1px solid color-mix(in srgb, #f59e0b 60%, transparent);

@@ -106,7 +106,10 @@ export function mountPromoCard(slot, announcement, ctx) {
 
   // 1.3 操作与优惠码复制行
   const promoFooter = promoCard.createDiv({ cls: 'wechat-multiplatform-promo-footer' });
-  const couponCode = announcement.couponCode || 'OBPUB11';
+  const couponCode = (announcement.couponCode && typeof announcement.couponCode === 'string')
+    ? announcement.couponCode.trim()
+    : '';
+
   if (couponCode) {
     const couponWrap = promoFooter.createDiv({ cls: 'wechat-multiplatform-promo-coupon-wrap' });
     couponWrap.createSpan({
@@ -133,6 +136,13 @@ export function mountPromoCard(slot, announcement, ctx) {
       }
       new Notice(`优惠码 ${couponCode} 已复制，结算时粘贴即可`);
     };
+  } else {
+    // 无优惠码或直降模式时：展示保障权益提示（支持后台 footerTip 自定义，或默认保障）
+    const tipWrap = promoFooter.createDiv({ cls: 'wechat-multiplatform-promo-tip-wrap' });
+    tipWrap.createSpan({
+      cls: 'wechat-multiplatform-promo-tip-text',
+      text: announcement.footerTip || '⚡ 直降特惠 · 一次开通终身有效',
+    });
   }
 
   const promoCtaBtn = promoFooter.createEl('button', {

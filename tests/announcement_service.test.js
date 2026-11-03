@@ -159,6 +159,34 @@ describe('multi-platform-onboarding', () => {
     );
   });
 
+  it('mountPromoCard renders tip wrap and avoids coupon button when couponCode is omitted', () => {
+    const slot = createMockElement();
+    const openExternalUrl = vi.fn();
+    mountPromoCard(
+      slot,
+      { ...baseAnnouncement, couponCode: '', footerTip: '⚡ 直降优惠 · 免码直享' },
+      {
+        openExternalUrl,
+        tab: {},
+        Notice: class {},
+      }
+    );
+
+    const promoCard = slot.children.find((c) => c.cls === 'wechat-multiplatform-promo-card');
+    const footer = promoCard.children.find((c) => c.cls === 'wechat-multiplatform-promo-footer');
+
+    const couponWrap = footer.children.find((c) => c.cls === 'wechat-multiplatform-promo-coupon-wrap');
+    expect(couponWrap).toBeUndefined();
+
+    const tipWrap = footer.children.find((c) => c.cls === 'wechat-multiplatform-promo-tip-wrap');
+    expect(tipWrap).toBeDefined();
+    const tipText = tipWrap.children.find((c) => c.text === '⚡ 直降优惠 · 免码直享');
+    expect(tipText).toBeDefined();
+
+    const proBtn = footer.children.find((c) => c.cls?.includes('wechat-multiplatform-pro-cta'));
+    expect(proBtn).toBeDefined();
+  });
+
   it('renders promo slot for free users and skips completely for Pro users', () => {
     const freeContainer = createMockElement();
     const openExternalUrl = vi.fn();

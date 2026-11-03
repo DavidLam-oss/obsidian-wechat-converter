@@ -39,6 +39,7 @@ import { resolveWechatSyncProLicense } from './wechatsync-settings.js';
  * @property {string} [originalPrice]
  * @property {string} [shortText]
  * @property {string} [description]
+ * @property {string} [footerTip]
  * @property {string} [actionText]
  * @property {string} [actionUrl]
  * @property {string} [startTime]
