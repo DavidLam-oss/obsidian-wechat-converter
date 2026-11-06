@@ -617,10 +617,10 @@ function preprocessMarkdownForTriplet(markdown, converter) {
 
   // Pre-process and protect video embeds to avoid detached DOM media requests crashing Electron
   const { markdown: videoProcessed, videos } = preProcessVideoEmbeds(output);
-  output = materializeLocalMarkdownImages(videoProcessed.replace(/!\[\[([^[\]|]+)(?:\|([^[\]]+))?]]/g, (_match, imagePath, alt) => {
+  output = normalizeAdjacentMarkdownBlockHeadings(materializeLocalMarkdownImages(videoProcessed.replace(/!\[\[([^[\]|]+)(?:\|([^[\]]+))?]]/g, (_match, imagePath, alt) => {
     const normalizedPath = String(imagePath || '').trim();
     return `![${alt || getImageCaptionFromPath(normalizedPath)}](${encodeURI(normalizedPath)})`;
-  }));
+  })));
 
   if (converter && typeof converter.stripFrontmatter === 'function') {
     output = converter.stripFrontmatter(output);

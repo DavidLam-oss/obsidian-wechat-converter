@@ -9,7 +9,7 @@
 
 ## 输出
 
-输出 `isSafeRawImageSrc`、`normalizeWechatUnsafeTaskListMarkersForNative`、`normalizeAdjacentMarkdownBlockHeadings`、`preprocessMarkdownForNative`、`cleanupNativeRenderedHtml`、`canUseNativePreviewFastPath`，供视图层生成预览或发布 HTML。
+输出 `isSafeRawImageSrc`、`normalizeWechatUnsafeTaskListMarkersForNative`、`normalizeAdjacentMarkdownBlocks`、`normalizeAdjacentMarkdownBlockHeadings`、`shouldSeparateAdjacentMarkdownBlocks`、`preprocessMarkdownForNative`、`cleanupNativeRenderedHtml`、`canUseNativePreviewFastPath`，供视图层生成预览或发布 HTML。
 
 ## 定位
 
@@ -98,14 +98,13 @@ export function normalizeWechatUnsafeTaskListMarkersForNative(markdown) {
 }
 
 /**
- * Some Obsidian-rendered embed/callout HTML blocks are generated before a
- * following markdown heading. If the heading touches the previous block, the
- * markdown parser treats it as paragraph text. Add a block boundary only for
- * known block-level endings.
+ * Standalone blocks (images, closing HTML tags, single-line HTML containers, quotes before headings)
+ * must be separated from adjacent markdown blocks/inlines by an empty line in CommonMark.
+ * Otherwise, the unclosed HTML block swallows subsequent lines, breaking inline parsing (bold, links, etc.).
  * @param {unknown} markdown
  * @returns {string}
  */
-export function normalizeAdjacentMarkdownBlockHeadings(markdown) {
+export function normalizeAdjacentMarkdownBlocks(markdown) {
   const source = String(markdown || '');
   if (!source) return source;
 
@@ -114,14 +113,49 @@ export function normalizeAdjacentMarkdownBlockHeadings(markdown) {
   const output = [];
   let fence = null;
   let inMathFence = false;
+  let inHtmlComment = false;
+  let rawHtmlBlockTag = '';
 
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
     const trimmed = String(line || '').trim();
     const fenceMatch = trimmed.match(/^(`{3,}|~{3,})/);
+
+    if (inHtmlComment) {
+      output.push(line);
+      if (trimmed.includes('-->')) inHtmlComment = false;
+      continue;
+    }
+
+    if (rawHtmlBlockTag) {
+      output.push(line);
+      if (new RegExp(`</${rawHtmlBlockTag}\\s*>`, 'i').test(trimmed)) rawHtmlBlockTag = '';
+      continue;
+    }
+
+    if (/^\s{0,3}<!--/.test(trimmed) && !trimmed.includes('-->')) {
+      inHtmlComment = true;
+      output.push(line);
+      continue;
+    }
+
+    const rawBlockMatch = trimmed.match(/^<([A-Za-z][\w:-]*)(?:\s[^<>]*)?>\s*$/);
+    const rawBlockTag = String(rawBlockMatch?.[1] || '').toLowerCase();
+    const isSelfClosing = /\/\s*>\s*$/.test(trimmed);
+    if (
+      rawBlockMatch
+      && (rawBlockTag === 'pre' || rawBlockTag === 'code' || rawBlockTag === 'script' || rawBlockTag === 'style')
+      && !isSelfClosing
+      && !new RegExp(`</${rawBlockTag}\\s*>`, 'i').test(trimmed)
+    ) {
+      rawHtmlBlockTag = rawBlockTag;
+      output.push(line);
+      continue;
+    }
+
     const inSkippedBlock = !!fence || inMathFence;
 
-    if (!inSkippedBlock && shouldSeparateFollowingHeading(line, lines[i + 1])) {
+    if (!inSkippedBlock && shouldSeparateAdjacentMarkdownBlocks(line, lines[i + 1])) {
       output.push(line, '');
     } else {
       output.push(line);
@@ -146,21 +180,57 @@ export function normalizeAdjacentMarkdownBlockHeadings(markdown) {
   return output.join('\n');
 }
 
+export const normalizeAdjacentMarkdownBlockHeadings = normalizeAdjacentMarkdownBlocks;
+
+/**
+ * @param {unknown} line
+ * @returns {boolean}
+ */
+function isImageLine(line) {
+  const trimmed = String(line || '').trim();
+  if (!trimmed) return false;
+  return /^<img\b[^>]*>\s*$/i.test(trimmed)
+    || /^!\[\[[^[\]\r\n]+]]\s*$/.test(trimmed)
+    || /^!\[[^\]\r\n]*]\([^) \r\n]+(?:\s+"[^"]*")?\)\s*$/.test(trimmed);
+}
+
 /**
  * @param {unknown} line
  * @param {unknown} nextLine
  * @returns {boolean}
  */
-function shouldSeparateFollowingHeading(line, nextLine) {
+export function shouldSeparateAdjacentMarkdownBlocks(line, nextLine) {
   const current = String(line || '').trim();
-  const next = String(nextLine || '');
-  if (!current || !/^#{1,6}\s+\S/.test(next)) return false;
+  const next = String(nextLine || '').trim();
+  if (!current || !next) return false;
 
-  if (/<\/(?:figure|blockquote|section|div)>\s*$/i.test(current)) return true;
-  if (/^!\[\[[^[\]\r\n]+]]\s*$/.test(current)) return true;
-  if (/^!\[[^\]\r\n]*]\([^) \r\n]+(?:\s+"[^"]*")?\)\s*$/.test(current)) return true;
-  if (/^>\s*$/.test(current)) return true;
-  if (/^>\s?.+/.test(current)) return true;
+  // 1. Heading boundary: quotes followed immediately by heading
+  if (/^#{1,6}\s+\S/.test(next)) {
+    if (/^>\s*$/.test(current) || /^>\s?.+/.test(current)) return true;
+  }
+
+  // 2. Standalone image lines: <img ...>, ![[...]], ![...](...)
+  // Only separate when next line is NOT another image (i.e. text/heading),
+  // preserving tight stacking for adjacent images.
+  if (isImageLine(current)) {
+    if (!isImageLine(next)) {
+      return true;
+    }
+    return false;
+  }
+
+  // 3. Block-level closing HTML tag (e.g. </section>, </div>, </center>, </figure>, </details>, </blockquote>)
+  const isBlockClosingTag = /^<\/(?:section|div|figure|blockquote|table|details|center|p|h[1-6])>\s*$/i.test(current);
+  if (isBlockClosingTag) {
+    const nextIsClosingTag = /^<\/(?:section|div|figure|blockquote|table|details|center|p|h[1-6])>\s*$/i.test(next);
+    if (!nextIsClosingTag) return true;
+  }
+
+  // 4. Single-line self-contained HTML block elements (e.g. <center>...</center>, <details>...</details>)
+  const isSingleLineHtmlBlock = /^<(?:center|details|summary|div|section|table|figure)\b[^>]*>.*?<\/(?:center|details|summary|div|section|table|figure)>\s*$/i.test(current);
+  if (isSingleLineHtmlBlock) {
+    return true;
+  }
 
   return false;
 }

@@ -91,6 +91,36 @@ describe('Obsidian Triplet Renderer runtime', () => {
     expect(container.textContent).not.toContain('attachments/做视频');
   });
 
+  it('should render bold text below image when there is no blank line between them', async () => {
+    const converter = await createLegacyConverter();
+    converter.resolveImagePath = (src) => src;
+    converter.showImageCaption = true;
+    const renderMarkdown = vi.fn(async (markdown, el) => {
+      el.innerHTML = converter.md.render(markdown);
+    });
+
+    const input = [
+      '![[attachments/马璐璐.jpg|马璐璐]]',
+      '**学习委员 | 马璐璐** 入党积极分子',
+      '任班级学习委员、校社联...',
+    ].join('\n');
+
+    const html = await renderObsidianTripletMarkdown({
+      app: {},
+      converter,
+      markdown: input,
+      sourcePath: 'note.md',
+      markdownRenderer: { renderMarkdown },
+    });
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    expect(container.querySelector('figure img')?.getAttribute('alt')).toBe('马璐璐');
+    expect(container.querySelector('figure figcaption')?.textContent).toBe('马璐璐');
+    expect(container.querySelector('strong')?.textContent).toBe('学习委员 | 马璐璐');
+    expect(container.textContent).not.toContain('**学习委员');
+  });
+
   it('should pass component into markdown renderer APIs', async () => {
     const component = { name: 'view-component' };
     const renderMarkdown = vi.fn(async (_markdown, el) => {

@@ -238,6 +238,30 @@ describe('Native Renderer', () => {
     expect(output).not.toContain('![[attachments/code.png]]\n\n#### 代码里的标题');
   });
 
+  it('should separate standalone images and html blocks followed by text without blank line', () => {
+    const input = [
+      '![[attachments/马璐璐.jpg|马璐璐]]',
+      '**学习委员 | 马璐璐** 入党积极分子',
+      '<img src="https://example.com/photo.jpg" alt="张三">',
+      '**班长 | 张三** 简介内容',
+      '<center>说明信息</center>',
+      '**正文加粗** 内容',
+      '</section>',
+      '**相册说明** 介绍',
+      '<div>',
+      '</div>',
+      '</section>',
+    ].join('\n');
+
+    const output = preprocessMarkdownForNative(input);
+    expect(output).toContain('![[attachments/马璐璐.jpg|马璐璐]]\n\n**学习委员 | 马璐璐**');
+    expect(output).toContain('<img src="https://example.com/photo.jpg" alt="张三">\n\n**班长 | 张三**');
+    expect(output).toContain('<center>说明信息</center>\n\n**正文加粗**');
+    expect(output).toContain('</section>\n\n**相册说明**');
+    // Nested closing tags should not have an extra blank line between them
+    expect(output).toContain('</div>\n</section>');
+  });
+
   it('should keep native preprocessing even when legacy parity option is passed', async () => {
     const md = readFixture('control-micro.md');
     const html = await renderNativeMarkdown({
