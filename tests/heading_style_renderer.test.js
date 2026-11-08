@@ -285,6 +285,33 @@ describe('Heading Style Renderer - decorateArticleHeadings', () => {
     expect(output).not.toContain('border-radius: 9999px');
   });
 
+  it('should support dual-track customPath rendering with strict character and regex budget', () => {
+    const html = '<h2>自定义火箭</h2><h3>三级小节</h3>';
+    const output = decorateArticleHeadings(html, {
+      customHeading: {
+        style: 'left-border',
+        customPath: 'M12 2L2 7l10 5 10-5-10-5z',
+        h3CustomPath: 'M5 12h14M12 5l7 7-7 7',
+      },
+      primaryColor: '#059669',
+    });
+    expect(output).toContain('data-owc-ornament="1"');
+    expect(output).toContain('stroke="#059669"');
+    expect(output).toContain('d="M12 2L2 7l10 5 10-5-10-5z"');
+    expect(output).toContain('d="M5 12h14M12 5l7 7-7 7"');
+
+    // 恶意注入或格式错误应被安全拦截
+    const evilOutput = decorateArticleHeadings('<h2>恶意输入</h2>', {
+      customHeading: {
+        style: 'left-border',
+        customPath: 'M0 0"><script>alert(1)</script>',
+      },
+      primaryColor: '#059669',
+    });
+    expect(evilOutput).not.toContain('<script>');
+    expect(evilOutput).not.toContain('data-owc-ornament');
+  });
+
   it('should enforce strict byte budget (< 380 chars) on every built-in ornament', () => {
     for (const ornamentId of VALID_HEADING_ORNAMENTS) {
       const html = renderHeadingOrnament(ornamentId, '#2563EB', 'h2');

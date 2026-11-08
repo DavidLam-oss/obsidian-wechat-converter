@@ -34,7 +34,7 @@
 
 import { findCustomTheme } from './custom-theme-adapter.js';
 import { sanitizeRawCssOverrides, escapeHtml } from './theme-token-validator.js';
-import { renderHeadingOrnament } from './heading-ornaments.js';
+import { resolveAndRenderHeadingOrnament } from './heading-ornaments.js';
 
 export const HEADING_STYLES = /** @type {const} */ ({
   DEFAULT: 'default',
@@ -191,9 +191,10 @@ export function parseHeadingNumberAndTitle(innerHtml, fallbackIndex) {
  * @returns {string}
  */
 export function renderPrefixSpan(customHeading, numStr, primaryColor) {
-  const ornamentHtml = customHeading?.ornament
-    ? renderHeadingOrnament(customHeading.ornament, primaryColor, 'h2')
-    : '';
+  const ornamentHtml = resolveAndRenderHeadingOrnament({
+    ornament: customHeading?.ornament,
+    customPath: customHeading?.customPath,
+  }, primaryColor, 'h2');
   if (!customHeading?.prefix) return ornamentHtml;
   // 占位符替换优先级：%n > {number} > number > 01
   const prefixRaw = customHeading.prefix.replace(/%n|\{number\}|number|01/i, numStr);
@@ -203,16 +204,20 @@ export function renderPrefixSpan(customHeading, numStr, primaryColor) {
 }
 
 /**
- * 为 H3 / H4 注入配置的前缀或几何/微矢量装饰
+ * 为 H3 / H4 注入配置的前缀或几何/微矢量装饰（支持内置枚举与 customPath）
  * @param {string} html
  * @param {'h3' | 'h4'} tag
- * @param {string | undefined} ornamentId
+ * @param {string | { ornament?: string, customPath?: string } | undefined} ornamentConfig
  * @param {string | undefined} prefixText
  * @param {string} primaryColor
  * @returns {string}
  */
-function decorateSubHeadings(html, tag, ornamentId, prefixText, primaryColor) {
-  const ornamentHtml = ornamentId ? renderHeadingOrnament(ornamentId, primaryColor, tag) : '';
+function decorateSubHeadings(html, tag, ornamentConfig, prefixText, primaryColor) {
+  const ornamentHtml = resolveAndRenderHeadingOrnament(
+    typeof ornamentConfig === 'string' ? { ornament: ornamentConfig } : ornamentConfig,
+    primaryColor,
+    tag
+  );
   const hasPrefix = typeof prefixText === 'string' && prefixText.length > 0;
   if (!ornamentHtml && !hasPrefix) return html;
 
@@ -298,9 +303,10 @@ export function decorateArticleHeadings(html, options = {}) {
 
     switch (effectiveStyle) {
       case HEADING_STYLES.SERIAL_NUMBER: {
-        const ornamentHtml = customHeading?.ornament
-          ? renderHeadingOrnament(customHeading.ornament, primaryColor, 'h2')
-          : '';
+        const ornamentHtml = resolveAndRenderHeadingOrnament({
+          ornament: customHeading?.ornament,
+          customPath: customHeading?.customPath,
+        }, primaryColor, 'h2');
         return (
           `<h2${attrsPrefix} style="display: block; margin: 36px 0 20px; padding: 0 0 10px 0; border: none; border-bottom: 1px solid ${subtleBorderColor}; text-align: left; background: none; line-height: 1.2;">` +
           ornamentHtml +
@@ -313,9 +319,10 @@ export function decorateArticleHeadings(html, options = {}) {
       case HEADING_STYLES.BADGE: {
         const bg = customHeading?.background || primaryColor;
         const radius = customHeading?.borderRadius || '10px';
-        const ornamentHtml = customHeading?.ornament
-          ? renderHeadingOrnament(customHeading.ornament, primaryColor, 'h2')
-          : '';
+        const ornamentHtml = resolveAndRenderHeadingOrnament({
+          ornament: customHeading?.ornament,
+          customPath: customHeading?.customPath,
+        }, primaryColor, 'h2');
         return (
           `<h2${attrsPrefix} style="display: block; margin: 34px 0 18px; padding: 0 0 10px 0; border: none; background: none; background-image: linear-gradient(to right, ${primaryColor}, transparent); background-size: 100% 2px; background-repeat: no-repeat; background-position: bottom left; text-align: left; line-height: 1.2;">` +
           `<span style="display: inline-block; vertical-align: middle; background-color: ${bg}; color: #ffffff; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: ${radius}; margin-right: 10px; line-height: 1.3; letter-spacing: 0.5px;">${numStr}</span>` +
@@ -327,9 +334,10 @@ export function decorateArticleHeadings(html, options = {}) {
 
       case HEADING_STYLES.ZEN: {
         const zenLineColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.6)`;
-        const ornamentHtml = customHeading?.ornament
-          ? renderHeadingOrnament(customHeading.ornament, primaryColor, 'h2')
-          : '';
+        const ornamentHtml = resolveAndRenderHeadingOrnament({
+          ornament: customHeading?.ornament,
+          customPath: customHeading?.customPath,
+        }, primaryColor, 'h2');
         return (
           `<h2${attrsPrefix} style="display: block; margin: 40px auto 24px; padding: 0; border: none; background: none; text-align: center; line-height: 1.2;">` +
           `<span style="display: block; font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 600; color: ${primaryColor}; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px;">PART ${numStr}</span>` +
@@ -398,6 +406,7 @@ export function decorateArticleHeadings(html, options = {}) {
           const hasH2CustomProps = Boolean(
             customHeading.style
             || customHeading.ornament
+            || customHeading.customPath
             || customHeading.prefix
             || customHeading.borderLeft
             || customHeading.borderBottom
@@ -423,12 +432,24 @@ export function decorateArticleHeadings(html, options = {}) {
     }
   });
 
-  // 2. 对 H3 与 H4 应用可选的微矢量/几何装饰件或前缀
-  if (customHeading?.h3Ornament || customHeading?.h3Prefix) {
-    result = decorateSubHeadings(result, 'h3', customHeading.h3Ornament, customHeading.h3Prefix, primaryColor);
+  // 2. 对 H3 与 H4 应用可选的微矢量/几何装饰件或前缀（支持内置枚举与 customPath）
+  if (customHeading?.h3Ornament || customHeading?.h3CustomPath || customHeading?.h3Prefix) {
+    result = decorateSubHeadings(
+      result,
+      'h3',
+      { ornament: customHeading.h3Ornament, customPath: customHeading.h3CustomPath },
+      customHeading.h3Prefix,
+      primaryColor
+    );
   }
-  if (customHeading?.h4Ornament || customHeading?.h4Prefix) {
-    result = decorateSubHeadings(result, 'h4', customHeading.h4Ornament, customHeading.h4Prefix, primaryColor);
+  if (customHeading?.h4Ornament || customHeading?.h4CustomPath || customHeading?.h4Prefix) {
+    result = decorateSubHeadings(
+      result,
+      'h4',
+      { ornament: customHeading.h4Ornament, customPath: customHeading.h4CustomPath },
+      customHeading.h4Prefix,
+      primaryColor
+    );
   }
 
   return result;

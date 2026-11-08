@@ -39,6 +39,7 @@ import { VALID_HEADING_ORNAMENTS } from './heading-ornaments.js';
  *   style?: string,
  *   prefix?: string, // 序号或前缀文本（支持 %n、{number} 或 01 占位符自动替换为当前二级标题序号；纯文本无占位符则原样呈现）
  *   ornament?: string, // 二级标题内置几何/微矢量装饰枚举名
+ *   customPath?: string, // 二级标题自定义 24x24 SVG 路径 d 坐标数据
  *   border?: string,
  *   borderLeft?: string,
  *   borderBottom?: string,
@@ -48,9 +49,11 @@ import { VALID_HEADING_ORNAMENTS } from './heading-ornaments.js';
  *   h3Style?: 'bottom-line' | 'left-border' | 'classic' | 'simple' | 'badge',
  *   h3Prefix?: string,
  *   h3Ornament?: string,
+ *   h3CustomPath?: string,
  *   h4Style?: 'simple' | 'left-border' | 'light-bg' | 'bottom-line' | 'classic-minor',
  *   h4Prefix?: string,
  *   h4Ornament?: string,
+ *   h4CustomPath?: string,
  * }} HeadingDecorationToken
  *
  * @typedef {{
@@ -149,19 +152,22 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的公众号视觉排
    你既可以直接使用常用风格："left-border"（左侧装饰条） | "bottom-line"（底边线） | "serial-number"（现代科技大数字） | "badge"（胶囊徽标） | "bubble"（浅色背景卡片） | "zen"（留白禅意） | "default"（经典条），
    也可以在 "heading" 对象中自由定制专属版式（严禁在 prefix 中使用任何 Emoji 表情符号）：
    - "align": "left" | "center"
-   - "ornament": 二级标题图形装饰微件（强烈推荐根据风格选用，单件极轻量且自适应主色），可选枚举：
+   - "ornament": 二级标题图形装饰微件（推荐优先从内置精选库选用），可选枚举：
      * 纯 CSS 几何微件："double-diamond"（双叠菱形） | "slash-bar"（双色斜切条） | "dot-matrix"（双圆点阵） | "corner-bracket"（杂志折角框） | "square-pip"（叠影方块） | "ring-dot"（几何圆环）
-     * 开源 Lucide 矢量图标："leaf"（森系叶片） | "feather"（人文羽毛笔） | "terminal"（极客终端 >_） | "sparkles"（星芒） | "compass"（商业罗盘） | "book-open"（书卷） | "bookmark"（书签） | "code"（代码符） | "layers"（图层） | "zap"（闪电） | "none"
+     * 开源 Lucide 矢量图标（33 款，涵盖生活/日常/商业/科技）："leaf" | "coffee" | "heart" | "star" | "sun" | "moon" | "music" | "camera" | "smile" | "feather" | "book-open" | "bookmark" | "lightbulb" | "pen" | "paperclip" | "compass" | "target" | "trending-up" | "award" | "flag" | "briefcase" | "shield-check" | "shield" | "check" | "bell" | "terminal" | "code" | "layers" | "zap" | "sparkles" | "globe" | "database" | "key" | "message-square" | "none"
+   - "customPath": 若内置库均不契合创意，可直接输出标准的 24x24 视口 SVG <path d="..."> 坐标字符串（纯坐标数据，无 HTML 标签，长度 <= 350 字符）
    - "prefix": 自定义纯文本前缀或序号（如 "01."、"01 /"、"PART 01"、"// "，或空 ""；严禁使用 Emoji）
    - "border": 自定义边框（如 "4px solid #2563EB" 或 "2px dashed #93C5FD"）
    - "background": 背景色或线性渐变（如 "rgba(37, 99, 235, 0.08)"）
    - "borderRadius": 圆角（如 "4px"）
    - "customStyle": 可直接给出针对二级标题的微信内联 CSS 声明（例如 "border-left: 4px solid #2563EB; padding: 6px 12px; background: #EFF6FF; border-radius: 0 4px 4px 0;"）
    - "h3Style": 三级标题风格，可选 "bottom-line"（默认短底线） | "left-border"（左侧竖条） | "classic"（浅底色小条） | "badge"（胶囊小标） | "simple"（纯加粗小标）
-   - "h3Ornament": 三级标题图形装饰微件（同 ornament 枚举，如 "dot-matrix"、"slash-bar"、"feather"、"terminal" 等，可选）
+   - "h3Ornament": 三级标题图形装饰微件（同 ornament 枚举，可选）
+   - "h3CustomPath": 三级标题自定义 24x24 SVG 路径坐标（可选）
    - "h3Prefix": 三级标题纯文本前缀（如 "§ "、"// "，严禁 Emoji，可选）
    - "h4Style": 四级标题风格，可选 "simple" | "left-border"（细左竖线） | "light-bg"（浅色胶囊底衬） | "bottom-line"（短下划线） | "classic-minor"
-   - "h4Ornament": 四级标题图形装饰微件（同 ornament 枚举，如 "ring-dot"、"dot-matrix"、"square-pip" 等，可选）
+   - "h4Ornament": 四级标题图形装饰微件（同 ornament 枚举，可选）
+   - "h4CustomPath": 四级标题自定义 24x24 SVG 路径坐标（可选）
    - "h4Prefix": 四级标题纯文本前缀（可选）
 5. 【引用块与正文强调】：
    - blockquote.style: 可选 "soft"（默认：左侧色条 + 浅底） | "center"（名言金句：居中 + 上下细线） | "paper"（纸张复古：细边条无背景） | "minimal"（极简：浅灰细边无底色）
@@ -411,6 +417,19 @@ export function validateCustomThemeToken(input) {
           }
         }
       }
+      const customPathFields = ['customPath', 'h3CustomPath', 'h4CustomPath'];
+      const svgPathRegex = /^[MmLlHhVvCcSsQqTtAaZz0-9\s.,-]+$/;
+      for (const field of customPathFields) {
+        if (h[field] !== undefined && h[field] !== null && h[field] !== '') {
+          if (typeof h[field] !== 'string') {
+            errors.push(`自定义矢量路径 (heading.${field}) 必须是字符串`);
+          } else if (h[field].trim().length > 400) {
+            errors.push(`自定义矢量路径 (heading.${field}) 长度不得超过 400 字符`);
+          } else if (!svgPathRegex.test(h[field].trim())) {
+            errors.push(`自定义矢量路径 (heading.${field}) 仅支持标准的 SVG path d 坐标数据`);
+          }
+        }
+      }
       if (h.customStyle) {
         const check = sanitizeRawCssOverrides(String(h.customStyle));
         if (!check.safe) {
@@ -489,12 +508,24 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
     return VALID_HEADING_ORNAMENTS.includes(/** @type {any} */ (lower)) && lower !== 'none' ? lower : undefined;
   };
 
+  const svgPathRegex = /^[MmLlHhVvCcSsQqTtAaZz0-9\s.,-]+$/;
+  /** @param {unknown} val */
+  const normalizeCustomPath = (val) => {
+    if (typeof val !== 'string') return undefined;
+    const trimmed = val.trim();
+    if (!trimmed || trimmed.length > 400 || !svgPathRegex.test(trimmed)) return undefined;
+    return trimmed;
+  };
+
   let heading = undefined;
   if (raw.heading && typeof raw.heading === 'object' && !Array.isArray(raw.heading)) {
     const h = raw.heading;
     const ornament = normalizeOrnament(h.ornament);
+    const customPath = normalizeCustomPath(h.customPath);
     const h3Ornament = normalizeOrnament(h.h3Ornament);
+    const h3CustomPath = normalizeCustomPath(h.h3CustomPath);
     const h4Ornament = normalizeOrnament(h.h4Ornament);
+    const h4CustomPath = normalizeCustomPath(h.h4CustomPath);
     const h3Prefix = typeof h.h3Prefix === 'string' && h.h3Prefix ? h.h3Prefix.slice(0, 20) : undefined;
     const h4Prefix = typeof h.h4Prefix === 'string' && h.h4Prefix ? h.h4Prefix.slice(0, 20) : undefined;
 
@@ -503,6 +534,7 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
       style: typeof h.style === 'string' ? h.style.trim() : (headingStyle !== 'default' ? headingStyle : ''),
       prefix: typeof h.prefix === 'string' ? h.prefix.slice(0, 30) : '',
       ...(ornament ? { ornament } : {}),
+      ...(customPath ? { customPath } : {}),
       border: typeof h.border === 'string' ? sanitizeRawCssOverrides(h.border).sanitized : undefined,
       borderLeft: typeof h.borderLeft === 'string' ? sanitizeRawCssOverrides(h.borderLeft).sanitized : undefined,
       borderBottom: typeof h.borderBottom === 'string' ? sanitizeRawCssOverrides(h.borderBottom).sanitized : undefined,
@@ -512,9 +544,11 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
       ...(h3Style ? { h3Style } : {}),
       ...(h3Prefix ? { h3Prefix } : {}),
       ...(h3Ornament ? { h3Ornament } : {}),
+      ...(h3CustomPath ? { h3CustomPath } : {}),
       ...(h4Style ? { h4Style } : {}),
       ...(h4Prefix ? { h4Prefix } : {}),
       ...(h4Ornament ? { h4Ornament } : {}),
+      ...(h4CustomPath ? { h4CustomPath } : {}),
     };
   }
 

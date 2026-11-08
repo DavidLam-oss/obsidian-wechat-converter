@@ -266,6 +266,35 @@ describe('theme-token-validator', () => {
       expect(normalized.heading?.h4Style).toBe('light-bg');
       expect(normalized.heading?.h4Ornament).toBe('dot-matrix');
     });
+
+    it('正确校验与归一化双轨制 customPath 矢量路径', () => {
+      const raw = {
+        name: '双轨制主题',
+        colors: { accent: '#2563EB' },
+        heading: {
+          style: 'left-border',
+          customPath: 'M12 2L2 7l10 5 10-5-10-5z',
+          h3CustomPath: 'M5 12h14M12 5l7 7-7 7',
+        },
+      };
+      const validRes = validateCustomThemeToken(raw);
+      expect(validRes.valid).toBe(true);
+
+      const normalized = normalizeCustomThemeToken(raw);
+      expect(normalized.heading?.customPath).toBe('M12 2L2 7l10 5 10-5-10-5z');
+      expect(normalized.heading?.h3CustomPath).toBe('M5 12h14M12 5l7 7-7 7');
+
+      // 非法坐标格式拦截
+      const invalidRes = validateCustomThemeToken({
+        name: '非法主题',
+        colors: { accent: '#2563EB' },
+        heading: {
+          customPath: 'M0 0 <script>alert(1)</script>',
+        },
+      });
+      expect(invalidRes.valid).toBe(false);
+      expect(invalidRes.errors[0]).toContain('自定义矢量路径');
+    });
   });
 
   describe('normalizeCustomThemesList', () => {
