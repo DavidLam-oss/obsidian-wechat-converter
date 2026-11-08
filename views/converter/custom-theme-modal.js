@@ -61,9 +61,10 @@ const HEADING_STYLE_LABELS = {
  *   app: any,
  *   plugin: any,
  *   onThemeApplied?: (themeId: string) => void,
+ *   onThemesChanged?: () => void,
  * }} options
  */
-export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
+export function showCustomThemeModal({ app, plugin, onThemeApplied, onThemesChanged }) {
   const modal = createObsidianModal(app);
   modal.modalEl.addClass('custom-theme-modal');
 
@@ -181,16 +182,22 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
       deleteBtn.onclick = async () => {
         const nextThemes = customThemes.filter((t) => t.id !== theme.id);
         plugin.settings.customThemes = nextThemes;
-        if (plugin.settings.theme === theme.id) {
+        const wasActive = plugin.settings.theme === theme.id;
+        if (wasActive) {
           plugin.settings.theme = 'github';
+        }
+        await plugin.saveSettings();
+        if (wasActive) {
           if (typeof onThemeApplied === 'function') {
             onThemeApplied('github');
           }
           new Notice('已删除当前使用的主题，已重置为默认「简约」主题');
         } else {
+          if (typeof onThemesChanged === 'function') {
+            onThemesChanged();
+          }
           new Notice(`已删除主题：${theme.name || theme.id}`);
         }
-        await plugin.saveSettings();
         renderListView();
       };
 
@@ -240,7 +247,7 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
 
     const reqTextarea = step1.createEl('textarea', {
       cls: 'custom-theme-req-textarea',
-      placeholder: '输入您的主题风格诉求（如：“偏暖的秋日森林系，主色用琥珀黄或松针绿，标题风格采用现代科技大数字序号或胶囊徽标”）...',
+      placeholder: '输入您的主题风格诉求（如：“偏暖的秋日森林系，主色琥珀黄与松针绿，二级标题搭配 leaf 矢量叶片或双叠菱形，三级标题采用短底线与斜切条”）...',
     });
 
     // 快捷灵感药丸标签
@@ -248,11 +255,11 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
     pillsRow.createEl('span', { cls: 'custom-theme-pills-label', text: '风格预设：' });
 
     const inspirationPills = [
-      { label: '秋日森系', desc: '偏暖色调的秋日森林系，主色琥珀黄与松针绿，温润克制，标题风格采用极简边框(default)，适合户外与生活手记' },
-      { label: '极客科技', desc: '理性科技数码风，主色沉稳科技蓝，适合硬核评测与技术教程，标题风格采用现代大数字序号(serial-number)' },
-      { label: '商业财经', desc: '现代商业资讯风，主色深邃绀蓝与活力点睛橙，精致商务感，标题风格采用胶囊徽标(badge)' },
-      { label: '人文禅意', desc: '东方极简素雅白灰黑，主色冷灰与黛青，适合哲学散文与深度随笔，标题风格采用留白禅意(zen)' },
-      { label: '赤红特刊', desc: '东方传统喜庆中国红与暖金配比，端庄典雅，适合大事件发布、节日特刊与精选周报，标题风格采用胶囊徽标(badge)' },
+      { label: '秋日森系', desc: '偏暖色调的秋日森林系，主色琥珀黄与松针绿，温润克制，二级标题搭配 leaf 矢量叶片或双叠菱形(double-diamond)，三级标题采用短底线，适合户外与生活手记' },
+      { label: '极客科技', desc: '理性科技数码风，主色沉稳科技蓝，二级标题搭配 terminal 极客终端符或现代序号，三级标题采用双色斜切条(slash-bar)，四级标题用点阵(dot-matrix)，适合硬核评测与技术教程' },
+      { label: '商业财经', desc: '现代商业资讯风，主色深邃绀蓝与活力点睛橙，精致商务感，二级标题搭配 compass 商业罗盘或胶囊徽标(badge)，三级标题用左侧色块条，四级标题用叠影方块(square-pip)' },
+      { label: '人文禅意', desc: '东方极简素雅白灰黑，主色冷灰与黛青，二级标题搭配 feather 羽毛笔或留白禅意(zen)，三级标题采用留白细线与双叠菱形，适合哲学散文与深度随笔' },
+      { label: '赤红特刊', desc: '东方传统喜庆中国红与暖金配比，端庄典雅，二级标题搭配 sparkles 星芒或胶囊徽标，三级标题采用浅底小条与几何圆环(ring-dot)，适合大事件发布、节日特刊与精选周报' },
     ];
 
     inspirationPills.forEach((pill) => {
@@ -438,6 +445,9 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied }) {
       plugin.settings.headingStyle = 'default';
       await plugin.saveSettings();
 
+      if (typeof onThemesChanged === 'function') {
+        onThemesChanged();
+      }
       if (typeof onThemeApplied === 'function') {
         onThemeApplied(normalized.id);
       }

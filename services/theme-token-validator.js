@@ -31,18 +31,26 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- reason: Theme token validation and normalization process untrusted and heterogeneous JSON payloads */
 
+import { VALID_HEADING_ORNAMENTS } from './heading-ornaments.js';
+
 /**
  * @typedef {{
  *   align?: 'left' | 'center',
  *   style?: string,
  *   prefix?: string, // 序号或前缀文本（支持 %n、{number} 或 01 占位符自动替换为当前二级标题序号；纯文本无占位符则原样呈现）
+ *   ornament?: string, // 二级标题内置几何/微矢量装饰枚举名
  *   border?: string,
  *   borderLeft?: string,
  *   borderBottom?: string,
  *   background?: string,
  *   borderRadius?: string,
  *   customStyle?: string,
- *   h3Style?: 'bottom-line' | 'left-border' | 'classic' | 'simple',
+ *   h3Style?: 'bottom-line' | 'left-border' | 'classic' | 'simple' | 'badge',
+ *   h3Prefix?: string,
+ *   h3Ornament?: string,
+ *   h4Style?: 'simple' | 'left-border' | 'light-bg' | 'bottom-line' | 'classic-minor',
+ *   h4Prefix?: string,
+ *   h4Ornament?: string,
  * }} HeadingDecorationToken
  *
  * @typedef {{
@@ -53,7 +61,8 @@
  *   author?: string,
  *   headingStyle?: string,
  *   heading?: HeadingDecorationToken,
- *   h3Style?: 'bottom-line' | 'left-border' | 'classic' | 'simple',
+ *   h3Style?: 'bottom-line' | 'left-border' | 'classic' | 'simple' | 'badge',
+ *   h4Style?: 'simple' | 'left-border' | 'light-bg' | 'bottom-line' | 'classic-minor',
  *   blockquoteStyle?: 'soft' | 'center' | 'paper' | 'minimal',
  *   blockquote?: {
  *     style?: 'soft' | 'center' | 'paper' | 'minimal',
@@ -102,7 +111,9 @@ export const VALID_HEADING_STYLES = /** @type {const} */ ([
 export const VALID_FONT_PRESETS = /** @type {const} */ (['sans-serif', 'serif', 'monospace']);
 export const VALID_BLOCKQUOTE_STYLES = /** @type {const} */ (['soft', 'center', 'paper', 'minimal']);
 export const VALID_STRONG_STYLES = /** @type {const} */ (['color', 'neutral', 'highlight']);
-export const VALID_H3_STYLES = /** @type {const} */ (['bottom-line', 'left-border', 'classic', 'simple']);
+export const VALID_H3_STYLES = /** @type {const} */ (['bottom-line', 'left-border', 'classic', 'simple', 'badge']);
+export const VALID_H4_STYLES = /** @type {const} */ (['simple', 'left-border', 'light-bg', 'bottom-line', 'classic-minor']);
+export { VALID_HEADING_ORNAMENTS };
 
 /**
  * 开箱即用的 AI 主题设计提示词模板
@@ -134,16 +145,24 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的公众号视觉排
    - title / text / muted：用于标题、正文与次要说明的灰阶；
    - border：分割线与卡片边框色；
    - codeBackground：代码块背景底色。
-4. 【二级标题装饰 (heading) —— 拥有充分设计自由】：
+4. 【多级标题装饰 (heading) —— 支持二级、三级、四级标题装饰与开源微矢量/几何微件】：
    你既可以直接使用常用风格："left-border"（左侧装饰条） | "bottom-line"（底边线） | "serial-number"（现代科技大数字） | "badge"（胶囊徽标） | "bubble"（浅色背景卡片） | "zen"（留白禅意） | "default"（经典条），
-   也可以在 "heading" 对象中自由定制专属版式：
+   也可以在 "heading" 对象中自由定制专属版式（严禁在 prefix 中使用任何 Emoji 表情符号）：
    - "align": "left" | "center"
-   - "prefix": 自定义前缀修饰或序号（如 "01."、"01 /"、"PART 01"、"◆ "、"// "、"「 "，或空 ""）
+   - "ornament": 二级标题图形装饰微件（强烈推荐根据风格选用，单件极轻量且自适应主色），可选枚举：
+     * 纯 CSS 几何微件："double-diamond"（双叠菱形） | "slash-bar"（双色斜切条） | "dot-matrix"（双圆点阵） | "corner-bracket"（杂志折角框） | "square-pip"（叠影方块） | "ring-dot"（几何圆环）
+     * 开源 Lucide 矢量图标："leaf"（森系叶片） | "feather"（人文羽毛笔） | "terminal"（极客终端 >_） | "sparkles"（星芒） | "compass"（商业罗盘） | "book-open"（书卷） | "bookmark"（书签） | "code"（代码符） | "layers"（图层） | "zap"（闪电） | "none"
+   - "prefix": 自定义纯文本前缀或序号（如 "01."、"01 /"、"PART 01"、"// "，或空 ""；严禁使用 Emoji）
    - "border": 自定义边框（如 "4px solid #2563EB" 或 "2px dashed #93C5FD"）
    - "background": 背景色或线性渐变（如 "rgba(37, 99, 235, 0.08)"）
    - "borderRadius": 圆角（如 "4px"）
    - "customStyle": 可直接给出针对二级标题的微信内联 CSS 声明（例如 "border-left: 4px solid #2563EB; padding: 6px 12px; background: #EFF6FF; border-radius: 0 4px 4px 0;"）
-   - "h3Style": 三级标题联动风格，可选 "bottom-line"（默认短底线） | "left-border"（左侧竖条） | "classic"（浅底色小条） | "simple"（纯加粗小标）
+   - "h3Style": 三级标题风格，可选 "bottom-line"（默认短底线） | "left-border"（左侧竖条） | "classic"（浅底色小条） | "badge"（胶囊小标） | "simple"（纯加粗小标）
+   - "h3Ornament": 三级标题图形装饰微件（同 ornament 枚举，如 "dot-matrix"、"slash-bar"、"feather"、"terminal" 等，可选）
+   - "h3Prefix": 三级标题纯文本前缀（如 "§ "、"// "，严禁 Emoji，可选）
+   - "h4Style": 四级标题风格，可选 "simple" | "left-border"（细左竖线） | "light-bg"（浅色胶囊底衬） | "bottom-line"（短下划线） | "classic-minor"
+   - "h4Ornament": 四级标题图形装饰微件（同 ornament 枚举，如 "ring-dot"、"dot-matrix"、"square-pip" 等，可选）
+   - "h4Prefix": 四级标题纯文本前缀（可选）
 5. 【引用块与正文强调】：
    - blockquote.style: 可选 "soft"（默认：左侧色条 + 浅底） | "center"（名言金句：居中 + 上下细线） | "paper"（纸张复古：细边条无背景） | "minimal"（极简：浅灰细边无底色）
    - typography.strongStyle: 可选 "color"（默认：主题色加粗） | "neutral"（传统纯深黑加粗） | "highlight"（加粗且带淡色荧光笔底衬）
@@ -160,12 +179,16 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的公众号视觉排
   "heading": {
     "style": "left-border",
     "align": "left",
+    "ornament": "terminal",
     "prefix": "01.",
     "borderLeft": "4px solid #2563EB",
     "background": "rgba(37, 99, 235, 0.08)",
     "borderRadius": "0 4px 4px 0",
     "customStyle": "padding: 6px 12px; margin: 32px 0 16px;",
-    "h3Style": "bottom-line"
+    "h3Style": "bottom-line",
+    "h3Ornament": "slash-bar",
+    "h4Style": "light-bg",
+    "h4Ornament": "dot-matrix"
   },
   "blockquote": {
     "style": "soft"
@@ -190,7 +213,7 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的公众号视觉排
     "strongStyle": "color"
   },
   "footer": {
-    "showEngagementCard": false,
+    "showEngagementCard": true,
     "ctaText": "如果对你有启发，欢迎点赞、在看、转发"
   }
 }
@@ -199,7 +222,7 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的公众号视觉排
 AI 生成主题如同定制 CSS，排版效果往往需要结合具体文章反复调试 1~2 轮。首次生成若未完全契合预期，可继续针对标题修饰、色相饱和度或边框粗细与 AI 追问微调。
 
 【我的风格诉求（请在此处输入您的具体要求）】：
-[例如：“我想要一个日系清新笔记风，主色用森林墨绿，标题左侧有细竖条并带有浅浅的米黄底衬，正文行距调大一些，注重轻松通透的阅读感。”]
+[例如：“我想要一个日系清新笔记风，主色用森林墨绿，二级标题搭配 leaf 矢量叶片与细竖条，三级标题采用短底线与双色斜切条(slash-bar)，四级标题用点阵(dot-matrix)，正文行距调大一些，注重轻松通透的阅读感。”]
 `;
 
 
@@ -354,10 +377,15 @@ export function validateCustomThemeToken(input) {
     errors.push(`引用块风格 (blockquoteStyle) 仅支持 ${VALID_BLOCKQUOTE_STYLES.join(' / ')}`);
   }
 
-  // 三级标题风格校验
+  // 三级与四级标题风格校验
   const h3Candidate = raw.heading?.h3Style || raw.h3Style;
   if (h3Candidate && !VALID_H3_STYLES.includes(h3Candidate)) {
     errors.push(`三级标题风格 (h3Style) 仅支持 ${VALID_H3_STYLES.join(' / ')}`);
+  }
+
+  const h4Candidate = raw.heading?.h4Style || raw.h4Style;
+  if (h4Candidate && !VALID_H4_STYLES.includes(h4Candidate)) {
+    errors.push(`四级标题风格 (h4Style) 仅支持 ${VALID_H4_STYLES.join(' / ')}`);
   }
 
   // 4. headingStyle 与 heading 装饰配置校验
@@ -374,6 +402,14 @@ export function validateCustomThemeToken(input) {
       const h = raw.heading;
       if (h.align && !['left', 'center', 'right'].includes(h.align)) {
         errors.push('标题对齐 (heading.align) 仅支持 left / center / right');
+      }
+      const ornamentFields = ['ornament', 'h3Ornament', 'h4Ornament'];
+      for (const field of ornamentFields) {
+        if (h[field] !== undefined && h[field] !== null && h[field] !== '') {
+          if (typeof h[field] !== 'string' || !VALID_HEADING_ORNAMENTS.includes(/** @type {any} */ (h[field].trim().toLowerCase()))) {
+            errors.push(`标题装饰微件 (heading.${field}) 仅支持内置枚举: ${VALID_HEADING_ORNAMENTS.join(' / ')}`);
+          }
+        }
       }
       if (h.customStyle) {
         const check = sanitizeRawCssOverrides(String(h.customStyle));
@@ -443,13 +479,30 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
   const h3Candidate = raw.heading?.h3Style || raw.h3Style;
   const h3Style = VALID_H3_STYLES.includes(h3Candidate) ? h3Candidate : undefined;
 
+  const h4Candidate = raw.heading?.h4Style || raw.h4Style;
+  const h4Style = VALID_H4_STYLES.includes(h4Candidate) ? h4Candidate : undefined;
+
+  /** @param {unknown} val */
+  const normalizeOrnament = (val) => {
+    if (typeof val !== 'string' || !val.trim()) return undefined;
+    const lower = val.trim().toLowerCase();
+    return VALID_HEADING_ORNAMENTS.includes(/** @type {any} */ (lower)) && lower !== 'none' ? lower : undefined;
+  };
+
   let heading = undefined;
   if (raw.heading && typeof raw.heading === 'object' && !Array.isArray(raw.heading)) {
     const h = raw.heading;
+    const ornament = normalizeOrnament(h.ornament);
+    const h3Ornament = normalizeOrnament(h.h3Ornament);
+    const h4Ornament = normalizeOrnament(h.h4Ornament);
+    const h3Prefix = typeof h.h3Prefix === 'string' && h.h3Prefix ? h.h3Prefix.slice(0, 20) : undefined;
+    const h4Prefix = typeof h.h4Prefix === 'string' && h.h4Prefix ? h.h4Prefix.slice(0, 20) : undefined;
+
     heading = {
       align: /** @type {'left' | 'center'} */ (h.align === 'center' ? 'center' : 'left'),
       style: typeof h.style === 'string' ? h.style.trim() : (headingStyle !== 'default' ? headingStyle : ''),
       prefix: typeof h.prefix === 'string' ? h.prefix.slice(0, 30) : '',
+      ...(ornament ? { ornament } : {}),
       border: typeof h.border === 'string' ? sanitizeRawCssOverrides(h.border).sanitized : undefined,
       borderLeft: typeof h.borderLeft === 'string' ? sanitizeRawCssOverrides(h.borderLeft).sanitized : undefined,
       borderBottom: typeof h.borderBottom === 'string' ? sanitizeRawCssOverrides(h.borderBottom).sanitized : undefined,
@@ -457,6 +510,11 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
       borderRadius: typeof h.borderRadius === 'string' ? sanitizeRawCssOverrides(h.borderRadius).sanitized : undefined,
       customStyle: typeof h.customStyle === 'string' ? sanitizeRawCssOverrides(h.customStyle).sanitized : undefined,
       ...(h3Style ? { h3Style } : {}),
+      ...(h3Prefix ? { h3Prefix } : {}),
+      ...(h3Ornament ? { h3Ornament } : {}),
+      ...(h4Style ? { h4Style } : {}),
+      ...(h4Prefix ? { h4Prefix } : {}),
+      ...(h4Ornament ? { h4Ornament } : {}),
     };
   }
 
@@ -492,8 +550,12 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
   };
 
   const footer = {
-    showEngagementCard: Boolean(raw.footer?.showEngagementCard),
-    ctaText: typeof raw.footer?.ctaText === 'string' ? raw.footer.ctaText.trim() : '如果对你有启发，欢迎点赞、在看、转发',
+    showEngagementCard: raw.footer?.showEngagementCard !== undefined
+      ? Boolean(raw.footer.showEngagementCard)
+      : true,
+    ctaText: typeof raw.footer?.ctaText === 'string' && raw.footer.ctaText.trim()
+      ? raw.footer.ctaText.trim()
+      : '如果对你有启发，欢迎点赞、在看、转发',
   };
 
   const cssCheck = sanitizeRawCssOverrides(String(raw.rawCssOverrides || ''));
@@ -508,6 +570,7 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
   delete extraFields.headingStyle;
   delete extraFields.heading;
   delete extraFields.h3Style;
+  delete extraFields.h4Style;
   delete extraFields.blockquote;
   delete extraFields.blockquoteStyle;
   delete extraFields.strongStyle;
@@ -528,6 +591,7 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
     ...(blockquote ? { blockquote } : {}),
     ...(strongStyle ? { strongStyle } : {}),
     ...(h3Style ? { h3Style } : {}),
+    ...(h4Style ? { h4Style } : {}),
     colors,
     typography,
     footer,

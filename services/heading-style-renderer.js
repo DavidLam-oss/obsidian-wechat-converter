@@ -34,6 +34,7 @@
 
 import { findCustomTheme } from './custom-theme-adapter.js';
 import { sanitizeRawCssOverrides, escapeHtml } from './theme-token-validator.js';
+import { renderHeadingOrnament } from './heading-ornaments.js';
 
 export const HEADING_STYLES = /** @type {const} */ ({
   DEFAULT: 'default',
@@ -183,18 +184,52 @@ export function parseHeadingNumberAndTitle(innerHtml, fallbackIndex) {
 }
 
 /**
- * 渲染经过 HTML 转义的标题前缀 span（支持 %n、{number}、number、01 序号占位符替换，杜绝 HTML 注入）
+ * 渲染经过 HTML 转义的标题前缀与内置几何/微矢量装饰（支持 %n、{number}、number、01 序号占位符替换，杜绝 HTML 注入）
  * @param {import('./theme-token-validator.js').HeadingDecorationToken | null | undefined} customHeading
  * @param {string} numStr
  * @param {string} primaryColor
  * @returns {string}
  */
 export function renderPrefixSpan(customHeading, numStr, primaryColor) {
-  if (!customHeading?.prefix) return '';
+  const ornamentHtml = customHeading?.ornament
+    ? renderHeadingOrnament(customHeading.ornament, primaryColor, 'h2')
+    : '';
+  if (!customHeading?.prefix) return ornamentHtml;
   // 占位符替换优先级：%n > {number} > number > 01
   const prefixRaw = customHeading.prefix.replace(/%n|\{number\}|number|01/i, numStr);
   const safePrefix = escapeHtml(prefixRaw);
-  return `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${safePrefix}</span>`;
+  const textSpan = `<span style="display: inline-block; vertical-align: baseline; font-weight: 700; color: ${primaryColor}; margin-right: 8px;">${safePrefix}</span>`;
+  return ornamentHtml + textSpan;
+}
+
+/**
+ * 为 H3 / H4 注入配置的前缀或几何/微矢量装饰
+ * @param {string} html
+ * @param {'h3' | 'h4'} tag
+ * @param {string | undefined} ornamentId
+ * @param {string | undefined} prefixText
+ * @param {string} primaryColor
+ * @returns {string}
+ */
+function decorateSubHeadings(html, tag, ornamentId, prefixText, primaryColor) {
+  const ornamentHtml = ornamentId ? renderHeadingOrnament(ornamentId, primaryColor, tag) : '';
+  const hasPrefix = typeof prefixText === 'string' && prefixText.length > 0;
+  if (!ornamentHtml && !hasPrefix) return html;
+
+  let subCounter = 0;
+  const regex = new RegExp(`<${tag}(\\b[^>]*)>([\\s\\S]*?)<\\/${tag}>`, 'gi');
+  return html.replace(regex, (_match, rawAttrs, innerContent) => {
+    subCounter += 1;
+    const numStr = String(subCounter).padStart(2, '0');
+    let prefixSpan = '';
+    if (hasPrefix) {
+      const replaced = String(prefixText).replace(/%n|\{number\}|number|01/i, numStr);
+      const safe = escapeHtml(replaced);
+      const margin = tag === 'h4' ? 5 : 6;
+      prefixSpan = `<span style="display:inline-block;vertical-align:baseline;font-weight:700;color:${primaryColor};margin-right:${margin}px;">${safe}</span>`;
+    }
+    return `<${tag}${rawAttrs}>${ornamentHtml}${prefixSpan}${innerContent}</${tag}>`;
+  });
 }
 
 /**
@@ -217,9 +252,11 @@ export function decorateArticleHeadings(html, options = {}) {
   if (!content) return '';
 
   const customHeading = options.customHeading || null;
-  const headingStyle = options.headingStyle
-    || /** @type {string|undefined} */ (options.settings?.headingStyle)
-    || (customHeading?.style || HEADING_STYLES.DEFAULT);
+  const headingStyle = (options.headingStyle && options.headingStyle !== HEADING_STYLES.DEFAULT)
+    ? options.headingStyle
+    : (options.settings?.headingStyle && options.settings.headingStyle !== HEADING_STYLES.DEFAULT
+        ? options.settings.headingStyle
+        : (customHeading?.style || options.headingStyle || options.settings?.headingStyle || HEADING_STYLES.DEFAULT));
 
   // 若为默认且没有提供自定义 heading 配置，原样返回
   if ((headingStyle === HEADING_STYLES.DEFAULT || !headingStyle) && !customHeading) {
@@ -235,8 +272,8 @@ export function decorateArticleHeadings(html, options = {}) {
 
   let headingCounter = 0;
 
-  // 正则替换所有 <h2>...</h2> 标签
-  return content.replace(/<h2(\b[^>]*)>([\s\S]*?)<\/h2>/gi, (_fullMatch, rawAttrs, innerContent) => {
+  // 1. 正则替换所有 <h2>...</h2> 标签
+  let result = content.replace(/<h2(\b[^>]*)>([\s\S]*?)<\/h2>/gi, (_fullMatch, rawAttrs, innerContent) => {
     headingCounter += 1;
     const attrs = String(rawAttrs || '');
     const inner = String(innerContent || '');
@@ -244,7 +281,7 @@ export function decorateArticleHeadings(html, options = {}) {
     const cleanedAttrs = stripStyleAttr(attrs);
     const attrsPrefix = cleanedAttrs ? ` ${cleanedAttrs}` : '';
 
-    // 1. 如果 AI 或自定义主题提供了直接的 customStyle 内联样式
+    // 1.1 如果 AI 或自定义主题提供了直接的 customStyle 内联样式
     if (customHeading?.customStyle) {
       const sanitized = sanitizeRawCssOverrides(String(customHeading.customStyle)).sanitized;
       const prefixSpan = renderPrefixSpan(customHeading, numStr, primaryColor);
@@ -256,13 +293,17 @@ export function decorateArticleHeadings(html, options = {}) {
       );
     }
 
-    // 2. 匹配有效样式模式
-    const effectiveStyle = customHeading?.style || headingStyle;
+    // 1.2 匹配有效样式模式
+    const effectiveStyle = headingStyle;
 
     switch (effectiveStyle) {
       case HEADING_STYLES.SERIAL_NUMBER: {
+        const ornamentHtml = customHeading?.ornament
+          ? renderHeadingOrnament(customHeading.ornament, primaryColor, 'h2')
+          : '';
         return (
           `<h2${attrsPrefix} style="display: block; margin: 36px 0 20px; padding: 0 0 10px 0; border: none; border-bottom: 1px solid ${subtleBorderColor}; text-align: left; background: none; line-height: 1.2;">` +
+          ornamentHtml +
           `<span style="display: inline-block; vertical-align: baseline; font-size: 34px; font-weight: 800; line-height: 1; color: ${primaryColor}; margin-right: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;">${numStr}</span>` +
           `<span style="display: inline-block; vertical-align: baseline; font-size: 19px; font-weight: 700; color: ${titleColor}; line-height: 1.4;">${cleanTitle}</span>` +
           `</h2>`
@@ -272,9 +313,13 @@ export function decorateArticleHeadings(html, options = {}) {
       case HEADING_STYLES.BADGE: {
         const bg = customHeading?.background || primaryColor;
         const radius = customHeading?.borderRadius || '10px';
+        const ornamentHtml = customHeading?.ornament
+          ? renderHeadingOrnament(customHeading.ornament, primaryColor, 'h2')
+          : '';
         return (
           `<h2${attrsPrefix} style="display: block; margin: 34px 0 18px; padding: 0 0 10px 0; border: none; background: none; background-image: linear-gradient(to right, ${primaryColor}, transparent); background-size: 100% 2px; background-repeat: no-repeat; background-position: bottom left; text-align: left; line-height: 1.2;">` +
           `<span style="display: inline-block; vertical-align: middle; background-color: ${bg}; color: #ffffff; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: ${radius}; margin-right: 10px; line-height: 1.3; letter-spacing: 0.5px;">${numStr}</span>` +
+          ornamentHtml +
           `<span style="display: inline-block; vertical-align: middle; font-size: 18px; font-weight: 700; color: ${titleColor}; line-height: 1.4;">${cleanTitle}</span>` +
           `</h2>`
         );
@@ -282,10 +327,13 @@ export function decorateArticleHeadings(html, options = {}) {
 
       case HEADING_STYLES.ZEN: {
         const zenLineColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.6)`;
+        const ornamentHtml = customHeading?.ornament
+          ? renderHeadingOrnament(customHeading.ornament, primaryColor, 'h2')
+          : '';
         return (
           `<h2${attrsPrefix} style="display: block; margin: 40px auto 24px; padding: 0; border: none; background: none; text-align: center; line-height: 1.2;">` +
           `<span style="display: block; font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 600; color: ${primaryColor}; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px;">PART ${numStr}</span>` +
-          `<span style="display: block; font-family: 'Songti SC', 'Source Han Serif SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: 21px; font-weight: 700; color: ${titleColor}; line-height: 1.4; letter-spacing: 1px;">${cleanTitle}</span>` +
+          `<span style="display: block; font-family: 'Songti SC', 'Source Han Serif SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: 21px; font-weight: 700; color: ${titleColor}; line-height: 1.4; letter-spacing: 1px;">${ornamentHtml}${cleanTitle}</span>` +
           `<section style="display: block; width: 42px; height: 1px; margin: 14px auto 0; background-color: ${zenLineColor}; border: none; line-height: 1px; font-size: 0; overflow: hidden;">&nbsp;</section>` +
           `</h2>`
         );
@@ -347,6 +395,18 @@ export function decorateArticleHeadings(html, options = {}) {
 
       default: {
         if (customHeading) {
+          const hasH2CustomProps = Boolean(
+            customHeading.style
+            || customHeading.ornament
+            || customHeading.prefix
+            || customHeading.borderLeft
+            || customHeading.borderBottom
+            || customHeading.border
+            || customHeading.background
+          );
+          if (!hasH2CustomProps) {
+            return _fullMatch;
+          }
           const borderVal = customHeading.borderLeft || customHeading.border || `3px solid ${primaryColor}`;
           const bgVal = customHeading.background || 'transparent';
           const radiusVal = customHeading.borderRadius || '0';
@@ -362,4 +422,14 @@ export function decorateArticleHeadings(html, options = {}) {
       }
     }
   });
+
+  // 2. 对 H3 与 H4 应用可选的微矢量/几何装饰件或前缀
+  if (customHeading?.h3Ornament || customHeading?.h3Prefix) {
+    result = decorateSubHeadings(result, 'h3', customHeading.h3Ornament, customHeading.h3Prefix, primaryColor);
+  }
+  if (customHeading?.h4Ornament || customHeading?.h4Prefix) {
+    result = decorateSubHeadings(result, 'h4', customHeading.h4Ornament, customHeading.h4Prefix, primaryColor);
+  }
+
+  return result;
 }

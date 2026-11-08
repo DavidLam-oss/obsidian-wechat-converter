@@ -27,6 +27,8 @@
 - SVG 采用内联微矢量，必须指定 explicit viewBox / width / height / stroke / fill。
 */
 
+import { findCustomTheme } from './custom-theme-adapter.js';
+
 export const DEFAULT_ENGAGEMENT_CTA_TEXT = '如果对你有启发，欢迎点赞、在看、转发';
 
 /** @type {Record<string, string>} */
@@ -99,9 +101,13 @@ export function resolveEngagementCardColor(themeColor, customColor) {
  * 判定是否应渲染互动三连卡。
  * 遵循「严格克制、可选开启」原则：
  * 1. 优先检查 frontmatter 中的 engagement_card / three_links 字段（单篇强制开/关）；
- * 2. 否则读取全局设置 enableEngagementCard（默认 false）。
+ * 2. 若全局开启 enableEngagementCard（true），或当前应用的自定义主题显式声明了 footer.showEngagementCard（true），则展示互动卡。
  *
- * @param {{ enableEngagementCard?: boolean } | null | undefined} settings
+ * @param {{
+ *   enableEngagementCard?: boolean,
+ *   theme?: string,
+ *   customThemes?: Array<import('./theme-token-validator.js').CustomThemeToken>,
+ * } | null | undefined} settings
  * @param {Record<string, unknown> | null | undefined} [frontmatter]
  * @returns {boolean}
  */
@@ -115,7 +121,14 @@ export function shouldShowEngagementCard(settings, frontmatter) {
       return fmValue;
     }
   }
-  return Boolean(settings?.enableEngagementCard);
+  if (settings?.enableEngagementCard === true) {
+    return true;
+  }
+  const activeCustomTheme = findCustomTheme(settings?.customThemes, settings?.theme);
+  if (activeCustomTheme?.footer?.showEngagementCard === true) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -144,9 +157,9 @@ export function renderEngagementCard(options = {}) {
   const safeCta = escapeHtml(rawCta);
 
   // 微矢量 SVG 图标（高兼容性，无微信过滤风险）
-  const thumbSvg = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; display: inline-block;"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>`;
-  const eyeSvg = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; display: inline-block;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
-  const shareSvg = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; display: inline-block;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>`;
+  const thumbSvg = `<svg data-owc-ornament="1" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; display: inline-block;"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>`;
+  const eyeSvg = `<svg data-owc-ornament="1" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; display: inline-block;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+  const shareSvg = `<svg data-owc-ornament="1" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; display: inline-block;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>`;
 
   const badgeStyle = `display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 14px; border-radius: 999px; background-color: ${badgeBg}; border: 1px solid ${badgeBorder}; color: ${primaryColor}; font-size: 13px; font-weight: 600; line-height: 1; text-align: center; box-sizing: border-box; text-decoration: none; white-space: nowrap; flex: 0 0 auto;`;
 
@@ -204,6 +217,8 @@ export function appendEngagementCardToHtml(html, options = {}) {
  *   plugin?: {
  *     settings?: {
  *       enableEngagementCard?: boolean,
+ *       theme?: string,
+ *       customThemes?: Array<import('./theme-token-validator.js').CustomThemeToken>,
  *       themeColor?: string,
  *       customColor?: string,
  *       engagementCtaText?: string,
@@ -231,10 +246,25 @@ export function decorateArticleWithEngagementCard(view, rawHtml) {
 
   const settings = view?.plugin?.settings;
   if (shouldShowEngagementCard(settings, frontmatter)) {
+    const activeCustomTheme = findCustomTheme(settings?.customThemes, settings?.theme);
+    const fmCta = frontmatter && typeof frontmatter === 'object'
+      ? (frontmatter.engagement_cta ?? frontmatter.engagementCta ?? frontmatter.cta_text)
+      : undefined;
+    const customThemeCta = activeCustomTheme?.footer?.ctaText;
+    const resolvedCta = (typeof fmCta === 'string' && fmCta.trim())
+      ? fmCta.trim()
+      : (typeof customThemeCta === 'string' && customThemeCta.trim())
+        ? customThemeCta.trim()
+        : (typeof settings?.engagementCtaText === 'string' ? settings.engagementCtaText : undefined);
+
+    const customThemeAccent = activeCustomTheme?.colors?.accent;
+    const customThemeMuted = activeCustomTheme?.colors?.muted;
+
     return appendEngagementCardToHtml(rawHtml, {
-      themeColor: typeof settings?.themeColor === 'string' ? settings.themeColor : undefined,
-      customColor: typeof settings?.customColor === 'string' ? settings.customColor : undefined,
-      ctaText: typeof settings?.engagementCtaText === 'string' ? settings.engagementCtaText : undefined,
+      themeColor: customThemeAccent || (typeof settings?.themeColor === 'string' ? settings.themeColor : undefined),
+      customColor: customThemeAccent || (typeof settings?.customColor === 'string' ? settings.customColor : undefined),
+      mutedTextColor: typeof customThemeMuted === 'string' && customThemeMuted.trim() ? customThemeMuted.trim() : undefined,
+      ctaText: resolvedCta,
     });
   }
 

@@ -192,6 +192,7 @@ export default [
       "services/dom-utils.js",
       "services/engagement-card.js",
       "services/frontmatter-interpolator.js",
+      "services/heading-ornaments.js",
       "services/heading-style-renderer.js",
       "services/image-source-utils.js",
       "services/image-swipe-callout.js",

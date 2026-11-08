@@ -171,6 +171,8 @@ type SettingsPanelMethodsContract = Pick<
     | 'formatSpacingValue'
     | 'updateSpacingSummary'
     | 'refreshSpacingSliders'
+    | 'openCustomThemeManager'
+    | 'refreshThemeSection'
     | 'refreshThemeColorSection'
     | 'refreshHeadingStyleSection'
 >;

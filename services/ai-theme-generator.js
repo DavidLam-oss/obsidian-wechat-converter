@@ -55,20 +55,28 @@ export const AI_THEME_SYSTEM_PROMPT = `你是一个专业的微信公众号排�
    - "id": 英文小写连字符命名（如 "autumn-forest"）
    - "name": 主题中文名称（如 "秋日森林"）
    - "description": 主题设计理念与适用文风简述
-   - "heading": 二级标题装饰对象（拥有充分的设计自由，请根据文风场景自由创造）：
-     * "style": 可选用经典模式或自定义标识，如 "left-border"（左侧色块条）、"bottom-line"（底边线）、"bubble"（浅底色卡片）、"serial-number"（现代大数字）、"badge"（胶囊徽标）、"zen"（居中留白）、"double-line"（双细线）或 "clean"；
+   - "heading": 多级标题装饰对象（支持 H2 / H3 / H4 联动装饰，严禁在 prefix 中使用任何 Emoji 表情符号）：
+     * "style": 二级标题风格，可选 "left-border"（左侧色块条）、"bottom-line"（底边线）、"bubble"（浅底色卡片）、"serial-number"（现代大数字）、"badge"（胶囊徽标）、"zen"（居中留白）、"double-line"（双细线）或 "clean"；
      * "align": "left" | "center"；
-     * "prefix": 前缀修饰或序号（如 "01."、"01 /"、"PART 01"、"◆ "、"// "、"「 "，或 ""）；
+     * "ornament": 二级标题内置几何/微矢量装饰微件（强烈推荐根据主题气质选配，自适应主色且无 Emoji），可选枚举：
+       - 纯 CSS 几何微件："double-diamond"（双叠菱形） | "slash-bar"（双色斜切条） | "dot-matrix"（双圆点阵） | "corner-bracket"（杂志折角框） | "square-pip"（叠影方块） | "ring-dot"（几何圆环）
+       - 开源 Lucide 矢量图标："leaf"（叶片） | "feather"（羽毛笔） | "terminal"（终端 >_） | "sparkles"（星芒） | "compass"（罗盘） | "book-open"（书卷） | "bookmark"（书签） | "code"（代码符） | "layers"（图层） | "zap"（闪电） | "none"
+     * "prefix": 二级标题纯文本前缀或序号（如 "01."、"01 /"、"PART 01"、"// "，或 ""；严禁 Emoji）；
      * "borderLeft": 左边框（如 "4px solid #2563EB"）；
      * "borderBottom": 底边框（如 "2px solid #2563EB"）；
      * "background": 背景色或渐变（如 "rgba(37, 99, 235, 0.08)"）；
      * "borderRadius": 圆角（如 "4px"）；
-     * "customStyle": 可直接给出针对二级标题的微信标准内联 CSS 声明（例如 "border-left: 4px solid #2563EB; padding: 6px 12px; background: #EFF6FF; border-radius: 0 4px 4px 0;"）；
-     * "h3Style": 三级标题联动风格，可选 "bottom-line"（默认短底线） | "left-border"（左侧竖条） | "classic"（浅底色小条） | "simple"（纯加粗小标）；
+     * "customStyle": 可直接给出针对二级标题的微信标准内联 CSS 声明；
+     * "h3Style": 三级标题风格，可选 "bottom-line"（默认短底线） | "left-border"（左侧竖条） | "classic"（浅底色小条） | "badge"（胶囊小标） | "simple"（纯加粗小标）；
+     * "h3Ornament": 三级标题几何/微矢量装饰（同 ornament 枚举，如 "slash-bar"、"dot-matrix"、"feather" 等，可选）；
+     * "h3Prefix": 三级标题纯文本前缀（严禁 Emoji，可选）；
+     * "h4Style": 四级标题风格，可选 "simple" | "left-border" | "light-bg" | "bottom-line" | "classic-minor"；
+     * "h4Ornament": 四级标题几何/微矢量装饰（同 ornament 枚举，如 "ring-dot"、"dot-matrix" 等，可选）；
+     * "h4Prefix": 四级标题纯文本前缀（严禁 Emoji，可选）；
    - "blockquote": {"style": "soft"（默认左侧色条） | "center"（居中金句） | "paper"（复古纸张） | "minimal"（极简无底色）}
    - "colors": 包含 "accent"（必填主色调）、可选 "canvas"（整篇底色，如 #FAF8F5 暖白）、"light"（浅色背景）、"highlight"（金句高亮底色）、"title"（大标题字色）、"text"（正文字色，推荐 #222222~#333333）、"muted"（辅助弱化字色，推荐 #888888~#999999）、"border"（边框与分割线色）
    - "typography": "fontPreset" ("sans-serif" | "serif" | "monospace")、"baseFontSize" (14~18)、"lineHeight" (1.6~2.0)、"paragraphGap" (12~24)、"strongStyle" ("color" | "neutral" | "highlight")
-   - "footer": "showEngagementCard": false, "ctaText": "..."
+   - "footer": "showEngagementCard": true, "ctaText": "..."（根据文风定制点赞、在看、转发引导文案，showEngagementCard 默认设为 true）
    - 注意：代码块保持默认高亮即可，无需自定义。
 `;
 
@@ -81,7 +89,7 @@ export function buildThemePromptWithRequirement(userRequirement = '') {
   const req = String(userRequirement || '').trim();
   const reqText = req
     ? `【用户具体风格诉求】：\n${req}`
-    : '【用户风格诉求】：\n请自由设计一套优雅克制、具有鲜明行业场景辨识度的排版主题（如科技数码、现代商业、清新生活、或深度人文等，根据你构思的主题定位自由发挥，展现丰富的版式与色彩搭配）。';
+    : '【用户风格诉求】：\n请自由设计一套优雅克制、具有鲜明行业场景辨识度的排版主题（如科技数码、现代商业、清新生活、或深度人文等，根据你构思的主题定位自由发挥，展现丰富的版式与色彩搭配）。请务必为二级标题（h2）、三级标题（h3）及四级标题（h4）精心选配呼应主题气质的几何或开源矢量微装饰（如 leaf、feather、terminal、sparkles、compass、double-diamond、slash-bar 等）与边框版式，严禁使用任何 Emoji。';
 
   return `${reqText}\n\n请严格依据上述诉求生成纯 JSON，格式参考规范如下：\n${AI_THEME_PROMPT_TEMPLATE}`;
 }

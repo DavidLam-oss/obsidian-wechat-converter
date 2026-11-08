@@ -172,6 +172,8 @@ function makeCardSessionMock() {
     noteId: 'n1',
     bumpContent: vi.fn(),
     setCoverSeed: vi.fn(),
+    isCoverFieldsDirty: vi.fn(() => false),
+    applyCoverFields: vi.fn(),
     markPreviewStale: vi.fn(),
     getPreviewState: vi.fn(() => ({ stale: false })),
     beginPreviewUpdate: vi.fn(() => ({ layoutKey: 'k1' })),

@@ -208,7 +208,7 @@ export function inspectWechatDraftContent(html) {
       }
     });
 
-    if (div.querySelector('svg, mjx-container')) {
+    if (div.querySelector('svg:not([data-owc-ornament]), mjx-container')) {
       blockingIssues.push(createDraftContentIssue(
         'draft_unconverted_vector',
         '正文仍有未转换的 SVG 或数学公式节点',

@@ -125,14 +125,12 @@ class AppleStylePlugin extends Plugin {
       id: 'open-custom-theme-modal',
       name: '自定义排版主题管理',
       callback: () => {
-        showCustomThemeModal({
-          app: this.app,
-          plugin: this,
-          onThemeApplied: () => {
-            const view = /** @type {{ convertCurrent?: (force?: boolean) => Promise<unknown> } | null} */ (this.getConverterView());
-            view?.convertCurrent?.(true);
-          },
-        });
+        const view = /** @type {{ openCustomThemeManager?: () => void } | null} */ (this.getConverterView());
+        if (typeof view?.openCustomThemeManager === 'function') {
+          view.openCustomThemeManager();
+          return;
+        }
+        showCustomThemeModal({ app: this.app, plugin: this });
       },
     });
 

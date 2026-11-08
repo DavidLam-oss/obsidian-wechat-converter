@@ -370,9 +370,8 @@ export async function processMathFormulas({
 
     try {
       // 查找所有 SVG 容器 (MathJax 公式或其他矢量图)
-      // 之前只查找 mjx-container svg，导致部分 MathJax 配置下(直接输出svg)无法识别
-      // 现在改为通过 querySelectorAll('svg') 捕获所有 SVG，彻底解决内容过长问题
-      const mathNodes = /** @type {SVGElement[]} */ (Array.from(container.querySelectorAll('svg')));
+      // 跳过带 data-owc-ornament="1" 的极轻量级标题装饰与文末互动微矢量图标
+      const mathNodes = /** @type {SVGElement[]} */ (Array.from(container.querySelectorAll('svg:not([data-owc-ornament])')));
       if (mathNodes.length === 0) return html;
 
       const total = mathNodes.length;

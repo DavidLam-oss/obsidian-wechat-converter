@@ -164,6 +164,15 @@ describe('theme-token-validator', () => {
       const res6 = validateCustomThemeToken(invalidH3);
       expect(res6.valid).toBe(false);
       expect(res6.errors.some((e) => e.includes('h3Style'))).toBe(true);
+
+      const invalidOrnament = {
+        name: 'Ornament测试',
+        colors: { accent: '#112233' },
+        heading: { ornament: '<svg>arbitrary-svg</svg>' },
+      };
+      const res7 = validateCustomThemeToken(invalidOrnament);
+      expect(res7.valid).toBe(false);
+      expect(res7.errors.some((e) => e.includes('heading.ornament'))).toBe(true);
     });
   });
 
@@ -240,14 +249,22 @@ describe('theme-token-validator', () => {
         typography: { strongStyle: 'highlight' },
         heading: {
           style: 'left-border',
+          ornament: 'feather',
           h3Style: 'classic',
+          h3Ornament: 'double-diamond',
+          h4Style: 'light-bg',
+          h4Ornament: 'dot-matrix',
         },
       };
       const normalized = normalizeCustomThemeToken(raw);
       expect(normalized.colors.canvas).toBe('#FAF8F5');
       expect(normalized.blockquote?.style).toBe('center');
       expect(normalized.typography?.strongStyle).toBe('highlight');
+      expect(normalized.heading?.ornament).toBe('feather');
       expect(normalized.heading?.h3Style).toBe('classic');
+      expect(normalized.heading?.h3Ornament).toBe('double-diamond');
+      expect(normalized.heading?.h4Style).toBe('light-bg');
+      expect(normalized.heading?.h4Ornament).toBe('dot-matrix');
     });
   });
 

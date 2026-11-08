@@ -150,6 +150,8 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     aiLayoutStaleSuppressTimer: number | null;
     /** @type {string | null} */
     baseRenderedHtml: string | null;
+    _themeGrid?: ObsidianElementLike | undefined;
+    _refreshThemeSection?: (() => void) | undefined;
     _refreshThemeColorSection?: (() => void) | undefined;
     _refreshHeadingStyleSection?: (() => void) | undefined;
     _customCssLastValidBySource: Map<string, CompiledCustomCssLike>;
@@ -368,6 +370,8 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     formatSpacingValue(value: unknown): string;
     updateSpacingSummary(): void;
     refreshSpacingSliders(): void;
+    openCustomThemeManager(): void;
+    refreshThemeSection?(): void;
     refreshThemeColorSection?(): void;
     refreshHeadingStyleSection?(): void;
     resetSettingsPanelViewState(): void;

@@ -5,6 +5,7 @@ import {
   shouldShowEngagementCard,
   renderEngagementCard,
   appendEngagementCardToHtml,
+  decorateArticleWithEngagementCard,
 } from '../services/engagement-card.js';
 
 describe('services/engagement-card', () => {
@@ -47,6 +48,77 @@ describe('services/engagement-card', () => {
       expect(shouldShowEngagementCard({ enableEngagementCard: true }, { engagement_card: false })).toBe(false);
       expect(shouldShowEngagementCard({ enableEngagementCard: true }, { interactive_card: false })).toBe(false);
     });
+
+    it('当前应用的自定义主题显式设置 footer.showEngagementCard=true 时自动开启', () => {
+      const settings = {
+        enableEngagementCard: false,
+        theme: 'custom-forest',
+        customThemes: [
+          {
+            id: 'custom-forest',
+            name: '秋日森系',
+            footer: {
+              showEngagementCard: true,
+              ctaText: '在森林里漫步，欢迎点赞与分享',
+            },
+          },
+        ],
+      };
+      expect(shouldShowEngagementCard(settings)).toBe(true);
+      expect(shouldShowEngagementCard(settings, { engagement_card: false })).toBe(false);
+    });
+
+    it('当前应用的自定义主题显式设置 footer.showEngagementCard=false 时保持关闭', () => {
+      const settings = {
+        enableEngagementCard: false,
+        theme: 'custom-forest',
+        customThemes: [
+          {
+            id: 'custom-forest',
+            name: '秋日森系',
+            footer: {
+              showEngagementCard: false,
+              ctaText: '在森林里漫步，欢迎点赞与分享',
+            },
+          },
+        ],
+      };
+      expect(shouldShowEngagementCard(settings)).toBe(false);
+    });
+  });
+
+  describe('decorateArticleWithEngagementCard', () => {
+    it('自定义主题激活时自动读取其 footer.ctaText 与 colors.accent/muted', () => {
+      const view = {
+        plugin: {
+          settings: {
+            enableEngagementCard: true,
+            theme: 'custom-forest',
+            themeColor: 'blue',
+            customThemes: [
+              {
+                id: 'custom-forest',
+                name: '秋日森系',
+                colors: {
+                  accent: '#D97706',
+                  muted: '#78716C',
+                },
+                footer: {
+                  showEngagementCard: true,
+                  ctaText: '如果这篇森林手记打动了你，欢迎点赞、在看、分享',
+                },
+              },
+            ],
+          },
+        },
+      };
+
+      const html = decorateArticleWithEngagementCard(view, '<section class="owc-article-root"><p>正文</p></section>');
+      expect(html).toContain('如果这篇森林手记打动了你，欢迎点赞、在看、分享');
+      expect(html).not.toContain(DEFAULT_ENGAGEMENT_CTA_TEXT);
+      expect(html).toContain('#D97706');
+      expect(html).toContain('#78716C');
+    });
   });
 
   describe('renderEngagementCard', () => {
@@ -57,7 +129,7 @@ describe('services/engagement-card', () => {
       expect(html).toContain('点赞');
       expect(html).toContain('在看');
       expect(html).toContain('转发');
-      expect(html).toContain('<svg viewBox="0 0 24 24" width="15" height="15"');
+      expect(html).toContain('<svg data-owc-ornament="1" viewBox="0 0 24 24" width="15" height="15"');
       expect(html).toContain('stroke="currentColor"');
     });
 

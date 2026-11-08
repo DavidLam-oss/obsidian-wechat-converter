@@ -317,9 +317,10 @@ async renderCardPreview() {
   }));
   // 若侧边栏关闭再打开，从插件内存/独立缓存中恢复该笔记已选定的封面配图与版式
   await ensureDiskCacheLoaded(this);
-  if (!session.isCoverFieldsDirty() && sourcePath) {
+  if (selfRecord.cardPreviewGeneration !== generation || (this.previewMode || 'article') !== 'card') return undefined;
+  if (typeof session.isCoverFieldsDirty === 'function' && !session.isCoverFieldsDirty() && sourcePath) {
     const cachedCover = getRememberedNoteCoverState(this, sourcePath);
-    if (cachedCover && cachedCover.coverImage) {
+    if (cachedCover && cachedCover.coverImage && typeof session.applyCoverFields === 'function') {
       session.applyCoverFields(cachedCover);
     }
   }

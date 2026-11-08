@@ -35,10 +35,13 @@ import { writeClipboardText } from '../views/shared/clipboard.js';
  * - views/shared/clipboard.js：纯文本写入的唯一入口。
  * - views/converter/clipboard.js：富文本（text/html + ClipboardItem）写入，
  *   与纯文本不是同一套 API，故单独保留。
+ * - services/card-ai-image-storage.js：图片二进制复制（image/png + ClipboardItem），
+ *   供 AI 卡片生成图片后的快捷复制功能使用。
  */
 const ALLOWED_CLIPBOARD_FILES = new Set([
   'views/shared/clipboard.js',
   'views/converter/clipboard.js',
+  'services/card-ai-image-storage.js',
 ]);
 
 const SCAN_ROOTS = ['views', 'services', 'input.js'];

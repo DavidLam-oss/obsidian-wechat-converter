@@ -220,21 +220,10 @@ createSettingsPanel(container) {
         });
       });
       const addBtn = grid.createEl('button', { cls: 'apple-btn-theme apple-btn-theme-manage', text: '+ 自定义' });
-      addBtn.addEventListener('click', () => {
-        showCustomThemeModal({
-          app: this.app,
-          plugin: this.plugin,
-          onThemeApplied: (themeId) => {
-            const custom = findCustomTheme(this.plugin.settings.customThemes, themeId);
-            const cfg = custom ? compileCustomThemeToAppleConfig(custom) : null;
-            this.theme?.update({ customThemeConfig: cfg });
-            renderThemes();
-            this.refreshHeadingStyleSection?.();
-            this.onThemeChange(themeId, grid);
-          },
-        });
-      });
+      addBtn.addEventListener('click', () => this.openCustomThemeManager());
     };
+    this._refreshThemeSection = renderThemes;
+    this._themeGrid = grid;
     renderThemes();
   });
 
@@ -738,6 +727,36 @@ refreshSpacingSliders() {
     valueLabel.setText(this.formatSpacingValue(v));
   });
   this.updateSpacingSummary();
+}
+,
+
+openCustomThemeManager() {
+  showCustomThemeModal({
+    app: this.app,
+    plugin: this.plugin,
+    onThemesChanged: () => {
+      this.refreshThemeSection();
+    },
+    onThemeApplied: (themeId) => {
+      const custom = findCustomTheme(this.plugin.settings.customThemes, themeId);
+      const cfg = custom ? compileCustomThemeToAppleConfig(custom) : null;
+      this.theme?.update({ customThemeConfig: cfg });
+      this.refreshThemeSection();
+      this.refreshHeadingStyleSection?.();
+      if (this._themeGrid) {
+        this.onThemeChange(themeId, this._themeGrid);
+      } else {
+        this.convertCurrent(true);
+      }
+    },
+  });
+}
+,
+
+refreshThemeSection() {
+  if (typeof this._refreshThemeSection === 'function') {
+    this._refreshThemeSection();
+  }
 }
 ,
 

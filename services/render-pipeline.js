@@ -84,13 +84,12 @@ export class NativeRenderPipeline {
     if (settings && typeof settings.theme === 'string') {
       const customTheme = findCustomTheme(settings.customThemes, settings.theme);
       if (customTheme) {
-        if (headingStyle === 'default') {
-          if (customTheme.headingStyle && customTheme.headingStyle !== 'default') {
-            headingStyle = customTheme.headingStyle;
-          }
-          if (customTheme.heading) {
-            customHeadingConfig = customTheme.heading;
-          }
+        if (customTheme.heading) {
+          customHeadingConfig = customTheme.heading;
+        }
+        const themeHeadingStyle = customTheme.headingStyle || customTheme.heading?.style;
+        if (headingStyle === 'default' && themeHeadingStyle && themeHeadingStyle !== 'default') {
+          headingStyle = themeHeadingStyle;
         }
       }
     }

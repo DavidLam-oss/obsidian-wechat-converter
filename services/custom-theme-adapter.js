@@ -72,7 +72,7 @@ export function compileCustomThemeToAppleConfig(token) {
       break;
   }
 
-  // 1. 自定义 H3 风格覆盖（注意命名差异：Token 侧只认 'classic'，引擎侧对应装饰值叫 'classic-subhead'，勿把引擎值当 Token 值反向比对）
+  // 1. 自定义 H3 / H4 风格覆盖（注意命名差异：Token 侧只认 'classic'，引擎侧对应装饰值叫 'classic-subhead'，勿把引擎值当 Token 值反向比对）
   const customH3 = token.heading?.h3Style || token.h3Style;
   if (customH3 === 'left-border') {
     h3Decoration = 'left-border';
@@ -82,6 +82,21 @@ export function compileCustomThemeToAppleConfig(token) {
     h3Decoration = 'simple';
   } else if (customH3 === 'bottom-line') {
     h3Decoration = 'bottom-line-left';
+  } else if (customH3 === 'badge') {
+    h3Decoration = 'colorful-section';
+  }
+
+  const customH4 = token.heading?.h4Style || token.h4Style;
+  if (customH4 === 'left-border') {
+    h4Decoration = 'left-border';
+  } else if (customH4 === 'light-bg') {
+    h4Decoration = 'light-bg';
+  } else if (customH4 === 'bottom-line') {
+    h4Decoration = 'bottom-line-left';
+  } else if (customH4 === 'classic-minor') {
+    h4Decoration = 'classic-minor';
+  } else if (customH4 === 'simple') {
+    h4Decoration = 'simple';
   }
 
   // 2. 引用块风格覆盖

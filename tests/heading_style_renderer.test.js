@@ -27,6 +27,10 @@ import {
   parseHeadingNumberAndTitle,
   decorateArticleHeadings,
 } from '../services/heading-style-renderer.js';
+import {
+  VALID_HEADING_ORNAMENTS,
+  renderHeadingOrnament,
+} from '../services/heading-ornaments.js';
 
 describe('Heading Style Renderer - Constants & Helpers', () => {
   it('should define valid styles', () => {
@@ -239,6 +243,57 @@ describe('Heading Style Renderer - decorateArticleHeadings', () => {
         },
       });
       expect(output).toContain(expected);
+    }
+  });
+
+  it('should render built-in geometric CSS and Lucide SVG ornaments on H2, H3, and H4', () => {
+    const multiLevelHtml = '<section><h2>二级章节</h2><h3>三级小节</h3><h4>四级要点</h4></section>';
+    const output = decorateArticleHeadings(multiLevelHtml, {
+      customHeading: {
+        style: 'left-border',
+        ornament: 'feather',
+        h3Ornament: 'double-diamond',
+        h3Prefix: '§ ',
+        h4Ornament: 'dot-matrix',
+        h4Prefix: '• ',
+      },
+      primaryColor: '#D97706',
+    });
+
+    // H2 包含带 data-owc-ornament="1" 的 feather 矢量图标且自动染色 #D97706
+    expect(output).toContain('data-owc-ornament="1"');
+    expect(output).toContain('stroke="#D97706"');
+    // H3 包含双叠菱形 rotate(45deg) 与转义后的 § 前缀
+    expect(output).toContain('transform:rotate(45deg)');
+    expect(output).toContain('§ ');
+    // H4 包含圆点阵与前缀
+    expect(output).toContain('border-radius:50%');
+    expect(output).toContain('• ');
+  });
+
+  it('explicit sidebar headingStyle should take precedence over customHeading.style', () => {
+    const html = '<h2>测试章节</h2>';
+    const output = decorateArticleHeadings(html, {
+      headingStyle: 'serial-number',
+      customHeading: {
+        style: 'badge',
+      },
+      primaryColor: '#2563EB',
+    });
+    // 显式指定 serial-number 时应生效，不能被 customHeading.style 强行覆盖
+    expect(output).toContain('01');
+    expect(output).not.toContain('border-radius: 9999px');
+  });
+
+  it('should enforce strict byte budget (< 380 chars) on every built-in ornament', () => {
+    for (const ornamentId of VALID_HEADING_ORNAMENTS) {
+      const html = renderHeadingOrnament(ornamentId, '#2563EB', 'h2');
+      if (ornamentId === 'none') {
+        expect(html).toBe('');
+      } else {
+        expect(html.length).toBeGreaterThan(20);
+        expect(html.length).toBeLessThanOrEqual(380);
+      }
     }
   });
 });

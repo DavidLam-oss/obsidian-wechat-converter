@@ -526,7 +526,8 @@ export function downloadAiCoverImageAsFile(input) {
     const link = activeDocument.createElement('a');
     link.href = input.dataUrl;
     link.download = fileName;
-    link.setCssStyles({ display: 'none' });
+    link.hidden = true;
+    link.setCssStyles?.({ display: 'none' });
     activeDocument.body.appendChild(link);
     link.click();
     link.remove();
