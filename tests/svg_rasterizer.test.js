@@ -30,6 +30,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const {
   getSvgLogicalSize,
   rasterizeSvgToPngDataUrl,
+  rasterizeEmbeddedSvgImagesForWechat,
 } = require('../services/svg-rasterizer');
 
 describe('SVG Rasterizer', () => {
@@ -41,6 +42,7 @@ describe('SVG Rasterizer', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it('should derive logical size from viewBox when layout size is unavailable', () => {
@@ -49,6 +51,34 @@ describe('SVG Rasterizer', () => {
     const size = getSvgLogicalSize(svg);
     expect(size.logicalWidth).toBe(240);
     expect(size.logicalHeight).toBe(120);
+  });
+
+  it('should use the viewBox ratio when SVG width is a percentage', () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('viewBox', '0 0 240 120');
+    expect(getSvgLogicalSize(svg)).toMatchObject({ logicalWidth: 240, logicalHeight: 120 });
+  });
+
+  it('should export embedded SVG as PNG while preserving aspect ratio and image attributes', async () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<img alt="Excalidraw" width="500" src="data:image/svg+xml,%3Csvg%3E">';
+    const source = { decode: vi.fn(async () => {}), naturalWidth: 2400, naturalHeight: 1200 };
+    vi.stubGlobal('Image', class { constructor() { return source; } });
+    const drawImage = vi.fn();
+    const canvas = document.createElement('canvas');
+    vi.spyOn(canvas, 'getContext').mockReturnValue({ drawImage });
+    vi.spyOn(canvas, 'toDataURL').mockReturnValue('data:image/png;base64,AA==');
+    vi.spyOn(document, 'createElement').mockReturnValue(canvas);
+
+    await rasterizeEmbeddedSvgImagesForWechat(root);
+
+    expect(source.decode).toHaveBeenCalledOnce();
+    expect(drawImage).toHaveBeenCalledWith(source, 0, 0, 1920, 960);
+    expect(canvas.toDataURL).toHaveBeenCalledWith('image/png');
+    expect(root.querySelector('img').getAttribute('src')).toBe('data:image/png;base64,AA==');
+    expect(root.querySelector('img').getAttribute('width')).toBe('500');
+    expect(root.querySelector('img').getAttribute('alt')).toBe('Excalidraw');
   });
 
   it('should inline computed styles before rasterization so Mermaid colors are preserved', async () => {

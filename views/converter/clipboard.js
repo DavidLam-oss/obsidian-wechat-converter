@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`../apple-style-view-shared.js`。
+关键依赖：`../apple-style-view-shared.js`、`../../services/svg-rasterizer.js`。
 
 ## 维护规则
 
@@ -52,6 +52,7 @@ import {
   pMap,
 } from '../apple-style-view-shared.js';
 import { stripUnresolvedVariableHighlights } from '../../services/frontmatter-interpolator.js';
+import { rasterizeEmbeddedSvgImagesForWechat } from '../../services/svg-rasterizer.js';
 
 /**
  * Keep syntax-highlight markup while making copied code safe to execute.
@@ -254,6 +255,7 @@ async enhanceHtmlForWechatPublishing(root) {
       simpleHash: (value) => this.simpleHash(String(value || '')),
       mermaidImageCache: this.mermaidImageCache,
     });
+    await rasterizeEmbeddedSvgImagesForWechat(root);
     this.transformCodeBlocksForClipboard(root);
   } finally {
     if (mount) {

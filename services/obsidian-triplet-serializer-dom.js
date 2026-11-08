@@ -215,7 +215,7 @@ function pruneObsidianOnlyAttributes(container, { finalStage = false } = {}) {
     'font-weight', 'text-anchor', 'alignment-baseline', 'dominant-baseline',
     'preserveaspectratio',
     'marker-start', 'marker-mid', 'marker-end', 'markerwidth', 'markerheight',
-    'refx', 'refy', 'orient', 'pathlength', 'role', 'focusable', 'aria-hidden',
+    'refx', 'refy', 'orient', 'markerunits', 'pathlength', 'role', 'focusable', 'aria-hidden',
     'xmlns:xlink', 'xlink:href',
   ]);
   const SVG_TAGS = new Set([
@@ -250,6 +250,9 @@ function pruneObsidianOnlyAttributes(container, { finalStage = false } = {}) {
     const attrs = Array.from(el.attributes);
     for (const attr of attrs) {
       const name = attr.name.toLowerCase();
+      // Mermaid's arrow markers and other SVG definitions are referenced by ID.
+      if (name === 'id' && el.namespaceURI === 'http://www.w3.org/2000/svg'
+        && el.closest('svg.owc-mermaid-diagram') && (tagName === 'marker' || el.closest('defs'))) continue;
       if ((name.startsWith('data-') && !allowed.has(name)) || name === 'id' || name === 'dir') {
         el.removeAttribute(attr.name);
         continue;
