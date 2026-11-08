@@ -509,5 +509,126 @@ describe('卡片封面选图切篇安全与取消机制 (H3, H4, M4)', () => {
       expect(keys).toContain('note-new.md');
       expect(keys).not.toContain('note-0.md');
     });
+
+    it('关闭侧边栏重新打开后（新建 view 实例共享同一 plugin），AI 历史灵感与封面状态依然保留', async () => {
+      const container1 = applyExtensions(document.createElement('div'));
+      const onSelect1 = vi.fn();
+
+      obsidian.requestUrl = vi.fn().mockResolvedValue({
+        status: 200,
+        json: {
+          data: [{ b64_json: 'persisted_image_b64' }],
+        },
+      });
+
+      renderAiMediaPickerTab({
+        container: container1,
+        view: mockView,
+        sourcePathKey: 'note-a.md',
+        ratioId: '3:4',
+        onSelect: onSelect1,
+      });
+
+      const generateBtn = container1.querySelector('.card-media-picker-ai-actions button');
+      generateBtn.click();
+
+      await vi.waitFor(() => {
+        expect(generateBtn.disabled).toBe(false);
+      });
+
+      expect(mockView.plugin._cardAiImageHistory['note-a.md']).toHaveLength(1);
+      expect(mockView.plugin._cardCoverStateCache['note-a.md']?.coverImage).toBe('data:image/png;base64,persisted_image_b64');
+
+      // 模拟侧边栏被彻底关闭后重新打开：创建全新的 newView 实例，但挂载同一个 plugin 实例
+      const newView = {
+        ...mockView,
+        _cardAiImageHistory: undefined,
+      };
+      const container2 = applyExtensions(document.createElement('div'));
+
+      renderAiMediaPickerTab({
+        container: container2,
+        view: newView,
+        sourcePathKey: 'note-a.md',
+        ratioId: '3:4',
+        onSelect: vi.fn(),
+      });
+
+      const historyItems = container2.querySelectorAll('.card-media-picker-history-item');
+      expect(historyItems).toHaveLength(1);
+      const thumbImg = historyItems[0].querySelector('.card-media-picker-history-thumb');
+      expect(thumbImg?.getAttribute('src')).toBe('data:image/png;base64,persisted_image_b64');
+    });
+
+    it('历史灵感缩略图提供复制图片、存入仓库与另存为操作按钮，点击操作按钮不误触发切换封面', async () => {
+      const container = applyExtensions(document.createElement('div'));
+      const pngB64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+      mockView.plugin._cardAiImageHistory = {
+        'note-a.md': [
+          {
+            id: 'ai_1',
+            dataUrl: `data:image/png;base64,${pngB64}`,
+            prompt: 'test prompt',
+            styleId: '3d-clay',
+            coverMode: 'adaptive',
+            timestamp: Date.now(),
+          },
+          {
+            id: 'ai_2',
+            dataUrl: `data:image/png;base64,${pngB64}`,
+            prompt: 'test prompt 2',
+            styleId: 'minimal-vector',
+            coverMode: 'mixed',
+            timestamp: Date.now() - 1000,
+          },
+        ],
+      };
+
+      const writeBinaryMock = vi.fn().mockResolvedValue(undefined);
+      const mkdirMock = vi.fn().mockResolvedValue(undefined);
+      const existsMock = vi.fn().mockResolvedValue(false);
+      mockView.app = {
+        vault: {
+          configDir: '.obsidian',
+          adapter: {
+            exists: existsMock,
+            mkdir: mkdirMock,
+            writeBinary: writeBinaryMock,
+          },
+        },
+      };
+
+      const onSelect = vi.fn();
+      renderAiMediaPickerTab({
+        container,
+        view: mockView,
+        sourcePathKey: 'note-a.md',
+        ratioId: '3:4',
+        onSelect,
+      });
+
+      const secondCard = container.querySelectorAll('.card-media-picker-history-item')[1];
+      expect(secondCard).toBeDefined();
+
+      const copyBtn = secondCard.querySelector('[data-action="copy"]');
+      const vaultSaveBtn = secondCard.querySelector('[data-action="save-vault"]');
+      const downloadBtn = secondCard.querySelector('[data-action="download"]');
+      expect(copyBtn).not.toBeNull();
+      expect(vaultSaveBtn).not.toBeNull();
+      expect(downloadBtn).not.toBeNull();
+
+      // 点击「存入仓库」按钮，应写入卡片导出目录，且不触发卡片选图的 onSelect
+      vaultSaveBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await vi.waitFor(() => {
+        expect(writeBinaryMock).toHaveBeenCalledTimes(1);
+      });
+      const savedPath = writeBinaryMock.mock.calls[0][0];
+      expect(savedPath).toMatch(/^卡片导出\/note-a\/ai-cover-.*\.png$/);
+      expect(onSelect).not.toHaveBeenCalled();
+
+      // 点击「另存为」按钮，不触发卡片选图的 onSelect
+      downloadBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      expect(onSelect).not.toHaveBeenCalled();
+    });
   });
 });

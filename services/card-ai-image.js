@@ -2,13 +2,14 @@
  * ## 核心功能: 小红书卡片导出（Image Card）AI 封面生成服务。
  * - 对接 OpenAI 兼容生图 API（/images/generations），提供预设风格模版与动态 Prompt 变量替换；
  * - 比例适配与 Base64 内联转码；支持 AbortSignal 取消与超时保护。
- * ## 输出: AI_CARD_COVER_STYLES, resolveCardCoverPrompt, resolveCardImageDimensions, generateCardCoverImage, extractVisualTopicWithAi.
+ * ## 输出: AI_CARD_COVER_STYLES, resolveCardCoverPrompt, resolveCardCoverAspectRatio, resolveCardImageDimensions, generateCardCoverImage, extractVisualTopicWithAi.
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- reason: JS file handles dynamic API responses without strict typescript type annotations */
 
 import { getObsidianRequestUrl } from './obsidian-compat.js';
 import { getActiveWindowValue } from './dom-utils.js';
+import { getCardTheme } from './card-themes.js';
 
 /**
  * 预设生图风格模版列表
@@ -18,36 +19,41 @@ export const AI_CARD_COVER_STYLES = [
     id: '3d-clay',
     name: '3D 粘土',
     description: '立体软萌、微缩景观与哑光磨砂质感',
-    promptTemplate:
-      '3D 黏土微缩场景，柔和圆润造型，马卡龙暖色调，哑光磨砂黏土质感，棚拍柔光照明，C4D 渲染风格，微缩景观展现主题：{topic}，纯净背景，超清细节，画面无文字',
+    promptTemplate: '3D 黏土微缩场景，横版宽幅构图，视觉主体居中且四周适度留白，柔和圆润造型，马卡龙暖色调，哑光磨砂黏土质感，棚拍柔光照明，C4D 渲染风格，微缩景观展现主题：{topic}，纯净背景，超清细节，画面无文字',
+    mixedPromptTemplate: '3D 黏土微缩场景，竖版全屏意境构图，柔和圆润造型，马卡龙暖色调，哑光磨砂黏土质感，棚拍柔光照明，C4D 渲染风格，微缩景观展现主题：{topic}，留白呼吸感，超清细节，画面无文字',
+    posterPromptTemplate: '3D 黏土微缩场景小红书封面海报，竖版海报构图，柔和圆润造型，马卡龙暖色调，哑光磨砂黏土质感，棚拍柔光照明，C4D 渲染风格，微缩场景展现：{topic}，并在画面醒目位置设计立体3D艺术字主标题：“{posterTitle}”，文字清晰工整，大师级海报排版，超清细节',
   },
   {
     id: 'minimal-vector',
     name: '扁平矢量',
     description: '清晰线条、几何色块与优雅留白',
-    promptTemplate:
-      '扁平矢量插画风格，极简现代设计，线条利落流畅，高雅撞色与留白构图，视觉化隐喻表达：{topic}，杂志海报质感，矢量图形，超清画质，画面无文字',
+    promptTemplate: '扁平矢量插画风格，横版宽幅构图，视觉重心居中，极简现代设计，线条利落流畅，高雅撞色与留白构图，视觉化隐喻表达：{topic}，杂志封面插画质感，矢量图形，超清画质，画面无文字',
+    mixedPromptTemplate: '扁平矢量插画风格，竖版全屏构图，极简现代设计，线条利落流畅，高雅撞色与呼吸感留白，视觉化隐喻表达：{topic}，杂志海报背景质感，矢量图形，超清画质，画面无文字',
+    posterPromptTemplate: '扁平矢量插画风格小红书封面海报，竖版海报构图，极简现代设计，线条利落流畅，高雅撞色与留白构图，视觉化呈现：{topic}，并在画面醒目位置排版现代设计感大标题：“{posterTitle}”，字体清晰醒目，图文浑然一体，杂志封面海报质感，超清画质',
   },
   {
     id: 'cyberpunk-tech',
     name: '未来科技',
     description: '黑曜底色、全息几何与霓虹科技感',
-    promptTemplate:
-      '未来主义赛博朋克科技感，深色黑曜背景，霓虹青紫辉光与全息光效，几何科技线条，概念化科技场景诠释：{topic}，电影级光影，超清细节，画面无文字',
+    promptTemplate: '未来主义赛博朋克科技感，横版宽幅构图，核心主体居中，深色黑曜背景，霓虹青紫辉光与全息光效，几何科技线条，概念化科技场景诠释：{topic}，电影级宽画幅光影，超清细节，画面无文字',
+    mixedPromptTemplate: '未来主义赛博朋克科技感，竖版全屏构图，深色黑曜背景，霓虹青紫辉光与全息光效，几何科技线条，概念化科技场景诠释：{topic}，电影级光影层次，超清细节，画面无文字',
+    posterPromptTemplate: '未来主义赛博朋克科技感小红书封面海报，竖版海报构图，深色黑曜背景，霓虹青紫辉光与全息光效，概念化科技场景：{topic}，并在画面醒目位置设计未来科技感发光大标题：“{posterTitle}”，文字清晰锐利，先锋科技海报排版，电影级光影，超清细节',
   },
   {
     id: 'warm-healing',
     name: '温暖手绘',
     description: '温馨水彩水粉手绘质感与治愈意境',
-    promptTemplate:
-      '温馨治愈水粉水彩手绘风，细腻笔触与纸张纹理，温润柔和暖光，治愈系慢生活意境，故事感画面呼应：{topic}，唯美插画壁纸质感，画面无文字',
+    promptTemplate: '温馨治愈水粉水彩手绘风，横版宽幅构图，视觉焦点居中且边缘舒展留白，细腻笔触与纸张纹理，温润柔和暖光，治愈系慢生活意境，故事感画面呼应：{topic}，唯美插画质感，画面无文字',
+    mixedPromptTemplate: '温馨治愈水粉水彩手绘风，竖版全屏壁纸构图，细腻笔触与纸张纹理，温润柔和暖光，治愈系慢生活意境，故事感画面呼应：{topic}，唯美插画壁纸质感，画面无文字',
+    posterPromptTemplate: '温馨治愈水粉水彩手绘风小红书封面海报，竖版海报构图，细腻笔触与纸张纹理，温润柔和暖光，治愈系故事感画面呼应：{topic}，并在画面醒目留白处融入优雅手写艺术字主标题：“{posterTitle}”，文字清晰工整，文艺书籍封面排版质感',
   },
   {
     id: 'editorial-magazine',
     name: '新潮杂志',
     description: '先锋艺术构图、撞色大色块与杂志海报',
-    promptTemplate:
-      '当代艺术先锋杂志封面背景，大胆现代抽象几何构图，高级撞色色块，前卫高级感，视觉概念象征：{topic}，美术馆海报美学，纯净大气，画面无文字',
+    promptTemplate: '当代艺术先锋杂志封面插图，横版宽幅构图，视觉主体居中，大胆现代抽象几何构图，高级撞色色块，前卫高级感，视觉概念象征：{topic}，美术馆画册美学，纯净大气，画面无文字',
+    mixedPromptTemplate: '当代艺术先锋杂志封面背景，竖版全屏构图，大胆现代抽象几何构图，高级撞色色块，前卫高级感，视觉概念象征：{topic}，美术馆海报美学，纯净大气，画面无文字',
+    posterPromptTemplate: '当代艺术先锋杂志封面海报，竖版海报构图，大胆现代抽象几何构图，高级撞色色块，视觉概念象征：{topic}，并在画面黄金视觉区设计极具张力的现代主义排版大标题：“{posterTitle}”，字体清晰醒目，美术馆级展览海报美学，前卫高级感',
   },
   {
     id: 'custom',
@@ -57,36 +63,21 @@ export const AI_CARD_COVER_STYLES = [
   },
 ];
 
-/**
- * @param {ArrayBuffer} buffer
- * @returns {string}
- */
+/** @param {ArrayBuffer} buffer @returns {string} */
 function bufferToBase64(buffer) {
-  if (typeof Buffer !== 'undefined') {
-    return Buffer.from(buffer).toString('base64');
-  }
+  if (typeof Buffer !== 'undefined') return Buffer.from(buffer).toString('base64');
   const win = getActiveWindowValue('window') || (typeof window !== 'undefined' ? window : null);
   const btoaFn = win && typeof win.btoa === 'function' ? win.btoa.bind(win) : null;
-  if (!btoaFn) {
-    throw new Error('当前环境缺少 Buffer 或 btoa，无法转换图片 Base64');
-  }
+  if (!btoaFn) throw new Error('当前环境缺少 Buffer 或 btoa，无法转换图片 Base64');
   let binary = '';
   const bytes = new Uint8Array(buffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
   return btoaFn(binary);
 }
 
 /**
- * 变量替换生成最终提示词
- * @param {object} options
- * @param {string} [options.styleId]
- * @param {string} [options.customPrompt]
- * @param {string} [options.title]
- * @param {string} [options.excerpt]
- * @param {string} [options.topic]
+ * 变量替换生成最终提示词（支持根据 coverMode 切换横版无字插画 / 竖版无字意境底图 / 纯海报带标题大字模式）
+ * @param {{ styleId?: string, customPrompt?: string, title?: string, excerpt?: string, topic?: string, coverMode?: string, themeId?: string }} [options]
  * @returns {string}
  */
 export function resolveCardCoverPrompt(options = {}) {
@@ -96,25 +87,36 @@ export function resolveCardCoverPrompt(options = {}) {
     title = '精选笔记',
     excerpt = '',
     topic = '',
+    coverMode = 'adaptive',
+    themeId = 'simple-white',
   } = options;
+
+  const isPosterMode = coverMode === 'full-bleed';
+  const theme = getCardTheme(themeId || 'simple-white');
+  const isVerticalBgMode = coverMode === 'mixed' || Boolean(theme && theme.coverStyle === 'neon');
 
   let template = '';
   if (styleId === 'custom') {
     template = (customPrompt && customPrompt.trim()) ? customPrompt.trim() : '{topic}';
   } else {
-    const matched = AI_CARD_COVER_STYLES.find((s) => s.id === styleId);
-    template = matched ? matched.promptTemplate : AI_CARD_COVER_STYLES[0].promptTemplate;
-    if (customPrompt && customPrompt.trim()) {
-      template = `${template}, ${customPrompt.trim()}`;
+    const matched = AI_CARD_COVER_STYLES.find((s) => s.id === styleId) || AI_CARD_COVER_STYLES[0];
+    if (isPosterMode && matched.posterPromptTemplate) {
+      template = matched.posterPromptTemplate;
+    } else if (isVerticalBgMode && matched.mixedPromptTemplate) {
+      template = matched.mixedPromptTemplate;
+    } else {
+      template = matched.promptTemplate;
     }
+    if (customPrompt && customPrompt.trim()) template = `${template}, ${customPrompt.trim()}`;
   }
-
   const safeTitle = (title || '精选笔记').replace(/[\r\n]+/g, ' ').trim();
   const safeExcerpt = (excerpt || '').replace(/[\r\n]+/g, ' ').slice(0, 100).trim();
   const safeTopic = (topic || '').replace(/[\r\n]+/g, ' ').trim();
   const effectiveTopic = safeTopic || (safeExcerpt ? `${safeTitle} (${safeExcerpt})` : safeTitle);
+  const posterTitle = (safeTopic && safeTopic.length <= 28) ? safeTopic : safeTitle;
 
   return template
+    .replace(/\{posterTitle\}/g, posterTitle)
     .replace(/\{title\}/g, safeTitle)
     .replace(/\{excerpt\}/g, safeExcerpt)
     .replace(/\{topic\}/g, effectiveTopic)
@@ -122,42 +124,44 @@ export function resolveCardCoverPrompt(options = {}) {
 }
 
 /**
+ * 根据封面版式、卡片主题与整卡比例，智能推导封面配图的最佳生成比例
+ * @param {{ coverMode?: string, themeId?: string, ratioId?: string }} [options]
+ * @returns {string}
+ */
+export function resolveCardCoverAspectRatio(options = {}) {
+  const { coverMode = 'adaptive', themeId = 'simple-white', ratioId = '3:4' } = options || {};
+  const cardRatio = ratioId || '3:4';
+  if (coverMode === 'mixed' || coverMode === 'full-bleed') return cardRatio;
+  const theme = getCardTheme(themeId || 'simple-white');
+  if (theme && theme.coverStyle === 'neon') return cardRatio;
+  return '4:3';
+}
+
+/**
  * 比例映射为 API 分辨率
- * @param {string} aspectRatio 比例，如 '3:4', '3:5', '9:16', '1:1'
- * @param {string} [modelName] 模型名称，用于兼容 DALL-E-3 等严格限制尺寸的模型
+ * @param {string} [aspectRatio='3:4']
+ * @param {string} [modelName='']
  * @returns {string}
  */
 export function resolveCardImageDimensions(aspectRatio = '3:4', modelName = '') {
   const isDallE3 = typeof modelName === 'string' && /dall-e-3/i.test(modelName);
-
   if (isDallE3) {
     if (aspectRatio === '1:1') return '1024x1024';
-    return '1024x1792'; // DALL-E-3 竖屏标准分辨率
+    if (aspectRatio === '4:3' || aspectRatio === '16:9') return '1792x1024';
+    return '1024x1792';
   }
-
   switch (aspectRatio) {
-    case '1:1':
-      return '1024x1024';
-    case '9:16':
-      return '1024x1792';
-    case '3:5':
-      return '864x1440';
+    case '1:1': return '1024x1024';
+    case '4:3': return '1024x768';
+    case '16:9': return '1792x1024';
+    case '9:16': return '1024x1792';
+    case '3:5': return '864x1440';
     case '3:4':
-    default:
-      return '768x1024';
+    default: return '768x1024';
   }
 }
 
-/**
- * 请求生图 API 并返回 Base64 格式的 Data URL
- * @param {object} options
- * @param {import('../project-types.js').AiProviderLike} options.provider
- * @param {string} options.prompt
- * @param {string} [options.aspectRatio='3:4']
- * @param {((options: Record<string, unknown>) => Promise<unknown>) | null} [options.requestUrl]
-/**
- * 获取环境安全的 window 定时器函数
- */
+/** 获取环境安全的 window 定时器函数 */
 function getWindowTimers() {
   const win = getActiveWindowValue('window') || (typeof window !== 'undefined' ? window : null);
   const setTimeoutFn = win && typeof win.setTimeout === 'function' ? win.setTimeout.bind(win) : setTimeout;
@@ -692,11 +696,12 @@ export async function generateCardCoverImage(options) {
 }
 
 /**
- * 使用配置的文本 AI Provider 智能提炼文章视觉核心观点
+ * 使用配置的文本 AI Provider 智能提炼文章视觉核心观点（或在纯海报模式下提炼爆款封面标题）
  * @param {object} options
  * @param {any} options.provider 文本 AI Provider
  * @param {string} options.title 文章标题
  * @param {string} options.content 文章正文或摘要内容
+ * @param {string} [options.coverMode='adaptive'] 封面版式（full-bleed 时提炼精炼海报主标题）
  * @param {((options: Record<string, unknown>) => Promise<unknown>) | null} [options.requestUrlFn]
  * @param {AbortSignal} [options.signal]
  * @param {number} [options.timeoutMs=30000]
@@ -707,6 +712,7 @@ export async function extractVisualTopicWithAi(options) {
     provider,
     title = '',
     content = '',
+    coverMode = 'adaptive',
     requestUrlFn: injectedRequestUrl = null,
     signal: externalSignal = null,
     timeoutMs = 30000,
@@ -720,7 +726,10 @@ export async function extractVisualTopicWithAi(options) {
   const requestUrlFn = typeof injectedRequestUrl === 'function' ? injectedRequestUrl : getObsidianRequestUrl();
   const cleanContent = String(content || '').slice(0, 2500);
 
-  const systemPrompt = '你是一位视觉设计与小红书封面策划专家。请根据用户提供的文章标题和内容，提炼出最核心、最具画面感的一句话视觉主题意象。要求：20字以内，语言生动形象，适合交给生图模型绘制，直接输出该短句，不要输出任何引言、解释、标点或序号。';
+  const isPosterMode = coverMode === 'full-bleed';
+  const systemPrompt = isPosterMode
+    ? '你是一位小红书爆款封面文案与视觉主编。请根据文章标题和内容，提炼出一句最抓人眼球、通顺精炼、直击文章核心价值的封面海报大字主标题。要求：6到14个汉字以内，句式完整通顺、朗朗上口，适合直接作为大字印在封面海报上，直接输出该标题短句，不要输出任何引号、标点、解释或序号。'
+    : '你是一位视觉设计与小红书封面策划专家。请根据用户提供的文章标题和内容，提炼出最核心、最具画面感的一句话视觉主题意象。要求：20字以内，语言生动形象，适合交给生图模型绘制，直接输出该短句，不要输出任何引言、解释、标点或序号。';
   const userPrompt = `文章标题：${title || '无标题'}\n\n文章内容摘要：${cleanContent}`;
 
   const payload = {

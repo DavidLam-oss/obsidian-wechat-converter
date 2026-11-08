@@ -16,6 +16,7 @@
 
 import { Notice } from '../apple-style-view-shared.js';
 import { AI_CARD_COVER_STYLES } from '../../services/card-ai-image.js';
+import { rememberNoteCoverState } from '../../services/card-ai-image-storage.js';
 import { COVER_MODE_LABELS } from '../../services/card-cover-model.js';
 import { resolveVaultResourceSrc } from '../../services/image-source-utils.js';
 import { showCardMediaPickerModal } from './card-media-picker-modal.js';
@@ -79,7 +80,7 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
         view,
         sourcePathKey: targetSourcePathKey,
         initialTab,
-        onSelect: ({ dataUrl, source }) => {
+        onSelect: ({ dataUrl, source, coverMode: selectedMode }) => {
           const currentSourcePathKey = resolveActiveCardSourceKey(view);
 
           if (targetSourcePathKey && currentSourcePathKey && targetSourcePathKey !== currentSourcePathKey) {
@@ -92,10 +93,13 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
                   coverImageSource: source,
                   coverImage: dataUrl,
                 };
-                if (prevMode === 'none') {
+                if (selectedMode && selectedMode !== 'none') {
+                  fields.coverMode = selectedMode;
+                } else if (prevMode === 'none') {
                   fields.coverMode = 'adaptive';
                 }
                 targetSession.applyCoverFields(fields);
+                rememberNoteCoverState(view, targetSourcePathKey, targetSession.getCoverFields?.() || fields);
                 new Notice('已切换笔记，所选封面已保存至原笔记');
               } else {
                 new Notice('已切换笔记，原笔记会话已失效');
@@ -107,7 +111,9 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
           }
 
           const session = view.getCardSettingsSession();
-          if (session?.getCoverFields?.()?.coverMode === 'none') {
+          if (selectedMode && selectedMode !== 'none') {
+            view.applyCardCoverField('coverMode', selectedMode);
+          } else if (session?.getCoverFields?.()?.coverMode === 'none') {
             view.applyCardCoverField('coverMode', 'adaptive');
           }
           view.applyCardCoverField('coverImageSource', source);
@@ -183,6 +189,10 @@ export function buildCardCoverSettingsSubpanel(view, coverSection, refs) {
       const session = typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession() : null;
       if (session && typeof session.applyCoverFields === 'function') {
         session.applyCoverFields({ coverImagePosition: { x: 50, y: 50 }, coverImageScale: 1.0 });
+        const sourceKey = resolveActiveCardSourceKey(view);
+        if (sourceKey && typeof session.getCoverFields === 'function') {
+          rememberNoteCoverState(view, sourceKey, session.getCoverFields());
+        }
         if (typeof view.renderCardSettingsValues === 'function') {
           view.renderCardSettingsValues();
         }

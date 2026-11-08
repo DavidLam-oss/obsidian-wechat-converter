@@ -80,6 +80,7 @@ import {
   renderCardCoverValues,
   renderCardCoverGroupEcho,
 } from './card-cover-settings.js';
+import { rememberNoteCoverState } from '../../services/card-ai-image-storage.js';
 import { writeClipboardText } from '../shared/clipboard.js';
 
 /**
@@ -596,6 +597,13 @@ applyCardCoverField(key, value) {
     return;
   }
   const result = session.applyCoverFields({ [key]: value });
+  const sourceKey = String(
+    session.getSourcePath?.() || (/** @type {any} */ (this)).cardPreviewPendingInput?.sourcePathKey || '',
+  );
+  if (sourceKey && typeof session.getCoverFields === 'function') {
+    const fields = session.getCoverFields();
+    rememberNoteCoverState(this, sourceKey, fields?.coverImage ? fields : null);
+  }
   this.renderCardSettingsValues();
   if (result.changed) void this.renderCardPreview();
 }
@@ -609,6 +617,12 @@ resetCardCoverFields() {
     return;
   }
   const result = session.resetCoverFields();
+  const sourceKey = String(
+    session.getSourcePath?.() || (/** @type {any} */ (this)).cardPreviewPendingInput?.sourcePathKey || '',
+  );
+  if (sourceKey) {
+    rememberNoteCoverState(this, sourceKey, null);
+  }
   this.renderCardSettingsValues();
   if (result.changed) void this.renderCardPreview();
 }

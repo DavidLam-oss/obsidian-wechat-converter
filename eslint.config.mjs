@@ -165,6 +165,7 @@ export default [
       "services/ai-layout-skill-bundle.js",
       "services/article-image-assets.js",
       "services/card-ai-image.js",
+      "services/card-ai-image-storage.js",
       "services/card-cover-model.js",
       "services/card-cover-pan-zoom.js",
       "services/card-cover-source.js",

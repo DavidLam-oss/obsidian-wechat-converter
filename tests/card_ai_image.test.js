@@ -24,6 +24,7 @@ import { describe, it, expect, vi } from 'vitest';
 import {
   AI_CARD_COVER_STYLES,
   resolveCardCoverPrompt,
+  resolveCardCoverAspectRatio,
   resolveCardImageDimensions,
   generateCardCoverImage,
   extractVisualTopicWithAi,
@@ -97,10 +98,57 @@ describe('Card AI Image Service (C06.2)', () => {
       expect(promptWithTitleOnly).toContain('治愈系日记');
       expect(promptWithTitleOnly).not.toContain('{topic}');
     });
+
+    it('adapts prompt template based on coverMode (adaptive vs mixed vs full-bleed poster with text)', () => {
+      const adaptivePrompt = resolveCardCoverPrompt({
+        styleId: '3d-clay',
+        title: '打造第二大脑',
+        topic: '知识星河',
+        coverMode: 'adaptive',
+      });
+      expect(adaptivePrompt).toContain('横版宽幅构图');
+      expect(adaptivePrompt).toContain('画面无文字');
+
+      const mixedPrompt = resolveCardCoverPrompt({
+        styleId: '3d-clay',
+        title: '打造第二大脑',
+        topic: '知识星河',
+        coverMode: 'mixed',
+      });
+      expect(mixedPrompt).toContain('竖版全屏');
+      expect(mixedPrompt).toContain('画面无文字');
+
+      const posterPrompt = resolveCardCoverPrompt({
+        styleId: '3d-clay',
+        title: '打造第二大脑',
+        topic: '构建你的终身知识库',
+        coverMode: 'full-bleed',
+      });
+      expect(posterPrompt).toContain('竖版海报构图');
+      expect(posterPrompt).toContain('主标题：“构建你的终身知识库”');
+      expect(posterPrompt).not.toContain('画面无文字');
+    });
   });
 
-  describe('resolveCardImageDimensions', () => {
+  describe('resolveCardCoverAspectRatio & resolveCardImageDimensions', () => {
+    it('resolves landscape 4:3 for adaptive cover mode on half-frame themes', () => {
+      expect(resolveCardCoverAspectRatio({ coverMode: 'adaptive', themeId: 'simple-white', ratioId: '3:4' })).toBe('4:3');
+      expect(resolveCardCoverAspectRatio({ coverMode: 'adaptive', themeId: 'gradient-blue', ratioId: '3:5' })).toBe('4:3');
+      expect(resolveCardCoverAspectRatio({ coverMode: 'adaptive', themeId: 'dark-gold', ratioId: '9:16' })).toBe('4:3');
+      expect(resolveCardCoverAspectRatio({ coverMode: 'none', themeId: 'simple-white', ratioId: '3:4' })).toBe('4:3');
+    });
+
+    it('preserves card portrait ratio for full-card cover modes or neon full-bg themes', () => {
+      expect(resolveCardCoverAspectRatio({ coverMode: 'mixed', themeId: 'simple-white', ratioId: '3:4' })).toBe('3:4');
+      expect(resolveCardCoverAspectRatio({ coverMode: 'full-bleed', themeId: 'simple-white', ratioId: '3:5' })).toBe('3:5');
+      expect(resolveCardCoverAspectRatio({ coverMode: 'adaptive', themeId: 'neon-purple', ratioId: '3:4' })).toBe('3:4');
+      expect(resolveCardCoverAspectRatio({ coverMode: 'adaptive', themeId: 'cyber', ratioId: '9:16' })).toBe('9:16');
+      expect(resolveCardCoverAspectRatio({ coverMode: 'adaptive', themeId: 'starry', ratioId: '3:4' })).toBe('3:4');
+    });
+
     it('maps aspect ratios for standard models', () => {
+      expect(resolveCardImageDimensions('4:3', 'flux')).toBe('1024x768');
+      expect(resolveCardImageDimensions('16:9', 'flux')).toBe('1792x1024');
       expect(resolveCardImageDimensions('3:4', 'flux')).toBe('768x1024');
       expect(resolveCardImageDimensions('3:5', 'flux')).toBe('864x1440');
       expect(resolveCardImageDimensions('9:16', 'flux')).toBe('1024x1792');
@@ -108,6 +156,8 @@ describe('Card AI Image Service (C06.2)', () => {
     });
 
     it('adapts aspect ratios for dall-e-3', () => {
+      expect(resolveCardImageDimensions('4:3', 'dall-e-3')).toBe('1792x1024');
+      expect(resolveCardImageDimensions('16:9', 'dall-e-3')).toBe('1792x1024');
       expect(resolveCardImageDimensions('3:4', 'dall-e-3')).toBe('1024x1792');
       expect(resolveCardImageDimensions('9:16', 'dall-e-3')).toBe('1024x1792');
       expect(resolveCardImageDimensions('1:1', 'dall-e-3')).toBe('1024x1024');
@@ -464,6 +514,36 @@ describe('Card AI Image Service (C06.2)', () => {
       expect(topic).toBe('赛博全息城市与30K创作者庆典');
       expect(mockRequestUrl).toHaveBeenCalledTimes(1);
       expect(mockRequestUrl.mock.calls[0][0].url).toBe('https://api.example.com/v1/chat/completions');
+      const sentBody = JSON.parse(mockRequestUrl.mock.calls[0][0].body);
+      expect(sentBody.messages[0].content).toContain('视觉主题意象');
+    });
+
+    it('uses poster headline system prompt when coverMode is full-bleed', async () => {
+      const mockRequestUrl = vi.fn().mockResolvedValue({
+        status: 200,
+        json: {
+          choices: [
+            { message: { content: '打造你的终身知识系统' } },
+          ],
+        },
+      });
+
+      const headline = await extractVisualTopicWithAi({
+        provider: {
+          name: 'Text Provider',
+          baseUrl: 'https://api.example.com/v1',
+          apiKey: 'key_123',
+          textModel: 'gpt-4o-mini',
+        },
+        title: 'Obsidian 深度笔记指南',
+        content: '通过双向链接与原子化卡片构建个人第二大脑...',
+        coverMode: 'full-bleed',
+        requestUrlFn: mockRequestUrl,
+      });
+
+      expect(headline).toBe('打造你的终身知识系统');
+      const sentBody = JSON.parse(mockRequestUrl.mock.calls[0][0].body);
+      expect(sentBody.messages[0].content).toContain('封面海报大字主标题');
     });
 
     it('handles failure when provider returns error status', async () => {

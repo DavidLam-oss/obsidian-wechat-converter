@@ -756,10 +756,125 @@ describe('卡片独立选图工作台 (Media Picker Modal)', () => {
         expect(bodyObj.prompt).toBeDefined();
         expect(bodyObj.prompt.length).toBeGreaterThan(0);
         expect(bodyObj.prompt).toContain('测试笔记标题');
+        expect(bodyObj.size).toBe('1792x1024');
+      } finally {
+        obsidian.requestUrl = originalRequestUrl;
+      }
+    });
+
+    it('全屏版式 (mixed / full-bleed) 下点击开始生成封面时按整卡竖版比例请求尺寸', async () => {
+      const container = applyExtensions(document.createElement('div'));
+      const mockSession = {
+        getCoverFields: vi.fn().mockReturnValue({ coverMode: 'mixed' }),
+        getLayoutSettings: vi.fn().mockReturnValue({ themeId: 'simple-white', ratioId: '3:5' }),
+      };
+      const mockView = {
+        plugin: {
+          settings: {
+            ai: {
+              providers: [
+                {
+                  id: 'p-1',
+                  name: '测试提供商',
+                  baseUrl: 'https://api.openai.com/v1',
+                  apiKey: 'sk-123',
+                  supportsImage: true,
+                  imageModel: 'dall-e-3',
+                },
+              ],
+              defaultImageProviderId: 'p-1',
+            },
+          },
+        },
+        getCardSettingsSession: vi.fn().mockReturnValue(mockSession),
+        getActiveFileTitle: vi.fn().mockReturnValue('全屏封面测试'),
+        getActiveDocExcerpt: vi.fn().mockReturnValue('全屏封面摘要'),
+      };
+
+      const mockRequestUrl = vi.fn().mockResolvedValue({
+        status: 200,
+        json: {
+          data: [{ b64_json: 'aW1n' }],
+        },
+      });
+
+      renderAiMediaPickerTab({
+        container,
+        view: mockView,
+        ratioId: '3:5',
+        onSelect: vi.fn(),
+        onOpenSettings: vi.fn(),
+      });
+
+      const originalRequestUrl = obsidian.requestUrl;
+      obsidian.requestUrl = mockRequestUrl;
+
+      try {
+        const generateBtn = container.querySelector('.mod-cta');
+        await generateBtn.dispatchEvent(new MouseEvent('click'));
+        await new Promise((r) => setTimeout(r, 50));
+
+        expect(mockRequestUrl).toHaveBeenCalled();
+        const bodyObj = JSON.parse(mockRequestUrl.mock.calls[0][0].body);
         expect(bodyObj.size).toBe('1024x1792');
       } finally {
         obsidian.requestUrl = originalRequestUrl;
       }
+    });
+
+    it('支持在 AI 生图弹窗内直接切换「融入主题 / 全屏意境 / 纯海报」版式，联动更新标题提示词与竖版海报尺寸', () => {
+      const container = applyExtensions(document.createElement('div'));
+      const applyFieldSpy = vi.fn();
+      const mockSession = {
+        getCoverFields: vi.fn().mockReturnValue({ coverMode: 'adaptive', title: '高效笔记法则' }),
+        getLayoutSettings: vi.fn().mockReturnValue({ themeId: 'simple-white', ratioId: '3:4' }),
+      };
+      const mockView = {
+        plugin: {
+          settings: {
+            ai: {
+              providers: [
+                {
+                  id: 'p-1',
+                  name: '测试提供商',
+                  baseUrl: 'https://api.openai.com/v1',
+                  apiKey: 'sk-123',
+                  supportsImage: true,
+                  imageModel: 'flux',
+                },
+              ],
+              defaultImageProviderId: 'p-1',
+            },
+          },
+        },
+        getCardSettingsSession: vi.fn().mockReturnValue(mockSession),
+        applyCardCoverField: applyFieldSpy,
+        getActiveFileTitle: vi.fn().mockReturnValue('高效笔记法则'),
+      };
+
+      renderAiMediaPickerTab({
+        container,
+        view: mockView,
+        ratioId: '3:4',
+        onSelect: vi.fn(),
+      });
+
+      const modeBtns = container.querySelectorAll('.card-media-picker-mode-btn');
+      expect(modeBtns.length).toBe(3);
+
+      const posterBtn = container.querySelector('.card-media-picker-mode-btn[data-cover-mode="full-bleed"]');
+      expect(posterBtn).not.toBeNull();
+      posterBtn.dispatchEvent(new MouseEvent('click'));
+
+      expect(posterBtn.classList.contains('is-active')).toBe(true);
+      expect(applyFieldSpy).toHaveBeenCalledWith('coverMode', 'full-bleed');
+
+      const extractBtnText = container.querySelector('.card-media-picker-ai-extract-text');
+      expect(extractBtnText?.textContent).toBe('AI 提炼标题');
+
+      const textarea = container.querySelector('.card-media-picker-prompt-textarea');
+      expect(textarea.value).toContain('主标题：“高效笔记法则”');
+      expect(textarea.value).not.toContain('画面无文字');
     });
 
     it('未配置任何 AI 生图 Provider 时展示引导配置提示', () => {

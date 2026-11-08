@@ -70,6 +70,11 @@ import { releasePageStyle } from '../../services/card-render-assembly.js';
 import { deriveCoverFields, isCoverUsable } from '../../services/card-cover-model.js';
 import { attachCoverImagePanZoom } from '../../services/card-cover-pan-zoom.js';
 import {
+  ensureDiskCacheLoaded,
+  getRememberedNoteCoverState,
+  rememberNoteCoverState,
+} from '../../services/card-ai-image-storage.js';
+import {
   createCardSessionRegistry,
   createPreviewRunner,
 } from '../../services/card-session.js';
@@ -310,6 +315,14 @@ async renderCardPreview() {
       cardCoverImageStyle: aiConfig?.cardCoverImageStyle,
     },
   }));
+  // 若侧边栏关闭再打开，从插件内存/独立缓存中恢复该笔记已选定的封面配图与版式
+  await ensureDiskCacheLoaded(this);
+  if (!session.isCoverFieldsDirty() && sourcePath) {
+    const cachedCover = getRememberedNoteCoverState(this, sourcePath);
+    if (cachedCover && cachedCover.coverImage) {
+      session.applyCoverFields(cachedCover);
+    }
+  }
   selfRecord.cardPreviewPendingInput = { markdown, sourcePath, sourcePathKey: sourcePath };
 
   const settled = await selfRecord.cardPreviewRunner.schedule();
@@ -610,6 +623,7 @@ renderCardPreviewDom() {
     renderPageThumb(outcome.coverPage, 'cover', '封面', null);
     selfRec.cardPreviewCoverCleanup = attachCoverImagePanZoom(outcome.coverPage, (change) => {
       session.applyCoverFields(change);
+      rememberNoteCoverState(this, session.getSourcePath(), session.getCoverFields());
       if (typeof (/** @type {any} */ (this).renderCardSettingsValues) === 'function') {
         /** @type {any} */ (this).renderCardSettingsValues();
       }

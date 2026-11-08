@@ -19,9 +19,19 @@ import { Notice, getObsidianSetIcon } from '../apple-style-view-shared.js';
 import {
   AI_CARD_COVER_STYLES,
   resolveCardCoverPrompt,
+  resolveCardCoverAspectRatio,
   generateCardCoverImage,
   extractVisualTopicWithAi,
 } from '../../services/card-ai-image.js';
+import {
+  getOrCreateNoteAiImageHistory,
+  pushNoteAiImageHistory,
+  rememberNoteCoverState,
+  ensureDiskCacheLoaded,
+  copyAiCoverImageToClipboard,
+  saveAiCoverImageToVaultExportDir,
+  downloadAiCoverImageAsFile,
+} from '../../services/card-ai-image-storage.js';
 import {
   resolveImageAiProvider,
   resolveAiProvider,
@@ -107,14 +117,67 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
 
   const session = typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession() : null;
   const currentCoverFields = session?.getCoverFields?.() || {};
+  const currentLayout = typeof view.getCurrentCardLayoutSettings === 'function'
+    ? view.getCurrentCardLayoutSettings()
+    : (session?.getLayoutSettings?.() || {});
   const docTitle = String(currentCoverFields.title || (typeof view.getActiveFileTitle === 'function' ? view.getActiveFileTitle() : '') || '精选笔记').trim();
   const docExcerpt = extractArticleSummary(view, currentCoverFields);
 
-  // 1. 风格预设画廊
-  container.createDiv({ cls: 'card-media-picker-section-title', text: '预设画面风格' });
-  const stylesGrid = container.createDiv({ cls: 'card-media-picker-ai-styles' });
-
+  let selectedCoverMode = (currentCoverFields.coverMode && currentCoverFields.coverMode !== 'none')
+    ? currentCoverFields.coverMode
+    : (aiSettings?.cardCoverMode && aiSettings.cardCoverMode !== 'none' ? aiSettings.cardCoverMode : 'adaptive');
   let selectedStyleId = currentCoverFields.coverImageStyle || AI_CARD_COVER_STYLES[0].id;
+
+  // 1. 风格预设画廊 + 封面呈现模式切换
+  const styleHeader = container.createDiv({ cls: 'card-media-picker-style-header' });
+  styleHeader.createDiv({ cls: 'card-media-picker-section-title', text: '预设画面风格' });
+
+  const modeSegment = styleHeader.createDiv({ cls: 'card-media-picker-mode-segment' });
+  const modeOptions = [
+    { id: 'adaptive', label: '融入主题', tip: '横版无字插画（下方搭配卡片标题排版）' },
+    { id: 'mixed', label: '全屏意境', tip: '竖版全屏无字底图（上层叠加卡片白色标题）' },
+    { id: 'full-bleed', label: '纯海报', tip: '竖版纯海报整页铺满（AI 在图中直接绘制封面大标题）' },
+  ];
+  const modeBtns = [];
+  modeOptions.forEach((opt) => {
+    const btn = modeSegment.createEl('button', {
+      cls: `card-media-picker-mode-btn ${opt.id === selectedCoverMode ? 'is-active' : ''}`,
+      text: opt.label,
+      attr: { type: 'button', title: opt.tip, 'data-cover-mode': opt.id },
+    });
+    btn.addEventListener('click', () => {
+      if (selectedCoverMode === opt.id) return;
+      const prevMode = selectedCoverMode;
+      selectedCoverMode = opt.id;
+      modeBtns.forEach((b) => {
+        b.removeClass('is-active');
+      });
+      btn.addClass('is-active');
+
+      // 实时同步版式选择到当前活跃笔记会话
+      const currentKey = resolveActiveCardSourceKey(view);
+      if (!sourcePathKey || !currentKey || sourcePathKey === currentKey) {
+        if (typeof view.applyCardCoverField === 'function') {
+          view.applyCardCoverField('coverMode', selectedCoverMode);
+        } else if (session && typeof session.applyCoverFields === 'function') {
+          session.applyCoverFields({ coverMode: selectedCoverMode });
+        }
+      }
+
+      // 切换到纯海报模式时，若输入框还是默认的冗长摘要，自动切为精炼标题以便海报印字
+      if (selectedCoverMode === 'full-bleed' && topicInput.value === docExcerpt && docTitle) {
+        topicInput.value = docTitle;
+      } else if (prevMode === 'full-bleed' && selectedCoverMode !== 'full-bleed' && topicInput.value === docTitle && docExcerpt) {
+        topicInput.value = docExcerpt;
+      }
+
+      updateModeUiLabels();
+      syncPrompt();
+    });
+    modeBtns.push(btn);
+  });
+
+  const stylesGrid = container.createDiv({ cls: 'card-media-picker-ai-styles' });
 
   const styleCards = [];
   AI_CARD_COVER_STYLES.forEach((style) => {
@@ -139,9 +202,9 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
     styleCards.push(card);
   });
 
-  // 2. 画面核心观点与主题输入
+  // 2. 画面核心观点与主题输入（纯海报模式下自动演进为「海报主标题与核心画面」）
   const topicHeader = container.createDiv({ cls: 'card-media-picker-topic-header' });
-  topicHeader.createDiv({ cls: 'card-media-picker-section-title', text: '画面核心观点与主题' });
+  const topicSectionTitle = topicHeader.createDiv({ cls: 'card-media-picker-section-title', text: '画面核心观点与主题' });
 
   const textProvider = resolveAiProvider(aiSettings);
   const isTextRunnable = isAiProviderRunnable(textProvider, 'text');
@@ -174,6 +237,7 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
     }
 
     const initialSourceKey = resolveActiveCardSourceKey(view) || sourcePathKey || '';
+    const isPoster = selectedCoverMode === 'full-bleed';
 
     extractBtn.disabled = true;
     textSpan.textContent = '提炼中...';
@@ -183,6 +247,7 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
         provider: textProvider,
         title: docTitle,
         content: markdown || docExcerpt,
+        coverMode: selectedCoverMode,
       });
 
       const currentSourceKey = resolveActiveCardSourceKey(view);
@@ -193,13 +258,13 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
 
       topicInput.value = aiTopic;
       syncPrompt();
-      new Notice('AI 已提炼视觉核心观点并同步提示词');
+      new Notice(isPoster ? 'AI 已提炼封面海报标题并同步提示词' : 'AI 已提炼视觉核心观点并同步提示词');
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       new Notice(`AI 提炼失败: ${msg}`);
     } finally {
       extractBtn.disabled = false;
-      textSpan.textContent = 'AI 提炼观点';
+      textSpan.textContent = selectedCoverMode === 'full-bleed' ? 'AI 提炼标题' : 'AI 提炼观点';
     }
   });
 
@@ -208,9 +273,19 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
       type: 'text',
       cls: 'card-media-picker-topic-input',
       attr: { placeholder: '提炼文章核心观点或关键词，将融入所选画面风格...' },
-      value: docExcerpt || docTitle,
+      value: selectedCoverMode === 'full-bleed' ? docTitle : (docExcerpt || docTitle),
     }))
   );
+
+  const updateModeUiLabels = () => {
+    const isPoster = selectedCoverMode === 'full-bleed';
+    topicSectionTitle.textContent = isPoster ? '海报主标题与核心画面' : '画面核心观点与主题';
+    textSpan.textContent = isPoster ? 'AI 提炼标题' : 'AI 提炼观点';
+    topicInput.placeholder = isPoster
+      ? '输入将绘制在海报上的精炼大标题（建议 6-14 字）...'
+      : '提炼文章核心观点或关键词，将融入所选画面风格...';
+  };
+  updateModeUiLabels();
 
   // 3. 画面描述词 Prompt
   container.createDiv({ cls: 'card-media-picker-section-title', text: '画面描述词 (Prompt)' });
@@ -253,11 +328,16 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
 
   const syncPrompt = () => {
     const topic = topicInput.value.trim();
+    const liveLayoutNow = typeof view.getCurrentCardLayoutSettings === 'function'
+      ? view.getCurrentCardLayoutSettings()
+      : currentLayout;
     promptTextarea.value = resolveCardCoverPrompt({
       styleId: selectedStyleId,
       title: docTitle,
       topic: topic || docTitle,
       excerpt: docExcerpt,
+      coverMode: selectedCoverMode,
+      themeId: liveLayoutNow?.themeId || 'simple-white',
     });
   };
 
@@ -295,53 +375,37 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
   const barFill = barBg.createDiv({ cls: 'card-media-picker-progress-bar-fill' });
   barFill.setCssStyles({ width: '8%' });
 
-  // 6. 历史记录缓存管理（按当前笔记持久化在 view 实例中，设容量上限防内存泄漏）
-  const MAX_AI_IMAGE_HISTORY = 10;
-  const MAX_CACHED_NOTES = 10;
-
+  // 6. 历史记录缓存管理（持久化在 plugin / view 实例中，并异步落盘至插件目录独立缓存）
   if (!view._tempNoteKey) {
     view._tempNoteKey = `temp_${Date.now()}`;
   }
   const noteKey = resolveActiveCardSourceKey(view) || sourcePathKey || view._tempNoteKey;
 
-  view._cardAiImageHistory = view._cardAiImageHistory || {};
-
-  // 控制已缓存笔记数量上限 (LRU/FIFO)
-  const cachedKeys = Object.keys(view._cardAiImageHistory);
-  if (!view._cardAiImageHistory[noteKey] && cachedKeys.length >= MAX_CACHED_NOTES) {
-    delete view._cardAiImageHistory[cachedKeys[0]];
-  }
-
-  if (!Array.isArray(view._cardAiImageHistory[noteKey])) {
-    view._cardAiImageHistory[noteKey] = [];
-    if (currentCoverFields.coverImage && currentCoverFields.coverImageSource === 'ai') {
-      view._cardAiImageHistory[noteKey].push({
-        id: 'initial_cover',
-        dataUrl: currentCoverFields.coverImage,
-        prompt: currentCoverFields.coverPrompt || '',
-        styleId: currentCoverFields.coverImageStyle || selectedStyleId,
-        timestamp: Date.now(),
-      });
-    }
-  }
-  const historyList = view._cardAiImageHistory[noteKey];
+  let historyList = getOrCreateNoteAiImageHistory(view, noteKey, {
+    currentCoverFields,
+    defaultStyleId: selectedStyleId,
+  });
 
   let currentSelectedDataUrl = (currentCoverFields.coverImage && currentCoverFields.coverImageSource === 'ai')
     ? currentCoverFields.coverImage
     : (historyList[0]?.dataUrl || '');
 
-  // 7. 历史灵感画廊区域（统一作为封面预览与多图选择工作台）
+  // 7. 历史灵感画廊区域（统一作为封面预览、多图切换与复制/导出工作台）
   const historySection = container.createDiv({
     cls: `card-media-picker-history-section ${historyList.length > 0 ? '' : 'is-hidden'}`,
   });
   historySection.createDiv({
     cls: 'card-media-picker-history-title',
-    text: '已生成的封面灵感（点击直接选用）',
+    text: '已生成的封面灵感（点击直接选用，悬停可复制或保存）',
   });
   const historyGrid = historySection.createDiv({ cls: 'card-media-picker-history-grid' });
 
   const renderHistoryThumbnails = () => {
     historyGrid.empty();
+    historyList = getOrCreateNoteAiImageHistory(view, noteKey, {
+      currentCoverFields,
+      defaultStyleId: selectedStyleId,
+    });
     if (historyList.length === 0) {
       historySection.addClass('is-hidden');
       return;
@@ -367,12 +431,91 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
         });
       }
 
+      // 底部悬停快捷操作栏：复制图片 / 存入导出目录 / 另存为文件（纯 Lucide 图标，无 emoji）
+      const actionsBar = card.createDiv({ cls: 'card-media-picker-history-actions' });
+
+      const copyBtn = actionsBar.createEl('button', {
+        cls: 'card-media-picker-history-action-btn',
+        attr: {
+          type: 'button',
+          title: '复制图片到剪贴板',
+          'aria-label': '复制图片到剪贴板',
+          'data-action': 'copy',
+        },
+      });
+      if (typeof setIcon === 'function') {
+        setIcon(copyBtn, 'copy');
+      } else {
+        copyBtn.textContent = '复制';
+      }
+      copyBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const ok = await copyAiCoverImageToClipboard(item.dataUrl);
+        new Notice(ok ? '已复制封面图片到剪贴板' : '当前环境暂不支持直接复制图片，请使用另存为');
+      });
+
+      const vaultSaveBtn = actionsBar.createEl('button', {
+        cls: 'card-media-picker-history-action-btn',
+        attr: {
+          type: 'button',
+          title: '存入仓库（卡片导出目录）',
+          'aria-label': '存入仓库（卡片导出目录）',
+          'data-action': 'save-vault',
+        },
+      });
+      if (typeof setIcon === 'function') {
+        setIcon(vaultSaveBtn, 'folder-down');
+      } else {
+        vaultSaveBtn.textContent = '入库';
+      }
+      vaultSaveBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const res = await saveAiCoverImageToVaultExportDir({
+          view,
+          dataUrl: item.dataUrl,
+          sourcePath: noteKey,
+        });
+        if (res.ok && res.path) {
+          new Notice(`已存入仓库：${res.path}`);
+        } else {
+          new Notice(`存入仓库失败：${res.message || '未知错误'}`);
+        }
+      });
+
+      const downloadBtn = actionsBar.createEl('button', {
+        cls: 'card-media-picker-history-action-btn',
+        attr: {
+          type: 'button',
+          title: '另存为本地文件',
+          'aria-label': '另存为本地文件',
+          'data-action': 'download',
+        },
+      });
+      if (typeof setIcon === 'function') {
+        setIcon(downloadBtn, 'download');
+      } else {
+        downloadBtn.textContent = '下载';
+      }
+      downloadBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const ok = downloadAiCoverImageAsFile({
+          dataUrl: item.dataUrl,
+          sourcePath: noteKey,
+        });
+        if (ok) {
+          new Notice('已触发封面图片另存为');
+        } else {
+          new Notice('另存为文件失败');
+        }
+      });
+
       card.addEventListener('click', () => {
         if (currentSelectedDataUrl === item.dataUrl) return;
         currentSelectedDataUrl = item.dataUrl;
+        const targetMode = item.coverMode || selectedCoverMode;
         renderHistoryThumbnails();
         if (typeof onSelect === 'function') {
-          onSelect({ dataUrl: item.dataUrl, source: 'ai' });
+          onSelect({ dataUrl: item.dataUrl, source: 'ai', coverMode: targetMode });
         }
         new Notice('已切换为封面图片');
       });
@@ -380,6 +523,20 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
   };
 
   renderHistoryThumbnails();
+
+  // 惰性从插件目录独立缓存恢复历史记录（若内存尚未加载）
+  void ensureDiskCacheLoaded(view).then((restored) => {
+    if (restored) {
+      historyList = getOrCreateNoteAiImageHistory(view, noteKey, {
+        currentCoverFields,
+        defaultStyleId: selectedStyleId,
+      });
+      if (!currentSelectedDataUrl && historyList[0]?.dataUrl) {
+        currentSelectedDataUrl = historyList[0].dataUrl;
+      }
+      renderHistoryThumbnails();
+    }
+  });
 
   // 定时器工具函数（符合 Obsidian 审核规范）
   const win = typeof window !== 'undefined' ? window : null;
@@ -465,10 +622,20 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
     new Notice('AI 正在绘制封面图片，通常需要 20-40 秒（复杂模型约需 1 分钟），请稍候...');
 
     try {
+      const liveSession = typeof view.getCardSettingsSession === 'function' ? view.getCardSettingsSession() : session;
+      const liveLayout = typeof view.getCurrentCardLayoutSettings === 'function'
+        ? view.getCurrentCardLayoutSettings()
+        : (liveSession?.getLayoutSettings?.() || currentLayout);
+      const effectiveAspectRatio = resolveCardCoverAspectRatio({
+        coverMode: selectedCoverMode || 'adaptive',
+        themeId: liveLayout.themeId || 'simple-white',
+        ratioId: ratioId || liveLayout.ratioId || '3:4',
+      });
+
       const dataUrl = await generateCardCoverImage({
         provider: imageProvider,
         prompt,
-        aspectRatio: ratioId || '3:4',
+        aspectRatio: effectiveAspectRatio,
         signal: abortController.signal,
       });
 
@@ -489,22 +656,22 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
       const currentNoteKey = resolveActiveCardSourceKey(view);
       const isNoteSwitched = noteKey && currentNoteKey && noteKey !== currentNoteKey;
 
-      // 压入发起时 noteKey 的历史列表首位（避免重复且不超过上限）
-      const targetHistory = view._cardAiImageHistory[noteKey] || historyList;
-      const existingIdx = targetHistory.findIndex((h) => h.dataUrl === dataUrl);
-      if (existingIdx >= 0) {
-        targetHistory.splice(existingIdx, 1);
-      }
-      targetHistory.unshift({
-        id: `ai_${Date.now()}`,
+      // 压入发起时 noteKey 的历史列表首位（去重 + 截断上限 + 异步落盘）
+      pushNoteAiImageHistory(view, noteKey, {
         dataUrl,
         prompt,
         styleId: selectedStyleId,
-        timestamp: Date.now(),
+        coverMode: selectedCoverMode || 'adaptive',
       });
-      if (targetHistory.length > MAX_AI_IMAGE_HISTORY) {
-        targetHistory.length = MAX_AI_IMAGE_HISTORY;
-      }
+
+      const generatedFields = {
+        coverImageSource: 'ai',
+        coverImage: dataUrl,
+        coverPrompt: prompt,
+        coverImageStyle: selectedStyleId,
+        coverMode: selectedCoverMode || 'adaptive',
+      };
+      rememberNoteCoverState(view, noteKey, generatedFields);
 
       if (isNoteSwitched) {
         // 用户切到了另一篇笔记：回写原笔记 session，严禁污染当前活动笔记！
@@ -512,17 +679,7 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
         if (registry && typeof registry.has === 'function' && registry.has(noteKey)) {
           const targetSession = registry.getSession(noteKey);
           if (targetSession && typeof targetSession.applyCoverFields === 'function') {
-            const prevMode = targetSession.getCoverFields?.()?.coverMode;
-            const fields = {
-              coverImageSource: 'ai',
-              coverImage: dataUrl,
-              coverPrompt: prompt,
-              coverImageStyle: selectedStyleId,
-            };
-            if (prevMode === 'none') {
-              fields.coverMode = 'adaptive';
-            }
-            targetSession.applyCoverFields(fields);
+            targetSession.applyCoverFields(generatedFields);
             new Notice('AI 封面生成完毕！检测到已切换笔记，封面已保存至原笔记。');
           } else {
             new Notice('AI 封面生成完毕！检测到已切换笔记，原笔记会话已失效。');
@@ -534,10 +691,14 @@ export function renderAiMediaPickerTab({ container, view, sourcePathKey, ratioId
       }
 
       currentSelectedDataUrl = dataUrl;
+      if (typeof view.applyCardCoverField === 'function') {
+        view.applyCardCoverField('coverPrompt', prompt);
+        view.applyCardCoverField('coverImageStyle', selectedStyleId);
+      }
 
       // 实时生效并回传封面
       if (typeof onSelect === 'function') {
-        onSelect({ dataUrl, source: 'ai' });
+        onSelect({ dataUrl, source: 'ai', coverMode: selectedCoverMode });
       }
 
       renderHistoryThumbnails();

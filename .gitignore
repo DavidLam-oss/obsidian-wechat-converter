@@ -1,6 +1,7 @@
 node_modules/
 .DS_Store
 data.json
+.card-ai-cover-cache.json
 *.bak
 workspace.json
 xgplayer/
