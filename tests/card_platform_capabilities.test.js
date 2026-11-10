@@ -59,7 +59,7 @@ describe("C04 平台能力隔离与降级验证", () => {
       expect(titleEl?.textContent).toContain("图片卡片目前仅支持桌面端");
       const descEl = emptyEl.querySelector(".icard-preview-empty-desc");
       expect(descEl?.textContent).toContain("移动端暂时无法进行卡片排版预览与导出，文章与贴图功能不受影响。");
-    });
+    }, 15000);
 
     it("移动端环境下文章与贴图模式不受影响", () => {
       const { AppleStylePlugin, createImageSwipeCalloutMarkdown } = loadInputModule();

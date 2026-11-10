@@ -58,6 +58,11 @@ export function resolveSyncAccount({ accounts, selectedAccountId, defaultAccount
  */
 export function toSyncFriendlyMessage(errorMessage = '') {
   const message = String(errorMessage || '');
+  if (/40164|not in whitelist|invalid ip/i.test(message)) {
+    const ipMatch = message.match(/(?:invalid ip\s+|当前 IP（)([0-9.]+)/i) || message.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/);
+    const ipText = ipMatch ? `当前 IP（${ipMatch[1] || ipMatch[0]}）` : '当前网络 IP';
+    return `检测到${ipText}未在微信白名单中 (40164)。请前往微信公众号后台「设置与开发 - 基本配置 - IP 白名单」添加该 IP；若网络环境经常变化，可在插件设置中配置中转代理。`;
+  }
   if (message.includes('45002')) {
     return '文章太长，微信接口拒收。建议分篇发送，或使用插件顶部的「复制」按钮手动粘贴到公众号后台。';
   }

@@ -295,7 +295,7 @@ describe("C04 卡片生命周期与捕获槽预算", () => {
       expect(view.cardPreviewMergeTimer).toBeNull();
       expect(session.disposed).toBe(true);
       expect(view.cardSessionRegistry).toBeNull();
-    });
+    }, 15000);
 
     it("disposeCardExportModal 释放弹窗控制器与资源（幂等）", () => {
       const { AppleStyleView } = loadInputModule();

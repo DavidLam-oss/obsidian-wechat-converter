@@ -562,7 +562,7 @@ export async function generateCardCoverImage(options) {
   }
   const imageModel = provider.imageModel || provider.model;
   if (!imageModel) {
-    throw new Error('生图 AI Provider 缺少生图模型名称（如 FLUX.1-schnell 或 dall-e-3）');
+    throw new Error('生图 AI Provider 缺少生图模型名称，请在设置中配置生图模型 ID');
   }
   if (!prompt || !prompt.trim()) {
     throw new Error('生图提示词不能为空');

@@ -36,6 +36,8 @@ import {
   toReadableError,
   attachIcon,
   APPLE_STYLE_VIEW,
+  fetchCurrentPublicIp,
+  writeClipboardText,
 } from '../apple-style-view-shared.js';
 import { renderSectionHeader } from './platform-wall.js';
 import { resolveCustomCssSource } from '../../services/custom-css-source.js';
@@ -233,6 +235,36 @@ const wechatSettingsMethods = {
       e.preventDefault();
       this.plugin.openExternalUrl(WECHAT_ACCOUNT_SETUP_GUIDE_URL);
     };
+
+    const ipSetting = new Setting(containerEl)
+      .setClass('wechat-ip-lookup-setting')
+      .setName('微信接口白名单 IP')
+      .setDesc('检测当前网络公网出口 IPv4 地址并自动复制，用于在微信公众平台配置 IP 白名单。')
+      .addButton((btn) => {
+        btn.setButtonText('查询当前公网 IP');
+        btn.setClass('wechat-btn-small');
+        btn.onClick(async () => {
+          btn.setDisabled(true);
+          btn.setButtonText('正在查询...');
+          try {
+            const ip = await fetchCurrentPublicIp();
+            const copied = await writeClipboardText(ip);
+            btn.setButtonText(`${ip} (点击复制)`);
+            ipSetting.setDesc(`当前出口 IP: ${ip}（已自动复制）。若切换了网络，可再次点击重新检测并复制。`);
+            new Notice(
+              copied
+                ? `当前公网 IP: ${ip}（已自动复制到剪贴板），请在微信公众平台「基本配置 - IP 白名单」中添加`
+                : `当前公网 IP: ${ip}，请在微信公众平台「基本配置 - IP 白名单」中添加`,
+              8000
+            );
+          } catch (err) {
+            btn.setButtonText('查询失败，重试');
+            new Notice(`查询公网 IP 失败: ${toReadableError(err).message}`, 6000);
+          } finally {
+            btn.setDisabled(false);
+          }
+        });
+      });
 
     // 账号列表
     const accounts = this.plugin.settings.wechatAccounts || [];

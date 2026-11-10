@@ -202,6 +202,7 @@ export default [
       "services/readable-error.js",
       "services/record-utils.js",
       "services/request-utils.js",
+      "services/public-ip.js",
 	      "services/feishu-api.js",
 	      "services/feishu-block-sync.js",
 	      "services/feishu-markdown-processor.js",

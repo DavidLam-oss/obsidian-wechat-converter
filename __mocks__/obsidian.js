@@ -184,6 +184,11 @@ function applyExtensions(el) {
       if (opts.cls) child.className = opts.cls;
       if (opts.text !== undefined) child.textContent = opts.text;
       if (opts.value !== undefined && 'value' in child) child.value = opts.value;
+      if (opts.type !== undefined) child.setAttribute('type', String(opts.type));
+      if (opts.placeholder !== undefined) {
+        child.placeholder = String(opts.placeholder);
+        child.setAttribute('placeholder', String(opts.placeholder));
+      }
       if (opts.href && 'href' in child) child.href = opts.href;
       if (opts.attr && typeof opts.attr === 'object') {
         Object.entries(opts.attr).forEach(([key, value]) => {

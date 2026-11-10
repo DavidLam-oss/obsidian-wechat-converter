@@ -25,10 +25,12 @@ import {
   normalizeAiProvider,
   getAiProviderIssues,
   isAiProviderRunnable,
+  summarizeAiProviderIssues,
   listTextAiProviders,
   listImageAiProviders,
   resolveImageAiProvider,
 } from '../services/ai-layout/providers.js';
+import { COMMON_AI_PRESETS } from '../services/ai-layout/constants.js';
 import {
   createDefaultAiSettings,
   normalizeAiSettings,
@@ -220,5 +222,23 @@ describe('AI Provider Capabilities (C06.1)', () => {
       cardCoverMode: 'invalid-mode',
     });
     expect(invalid.cardCoverMode).toBe('adaptive');
+  });
+
+  it('leaves sample model IDs empty in presets and preserves explicit empty models', () => {
+    COMMON_AI_PRESETS.forEach((preset) => {
+      expect(preset.textModel).toBe('');
+      expect(preset.imageModel).toBe('');
+    });
+
+    const emptyModelProvider = normalizeAiProvider({
+      id: 'p-empty',
+      baseUrl: 'https://api.openai.com/v1',
+      apiKey: 'sk-123',
+      supportsText: true,
+      textModel: '',
+    });
+    expect(emptyModelProvider.textModel).toBe('');
+    expect(getAiProviderIssues(emptyModelProvider, 'text')).toContain('missing-model');
+    expect(summarizeAiProviderIssues(emptyModelProvider, 'text')).toContain('缺少文本模型 ID');
   });
 });

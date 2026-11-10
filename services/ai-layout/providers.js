@@ -45,12 +45,12 @@ function normalizeAiProvider(raw = {}) {
   const supportsText = source.supportsText !== undefined ? Boolean(source.supportsText) : true;
   const supportsImage = source.supportsImage !== undefined ? Boolean(source.supportsImage) : false;
 
-  const textModel = typeof source.textModel === 'string' && source.textModel.trim()
+  const textModel = typeof source.textModel === 'string'
     ? source.textModel.trim()
     : (typeof source.model === 'string' && source.model.trim() ? source.model.trim() : defaults.model);
 
   const defaultImageModel = DEFAULT_IMAGE_MODELS[kind] || '';
-  const imageModel = typeof source.imageModel === 'string' && source.imageModel.trim()
+  const imageModel = typeof source.imageModel === 'string'
     ? source.imageModel.trim()
     : (supportsImage ? defaultImageModel : '');
 
@@ -162,8 +162,8 @@ function summarizeAiProviderIssues(provider = {}, capability = 'any') {
     'missing-base-url': '缺少 Base URL',
     'invalid-base-url': 'Base URL 必须是 HTTPS，或指向本机/局域网的 HTTP 地址',
     'missing-api-key': '缺少 API Key',
-    'missing-model': '缺少文本模型名',
-    'missing-image-model': '缺少生图模型名',
+    'missing-model': '缺少文本模型 ID',
+    'missing-image-model': '缺少生图模型 ID',
     'missing-capabilities': '未启用任何服务能力（请勾选文本模型或生图模型）',
     'text-not-supported': '未启用文本模型能力',
     'image-not-supported': '未启用生图模型能力',

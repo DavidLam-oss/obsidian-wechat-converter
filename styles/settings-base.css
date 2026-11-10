@@ -69,3 +69,69 @@
   padding: 0;
 }
 
+/* 微信账号 IP 白名单辅助横幅 */
+.wechat-account-ip-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   通用表单模态框 (wechat-form-modal)
+   解决长表单内容向下滚动时右上角关闭按钮 x 与标题被滚出视口的问题
+   ========================================================================== */
+
+div.modal.wechat-form-modal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  max-height: min(88vh, 720px);
+  padding-bottom: var(--size-4-4, 16px);
+}
+
+div.modal.wechat-form-modal .modal-close-button {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 20;
+}
+
+div.modal.wechat-form-modal .modal-title {
+  flex: 0 0 auto;
+  margin-top: 0;
+  margin-bottom: 14px;
+  padding-right: 36px;
+}
+
+div.modal.wechat-form-modal .modal-content,
+div.modal.wechat-form-modal .wechat-form-modal-content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 4px;
+}
+
+div.modal.wechat-form-modal .modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+div.modal.wechat-form-modal .modal-content::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-muted, #888) 35%, transparent);
+}
+
+/* 微信接口 IP 检测设置项 */
+.wechat-ip-lookup-setting .setting-item-control button {
+  white-space: nowrap;
+}
+
+

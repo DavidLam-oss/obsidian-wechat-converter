@@ -37,6 +37,9 @@ import {
  */
 export function showEditAiProviderModal(tab, provider) {
   const modal = createObsidianModal(tab.app);
+  modal.modalEl?.addClass?.("wechat-form-modal");
+  modal.modalEl?.addClass?.("ai-provider-modal");
+  modal.contentEl?.addClass?.("wechat-form-modal-content");
   modal.titleEl.setText(provider ? "编辑 AI Provider" : "添加 AI Provider");
 
   const form = modal.contentEl.createDiv();
@@ -95,26 +98,14 @@ export function showEditAiProviderModal(tab, provider) {
     value: provider?.baseUrl || "https://api.openai.com/v1",
   });
 
-  // API Key 输入（带明暗文切换）
+  // API Key 输入
   const apiKeyGroup = form.createDiv({ cls: "wechat-form-group" });
   apiKeyGroup.createEl("label", { text: "API Key" });
-  const apiKeyWrap = apiKeyGroup.createDiv({ cls: "ai-api-key-wrap" });
-  const apiKeyInput = apiKeyWrap.createEl("input", {
+  const apiKeyInput = apiKeyGroup.createEl("input", {
     type: "password",
     placeholder: "sk-...",
     value: provider?.apiKey || "",
-    cls: "ai-api-key-input",
   });
-  const toggleVisibilityBtn = apiKeyWrap.createEl("button", {
-    text: "显示",
-    cls: "wechat-btn-small ai-api-key-toggle-btn",
-    attr: { type: "button" },
-  });
-  toggleVisibilityBtn.onclick = () => {
-    const isPassword = apiKeyInput.type === "password";
-    apiKeyInput.type = isPassword ? "text" : "password";
-    toggleVisibilityBtn.textContent = isPassword ? "隐藏" : "显示";
-  };
 
   // =========================================================================
   // 能力区分：文本模型 & 生图模型
@@ -139,8 +130,8 @@ export function showEditAiProviderModal(tab, provider) {
   const textModelGroup = textCapWrap.createDiv({ cls: "ai-modal-model-group" });
   const textModelInput = textModelGroup.createEl("input", {
     type: "text",
-    placeholder: "文本模型名称，如 deepseek-ai/DeepSeek-V3 或 gpt-4.1-mini",
-    value: provider?.textModel || provider?.model || "gpt-4.1-mini",
+    placeholder: "请输入文本模型 ID",
+    value: provider?.textModel || provider?.model || "",
     cls: "ai-modal-input-full",
   });
 
@@ -156,7 +147,7 @@ export function showEditAiProviderModal(tab, provider) {
   const imgModelGroup = imgCapWrap.createDiv({ cls: "ai-modal-model-group" });
   const imgModelInput = imgModelGroup.createEl("input", {
     type: "text",
-    placeholder: "生图模型名称，如 black-forest-labs/FLUX.1-schnell 或 dall-e-3",
+    placeholder: "请输入生图模型 ID",
     value: provider?.imageModel || "",
     cls: "ai-modal-input-full",
   });
@@ -186,9 +177,9 @@ export function showEditAiProviderModal(tab, provider) {
     kindSelect.value = selectedPreset.kind;
     baseUrlInput.value = selectedPreset.baseUrl;
     textCapCheckbox.checked = selectedPreset.supportsText;
-    textModelInput.value = selectedPreset.textModel;
+    textModelInput.value = selectedPreset.textModel || "";
     imgCapCheckbox.checked = selectedPreset.supportsImage;
-    imgModelInput.value = selectedPreset.imageModel;
+    imgModelInput.value = selectedPreset.imageModel || "";
     syncCapDisplay();
   });
 
@@ -215,6 +206,17 @@ export function showEditAiProviderModal(tab, provider) {
   const testBtn = btnRow.createEl("button", { text: "测试连接", cls: "wechat-btn-test" });
   testBtn.onclick = async () => {
     const isImageSupported = kindSelect.value === AI_PROVIDER_KINDS.OPENAI_COMPATIBLE && imgCapCheckbox.checked;
+    if (textCapCheckbox.checked && !textModelInput.value.trim()) {
+      new Notice("请填写文本模型 ID");
+      textModelInput.focus();
+      return;
+    }
+    if (isImageSupported && !imgModelInput.value.trim()) {
+      new Notice("请填写生图模型 ID");
+      imgModelInput.focus();
+      return;
+    }
+
     const candidate = normalizeAiProvider({
       id: provider?.id,
       name: nameInput.value.trim() || "未命名 Provider",
@@ -253,6 +255,16 @@ export function showEditAiProviderModal(tab, provider) {
     const isImageSupported = kindSelect.value === AI_PROVIDER_KINDS.OPENAI_COMPATIBLE && imgCapCheckbox.checked;
     if (!textCapCheckbox.checked && !isImageSupported) {
       new Notice("请至少勾选一项有效能力（文本模型或生图模型）");
+      return;
+    }
+    if (textCapCheckbox.checked && !textModelInput.value.trim()) {
+      new Notice("请填写文本模型 ID");
+      textModelInput.focus();
+      return;
+    }
+    if (isImageSupported && !imgModelInput.value.trim()) {
+      new Notice("请填写生图模型 ID");
+      imgModelInput.focus();
       return;
     }
 

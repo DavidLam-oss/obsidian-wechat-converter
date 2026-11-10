@@ -32,6 +32,9 @@ import {
   normalizeWechatAccountPublishOptions,
   WechatAPI,
   toReadableError,
+  toSyncFriendlyMessage,
+  fetchCurrentPublicIp,
+  writeClipboardText,
   refreshSettingTabCompat,
   generateId,
 } from '../apple-style-view-shared.js';
@@ -46,10 +49,42 @@ const wechatAccountModalMethods = {
    */
   showEditAccountModal(account) {
     const modal = createObsidianModal(this.app);
+    modal.modalEl?.addClass?.('wechat-form-modal');
+    modal.modalEl?.addClass?.('wechat-account-modal');
+    modal.contentEl?.addClass?.('wechat-form-modal-content');
     modal.titleEl.setText(account ? '编辑账号' : '添加账号');
 
     const form = modal.contentEl.createDiv();
     const publishDefaults = getWechatAccountPublishOptions(account);
+
+    // IP 白名单提示与一键查询
+    const ipNoticeBox = form.createDiv({ cls: 'wechat-account-ip-banner' });
+    ipNoticeBox.createSpan({ text: '首次配置需在微信后台配置 IP 白名单。' });
+    const checkIpBtn = ipNoticeBox.createEl('button', {
+      text: '查询当前 IP',
+      cls: 'wechat-btn-small',
+      attr: { type: 'button' },
+    });
+    checkIpBtn.onclick = async () => {
+      checkIpBtn.disabled = true;
+      checkIpBtn.textContent = '查询中...';
+      try {
+        const ip = await fetchCurrentPublicIp();
+        const copied = await writeClipboardText(ip);
+        checkIpBtn.textContent = `${ip} (已复制)`;
+        new Notice(
+          copied
+            ? `当前公网 IP: ${ip}（已复制到剪贴板），请在微信公众号后台「基本配置 - IP 白名单」中添加`
+            : `当前公网 IP: ${ip}，请在微信公众号后台「基本配置 - IP 白名单」中添加`,
+          8000
+        );
+      } catch (err) {
+        checkIpBtn.textContent = '查询当前 IP';
+        new Notice(`查询公网 IP 失败: ${toReadableError(err).message}`, 6000);
+      } finally {
+        checkIpBtn.disabled = false;
+      }
+    };
 
     // 账号名称
     const nameGroup = form.createDiv({ cls: 'wechat-form-group' });
@@ -150,7 +185,9 @@ const wechatAccountModalMethods = {
         await api.getAccessToken();
         new Notice('连接成功！');
       } catch (err) {
-        new Notice(`连接失败: ${toReadableError(err).message}`);
+        const readable = toReadableError(err);
+        const friendly = toSyncFriendlyMessage(readable.message);
+        new Notice(`连接失败: ${friendly}`, 10000);
       }
       testBtn.disabled = false;
       testBtn.textContent = '测试连接';

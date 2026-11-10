@@ -340,6 +340,12 @@ function isMobileClient(app) {
 export {
   transformVideosForClipboard,
 } from '../services/wechat-video.js';
+export {
+  writeClipboardText,
+} from './shared/clipboard.js';
+export {
+  fetchCurrentPublicIp,
+} from '../services/public-ip.js';
 
 export {
   DEFAULT_SETTINGS,
