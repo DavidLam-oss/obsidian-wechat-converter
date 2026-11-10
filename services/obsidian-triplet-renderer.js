@@ -29,7 +29,7 @@ import { serializeObsidianRenderedHtml } from './obsidian-triplet-serializer.js'
 import { normalizeRenderedDomPunctuation } from './chinese-punctuation.js';
 import { findAllElements, getActiveDocument, getActiveWindowValue } from './dom-utils.js';
 import { parseFencedBlockDelimiter, splitMarkdownCodeSegments } from './markdown-utils.js';
-import { normalizeAdjacentMarkdownBlockHeadings } from './native-renderer.js';
+import { materializePastedExcalidrawSvg, normalizeAdjacentMarkdownBlockHeadings } from './native-renderer.js';
 import { getImageCaptionFromPath, materializeLocalMarkdownImages, preprocessImageSwipeCallouts } from './obsidian-triplet-renderer-images.js';
 import { preProcessVideoEmbeds } from './obsidian-triplet-renderer-videos.js';
 
@@ -612,7 +612,7 @@ function preRenderMathFormulas(markdown, converter) {
  * @returns {TripletPreprocessResult}
  */
 function preprocessMarkdownForTriplet(markdown, converter) {
-  let output = preprocessImageSwipeCallouts(markdown);
+  let output = preprocessImageSwipeCallouts(materializePastedExcalidrawSvg(markdown, converter));
   output = normalizeAdjacentMarkdownBlockHeadings(output).replace(/^[\t ]+(\$\$)/gm, '$1');
 
   // Pre-process and protect video embeds to avoid detached DOM media requests crashing Electron

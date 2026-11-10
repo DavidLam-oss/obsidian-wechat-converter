@@ -39,7 +39,7 @@ vi.mock('obsidian', () => ({
 }));
 
 const { createLegacyConverter } = require('./helpers/render-runtime');
-const { renderMermaidCodeBlocks } = require('../services/rendered-mermaid');
+const { renderMermaidCodeBlocks, convertRenderedMermaidDiagramsToImages } = require('../services/rendered-mermaid');
 const {
   waitForTripletDomToSettle,
   renderByObsidianMarkdownRenderer,
@@ -316,6 +316,53 @@ describe('Obsidian Triplet Renderer runtime', () => {
     });
 
     expect(html).toContain('<img');
+  });
+
+  it('should preserve native Mermaid node styles and arrow markers through preview and export', async () => {
+    const converter = await createLegacyConverter();
+    const html = await renderObsidianTripletMarkdown({
+      app: {}, converter,
+      markdown: '~~~mermaid\nflowchart TD\nA -- 开始 --> B\n~~~',
+      markdownRenderer: { renderMarkdown: async (_markdown, el) => {
+        el.innerHTML = [
+          '<div class="mermaid"><svg id="chart-1" width="100%" viewBox="0 0 240 120">',
+          '<style>#chart-1 .node rect { fill: #efeaff; }</style>',
+          '<g><marker id="chart-1-arrow" markerUnits="userSpaceOnUse"><path d="M0,0 L6,3 L0,6 Z"/></marker></g>',
+          '<g class="node"><rect width="40" height="20"/></g>',
+          '<path marker-end="url(#chart-1-arrow)" d="M30,20 L120,90"/></svg></div>',
+        ].join('');
+      } },
+      mermaidCodeRenderer: renderMermaidCodeBlocks,
+      rasterizeMermaid: false,
+      preserveSvgStyleTags: true,
+    });
+    const preview = document.createElement('div');
+    preview.innerHTML = html;
+    expect(preview.querySelector('svg rect')?.getAttribute('style')).toContain('fill: #efeaff');
+    expect(preview.querySelector('marker#chart-1-arrow')?.getAttribute('markerUnits')).toBe('userSpaceOnUse');
+    expect(preview.querySelector('path[marker-end]')?.getAttribute('marker-end')).toBe('url(#chart-1-arrow)');
+    const rasterizeSvg = vi.fn(async () => ({ dataUrl: 'data:image/png;base64,AA==', width: 240, height: 120 }));
+    await convertRenderedMermaidDiagramsToImages(preview, { rasterizeSvg });
+    expect(rasterizeSvg).toHaveBeenCalledOnce();
+    expect(preview.querySelector('img.mermaid-diagram-image')?.getAttribute('src')).toBe('data:image/png;base64,AA==');
+  });
+
+  it('should render pasted Excalidraw SVG as an isolated image without losing fonts or masks', async () => {
+    const converter = await createLegacyConverter();
+    const svg = [
+      '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="80" viewBox="0 0 160 80">',
+      '<!-- svg-source:excalidraw --><defs><style>@font-face { font-family: Sketch; src: url(data:font/woff2;base64,AA==); }</style>',
+      '<mask id="mask-a"><rect fill="white" width="160" height="80"/></mask></defs>',
+      '<text mask="url(#mask-a)" font-family="Sketch">流程</text></svg>',
+    ].join('\n');
+    const markdownRenderer = { renderMarkdown: async (markdown, el) => { el.innerHTML = markdown; } };
+    const html = await renderObsidianTripletMarkdown({ app: {}, converter, markdown: svg, markdownRenderer });
+    const preview = document.createElement('div');
+    preview.innerHTML = html;
+    const src = preview.querySelector('img')?.getAttribute('src') || '';
+    expect(src).toMatch(/^data:image\/svg\+xml,/);
+    expect(decodeURIComponent(src.split(',')[1])).toBe(svg);
+    expect(preview.querySelector('svg')).toBeNull();
   });
 
   it('should rasterize rendered Mermaid diagrams before serialization', async () => {

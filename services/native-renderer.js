@@ -9,7 +9,7 @@
 
 ## 输出
 
-输出 `isSafeRawImageSrc`、`normalizeWechatUnsafeTaskListMarkersForNative`、`normalizeAdjacentMarkdownBlocks`、`normalizeAdjacentMarkdownBlockHeadings`、`shouldSeparateAdjacentMarkdownBlocks`、`preprocessMarkdownForNative`、`cleanupNativeRenderedHtml`、`canUseNativePreviewFastPath`，供视图层生成预览或发布 HTML。
+输出 `isSafeRawImageSrc`、`normalizeWechatUnsafeTaskListMarkersForNative`、`normalizeAdjacentMarkdownBlocks`、`normalizeAdjacentMarkdownBlockHeadings`、`shouldSeparateAdjacentMarkdownBlocks`、`preprocessMarkdownForNative`、`materializePastedExcalidrawSvg`、`cleanupNativeRenderedHtml`、`canUseNativePreviewFastPath`，供视图层生成预览或发布 HTML。
 
 ## 定位
 
@@ -17,7 +17,7 @@
 
 ## 依赖
 
-关键依赖：`./dom-utils.js`。
+关键依赖：`./dom-utils.js`、`./markdown-utils.js`。
 
 ## 维护规则
 
@@ -26,6 +26,7 @@
 */
 
 import { createHtmlContainer } from './dom-utils.js';
+import { splitMarkdownCodeSegments } from './markdown-utils.js';
 
 /**
  * @typedef {{ convert: (markdown: string) => Promise<string> | string, updateSourcePath?: (sourcePath: string) => void }} NativeConverterLike
@@ -315,6 +316,24 @@ function extractInlineImageTargets(markdown) {
   return targets;
 }
 
+const EXCALIDRAW_SVG_SOURCE = '<!-- svg-source:excalidraw -->';
+
+/**
+ * Keep pasted Excalidraw markup in the browser's SVG image context, which
+ * preserves its fonts and masks while disabling scripts and external resources.
+ * @param {string} markdown
+ * @param {Parameters<typeof splitMarkdownCodeSegments>[1]} converter
+ */
+export function materializePastedExcalidrawSvg(markdown, converter) {
+  if (!markdown.includes(EXCALIDRAW_SVG_SOURCE)) return markdown;
+  const standaloneSvg = /^([ \t]{0,3})(<svg\b[^>]*>\s*<!-- svg-source:excalidraw -->[\s\S]*?<\/svg>)(?=[ \t]*\r?$)/gim;
+  return splitMarkdownCodeSegments(markdown, converter).map(({ text, isCode }) => (
+    isCode ? text : text.replace(standaloneSvg, (_match, indent, svg) => (
+      `${indent}<img src="data:image/svg+xml,${encodeURIComponent(String(svg))}" alt="Excalidraw">`
+    ))
+  )).join('');
+}
+
 /**
  * @param {unknown} markdown
  * @returns {boolean}
@@ -324,7 +343,7 @@ export function canUseNativePreviewFastPath(markdown) {
   if (!source.trim()) return false;
 
   if (/^\s{0,3}>\s?\[!\s*(?:image-swipe|image-sensitive)\s*](?:[+-])?/im.test(source)) return false;
-  if (source.includes('![[')) return false;
+  if (source.includes('![[') || source.includes(EXCALIDRAW_SVG_SOURCE)) return false;
   if (/^\s{0,3}(?:`{3,}|~{3,})\s*mermaid\b/im.test(source)) return false;
   if (/^\s*\$\$\s*$/m.test(source) || /(^|[^\\])\$[^$\n]+\$/m.test(source)) return false;
 

@@ -1,7 +1,7 @@
 /*
 ## 核心功能
 
-实现渲染管线相关的 rendered mermaid 能力，服务预览、复制和发布一致性。
+在预览序列化前归一化 Obsidian 原生 Mermaid SVG，并处理 Mermaid 代码块回退和发布栅格化。
 
 ## 输入
 
@@ -655,6 +655,7 @@ let mermaidRenderNonce = 0;
  */
 export async function renderMermaidCodeBlocks(root, options = {}) {
   if (!root) return 0;
+  normalizeRenderedMermaidDiagrams(root);
 
   const mermaidApi = resolveMermaidApi(options);
   if (!mermaidApi) return 0;

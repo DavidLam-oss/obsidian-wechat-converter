@@ -71,6 +71,12 @@ describe('Obsidian Triplet Renderer preprocessing', () => {
     expect(output).not.toContain('   $$');
   });
 
+  it('should leave pasted SVG examples in fenced code blocks untouched', () => {
+    const input = '~~~html\n<svg><!-- svg-source:excalidraw --><path/></svg>\n~~~';
+    const { markdown } = preprocessMarkdownForTriplet(input, {});
+    expect(markdown).toBe(input);
+  });
+
   it('should neutralize unsafe markdown links into literal text form', () => {
     const input = [
       '[ok](https://example.com)',

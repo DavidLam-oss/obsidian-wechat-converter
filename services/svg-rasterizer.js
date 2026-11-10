@@ -1,7 +1,7 @@
 /*
 ## 核心功能
 
-处理图片、SVG 或 Mermaid 资源的 svg rasterizer 能力。
+将 SVG 节点及内嵌 SVG 图片栅格化，供 Mermaid 导出和公众号发布使用。
 
 ## 输入
 
@@ -152,19 +152,16 @@ export function getSvgLogicalSize(svgElement) {
   const viewBox = svgElement?.getAttribute?.('viewBox') || '';
 
   if (logicalWidth === 0 || logicalHeight === 0) {
-    logicalWidth = parseFloat(rawWidth) || logicalWidth;
-    logicalHeight = parseFloat(rawHeight) || logicalHeight;
+    if (!logicalWidth && !rawWidth.trim().endsWith('%')) logicalWidth = parseFloat(rawWidth) || 0;
+    if (!logicalHeight && !rawHeight.trim().endsWith('%')) logicalHeight = parseFloat(rawHeight) || 0;
   }
 
   if ((logicalWidth === 0 || logicalHeight === 0) && viewBox) {
     const parts = viewBox.trim().split(/[\s,]+/).map((value) => parseFloat(value));
-    if (parts.length === 4) {
-      if (logicalWidth === 0 && Number.isFinite(parts[2]) && parts[2] > 0) {
-        logicalWidth = parts[2];
-      }
-      if (logicalHeight === 0 && Number.isFinite(parts[3]) && parts[3] > 0) {
-        logicalHeight = parts[3];
-      }
+    const [, , boxWidth, boxHeight] = parts;
+    if (parts.length === 4 && boxWidth > 0 && boxHeight > 0 && Number.isFinite(boxWidth) && Number.isFinite(boxHeight)) {
+      if (!logicalWidth) logicalWidth = logicalHeight ? logicalHeight * boxWidth / boxHeight : boxWidth;
+      if (!logicalHeight) logicalHeight = logicalWidth * boxHeight / boxWidth;
     }
   }
 
@@ -314,4 +311,28 @@ export async function rasterizeSvgToPngBlob(svgElement, options = {}) {
  */
 export async function rasterizeSvgToPngDataUrl(svgElement, options = {}) {
   return rasterizeSvg(svgElement, { ...options, output: 'dataUrl' });
+}
+
+/** @param {HTMLElement} root */
+export async function rasterizeEmbeddedSvgImagesForWechat(root) {
+  const images = root.querySelectorAll('img[src^="data:image/svg+xml," i],img[src^="data:image/svg+xml;" i]');
+  for (const img of images) {
+    try {
+      const source = new Image();
+      source.src = img.getAttribute('src') || '';
+      await source.decode();
+      const { naturalWidth, naturalHeight } = source;
+      if (!naturalWidth || !naturalHeight) throw new Error('SVG image has no dimensions');
+      const scale = Math.min(1, 1920 / Math.max(naturalWidth, naturalHeight));
+      const canvas = root.ownerDocument.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(naturalHeight * scale));
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Canvas context unavailable');
+      context.drawImage(source, 0, 0, canvas.width, canvas.height);
+      img.setAttribute('src', canvas.toDataURL('image/png'));
+    } catch (error) {
+      console.warn('内嵌 SVG 转 PNG 失败，保留原图:', error);
+    }
+  }
 }
