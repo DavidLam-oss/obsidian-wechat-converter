@@ -273,7 +273,7 @@ describe('card mode switch regressions', () => {
         view.setPreviewLoading(false);
         return view.previewContainer;
       });
-      view.switchPreviewMode('card');
+      view.switchPreviewMode('card', { loadingDelay: 0 });
       expect(view.previewMode).toBe('card');
       expect(view.previewContainer.querySelector('.icard-preview-empty.is-loading')).not.toBeNull();
       expect(view.previewContainer.classList.contains('apple-preview-loading')).toBe(true);
@@ -566,12 +566,87 @@ describe('card mode switch regressions', () => {
       switchPreviewMode: panelShellMethods.switchPreviewMode,
     };
 
-    expect(() => view.switchPreviewMode('card')).not.toThrow();
+    expect(() => view.switchPreviewMode('card', { loadingDelay: 0 })).not.toThrow();
     expect(view.previewMode).toBe('card');
     expect(view.landingGateActive).toBe(false);
-    expect(previewContainer.querySelector('.icard-preview-empty.is-loading')).toBeTruthy();
+    expect(previewContainer.classList.contains('has-card-preview')).toBe(true);
+    const loadingRoot = previewContainer.querySelector('.icard-preview-empty.is-loading');
+    expect(loadingRoot).toBeTruthy();
+    expect(loadingRoot?.getAttribute('role')).toBe('status');
+    expect(loadingRoot?.getAttribute('aria-busy')).toBe('true');
+    expect(previewContainer.querySelector('.icard-loading-toolbar')).toBeTruthy();
+    expect(previewContainer.querySelector('.icard-loading-deck .icard-loading-card')).toBeTruthy();
+    const spinner = previewContainer.querySelector('progress.icard-loading-spinner');
+    expect(spinner).toBeTruthy();
+    expect(spinner?.hasAttribute('value')).toBe(false);
+    expect(previewContainer.querySelector('.icard-loading-pill .icard-preview-empty-title')?.textContent).toBe('正在生成卡片预览...');
 
     expect(() => view.switchPreviewMode('article')).not.toThrow();
     expect(view.previewMode).toBe('article');
+    expect(previewContainer.classList.contains('has-card-preview')).toBe(false);
+  });
+
+  it('applies 160ms debounce and 260ms minimum display guard for card loading placeholder', async () => {
+    vi.useFakeTimers();
+    const previewContainer = enhanceObsidianEl(createObsidianLikeElement('div'));
+    const view = {
+      previewMode: 'article',
+      previewContainer,
+      syncPreviewModeUi: vi.fn(),
+      closeTransientPanels: vi.fn(),
+      runModeRenderWithDiagnostics: vi.fn(),
+      renderCardPreview: vi.fn(async () => undefined),
+      convertCurrent: vi.fn(async () => undefined),
+      switchPreviewMode: panelShellMethods.switchPreviewMode,
+      clearCardLoadingTimer: panelShellMethods.clearCardLoadingTimer,
+      waitForCardLoadingMinDuration: panelShellMethods.waitForCardLoadingMinDuration,
+    };
+
+    // 1. 切换到卡片模式（默认 160ms 延迟）：0ms 时不挂载骨架屏，避免 50~100ms 快速渲染时的视觉闪烁
+    view.switchPreviewMode('card');
+    expect(view.previewMode).toBe('card');
+    expect(previewContainer.classList.contains('has-card-preview')).toBe(true);
+    expect(previewContainer.querySelector('.icard-preview-empty.is-loading')).toBeNull();
+    expect(view.cardLoadingPlaceholderShownAt).toBeFalsy();
+
+    // 100ms：仍未达到防抖门槛，保持不挂载
+    vi.advanceTimersByTime(100);
+    expect(previewContainer.querySelector('.icard-preview-empty.is-loading')).toBeNull();
+
+    // 到达 160ms：触发骨架屏挂载并记录展示时间
+    vi.advanceTimersByTime(60);
+    expect(previewContainer.querySelector('.icard-preview-empty.is-loading')).toBeTruthy();
+    expect(view.cardLoadingPlaceholderShownAt).toBeGreaterThan(0);
+
+    // 2. 最小展示时长保护（260ms）：若渲染耗时仅经过 60ms（即骨架展示 60ms），应等待剩余 200ms
+    vi.advanceTimersByTime(60);
+    let waitResolved = false;
+    const waitPromise = view.waitForCardLoadingMinDuration(260).then(() => {
+      waitResolved = true;
+    });
+    expect(waitResolved).toBe(false);
+
+    // 前进 199ms，仍未满 260ms
+    vi.advanceTimersByTime(199);
+    expect(waitResolved).toBe(false);
+
+    // 前进 1ms（满 200ms 补足），完成最小展示时长
+    vi.advanceTimersByTime(1);
+    await waitPromise;
+    expect(waitResolved).toBe(true);
+    expect(view.cardLoadingPlaceholderShownAt).toBe(0);
+
+    // 3. 再次切换模式时取消在途防抖计时器
+    view.previewMode = 'article';
+    previewContainer.empty();
+    view.switchPreviewMode('card');
+    expect(previewContainer.querySelector('.icard-preview-empty.is-loading')).toBeNull();
+    // 快速切回文章模式（在 160ms 内）
+    view.switchPreviewMode('article');
+    vi.advanceTimersByTime(200);
+    // 骨架屏不应被迟到挂载
+    expect(previewContainer.querySelector('.icard-preview-empty.is-loading')).toBeNull();
+
+    vi.useRealTimers();
   });
 });

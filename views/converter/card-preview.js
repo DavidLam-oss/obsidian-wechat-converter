@@ -125,6 +125,7 @@ function cardStateOf(view) {
  * @param {AppleStyleViewContract} view
  */
 function clearCardLoadingState(view) {
+  view.clearCardLoadingTimer?.();
   if (typeof view.previewContainer?.querySelector === 'function'
     && view.previewContainer.querySelector('.icard-preview-empty.is-loading')) {
     view.renderCardEmptyState();
@@ -368,6 +369,10 @@ async renderCardPreview() {
     return undefined;
   }
   selfRecord.cardPreviewOutcome = selfRecord.cardPreviewLastOutcome || null;
+  if (typeof this.waitForCardLoadingMinDuration === 'function') {
+    await this.waitForCardLoadingMinDuration();
+    if (selfRecord.cardPreviewGeneration !== generation || (this.previewMode || 'article') !== 'card') return undefined;
+  }
   return this.renderCardPreviewDom();
 }
 ,
@@ -550,6 +555,7 @@ renderCardPreviewDom() {
     return undefined;
   }
 
+  this.clearCardLoadingTimer?.();
   const selfRec = cardStateOf(this);
   const container = this.previewContainer;
   if (!container) {
@@ -757,6 +763,7 @@ locateCardPageSource(pageIndex) {
 
 /** 视图关闭：取消合并计时器、销毁全部会话与资源持有 */
 disposeCardPreview() {
+  this.clearCardLoadingTimer?.();
   const selfRecord = cardStateOf(this);
   if (selfRecord.cardPreviewMergeTimer) {
     window.clearTimeout(selfRecord.cardPreviewMergeTimer);

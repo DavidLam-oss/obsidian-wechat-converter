@@ -339,7 +339,13 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
     previewStickerData: StickerPreviewDataLike | null;
     /** 是否在贴图文案中插入 [配图 N] 序号 */
     insertStickerImageIndex: boolean;
-    switchPreviewMode(mode: string): void;
+    /** 卡片模式骨架屏延迟防抖计时器（160ms，快速渲染不展示） */
+    cardLoadingPlaceholderTimer?: number | null;
+    /** 卡片模式骨架屏开始展示时间戳（用于 260ms 最小展示时长保护） */
+    cardLoadingPlaceholderShownAt?: number;
+    clearCardLoadingTimer(): void;
+    waitForCardLoadingMinDuration(minDuration?: number): Promise<void>;
+    switchPreviewMode(mode: string, options?: { loadingDelay?: number }): void;
     /**
      * 模式渲染的兜底观察器：拒绝时在预览区显示可见错误面板，超时未落地同样提示。
      * @param {string} label 模式名（用于错误文案）

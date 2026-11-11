@@ -25,7 +25,7 @@
     "main.js": 4100000,
     "services/ai-layout-runtime/generated-skills.js": 52200,
     "services/generated-embedded-deps.js": 2350000,
-    "styles.css": 275000
+    "styles.css": 290000
   },
   "waivers": {
     "main.js": {
@@ -44,9 +44,9 @@
       "date": "2026-10-17"
     },
     "styles.css": {
-      "max": 275000,
-      "reason": "双十一特惠卡片与横幅全新样式重构。预留约 3% 余量，避免样式微调触发上限告警。",
-      "date": "2026-11-02"
+      "max": 290000,
+      "reason": "卡片模式加载态新增 Design Studio 叠层骨架、毛玻璃状态胶囊与可访问进度环样式，在当前 ~281.5KB 基础上预留约 3% 余量。",
+      "date": "2026-11-11"
     },
     "views/converter/core.js": {
       "max": 1157,

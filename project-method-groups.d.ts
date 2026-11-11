@@ -187,6 +187,8 @@ type PanelShellMethodsContract = Pick<
     | 'closeTransientPanels'
     | 'syncPreviewModeUi'
     | 'toggleSettingsPanel'
+    | 'clearCardLoadingTimer'
+    | 'waitForCardLoadingMinDuration'
     | 'switchPreviewMode'
     | 'runModeRenderWithDiagnostics'
     | 'showModeRenderFailure'

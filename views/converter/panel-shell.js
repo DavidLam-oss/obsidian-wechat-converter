@@ -31,6 +31,89 @@ import {
   removeElementClass,
 } from '../apple-style-view-shared.js';
 
+/** 卡片模式骨架屏延迟防抖时间（ms）：排版耗时低于此门槛时完全不挂载骨架，消除 50~100ms 快速加载时的闪烁 */
+const CARD_LOADING_DEBOUNCE_MS = 160;
+
+/** 骨架屏最小展示时长（ms）：若排版慢于防抖门槛触发了骨架，至少保持该时长，避免闪烁骤变 */
+const CARD_LOADING_MIN_DURATION_MS = 260;
+
+/**
+ * 安全创建子元素（兼容测试中只实现局部 DOM 接口的轻量替身）。
+ * @param {unknown} parent
+ * @param {string} tag
+ * @param {Record<string, unknown>} options
+ * @returns {ObsidianElementLike | null}
+ */
+function createChildEl(parent, tag, options) {
+  if (!parent || typeof parent !== 'object' || typeof (/** @type {ObsidianElementLike} */ (parent)).createEl !== 'function') {
+    return null;
+  }
+  return /** @type {ObsidianElementLike} */ (parent).createEl(tag, options);
+}
+
+/**
+ * 渲染卡片模式「Design Studio 骨架 + 毛玻璃状态胶囊」加载态。
+ * 保留 `.icard-preview-empty.is-loading` 与 `.icard-preview-empty-title` 类名，确保状态清理与可访问性一致。
+ * @param {ObsidianElementLike | null | undefined} previewContainer
+ */
+function renderCardLoadingPlaceholder(previewContainer) {
+  if (!previewContainer) return;
+  previewContainer.empty?.();
+  previewContainer.addClass?.('has-card-preview');
+
+  const loading = createChildEl(previewContainer, 'div', {
+    cls: 'icard-preview-empty is-loading',
+    attr: {
+      role: 'status',
+      'aria-live': 'polite',
+      'aria-busy': 'true',
+    },
+  });
+  if (!loading) return;
+
+  const toolbar = createChildEl(loading, 'div', {
+    cls: 'icard-loading-toolbar',
+    attr: { 'aria-hidden': 'true' },
+  });
+  createChildEl(toolbar, 'span', { cls: 'icard-loading-bar is-count icard-loading-shimmer' });
+  createChildEl(toolbar, 'span', { cls: 'icard-loading-chip icard-loading-shimmer' });
+
+  const stage = createChildEl(loading, 'div', { cls: 'icard-loading-stage' });
+  const deck = createChildEl(stage, 'div', {
+    cls: 'icard-loading-deck',
+    attr: { 'aria-hidden': 'true' },
+  });
+  createChildEl(deck, 'div', { cls: 'icard-loading-card-back' });
+
+  const card = createChildEl(deck, 'div', { cls: 'icard-loading-card' });
+  createChildEl(card, 'div', { cls: 'icard-loading-card-badge' });
+  createChildEl(card, 'div', { cls: 'icard-loading-card-hero icard-loading-shimmer' });
+
+  const lines = createChildEl(card, 'div', { cls: 'icard-loading-card-lines' });
+  createChildEl(lines, 'span', { cls: 'icard-loading-card-line is-title icard-loading-shimmer' });
+  createChildEl(lines, 'span', { cls: 'icard-loading-card-line is-body icard-loading-shimmer' });
+  createChildEl(lines, 'span', { cls: 'icard-loading-card-line is-short icard-loading-shimmer' });
+
+  const footer = createChildEl(card, 'div', { cls: 'icard-loading-card-footer' });
+  createChildEl(footer, 'span', { cls: 'icard-loading-card-meta' });
+  createChildEl(footer, 'span', { cls: 'icard-loading-card-meta is-right' });
+
+  const pill = createChildEl(stage, 'div', { cls: 'icard-loading-pill' });
+  createChildEl(pill, 'progress', {
+    cls: 'icard-loading-spinner',
+    attr: { 'aria-label': '正在生成卡片预览' },
+  });
+  const copy = createChildEl(pill, 'div', { cls: 'icard-loading-copy' });
+  createChildEl(copy, 'div', {
+    cls: 'icard-preview-empty-title',
+    text: '正在生成卡片预览...',
+  });
+  createChildEl(copy, 'div', {
+    cls: 'icard-preview-empty-desc',
+    text: '正在排版分页并准备卡片画布',
+  });
+}
+
 /** @type {PanelShellMethodsContract & ThisType<AppleStyleViewContract>} */
 export const panelShellMethods = {
 resetSettingsPanelViewState() {
@@ -211,7 +294,40 @@ toggleSettingsPanel() {
 }
 ,
 
-switchPreviewMode(mode) {
+/** 清除卡片模式骨架屏延迟计时器与已展示时间戳 */
+clearCardLoadingTimer() {
+  if (this.cardLoadingPlaceholderTimer) {
+    window.clearTimeout(this.cardLoadingPlaceholderTimer);
+    this.cardLoadingPlaceholderTimer = null;
+  }
+  this.cardLoadingPlaceholderShownAt = 0;
+}
+,
+
+/**
+ * 等待卡片模式骨架屏最小展示时长，避免排版在 170~250ms 落地时骨架屏突兀闪烁。
+ * @param {number} [minDuration]
+ */
+async waitForCardLoadingMinDuration(minDuration = CARD_LOADING_MIN_DURATION_MS) {
+  if (this.cardLoadingPlaceholderShownAt > 0) {
+    const elapsed = Date.now() - this.cardLoadingPlaceholderShownAt;
+    const remaining = minDuration - elapsed;
+    if (remaining > 0) {
+      await new Promise((resolve) => {
+        window.setTimeout(resolve, remaining);
+      });
+    }
+    this.cardLoadingPlaceholderShownAt = 0;
+  }
+}
+,
+
+/**
+ * 切换预览模式（文章 / 贴图 / 卡片）。
+ * @param {'article' | 'sticker' | 'card'} mode
+ * @param {{ loadingDelay?: number }} [options]
+ */
+switchPreviewMode(mode, options = {}) {
   if (this.previewMode === mode) return;
   if (mode !== 'article' && mode !== 'sticker' && mode !== 'card') return;
   if (this._modeRenderTimer) {
@@ -226,6 +342,15 @@ switchPreviewMode(mode) {
     window.clearTimeout(this.cardPreviewMergeTimer);
     this.cardPreviewMergeTimer = null;
   }
+  if (typeof this.clearCardLoadingTimer === 'function') {
+    this.clearCardLoadingTimer();
+  } else {
+    if (this.cardLoadingPlaceholderTimer) {
+      window.clearTimeout(this.cardLoadingPlaceholderTimer);
+      this.cardLoadingPlaceholderTimer = null;
+    }
+    this.cardLoadingPlaceholderShownAt = 0;
+  }
   this.previewMode = mode;
   this.landingGateActive = false;
   this.previewContainer?.removeClass('has-card-preview');
@@ -235,15 +360,36 @@ switchPreviewMode(mode) {
   // 会把新模式的预览覆盖回文章排版——表现为「模式选了，预览没变」。
   this.renderGeneration = (Number(this.renderGeneration) || 0) + 1;
   this.loadingGeneration = (Number(this.loadingGeneration) || 0) + 1;
+
+  const loadingDelay = typeof options?.loadingDelay === 'number'
+    ? options.loadingDelay
+    : CARD_LOADING_DEBOUNCE_MS;
+
   if (mode === 'card') {
     if (this.previewContainer) {
-      this.previewContainer.empty();
-      if (typeof this.previewContainer.createEl === 'function') {
-        const loading = this.previewContainer.createEl('div', { cls: 'icard-preview-empty is-loading' });
-        loading.createEl('div', { cls: 'icard-preview-empty-title', text: '正在生成卡片预览...' });
-      }
+      this.previewContainer.empty?.();
+      this.previewContainer.addClass?.('has-card-preview');
     }
-    this.setPreviewLoading?.(true, '正在生成卡片预览...');
+    if (loadingDelay <= 0) {
+      renderCardLoadingPlaceholder(this.previewContainer);
+      this.cardLoadingPlaceholderShownAt = Date.now();
+      this.setPreviewLoading?.(true, '正在生成卡片预览...');
+    } else {
+      const generation = this.renderGeneration;
+      this.cardLoadingPlaceholderTimer = window.setTimeout(() => {
+        this.cardLoadingPlaceholderTimer = null;
+        if (
+          this.previewMode === 'card'
+          && this.renderGeneration === generation
+          && this.previewContainer
+          && !this.previewContainer.querySelector?.('.icard-preview-shell')
+        ) {
+          renderCardLoadingPlaceholder(this.previewContainer);
+          this.cardLoadingPlaceholderShownAt = Date.now();
+          this.setPreviewLoading?.(true, '正在生成卡片预览...');
+        }
+      }, loadingDelay);
+    }
   } else {
     this.setPreviewLoading?.(false);
   }

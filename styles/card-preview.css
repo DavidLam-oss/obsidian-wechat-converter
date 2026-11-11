@@ -12,7 +12,7 @@
 ## 输出
 
 输出预览外壳的布局与状态表现：摘要条与 chip、缩放控制、缩略页容器、
-空态/失败态/诊断区（含深色主题适配）。
+加载态卡片骨架/空态/失败态/诊断区（含深色主题适配）。
 
 ## 定位
 
@@ -48,9 +48,15 @@
   background: transparent;
 }
 
+/* 卡片模式已有专属骨架屏与环形加载器，抑制顶部通用 2px 紫条避免视觉冲突 */
+.apple-converter-preview.has-card-preview.apple-preview-loading::before {
+  content: none;
+}
+
 /* —— B02 卡片预览 UI：全域一体化自适应 Design Studio 画布 —— */
 
-.icard-preview-shell {
+.icard-preview-shell,
+.icard-preview-empty.is-loading {
   --icard-canvas-bg: color-mix(in srgb, var(--background-secondary) 65%, var(--background-primary));
   --icard-canvas-dot: rgba(0, 0, 0, 0.10);
   --icard-canvas-dot-sub: rgba(0, 0, 0, 0.035);
@@ -73,11 +79,17 @@
   );
   background-size: 20px 20px;
 }
-.icard-preview-shell::-webkit-scrollbar {
+.icard-preview-shell::-webkit-scrollbar,
+.icard-preview-empty.is-loading::-webkit-scrollbar {
   display: none;
 }
 
-.theme-dark .icard-preview-shell {
+.icard-preview-shell {
+  animation: icard-shell-enter 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.theme-dark .icard-preview-shell,
+.theme-dark .icard-preview-empty.is-loading {
   --icard-canvas-bg: color-mix(in srgb, var(--background-secondary) 85%, #000000);
   --icard-canvas-dot: rgba(255, 255, 255, 0.095);
   --icard-canvas-dot-sub: rgba(255, 255, 255, 0.03);
@@ -259,6 +271,436 @@
   font-size: 12px;
   color: var(--text-muted);
   max-width: 420px;
+}
+
+/* —— B02 卡片模式加载态：Design Studio 叠层骨架 + 毛玻璃状态胶囊 —— */
+@property --icard-arc-start {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --icard-arc-end {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --icard-progress-dash-animation {
+  syntax: "*";
+  inherits: false;
+  initial-value: , icard-progress-dash 2.4s ease-in-out infinite;
+}
+
+.icard-preview-empty.is-loading {
+  --icard-shimmer-sheen: rgba(255, 255, 255, 0.72);
+  --icard-skeleton-fill: color-mix(in srgb, var(--text-normal, #1d1d1f) 7%, transparent);
+  --icard-skeleton-soft: color-mix(in srgb, var(--text-normal, #1d1d1f) 4.5%, transparent);
+
+  animation: icard-loading-fade-in 180ms ease both;
+  width: 100%;
+  min-height: 100%;
+  padding: 0;
+  gap: 0;
+  justify-content: flex-start;
+  align-items: stretch;
+  text-align: center;
+}
+
+.theme-dark .icard-preview-empty.is-loading {
+  --icard-shimmer-sheen: rgba(255, 255, 255, 0.11);
+  --icard-skeleton-fill: rgba(255, 255, 255, 0.085);
+  --icard-skeleton-soft: rgba(255, 255, 255, 0.05);
+}
+
+/* 顶部工具条占位，与真实 .icard-preview-toolbar 等高对齐，消除落地跳变 */
+.icard-loading-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 20px 11px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  background: color-mix(in srgb, var(--icard-canvas-bg) 75%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid color-mix(in srgb, var(--background-modifier-border) 45%, transparent);
+}
+
+.icard-loading-bar {
+  display: inline-block;
+  width: 64px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--icard-skeleton-fill);
+}
+
+.icard-loading-chip {
+  display: inline-block;
+  width: 48px;
+  height: 16px;
+  border-radius: 10px;
+  background: var(--icard-skeleton-soft);
+}
+
+.icard-loading-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 20px 20px 28px;
+  box-sizing: border-box;
+}
+
+/* 叠层卡片骨架：3:4 比例 + Apple 多层柔和投影 */
+.icard-loading-deck {
+  position: relative;
+  width: clamp(118px, 40%, 164px);
+  aspect-ratio: 3 / 4;
+  flex-shrink: 0;
+}
+
+.icard-loading-card-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--background-primary, #ffffff) 74%, var(--background-secondary, #f5f5f7));
+  border: 1px solid rgba(0, 0, 0, 0.055);
+  box-shadow: 0 8px 20px -12px rgba(0, 0, 0, 0.16);
+  transform: translate(9px, 6px) rotate(3.2deg);
+}
+
+.theme-dark .icard-loading-card-back {
+  background: color-mix(in srgb, var(--background-secondary, #222225) 84%, #ffffff 4%);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.45);
+}
+
+.icard-loading-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  background: var(--background-primary, #ffffff);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 3px 8px -1px rgba(0, 0, 0, 0.06),
+    0 14px 28px -10px rgba(0, 0, 0, 0.20);
+}
+
+.theme-dark .icard-loading-card {
+  background: color-mix(in srgb, var(--background-primary, #1e1e1e) 92%, #ffffff 8%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 4px 10px -1px rgba(0, 0, 0, 0.25),
+    0 16px 32px -10px rgba(0, 0, 0, 0.56);
+}
+
+.icard-loading-card-badge {
+  align-self: flex-end;
+  width: 24px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--icard-skeleton-soft);
+}
+
+.icard-loading-card-hero {
+  width: 100%;
+  height: 36%;
+  border-radius: 7px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--interactive-accent, #0071e3) 10%, var(--icard-skeleton-fill)),
+    var(--icard-skeleton-soft)
+  );
+}
+
+.icard-loading-card-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.icard-loading-card-line {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--icard-skeleton-fill);
+}
+
+.icard-loading-card-line.is-title {
+  width: 78%;
+  height: 10px;
+}
+
+.icard-loading-card-line.is-body {
+  width: 94%;
+  background: var(--icard-skeleton-soft);
+}
+
+.icard-loading-card-line.is-short {
+  width: 58%;
+  background: var(--icard-skeleton-soft);
+}
+
+.icard-loading-card-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 6px;
+  border-top: 1px solid var(--icard-skeleton-soft);
+}
+
+.icard-loading-card-meta {
+  display: inline-block;
+  width: 26%;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--icard-skeleton-soft);
+}
+
+.icard-loading-card-meta.is-right {
+  width: 34%;
+}
+
+/* 柔光骨架扫掠（仅 transform，走合成层） */
+.icard-loading-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.icard-loading-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--icard-shimmer-sheen) 50%,
+    transparent 100%
+  );
+  animation: icard-loading-sweep 1.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes icard-loading-sweep {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* 底部毛玻璃状态胶囊 */
+.icard-loading-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(300px, 100%);
+  padding: 9px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--background-primary, #ffffff) 86%, transparent);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  border: 1px solid color-mix(in srgb, var(--background-modifier-border, rgba(0, 0, 0, 0.08)) 65%, transparent);
+  box-shadow:
+    0 2px 6px -1px rgba(0, 0, 0, 0.05),
+    0 10px 24px -10px rgba(0, 0, 0, 0.14);
+}
+
+.theme-dark .icard-loading-pill {
+  background: color-mix(in srgb, var(--background-secondary, #262629) 82%, transparent);
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 2px 8px -1px rgba(0, 0, 0, 0.24),
+    0 12px 28px -10px rgba(0, 0, 0, 0.50);
+}
+
+.icard-loading-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 2px;
+  min-width: 0;
+}
+
+.icard-loading-pill .icard-preview-empty-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.icard-loading-pill .icard-preview-empty-desc {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+/* 语义化不定长环形指示器（progress 元素 + conic-gradient 渐隐弧） */
+progress.icard-loading-spinner:indeterminate::-webkit-progress-bar,
+progress.icard-loading-spinner:indeterminate::-webkit-progress-value,
+progress.icard-loading-spinner:indeterminate::-moz-progress-bar,
+progress.icard-loading-spinner:indeterminate::slider-fill {
+  display: none;
+  background: none;
+}
+
+progress.icard-loading-spinner:indeterminate {
+  --_from: calc(90deg + var(--icard-arc-start, 0deg));
+  --_to: calc(90deg + var(--icard-arc-end, 158deg));
+  --size: 18px;
+  --thickness: 2px;
+  --spinner-color: var(--interactive-accent, var(--apple-loading-accent, #7c3aed));
+  --track-color: color-mix(in srgb, var(--text-muted, #6e6e73) 20%, transparent);
+  --spinner-duration: 1.15s;
+  --_used-spinner-duration: var(--spinner-duration);
+
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--size);
+  height: var(--size);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  appearance: none;
+  -webkit-appearance: none;
+  background: conic-gradient(
+      from var(--_from),
+      var(--spinner-color) calc(var(--_to) - var(--_from)),
+      transparent 0
+    )
+    var(--track-color);
+  animation:
+    icard-progress-spin var(--_used-spinner-duration) linear infinite
+    var(--icard-progress-dash-animation, );
+}
+
+@supports (background-clip: border-area) {
+  progress.icard-loading-spinner:indeterminate {
+    background-clip: border-area;
+    border: var(--thickness) solid transparent;
+    background-origin: border-box;
+  }
+}
+
+@supports not (background-clip: border-area) {
+  progress.icard-loading-spinner:indeterminate {
+    --clip-boundary: calc(100% - var(--thickness));
+    -webkit-mask-image: radial-gradient(
+      farthest-side,
+      transparent var(--clip-boundary),
+      black var(--clip-boundary)
+    );
+    mask-image: radial-gradient(
+      farthest-side,
+      transparent var(--clip-boundary),
+      black var(--clip-boundary)
+    );
+    border: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  progress.icard-loading-spinner:indeterminate {
+    forced-color-adjust: none;
+    --spinner-color: CanvasText;
+    --track-color: Canvas;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icard-preview-shell {
+    animation: icard-shell-fade 120ms ease both;
+  }
+
+  .icard-preview-empty.is-loading {
+    animation: none;
+  }
+
+  progress.icard-loading-spinner:indeterminate {
+    --_used-spinner-duration: 6s;
+    --icard-progress-dash-animation: ;
+    --icard-arc-end: 158deg;
+  }
+
+  .icard-loading-shimmer::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+@keyframes icard-shell-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes icard-shell-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes icard-loading-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes icard-progress-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+@keyframes icard-progress-dash {
+  from {
+    --icard-arc-start: 0deg;
+    --icard-arc-end: 3deg;
+  }
+  50% {
+    --icard-arc-start: 100deg;
+    --icard-arc-end: 358deg;
+  }
+  to {
+    --icard-arc-start: 360deg;
+    --icard-arc-end: 363deg;
+  }
+}
+
+@media (max-height: 760px) {
+  .icard-loading-stage {
+    padding: 14px 16px 20px;
+    gap: 14px;
+  }
+
+  .icard-loading-deck {
+    width: clamp(104px, 34%, 148px);
+  }
 }
 
 /* —— B03 诊断区（省略/资源失败明细 + 确认闭环）—— */
