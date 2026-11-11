@@ -158,6 +158,39 @@ describe('Scan Risk Patterns Guard', () => {
     });
   });
 
+  describe('no-css-masks rule', () => {
+    const rule = RULES.find((r) => r.id === 'no-css-masks');
+
+    it('blocks mask and mask-image in CSS', () => {
+      const invalidSnippets = [
+        '.icon { mask: url(test.svg); }',
+        '.icon { mask-image: radial-gradient(circle, black, transparent); }',
+        '.icon { -webkit-mask-image: radial-gradient(circle, black, transparent); }',
+        '.icon { -webkit-mask: url(test.svg); }',
+      ];
+      for (const snippet of invalidSnippets) {
+        const matches = findMatches(snippet, rule.pattern);
+        expect(matches.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('allows clean CSS without masks', () => {
+      const cleanSnippets = [
+        '.spinner { border: 2px solid var(--track); border-top-color: var(--accent); }',
+        '.card { border-radius: 50%; background: transparent; }',
+      ];
+      for (const snippet of cleanSnippets) {
+        const matches = findMatches(snippet, rule.pattern);
+        expect(matches.length).toBe(0);
+      }
+    });
+
+    it('only targets .css files', () => {
+      expect(ruleAppliesToFile(rule, 'styles/card-preview.css')).toBe(true);
+      expect(ruleAppliesToFile(rule, 'views/editor.js')).toBe(false);
+    });
+  });
+
   describe('no-global-this-production rule', () => {
     const rule = RULES.find((r) => r.id === 'no-global-this-production');
 

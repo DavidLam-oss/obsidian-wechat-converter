@@ -3613,24 +3613,6 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
 }
 
 /* —— B02 卡片模式加载态：Design Studio 叠层骨架 + 毛玻璃状态胶囊 —— */
-@property --icard-arc-start {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
-@property --icard-arc-end {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
-@property --icard-progress-dash-animation {
-  syntax: "*";
-  inherits: false;
-  initial-value: , icard-progress-dash 2.4s ease-in-out infinite;
-}
-
 .icard-preview-empty.is-loading {
   --icard-shimmer-sheen: rgba(255, 255, 255, 0.72);
   --icard-skeleton-fill: color-mix(in srgb, var(--text-normal, #1d1d1f) 7%, transparent);
@@ -3887,7 +3869,7 @@ input[type="range"].apple-slider:active::-webkit-slider-thumb {
   line-height: 1.35;
 }
 
-/* 语义化不定长环形指示器（progress 元素 + conic-gradient 渐隐弧） */
+/* 语义化不定长环形指示器（原生 progress 元素 + 环形边框平滑旋转，零 css-masks 依赖） */
 progress.icard-loading-spinner:indeterminate::-webkit-progress-bar,
 progress.icard-loading-spinner:indeterminate::-webkit-progress-value,
 progress.icard-loading-spinner:indeterminate::-moz-progress-bar,
@@ -3897,66 +3879,35 @@ progress.icard-loading-spinner:indeterminate::slider-fill {
 }
 
 progress.icard-loading-spinner:indeterminate {
-  --_from: calc(90deg + var(--icard-arc-start, 0deg));
-  --_to: calc(90deg + var(--icard-arc-end, 158deg));
   --size: 18px;
   --thickness: 2px;
   --spinner-color: var(--interactive-accent, var(--apple-loading-accent, #7c3aed));
-  --track-color: color-mix(in srgb, var(--text-muted, #6e6e73) 20%, transparent);
-  --spinner-duration: 1.15s;
-  --_used-spinner-duration: var(--spinner-duration);
+  --track-color: color-mix(in srgb, var(--text-muted, #6e6e73) 22%, transparent);
+  --spinner-duration: 0.85s;
 
+  box-sizing: border-box;
   position: relative;
   flex: 0 0 auto;
   width: var(--size);
   height: var(--size);
   margin: 0;
   padding: 0;
-  border: 0;
+  border: var(--thickness) solid var(--track-color);
+  border-top-color: var(--spinner-color);
+  border-right-color: var(--spinner-color);
   border-radius: 50%;
   appearance: none;
   -webkit-appearance: none;
-  background: conic-gradient(
-      from var(--_from),
-      var(--spinner-color) calc(var(--_to) - var(--_from)),
-      transparent 0
-    )
-    var(--track-color);
-  animation:
-    icard-progress-spin var(--_used-spinner-duration) linear infinite
-    var(--icard-progress-dash-animation, );
-}
-
-@supports (background-clip: border-area) {
-  progress.icard-loading-spinner:indeterminate {
-    background-clip: border-area;
-    border: var(--thickness) solid transparent;
-    background-origin: border-box;
-  }
-}
-
-@supports not (background-clip: border-area) {
-  progress.icard-loading-spinner:indeterminate {
-    --clip-boundary: calc(100% - var(--thickness));
-    -webkit-mask-image: radial-gradient(
-      farthest-side,
-      transparent var(--clip-boundary),
-      black var(--clip-boundary)
-    );
-    mask-image: radial-gradient(
-      farthest-side,
-      transparent var(--clip-boundary),
-      black var(--clip-boundary)
-    );
-    border: 0;
-  }
+  background: transparent;
+  animation: icard-progress-spin var(--spinner-duration) linear infinite;
 }
 
 @media (forced-colors: active) {
   progress.icard-loading-spinner:indeterminate {
     forced-color-adjust: none;
-    --spinner-color: CanvasText;
-    --track-color: Canvas;
+    border-color: Canvas;
+    border-top-color: CanvasText;
+    border-right-color: CanvasText;
   }
 }
 
@@ -3970,9 +3921,7 @@ progress.icard-loading-spinner:indeterminate {
   }
 
   progress.icard-loading-spinner:indeterminate {
-    --_used-spinner-duration: 6s;
-    --icard-progress-dash-animation: ;
-    --icard-arc-end: 158deg;
+    animation-duration: 4s;
   }
 
   .icard-loading-shimmer::after {
@@ -4011,23 +3960,11 @@ progress.icard-loading-spinner:indeterminate {
 }
 
 @keyframes icard-progress-spin {
-  to {
-    rotate: 1turn;
-  }
-}
-
-@keyframes icard-progress-dash {
   from {
-    --icard-arc-start: 0deg;
-    --icard-arc-end: 3deg;
-  }
-  50% {
-    --icard-arc-start: 100deg;
-    --icard-arc-end: 358deg;
+    transform: rotate(0deg);
   }
   to {
-    --icard-arc-start: 360deg;
-    --icard-arc-end: 363deg;
+    transform: rotate(360deg);
   }
 }
 

@@ -20,6 +20,7 @@
 - `no-unbalanced-eslint-disable`: 块级 eslint-disable 必须有成对匹配相同规则的 eslint-enable
 - `no-css-important`: 禁止样式表出现 !important
 - `no-css-has`: 禁止 CSS 出现 :has() 选择器（移动端 webview 兼容限制）
+- `no-css-masks`: 禁止 CSS 出现 mask / mask-image / -webkit-mask（避免 Obsidian 低版本兼容性警告）
 - `no-vault-getfiles-find`: 禁止使用 app.vault.getFiles().find(...) 进行路径查找（强制推荐 getAbstractFileByPath）
 - `no-view-lifecycle-collision`: 禁止在 View/ItemView 类或视图方法上定义保留生命周期名（open, close, load, unload, onload, onunload, setState, getState）
 - `no-setting-implicit-return`: 禁止在 Promise 或箭头函数中隐式返回 Setting 实例（防止 .then 属性引发死锁）
@@ -169,6 +170,12 @@ const RULES = [
     id: 'no-css-has',
     message: 'CSS :has() has limited mobile webview support; gate behind a fallback or use a simpler selector.',
     pattern: /:has\s*\(/,
+    extensions: new Set(['.css']),
+  },
+  {
+    id: 'no-css-masks',
+    message: 'Avoid CSS mask-image / -webkit-mask-image (css-masks); only partially supported in older Obsidian targets (e.g. 1.4.x). Use border, canvas, or SVG instead.',
+    pattern: /\b(?:-webkit-)?mask(?:-image)?\s*:/,
     extensions: new Set(['.css']),
   },
   {
