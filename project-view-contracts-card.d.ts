@@ -88,6 +88,7 @@ interface AppleStyleViewContract {
     getCardSessions(): unknown;
     getCardPreviewZoom(): number;
     applyCardPreviewZoom(): void;
+    refitCardPreviewZoom(): void;
     /**
      * 每次渲染按容器宽度自适应：取不产生横向滚动的最大缩放（无手动缩放控件）。
      * @param {number} pageWidth 页面自然宽度（px）

@@ -213,6 +213,7 @@ export {
   getValueElementFromEvent,
   getEventTargetValue,
   toImageElements,
+  isElementLike,
   removeElementClass,
 } from './shared/view-dom-helpers.js';
 export {

@@ -55,6 +55,7 @@ AppleStyleView 实例状态（previewMode/previewContainer/app 等）、当前�
 import {
   resolveMarkdownSource,
   isMobileClient,
+  isElementLike,
   MarkdownView,
 } from '../apple-style-view-shared.js';
 import { createCardDocument } from '../../services/card-document.js';
@@ -103,6 +104,7 @@ import { OMISSION_LABELS } from './card-preview-diagnostics.js';
  *   cardPreviewOutcome?: Record<string, any> | null,
  *   cardPreviewShell?: ObsidianElementLike | null,
  *   cardRenderedLayoutKey?: string,
+ *   cardPreviewPageWidth?: number,
  *   cardContentHashes?: Map<string, string>,
  *   cardResourceBudget?: import('../../services/card-resources.js').CardResourceSession | null,
  *   cardPreviewCoverCleanup?: (() => void) | null
@@ -115,6 +117,20 @@ import { OMISSION_LABELS } from './card-preview-diagnostics.js';
  */
 function cardStateOf(view) {
   return /** @type {CardViewStateLike} */ (view);
+}
+
+/**
+ * 清除卡片预览加载态：若画布当前仅剩「正在生成卡片预览...」占位而非既有成品页，
+ * 则回落到空态避免卡死在加载提示（§5.2 迟到/未落地竞态兜底）。
+ * @param {AppleStyleViewContract} view
+ */
+function clearCardLoadingState(view) {
+  if (typeof view.previewContainer?.querySelector === 'function'
+    && view.previewContainer.querySelector('.icard-preview-empty.is-loading')) {
+    view.renderCardEmptyState();
+    return;
+  }
+  view.setPreviewLoading?.(false);
 }
 
 /**
@@ -198,10 +214,21 @@ applyCardPreviewZoom() {
     el.style.setProperty('width', `${Math.round(width * zoom)}px`);
     el.style.setProperty('height', `${Math.round(height * zoom)}px`);
     const inner = el.querySelector('.icard-page');
-    if (inner instanceof HTMLElement) {
+    if (isElementLike(inner)) {
       inner.style.setProperty('transform', `scale(${zoom})`);
     }
   });
+}
+,
+
+/** 仅按当前容器宽度重算卡片预览缩放，不重建页面结构也不触发重新分页 */
+refitCardPreviewZoom() {
+  const selfRec = cardStateOf(this);
+  if ((this.previewMode || 'article') !== 'card') return;
+  const pageWidth = Number(selfRec.cardPreviewPageWidth || 0);
+  if (!selfRec.cardPreviewShell || !selfRec.cardPreviewOutcome || pageWidth <= 0) return;
+  this.maybeAutoFitCardPreviewZoom(pageWidth);
+  this.applyCardPreviewZoom();
 }
 ,
 
@@ -276,6 +303,7 @@ async renderCardPreview() {
     return current?.coverEnabled === true;
   })();
   if (!source || !source.ok || (!String(source.markdown || '').trim() && !coverOnlyWanted)) {
+    selfRecord.cardPreviewPendingInput = null;
     this.renderCardEmptyState();
     return undefined;
   }
@@ -285,6 +313,8 @@ async renderCardPreview() {
   const session = /** @type {import('../../services/card-session.js').CardNoteSessionLike} */ (
     /** @type {import('../../services/card-session.js').CardSessionRegistryLike} */ (this.getCardSessions()).getSession(sourcePath)
   );
+  // 尽早绑定当前会话输入，避免异步加载磁盘缓存期间打开“卡片设置”误判为无文档会话
+  selfRecord.cardPreviewPendingInput = { markdown, sourcePath, sourcePathKey: sourcePath };
 
   // 内容版本键：正文变化 → bump，选择/省略确认自动失效（B01 契约）
   const contentHash = String(this.simpleHash ? this.simpleHash(markdown) : markdown.length);
@@ -324,11 +354,19 @@ async renderCardPreview() {
       session.applyCoverFields(cachedCover);
     }
   }
-  selfRecord.cardPreviewPendingInput = { markdown, sourcePath, sourcePathKey: sourcePath };
 
-  const settled = await selfRecord.cardPreviewRunner.schedule();
+  let settled = await selfRecord.cardPreviewRunner.schedule();
   if (selfRecord.cardPreviewGeneration !== generation || (this.previewMode || 'article') !== 'card') return undefined;
-  if (!settled || !settled.applied) return undefined;
+  if (settled && !settled.applied && settled.reason === 'version-changed') {
+    settled = await selfRecord.cardPreviewRunner.schedule();
+    if (selfRecord.cardPreviewGeneration !== generation || (this.previewMode || 'article') !== 'card') return undefined;
+  }
+  if (!settled || !settled.applied) {
+    if (settled?.reason !== 'superseded') {
+      clearCardLoadingState(this);
+    }
+    return undefined;
+  }
   selfRecord.cardPreviewOutcome = selfRecord.cardPreviewLastOutcome || null;
   return this.renderCardPreviewDom();
 }
@@ -436,6 +474,7 @@ async runCardLayoutPipeline(ctx) {
 
 /** 空态（未选文档 / 正文为空） */
 renderCardEmptyState() {
+  this.setPreviewLoading?.(false);
   if (!this.previewContainer) return;
   this.previewContainer.empty();
   this.previewContainer.removeClass('apple-has-content');
@@ -451,6 +490,7 @@ renderCardEmptyState() {
 
 /** 移动端说明态（B02 ⑥：桌面能力延迟加载，不触发 Electron 依赖） */
 renderCardMobileNotice() {
+  this.setPreviewLoading?.(false);
   if (!this.previewContainer) return;
   this.previewContainer.empty();
   this.previewContainer.removeClass('apple-has-content');
@@ -466,6 +506,7 @@ renderCardMobileNotice() {
 
 /** 失败态 */
 renderCardFailureState(outcome) {
+  this.setPreviewLoading?.(false);
   if (!this.previewContainer) return;
   this.previewContainer.empty();
   this.previewContainer.removeClass('apple-has-content');
@@ -502,14 +543,20 @@ renderCardPreviewDom() {
     this.renderCardFailureState(outcome);
     return undefined;
   }
-  // 负载与当前版本不符（迟到结果竞态）时不重渲染：保持旧预览暂留
+  // 负载与当前版本不符（迟到结果竞态）时不重渲染：保持旧预览暂留；
+  // 若画布上只有模式切换时的加载占位，则回落空态以免卡在加载提示。
   if (!outcome || outcome.layoutKey !== session.currentLayoutKey()) {
+    clearCardLoadingState(this);
     return undefined;
   }
 
   const selfRec = cardStateOf(this);
   const container = this.previewContainer;
-  if (!container) return undefined;
+  if (!container) {
+    this.setPreviewLoading?.(false);
+    return undefined;
+  }
+  this.setPreviewLoading?.(false);
   container.empty();
   container.removeClass('apple-has-content');
 
@@ -610,7 +657,7 @@ renderCardPreviewDom() {
     });
     item.dataset.pageWidth = String(size.width);
     item.dataset.pageHeight = String(size.height);
-    if (pageEl instanceof HTMLElement) {
+    if (isElementLike(pageEl)) {
       item.appendChild(pageEl);
     }
     const badgeEl = item.createEl('div', { cls: 'icard-preview-page-badge', text: badge });
@@ -620,7 +667,7 @@ renderCardPreviewDom() {
     }
     return item;
   };
-  if (outcome?.coverPage instanceof HTMLElement) {
+  if (isElementLike(outcome?.coverPage)) {
     renderPageThumb(outcome.coverPage, 'cover', '封面', null);
     selfRec.cardPreviewCoverCleanup = attachCoverImagePanZoom(outcome.coverPage, (change) => {
       session.applyCoverFields(change);
@@ -632,7 +679,7 @@ renderCardPreviewDom() {
   }
   pages.forEach((pageEl, index) => {
     renderPageThumb(
-      pageEl instanceof HTMLElement ? pageEl : null,
+      isElementLike(pageEl) ? pageEl : null,
       `page-${index + 1}`,
       `第 ${index + 1} 页`,
       () => this.locateCardPageSource(index + 1),
@@ -642,6 +689,7 @@ renderCardPreviewDom() {
   // 「已知悉…接受本次省略」不改变排版结果、只挡导出，属重复流程，已整块退役。
   // 明细列表仅保留在「正文全部未进入卡片」空态（那里它是唯一信息源）。
   selfRec.cardRenderedLayoutKey = String(outcome.layoutKey);
+  selfRec.cardPreviewPageWidth = Number(size.width);
   this.maybeAutoFitCardPreviewZoom(Number(size.width));
   this.applyCardPreviewZoom();
   return /** @type {ObsidianElementLike} */ (/** @type {unknown} */ (shell));
@@ -717,9 +765,15 @@ disposeCardPreview() {
   selfRecord.cardPreviewGeneration = (selfRecord.cardPreviewGeneration || 0) + 1;
   selfRecord.cardPreviewRunner = null;
   selfRecord.cardPreviewRunnerNoteId = '';
+  selfRecord.cardPreviewPendingInput = null;
   selfRecord.cardPreviewOutcome = null;
   selfRecord.cardPreviewShell = null;
   selfRecord.cardRenderedLayoutKey = '';
+  selfRecord.cardPreviewPageWidth = 0;
+  if (selfRecord.cardContentHashes instanceof Map) {
+    selfRecord.cardContentHashes.clear();
+  }
+  this.setPreviewLoading?.(false);
   if (selfRecord.cardSessionRegistry) {
     selfRecord.cardSessionRegistry.disposeAll();
     selfRecord.cardSessionRegistry = null;

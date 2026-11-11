@@ -82,6 +82,7 @@ getIcon() {
 
 async onOpen() {
   console.debug('🍎 发布助手面板打开');
+  this.previewMode = 'article';
   const container = /** @type {ObsidianElementLike} */ (this.containerEl.children[1]);
   container.empty();
   container.addClass('apple-converter-container');
@@ -124,12 +125,14 @@ async onOpen() {
   this.landingGateActive = true;
   this.landingGateUserInteracted = false;
   unbindLandingArmListener(this);
-  const armListener = () => {
+  const armListener = (/** @type {Event | undefined} */ event) => {
     this.landingGateUserInteracted = true;
     unbindLandingArmListener(this);
     if (this.landingGateActive && this.lastActiveFile) {
       this.landingGateActive = false;
-      if (this.converter && typeof this.convertCurrent === 'function') {
+      const target = /** @type {{ closest?: (selector: string) => unknown } | null} */ (event?.target || null);
+      const isModeButtonClick = Boolean(target && typeof target.closest === 'function' && target.closest('.apple-preview-mode-segment'));
+      if (!isModeButtonClick && this.converter && typeof this.convertCurrent === 'function') {
         this.convertCurrent(true);
       }
     }
@@ -1061,27 +1064,21 @@ onResize() {
   if (this.landingGateActive) return;
 
   this.resizeTimeout = window.setTimeout(() => {
+    if (this.previewMode === 'card') {
+      this.refitCardPreviewZoom?.();
+      return;
+    }
     this.convertCurrent(true);
   }, 300);
 },
 
 async onClose() {
-  if (this.activeLeafRenderTimer) {
-    window.clearTimeout(this.activeLeafRenderTimer);
-    this.activeLeafRenderTimer = null;
-  }
-  if (this.loadingVisibilityTimer) {
-    window.clearTimeout(this.loadingVisibilityTimer);
-    this.loadingVisibilityTimer = null;
-  }
-  if (this.sidePaddingPreviewTimer) {
-    window.clearTimeout(this.sidePaddingPreviewTimer);
-    this.sidePaddingPreviewTimer = null;
-  }
-  if (this.aiLayoutStaleSuppressTimer) {
-    window.clearTimeout(this.aiLayoutStaleSuppressTimer);
-    this.aiLayoutStaleSuppressTimer = null;
-  }
+  if (this.activeLeafRenderTimer) { window.clearTimeout(this.activeLeafRenderTimer); this.activeLeafRenderTimer = null; }
+  if (this.loadingVisibilityTimer) { window.clearTimeout(this.loadingVisibilityTimer); this.loadingVisibilityTimer = null; }
+  if (this.sidePaddingPreviewTimer) { window.clearTimeout(this.sidePaddingPreviewTimer); this.sidePaddingPreviewTimer = null; }
+  if (this.aiLayoutStaleSuppressTimer) { window.clearTimeout(this.aiLayoutStaleSuppressTimer); this.aiLayoutStaleSuppressTimer = null; }
+  if (this.resizeTimeout) { window.clearTimeout(this.resizeTimeout); this.resizeTimeout = null; }
+  if (this._modeRenderTimer) { window.clearTimeout(this._modeRenderTimer); this._modeRenderTimer = null; }
   // Landing 门控的臂动监听随视图关闭一并摘除
   unbindLandingArmListener(this);
   this.landingGateActive = false;
@@ -1115,6 +1112,7 @@ async onClose() {
   }
   this.previewContainer?.empty();
   this.closeTransientPanels();
+  this.previewMode = 'article';
   this.aiLayoutBtn = null;
   this.settingsBtn = null;
   // 清理文章状态缓存

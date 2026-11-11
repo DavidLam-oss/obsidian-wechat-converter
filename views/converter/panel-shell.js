@@ -27,6 +27,7 @@
 
 import {
   toRecord,
+  isElementLike,
   removeElementClass,
 } from '../apple-style-view-shared.js';
 
@@ -119,7 +120,7 @@ attachOverlayScrollGuard(overlay, nestedSelectors = []) {
   /** @param {WheelEvent} event */
   const handleWheel = (event) => {
     if (!overlay.classList.contains('visible')) return;
-    const target = event.target instanceof HTMLElement ? event.target : null;
+    const target = isElementLike(event.target) ? event.target : null;
     const nestedScrollable = /** @type {Element | null} */ (target
       ? normalizedSelectors
         .map((selector) => target.closest(selector))
@@ -154,7 +155,22 @@ closeTransientPanels() {
 ,
 
 
-toggleSettingsPanel() {
+syncPreviewModeUi() {
+  const mode = this.previewMode === 'sticker' || this.previewMode === 'card' ? this.previewMode : 'article';
+  this.previewMode = mode;
+
+  const articleBtn = /** @type {unknown} */ (this.btnArticleMode);
+  const stickerBtn = /** @type {unknown} */ (this.btnStickerMode);
+  const cardBtn = /** @type {unknown} */ (this.btnCardMode);
+
+  if (isElementLike(articleBtn) && isElementLike(stickerBtn)) {
+    articleBtn.classList.toggle('active', mode === 'article');
+    stickerBtn.classList.toggle('active', mode === 'sticker');
+    if (isElementLike(cardBtn)) {
+      cardBtn.classList.toggle('active', mode === 'card');
+    }
+  }
+
   const artWrapper = /** @type {unknown} */ (this.articleSettingsWrapper);
   const stkWrapper = /** @type {unknown} */ (this.stickerSettingsWrapper);
   const cardWrapper = /** @type {unknown} */ (this.cardSettingsWrapper);
@@ -169,26 +185,26 @@ toggleSettingsPanel() {
       }
     }
   };
+  setWrapperHidden(artWrapper, mode !== 'article');
+  setWrapperHidden(stkWrapper, mode !== 'sticker');
+  setWrapperHidden(cardWrapper, mode !== 'card');
 
+  // 集中控制操作按钮显隐（B02 ①）
+  this.applyModeActionVisibility();
+}
+,
+
+toggleSettingsPanel() {
+  this.syncPreviewModeUi();
   if (this.previewMode === 'sticker') {
-    setWrapperHidden(artWrapper, true);
-    setWrapperHidden(stkWrapper, false);
-    setWrapperHidden(cardWrapper, true);
     const toggleState = toRecord(this.stickerIndexToggleState);
     const checkbox = toggleState ? toRecord(toggleState.checkbox) : null;
     if (checkbox && typeof checkbox.checked === 'boolean') {
       checkbox.checked = Boolean(this.insertStickerImageIndex);
     }
   } else if (this.previewMode === 'card') {
-    setWrapperHidden(artWrapper, true);
-    setWrapperHidden(stkWrapper, true);
-    setWrapperHidden(cardWrapper, false);
     // 打开时同步当前会话设置值（换篇/重排后可能已变化）
     if (typeof this.renderCardSettingsValues === 'function') this.renderCardSettingsValues();
-  } else {
-    setWrapperHidden(stkWrapper, true);
-    setWrapperHidden(cardWrapper, true);
-    setWrapperHidden(artWrapper, false);
   }
 
   this.togglePanel(this.settingsOverlay, this.settingsBtn, () => this.resetSettingsPanelViewState());
@@ -202,33 +218,40 @@ switchPreviewMode(mode) {
     window.clearTimeout(this._modeRenderTimer);
     this._modeRenderTimer = null;
   }
+  if (this.loadingVisibilityTimer) {
+    window.clearTimeout(this.loadingVisibilityTimer);
+    this.loadingVisibilityTimer = null;
+  }
+  if (this.cardPreviewMergeTimer) {
+    window.clearTimeout(this.cardPreviewMergeTimer);
+    this.cardPreviewMergeTimer = null;
+  }
   this.previewMode = mode;
+  this.landingGateActive = false;
   this.previewContainer?.removeClass('has-card-preview');
 
   // 作废在途的文章渲染（convertCurrent 的提交守卫读这两个值）。
   // 不作废的话：文章模式的渲染较慢，用户切到贴图/卡片后它才落地，
   // 会把新模式的预览覆盖回文章排版——表现为「模式选了，预览没变」。
   this.renderGeneration = (Number(this.renderGeneration) || 0) + 1;
-  this.setPreviewLoading(false);
-
-  const articleBtn = /** @type {unknown} */ (this.btnArticleMode);
-  const stickerBtn = /** @type {unknown} */ (this.btnStickerMode);
-  const cardBtn = /** @type {unknown} */ (this.btnCardMode);
-
-  if (articleBtn && stickerBtn) {
-    const aEl = /** @type {Element} */ (articleBtn);
-    const sEl = /** @type {Element} */ (stickerBtn);
-    const cEl = /** @type {Element | null} */ (cardBtn instanceof Element ? cardBtn : null);
-    aEl.classList.toggle('active', mode === 'article');
-    sEl.classList.toggle('active', mode === 'sticker');
-    if (cEl) cEl.classList.toggle('active', mode === 'card');
+  this.loadingGeneration = (Number(this.loadingGeneration) || 0) + 1;
+  if (mode === 'card') {
+    if (this.previewContainer) {
+      this.previewContainer.empty();
+      if (typeof this.previewContainer.createEl === 'function') {
+        const loading = this.previewContainer.createEl('div', { cls: 'icard-preview-empty is-loading' });
+        loading.createEl('div', { cls: 'icard-preview-empty-title', text: '正在生成卡片预览...' });
+      }
+    }
+    this.setPreviewLoading?.(true, '正在生成卡片预览...');
+  } else {
+    this.setPreviewLoading?.(false);
   }
+
+  this.syncPreviewModeUi();
 
   // 跨模式切换时收起悬浮面板：各模式设置内容不同，留在屏幕上会造成误解。
   this.closeTransientPanels();
-
-  // 集中控制操作按钮显隐（B02 ①）
-  this.applyModeActionVisibility();
 
   if (mode === 'sticker') {
     this.runModeRenderWithDiagnostics('贴图', this.renderStickerPreview(), 8000, 'sticker');
@@ -300,6 +323,7 @@ runModeRenderWithDiagnostics(label, renderPromise, timeoutMs, expectedMode) {
  * @param {Error} error 渲染错误
  */
 showModeRenderFailure(label, error) {
+  this.setPreviewLoading?.(false);
   if (!this.previewContainer) return;
   this.previewContainer.empty();
   this.previewContainer.removeClass('has-card-preview');

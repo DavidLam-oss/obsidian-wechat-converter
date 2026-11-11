@@ -78,6 +78,9 @@ import {
   getBridgeSafeSessionCover,
   downloadMaterialCoverAsBridgeAsset,
 } from './multi-platform-cover-assets.js';
+import {
+  resolveMultiPlatformExportSanitizeOptions,
+} from '../../services/multi-platform-html-cleaner.js';
 import { renderMultiPlatformModalUI } from './multi-platform-modal-ui.js';
 import {
   toRecord,
@@ -111,7 +114,7 @@ const QUOTA_POLICY = 'truncate';
  * @typedef {{ path: string, basename: string }} FileLike
  * @typedef {{ title?: string, cover?: string }} PublishMetaLike
  * @typedef {{ markdown: string, assets: BridgeAssetLike[], cover?: string, firstImageSrc?: string, warnings?: unknown[] }} ResolvedImagesLike
- * @typedef {{ app?: unknown, currentHtml?: string, lastResolvedMarkdown?: string, sessionCoverBase64?: string, sessionThumbMediaId?: string, wechatMaterialCoverAssetCache?: Map<string, MaterialCoverCacheEntryLike>, articleStates: Map<string, Record<string, unknown>>, plugin: PluginLike, getMissingRenderNotice: () => string, preparePublishModalShell: (modal: PublishModalLike, options: Record<string, unknown>) => void, createPublishModeTabs: (modal: PublishModalLike, mode: string) => { wechatTab: ModalContentElementLike }, showSyncModal: (options: Record<string, unknown>) => void, openPluginSettings: () => boolean, getPublishContextFile: () => FileLike | null, getFrontmatterPublishMeta: (file: FileLike | null) => PublishMetaLike, resolveArticleHtmlSource: (options: { target: 'multi-platform' }) => { html: string, layoutMode: 'native'|'ai', sourceKind: 'base'|'ai-export' } | null, getFirstImageFromArticle: () => string, prepareHtmlForWechatsyncArticleViaBridge: (html: string, assets: BridgeAssetLike[]) => Promise<string>, generateCoverThumbnailFromAsset: (asset: BridgeAssetLike) => Promise<string>, getWechatsyncTaskSnapshot: (bridge: BridgeLike, syncId: string) => Promise<unknown>, showMultiPlatformQuotaBlockedModal: (options: Record<string, unknown>) => void, showWechatsyncEnqueueAcceptedModal: (options: Record<string, unknown>) => void, showMultiPlatformSyncResultModal: (options: Record<string, unknown>) => void }} PublishViewLike
+ * @typedef {{ app?: unknown, previewMode?: string, currentHtml?: string, lastResolvedMarkdown?: string, sessionCoverBase64?: string, sessionThumbMediaId?: string, wechatMaterialCoverAssetCache?: Map<string, MaterialCoverCacheEntryLike>, articleStates: Map<string, Record<string, unknown>>, plugin: PluginLike, getMissingRenderNotice: () => string, preparePublishModalShell: (modal: PublishModalLike, options: Record<string, unknown>) => void, createPublishModeTabs: (modal: PublishModalLike, mode: string) => { wechatTab: ModalContentElementLike }, showSyncModal: (options: Record<string, unknown>) => void, openPluginSettings: () => boolean, getPublishContextFile: () => FileLike | null, getFrontmatterPublishMeta: (file: FileLike | null) => PublishMetaLike, resolveArticleHtmlSource: (options: { target: 'multi-platform' }) => { html: string, layoutMode: 'native'|'ai', sourceKind: 'base'|'ai-export' } | null, getFirstImageFromArticle: () => string, prepareHtmlForWechatsyncArticleViaBridge: (html: string, assets: BridgeAssetLike[], options?: { stripEngagementCard?: boolean, stripImageCaption?: boolean }) => Promise<string>, generateCoverThumbnailFromAsset: (asset: BridgeAssetLike) => Promise<string>, getWechatsyncTaskSnapshot: (bridge: BridgeLike, syncId: string) => Promise<unknown>, showMultiPlatformQuotaBlockedModal: (options: Record<string, unknown>) => void, showWechatsyncEnqueueAcceptedModal: (options: Record<string, unknown>) => void, showMultiPlatformSyncResultModal: (options: Record<string, unknown>) => void }} PublishViewLike
  */
 
 /**
@@ -412,7 +415,8 @@ async function showMultiPlatformPublishModal(view, options = {}) {
       // the legacy prepareHtmlForWechatsyncArticle would double-encode
       // every local image and break extension-side retry on redacted
       // base64.
-      const content = await view.prepareHtmlForWechatsyncArticleViaBridge(exportHtml, assets);
+      const sanitizeOptions = resolveMultiPlatformExportSanitizeOptions(view);
+      const content = await view.prepareHtmlForWechatsyncArticleViaBridge(exportHtml, assets, sanitizeOptions);
 
       // Invariant guard (handover §3.2): bridge content[] must never carry
       // inline base64 image bytes — assets[] is the single source of truth

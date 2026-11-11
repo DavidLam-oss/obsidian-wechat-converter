@@ -424,15 +424,17 @@ interface AppleStyleViewContract {
     }): Promise<string>;
     /**
      * @param {string} html
+     * @param {{ stripEngagementCard?: boolean; stripImageCaption?: boolean }} [options]
      * @returns {Promise<string>}
      */
-    prepareHtmlForWechatsyncArticle(html: string): Promise<string>;
+    prepareHtmlForWechatsyncArticle(html: string, options?: { stripEngagementCard?: boolean; stripImageCaption?: boolean }): Promise<string>;
     /**
      * @param {string} html
      * @param {unknown[]} [assets]
+     * @param {{ stripEngagementCard?: boolean; stripImageCaption?: boolean }} [options]
      * @returns {Promise<string>}
      */
-    prepareHtmlForWechatsyncArticleViaBridge(html: string, assets?: unknown[]): Promise<string>;
+    prepareHtmlForWechatsyncArticleViaBridge(html: string, assets?: unknown[], options?: { stripEngagementCard?: boolean; stripImageCaption?: boolean }): Promise<string>;
     /**
      * @param {WechatsyncAssetLike | null | undefined} asset
      * @returns {Promise<string>}

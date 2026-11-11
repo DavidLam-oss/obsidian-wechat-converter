@@ -53,6 +53,10 @@ import {
 } from '../apple-style-view-shared.js';
 import { stripUnresolvedVariableHighlights } from '../../services/frontmatter-interpolator.js';
 import { rasterizeEmbeddedSvgImagesForWechat } from '../../services/svg-rasterizer.js';
+import {
+  resolveMultiPlatformExportSanitizeOptions,
+  stripMultiPlatformUnsupportedElements,
+} from '../../services/multi-platform-html-cleaner.js';
 
 /**
  * Keep syntax-highlight markup while making copied code safe to execute.
@@ -278,9 +282,13 @@ async prepareHtmlForWechatDraft(html, options = {}) {
 }
 ,
 
-async prepareHtmlForWechatsyncArticle(html) {
+async prepareHtmlForWechatsyncArticle(html, options = undefined) {
   const tempDiv = createHtmlContainer('div', html || '');
   if (!tempDiv) return '';
+  const sanitizeOptions = options && typeof options === 'object'
+    ? options
+    : resolveMultiPlatformExportSanitizeOptions(this);
+  stripMultiPlatformUnsupportedElements(tempDiv, sanitizeOptions);
   await this.processImagesToDataURL(tempDiv);
   transformVideosForClipboard(tempDiv);
   this.transformCodeBlocksForWechatsync(tempDiv);
@@ -288,10 +296,14 @@ async prepareHtmlForWechatsyncArticle(html) {
 }
 ,
 
-async prepareHtmlForWechatsyncArticleViaBridge(html, assets = []) {
+async prepareHtmlForWechatsyncArticleViaBridge(html, assets = [], options = undefined) {
   const mapped = mapAppUrlImagesToAssetUrls(html || '', assets);
   const tempDiv = createHtmlContainer('div', mapped);
   if (!tempDiv) return '';
+  const sanitizeOptions = options && typeof options === 'object'
+    ? options
+    : resolveMultiPlatformExportSanitizeOptions(this);
+  stripMultiPlatformUnsupportedElements(tempDiv, sanitizeOptions);
   transformVideosForClipboard(tempDiv);
   this.transformCodeBlocksForWechatsync(tempDiv);
   return tempDiv.innerHTML;

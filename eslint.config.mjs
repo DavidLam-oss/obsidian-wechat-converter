@@ -215,6 +215,7 @@ export default [
       "services/path-utils.js",
       "services/markdown-source.js",
       "services/markdown-cleaner.js",
+      "services/multi-platform-html-cleaner.js",
       "services/publish-cleanup.js",
       "services/render-pipeline.js",
       "services/settings-guard.js",

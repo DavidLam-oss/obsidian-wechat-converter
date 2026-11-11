@@ -90,7 +90,7 @@ createSettingsPanel(container) {
 
   selfRec.btnArticleMode = segment.createEl('button', {
     cls: 'apple-mode-btn active',
-    attr: { 'aria-label': '文章排版模式' }
+    attr: { type: 'button', 'aria-label': '文章排版模式' }
   });
   const btnArt = /** @type {HTMLElement} */ (selfRec.btnArticleMode);
   if (typeof setIcon === 'function') {
@@ -99,7 +99,7 @@ createSettingsPanel(container) {
 
   selfRec.btnStickerMode = segment.createEl('button', {
     cls: 'apple-mode-btn',
-    attr: { 'aria-label': '微信贴图模式' }
+    attr: { type: 'button', 'aria-label': '微信贴图模式' }
   });
   const btnStk = /** @type {HTMLElement} */ (selfRec.btnStickerMode);
   if (typeof setIcon === 'function') {
@@ -108,7 +108,7 @@ createSettingsPanel(container) {
 
   selfRec.btnCardMode = segment.createEl('button', {
     cls: 'apple-mode-btn',
-    attr: { 'aria-label': '图片卡片模式' }
+    attr: { type: 'button', 'aria-label': '图片卡片模式' }
   });
   const btnCard = /** @type {HTMLElement} */ (selfRec.btnCardMode);
   if (typeof setIcon === 'function') {
@@ -652,6 +652,7 @@ createSettingsPanel(container) {
   this.aiLayoutOverlay = container.createEl('div', { cls: 'apple-ai-layout-overlay' });
   this.createAiLayoutPanel(this.aiLayoutOverlay);
   this.updateAiToolbarState();
+  this.syncPreviewModeUi?.();
 }
 ,
 createSection(parent, label, builder) {

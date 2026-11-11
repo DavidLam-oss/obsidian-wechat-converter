@@ -128,11 +128,24 @@ function toImageElements(value) {
 }
 
 /**
+ * Cross-window safe element check (avoids broken `instanceof HTMLElement` in popout windows).
+ * @param {unknown} value
+ * @returns {value is HTMLElement}
+ */
+function isElementLike(value) {
+  if (!value || typeof value !== 'object') return false;
+  const record = /** @type {{ nodeType?: unknown, classList?: unknown }} */ (value);
+  return record.nodeType === 1 || (typeof record.classList === 'object' && record.classList !== null);
+}
+
+/**
  * @param {unknown} element
  * @param {string} className
  */
 function removeElementClass(element, className) {
-  if (element instanceof HTMLElement) element.classList.remove(className);
+  if (isElementLike(element) && element.classList && typeof element.classList.remove === 'function') {
+    element.classList.remove(className);
+  }
 }
 
 export {
@@ -142,5 +155,6 @@ export {
   getValueElementFromEvent,
   getEventTargetValue,
   toImageElements,
+  isElementLike,
   removeElementClass,
 };

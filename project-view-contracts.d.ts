@@ -399,4 +399,5 @@ interface AppleStyleViewContract extends ItemViewBaseLike {
      */
     attachOverlayScrollGuard(overlay: ObsidianElementLike | null, nestedSelectors?: string[]): void;
     closeTransientPanels(): void;
+    syncPreviewModeUi(): void;
 }
