@@ -567,6 +567,24 @@ describe("prepare 命中缓存时零耗时复用并跳过重复 IO", () => {
     snap2.release();
   });
 
+  it("preview 模式下远程图片跳过 fetchBlob 与 decodeImage，直接放行", async () => {
+    const fetchBlob = vi.fn();
+    const decodeImage = vi.fn();
+    const pool = createCardResourcePool({ loaders: makeLoaders({ fetchBlob, decodeImage }) });
+    const snap = await pool.prepare(
+      [{ ref: "https://x.test/pic.png", kind: "remote" }],
+      { mode: "preview" }
+    );
+    expect(fetchBlob).not.toHaveBeenCalled();
+    expect(decodeImage).not.toHaveBeenCalled();
+    expect(snap.hasBlockingFailures).toBe(false);
+    expect(snap.images["https://x.test/pic.png"]).toMatchObject({
+      ref: "https://x.test/pic.png",
+      src: "https://x.test/pic.png",
+    });
+    snap.release();
+  });
+
   it("本地文件 mtime 变更后使缓存失效并重新读取", async () => {
     const cache = createCardResourceCache();
     let currentMtime = 1000;

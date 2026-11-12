@@ -489,6 +489,7 @@ export function createCardResourcePool(options = {}) {
    */
   async function prepare(imageRefs, opts = {}) {
     const wholeTimeoutMs = opts.timeoutMs ?? CARD_WHOLE_PREP_TIMEOUT_MS;
+    const isPreview = opts.mode === "preview";
     const controller = new AbortController();
     const externalSignal = opts.signal;
     if (externalSignal) {
@@ -513,6 +514,22 @@ export function createCardResourcePool(options = {}) {
         }
         if (resolved.state === "filtered") {
           return { status: /** @type {CardResourceStatus} */ ("filtered"), refEntry };
+        }
+
+        // —— 预览模式解耦：远程图无需在 JS 层全量下载与转 Base64，直接交由渲染进程原生加载（与文章模式同构）——
+        if (isPreview && /^https?:\/\//i.test(resolved.src)) {
+          /** @type {CardResourceImageEntry} */
+          const entry = {
+            ref: refEntry.ref,
+            src: resolved.src,
+            mime: resolved.mime || "image/png",
+            bytes: 0,
+            width: 0,
+            height: 0,
+            vaultPath: "",
+            dataUrl: "",
+          };
+          return { status: /** @type {CardResourceStatus} */ ("ok"), refEntry, entry };
         }
 
         // —— 内存缓存命中探测（切换主题、比例、字号或重绘时零耗时复用）——

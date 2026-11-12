@@ -263,7 +263,7 @@ prepareCardExportResources(input) {
           sourcePath: String(input.sourcePath || ''),
           session: createCardResourceSession(),
         });
-        const prepared = await pool.prepare(imageRefs);
+        const prepared = await pool.prepare(imageRefs, { mode: 'export' });
         await pool.waitForFonts(window.document);
         return prepared;
       })();

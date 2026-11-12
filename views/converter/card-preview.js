@@ -421,7 +421,7 @@ async runCardLayoutPipeline(ctx) {
     sourcePath: String(input.sourcePath || ''),
     session: selfRecord.cardResourceBudget,
   });
-  const resources = await pool.prepare(imageRefs);
+  const resources = await pool.prepare(imageRefs, { mode: 'preview' });
   if (ctx.isStale()) return { ok: false, stale: true };
   await pool.waitForFonts(window.document);
   if (ctx.isStale()) return { ok: false, stale: true };
