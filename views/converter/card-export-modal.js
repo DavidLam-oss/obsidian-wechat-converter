@@ -88,6 +88,7 @@ openCardExportModal() {
 
   (/** @type {any} */ (this)).cardExportScrollTop = 0;
   (/** @type {any} */ (this)).cardExportScrollBound = false;
+  (/** @type {any} */ (this)).cardExportUserInteractingUntil = 0;
   modal.onClose = () => {
     (/** @type {any} */ (this)).cardExportModal = null;
     const session = this.getCardExportSession();
@@ -126,7 +127,7 @@ resolveCardExportView() {
 ,
 
 /**
- * 进度事件接收（B05 进度反馈）：写入视图态并重绘。
+ * 进度事件接收（B05 进度反馈）：写入视图态并尝试原地增量更新，未挂载时回落重绘。
  * stage 为 "preparing" 表示图片资源准备阶段（下载并内联，首次可能数秒）；其余阶段任务已建立。
  * 弹窗关闭时只记录状态不重绘，重开时按最新任务态展示。
  * @param {any} event
@@ -134,7 +135,12 @@ resolveCardExportView() {
 handleCardExportProgress(event) {
   (/** @type {any} */ (this)).cardExportProgress = event || null;
   (/** @type {any} */ (this)).cardExportStage = event && event.stage === 'preparing' ? 'resources' : null;
-  if ((/** @type {any} */ (this)).cardExportModal) this.renderCardExportModal();
+  if ((/** @type {any} */ (this)).cardExportModal) {
+    if (typeof (/** @type {any} */ (this)).patchCardExportProgress === 'function' && (/** @type {any} */ (this)).patchCardExportProgress()) {
+      return;
+    }
+    this.renderCardExportModal();
+  }
 }
 ,
 

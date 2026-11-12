@@ -280,6 +280,7 @@ type CardExportMethodsContract = Pick<
 
 type CardExportModalViewMethodsContract = Pick<
     AppleStyleViewContract,
+    | 'patchCardExportProgress'
     | 'renderCardExportModal'
     | 'renderCardExportForm'
     | 'resolveCardExportScope'

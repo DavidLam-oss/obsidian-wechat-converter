@@ -67,6 +67,18 @@ import {
 } from './card-export-bridge.js';
 import { computeCardPixelSize } from '../../services/card-render-capture.js';
 import { writeClipboardText } from '../shared/clipboard.js';
+import {
+  EXPORT_PAGE_LABELS,
+  formatExportReason,
+  jobStatusDescription,
+  pageChipText,
+  pageChipTone,
+  pageOrdinal,
+  pageRowLabel,
+  bindCardExportUserInteraction,
+  isCardExportUserInteracting,
+  patchCardExportProgress as patchCardExportProgressImpl,
+} from './card-export-modal-progress.js';
 
 /** 导出任务状态 → 中文标签 */
 const EXPORT_STATE_LABELS = {
@@ -77,15 +89,6 @@ const EXPORT_STATE_LABELS = {
   failed: '导出失败',
   canceled: '已取消',
   'paused-manifest': '导出已暂停（结果记录失败）',
-};
-
-/** 单页结果状态 → 标签 */
-const EXPORT_PAGE_LABELS = {
-  saved: '已保存',
-  failed: '失败',
-  canceled: '已取消',
-  pending: '待处理',
-  skipped: '已跳过',
 };
 
 /** 任务状态 → 状态区色调（成功/警告/错误/中性/强调） */
@@ -165,6 +168,15 @@ rememberCardExportRoot(root) {
   plugin.settings.cardDefaults = { ...current, exportRoot: root };
   if (typeof plugin.saveSettings === 'function') void plugin.saveSettings();
 },
+
+/**
+ * 原地增量更新导出进度（避免重新渲染打断滚动条拖拽手势）。
+ * @returns {boolean}
+ */
+patchCardExportProgress() {
+  return patchCardExportProgressImpl(this);
+},
+
 /**
  * 重绘弹窗内容：按会话任务状态分派到表单 / 准备中 / 任务视图。
  * 滚动位置跨重绘保留——进度事件会频繁触发重绘，不应把用户弹回顶部。
@@ -182,6 +194,7 @@ renderCardExportModal() {
   if (!(/** @type {any} */ (this)).cardExportScrollBound && typeof content.addEventListener === 'function') {
     (/** @type {any} */ (this)).cardExportScrollBound = true;
     content.addEventListener('scroll', () => { (/** @type {any} */ (this)).cardExportScrollTop = content.scrollTop; });
+    bindCardExportUserInteraction(this, content);
   }
 
   const body = content.createEl('div', { cls: 'icard-export-body' });
@@ -583,7 +596,7 @@ renderCardExportPages(body, input) {
     }
   });
 
-  if (running) {
+  if (running && !isCardExportUserInteracting(this)) {
     const current = list.querySelector('.icard-export-page-row.is-rendering');
     if (current && typeof current.scrollIntoView === 'function') current.scrollIntoView({ block: 'nearest' });
   }
@@ -690,67 +703,6 @@ function appendBreakablePath(el, text) {
 }
 
 /**
- * 状态区副文案：把「已完成张数」和「当前阶段」合成一句，避免在进度条与列表里重复。
- * @param {{ state: string, running: boolean, progressEvent: any, currentOrdinal: number, saved: number, total: number, failed: number }} input
- */
-function jobStatusDescription({ state, running, progressEvent, currentOrdinal, saved, total, failed }) {
-  if (!running) {
-    if (state === 'paused-manifest') {
-      return `清单写入失败，已暂停后续页（已存 ${saved} 张）；可重试记录清单并继续导出，或取消导出。`;
-    }
-    const base = `${saved} 张卡片已保存`;
-    if (failed > 0) return `${base}，${failed} 张失败`;
-    if (state === 'canceled') return `已在保存 ${saved} 张后取消`;
-    return base;
-  }
-  if (progressEvent && progressEvent.stage === 'preparing') return '正在下载并内联笔记图片（图片多时首次较慢）…';
-  // currentOrdinal < 0 表示还没进入渲染阶段；0 表示正在渲染封面（封面不是「第 0 页」）
-  if (currentOrdinal > 0) return `已保存 ${saved} / ${total} 张 · 正在渲染第 ${currentOrdinal} 页`;
-  if (currentOrdinal === 0) return `已保存 ${saved} / ${total} 张 · 正在渲染封面`;
-  return `已保存 ${saved} / ${total} 张 · 正在准备…`;
-}
-
-/** 逐页明细右侧徽标文案 */
-function pageChipText({ running, failed, canceled, total }) {
-  if (failed > 0) return `${failed} 张失败`;
-  if (running) return '进行中';
-  if (canceled > 0) return `${canceled} 张已取消`;
-  return total > 0 ? '全部成功' : '无内容';
-}
-
-/** 逐页明细右侧徽标色调 */
-function pageChipTone({ running, failed, canceled }) {
-  if (failed > 0) return 'error';
-  if (running) return 'accent';
-  if (canceled > 0) return 'muted';
-  return 'success';
-}
-
-/**
- * 页号（1-based）：取自 pageId（`page-N`），非法 id 回落批次内序号。
- * 子集导出必须用原始页序，否则「第 N 页」会与预览里的页号对不上。
- * 封面返回 0（与导出口径一致：card-export-bridge 用 `{ pageId:'cover', ordinal:0 }`）。
- * @param {string} pageId @param {number} fallback
- */
-function pageOrdinal(pageId, fallback) {
-  if (String(pageId || '') === 'cover') return 0;
-  const match = /^page-(\d+)$/.exec(String(pageId || ''));
-  return match ? Number(match[1]) : fallback;
-}
-
-/**
- * 逐页明细里的页名：封面就叫「封面」，正文才叫「第 N 页」。
- * 封面不是「第 1 页」——它有独立的 pageId/ordinal(0)，若按批次内序号回落，
- * 就会与紧随其后的 page-1 双双显示成「第 1 页」，用户看到两行同名。
- * 与自选清单（card-page-selection.js 的 pageRowLabel）保持同一口径。
- * @param {string} pageId @param {number} fallback
- */
-function pageRowLabel(pageId, fallback) {
-  const ordinal = pageOrdinal(pageId, fallback);
-  return ordinal > 0 ? `第 ${ordinal} 页` : '封面';
-}
-
-/**
  * 已保存页尺寸全部一致时返回该尺寸文案，否则 null。
  * 一致 → 说一次就够；有差异 → 逐行显示才有意义。
  * @param {any[]} results
@@ -763,21 +715,5 @@ function uniformSavedSize(results) {
   return sizes.size === 1 ? [...sizes][0] : null;
 }
 
-/**
- * 导出失败原因 → 用户可读文案（脱敏：仅映射已知 reason，不透传原始细节）。
- * @param {string} reason
- */
-export function formatExportReason(reason) {
-  const map = {
-    'capture-failed': '捕获失败',
-    'capture-invalid': '输出非 PNG',
-    'write-failed': '写入失败',
-    'path-conflict': '同名文件冲突',
-    'path-redirect': '输出位置被重定向',
-    'manifest-write-failed': '结果记录未写入',
-  };
-  return map[String(reason)] || '未能输出';
-}
-
-export { EXPORT_STATE_LABELS, EXPORT_PAGE_LABELS };
+export { EXPORT_STATE_LABELS, EXPORT_PAGE_LABELS, formatExportReason };
 /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument -- reason: close the scoped disable block above */

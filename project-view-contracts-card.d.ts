@@ -189,6 +189,8 @@ interface AppleStyleViewContract {
     resolveCardExportRootDefault(): string;
     /** 卡片导出：记住弹窗内填写的输出目录，作为下次预填的默认（2026-09-19：不单设配置项） */
     rememberCardExportRoot(root: string): void;
+    /** 卡片导出：原地增量更新导出进度（避免重新渲染打断滚动条拖拽手势） */
+    patchCardExportProgress(): boolean;
     /** 卡片导出：按会话任务状态重绘弹窗 */
     renderCardExportModal(): void;
     /** 卡片导出：准备中视图（点击开始后、任务建立与图片内联完成之前） */
