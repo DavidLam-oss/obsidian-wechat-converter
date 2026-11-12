@@ -220,14 +220,15 @@ describe('AppleStyleView - Card Export Modal (B05)', () => {
     const began = session.beginExportJob({ snapshotId: snapshot.snapshotId, pageIds: ['page-1', 'page-2'], scale: 2 });
     session.recordPageResult(began.job.jobId, 'page-1', { status: 'saved', width: 750, height: 1000 });
     session.recordPageResult(began.job.jobId, 'page-2', { status: 'failed', reason: 'capture-failed' });
+    session.completeExport(began.job.jobId, { status: 'partial' });
 
     view.openCardExportModal();
     const overlay = view.cardExportModal.contentEl;
     const rows = overlay.querySelectorAll('.icard-export-page-row');
     expect(rows).toHaveLength(2);
-    expect(overlay.querySelector('.icard-export-status')?.textContent).toContain('导出中');
+    expect(overlay.querySelector('.icard-export-status')?.textContent).toContain('部分完成');
     expect(overlay.querySelectorAll('.icard-export-page-reason')[0]?.textContent).toBe('捕获失败');
-    expect(overlay.querySelector('.icard-export-cancel')).not.toBeNull();
+    expect(overlay.querySelector('.icard-export-retry')).not.toBeNull();
   });
 
   it('部分完成：展示重试失败页与重试结果记录入口', () => {
@@ -246,7 +247,7 @@ describe('AppleStyleView - Card Export Modal (B05)', () => {
     expect(overlay.querySelector('.icard-export-retry-manifest')).not.toBeNull();
   });
 
-  it('完成态视觉：状态区取成功色、逐页明细默认折叠、徽标为「全部成功」', () => {
+  it('完成态视觉：全成功时状态区取成功色并交代尺寸，无冗余逐页列表', () => {
     const view = readyView(AppleStyleView);
     const { session, snapshot } = withSession(view);
     const began = session.beginExportJob({ snapshotId: snapshot.snapshotId, pageIds: ['page-1', 'page-2'], scale: 2 });
@@ -257,15 +258,13 @@ describe('AppleStyleView - Card Export Modal (B05)', () => {
     view.openCardExportModal();
     const overlay = view.cardExportModal.contentEl;
     expect(overlay.querySelector('.icard-export-status.is-success')).not.toBeNull();
-    // 全部成功时不再铺成功色底，也不再重复张数（只在状态区说一次）
+    // 全部成功时不再铺进度条，也不展示冗余的单页明细
     expect(overlay.querySelector('.icard-export-progress')).toBeNull();
-    const details = overlay.querySelector('.icard-export-pages-details');
-    expect(details).not.toBeNull();
-    expect(details.hasAttribute('open')).toBe(false);
-    expect(overlay.querySelector('.icard-export-chip.is-success')?.textContent).toBe('全部成功');
-    // 尺寸全一致 → 不逐行重复，只在摘要处说一次
-    expect(overlay.querySelectorAll('.icard-export-page-size')).toHaveLength(0);
-    expect(overlay.querySelector('.icard-export-pages-size-note')?.textContent).toBe('750 × 1000');
+    expect(overlay.querySelector('.icard-export-pages-details')).toBeNull();
+    // 状态描述区清晰呈现张数与统一尺寸
+    expect(overlay.querySelector('.icard-export-status-desc')?.textContent).toBe('2 张卡片已保存（750 × 1000）');
+    // 页脚提供完成主操作
+    expect(overlay.querySelector('.icard-export-done')).not.toBeNull();
   });
 
   it('失败态视觉：逐页明细自动展开，失败行带语义色标记', () => {
@@ -312,38 +311,35 @@ describe('AppleStyleView - Card Export Modal (B05)', () => {
     expect(overlay.querySelectorAll('.icard-export-page-size')).toHaveLength(0);
   });
 
-  it('逐页明细：进行中默认折叠无滚动条，出现失败页时自动展开且不被固化为用户意图', () => {
+  it('逐页明细：全成功态保持纯净无列表，失败时展开故障清单且不被固化为用户意图', () => {
     const view = readyView(AppleStyleView);
     const { session, snapshot } = withSession(view);
     const began = session.beginExportJob({ snapshotId: snapshot.snapshotId, pageIds: ['page-1', 'page-2'], scale: 2 });
 
     view.openCardExportModal();
-    let details = view.cardExportModal.contentEl.querySelector('.icard-export-pages-details');
-    // 进行中（全部正常）：默认折叠保持紧凑，不出长列表与滚动条
-    expect(details.hasAttribute('open')).toBe(false);
+    // 进行中：零冗余列表，弹窗保持极致紧凑纯净
+    expect(view.cardExportModal.contentEl.querySelector('.icard-export-pages-details')).toBeNull();
 
-    // 出现失败页时：自动展开以便用户即时查错
+    // 出现失败页的任务：自动展示并展开故障诊断清单
     session.recordPageResult(began.job.jobId, 'page-1', { status: 'failed', reason: 'capture-failed' });
+    session.completeExport(began.job.jobId, { status: 'partial' });
     view.renderCardExportModal();
-    details = view.cardExportModal.contentEl.querySelector('.icard-export-pages-details');
+    const details = view.cardExportModal.contentEl.querySelector('.icard-export-pages-details');
+    expect(details).not.toBeNull();
     expect(details.hasAttribute('open')).toBe(true);
 
     // 浏览器对程序化 open 会触发 toggle —— 模拟它，不应被固化成用户意图
     details.dispatchEvent(new window.Event('toggle'));
     expect(view.cardExportPagesExpanded).toBeUndefined();
 
-    // 结束当前任务
-    session.completeExport(began.job.jobId, { status: 'failed' });
-
-    // 随后的全成功任务：完成后恢复折叠，不因前次自动展开而残留打开状态
+    // 随后的全成功任务：完成后不展示列表，不因前次自动展开而残留打开状态
     const began2 = session.beginExportJob({ snapshotId: snapshot.snapshotId, pageIds: ['page-1', 'page-2'], scale: 2 });
     session.recordPageResult(began2.job.jobId, 'page-1', { status: 'saved', width: 750, height: 1000 });
     session.recordPageResult(began2.job.jobId, 'page-2', { status: 'saved', width: 750, height: 1000 });
     session.completeExport(began2.job.jobId, { status: 'completed' });
 
     view.renderCardExportModal();
-    details = view.cardExportModal.contentEl.querySelector('.icard-export-pages-details');
-    expect(details.hasAttribute('open')).toBe(false);
+    expect(view.cardExportModal.contentEl.querySelector('.icard-export-pages-details')).toBeNull();
   });
 
   it('startCardExport：冻结快照建任务并调用控制器（入参含 snapshotId/configDir）', async () => {
@@ -486,8 +482,8 @@ describe('AppleStyleView - Card Export Modal (B05)', () => {
     expect(overlay.querySelector('.icard-export-status-desc')?.textContent).toContain('正在渲染第 2 页');
     expect(overlay.querySelector('.icard-export-progress-track')).not.toBeNull();
     expect(overlay.querySelector('.icard-export-progress-label')?.textContent).toBe('0%');
-    expect(overlay.querySelectorAll('.icard-export-page-row.is-rendering')).toHaveLength(1);
-    expect(overlay.querySelector('.icard-export-page-row.is-rendering .icard-export-page-state')?.textContent).toBe('渲染中…');
+    // 进行中不铺展长列表，杜绝渲染与滚动争抢
+    expect(overlay.querySelector('.icard-export-pages')).toBeNull();
     expect(overlay.querySelector('.icard-export-cancel')).not.toBeNull();
     // 进行中页脚左侧解释「关闭 ≠ 取消」，避免用户不敢关窗
     expect(overlay.querySelector('.icard-export-footer-hint')?.textContent).toBe('关闭窗口不会中断导出');
@@ -921,17 +917,13 @@ describe('AppleStyleView - Card Export Scope (B05 全部 / 自选页)', () => {
     const { session, snapshot } = withSession(view, 4);
     const began = session.beginExportJob({ snapshotId: snapshot.snapshotId, pageIds: ['page-3', 'page-4'], scale: 2 });
     session.recordPageResult(began.job.jobId, 'page-3', { status: 'saved', width: 750, height: 1000 });
+    session.recordPageResult(began.job.jobId, 'page-4', { status: 'failed', reason: 'capture-failed' });
+    session.completeExport(began.job.jobId, { status: 'partial' });
 
     view.openCardExportModal();
     const overlay = view.cardExportModal.contentEl;
     expect([...overlay.querySelectorAll('.icard-export-page-name')].map((el) => el.textContent))
       .toEqual(['第 3 页', '第 4 页']);
-
-    // 进度事件的 current 是原始页序（page-4 → 4），据此高亮正在渲染的那一行
-    view.handleCardExportProgress({ stage: 'page', total: 2, settled: 1, saved: 1, failed: 0, current: 4 });
-    const rendering = overlay.querySelectorAll('.icard-export-page-row.is-rendering');
-    expect(rendering).toHaveLength(1);
-    expect(rendering[0].querySelector('.icard-export-page-name')?.textContent).toBe('第 4 页');
   });
 
   it('有封面时逐页明细首行是「封面」而不是「第 1 页」（不与 page-1 重名）', () => {
@@ -942,7 +934,9 @@ describe('AppleStyleView - Card Export Scope (B05 全部 / 自选页)', () => {
       coverPage: document.createElement('div'),
     };
     const { session, snapshot } = withSession(view, 2);
-    session.beginExportJob({ snapshotId: snapshot.snapshotId, pageIds: ['cover', 'page-1', 'page-2'], scale: 2 });
+    const began = session.beginExportJob({ snapshotId: snapshot.snapshotId, pageIds: ['cover', 'page-1', 'page-2'], scale: 2 });
+    session.recordPageResult(began.job.jobId, 'cover', { status: 'failed', reason: 'capture-failed' });
+    session.completeExport(began.job.jobId, { status: 'partial' });
 
     view.openCardExportModal();
     const overlay = view.cardExportModal.contentEl;
@@ -952,7 +946,7 @@ describe('AppleStyleView - Card Export Scope (B05 全部 / 自选页)', () => {
     expect(names.filter((n) => n === '第 1 页')).toHaveLength(1);
   });
 
-  it('渲染封面时：状态文案说「正在渲染封面」，且封面行被标为进行中', () => {
+  it('渲染封面时：状态文案说「正在渲染封面」', () => {
     const view = readyView(AppleStyleView);
     view.cardPreviewOutcome = {
       ...view.cardPreviewOutcome,
@@ -967,11 +961,5 @@ describe('AppleStyleView - Card Export Scope (B05 全部 / 自选页)', () => {
 
     const overlay = view.cardExportModal.contentEl;
     expect(overlay.querySelector('.icard-export-status-desc')?.textContent).toContain('正在渲染封面');
-    const rendering = overlay.querySelectorAll('.icard-export-page-row.is-rendering');
-    expect(rendering).toHaveLength(1);
-    expect(rendering[0].querySelector('.icard-export-page-name')?.textContent).toBe('封面');
-    // 封面渲染中不得把 page-1 也标成进行中
-    expect(overlay.querySelector('.icard-export-page-row.is-rendering .icard-export-page-name')?.textContent)
-      .not.toBe('第 1 页');
   });
 });

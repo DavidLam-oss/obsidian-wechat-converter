@@ -116,16 +116,17 @@ export const pageChipTone = ({ running, failed, canceled }) => {
 
 /**
  * 状态区副文案。
- * @param {{ state: string, running: boolean, progressEvent: any, currentOrdinal: number, saved: number, total: number, failed: number }} input
+ * @param {{ state: string, running: boolean, progressEvent: any, currentOrdinal: number, saved: number, total: number, failed: number, uniformSize?: string | null }} input
  * @returns {string}
  */
-export const jobStatusDescription = ({ state, running, progressEvent, currentOrdinal, saved, total, failed }) => {
+export const jobStatusDescription = ({ state, running, progressEvent, currentOrdinal, saved, total, failed, uniformSize }) => {
   if (!running) {
     if (state === 'paused-manifest') {
       return `清单写入失败，已暂停后续页（已存 ${saved} 张）；可重试记录清单并继续导出，或取消导出。`;
     }
-    const base = `${saved} 张卡片已保存`;
-    if (failed > 0) return `${base}，${failed} 张失败`;
+    const sizeNote = uniformSize ? `（${uniformSize}）` : '';
+    const base = `${saved} 张卡片已保存${sizeNote}`;
+    if (failed > 0) return `${saved} 张卡片已保存，${failed} 张失败`;
     if (state === 'canceled') return `已在保存 ${saved} 张后取消`;
     return base;
   }
@@ -187,8 +188,7 @@ export const patchCardExportProgress = (view) => {
   const descEl = body.querySelector?.('.icard-export-status-desc');
   const barEl = body.querySelector?.('.icard-export-progress-bar');
   const labelEl = body.querySelector?.('.icard-export-progress-label');
-  const listEl = body.querySelector?.('.icard-export-pages');
-  if (!descEl || !barEl || !labelEl || !listEl) return false;
+  if (!descEl || !barEl || !labelEl) return false;
 
   const pageIds = Array.isArray(job.pageIds) ? job.pageIds : [];
   const total = pageIds.length;
@@ -211,55 +211,7 @@ export const patchCardExportProgress = (view) => {
   const nextPercent = `${percent}%`;
   if (labelEl.textContent !== nextPercent) labelEl.textContent = nextPercent;
 
-  // 3. 逐页进度标签与徽标
-  const detailsEl = body.querySelector?.('.icard-export-pages-details');
-  const summaryLabel = detailsEl?.querySelector?.('.icard-export-pages-label');
-  if (summaryLabel) {
-    const nextSummary = `逐页进度 ${results.length} / ${total}`;
-    if (summaryLabel.textContent !== nextSummary) summaryLabel.textContent = nextSummary;
-  }
-  const chip = detailsEl?.querySelector?.('.icard-export-chip');
-  if (chip) {
-    const tone = pageChipTone({ running, failed, canceled });
-    chip.className = `icard-export-chip is-${tone}`;
-    const nextChipText = pageChipText({ running, failed, canceled, total });
-    if (chip.textContent !== nextChipText) chip.textContent = nextChipText;
-  }
-
-  // 4. 逐页明细行更新
-  const resultByPage = new Map(results.map((r) => [r.pageId, r]));
-  const rows = listEl.querySelectorAll?.('.icard-export-page-row') || [];
-  pageIds.forEach((pageId, index) => {
-    const row = rows[index];
-    if (!row) return;
-    const result = resultByPage.get(pageId);
-    const status = result ? result.status : 'pending';
-    const ordinal = pageOrdinal(pageId, index + 1);
-    const isCurrent = running && status === 'pending' && currentOrdinal >= 0 && ordinal === currentOrdinal;
-    const targetClass = `icard-export-page-row is-${isCurrent ? 'rendering' : status}`;
-    if (row.className !== targetClass) row.className = targetClass;
-
-    const stateEl = row.querySelector?.('.icard-export-page-state');
-    if (stateEl) {
-      const nextStateText = isCurrent ? '渲染中…' : (EXPORT_PAGE_LABELS[status] || status);
-      if (stateEl.textContent !== nextStateText) stateEl.textContent = nextStateText;
-    }
-
-    if (result && result.status === 'failed' && result.reason) {
-      let reasonEl = row.querySelector?.('.icard-export-page-reason');
-      if (!reasonEl) {
-        reasonEl = typeof row.createEl === 'function'
-          ? row.createEl('span', { cls: 'icard-export-page-reason' })
-          : (row.ownerDocument || getActiveDocumentCompat()).createElement('span');
-        reasonEl.className = 'icard-export-page-reason';
-        if (!row.contains(reasonEl)) row.appendChild(reasonEl);
-      }
-      const nextReason = formatExportReason(result.reason);
-      if (reasonEl.textContent !== nextReason) reasonEl.textContent = nextReason;
-    }
-  });
-
-  // 5. 取消状态响应
+  // 3. 取消状态响应
   if (state === 'canceling') {
     const cancelBtn = body.querySelector?.('.icard-export-cancel');
     if (cancelBtn) {
@@ -268,17 +220,65 @@ export const patchCardExportProgress = (view) => {
     }
   }
 
-  // 6. 异常时自动展开明细以便用户即时定位，正常时保持折叠以确保无滚动条与高性能
-  if (failed > 0 && detailsEl && !detailsEl.hasAttribute('open')) {
-    detailsEl.setAttribute('open', '');
-  }
+  // 4. 若 DOM 中挂载了逐页明细（例如异常诊断或测试沙箱），按需增量更新各行
+  const listEl = body.querySelector?.('.icard-export-pages');
+  if (listEl) {
+    const detailsEl = body.querySelector?.('.icard-export-pages-details');
+    const summaryLabel = detailsEl?.querySelector?.('.icard-export-pages-label');
+    if (summaryLabel) {
+      const nextSummary = `逐页进度 ${results.length} / ${total}`;
+      if (summaryLabel.textContent !== nextSummary) summaryLabel.textContent = nextSummary;
+    }
+    const chip = detailsEl?.querySelector?.('.icard-export-chip');
+    if (chip) {
+      const tone = pageChipTone({ running, failed, canceled });
+      chip.className = `icard-export-chip is-${tone}`;
+      const nextChipText = pageChipText({ running, failed, canceled, total });
+      if (chip.textContent !== nextChipText) chip.textContent = nextChipText;
+    }
 
-  // 7. 防打扰自动滚动：仅在明细处于展开态且用户最近未手动交互时才跟随当前行
-  const isDetailsOpen = Boolean(detailsEl && detailsEl.hasAttribute('open'));
-  if (isDetailsOpen && !isCardExportUserInteracting(view)) {
-    const current = listEl.querySelector?.('.icard-export-page-row.is-rendering');
-    if (current && typeof current.scrollIntoView === 'function') {
-      current.scrollIntoView({ block: 'nearest' });
+    const resultByPage = new Map(results.map((r) => [r.pageId, r]));
+    const rows = listEl.querySelectorAll?.('.icard-export-page-row') || [];
+    pageIds.forEach((pageId, index) => {
+      const row = rows[index];
+      if (!row) return;
+      const result = resultByPage.get(pageId);
+      const status = result ? result.status : 'pending';
+      const ordinal = pageOrdinal(pageId, index + 1);
+      const isCurrent = running && status === 'pending' && currentOrdinal >= 0 && ordinal === currentOrdinal;
+      const targetClass = `icard-export-page-row is-${isCurrent ? 'rendering' : status}`;
+      if (row.className !== targetClass) row.className = targetClass;
+
+      const stateEl = row.querySelector?.('.icard-export-page-state');
+      if (stateEl) {
+        const nextStateText = isCurrent ? '渲染中…' : (EXPORT_PAGE_LABELS[status] || status);
+        if (stateEl.textContent !== nextStateText) stateEl.textContent = nextStateText;
+      }
+
+      if (result && result.status === 'failed' && result.reason) {
+        let reasonEl = row.querySelector?.('.icard-export-page-reason');
+        if (!reasonEl) {
+          reasonEl = typeof row.createEl === 'function'
+            ? row.createEl('span', { cls: 'icard-export-page-reason' })
+            : (row.ownerDocument || getActiveDocumentCompat()).createElement('span');
+          reasonEl.className = 'icard-export-page-reason';
+          if (!row.contains(reasonEl)) row.appendChild(reasonEl);
+        }
+        const nextReason = formatExportReason(result.reason);
+        if (reasonEl.textContent !== nextReason) reasonEl.textContent = nextReason;
+      }
+    });
+
+    if (failed > 0 && detailsEl && !detailsEl.hasAttribute('open')) {
+      detailsEl.setAttribute('open', '');
+    }
+
+    const isDetailsOpen = Boolean(detailsEl && detailsEl.hasAttribute('open'));
+    if (isDetailsOpen && !isCardExportUserInteracting(view)) {
+      const current = listEl.querySelector?.('.icard-export-page-row.is-rendering');
+      if (current && typeof current.scrollIntoView === 'function') {
+        current.scrollIntoView({ block: 'nearest' });
+      }
     }
   }
 

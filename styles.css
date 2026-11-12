@@ -4889,6 +4889,18 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   gap: var(--apple-spacing-md, 16px);
   min-height: 168px;
   padding: 4px 20px 20px;
+  animation: icard-export-fade-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes icard-export-fade-in {
+  from {
+    opacity: 0.6;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .icard-export-content button {

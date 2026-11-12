@@ -437,9 +437,10 @@ renderCardExportJob(body, job) {
   } else {
     applyIcon(mark.createEl('span', { cls: 'icard-export-status-icon' }), EXPORT_STATE_ICONS[state] || 'info');
   }
+  const uniformSize = running ? null : uniformSavedSize(results);
   const statusText = status.createEl('div', { cls: 'icard-export-status-text' });
   statusText.createEl('div', { cls: 'icard-export-status-title', text: EXPORT_STATE_LABELS[state] || state });
-  statusText.createEl('div', { cls: 'icard-export-status-desc', text: jobStatusDescription({ state, running, progressEvent, currentOrdinal, saved, total, failed }) });
+  statusText.createEl('div', { cls: 'icard-export-status-desc', text: jobStatusDescription({ state, running, progressEvent, currentOrdinal, saved, total, failed, uniformSize }) });
 
   // 图片资源失败 / 省略内容提示（§5.5 不静默少图）
   const resourceSummary = (/** @type {any} */ (this)).cardExportResourceSummary;
@@ -452,10 +453,7 @@ renderCardExportJob(body, job) {
     });
   }
 
-  // 结果定位（终态且已落账批次信息时）
-  if (!running && state !== 'paused-manifest') this.renderCardExportResultLinks(body);
-
-  // 进度条：只在进行中展示（终态的张数写在状态区，不再重复）
+  // 进度条：只在进行中展示（终态由结果卡片接管）
   if (running) {
     const progress = body.createEl('div', { cls: 'icard-export-progress' });
     const track = progress.createEl('div', { cls: 'icard-export-progress-track' });
@@ -463,11 +461,7 @@ renderCardExportJob(body, job) {
     const percent = total > 0 ? Math.round((results.length / total) * 100) : 0;
     bar.style.setProperty('width', `${percent}%`);
     progress.createEl('div', { cls: 'icard-export-progress-label', text: `${percent}%` });
-  }
 
-  this.renderCardExportPages(body, { pageIds, results, running, currentOrdinal, failed, canceled, total });
-
-  if (running) {
     const footer = body.createEl('div', { cls: 'icard-export-footer' });
     footer.createEl('span', { cls: 'icard-export-footer-hint', text: '关闭窗口不会中断导出' });
     const cancelBtn = footer.createEl('button', {
@@ -481,6 +475,16 @@ renderCardExportJob(body, job) {
       this.cancelCardExport();
     });
     return;
+  }
+
+  // 结果定位（终态且已落账批次信息时）
+  if (state !== 'paused-manifest') this.renderCardExportResultLinks(body);
+
+  // 终态明细列表：仅在存在异常（失败 / 取消 / 尺寸不一）时作为诊断清单呈现；
+  // 全部成功且尺寸一致时保持极致纯净，不展示冗余的单页明细。
+  const hasExceptions = failed > 0 || canceled > 0 || (results.length > 0 && !uniformSavedSize(results));
+  if (hasExceptions) {
+    this.renderCardExportPages(body, { pageIds, results, running: false, currentOrdinal: -1, failed, canceled, total });
   }
 
   // 终态 / 暂停态：恢复类操作（重试）放主区，导航类操作放页脚
