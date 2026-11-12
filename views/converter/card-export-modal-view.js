@@ -540,9 +540,8 @@ renderCardExportPages(body, input) {
   const { pageIds, results, running, currentOrdinal, failed, canceled, total } = input;
   if (pageIds.length === 0) return;
 
-  // 自动展开（进行中 / 有失败页）是「系统替你打开」，不能被记成用户意图，
-  // 否则完成后会把这次自动展开粘滞下来——明明全部成功却停在展开态。
-  const autoOpen = running || failed > 0;
+  // 逐页明细：默认保持折叠，仅在存在失败页时自动展开（导出中不强行铺开长列表，避免滚动条打扰与性能争抢）
+  const autoOpen = failed > 0;
   const open = autoOpen || (/** @type {any} */ (this)).cardExportPagesExpanded === true;
   const details = /** @type {any} */ (body.createEl('details', { cls: 'icard-export-pages-details' }));
   if (open) details.setAttribute('open', '');
@@ -596,7 +595,7 @@ renderCardExportPages(body, input) {
     }
   });
 
-  if (running && !isCardExportUserInteracting(this)) {
+  if (running && open && !isCardExportUserInteracting(this)) {
     const current = list.querySelector('.icard-export-page-row.is-rendering');
     if (current && typeof current.scrollIntoView === 'function') current.scrollIntoView({ block: 'nearest' });
   }

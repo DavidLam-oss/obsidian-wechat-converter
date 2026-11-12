@@ -268,8 +268,14 @@ export const patchCardExportProgress = (view) => {
     }
   }
 
-  // 6. 防打扰自动滚动：仅在用户最近未手动交互（拖拽滚动条 / 滑轮 / 触控）时才跟随当前行
-  if (!isCardExportUserInteracting(view)) {
+  // 6. 异常时自动展开明细以便用户即时定位，正常时保持折叠以确保无滚动条与高性能
+  if (failed > 0 && detailsEl && !detailsEl.hasAttribute('open')) {
+    detailsEl.setAttribute('open', '');
+  }
+
+  // 7. 防打扰自动滚动：仅在明细处于展开态且用户最近未手动交互时才跟随当前行
+  const isDetailsOpen = Boolean(detailsEl && detailsEl.hasAttribute('open'));
+  if (isDetailsOpen && !isCardExportUserInteracting(view)) {
     const current = listEl.querySelector?.('.icard-export-page-row.is-rendering');
     if (current && typeof current.scrollIntoView === 'function') {
       current.scrollIntoView({ block: 'nearest' });

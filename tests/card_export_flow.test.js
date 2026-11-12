@@ -312,21 +312,34 @@ describe('AppleStyleView - Card Export Modal (B05)', () => {
     expect(overlay.querySelectorAll('.icard-export-page-size')).toHaveLength(0);
   });
 
-  it('逐页明细：程序化展开（进行中）不被记成用户意图，完成后恢复折叠', () => {
+  it('逐页明细：进行中默认折叠无滚动条，出现失败页时自动展开且不被固化为用户意图', () => {
     const view = readyView(AppleStyleView);
     const { session, snapshot } = withSession(view);
     const began = session.beginExportJob({ snapshotId: snapshot.snapshotId, pageIds: ['page-1', 'page-2'], scale: 2 });
 
     view.openCardExportModal();
     let details = view.cardExportModal.contentEl.querySelector('.icard-export-pages-details');
-    // 进行中：自动展开
+    // 进行中（全部正常）：默认折叠保持紧凑，不出长列表与滚动条
+    expect(details.hasAttribute('open')).toBe(false);
+
+    // 出现失败页时：自动展开以便用户即时查错
+    session.recordPageResult(began.job.jobId, 'page-1', { status: 'failed', reason: 'capture-failed' });
+    view.renderCardExportModal();
+    details = view.cardExportModal.contentEl.querySelector('.icard-export-pages-details');
     expect(details.hasAttribute('open')).toBe(true);
+
     // 浏览器对程序化 open 会触发 toggle —— 模拟它，不应被固化成用户意图
     details.dispatchEvent(new window.Event('toggle'));
+    expect(view.cardExportPagesExpanded).toBeUndefined();
 
-    session.recordPageResult(began.job.jobId, 'page-1', { status: 'saved', width: 750, height: 1000 });
-    session.recordPageResult(began.job.jobId, 'page-2', { status: 'saved', width: 750, height: 1000 });
-    session.completeExport(began.job.jobId, { status: 'completed' });
+    // 结束当前任务
+    session.completeExport(began.job.jobId, { status: 'failed' });
+
+    // 随后的全成功任务：完成后恢复折叠，不因前次自动展开而残留打开状态
+    const began2 = session.beginExportJob({ snapshotId: snapshot.snapshotId, pageIds: ['page-1', 'page-2'], scale: 2 });
+    session.recordPageResult(began2.job.jobId, 'page-1', { status: 'saved', width: 750, height: 1000 });
+    session.recordPageResult(began2.job.jobId, 'page-2', { status: 'saved', width: 750, height: 1000 });
+    session.completeExport(began2.job.jobId, { status: 'completed' });
 
     view.renderCardExportModal();
     details = view.cardExportModal.contentEl.querySelector('.icard-export-pages-details');

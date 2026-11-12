@@ -156,7 +156,7 @@ describe('card-export-modal-progress unit tests', () => {
       resolveCardExportView: () => ({ job }),
     };
 
-    // 第一次增量更新：正在渲染第 1 页
+    // 第一次增量更新：正在渲染第 1 页（默认折叠明细，抑制无意义的 auto-scroll）
     const ok1 = patchCardExportProgress(view);
     expect(ok1).toBe(true);
     // 节点本身未被替换（引用保持同一对象）
@@ -164,9 +164,11 @@ describe('card-export-modal-progress unit tests', () => {
     expect(statusDesc.textContent).toContain('正在渲染第 1 页');
     expect(row1.className).toContain('is-rendering');
     expect(state1.textContent).toBe('渲染中…');
-    expect(scrollIntoViewMock).toHaveBeenCalledTimes(1);
+    // 折叠状态下不调用 scrollIntoView，避免后台渲染空耗 CPU
+    expect(scrollIntoViewMock).toHaveBeenCalledTimes(0);
 
-    // 第 1 页保存成功，进入第 2 页
+    // 用户手动展开明细，进入第 2 页
+    details.setAttribute('open', '');
     job.results.push({ pageId: 'page-1', status: 'saved', width: 800, height: 1200 });
     view.cardExportProgress = { stage: 'page', current: 2 };
     const ok2 = patchCardExportProgress(view);
@@ -179,15 +181,23 @@ describe('card-export-modal-progress unit tests', () => {
     expect(state1.textContent).toBe('已保存');
     expect(row2.className).toBe('icard-export-page-row is-rendering');
     expect(state2.textContent).toBe('渲染中…');
-    expect(scrollIntoViewMock).toHaveBeenCalledTimes(2);
+    // 明细展开时随进度自动滚动
+    expect(scrollIntoViewMock).toHaveBeenCalledTimes(1);
 
     // 用户正在交互时抑制 auto-scroll
     view.cardExportUserInteractingUntil = Date.now() + 2000;
-    job.results.push({ pageId: 'page-2', status: 'saved', width: 800, height: 1200 });
     view.cardExportProgress = { stage: 'page', current: 2 };
     patchCardExportProgress(view);
-    // 依然只有之前的 2 次，未触发第 3 次 scrollIntoView
-    expect(scrollIntoViewMock).toHaveBeenCalledTimes(2);
+    // 依然只有之前的 1 次，交互期间未触发 scrollIntoView
+    expect(scrollIntoViewMock).toHaveBeenCalledTimes(1);
+
+    // 发生失败时自动展开明细以便查错
+    details.removeAttribute('open');
+    view.cardExportUserInteractingUntil = 0;
+    job.results.push({ pageId: 'page-2', status: 'failed', reason: 'capture-failed' });
+    patchCardExportProgress(view);
+    expect(details.hasAttribute('open')).toBe(true);
+    expect(row2.querySelector('.icard-export-page-reason')?.textContent).toBe('捕获失败');
 
     // 任务终态时 patchCardExportProgress 返回 false，交由全量渲染接管
     job.state = 'completed';
