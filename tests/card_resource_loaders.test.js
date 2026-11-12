@@ -15,6 +15,7 @@
 
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { createDefaultLoaders } from "../services/card-resource-loaders.js";
+import { obsidianApi } from "../services/obsidian-compat.js";
 
 const readBytes = (blob) => new Promise((resolve, reject) => {
   const reader = new FileReader();
@@ -73,5 +74,43 @@ describe("createDefaultLoaders().fetchBlob", () => {
     await expect(
       createDefaultLoaders().fetchBlob("data:image/png;base64,AQID", controller.signal),
     ).rejects.toMatchObject({ name: "AbortError" });
+  });
+
+  it("远程图片经 requestUrl 抓取，遇偶发失败重试成功返回 Blob", async () => {
+    let callCount = 0;
+    const requestUrlSpy = vi.spyOn(obsidianApi, "requestUrl").mockImplementation(async () => {
+      callCount += 1;
+      if (callCount === 1) {
+        throw new Error("net::ERR_CONNECTION_RESET");
+      }
+      return {
+        status: 200,
+        headers: { "content-type": "image/png" },
+        arrayBuffer: new Uint8Array([9, 8, 7]).buffer,
+      };
+    });
+
+    const { blob } = await createDefaultLoaders().fetchBlob(
+      "https://example.com/test.png",
+      new AbortController().signal
+    );
+    expect(callCount).toBe(2);
+    expect(blob.type).toBe("image/png");
+    expect(Array.from(await readBytes(blob))).toEqual([9, 8, 7]);
+    requestUrlSpy.mockRestore();
+  });
+
+  it("远程图片重试两次皆失败时抛出错误", async () => {
+    const requestUrlSpy = vi.spyOn(obsidianApi, "requestUrl").mockImplementation(async () => {
+      throw new Error("net::ERR_CONNECTION_RESET");
+    });
+
+    await expect(
+      createDefaultLoaders().fetchBlob(
+        "https://example.com/fail.png",
+        new AbortController().signal
+      )
+    ).rejects.toThrow("net::ERR_CONNECTION_RESET");
+    requestUrlSpy.mockRestore();
   });
 });

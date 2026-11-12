@@ -1,7 +1,7 @@
 /*
 ## 核心功能
 
-卡片资源的默认加载器（自 card-resources.js 拆出）：远程图片经 Obsidian requestUrl 主进程转发取字节、
+卡片资源的默认加载器（自 card-resources.js 拆出）：远程图片经 Obsidian requestUrl 主进程转发取字节（支持偶发抖动自动重试）、
 本地 vault 图经 vault.readBinary、data: URL 内存解码（不使用全局 fetch）、图片解码尺寸探测、已加载字节内联为 data: URL、字体就绪等待；以及统一的取消错误构造。
 
 ## 输入
@@ -30,6 +30,13 @@
 */
 
 import { getObsidianRequestUrl } from './obsidian-compat.js';
+
+/**
+ * @typedef {object} RequestUrlResultLike
+ * @property {number} status
+ * @property {Record<string, string>} [headers]
+ * @property {ArrayBuffer} arrayBuffer
+ */
 
 /**
  * data: URL → Blob（base64 与百分号编码两种载荷）。
@@ -88,13 +95,43 @@ export function createDefaultLoaders() {
       if (/^https?:\/\//i.test(src)) {
         const requestUrl = getObsidianRequestUrl();
         if (typeof requestUrl !== 'function') throw new Error('当前环境缺少 requestUrl，无法加载远程图片');
-        const response = await requestUrl({ url: src, throw: false });
+        /** @type {RequestUrlResultLike | null} */
+        let response = null;
+        /** @type {Error | null} */
+        let lastError = null;
+        // 支持偶发网络抖动（如 COS connection: close 导致连接重置）短暂退避重试一次
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          if (signal.aborted) throw abortError();
+          try {
+            const rawResponse = await requestUrl({ url: src, throw: false });
+            if (rawResponse && typeof rawResponse === 'object' && typeof (/** @type {Record<string, unknown>} */ (rawResponse)).status === 'number') {
+              response = /** @type {RequestUrlResultLike} */ (rawResponse);
+              if (response.status >= 200 && response.status < 300) {
+                lastError = null;
+                break;
+              }
+              lastError = new Error(`HTTP ${response.status}（requestUrl）`);
+            } else {
+              lastError = new Error('requestUrl 返回格式无效');
+            }
+          } catch (err) {
+            lastError = err instanceof Error ? err : new Error(String(err));
+          }
+          if (attempt === 0 && !signal.aborted) {
+            await new Promise((r) => window.setTimeout(r, 350));
+          }
+        }
         if (signal.aborted) throw abortError();
         if (!response || response.status < 200 || response.status >= 300) {
-          throw new Error(`HTTP ${response?.status ?? 'unknown'}（requestUrl）`);
+          throw lastError || new Error(`HTTP ${response ? String(response.status) : 'unknown'}（requestUrl）`);
         }
         const headers = response.headers || {};
-        const mime = String(headers['content-type'] || headers['Content-Type'] || '').split(';')[0] || 'image/png';
+        const contentType = typeof headers['content-type'] === 'string'
+          ? headers['content-type']
+          : typeof headers['Content-Type'] === 'string'
+          ? headers['Content-Type']
+          : '';
+        const mime = contentType.split(';')[0] || 'image/png';
         return { blob: new Blob([/** @type {BlobPart} */ (response.arrayBuffer)], { type: mime }) };
       }
       throw new Error(`无法读取图片资源：${src.slice(0, 80)}`);

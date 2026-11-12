@@ -7,11 +7,15 @@ import {
   CARD_IMAGE_TIMEOUT_MS,
   CARD_MAX_IMAGE_BYTES,
   CARD_MAX_IMAGE_PIXELS,
+  CardResourceCache,
   appendCoverImageRef,
+  clearCardResourceCache,
+  createCardResourceCache,
   createCardResourcePool,
   createCardResourceSession,
   createInlineSnapshotResolver,
   createSnapshotResolver,
+  getDefaultCardResourceCache,
   resolveCardImageSource,
 } from "../services/card-resources.js";
 
@@ -464,6 +468,141 @@ describe("内联 data URL（捕获路径不能被跨域取图打断）", () => {
     expect(snap.hasBlockingFailures).toBe(true);
     expect(snap.diagnostics[0]).toMatchObject({ status: "error", ref: "a.png" });
     snap.release();
+  });
+});
+
+describe("CardResourceCache 内存资源缓存与 LRU 机制", () => {
+  it("基础 get / set / delete / clear", () => {
+    const cache = createCardResourceCache({ maxEntries: 2 });
+    const entry1 = { ref: "1.png", src: "https://x.test/1.png", mime: "image/png", bytes: 100, width: 10, height: 10, vaultPath: "", dataUrl: "data:..." };
+    const entry2 = { ref: "2.png", src: "https://x.test/2.png", mime: "image/png", bytes: 200, width: 20, height: 20, vaultPath: "", dataUrl: "data:..." };
+    cache.set(entry1.src, entry1);
+    cache.set(entry2.src, entry2);
+    expect(cache.size).toBe(2);
+    expect(cache.get(entry1.src)).toEqual(entry1);
+
+    cache.delete(entry1.src);
+    expect(cache.has(entry1.src)).toBe(false);
+    expect(cache.size).toBe(1);
+
+    cache.clear();
+    expect(cache.size).toBe(0);
+  });
+
+  it("超出 maxEntries 时自动根据 LRU 淘汰最久未访问条目", () => {
+    const cache = createCardResourceCache({ maxEntries: 2 });
+    const e1 = { ref: "1", src: "src1", mime: "image/png", bytes: 10, width: 1, height: 1, vaultPath: "", dataUrl: "" };
+    const e2 = { ref: "2", src: "src2", mime: "image/png", bytes: 10, width: 1, height: 1, vaultPath: "", dataUrl: "" };
+    const e3 = { ref: "3", src: "src3", mime: "image/png", bytes: 10, width: 1, height: 1, vaultPath: "", dataUrl: "" };
+
+    cache.set("src1", e1);
+    cache.set("src2", e2);
+    // 访问 src1，使其成为最近使用，src2 成为最久未用
+    cache.get("src1");
+    cache.set("src3", e3);
+
+    expect(cache.has("src1")).toBe(true);
+    expect(cache.has("src3")).toBe(true);
+    expect(cache.has("src2")).toBe(false);
+  });
+
+  it("超出 maxBytes 预算时自动淘汰最旧条目", () => {
+    const cache = createCardResourceCache({ maxEntries: 10, maxBytes: 150 });
+    const e1 = { ref: "1", src: "src1", mime: "image/png", bytes: 100, width: 1, height: 1, vaultPath: "", dataUrl: "" };
+    const e2 = { ref: "2", src: "src2", mime: "image/png", bytes: 80, width: 1, height: 1, vaultPath: "", dataUrl: "" };
+
+    cache.set("src1", e1);
+    expect(cache.totalBytes).toBe(100);
+    cache.set("src2", e2); // 100 + 80 = 180 > 150，应淘汰 src1
+    expect(cache.has("src1")).toBe(false);
+    expect(cache.has("src2")).toBe(true);
+    expect(cache.totalBytes).toBe(80);
+  });
+
+  it("单例 getDefaultCardResourceCache 与 clearCardResourceCache 工作正常", () => {
+    clearCardResourceCache();
+    const def = getDefaultCardResourceCache();
+    expect(def).toBeInstanceOf(CardResourceCache);
+    def.set("test", { ref: "t", src: "test", mime: "image/png", bytes: 10, width: 1, height: 1, vaultPath: "", dataUrl: "" });
+    expect(def.size).toBe(1);
+    clearCardResourceCache();
+    expect(def.size).toBe(0);
+  });
+});
+
+describe("prepare 命中缓存时零耗时复用并跳过重复 IO", () => {
+  it("第二次调用 prepare 命中 cache 时不调用 fetchBlob 与 decodeImage", async () => {
+    const cache = createCardResourceCache();
+    const fetchBlob = vi.fn(async () => ({ blob: new Blob([new Uint8Array(10)], { type: "image/png" }) }));
+    const decodeImage = vi.fn(async () => ({ width: 50, height: 50 }));
+    const loaders = makeLoaders({ fetchBlob, decodeImage });
+
+    const pool1 = createCardResourcePool({
+      app: makeApp({ "a.png": true }),
+      loaders,
+      cache,
+    });
+    const snap1 = await pool1.prepare([{ ref: "a.png", kind: "local" }]);
+    expect(fetchBlob).toHaveBeenCalledTimes(1);
+    expect(decodeImage).toHaveBeenCalledTimes(1);
+    expect(snap1.images["a.png"]).toBeTruthy();
+    snap1.release();
+
+    const pool2 = createCardResourcePool({
+      app: makeApp({ "a.png": true }),
+      loaders,
+      cache,
+    });
+    const snap2 = await pool2.prepare([{ ref: "a.png", kind: "local" }]);
+    // 依然只有第一次调用的 1 次，未重复调用 fetchBlob / decodeImage
+    expect(fetchBlob).toHaveBeenCalledTimes(1);
+    expect(decodeImage).toHaveBeenCalledTimes(1);
+    expect(snap2.images["a.png"]).toMatchObject({
+      ref: "a.png",
+      src: "app://local/a.png",
+      width: 50,
+      height: 50,
+      bytes: 10,
+    });
+    snap2.release();
+  });
+
+  it("本地文件 mtime 变更后使缓存失效并重新读取", async () => {
+    const cache = createCardResourceCache();
+    let currentMtime = 1000;
+    const fetchBlob = vi.fn(async () => ({ blob: new Blob([new Uint8Array(10)], { type: "image/png" }) }));
+    const loaders = makeLoaders({ fetchBlob });
+
+    const app = {
+      metadataCache: {},
+      vault: {
+        getAbstractFileByPath: (path) => ({ path, stat: { mtime: currentMtime } }),
+        getResourcePath: (file) => `app://local/${file.path}`,
+      },
+    };
+
+    const pool1 = createCardResourcePool({ app, loaders, cache });
+    const snap1 = await pool1.prepare([{ ref: "a.png", kind: "local" }]);
+    expect(fetchBlob).toHaveBeenCalledTimes(1);
+    snap1.release();
+
+    // 修改 mtime
+    currentMtime = 2000;
+    const pool2 = createCardResourcePool({ app, loaders, cache });
+    const snap2 = await pool2.prepare([{ ref: "a.png", kind: "local" }]);
+    expect(fetchBlob).toHaveBeenCalledTimes(2); // 重新读取
+    snap2.release();
+  });
+});
+
+describe("createSnapshotResolver 针对未就绪远程图片提供优雅降级回退", () => {
+  it("快照未收录的远程 http(s) 图片降级返回原 URL 供预览 DOM 直接渲染，非远程返回 null", () => {
+    const snap = /** @type {any} */ ({ images: {} });
+    const resolver = createSnapshotResolver(snap);
+    expect(resolver("https://cos.example.com/pic.png")).toBe("https://cos.example.com/pic.png");
+    expect(resolver("http://example.com/pic.jpg")).toBe("http://example.com/pic.jpg");
+    expect(resolver("local/pic.png")).toBeNull();
+    expect(resolver("")).toBeNull();
   });
 });
 

@@ -3,21 +3,23 @@
 
 卡片图片/字体资源就绪层：解析 local/wiki/相对/受控远程图片来源，做 MIME、编码体积与解码像素校验，
 并把已加载的字节**内联为 data: URL**（捕获引擎不重新取图，避免跨域图片被占位图顶替）；提供有超时、
-可取消的图片与字体等待；以「冻结快照 + 引用计数」管理所有权，预览与导出可持有同一份资源，最后一个持有者释放时回收。
+可取消的图片与字体等待；以「冻结快照 + 引用计数」管理所有权，预览与导出可持有同一份资源，最后一个持有者释放时回收；
+提供内存级 LRU 资源缓存（CardResourceCache），避免切换参数、主题、比例及重绘时重复触发图片读取与解码。
 
 ## 输入
 
-- `createCardResourcePool({ app, sourcePath, session?, loaders? })`：插件 app（vault/metadataCache）、笔记 sourcePath、可选共享会话预算与可注入加载器（测试用）。
+- `createCardResourcePool({ app, sourcePath, session?, loaders?, cache? })`：插件 app（vault/metadataCache）、笔记 sourcePath、可选共享会话预算、可注入加载器与可选资源缓存。
 - `pool.prepare(imageRefs, opts)`：card-document 产出的 images 引用（{ref, kind, gif, excluded}）。
 - `pool.waitForFonts(document, opts)`：目标 Document。
 
 ## 输出
 
 - 常量 `CARD_IMAGE_TIMEOUT_MS` 等预算值（§5.5/§5.6 初始值）。
+- `CardResourceCache`、`createCardResourceCache`、`getDefaultCardResourceCache`、`clearCardResourceCache`：内存级图片资源缓存管理。
 - `resolveCardImageSource(ref, ctx)`：ref → {src, mime, vaultPath} | null。
 - `createCardResourcePool(...)`：`prepare()` 返回冻结的 CardResourceSnapshot（images/诊断/hasBlockingFailures），含 `retain()/release()` 引用计数；`waitForFonts()` 返回 {status:"ok"|"timeout"}。
 - `appendCoverImageRef(imageRefs, coverImage)`：把封面本地图引用并入准备清单（远程/data: 跳过、去重）。
-- `createSnapshotResolver(snapshot)`：ref → 可渲染 src | null（预览用，保留原始资源地址）。
+- `createSnapshotResolver(snapshot)`：ref → 可渲染 src | null（预览用，保留原始资源地址；未就绪的远程图片支持优雅降级）。
 - `createInlineSnapshotResolver(snapshot)`：ref → 内联 data: URL | 原始 src | null（捕获/导出用，避免截图引擎跨域取图失败）。
 - `createCardResourceSession()`：会话级累计字节预算。
 
@@ -133,9 +135,117 @@ export const CARD_LOAD_CONCURRENCY = 3;
  * @property {string} [sourcePath] 当前笔记路径（相对路径解析锚点）
  * @property {CardResourceSession} [session] 共享会话预算（createCardResourceSession 产出）
  * @property {Partial<CardResourceLoaders>} [loaders]
+ * @property {CardResourceCache | null | false} [cache] 可选资源缓存实例（未传时默认使用全局单例；传 loaders 时默认关闭以保证单测隔离）
  */
 
 const IMAGE_MIME_PREFIX = "image/";
+
+/**
+ * 内存级卡片图片资源缓存：
+ * 避免在切换排版设置、缩放、主题、比例或重绘时重复触发图片读取、网络请求与解码。
+ * 默认上限 100 张、累计 150MB，使用 LRU 淘汰策略。
+ */
+export class CardResourceCache {
+  /** @param {{ maxEntries?: number, maxBytes?: number }} [options] */
+  constructor(options = {}) {
+    this.maxEntries = options.maxEntries || 100;
+    this.maxBytes = options.maxBytes || 150 * 1024 * 1024;
+    /** @type {Map<string, { entry: CardResourceImageEntry, bytes: number, mtime?: number, accessedAt: number }>} */
+    this.entries = new Map();
+    this.totalBytes = 0;
+  }
+
+  /** @param {string} key */
+  get(key) {
+    const item = this.entries.get(key);
+    if (!item) return null;
+    item.accessedAt = Date.now();
+    this.entries.delete(key);
+    this.entries.set(key, item);
+    return item.entry;
+  }
+
+  /** @param {string} key */
+  getWithMeta(key) {
+    const item = this.entries.get(key);
+    if (!item) return null;
+    item.accessedAt = Date.now();
+    this.entries.delete(key);
+    this.entries.set(key, item);
+    return item;
+  }
+
+  /**
+   * @param {string} key
+   * @param {CardResourceImageEntry} entry
+   * @param {{ mtime?: number }} [meta]
+   */
+  set(key, entry, meta = {}) {
+    if (!key || !entry) return;
+    const bytes = Number(entry.bytes) || 0;
+    if (this.entries.has(key)) {
+      const old = this.entries.get(key);
+      this.totalBytes -= old?.bytes || 0;
+      this.entries.delete(key);
+    }
+    while (this.entries.size >= this.maxEntries || (this.totalBytes + bytes > this.maxBytes && this.entries.size > 0)) {
+      const iterResult = this.entries.keys().next();
+      if (iterResult.done || typeof iterResult.value !== "string") break;
+      const oldestKey = iterResult.value;
+      const old = this.entries.get(oldestKey);
+      this.totalBytes -= old?.bytes || 0;
+      this.entries.delete(oldestKey);
+    }
+    this.entries.set(key, { entry, bytes, mtime: meta.mtime, accessedAt: Date.now() });
+    this.totalBytes += bytes;
+  }
+
+  /** @param {string} key */
+  has(key) {
+    return this.entries.has(key);
+  }
+
+  /** @param {string} key */
+  delete(key) {
+    const item = this.entries.get(key);
+    if (item) {
+      this.totalBytes -= item.bytes;
+      this.entries.delete(key);
+      return true;
+    }
+    return false;
+  }
+
+  clear() {
+    this.entries.clear();
+    this.totalBytes = 0;
+  }
+
+  get size() {
+    return this.entries.size;
+  }
+}
+
+/** @type {CardResourceCache | null} */
+let defaultCardResourceCache = null;
+
+/** @returns {CardResourceCache} */
+export function getDefaultCardResourceCache() {
+  if (!defaultCardResourceCache) defaultCardResourceCache = new CardResourceCache();
+  return defaultCardResourceCache;
+}
+
+/**
+ * @param {{ maxEntries?: number, maxBytes?: number }} [options]
+ * @returns {CardResourceCache}
+ */
+export function createCardResourceCache(options) {
+  return new CardResourceCache(options);
+}
+
+export function clearCardResourceCache() {
+  if (defaultCardResourceCache) defaultCardResourceCache.clear();
+}
 
 /**
  * 会话级累计预算：超过上限（默认 CARD_SESSION_MAX_BYTES）时 addBytes 返回 false。
@@ -304,6 +414,17 @@ async function boundedAllSettle(items, worker, concurrency, shouldStop) {
 }
 
 /**
+ * @param {unknown} file
+ * @returns {number}
+ */
+function getFileMtime(file) {
+  if (!file || typeof file !== "object") return 0;
+  const stat = "stat" in file && file.stat && typeof file.stat === "object" ? file.stat : null;
+  if (!stat) return 0;
+  return "mtime" in stat && typeof stat.mtime === "number" ? stat.mtime : 0;
+}
+
+/**
  * @param {unknown} error
  * @returns {boolean}
  */
@@ -320,6 +441,12 @@ export function createCardResourcePool(options = {}) {
   const sourcePath = options.sourcePath || "";
   const session = options.session || createCardResourceSession();
   const loaders = { ...createDefaultLoaders(), ...(options.loaders || {}) };
+  const cache =
+    options.cache !== undefined
+      ? options.cache
+      : options.loaders
+      ? null
+      : getDefaultCardResourceCache();
 
   /**
    * 等待字体就绪：有超时上限；超时返回 {status:"timeout"}，由调用方以可用字体重测并锁定快照。
@@ -387,6 +514,43 @@ export function createCardResourcePool(options = {}) {
         if (resolved.state === "filtered") {
           return { status: /** @type {CardResourceStatus} */ ("filtered"), refEntry };
         }
+
+        // —— 内存缓存命中探测（切换主题、比例、字号或重绘时零耗时复用）——
+        if (cache && typeof cache.getWithMeta === "function") {
+          const cachedMeta = cache.getWithMeta(resolved.src);
+          if (cachedMeta && cachedMeta.entry) {
+            let isStale = false;
+            if (resolved.vaultPath && app?.vault) {
+              const vaultFile = app.vault.getAbstractFileByPath?.(resolved.vaultPath);
+              const mtime = getFileMtime(vaultFile);
+              if (mtime && cachedMeta.mtime && cachedMeta.mtime !== mtime) {
+                isStale = true;
+              }
+            }
+            if (!isStale) {
+              const cached = cachedMeta.entry;
+              if (!session.addBytes(cached.bytes)) {
+                return {
+                  status: /** @type {CardResourceStatus} */ ("budget-exceeded"),
+                  refEntry,
+                  reason: `会话累计资源超过 ${session.maxBytes}`,
+                };
+              }
+              /** @type {CardResourceImageEntry} */
+              const entry = {
+                ref: refEntry.ref,
+                src: resolved.src,
+                mime: cached.mime,
+                bytes: cached.bytes,
+                width: cached.width,
+                height: cached.height,
+                vaultPath: resolved.vaultPath || cached.vaultPath || "",
+                dataUrl: cached.dataUrl,
+              };
+              return { status: /** @type {CardResourceStatus} */ ("ok"), refEntry, entry };
+            }
+          }
+        }
         // —— 单图加载：计时从实际启动开始（不含排队）——
         const imageController = new AbortController();
         const onOuterAbort = () => imageController.abort();
@@ -451,6 +615,14 @@ export function createCardResourcePool(options = {}) {
             vaultPath: resolved.vaultPath || "",
             dataUrl,
           };
+          if (cache && typeof cache.set === "function") {
+            let mtime = 0;
+            if (resolved.vaultPath && app?.vault) {
+              const vaultFile = app.vault.getAbstractFileByPath?.(resolved.vaultPath);
+              mtime = getFileMtime(vaultFile);
+            }
+            cache.set(resolved.src, entry, { mtime });
+          }
           return { status: /** @type {CardResourceStatus} */ ("ok"), refEntry, entry };
         } catch (error) {
           window.clearTimeout(perImageTimer);
@@ -573,13 +745,19 @@ export function appendCoverImageRef(imageRefs, coverImage) {
 
 /**
  * 从快照构造 renderProfile 的 resolveImageSrc：只有就绪资源才返回 src，其余返回 null（渲染器跳过）。
+ * 预览容错：对于合法 http(s) 远程图片，若快照未就绪（如偶发网络抖动），回退返回原地址由 Chromium 渲染进程直接展示，避免预览中卡片破损丢图；
+ * 导出时则走 createInlineSnapshotResolver，继续维持严格的数据内联与失败阻断校验。
  * @param {CardResourceSnapshot | null | undefined} snapshot
  * @returns {(ref: string) => string | null}
  */
 export function createSnapshotResolver(snapshot) {
   return (ref) => {
     const entry = snapshot && snapshot.images[ref];
-    return entry ? entry.src : null;
+    if (entry) return entry.src;
+    if (typeof ref === "string" && /^https?:\/\//i.test(ref)) {
+      return ref;
+    }
+    return null;
   };
 }
 
