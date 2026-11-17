@@ -365,6 +365,27 @@ describe('WechatAPI - Upload & MIME Logic', () => {
     expect(view.app.vault.readBinary).toHaveBeenCalledWith(imageFile);
   });
 
+  it('should fetch Android localhost _capacitor_file_ images directly instead of requestUrl', async () => {
+    const view = new AppleStyleView(null, null);
+    const src = 'http://localhost/_capacitor_file_/storage/emulated/0/obsidianLUKE/006-%E6%91%84%E5%BD%B1/photo.jpg';
+    const originalFetch = window.fetch;
+    const fetchMock = vi.fn().mockResolvedValue({
+      blob: async () => new Blob(['android-local-image'], { type: 'image/jpeg' }),
+    });
+    window.fetch = fetchMock;
+
+    try {
+      const blob = await view.srcToBlob(src);
+
+      expect(fetchMock).toHaveBeenCalledWith(src);
+      expect(obsidianMock.requestUrl).not.toHaveBeenCalled();
+      expect(blob.type).toBe('image/jpeg');
+      expect(await blobToText(blob)).toBe('android-local-image');
+    } finally {
+      window.fetch = originalFetch;
+    }
+  });
+
   it('should reject file URLs outside the current vault', async () => {
     const view = new AppleStyleView(null, null);
     view.app = {

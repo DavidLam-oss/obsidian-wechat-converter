@@ -130,6 +130,25 @@ function getFileUrlLocalPath(src) {
 }
 
 /**
+ * 判断是否为 Capacitor 的本地文件资源 URL。
+ *
+ * Obsidian Android 的 `vault.getResourcePath()` 返回
+ * `http://localhost/_capacitor_file_/...`；iOS 返回
+ * `capacitor://localhost/_capacitor_file_/...`。这类 URL 需要交给 WebView 的
+ * `fetch` 或 `vault.readBinary` 读取，不能交给 `requestUrl`：Android 9+
+ * 默认禁止 cleartext HTTP，`requestUrl` 会直接失败。
+ *
+ * @param {unknown} src
+ * @returns {boolean}
+ */
+function isCapacitorFileResourceUrl(src) {
+  const text = String(src || '').trim();
+  if (!text) return false;
+  return /^capacitor:\/\//i.test(text)
+    || /^https?:\/\/localhost(?::\d+)?\/_(?:capacitor|app)_file_\//i.test(text);
+}
+
+/**
  * @param {{ vault?: { adapter?: unknown } } | null | undefined} app
  * @returns {string}
  */
@@ -321,6 +340,7 @@ export {
   inferLocalImageMimeType,
   safeDecodeUriText,
   getFileUrlLocalPath,
+  isCapacitorFileResourceUrl,
   getVaultAdapterBasePath,
   normalizeAbsoluteLocalPath,
   getVaultRelativePathFromLocalPath,

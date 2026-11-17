@@ -45,6 +45,7 @@ import {
   inferLocalImageMimeType,
   safeDecodeUriText,
   getFileUrlLocalPath,
+  isCapacitorFileResourceUrl,
   getVaultRelativePathFromLocalPath,
   resolveVaultImageFile,
   getObsidianSetIcon,
@@ -122,8 +123,8 @@ async srcToBlob(src) {
     return dataUrlToBlob(src);
   }
 
-  // Obsidian 本地资源 (app:// 或 capacitor://) 可以直接 fetch
-  if (src.startsWith('app://') || src.startsWith('capacitor://')) {
+  // Obsidian 移动端本地资源 (app:// / capacitor:// / Android http://localhost/_capacitor_file_) 可以直接 fetch
+  if (src.startsWith('app://') || isCapacitorFileResourceUrl(src)) {
     const resp = await window.fetch(src);
     return await resp.blob();
   }
@@ -638,7 +639,7 @@ async copyHTML() {
 
 async processImagesToDataURL(container) {
   const images = toImageElements(container.querySelectorAll('img'));
-  const localImages = images.filter(img => img.src.startsWith('app://') || img.src.startsWith('capacitor://'));
+  const localImages = images.filter(img => img.src.startsWith('app://') || isCapacitorFileResourceUrl(img.src));
 
   if (localImages.length === 0) return false;
 

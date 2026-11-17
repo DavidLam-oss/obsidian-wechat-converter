@@ -251,6 +251,7 @@ export {
   inferLocalImageMimeType,
   safeDecodeUriText,
   getFileUrlLocalPath,
+  isCapacitorFileResourceUrl,
   getVaultAdapterBasePath,
   normalizeAbsoluteLocalPath,
   getVaultRelativePathFromLocalPath,

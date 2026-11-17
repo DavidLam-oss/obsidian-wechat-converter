@@ -512,6 +512,20 @@ describe('article image asset resolver', () => {
       expect(out).toContain('src="asset://image-mob"');
     });
 
+    it('mapAppUrlImagesToAssetUrls: handles Android http://localhost/_capacitor_file_ URLs', () => {
+      const resourceSrc = 'http://localhost/_capacitor_file_/storage/emulated/0/obsidianLUKE/Wechat/img/cover.png';
+      const html = `<img src="${resourceSrc}">`;
+      const out = mapAppUrlImagesToAssetUrls(html, [{
+        id: 'image-android',
+        source: {
+          originalSrc: 'Wechat/img/cover.png',
+          resourceSrc,
+          vaultRelativePath: 'Wechat/img/cover.png',
+        },
+      }]);
+      expect(out).toContain('src="asset://image-android"');
+    });
+
     it('mapAppUrlImagesToAssetUrls: empty / null input is safe', () => {
       expect(mapAppUrlImagesToAssetUrls('', [sampleAsset])).toBe('');
       expect(mapAppUrlImagesToAssetUrls(null, [sampleAsset])).toBe('');

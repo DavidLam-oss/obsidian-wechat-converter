@@ -91,6 +91,18 @@ describe('AppleStyleView - Image Processing', () => {
     expect(view.convertImageToLocally).toHaveBeenCalled();
   });
 
+  it('should handle Android http://localhost/_capacitor_file_ images', async () => {
+    const div = document.createElement('div');
+    div.innerHTML = '<img src="http://localhost/_capacitor_file_/storage/emulated/0/obsidianLUKE/006-%E6%91%84%E5%BD%B1/photo.jpg" />';
+
+    view.convertImageToLocally = vi.fn().mockResolvedValue(true);
+
+    const hasProcessed = await view.processImagesToDataURL(div);
+
+    expect(hasProcessed).toBe(true);
+    expect(view.convertImageToLocally).toHaveBeenCalled();
+  });
+
   it('should ignore remote images in local processing', async () => {
     const div = document.createElement('div');
     div.innerHTML = '<img src="https://example.com/image.png" />';

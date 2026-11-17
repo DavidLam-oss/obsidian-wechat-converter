@@ -25,7 +25,7 @@
 - 保持职责边界清晰，跨层行为优先通过既有服务、视图或测试 helper 协作。
 */
 
-import { resolveVaultImageFile } from './image-source-utils.js';
+import { isCapacitorFileResourceUrl, resolveVaultImageFile } from './image-source-utils.js';
 
 const DEFAULT_MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const DEFAULT_MAX_TOTAL_IMAGE_SIZE_BYTES = 50 * 1024 * 1024;
@@ -893,10 +893,10 @@ function findAssetForCover(coverString, assets = []) {
   return null;
 }
 
-// Bridge publish flow: rewrite every <img src="app://..."> (or capacitor://)
-// in the rendered HTML back to asset://<id>, using the same assets[] that
-// resolveArticleImages produced. Remote https://, data:, and unmatched
-// app:// urls are left untouched (the latter become a downstream warning,
+// Bridge publish flow: rewrite every <img src="app://..."> (or capacitor://,
+// or Android http://localhost/_capacitor_file_) back to asset://<id>, using
+// the same assets[] that resolveArticleImages produced. Remote https:// and
+// data: are left untouched; unmatched local urls become a downstream warning,
 // which is preferable to silently inlining base64).
 /**
  * @param {unknown} html
@@ -910,7 +910,7 @@ function mapAppUrlImagesToAssetUrls(html, assets = []) {
     (match, prefix, src, suffix) => {
       const source = /** @type {unknown} */ (src);
       const srcValue = String(source || '');
-      if (!/^(app|capacitor):\/\//i.test(srcValue)) return String(match || '');
+      if (!/^app:\/\//i.test(srcValue) && !isCapacitorFileResourceUrl(srcValue)) return String(match || '');
       const asset = findAssetForRenderedSrc(srcValue, assets);
       if (!asset) return String(match || '');
       return `${String(prefix || '')}asset://${asset.id}${String(suffix || '')}`;
