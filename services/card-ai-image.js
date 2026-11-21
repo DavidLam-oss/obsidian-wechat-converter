@@ -10,6 +10,7 @@
 import { getObsidianRequestUrl } from './obsidian-compat.js';
 import { getActiveWindowValue } from './dom-utils.js';
 import { getCardTheme } from './card-themes.js';
+import { isTemperatureNotSupportedError, isKnownReasoningModelName } from './ai-layout/index.js';
 
 /**
  * 预设生图风格模版列表
@@ -487,12 +488,8 @@ async function pollImageGenerationTask(options) {
     }
 
     const status = taskResp.status;
-    if (status === 401 || status === 403) {
-      throw new Error(`查询任务状态鉴权失败 (${status})`);
-    }
-    if (status === 429) {
-      throw new Error('生图任务请求超限或配额不足 (HTTP 429)，已终止轮询');
-    }
+    if (status === 401 || status === 403) throw new Error(`查询任务状态鉴权失败 (${status})`);
+    if (status === 429) throw new Error('生图任务请求超限或配额不足 (HTTP 429)，已终止轮询');
     if (status >= 500) {
       consecutiveErrors += 1;
       if (consecutiveErrors >= maxConsecutiveErrors) {
@@ -507,12 +504,8 @@ async function pollImageGenerationTask(options) {
 
     if (taskStatus === 'completed' || taskStatus === 'succeeded' || taskStatus === 'success') {
       const imageUrl = extractImageUrlFromTaskResult(taskData || taskJson);
-      if (!imageUrl) {
-        throw new Error('生图任务已完成，但未解析到图片 URL');
-      }
-      if (imageUrl.startsWith('data:')) {
-        return imageUrl;
-      }
+      if (!imageUrl) throw new Error('生图任务已完成，但未解析到图片 URL');
+      if (imageUrl.startsWith('data:')) return imageUrl;
       try {
         return await downloadImageAsBase64(imageUrl, requestUrlFn, signal);
       } catch (downloadErr) {
@@ -732,13 +725,14 @@ export async function extractVisualTopicWithAi(options) {
     : '你是一位视觉设计与小红书封面策划专家。请根据用户提供的文章标题和内容，提炼出最核心、最具画面感的一句话视觉主题意象。要求：20字以内，语言生动形象，适合交给生图模型绘制，直接输出该短句，不要输出任何引言、解释、标点或序号。';
   const userPrompt = `文章标题：${title || '无标题'}\n\n文章内容摘要：${cleanContent}`;
 
+  const isReasoning = isKnownReasoningModelName(textModel);
   const payload = {
     model: textModel,
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    temperature: 0.5,
+    ...(isReasoning ? {} : { temperature: 0.5 }),
     stream: false,
   };
 
@@ -754,7 +748,7 @@ export async function extractVisualTopicWithAi(options) {
       throw new Error('提炼观点任务已被取消');
     }
 
-    const resp = await performHttpRequest({
+    let resp = await performHttpRequest({
       url: `${provider.baseUrl.replace(/\/+$/, '')}/chat/completions`,
       method: 'POST',
       headers: {
@@ -766,7 +760,19 @@ export async function extractVisualTopicWithAi(options) {
       signal: effectiveSignal,
     });
 
-    const respJson = /** @type {Record<string, any>} */ (resp.json || {});
+    let respJson = /** @type {Record<string, any>} */ (resp.json || {});
+    if (resp.status === 400 && isTemperatureNotSupportedError(respJson?.error?.message || resp.text)) {
+      delete payload.temperature;
+      resp = await performHttpRequest({
+        url: `${provider.baseUrl.replace(/\/+$/, '')}/chat/completions`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${provider.apiKey}` },
+        body: payload,
+        requestUrlFn,
+        signal: effectiveSignal,
+      });
+      respJson = /** @type {Record<string, any>} */ (resp.json || {});
+    }
     if (resp.status === 429) {
       throw new Error('文本 AI 服务请求频率超限或配额耗尽 (HTTP 429)');
     }

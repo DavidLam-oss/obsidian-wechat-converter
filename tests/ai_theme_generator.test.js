@@ -117,6 +117,86 @@ describe('AI Theme Generator Service', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
+    it('should omit temperature for reasoning models and retry without temperature if rejected', async () => {
+      const aiSettings = {
+        providers: [
+          {
+            id: 'p-reasoning',
+            kind: 'openai-compatible',
+            enabled: true,
+            baseUrl: 'https://api.openai.com/v1',
+            apiKey: 'sk-test',
+            supportsText: true,
+            textModel: 'o1-mini',
+          },
+        ],
+      };
+
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content: `\`\`\`json\n${mockValidTokenJson}\n\`\`\``,
+              },
+            },
+          ],
+        }),
+      });
+
+      const res = await generateCustomThemeWithAi({
+        aiSettings,
+        userRequirement: '极客夜色',
+        fetchImpl: mockFetch,
+      });
+
+      expect(res.success).toBe(true);
+      const reqBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(reqBody.temperature).toBeUndefined();
+
+      // 测试遇到 400 temperature unsupported 时重试
+      const retryFetch = vi.fn()
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 400,
+          text: async () => "Unsupported parameter: 'temperature' is not supported with this model.",
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            choices: [{ message: { content: `\`\`\`json\n${mockValidTokenJson}\n\`\`\`` } }],
+          }),
+        });
+
+      const retrySettings = {
+        providers: [
+          {
+            id: 'p-custom',
+            kind: 'openai-compatible',
+            enabled: true,
+            baseUrl: 'https://api.example.com/v1',
+            apiKey: 'sk-test',
+            supportsText: true,
+            textModel: 'custom-model',
+          },
+        ],
+      };
+
+      const retryRes = await generateCustomThemeWithAi({
+        aiSettings: retrySettings,
+        userRequirement: '重试测试',
+        fetchImpl: retryFetch,
+      });
+
+      expect(retryRes.success).toBe(true);
+      expect(retryFetch).toHaveBeenCalledTimes(2);
+      expect(JSON.parse(retryFetch.mock.calls[0][1].body).temperature).toBe(0.7);
+      expect(JSON.parse(retryFetch.mock.calls[1][1].body).temperature).toBeUndefined();
+    });
+
     it('should successfully generate theme via Gemini provider', async () => {
       const aiSettings = {
         providers: [

@@ -546,6 +546,60 @@ describe('Card AI Image Service (C06.2)', () => {
       expect(sentBody.messages[0].content).toContain('封面海报大字主标题');
     });
 
+    it('omits temperature for reasoning models and retries without temperature when rejected', async () => {
+      const mockRequestUrl = vi.fn().mockResolvedValue({
+        status: 200,
+        json: {
+          choices: [
+            { message: { content: '深度思考模型提炼' } },
+          ],
+        },
+      });
+
+      const res = await extractVisualTopicWithAi({
+        provider: {
+          name: 'o1 Text Provider',
+          baseUrl: 'https://api.openai.com/v1',
+          apiKey: 'key_123',
+          textModel: 'o1-mini',
+        },
+        title: '思考题',
+        content: '内容...',
+        requestUrlFn: mockRequestUrl,
+      });
+
+      expect(res).toBe('深度思考模型提炼');
+      const body = JSON.parse(mockRequestUrl.mock.calls[0][0].body);
+      expect(body.temperature).toBeUndefined();
+
+      // 测试遇到 400 temperature unsupported 时重试
+      const retryMock = vi.fn()
+        .mockResolvedValueOnce({
+          status: 400,
+          json: { error: { message: "Unsupported parameter: 'temperature' is not supported with this model." } },
+        })
+        .mockResolvedValueOnce({
+          status: 200,
+          json: { choices: [{ message: { content: '自适应重试成功' } }] },
+        });
+
+      const retryRes = await extractVisualTopicWithAi({
+        provider: {
+          baseUrl: 'https://api.example.com/v1',
+          apiKey: 'key_123',
+          textModel: 'custom-model',
+        },
+        title: 'Title',
+        content: 'Content',
+        requestUrlFn: retryMock,
+      });
+
+      expect(retryRes).toBe('自适应重试成功');
+      expect(retryMock).toHaveBeenCalledTimes(2);
+      expect(JSON.parse(retryMock.mock.calls[0][0].body).temperature).toBe(0.5);
+      expect(JSON.parse(retryMock.mock.calls[1][0].body).temperature).toBeUndefined();
+    });
+
     it('handles failure when provider returns error status', async () => {
       const mockRequestUrl = vi.fn().mockResolvedValue({
         status: 401,

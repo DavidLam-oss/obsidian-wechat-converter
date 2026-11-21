@@ -35,6 +35,8 @@ import {
   getDefaultFetch,
   setAiLayoutTimeout,
   clearAiLayoutTimeout,
+  isTemperatureNotSupportedError,
+  isKnownReasoningModelName,
 } from './ai-layout/index.js';
 import {
   AI_THEME_PROMPT_TEMPLATE,
@@ -155,15 +157,17 @@ export async function generateCustomThemeWithAi({
 
     switch (provider.kind) {
       case AI_PROVIDER_KINDS.OPENAI_COMPATIBLE: {
-        const response = await fetchImpl(`${provider.baseUrl}/chat/completions`, {
+        const textModel = provider.textModel || provider.model;
+        const isReasoning = isKnownReasoningModelName(textModel);
+        let response = await fetchImpl(`${provider.baseUrl}/chat/completions`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${provider.apiKey}`,
           },
           body: JSON.stringify({
-            model: provider.textModel || provider.model,
-            temperature: 0.7,
+            model: textModel,
+            ...(isReasoning ? {} : { temperature: 0.7 }),
             messages: [
               { role: 'system', content: AI_THEME_SYSTEM_PROMPT },
               { role: 'user', content: prompt },
@@ -174,7 +178,27 @@ export async function generateCustomThemeWithAi({
 
         if (!response.ok) {
           const text = await response.text();
-          throw new Error(`AI 请求失败 (${response.status}): ${text || response.statusText}`);
+          if (response.status === 400 && isTemperatureNotSupportedError(text)) {
+            response = await fetchImpl(`${provider.baseUrl}/chat/completions`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${provider.apiKey}`,
+              },
+              body: JSON.stringify({
+                model: textModel,
+                messages: [
+                  { role: 'system', content: AI_THEME_SYSTEM_PROMPT },
+                  { role: 'user', content: prompt },
+                ],
+              }),
+              signal: controller.signal,
+            });
+          }
+          if (!response.ok) {
+            const retryText = response.status === 400 ? await response.text().catch(() => '') : '';
+            throw new Error(`AI 请求失败 (${response.status}): ${retryText || text || response.statusText}`);
+          }
         }
 
         const data = await response.json();

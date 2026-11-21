@@ -152,6 +152,7 @@ export default [
       "services/ai-layout/generation.js",
       "services/ai-layout/index.js",
       "services/ai-layout/layout-normalization.js",
+      "services/ai-layout/openai-compat.js",
       "services/ai-layout/prompt-context.js",
       "services/ai-layout/providers.js",
       "services/ai-layout/render.js",

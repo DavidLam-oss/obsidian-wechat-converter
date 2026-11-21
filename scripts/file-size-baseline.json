@@ -4,7 +4,7 @@
   "softLimit": 800,
   "files": {
     "converter.js": 1554,
-    "services/ai-layout/generation.js": 1041,
+    "services/ai-layout/generation.js": 1030,
     "services/ai-layout/prompt-context.js": 927,
     "services/article-image-assets.js": 1067,
     "services/card-themes.js": 861,

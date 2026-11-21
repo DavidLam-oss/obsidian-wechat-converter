@@ -40,4 +40,5 @@ export * from './prompt-context.js';
 export * from './selection.js';
 export * from './layout-normalization.js';
 export * from './generation.js';
+export * from './openai-compat.js';
 export * from './render.js';

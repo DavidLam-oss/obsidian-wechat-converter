@@ -76,6 +76,13 @@ import {
   toRecord,
   toSelectionRecord,
 } from './utils.js';
+import {
+  testOpenAiTextProviderConnection,
+  requestOpenAiChatCompletionAdaptive,
+  isTemperatureNotSupportedError,
+  isKnownReasoningModelName,
+  isMaxCompletionTokensRequiredError,
+} from './openai-compat.js';
 
 const AI_PROVIDER_CONNECTION_TEST_TIMEOUT_MS = 15000;
 const AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS = 16;
@@ -474,26 +481,15 @@ async function requestOpenAICompatibleLayout({
   const timer = setAiLayoutTimeout(() => controller.abort(), abortTimeoutMs || timeoutMs);
 
   try {
-    const response = await fetchImpl(`${provider.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${provider.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: provider.model,
-        temperature: 0.2,
-        messages: buildLayoutMessages({ title, markdown, selection, stylePack, imageRefs }),
-      }),
+    const data = await requestOpenAiChatCompletionAdaptive({
+      fetchImpl,
+      baseUrl: provider.baseUrl,
+      apiKey: provider.apiKey,
+      model: provider.model,
+      messages: buildLayoutMessages({ title, markdown, selection, stylePack, imageRefs }),
+      temperature: 0.2,
       signal: controller.signal,
     });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`AI 请求失败 (${response.status}): ${text || response.statusText}`);
-    }
-
-    const data = await response.json();
     const content = readChatCompletionContent(data);
     const jsonPayload = extractJsonPayload(content);
     try {
@@ -836,23 +832,13 @@ async function testTextProviderConnection(safeProvider, fetchImpl, signal) {
 
   switch (safeProvider.kind) {
     case AI_PROVIDER_KINDS.OPENAI_COMPATIBLE: {
-      response = await fetchImpl(`${safeProvider.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${safeProvider.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: safeProvider.textModel || safeProvider.model,
-          temperature: 0,
-          max_tokens: AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS,
-          stream: false,
-          messages: [{ role: 'user', content: AI_PROVIDER_CONNECTION_TEST_PROMPT }],
-        }),
+      data = await testOpenAiTextProviderConnection({
+        safeProvider,
+        fetchImpl,
         signal,
+        maxTokens: AI_PROVIDER_CONNECTION_TEST_MAX_TOKENS,
+        prompt: AI_PROVIDER_CONNECTION_TEST_PROMPT,
       });
-      await ensureAiConnectionResponseOk(response);
-      data = await response.json();
       break;
     }
     case AI_PROVIDER_KINDS.GEMINI: {
@@ -1038,4 +1024,7 @@ export {
   generateArticleLayout,
   AiProviderConnectionTimeoutError,
   testAiProviderConnection,
+  isMaxCompletionTokensRequiredError,
+  isTemperatureNotSupportedError,
+  isKnownReasoningModelName,
 };

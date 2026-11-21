@@ -66,6 +66,150 @@ describe('ai-layout service generation providers', () => {
     expect(options.body).not.toContain('排版');
   });
 
+  it('should automatically retry with max_completion_tokens when model rejects max_tokens', async () => {
+    const provider = {
+      name: 'OpenAI GPT-6.1-Terra',
+      kind: 'openai-compatible',
+      baseUrl: 'https://api.openai.com/v1',
+      apiKey: 'secret',
+      textModel: 'gpt-6.1-terra',
+      supportsText: true,
+      supportsImage: false,
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        text: async () => JSON.stringify({
+          error: {
+            message: "Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead.",
+            type: 'invalid_request_error',
+            param: 'max_tokens',
+            code: 'unsupported_parameter',
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ choices: [{ message: { content: 'OK' } }] }),
+      });
+
+    await expect(testAiProviderConnection(provider, fetchImpl)).resolves.toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+
+    const firstBody = JSON.parse(fetchImpl.mock.calls[0][1].body);
+    expect(firstBody.max_tokens).toBe(16);
+    expect(firstBody.max_completion_tokens).toBeUndefined();
+
+    const secondBody = JSON.parse(fetchImpl.mock.calls[1][1].body);
+    expect(secondBody.max_completion_tokens).toBe(16);
+    expect(secondBody.max_tokens).toBeUndefined();
+    expect(secondBody.temperature).toBe(0);
+  });
+
+  it('should automatically retry without temperature when model rejects temperature parameter', async () => {
+    const provider = {
+      name: 'Custom Gateway Reasoning',
+      kind: 'openai-compatible',
+      baseUrl: 'https://api.example.com/v1',
+      apiKey: 'secret',
+      textModel: 'custom-reasoning-model',
+      supportsText: true,
+      supportsImage: false,
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        text: async () => "Unsupported parameter: 'temperature' is not supported with this model.",
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ choices: [{ message: { content: 'OK' } }] }),
+      });
+
+    await expect(testAiProviderConnection(provider, fetchImpl)).resolves.toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+
+    const firstBody = JSON.parse(fetchImpl.mock.calls[0][1].body);
+    expect(firstBody.temperature).toBe(0);
+
+    const secondBody = JSON.parse(fetchImpl.mock.calls[1][1].body);
+    expect(secondBody.temperature).toBeUndefined();
+    expect(secondBody.max_tokens).toBe(16);
+  });
+
+  it('should adaptively recover from sequential parameter rejections (max_tokens then temperature)', async () => {
+    const provider = {
+      name: 'Strict Reasoning Model',
+      kind: 'openai-compatible',
+      baseUrl: 'https://api.openai.com/v1',
+      apiKey: 'secret',
+      textModel: 'future-reasoning-x',
+      supportsText: true,
+      supportsImage: false,
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        text: async () => "Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead.",
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        text: async () => "temperature only supports default value (1) for this model",
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ choices: [{ message: { content: 'OK' } }] }),
+      });
+
+    await expect(testAiProviderConnection(provider, fetchImpl)).resolves.toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+
+    const thirdBody = JSON.parse(fetchImpl.mock.calls[2][1].body);
+    expect(thirdBody.max_completion_tokens).toBe(16);
+    expect(thirdBody.max_tokens).toBeUndefined();
+    expect(thirdBody.temperature).toBeUndefined();
+  });
+
+  it('should proactively use max_completion_tokens and omit temperature for known reasoning models like o1', async () => {
+    const provider = {
+      name: 'OpenAI o1',
+      kind: 'openai-compatible',
+      baseUrl: 'https://api.openai.com/v1',
+      apiKey: 'secret',
+      textModel: 'o1-mini',
+      supportsText: true,
+      supportsImage: false,
+    };
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ choices: [{ message: { content: 'OK' } }] }),
+    });
+
+    await expect(testAiProviderConnection(provider, fetchImpl)).resolves.toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+    const body = JSON.parse(fetchImpl.mock.calls[0][1].body);
+    expect(body.model).toBe('o1-mini');
+    expect(body.max_completion_tokens).toBe(16);
+    expect(body.max_tokens).toBeUndefined();
+    expect(body.temperature).toBeUndefined();
+  });
+
   it('should test image-only OpenAI-compatible providers with GET /models', async () => {
     const provider = {
       name: 'APIMart Image',
@@ -763,6 +907,104 @@ describe('ai-layout service generation providers', () => {
       timeoutMs: 2000,
       fetchImpl,
     })).rejects.toThrow('max_tokens 输出上限');
+  });
+
+  it('should omit temperature for reasoning models and retry requestOpenAiLayout without temperature when rejected', async () => {
+    const o1Provider = {
+      id: 'o1-1',
+      name: 'OpenAI o1',
+      kind: 'openai-compatible',
+      baseUrl: 'https://api.openai.com/v1',
+      apiKey: 'secret',
+      model: 'o1-mini',
+      enabled: true,
+    };
+    const o1Fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                articleType: 'tutorial',
+                selection: { layoutFamily: 'source-first', colorPalette: 'tech-green' },
+                resolved: { layoutFamily: 'source-first', colorPalette: 'tech-green' },
+                recommendedLayoutFamily: 'source-first',
+                recommendedColorPalette: 'tech-green',
+                title: 'o1 测试',
+                summary: '摘要',
+                blocks: [{ type: 'lead-quote', text: 'o1 排版成功' }],
+              }),
+            },
+          },
+        ],
+      }),
+    }));
+
+    const o1Result = await generateArticleLayout({
+      provider: o1Provider,
+      title: 'o1 测试',
+      markdown: '## 标题\n内容',
+      imageRefs: [],
+      timeoutMs: 2000,
+      fetchImpl: o1Fetch,
+    });
+
+    expect(o1Result.layoutJson.blocks[0].text).toBe('o1 排版成功');
+    const o1ReqBody = JSON.parse(o1Fetch.mock.calls[0][1].body);
+    expect(o1ReqBody.temperature).toBeUndefined();
+
+    // 普通模型遇到 temperature 不受支持时重试
+    const retryProvider = {
+      id: 'p-custom',
+      name: 'Custom LLM',
+      kind: 'openai-compatible',
+      baseUrl: 'https://api.example.com/v1',
+      apiKey: 'secret',
+      model: 'custom-model',
+      enabled: true,
+    };
+    const retryFetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: async () => "Unsupported parameter: 'temperature' is not supported with this model.",
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  articleType: 'tutorial',
+                  selection: { layoutFamily: 'source-first', colorPalette: 'tech-green' },
+                  resolved: { layoutFamily: 'source-first', colorPalette: 'tech-green' },
+                  recommendedLayoutFamily: 'source-first',
+                  recommendedColorPalette: 'tech-green',
+                  title: '重试测试',
+                  summary: '摘要',
+                  blocks: [{ type: 'lead-quote', text: '重试排版成功' }],
+                }),
+              },
+            },
+          ],
+        }),
+      });
+
+    const retryResult = await generateArticleLayout({
+      provider: retryProvider,
+      title: '重试测试',
+      markdown: '## 标题\n内容',
+      imageRefs: [],
+      timeoutMs: 2000,
+      fetchImpl: retryFetch,
+    });
+
+    expect(retryResult.layoutJson.blocks[0].text).toBe('重试排版成功');
+    expect(retryFetch).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(retryFetch.mock.calls[0][1].body).temperature).toBe(0.2);
+    expect(JSON.parse(retryFetch.mock.calls[1][1].body).temperature).toBeUndefined();
   });
 
   it('should convert aborted provider requests into timeout errors', async () => {
