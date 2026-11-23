@@ -383,38 +383,24 @@
 }
 
 .sticker-image-list__remove,
-.sticker-image-list__move-controls button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 0;
-  border-radius: 7px;
-  color: #ffffff;
-  background: rgba(18, 24, 33, 0.72);
-  backdrop-filter: blur(6px);
-}
-
-.sticker-image-list__remove {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  z-index: 2;
-}
-
-.sticker-image-list__remove:hover {
-  background: var(--text-error);
-}
-
 .sticker-image-list__move-controls {
   position: absolute;
   top: 6px;
-  left: 6px;
   z-index: 2;
-  display: flex;
-  gap: 4px;
+}
+
+.sticker-image-list__move-controls {
+  left: 6px;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  gap: 1px;
+  background: rgba(18, 24, 33, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 999px;
+  border: 0.5px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
   opacity: 0;
   transition: opacity 140ms ease;
 }
@@ -424,8 +410,76 @@
   opacity: 1;
 }
 
+.sticker-image-list__move-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  color: #ffffff;
+  background: transparent;
+  cursor: pointer;
+  transition: background 120ms ease, opacity 120ms ease, transform 100ms ease;
+}
+
+.sticker-image-list__move-controls button .svg-icon,
+.sticker-image-list__move-controls button svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.2px;
+}
+
+.sticker-image-list__move-controls button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sticker-image-list__move-controls button:active:not(:disabled) {
+  transform: scale(0.92);
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .sticker-image-list__move-controls button:disabled {
-  opacity: 0.35;
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+}
+
+.sticker-image-list__remove {
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #ffffff;
+  background: rgba(18, 24, 33, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 0.5px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  transition: background 120ms ease, transform 100ms ease;
+}
+
+.sticker-image-list__remove .svg-icon,
+.sticker-image-list__remove svg {
+  width: 11px;
+  height: 11px;
+  stroke-width: 2.2px;
+}
+
+.sticker-image-list__remove:hover {
+  background: var(--text-error, #ff3b30);
+}
+
+.sticker-image-list__remove:active {
+  transform: scale(0.92);
 }
 
 .apple-sticker-restore-row {
@@ -437,13 +491,69 @@
 @media (hover: none), (pointer: coarse) {
   .sticker-image-list__move-controls {
     opacity: 1;
+    top: 5px;
+    left: 5px;
+    padding: 1.5px;
   }
 
-  .sticker-image-list__remove,
   .sticker-image-list__move-controls button {
-    width: 30px;
-    height: 30px;
+    width: 22px;
+    height: 22px;
+    touch-action: manipulation;
   }
+
+  .sticker-image-list__move-controls button .svg-icon,
+  .sticker-image-list__move-controls button svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .sticker-image-list__remove {
+    top: 5px;
+    right: 5px;
+    width: 22px;
+    height: 22px;
+    touch-action: manipulation;
+  }
+
+  .sticker-image-list__remove .svg-icon,
+  .sticker-image-list__remove svg {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+.apple-converter-container.apple-converter-mobile .sticker-image-list__move-controls {
+  opacity: 1;
+  top: 5px;
+  left: 5px;
+  padding: 1.5px;
+}
+
+.apple-converter-container.apple-converter-mobile .sticker-image-list__move-controls button {
+  width: 22px;
+  height: 22px;
+  touch-action: manipulation;
+}
+
+.apple-converter-container.apple-converter-mobile .sticker-image-list__move-controls button .svg-icon,
+.apple-converter-container.apple-converter-mobile .sticker-image-list__move-controls button svg {
+  width: 11px;
+  height: 11px;
+}
+
+.apple-converter-container.apple-converter-mobile .sticker-image-list__remove {
+  top: 5px;
+  right: 5px;
+  width: 22px;
+  height: 22px;
+  touch-action: manipulation;
+}
+
+.apple-converter-container.apple-converter-mobile .sticker-image-list__remove .svg-icon,
+.apple-converter-container.apple-converter-mobile .sticker-image-list__remove svg {
+  width: 10px;
+  height: 10px;
 }
 
 @media (max-width: 420px) {

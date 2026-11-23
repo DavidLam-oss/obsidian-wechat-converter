@@ -158,8 +158,10 @@
 .sticker-publish-image-body .sticker-image-list__order,
 .sticker-publish-image-body .sticker-image-list__source,
 .sticker-publish-image-body .sticker-image-list__remove,
+.sticker-publish-image-body .sticker-image-list__move-controls,
 .sticker-publish-image-body .sticker-image-list__move-controls button {
   backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .sticker-publish-image-body.wechat-modal-sticker-grid-preview img {
