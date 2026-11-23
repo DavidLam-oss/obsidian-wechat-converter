@@ -133,18 +133,25 @@ describe('AppleStyleView - Card Mode (B02)', () => {
     expect(view.aiLayoutBtn.classList.contains('hidden')).toBe(true);
   });
 
-  it('移动端：卡片模式只显示桌面端说明，不进入排版管线', async () => {
+  it('移动端：卡片模式支持正常进入排版管线', async () => {
     const view = new AppleStyleView({ view: null }, { settings: { wechatAccounts: [] } });
     view.app = { isMobile: true, vault: {} };
     view.previewMode = 'card';
     view.previewContainer = createObsidianLikeElement();
-    view.runCardLayoutPipeline = vi.fn();
+    view.resolveCardMarkdownSource = vi.fn().mockResolvedValue({
+      ok: true,
+      markdown: '# 标题\n移动端卡片测试',
+      sourcePath: 'notes/test.md',
+    });
+    view.runCardLayoutPipeline = vi.fn().mockResolvedValue({
+      ok: true,
+      pageCount: 1,
+      pages: [createObsidianLikeElement()],
+    });
 
     await view.renderCardPreview();
 
-    expect(view.runCardLayoutPipeline).not.toHaveBeenCalled();
-    expect(view.previewContainer.querySelector('.icard-preview-empty-title')?.textContent)
-      .toBe('图片卡片目前仅支持桌面端');
+    expect(view.runCardLayoutPipeline).toHaveBeenCalled();
   });
 
   it('无文档/空正文：显示空态', async () => {

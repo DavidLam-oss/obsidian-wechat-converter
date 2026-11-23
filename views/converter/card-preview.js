@@ -54,7 +54,6 @@ AppleStyleView 实例状态（previewMode/previewContainer/app 等）、当前�
 
 import {
   resolveMarkdownSource,
-  isMobileClient,
   isElementLike,
   MarkdownView,
 } from '../apple-style-view-shared.js';
@@ -284,12 +283,6 @@ async renderCardPreview() {
   const generation = (typeof selfRecord.cardPreviewGeneration === 'number' ? selfRecord.cardPreviewGeneration : 0) + 1;
   selfRecord.cardPreviewGeneration = generation;
 
-  // B02 ⑥：移动端能力判断从接入第一刻生效，不触发排版管线
-  if (isMobileClient(this.app)) {
-    this.renderCardMobileNotice();
-    return undefined;
-  }
-
   const source = await this.resolveCardMarkdownSource();
   // 落地守卫（与 convertCurrent 同款两道）：①仍是这一轮渲染；②用户没在渲染途中切走模式。
   // 卡片是慢路径（等资源/字体/分页），切到贴图/文章后落地会把新模式的预览顶掉。
@@ -479,6 +472,7 @@ async runCardLayoutPipeline(ctx) {
 
 /** 空态（未选文档 / 正文为空） */
 renderCardEmptyState() {
+  this.clearCardLoadingTimer?.();
   this.setPreviewLoading?.(false);
   if (!this.previewContainer) return;
   this.previewContainer.empty();
@@ -495,6 +489,7 @@ renderCardEmptyState() {
 
 /** 移动端说明态（B02 ⑥：桌面能力延迟加载，不触发 Electron 依赖） */
 renderCardMobileNotice() {
+  this.clearCardLoadingTimer?.();
   this.setPreviewLoading?.(false);
   if (!this.previewContainer) return;
   this.previewContainer.empty();
@@ -511,6 +506,7 @@ renderCardMobileNotice() {
 
 /** 失败态 */
 renderCardFailureState(outcome) {
+  this.clearCardLoadingTimer?.();
   this.setPreviewLoading?.(false);
   if (!this.previewContainer) return;
   this.previewContainer.empty();

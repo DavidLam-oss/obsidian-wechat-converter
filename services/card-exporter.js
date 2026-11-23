@@ -112,6 +112,7 @@ export const CARD_EXPORT_LIMITS = Object.freeze({
  *   },
  *   now?: () => Date,
  *   capturePageBytes: (input: { pageId: string, ordinal: number }) => Promise<{ bytes: Uint8Array }>,
+ *   interPageDelayMs?: number,
  *   onProgress?: (event: { stage: "begin"|"page"|"done", total: number, settled: number, saved: number, failed: number, current?: number }) => void,
  * }} deps
  */
@@ -119,6 +120,7 @@ export function createCardExporter(deps) {
   const { session, fs, capturePageBytes } = deps;
   const onProgress = typeof deps.onProgress === 'function' ? deps.onProgress : null;
   const now = deps.now || (() => new Date());
+  const interPageDelayMs = typeof deps.interPageDelayMs === 'number' && deps.interPageDelayMs > 0 ? deps.interPageDelayMs : 0;
 
   /**
    * 逐层核验路径及其存在祖先的真实位置仍在 vault 根内（§6.1 符号链接/重定向防护）。
@@ -470,6 +472,11 @@ export function createCardExporter(deps) {
           // 已存图片与内存记录保留；停止后续页，等待清单修复（§6.1 部分成功语义）
           patchPage(page.pageId, { status: 'saved' });
           return { pausedManifest: true, stopReason: 'manifest-write-failed' };
+        }
+        if (interPageDelayMs > 0 && remaining.length > 0) {
+          await new Promise((resolve) => {
+            window.setTimeout(resolve, interPageDelayMs);
+          });
         }
       }
       return { pausedManifest: false };

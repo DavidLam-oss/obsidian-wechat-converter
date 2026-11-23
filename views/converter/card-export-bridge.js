@@ -64,6 +64,7 @@ import { renderCardPages, releasePageStyle, RATIO_PRESETS, capturePage, CAPTURE_
 import { DEFAULT_CARD_THEME_ID, getCardTheme } from '../../services/card-themes.js';
 import { loadCommonJsDependency } from '../../services/obsidian-compat.js';
 import { getActiveWindowValue } from '../../services/dom-utils.js';
+import { isMobileClient } from '../apple-style-view-shared.js';
 
 /** 导出倍率白名单（§5.5；C01 扩展比例时同步） */
 export const CARD_EXPORT_SCALES = /** @type {const} */ ([1, 2, 3]);
@@ -129,12 +130,39 @@ buildCardExportFsAdapter() {
   }
 
   const toAbs = (vaultRelativePath) => {
-    if (typeof adapter?.getFullPath === 'function') return adapter.getFullPath(vaultRelativePath);
+    if (typeof adapter?.getFullPath === 'function') {
+      try {
+        const abs = adapter.getFullPath(vaultRelativePath);
+        if (abs) return abs;
+      } catch {
+        // 继续尝试其他途径
+      }
+    }
+    if (typeof adapter?.getBasePath === 'function') {
+      try {
+        const base = adapter.getBasePath();
+        if (base) return vaultRelativePath ? `${base}/${vaultRelativePath}` : base;
+      } catch {
+        // 继续尝试其他途径
+      }
+    }
+    if (typeof adapter?.basePath === 'string' && adapter.basePath) {
+      const base = adapter.basePath.replace(/[/\\]+$/, '');
+      return vaultRelativePath ? `${base}/${vaultRelativePath}` : base;
+    }
     if (typeof vault?.getAbstractFileByPath === 'function') {
       const file = vault.getAbstractFileByPath(vaultRelativePath);
       if (file && typeof file.path === 'string' && typeof adapter?.getFullPath === 'function') {
-        return adapter.getFullPath(file.path);
+        try {
+          const abs = adapter.getFullPath(file.path);
+          if (abs) return abs;
+        } catch {
+          // 继续尝试其他途径
+        }
       }
+    }
+    if (isMobileClient(this.app)) {
+      return vaultRelativePath ? `/__vault__/${vaultRelativePath}` : '/__vault__';
     }
     return vaultRelativePath;
   };
@@ -498,6 +526,7 @@ createCardExportController(session, context) {
     session,
     fs: fsAdapter,
     capturePageBytes,
+    interPageDelayMs: isMobileClient(this.app) ? 60 : 0,
     onProgress: notify || undefined,
   });
   return {
@@ -545,6 +574,10 @@ resolveCardExportAbsPath(vaultRelativePath) {
       // 无绝对路径能力：调用方降级为复制 vault 相对路径
     }
   }
+  if (typeof adapter?.basePath === 'string' && adapter.basePath) {
+    const base = String(adapter.basePath || '').replace(/[/\\]+$/, '');
+    if (base) return toNativePath(`${base}/${rel}`);
+  }
   return null;
 }
 ,
@@ -553,7 +586,7 @@ resolveCardExportAbsPath(vaultRelativePath) {
 canRevealCardExportOutput() {
   if (!getRevealShell()) return false;
   const adapter = /** @type {any} */ (this.app)?.vault?.adapter;
-  return typeof adapter?.getFullPath === 'function' || typeof adapter?.getBasePath === 'function';
+  return typeof adapter?.getFullPath === 'function' || typeof adapter?.getBasePath === 'function' || typeof adapter?.basePath === 'string';
 }
 ,
 

@@ -1,6 +1,10 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
 
+if (typeof window === "undefined") {
+  globalThis.window = /** @type {any} */ (globalThis);
+}
+
 /* 卡片导出编排测试（B04，规划 §5.4/§6.1/§6.2）：
    输出资格再校验（快照/版本/省略确认/预算/页序）、批次目录冲突重生成（≤5 次）、
    逐页「捕获 → PNG 核验 → realpath 核验 → 排他写盘 → 落账 → 清单更新」顺序、
@@ -413,5 +417,19 @@ describe("进度回调与写盘足迹（B05 进度反馈 / §6.1 不在 vault �
     // 干净批次不落清单（2026-09-12 策略）：全部成功时一次清单写入都没有
     const manifestWrites = fakeFs.calls.written.filter((p) => p.endsWith(EXPORT_MANIFEST_NAME));
     expect(manifestWrites).toEqual([]);
+  });
+
+  it("interPageDelayMs: 支持在多页导出之间引入调度延迟以缓冲移动端 GC", async () => {
+    const ctx = sessionWithSnapshot({ pageCount: 2 });
+    const fakeFs = createFakeFs();
+    const timestamps = [];
+    const exporter = buildExporter(ctx, fakeFs, async () => {
+      timestamps.push(Date.now());
+      return { bytes: makePngBytes(750, 1000) };
+    }, { interPageDelayMs: 40 });
+    const result = await exporter.exportCards(exportInput(ctx));
+    expect(result.status).toBe("completed");
+    expect(timestamps.length).toBe(2);
+    expect(timestamps[1] - timestamps[0]).toBeGreaterThanOrEqual(25);
   });
 });

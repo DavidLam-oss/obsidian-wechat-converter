@@ -686,6 +686,7 @@ renderCardExportResultLinks(body) {
         }, 1500);
       });
     });
+    hint.setText('已保存至当前知识库，可在左侧文件树中查看或分享。');
   }
 }
 ,

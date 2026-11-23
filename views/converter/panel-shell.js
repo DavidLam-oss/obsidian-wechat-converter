@@ -383,6 +383,7 @@ switchPreviewMode(mode, options = {}) {
           && this.renderGeneration === generation
           && this.previewContainer
           && !this.previewContainer.querySelector?.('.icard-preview-shell')
+          && !this.previewContainer.querySelector?.('.icard-preview-empty:not(.is-loading)')
         ) {
           renderCardLoadingPlaceholder(this.previewContainer);
           this.cardLoadingPlaceholderShownAt = Date.now();

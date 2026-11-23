@@ -34,7 +34,7 @@ describe("C04 平台能力隔离与降级验证", () => {
       expect(isMobileClient(mockApp)).toBe(false);
     });
 
-    it("移动端环境下 renderCardPreview 渲染移动端说明态，不触发 Markdown 解析与排版管线", async () => {
+    it("移动端环境下 renderCardPreview 正常执行排版管线，支持卡片预览", async () => {
       const { AppleStyleView } = loadInputModule();
       const mockApp = { isMobile: true };
       const view = new AppleStyleView({ view: null }, { settings: { wechatAccounts: [] } });
@@ -44,22 +44,33 @@ describe("C04 平台能力隔离与降级验证", () => {
       let resolveSourceCalled = false;
       view.resolveCardMarkdownSource = async () => {
         resolveSourceCalled = true;
-        return { ok: true, markdown: "# 标题", sourcePath: "a.md" };
+        return { ok: true, markdown: "# 标题\n测试正文内容", sourcePath: "a.md" };
       };
 
       await view.renderCardPreview();
 
-      // 验证未调用任何排版/解析链路
-      expect(resolveSourceCalled).toBe(false);
-
-      // 验证 DOM 渲染了移动端专有说明态
-      const emptyEl = view.previewContainer.querySelector(".icard-preview-empty");
-      expect(emptyEl).toBeTruthy();
-      const titleEl = emptyEl.querySelector(".icard-preview-empty-title");
-      expect(titleEl?.textContent).toContain("图片卡片目前仅支持桌面端");
-      const descEl = emptyEl.querySelector(".icard-preview-empty-desc");
-      expect(descEl?.textContent).toContain("移动端暂时无法进行卡片排版预览与导出，文章与贴图功能不受影响。");
+      // 验证移动端已打通排版管线
+      expect(resolveSourceCalled).toBe(true);
     }, 15000);
+
+    it("移动端环境下 buildCardExportFsAdapter 支持虚拟根路径解析，不抛 realpath-unavailable", async () => {
+      const { AppleStyleView } = loadInputModule();
+      const mockApp = {
+        isMobile: true,
+        vault: {
+          adapter: {
+            exists: async () => true,
+          },
+        },
+      };
+      const view = new AppleStyleView({ view: null }, { settings: { wechatAccounts: [] } });
+      view.app = mockApp;
+      const fs = view.buildCardExportFsAdapter();
+      const rootPath = await fs.realpath('');
+      expect(rootPath).toBe('/__vault__');
+      const subPath = await fs.realpath('卡片导出/test');
+      expect(subPath).toBe('/__vault__/卡片导出/test');
+    });
 
     it("移动端环境下文章与贴图模式不受影响", () => {
       const { AppleStylePlugin, createImageSwipeCalloutMarkdown } = loadInputModule();
