@@ -482,16 +482,22 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
   background-color: var(--background-modifier-hover);
 }
 
-/* 封面配图鼠标手势交互（Pan & Zoom） */
+/* 封面配图鼠标与触控手势交互（Pan & Zoom） */
 .icard-cover-interactive-image-wrap {
   cursor: grab;
   user-select: none;
-  touch-action: none;
+  touch-action: pan-y;
   position: relative;
 }
 
 .icard-cover-interactive-image-wrap.is-dragging {
   cursor: grabbing;
+}
+
+.icard-cover-interactive-image-wrap.is-touch-panning,
+.icard-cover-interactive-image-wrap.is-touch-pinching {
+  touch-action: none;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.45);
 }
 
 .icard-cover-interactive-image-wrap::after {
@@ -513,6 +519,23 @@ apple-btn-row/apple-btn-size；分节间距由本文件的
 
 .icard-cover-interactive-image-wrap:hover::after {
   opacity: 0.9;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .icard-cover-interactive-image-wrap {
+    touch-action: pan-y;
+  }
+
+  .icard-cover-interactive-image-wrap::after {
+    content: "长按平移 · 双指缩放";
+    display: none;
+  }
+
+  .icard-cover-interactive-image-wrap.is-touch-panning::after,
+  .icard-cover-interactive-image-wrap.is-touch-pinching::after {
+    display: block;
+    opacity: 0.9;
+  }
 }
 
 /* 比例卡片（2026-09-20 David，参考微信工具样式）：形状示意 + 数值。
