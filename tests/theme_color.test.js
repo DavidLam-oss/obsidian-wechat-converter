@@ -122,6 +122,28 @@ describe('AppleTheme Color Logic', () => {
         expect(theme.adjustColorBrightness('FFFFFF', -20).toLowerCase()).toBe('#cccccc');
         expect(theme.adjustColorBrightness('#FFFFFF', -20).toLowerCase()).toBe('#cccccc');
     });
+
+    it('should respect customThemeConfig.titleColor when coloredHeader is false and scale numeric fontSize >= 12', () => {
+      const theme = new AppleTheme({
+        fontSize: 15,
+        coloredHeader: false,
+        customThemeConfig: {
+          name: '测试主题',
+          lineHeight: 1.8,
+          paragraphGap: 16,
+          textColor: '#333333',
+          titleColor: '#7C2D12',
+        },
+      });
+      expect(theme.getHeadingColorValue()).toBe('#7C2D12');
+      expect(theme.getSizes().base).toBe(15);
+      expect(theme.getSizes().code).toBe(13);
+
+      const clampedLow = new AppleTheme({ fontSize: 12 });
+      expect(clampedLow.getSizes().base).toBe(12);
+      const clampedHigh = new AppleTheme({ fontSize: 30 });
+      expect(clampedHigh.getSizes().base).toBe(22);
+    });
   });
 
   describe('Avatar Watermark Layout', () => {

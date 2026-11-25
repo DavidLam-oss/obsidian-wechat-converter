@@ -313,10 +313,51 @@ describe('theme-token-validator', () => {
   });
 
   describe('AI_THEME_PROMPT_TEMPLATE', () => {
-    it('包含有效的 JSON 结构指导和主要字段说明', () => {
+    it('包含有效的 JSON 结构指导和 CSS 优先字段说明', () => {
       expect(AI_THEME_PROMPT_TEMPLATE).toContain('schemaVersion');
       expect(AI_THEME_PROMPT_TEMPLATE).toContain('colors');
-      expect(AI_THEME_PROMPT_TEMPLATE).toContain('heading');
+      expect(AI_THEME_PROMPT_TEMPLATE).toContain('"css"');
+      expect(AI_THEME_PROMPT_TEMPLATE).toContain('::before');
+    });
+  });
+
+  describe('css AST validation & normalization', () => {
+    it('允许带 ::before 与 counter() 的微信安全 CSS，并同步 css 与 rawCssOverrides', () => {
+      const token = {
+        name: '杂志人文',
+        colors: { accent: '#8C5A3C' },
+        css: 'section { counter-reset: h2sec; } h2 { counter-increment: h2sec; } h2::before { content: counter(h2sec) ". "; color: #8C5A3C; }',
+      };
+      const res = validateCustomThemeToken(token);
+      expect(res.valid).toBe(true);
+      expect(res.token?.css).toContain('counter(h2sec)');
+      expect(res.token?.rawCssOverrides).toBe(res.token?.css);
+    });
+
+    it('拦截语法错误或含外部 url/@import 的 theme.css', () => {
+      const syntaxErr = validateCustomThemeToken({
+        name: '语法错误',
+        colors: { accent: '#2563EB' },
+        css: 'h2 { color: #2563EB;',
+      });
+      expect(syntaxErr.valid).toBe(false);
+      expect(syntaxErr.errors.some((e) => e.includes('CSS 语法解析失败'))).toBe(true);
+
+      const blockedImportErr = validateCustomThemeToken({
+        name: '外链阻断',
+        colors: { accent: '#2563EB' },
+        css: '@import url("https://evil.com/x.css"); h2 { color: #2563EB; }',
+      });
+      expect(blockedImportErr.valid).toBe(false);
+      expect(blockedImportErr.errors.some((e) => e.includes('危险规则'))).toBe(true);
+
+      const blockedFontFaceErr = validateCustomThemeToken({
+        name: '字体请求阻断',
+        colors: { accent: '#2563EB' },
+        css: '@font-face { font-family: "X"; } h2 { color: #2563EB; }',
+      });
+      expect(blockedFontFaceErr.valid).toBe(false);
+      expect(blockedFontFaceErr.errors.some((e) => e.includes('不支持或有网络风险的规则'))).toBe(true);
     });
   });
 });

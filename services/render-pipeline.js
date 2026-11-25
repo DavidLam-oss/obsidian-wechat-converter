@@ -28,7 +28,7 @@
 
 import { interpolateMarkdownVariables } from './frontmatter-interpolator.js';
 import { decorateArticleHeadings } from './heading-style-renderer.js';
-import { findCustomTheme } from './custom-theme-adapter.js';
+import { findCustomTheme, getCustomThemeCss } from './custom-theme-adapter.js';
 
 /**
  * @typedef {{
@@ -81,9 +81,15 @@ export class NativeRenderPipeline {
       || 'default';
 
     let customHeadingConfig = null;
+    let customTitleColor;
+    let hasThemeCss = false;
     if (settings && typeof settings.theme === 'string') {
       const customTheme = findCustomTheme(settings.customThemes, settings.theme);
       if (customTheme) {
+        hasThemeCss = Boolean(getCustomThemeCss(customTheme));
+        if (customTheme.colors?.title) {
+          customTitleColor = customTheme.colors.title;
+        }
         if (customTheme.heading) {
           customHeadingConfig = customTheme.heading;
         }
@@ -98,6 +104,8 @@ export class NativeRenderPipeline {
       html = decorateArticleHeadings(html, {
         headingStyle,
         customHeading: customHeadingConfig,
+        hasThemeCss,
+        titleColor: customTitleColor,
         settings,
         themeColor: typeof context.themeColor === 'string' ? context.themeColor : undefined,
         customColor: typeof context.customColor === 'string' ? context.customColor : undefined,

@@ -215,8 +215,11 @@ class AppleTheme {
    * @returns {string}
    */
   getHeadingColorValue() {
-    // 1. 如果未开启标题染色，返回默认深灰
+    // 1. 如果未开启标题染色，自定义主题优先读取自身的 titleColor/headingColor，否则返回默认深灰
     if (!this.coloredHeader) {
+      if (this.customThemeConfig && (this.customThemeConfig.headingColor || this.customThemeConfig.titleColor)) {
+        return String(this.customThemeConfig.headingColor || this.customThemeConfig.titleColor);
+      }
       return '#3e3e3e';
     }
 
@@ -273,6 +276,20 @@ class AppleTheme {
    * @returns {AppleFontSizeConfig}
    */
   getSizes() {
+    if (typeof this.fontSize === 'number' && Number.isFinite(this.fontSize) && this.fontSize >= 12) {
+      const base = Math.min(22, Math.max(12, Math.round(this.fontSize)));
+      return {
+        base,
+        h1: Math.round(base * 1.875),
+        h2: Math.round(base * 1.375),
+        h3: Math.round(base * 1.125),
+        h4: base,
+        h5: base,
+        h6: base,
+        code: Math.max(12, base - 2),
+        caption: Math.max(11, base - 3),
+      };
+    }
     return AppleTheme.FONT_SIZES[/** @type {AppleFontSizeName} */ (this.fontSize)] || AppleTheme.FONT_SIZES[3];
   }
 
@@ -381,6 +398,9 @@ class AppleTheme {
             ? AppleTheme.QUOTE_NEUTRAL_BORDER
             : `${color}99`;
           return `font-family: ${AppleTheme.FONTS.serif}; font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: #5f574c; background: ${paperBg}; margin: 22px 0 22px 8px; padding: 16px 18px; border-left: 2px solid ${paperBorder}; border-radius: ${r.sm}px; ${this.getBodyTextAlign()};`;
+        }
+        if (config.blockquoteStyle === 'none') {
+          return `font-size: ${sizes.base}px; line-height: ${effectiveLineHeight}; color: ${config.blockquoteTextColor || '#595959'}; margin: ${s.md}px 0; padding: 8px 14px;`;
         }
         if (config.blockquoteStyle === 'minimal') {
           const minimalBorder = quoteCalloutStyleMode === 'neutral'

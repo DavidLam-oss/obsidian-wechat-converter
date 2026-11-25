@@ -243,6 +243,7 @@ function decorateSubHeadings(html, tag, ornamentConfig, prefixText, primaryColor
  * @param {{
  *   headingStyle?: string,
  *   customHeading?: import('./theme-token-validator.js').HeadingDecorationToken,
+ *   hasThemeCss?: boolean,
  *   primaryColor?: string,
  *   themeColor?: string,
  *   customColor?: string,
@@ -290,10 +291,18 @@ export function decorateArticleHeadings(html, options = {}) {
     if (customHeading?.customStyle) {
       const sanitized = sanitizeRawCssOverrides(String(customHeading.customStyle)).sanitized;
       const prefixSpan = renderPrefixSpan(customHeading, numStr, primaryColor);
+      const extraStyles = [];
+      if (customHeading.borderLeft) extraStyles.push(`border-left: ${customHeading.borderLeft}`);
+      else if (customHeading.border) extraStyles.push(`border: ${customHeading.border}`);
+      if (customHeading.borderBottom) extraStyles.push(`border-bottom: ${customHeading.borderBottom}`);
+      if (customHeading.background) extraStyles.push(`background: ${customHeading.background}`);
+      if (customHeading.borderRadius) extraStyles.push(`border-radius: ${customHeading.borderRadius}`);
+      if (customHeading.align) extraStyles.push(`text-align: ${customHeading.align}`);
+      const baseDecl = extraStyles.length > 0 ? `${extraStyles.join('; ')}; ` : '';
       return (
-        `<h2${attrsPrefix} style="display: block; margin: 32px 0 16px; line-height: 1.4; ${sanitized}">` +
+        `<h2${attrsPrefix} style="display: block; margin: 32px 0 16px; font-size: 19px; font-weight: 700; color: ${titleColor}; line-height: 1.4; ${baseDecl}${sanitized}">` +
         prefixSpan +
-        `<span style="color: ${titleColor}; line-height: 1.4;">${cleanTitle}</span>` +
+        cleanTitle +
         `</h2>`
       );
     }
@@ -415,6 +424,17 @@ export function decorateArticleHeadings(html, options = {}) {
           );
           if (!hasH2CustomProps) {
             return _fullMatch;
+          }
+          // CSS 驱动自定义主题若仅搭配 ornament/prefix（无显式边框/底色字段），保留原有 h2 属性交由 theme.css 控制，避免注入左边框与内层 span 覆盖样式
+          const hasBoxCustomProps = Boolean(
+            customHeading.borderLeft
+            || customHeading.borderBottom
+            || customHeading.border
+            || customHeading.background
+          );
+          if (options.hasThemeCss && !hasBoxCustomProps) {
+            const prefixSpan = renderPrefixSpan(customHeading, numStr, primaryColor);
+            return `<h2${attrs}>${prefixSpan}${cleanTitle}</h2>`;
           }
           const borderVal = customHeading.borderLeft || customHeading.border || `3px solid ${primaryColor}`;
           const bgVal = customHeading.background || 'transparent';

@@ -176,18 +176,35 @@ describe('Heading Style Renderer - decorateArticleHeadings', () => {
     expect(output).toContain('02. ');
   });
 
-  it('should render custom inline CSS when customStyle is provided', () => {
+  it('should render custom inline CSS when customStyle is provided without dropping typography', () => {
     const output = decorateArticleHeadings(baseHtml, {
       customHeading: {
         customStyle: 'border-bottom: 2px dashed #9333EA; padding-bottom: 4px;',
+        borderLeft: '4px solid #9333EA',
         prefix: '◆ ',
       },
       primaryColor: '#9333EA',
     });
 
     expect(output).toContain('border-bottom: 2px dashed #9333EA');
+    expect(output).toContain('border-left: 4px solid #9333EA');
+    expect(output).toContain('font-size: 19px; font-weight: 700');
     expect(output).toContain('◆ ');
     expect(output).toContain('导言');
+  });
+
+  it('should preserve h2 attributes and avoid injecting left border or inner span when hasThemeCss is true with ornament-only heading', () => {
+    const output = decorateArticleHeadings('<section><h2 style="color: #8C5A3C;">章节一</h2></section>', {
+      headingStyle: 'default',
+      customHeading: { ornament: 'leaf' },
+      hasThemeCss: true,
+      primaryColor: '#8C5A3C',
+    });
+
+    expect(output).toContain('data-owc-ornament="1"');
+    expect(output).toContain('<h2 style="color: #8C5A3C;">');
+    expect(output).not.toContain('border-left: 3px solid');
+    expect(output).not.toContain('font-size: 19px');
   });
 
   it('should HTML escape malicious prefix to prevent tag injection (XSS)', () => {

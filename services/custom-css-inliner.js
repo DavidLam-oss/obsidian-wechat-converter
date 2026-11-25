@@ -120,7 +120,8 @@ function countSelectorMatches(wrappedHtml, selectors) {
   const matchedElements = new Set();
   selectors.forEach((selector) => {
     try {
-      const elements = Array.from(container.querySelectorAll(selector));
+      const querySelector = selector.startsWith('>') ? `:scope ${selector}` : selector;
+      const elements = Array.from(container.querySelectorAll(querySelector));
       if (elements.length > 0) matchedRuleCount += 1;
       elements.forEach((element) => matchedElements.add(element));
     } catch {

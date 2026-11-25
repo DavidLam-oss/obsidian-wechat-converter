@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
+  AI_THEME_SYSTEM_PROMPT,
   buildThemePromptWithRequirement,
+  buildAiThemeUserMessage,
   hasRunnableTextProvider,
   generateCustomThemeWithAi,
 } from '../services/ai-theme-generator.js';
@@ -43,6 +45,30 @@ describe('AI Theme Generator Service', () => {
     it('should use default prompt text when requirement is empty', () => {
       const prompt = buildThemePromptWithRequirement('');
       expect(prompt).toContain('请自由设计一套优雅克制');
+      expect(AI_THEME_SYSTEM_PROMPT).toContain('::before');
+      expect(AI_THEME_SYSTEM_PROMPT).not.toContain('"customPath":');
+    });
+
+    it('should build incremental refine prompt preserving legacy and hybrid fields', () => {
+      const prompt = buildAiThemeUserMessage({
+        currentTheme: {
+          id: 'custom-editorial',
+          name: '刊物风',
+          headingStyle: 'zen',
+          h3Style: 'classic',
+          blockquoteStyle: 'center',
+          strongStyle: 'highlight',
+          typography: { fontPreset: 'serif', baseFontSize: 16 },
+          colors: { accent: '#8C5A3C' },
+          css: 'h2 { color: #8C5A3C; }',
+        },
+        refineInstruction: '标题改成细下划线',
+      });
+      expect(prompt).toContain('custom-editorial');
+      expect(prompt).toContain('"headingStyle": "zen"');
+      expect(prompt).toContain('"blockquoteStyle": "center"');
+      expect(prompt).toContain('标题改成细下划线');
+      expect(prompt).toContain('基于当前主题配置做精准的局部修改');
     });
 
     it('should check if runnable text provider exists', () => {
@@ -383,6 +409,100 @@ describe('AI Theme Generator Service', () => {
       });
 
       expect(result.success).toBe(false);
+      expect(result.error).toContain('主题配置校验失败');
+    });
+
+    it('should auto-repair once when AI returns CSS with syntax error', async () => {
+      const aiSettings = {
+        providers: [
+          {
+            id: 'p1',
+            kind: 'openai-compatible',
+            enabled: true,
+            baseUrl: 'https://api.example.com/v1',
+            apiKey: 'sk-123',
+            supportsText: true,
+            textModel: 'gpt-4o',
+          },
+        ],
+      };
+
+      const brokenCssToken = JSON.stringify({
+        schemaVersion: 1,
+        id: 'broken-css',
+        name: '修复测试',
+        colors: { accent: '#2563EB' },
+        css: 'h2 { color: #2563EB;',
+      });
+
+      const repairedCssToken = JSON.stringify({
+        schemaVersion: 1,
+        id: 'broken-css',
+        name: '修复测试',
+        colors: { accent: '#2563EB' },
+        css: 'h2 { color: #2563EB; }',
+      });
+
+      const mockFetch = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({ choices: [{ message: { content: brokenCssToken } }] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({ choices: [{ message: { content: repairedCssToken } }] }),
+        });
+
+      const result = await generateCustomThemeWithAi({
+        aiSettings,
+        userRequirement: '蓝色简报',
+        fetchImpl: mockFetch,
+      });
+
+      expect(result.success).toBe(true);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(result.token?.css).toBe('h2 { color: #2563EB; }');
+    });
+
+    it('should return validation error if CSS auto-repair retry also fails', async () => {
+      const aiSettings = {
+        providers: [
+          {
+            id: 'p1',
+            kind: 'openai-compatible',
+            enabled: true,
+            baseUrl: 'https://api.example.com/v1',
+            apiKey: 'sk-123',
+            supportsText: true,
+            textModel: 'gpt-4o',
+          },
+        ],
+      };
+
+      const brokenCssToken = JSON.stringify({
+        schemaVersion: 1,
+        id: 'still-broken',
+        name: '二次失败测试',
+        colors: { accent: '#2563EB' },
+        css: 'h2 { color: #2563EB;',
+      });
+
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ choices: [{ message: { content: brokenCssToken } }] }),
+      });
+
+      const result = await generateCustomThemeWithAi({
+        aiSettings,
+        userRequirement: '蓝色简报',
+        fetchImpl: mockFetch,
+      });
+
+      expect(result.success).toBe(false);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
       expect(result.error).toContain('主题配置校验失败');
     });
   });

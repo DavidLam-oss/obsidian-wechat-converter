@@ -52,6 +52,7 @@ import {
 import { applyCompiledCustomCss } from '../../services/custom-css-inliner.js';
 import { compileCustomCss } from '../../services/custom-css-compiler.js';
 import { resolveCustomCssSource } from '../../services/custom-css-source.js';
+import { applyActiveCustomThemeCss, resolveThemeUpdateOptions } from '../../services/custom-theme-adapter.js';
 import { decorateArticleWithEngagementCard } from '../../services/engagement-card.js';
 import { mountPhoneFrame } from './phone-frame.js';
 import { lockPaneMinWidth, unlockPaneMinWidth } from './pane-min-width.js';
@@ -546,7 +547,7 @@ async onThemeChange(value, grid) {
   this.plugin.settings.letterSpacing = null;
   await this.plugin.saveSettings();
   this.updateButtonActive(grid, value);
-  this.theme?.update({ theme: value, lineHeight: null, paragraphGap: null, letterSpacing: null });
+  this.theme?.update(resolveThemeUpdateOptions(this.plugin.settings, value));
   this.refreshSpacingSliders?.(); this.refreshThemeColorSection?.();
   await this.convertCurrent(true);
 }
@@ -720,6 +721,7 @@ async applyCustomCss(html, options = {}) {
     return html;
   }
 
+  html = applyActiveCustomThemeCss(html, this.plugin?.settings);
   const source = await resolveCustomCssSource(this.plugin);
   if (source.kind === 'disabled') this._customCssLastValidBySource.clear();
   const lastValid = this._customCssLastValidBySource.get(source.identity);

@@ -23,6 +23,9 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return -- reason: Theme token compilation maps loosely-typed JSON tokens into typed AppleTheme options */
 
+import { compileCustomCss } from './custom-css-compiler.js';
+import { applyCompiledCustomCss } from './custom-css-inliner.js';
+
 /**
  * 官方内置 8 套文章主题元信息清单
  */
@@ -38,6 +41,154 @@ export const BUILTIN_ARTICLE_THEMES = /** @type {const} */ ([
 ]);
 
 /**
+ * 读取自定义主题的 CSS 文本（优先 css，兼容历史 rawCssOverrides）
+ * @param {import('./theme-token-validator.js').CustomThemeToken | Record<string, any> | null | undefined} token
+ * @returns {string}
+ */
+export function getCustomThemeCss(token) {
+  if (!token || typeof token !== 'object') return '';
+  const candidate = typeof token.css === 'string' && token.css.trim()
+    ? token.css
+    : (typeof token.rawCssOverrides === 'string' ? token.rawCssOverrides : '');
+  return candidate.trim();
+}
+
+/**
+ * 编译自定义主题 CSS（自动强制 !important 以覆盖 AppleTheme 基础内联保底样式）
+ * @param {import('./theme-token-validator.js').CustomThemeToken | Record<string, any> | null | undefined} token
+ * @returns {import('./custom-css-compiler.js').CustomCssCompileResult | null}
+ */
+export function compileCustomThemeCss(token) {
+  const css = getCustomThemeCss(token);
+  if (!css) return null;
+  return compileCustomCss(css, {
+    sourceIdentity: `custom-theme:${token?.id || 'draft'}`,
+    forceImportant: true,
+    rootSectionDirectChild: true,
+  });
+}
+
+/**
+ * 保护内置组件子树（互动三连卡、Mac 代码块）不被自定义主题 CSS（如 p / pre / section）误伤
+ * @param {string} html
+ * @returns {{ html: string, restore: (targetHtml: string) => string }}
+ */
+function protectBuiltinComponentSubtrees(html) {
+  if (typeof DOMParser === 'undefined' || !html) {
+    return { html, restore: (targetHtml) => targetHtml };
+  }
+  const hasProtectedClass = html.includes('owc-engagement-card')
+    || html.includes('code-snippet__fix')
+    || html.includes('code-snippet__export');
+  if (!hasProtectedClass) {
+    return { html, restore: (targetHtml) => targetHtml };
+  }
+
+  const doc = new DOMParser().parseFromString(`<div id="owc-theme-protect-root">${html}</div>`, 'text/html');
+  const root = doc.getElementById('owc-theme-protect-root');
+  if (!root) {
+    return { html, restore: (targetHtml) => targetHtml };
+  }
+
+  /** @type {Array<{ token: string, markup: string }>} */
+  const placeholders = [];
+  const protectedNodes = Array.from(
+    root.querySelectorAll('.owc-engagement-card, .code-snippet__fix, .code-snippet__export')
+  );
+  protectedNodes.forEach((node, index) => {
+    // 跳过已处于更外层受保护节点内部的后代
+    if (node.parentElement?.closest('.owc-engagement-card, .code-snippet__fix, .code-snippet__export')) {
+      return;
+    }
+    const token = `owc-protected-${index}`;
+    placeholders.push({ token, markup: node.outerHTML });
+    const marker = doc.createElement('span');
+    marker.setAttribute('data-owc-protected-block', token);
+    node.replaceWith(marker);
+  });
+
+  if (placeholders.length === 0) {
+    return { html, restore: (targetHtml) => targetHtml };
+  }
+
+  // 读取替换后的内部 HTML 序列（不经过 innerHTML 赋值）
+  const protectedHtml = Array.from(root.childNodes)
+    .map((child) => (child.nodeType === 1 ? /** @type {Element} */ (child).outerHTML : (child.textContent || '')))
+    .join('');
+
+  return {
+    html: protectedHtml,
+    restore: (targetHtml) => {
+      const outDoc = new DOMParser().parseFromString(`<div id="owc-theme-restore-root">${targetHtml}</div>`, 'text/html');
+      const outRoot = outDoc.getElementById('owc-theme-restore-root');
+      if (!outRoot) return targetHtml;
+      placeholders.forEach(({ token, markup }) => {
+        const marker = outRoot.querySelector(`[data-owc-protected-block="${token}"]`);
+        if (!marker) return;
+        const fragDoc = new DOMParser().parseFromString(markup, 'text/html');
+        const restoredEl = fragDoc.body.firstElementChild;
+        if (restoredEl) {
+          marker.replaceWith(outDoc.importNode(restoredEl, true));
+        }
+      });
+      return Array.from(outRoot.childNodes)
+        .map((child) => (child.nodeType === 1 ? /** @type {Element} */ (child).outerHTML : (child.textContent || '')))
+        .join('');
+    },
+  };
+}
+
+/**
+ * 将自定义主题 CSS 编译并内联应用到 HTML（含 ::before/::after/counter() 预渲染；fail-open）
+ * @param {string} html
+ * @param {import('./theme-token-validator.js').CustomThemeToken | Record<string, any> | null | undefined} token
+ * @returns {string}
+ */
+export function applyCustomThemeCssToHtml(html, token) {
+  if (!html) return html;
+  const compiled = compileCustomThemeCss(token);
+  if (!compiled || !compiled.usable) return html;
+  const protectedSubtrees = protectBuiltinComponentSubtrees(html);
+  const result = applyCompiledCustomCss(protectedSubtrees.html, compiled);
+  return result.html ? protectedSubtrees.restore(result.html) : html;
+}
+
+/**
+ * 计算切换主题时同步更新 AppleTheme 实例所需的完整选项（含 themeColor / customColor / customThemeConfig）
+ * @param {{ themeColor?: unknown, customColor?: unknown, customThemes?: unknown } | null | undefined} settings
+ * @param {string} themeId
+ * @returns {Record<string, any>}
+ */
+export function resolveThemeUpdateOptions(settings, themeId) {
+  const customToken = findCustomTheme(settings?.customThemes, themeId);
+  const customConfig = customToken ? compileCustomThemeToAppleConfig(customToken) : null;
+  return {
+    theme: themeId,
+    themeColor: customToken ? 'custom' : (typeof settings?.themeColor === 'string' ? settings.themeColor : 'blue'),
+    customColor: customToken
+      ? (customToken.colors?.accent || '#2563EB')
+      : (typeof settings?.customColor === 'string' ? settings.customColor : null),
+    customThemeConfig: customConfig,
+    lineHeight: null,
+    paragraphGap: null,
+    letterSpacing: null,
+  };
+}
+
+/**
+ * 若当前 settings 选中的是带 CSS 的自定义主题，则先应用该主题 CSS；否则原样返回 HTML
+ * @param {string} html
+ * @param {{ theme?: unknown, customThemes?: unknown } | null | undefined} settings
+ * @returns {string}
+ */
+export function applyActiveCustomThemeCss(html, settings) {
+  if (!html || !settings) return html;
+  const activeCustomTheme = findCustomTheme(settings.customThemes, String(settings.theme || ''));
+  if (!activeCustomTheme || !getCustomThemeCss(activeCustomTheme)) return html;
+  return applyCustomThemeCssToHtml(html, activeCustomTheme);
+}
+
+/**
  * 将 CustomThemeToken 编译为运行时 AppleThemeConfig 结构
  * @param {import('./theme-token-validator.js').CustomThemeToken} token
  * @returns {Record<string, any>}
@@ -45,14 +196,16 @@ export const BUILTIN_ARTICLE_THEMES = /** @type {const} */ ([
 export function compileCustomThemeToAppleConfig(token) {
   const colors = token.colors || { accent: '#2563EB' };
   const typography = token.typography || {};
+  const themeCss = getCustomThemeCss(token);
+  const hasThemeCss = Boolean(themeCss);
 
-  // 映射标题风格
+  // 映射标题风格（CSS 驱动主题默认保持零边框干扰基线，避免 github 底线与自定义 CSS 冲突）
   let h1Decoration = 'none';
   let h2Decoration = 'none';
-  let h3Decoration = 'bottom-line-left';
+  let h3Decoration = hasThemeCss ? 'none' : 'bottom-line-left';
   let h4Decoration = 'none';
   let headingWeight = 700;
-  let blockquoteStyle = 'soft';
+  let blockquoteStyle = hasThemeCss ? 'none' : 'soft';
 
   switch (token.headingStyle) {
     case 'serial-number':
@@ -109,6 +262,8 @@ export function compileCustomThemeToAppleConfig(token) {
     blockquoteStyle = 'minimal';
   } else if (customBlockquote === 'soft') {
     blockquoteStyle = 'soft';
+  } else if (customBlockquote === 'none') {
+    blockquoteStyle = 'none';
   }
 
   // 3. 加粗强调风格
@@ -151,8 +306,9 @@ export function compileCustomThemeToAppleConfig(token) {
     tableCellPadding: 10,
     figurePadding: 8,
     figureBorderColor: colors.border || '#E2E8F0',
-    // 预留前向兼容字段（由于微信剥离外部样式表与 style 标签，本字段保持惰性，定制样式统一走 Token/heading 内联）
-    rawCssOverrides: token.rawCssOverrides || '',
+    highlightColor: colors.highlight,
+    css: themeCss,
+    rawCssOverrides: themeCss,
   };
 }
 

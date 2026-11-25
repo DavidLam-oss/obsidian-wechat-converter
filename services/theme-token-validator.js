@@ -31,7 +31,8 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- reason: Theme token validation and normalization process untrusted and heterogeneous JSON payloads */
 
-import { VALID_HEADING_ORNAMENTS } from './heading-ornaments.js';
+import { VALID_HEADING_ORNAMENTS, CURATED_AI_HEADING_ORNAMENTS } from './heading-ornaments.js';
+import { compileCustomCss } from './custom-css-compiler.js';
 
 /**
  * @typedef {{
@@ -94,7 +95,8 @@ import { VALID_HEADING_ORNAMENTS } from './heading-ornaments.js';
  *     showEngagementCard?: boolean,
  *     ctaText?: string,
  *   },
- *   rawCssOverrides?: string, // 预留前向兼容字段；由于微信富文本编辑器强制剥离所有 <style> 块与外部类名，该字段在文章排版转译中保持惰性，样式定制统一走 Token/heading 内联
+ *   css?: string, // 微信安全自定义排版 CSS（支持标准选择器与 ::before/::after/counter()，由 AST 编译器校验并内联）
+ *   rawCssOverrides?: string, // 历史兼容别名，与 css 同源，编译管线统一经由 custom-css-compiler 处理
  * }} CustomThemeToken
  */
 
@@ -116,119 +118,61 @@ export const VALID_BLOCKQUOTE_STYLES = /** @type {const} */ (['soft', 'center', 
 export const VALID_STRONG_STYLES = /** @type {const} */ (['color', 'neutral', 'highlight']);
 export const VALID_H3_STYLES = /** @type {const} */ (['bottom-line', 'left-border', 'classic', 'simple', 'badge']);
 export const VALID_H4_STYLES = /** @type {const} */ (['simple', 'left-border', 'light-bg', 'bottom-line', 'classic-minor']);
-export { VALID_HEADING_ORNAMENTS };
+export { VALID_HEADING_ORNAMENTS, CURATED_AI_HEADING_ORNAMENTS };
 
 /**
- * 开箱即用的 AI 主题设计提示词模板
+ * 开箱即用的 AI 主题设计提示词模板（供复制给外部大模型）
  */
-export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的公众号视觉排版大师与配置生成器。请根据用户的风格诉求，为用户设计一套优雅、克制、耐看且在微信生态内具有极高排版兼容性的 Theme Token JSON。
+export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的微信公众号视觉排版设计师。请根据用户的风格诉求，设计一套优雅、克制、耐看且在微信生态内高度兼容的主题配置 JSON（含标准 CSS）。
 
-【微信排版能力边界与规范 (Do's & Don'ts)】
-- 🚫 严禁做（微信编辑器会剥离或排版崩溃）：
-  * 严禁依赖外部 CSS 类名或 <style> 标签（微信富文本完全剥离 <style> 块）；
-  * 严禁使用伪元素（::before、::after 无法内联）；
-  * 严禁使用 CSS 动画（@keyframes）及 JS 交互事件；
-  * 严禁使用负 margin 溢出、大宽度绝对定位或浮动（会导致手机端产生水平滚动条或文字截断）；
-  * 严禁在 JSON 外部附带任何额外 Markdown 代码围栏（例如 \`\`\`json）、前导问候或解释说明，必须是合法的纯 JSON 字符串。
-- ✅ 允许并鼓励做（微信富文本完美兼容的标准内联样式）：
-  * 标准内联盒模型：padding、margin、border、border-left、border-bottom、border-radius；
-  * 背景与层次：background（单色、浅底色或 linear-gradient 线性渐变）；
-  * 文本修饰：color、font-size、line-height、font-weight、letter-spacing、text-align；
-  * 标题自由组合：利用 prefix（大序号 01.、徽标 ◆、双斜杠 //、直角引号 「）、边框条与背景色块组合出极具美感的标题样式；
-  * 正文字色保障：正文 text 建议使用 #222222~#333333 保证阅读对比度，辅助色 muted 使用 #666666~#888888。
+【核心设计原则（重要）】
+1. **CSS 优先，告别堆砌**：通过字体气质、字号对比、行高留白、克制的边框/浅底、以及标准 \`::before\` / \`::after\`（支持 \`counter-reset\` / \`counter()\`）来打造独特的版式风格。插件会自动将安全 CSS 与伪元素编译内联为微信兼容的 HTML，因此你**无需**手写 \`!important\`，也**无需**手写 \`<style>\` 标签。
+2. **克制与一致性**：
+   - 正文文字 \`p, li\` 保持高可读性（浅底上推荐 #222222 ~ #3A3A3A），主色调 \`colors.accent\` 用于重点引导、边框、强调词与微装饰；
+   - 严禁在正文和标题中堆砌 Emoji 或手写 SVG 路径（不要输出 \`customPath\`）；
+   - 如用户明确要求小图标装饰，仅可在 \`heading.ornament\` 选用极克制的微件（建议仅用于 H2，H3/H4 保持简洁）。
+3. **微信兼容边界**：
+   - ✅ 支持：\`section, h1, h2, h3, h4, p, blockquote, blockquote p, .owc-callout, strong, em, code, hr, ul, ol, li, table, th, td, a\` 等标签选择器（修改正文样式请同时作用于 \`p, li\`，引用内段落建议重置 \`blockquote p { margin: 0; color: inherit; }\`），以及 \`::before\` / \`::after\`、\`counter-reset\` / \`counter()\`、\`linear-gradient\`、\`border\`、\`border-radius\`、\`padding\`、\`margin\`、\`letter-spacing\`；
+   - 🚫 严禁：\`@import\`、\`@font-face\`、外部 \`url(...)\`、\`position: fixed/absolute\`、\`@keyframes\` 动画、JS 脚本或导致横向溢出的负 \`margin\`。
 
-【严格输出规范】
-1. 只输出合法标准的 JSON 字符串，严禁包含任何 Markdown 代码围栏（例如 \`\`\`json）、前后缀解说或注释。
-2. 颜色值必须严格符合 6 位十六进制格式（#RRGGBB）。
-3. 遵循克制配色要素：
-   - accent（主色）：醒目品牌色，用于重点引导、徽标、分节与强调；
-   - canvas（可选整篇底色）：如 "#FAF8F5"（护眼暖白）、"#FDFBF7"（复古纸张米黄）或纯白 "#FFFFFF"；
-   - light（浅底色）：主色极浅淡化版本（通常为 90%~95% 浅度混白），用于引用块与卡片底色；
-   - highlight（点睛色）：辅助提亮点缀色，用于重点短语标注；
-   - title / text / muted：用于标题、正文与次要说明的灰阶；
-   - border：分割线与卡片边框色；
-   - codeBackground：代码块背景底色。
-4. 【多级标题装饰 (heading) —— 支持二级、三级、四级标题装饰与开源微矢量/几何微件】：
-   你既可以直接使用常用风格："left-border"（左侧装饰条） | "bottom-line"（底边线） | "serial-number"（现代科技大数字） | "badge"（胶囊徽标） | "bubble"（浅色背景卡片） | "zen"（留白禅意） | "default"（经典条），
-   也可以在 "heading" 对象中自由定制专属版式（严禁在 prefix 中使用任何 Emoji 表情符号）：
-   - "align": "left" | "center"
-   - "ornament": 二级标题图形装饰微件（推荐优先从内置精选库选用），可选枚举：
-     * 纯 CSS 几何微件："double-diamond"（双叠菱形） | "slash-bar"（双色斜切条） | "dot-matrix"（双圆点阵） | "corner-bracket"（杂志折角框） | "square-pip"（叠影方块） | "ring-dot"（几何圆环）
-     * 开源 Lucide 矢量图标（33 款，涵盖生活/日常/商业/科技）："leaf" | "coffee" | "heart" | "star" | "sun" | "moon" | "music" | "camera" | "smile" | "feather" | "book-open" | "bookmark" | "lightbulb" | "pen" | "paperclip" | "compass" | "target" | "trending-up" | "award" | "flag" | "briefcase" | "shield-check" | "shield" | "check" | "bell" | "terminal" | "code" | "layers" | "zap" | "sparkles" | "globe" | "database" | "key" | "message-square" | "none"
-   - "customPath": 若内置库均不契合创意，可直接输出标准的 24x24 视口 SVG <path d="..."> 坐标字符串（纯坐标数据，无 HTML 标签，长度 <= 350 字符）
-   - "prefix": 自定义纯文本前缀或序号（如 "01."、"01 /"、"PART 01"、"// "，或空 ""；严禁使用 Emoji）
-   - "border": 自定义边框（如 "4px solid #2563EB" 或 "2px dashed #93C5FD"）
-   - "background": 背景色或线性渐变（如 "rgba(37, 99, 235, 0.08)"）
-   - "borderRadius": 圆角（如 "4px"）
-   - "customStyle": 可直接给出针对二级标题的微信内联 CSS 声明（例如 "border-left: 4px solid #2563EB; padding: 6px 12px; background: #EFF6FF; border-radius: 0 4px 4px 0;"）
-   - "h3Style": 三级标题风格，可选 "bottom-line"（默认短底线） | "left-border"（左侧竖条） | "classic"（浅底色小条） | "badge"（胶囊小标） | "simple"（纯加粗小标）
-   - "h3Ornament": 三级标题图形装饰微件（同 ornament 枚举，可选）
-   - "h3CustomPath": 三级标题自定义 24x24 SVG 路径坐标（可选）
-   - "h3Prefix": 三级标题纯文本前缀（如 "§ "、"// "，严禁 Emoji，可选）
-   - "h4Style": 四级标题风格，可选 "simple" | "left-border"（细左竖线） | "light-bg"（浅色胶囊底衬） | "bottom-line"（短下划线） | "classic-minor"
-   - "h4Ornament": 四级标题图形装饰微件（同 ornament 枚举，可选）
-   - "h4CustomPath": 四级标题自定义 24x24 SVG 路径坐标（可选）
-   - "h4Prefix": 四级标题纯文本前缀（可选）
-5. 【引用块与正文强调】：
-   - blockquote.style: 可选 "soft"（默认：左侧色条 + 浅底） | "center"（名言金句：居中 + 上下细线） | "paper"（纸张复古：细边条无背景） | "minimal"（极简：浅灰细边无底色）
-   - typography.strongStyle: 可选 "color"（默认：主题色加粗） | "neutral"（传统纯深黑加粗） | "highlight"（加粗且带淡色荧光笔底衬）
-   - 注意：代码块（code blocks）请保持默认黑色高亮，无需自定义。
-6. typography 排版建议：baseFontSize 通常在 14~17 之间，lineHeight 在 1.6~2.0 之间。
+【输出 JSON 结构要求】
+只输出一个合法的纯 JSON 对象（不要带 \`\`\`json 代码围栏、前导问候或解释）：
+- \`"schemaVersion"\`: 1
+- \`"id"\`: 英文小写连字符（如 \`"editorial-ink"\`）
+- \`"name"\`: 主题中文名称（2~6 个字）
+- \`"description"\`: 适用场景与设计简述（15~40 字）
+- \`"colors"\`:
+  - \`"accent"\`: 必填，6 位 Hex 主色（如 \`"#1E40AF"\`）
+  - 可选：\`"canvas"\`（整篇底色，默认 \`"#FFFFFF"\`）、\`"light"\`（主色极浅底色）、\`"title"\`、\`"text"\`、\`"muted"\`、\`"border"\`
+- \`"css"\`: 核心排版 CSS 字符串（直接写干净的标准 CSS，插件会自动限定作用域并内联覆盖，无需写 \`.owc-article-root\` 前缀或 \`!important\`）
+- \`"heading"\`: 可选；仅当用户明确要求微件图标时才附带 \`{ "ornament": "..." }\`（可选枚举：\`"double-diamond"\` | \`"slash-bar"\` | \`"dot-matrix"\` | \`"corner-bracket"\` | \`"square-pip"\` | \`"ring-dot"\` | \`"leaf"\` | \`"feather"\` | \`"sparkles"\` | \`"compass"\` | \`"book-open"\` | \`"terminal"\` | \`"lightbulb"\` | \`"bookmark"\` | \`"none"\`）
+- \`"footer"\`: \`{ "showEngagementCard": true, "ctaText": "贴合文风的引导语" }\`
 
-【标准 JSON 输出格式示范】
+【风格参考示范（请根据用户诉求自由发挥，不要照搬固定套路）】
+示例 A（杂志人文风，利用 counter() 章节号与衬线居中金线）：
 {
   "schemaVersion": 1,
-  "id": "custom-tech-blue",
-  "name": "科技沉稳蓝",
-  "description": "适合硬核评测与技术解析的理性沉稳排版",
-  "author": "设计师",
-  "heading": {
-    "style": "left-border",
-    "align": "left",
-    "ornament": "terminal",
-    "prefix": "01.",
-    "borderLeft": "4px solid #2563EB",
-    "background": "rgba(37, 99, 235, 0.08)",
-    "borderRadius": "0 4px 4px 0",
-    "customStyle": "padding: 6px 12px; margin: 32px 0 16px;",
-    "h3Style": "bottom-line",
-    "h3Ornament": "slash-bar",
-    "h4Style": "light-bg",
-    "h4Ornament": "dot-matrix"
-  },
-  "blockquote": {
-    "style": "soft"
-  },
-  "colors": {
-    "accent": "#2563EB",
-    "canvas": "#FFFFFF",
-    "light": "#EFF6FF",
-    "highlight": "#F59E0B",
-    "title": "#1E293B",
-    "text": "#334155",
-    "muted": "#64748B",
-    "border": "#E2E8F0",
-    "codeBackground": "#F8FAFC"
-  },
-  "typography": {
-    "fontPreset": "sans-serif",
-    "baseFontSize": 15,
-    "lineHeight": 1.75,
-    "paragraphGap": 16,
-    "letterSpacing": 0,
-    "strongStyle": "color"
-  },
-  "footer": {
-    "showEngagementCard": true,
-    "ctaText": "如果对你有启发，欢迎点赞、在看、转发"
-  }
+  "id": "editorial-paper",
+  "name": "刊物人文",
+  "description": "米白纸感底色配合衬线标题与克制章节号，适合深度长文与人物随笔",
+  "colors": { "accent": "#8C5A3C", "canvas": "#FCF9F2", "light": "#F4EDE2", "title": "#2C241E", "text": "#3A332D", "muted": "#7C7065", "border": "#E5DDD0" },
+  "css": "section { background: #FCF9F2; counter-reset: h2sec; } p, li { color: #3A332D; font-size: 15.5px; line-height: 1.9; } h1 { font-family: Georgia, 'Songti SC', serif; font-size: 24px; color: #2C241E; text-align: center; padding-bottom: 14px; border-bottom: 1px solid #D9CEBE; letter-spacing: 1px; } h2 { counter-increment: h2sec; font-family: Georgia, 'Songti SC', serif; font-size: 20px; color: #2C241E; text-align: center; margin: 38px 0 18px; padding-bottom: 10px; border-bottom: 1px solid #8C5A3C; } h2::before { content: counter(h2sec, decimal-leading-zero) ' · '; color: #8C5A3C; font-size: 13px; letter-spacing: 2px; font-weight: 600; } h3 { font-size: 17px; color: #2C241E; border-left: 3px solid #8C5A3C; padding-left: 10px; margin: 26px 0 12px; } blockquote { background: #F4EDE2; border-left: 2px solid #8C5A3C; color: #5C5046; padding: 14px 18px; margin: 20px 0; border-radius: 4px; } blockquote p { margin: 0; color: inherit; } strong { color: #8C5A3C; font-weight: 700; } hr { border: none; border-top: 1px solid #E5DDD0; margin: 36px auto; width: 48%; }",
+  "footer": { "showEngagementCard": true, "ctaText": "若这篇长文让你有所触动，欢迎点赞、在看或分享给朋友" }
 }
 
-【设计建议与调试提示】：
-AI 生成主题如同定制 CSS，排版效果往往需要结合具体文章反复调试 1~2 轮。首次生成若未完全契合预期，可继续针对标题修饰、色相饱和度或边框粗细与 AI 追问微调。
+示例 B（现代编辑部科技风，干净左对齐与渐变分隔）：
+{
+  "schemaVersion": 1,
+  "id": "modern-briefing",
+  "name": "简报蓝调",
+  "description": "冷灰与克制深蓝的现代商业简报风格，适合行业分析与产品拆解",
+  "colors": { "accent": "#1D4ED8", "canvas": "#FFFFFF", "light": "#EFF6FF", "title": "#0F172A", "text": "#334155", "muted": "#64748B", "border": "#E2E8F0" },
+  "css": "section { background: #FFFFFF; } p, li { color: #334155; font-size: 15px; line-height: 1.82; } h1 { font-size: 23px; font-weight: 800; color: #0F172A; text-align: left; padding-bottom: 12px; border-bottom: 2px solid #0F172A; } h2 { font-size: 19px; font-weight: 700; color: #0F172A; text-align: left; margin: 34px 0 16px; padding: 8px 14px; background: linear-gradient(90deg, rgba(29, 78, 216, 0.08), rgba(29, 78, 216, 0.01)); border-left: 4px solid #1D4ED8; border-radius: 0 6px 6px 0; } h3 { font-size: 16.5px; font-weight: 700; color: #1E3A8A; margin: 22px 0 10px; } h3::before { content: '// '; color: #1D4ED8; font-weight: 700; } blockquote { background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 3px solid #1D4ED8; padding: 12px 16px; border-radius: 6px; color: #475569; } blockquote p { margin: 0; color: inherit; } strong { color: #0F172A; background: rgba(29, 78, 216, 0.1); padding: 1px 4px; border-radius: 3px; } th { background: #EFF6FF; color: #1E3A8A; }",
+  "footer": { "showEngagementCard": true, "ctaText": "觉得分析有参考价值？欢迎点赞、在看支持" }
+}
 
 【我的风格诉求（请在此处输入您的具体要求）】：
-[例如：“我想要一个日系清新笔记风，主色用森林墨绿，二级标题搭配 leaf 矢量叶片与细竖条，三级标题采用短底线与双色斜切条(slash-bar)，四级标题用点阵(dot-matrix)，正文行距调大一些，注重轻松通透的阅读感。”]
+[例如：“我想要一个偏暖的秋日森林系，主色用焦糖琥珀与深松绿，适合户外手记与慢生活随笔，标题干净克制、阅读通透。”]
 `;
 
 
@@ -448,11 +392,35 @@ export function validateCustomThemeToken(input) {
     }
   }
 
-  // 5. rawCssOverrides 安全审查
-  if (raw.rawCssOverrides) {
-    const cssCheck = sanitizeRawCssOverrides(String(raw.rawCssOverrides));
+  // 5. css / rawCssOverrides AST 级与黑名单安全审查
+  const cssFields = [
+    { key: 'css', label: '主题 CSS (css)' },
+    { key: 'rawCssOverrides', label: '自定义 CSS (rawCssOverrides)' },
+  ];
+  for (const { key, label } of cssFields) {
+    const rawVal = raw[key];
+    if (rawVal === undefined || rawVal === null || rawVal === '') continue;
+    if (typeof rawVal !== 'string') {
+      errors.push(`${label} 必须是字符串`);
+      continue;
+    }
+    const cssCheck = sanitizeRawCssOverrides(rawVal);
     if (!cssCheck.safe) {
-      errors.push(`自定义 CSS 包含危险规则: ${cssCheck.error}`);
+      errors.push(`${label} 包含危险规则: ${cssCheck.error}`);
+      continue;
+    }
+    const compiled = compileCustomCss(rawVal, { sourceIdentity: `validate-${key}` });
+    if (!compiled.usable) {
+      const fatalMsg = compiled.diagnostics
+        .filter((d) => d.severity === 'fatal')
+        .map((d) => (d.line ? `第 ${d.line} 行: ${d.message}` : d.message))
+        .join('；');
+      errors.push(`${label} CSS 语法解析失败: ${fatalMsg || '存在无法解析的规则'}`);
+      continue;
+    }
+    const blocked = compiled.diagnostics.filter((d) => d.severity === 'blocked');
+    if (blocked.length > 0) {
+      errors.push(`${label} 包含不支持或有网络风险的规则: ${blocked.map((d) => d.message).join('；')}`);
     }
   }
 
@@ -592,8 +560,15 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
       : '如果对你有启发，欢迎点赞、在看、转发',
   };
 
-  const cssCheck = sanitizeRawCssOverrides(String(raw.rawCssOverrides || ''));
-  const rawCssOverrides = cssCheck.safe ? cssCheck.sanitized : '';
+  const rawCssSource = typeof raw.css === 'string' && raw.css.trim()
+    ? raw.css
+    : (typeof raw.rawCssOverrides === 'string' ? raw.rawCssOverrides : '');
+  const cssCheck = sanitizeRawCssOverrides(String(rawCssSource || ''));
+  const sanitizedCss = cssCheck.safe ? cssCheck.sanitized : '';
+  const compiledCheck = sanitizedCss
+    ? compileCustomCss(sanitizedCss, { sourceIdentity: 'normalize-theme-css' })
+    : null;
+  const effectiveCss = compiledCheck?.usable ? sanitizedCss : '';
 
   // 严格前向兼容：保留未知外部字段
   const extraFields = { ...raw };
@@ -611,6 +586,7 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
   delete extraFields.colors;
   delete extraFields.typography;
   delete extraFields.footer;
+  delete extraFields.css;
   delete extraFields.rawCssOverrides;
   delete extraFields.schemaVersion;
 
@@ -629,7 +605,8 @@ export function normalizeCustomThemeToken(raw, fallbackId) {
     colors,
     typography,
     footer,
-    rawCssOverrides,
+    ...(effectiveCss ? { css: effectiveCss } : {}),
+    rawCssOverrides: effectiveCss,
     ...extraFields,
   };
 }

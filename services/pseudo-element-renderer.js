@@ -303,6 +303,9 @@ function numToAlpha(num) {
  */
 function matchesSelectorInContainer(el, selector, container) {
     try {
+        if (selector.startsWith('>')) {
+            return el.parentElement === container && el.matches(selector.slice(1).trim());
+        }
         return container.contains(el) && el.matches(selector);
     } catch {
         return false;
@@ -460,7 +463,8 @@ function isVisualOnly(properties) {
  */
 function safeQuerySelectorAll(container, selector) {
     try {
-        return Array.from(container.querySelectorAll(selector));
+        const querySelector = selector.startsWith('>') ? `:scope ${selector}` : selector;
+        return Array.from(container.querySelectorAll(querySelector));
     } catch {
         return [];
     }
@@ -524,8 +528,16 @@ function renderPseudoForElement(el, rule, counterMap) {
     }
 
     const doc = el.ownerDocument;
+    const pseudoKey = `${rule.baseSelector}::${rule.pseudoType}`;
+    Array.from(el.children).forEach((child) => {
+        if (child.getAttribute?.('data-owc-pseudo') === pseudoKey) {
+            child.remove();
+        }
+    });
+
     const span = doc.createElement('span');
     span.className = generateSpanClass(el.tagName, rule.pseudoType, el);
+    span.setAttribute('data-owc-pseudo', pseudoKey);
 
     // 把伪元素自身的视觉属性写成 inline style（跳过 content 与 counter-* 前缀属性）
     const styleParts = [];

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as appleStyleViewShared from '../views/apple-style-view-shared.js';
-import { showCustomThemeModal } from '../views/converter/custom-theme-modal.js';
+import { showCustomThemeModal, buildCustomThemeSampleHtml } from '../views/converter/custom-theme-modal.js';
 import * as clipboardModule from '../views/shared/clipboard.js';
 import * as aiGeneratorModule from '../services/ai-theme-generator.js';
 
@@ -198,6 +198,40 @@ describe('Custom Theme Modal View', () => {
     // Preview card should be updated
     const previewCard = step2.children[1];
     expect(previewCard.hasClass('is-hidden')).toBe(false);
+
+    // Refine button & CSS quick editor should become visible
+    const aiRefineBtn = btnRow.children[2];
+    expect(aiRefineBtn.hasClass('is-hidden')).toBe(false);
+    const cssPanel = step2.children[3];
+    expect(cssPanel.hasClass('is-hidden')).toBe(false);
+
+    // Editing CSS textarea should sync back into JSON textarea (including recovery after half-typed CSS)
+    const cssTextarea = cssPanel.children[1];
+    cssTextarea.value = 'h2 { color: #16a34a;';
+    cssTextarea.oninput();
+    cssTextarea.value = 'h2 { color: #16a34a; }';
+    cssTextarea.oninput();
+    expect(textarea.value).toContain('#16a34a');
+
+    // Clicking refine button should pass currentTheme + refineInstruction
+    const refineSpy = vi.spyOn(aiGeneratorModule, 'generateCustomThemeWithAi').mockResolvedValue({
+      success: true,
+      token: {
+        ...mockTheme,
+        css: 'h2 { border-bottom: 1px solid #d97706; }',
+      },
+      json: JSON.stringify({
+        ...mockTheme,
+        css: 'h2 { border-bottom: 1px solid #d97706; }',
+      }, null, 2),
+    });
+    reqTextarea.value = '改成细下划线';
+    await aiRefineBtn.onclick();
+    expect(refineSpy).toHaveBeenCalledWith(expect.objectContaining({
+      refineInstruction: '改成细下划线',
+      currentTheme: expect.objectContaining({ id: 'custom-autumn-forest' }),
+    }));
+    expect(cssTextarea.value).toContain('border-bottom: 1px solid #d97706');
   });
 
   it('should render saved theme cards without technical ID or default heading label', () => {
@@ -243,6 +277,17 @@ describe('Custom Theme Modal View', () => {
     const allTextSecond = JSON.stringify(secondCard);
     expect(allTextSecond).not.toContain('custom-modern-capsule');
     expect(allTextSecond).toContain('标题风格: 胶囊徽标');
+  });
+
+  it('should escape HTML in theme.name when rendering sample preview HTML (XSS protection)', () => {
+    const html = buildCustomThemeSampleHtml({
+      name: '恶意主题 <img src=x onerror=alert(1)>',
+      colors: { accent: '#2563EB' },
+      css: 'h2 { color: #2563EB; }',
+    });
+
+    expect(html).not.toContain('<img src=x');
+    expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
   });
 });
 

@@ -24,6 +24,9 @@ import {
   compileCustomThemeToAppleOptions,
   findCustomTheme,
   listAllThemes,
+  getCustomThemeCss,
+  applyCustomThemeCssToHtml,
+  resolveThemeUpdateOptions,
 } from '../services/custom-theme-adapter.js';
 
 describe('custom-theme-adapter', () => {
@@ -173,6 +176,67 @@ describe('custom-theme-adapter', () => {
       const all = listAllThemes([]);
       expect(all.length).toBe(BUILTIN_ARTICLE_THEMES.length);
       expect(all.every((t) => !t.isCustom)).toBe(true);
+    });
+  });
+
+  describe('CSS-driven custom theme compilation & inline override', () => {
+    it('CSS 主题默认禁用 h3 干扰底线与 blockquote 左竖线，并保护互动卡/代码块及仅匹配根 section::before', () => {
+      const cssToken = {
+        id: 'custom-editorial-paper',
+        name: '刊物人文',
+        colors: { accent: '#8C5A3C' },
+        css: 'section { background: #FCF9F2; counter-reset: h2sec; } section::before { content: "HEADER "; color: #8C5A3C; } h2 { counter-increment: h2sec; color: #8C5A3C; } h2::before { content: counter(h2sec, decimal-leading-zero) " · "; color: #8C5A3C; } p { color: #3A332D; text-align: left; }',
+      };
+
+      expect(getCustomThemeCss(cssToken)).toContain('counter-reset');
+      const config = compileCustomThemeToAppleConfig(cssToken);
+      expect(config.h3Decoration).toBe('none');
+      expect(config.blockquoteStyle).toBe('none');
+
+      const baseHtml = [
+        '<section style="color:#3e3e3e;">',
+        '<h2 style="color:#3e3e3e;">章节标题</h2>',
+        '<p style="color:#3e3e3e;">正文内容</p>',
+        '<section class="code-snippet__fix" style="background:#0d1117;"><section style="color:#fff;">code</section></section>',
+        '<section class="owc-engagement-card" style="text-align:center;"><p style="text-align:center;font-size:14px;">欢迎点赞</p></section>',
+        '</section>',
+      ].join('');
+      const result = applyCustomThemeCssToHtml(baseHtml, cssToken);
+
+      expect(result).toContain('#8C5A3C');
+      expect(result).toContain('#3A332D');
+      expect(result).toContain('01 · ');
+      expect(result).toContain('HEADER ');
+      // 根 section::before 仅注入一次（不注入到嵌套代码块/互动卡 section）
+      expect(result.match(/HEADER /g)).toHaveLength(1);
+      // 嵌套代码块与互动卡样式完整保留，不被 section / p 规则覆盖
+      expect(result).toContain('class="code-snippet__fix" style="background:#0d1117;"');
+      expect(result).toContain('<p style="text-align:center;font-size:14px;">欢迎点赞</p>');
+    });
+
+    it('resolveThemeUpdateOptions 在内置主题与自定义主题间切换时正确同步 themeColor 与 customColor', () => {
+      const customTheme = {
+        id: 'custom-amber',
+        name: '琥珀',
+        colors: { accent: '#D97706' },
+        css: 'h2 { color: #D97706; }',
+      };
+      const settings = {
+        theme: 'github',
+        themeColor: 'blue',
+        customColor: '#0366d6',
+        customThemes: [customTheme],
+      };
+
+      const toCustom = resolveThemeUpdateOptions(settings, 'custom-amber');
+      expect(toCustom.themeColor).toBe('custom');
+      expect(toCustom.customColor).toBe('#D97706');
+      expect(toCustom.customThemeConfig?.primaryColor).toBe('#D97706');
+
+      const backToBuiltin = resolveThemeUpdateOptions(settings, 'github');
+      expect(backToBuiltin.themeColor).toBe('blue');
+      expect(backToBuiltin.customColor).toBe('#0366d6');
+      expect(backToBuiltin.customThemeConfig).toBeNull();
     });
   });
 });

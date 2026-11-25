@@ -10475,11 +10475,11 @@ div.modal.wechat-material-picker-modal-mobile {
  */
 
 .custom-theme-modal {
-  width: 640px;
-  max-width: 92vw;
-  height: min(82vh, 640px);
-  min-height: min(82vh, 520px);
-  max-height: min(82vh, 640px);
+  width: 700px;
+  max-width: 94vw;
+  height: min(86vh, 740px);
+  min-height: min(86vh, 540px);
+  max-height: min(86vh, 740px);
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -10807,6 +10807,7 @@ div.modal.wechat-material-picker-modal-mobile {
 
 .custom-theme-btn-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   margin-top: 2px;
@@ -10847,11 +10848,16 @@ div.modal.wechat-material-picker-modal-mobile {
   background: var(--background-modifier-hover);
 }
 
+.custom-theme-copy-prompt-btn-secondary.is-hidden {
+  display: none;
+}
+
 .custom-theme-preview-card {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px 12px;
   border-radius: 8px;
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
@@ -10865,6 +10871,51 @@ div.modal.wechat-material-picker-modal-mobile {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.custom-theme-sample-preview {
+  max-height: 220px;
+  overflow-y: auto;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: #ffffff;
+  color: #333333;
+}
+
+.custom-theme-css-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.custom-theme-css-panel.is-hidden {
+  display: none;
+}
+
+.custom-theme-css-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.custom-theme-css-textarea {
+  width: 100%;
+  height: 120px;
+  box-sizing: border-box;
+  font-family: var(--font-monospace);
+  font-size: 11.5px;
+  line-height: 1.45;
+  padding: 8px 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  resize: vertical;
+}
+
+.custom-theme-css-textarea:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
 }
 
 .custom-theme-preview-name {

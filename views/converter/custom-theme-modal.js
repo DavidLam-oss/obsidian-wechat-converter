@@ -30,12 +30,21 @@
 import {
   createObsidianModal,
   Notice,
+  setElementHtml,
 } from '../apple-style-view-shared.js';
 import { writeClipboardText } from '../shared/clipboard.js';
 import {
   validateCustomThemeToken,
   normalizeCustomThemeToken,
+  escapeHtml,
 } from '../../services/theme-token-validator.js';
+import {
+  compileCustomThemeToAppleOptions,
+  getCustomThemeCss,
+  applyCustomThemeCssToHtml,
+} from '../../services/custom-theme-adapter.js';
+import { decorateArticleHeadings } from '../../services/heading-style-renderer.js';
+import AppleTheme from '../../themes/apple-theme.js';
 import {
   generateCustomThemeWithAi,
   hasRunnableTextProvider,
@@ -53,6 +62,44 @@ const HEADING_STYLE_LABELS = {
   'card': '卡片背景',
   'double-line': '双细线',
 };
+
+/**
+ * 基于当前 Token 生成一段微型真实文章样张 HTML，供弹窗内即时预览排版质感
+ * @param {any} token
+ * @returns {string}
+ */
+export function buildCustomThemeSampleHtml(token) {
+  const normalized = normalizeCustomThemeToken(token || { name: '预览', colors: { accent: '#2563EB' } });
+  const options = compileCustomThemeToAppleOptions(normalized);
+  const theme = new AppleTheme(options);
+  const hasThemeCss = Boolean(getCustomThemeCss(normalized));
+
+  const sampleRawHtml = [
+    `<section style="${theme.getStyle('section')}">`,
+    `  <h1 style="${theme.getStyle('h1')}">${escapeHtml(normalized.name || '主题样张预览')}</h1>`,
+    `  <h2 style="${theme.getStyle('h2')}">章节排版与视觉层次</h2>`,
+    `  <p style="${theme.getStyle('p')}">这是一段正文排版样张，用于观察字距、行高与<strong style="${theme.getStyle('strong')}">重点强调文字</strong>在阅读时的呼吸感与色彩对比度。</p>`,
+    `  <h3 style="${theme.getStyle('h3')}">子节标题风格展示</h3>`,
+    `  <blockquote style="${theme.getStyle('blockquote')}"><p style="margin:0;">好的排版应当克制、清晰，让读者专注于文字本身的节奏。</p></blockquote>`,
+    `  <ul style="${theme.getStyle('ul')}"><li style="${theme.getStyle('li')}">列表项目一：保持视觉留白与对齐</li><li style="${theme.getStyle('li')}">列表项目二：兼顾手机端阅读体验</li></ul>`,
+    `  <hr style="${theme.getStyle('hr')}"/>`,
+    `</section>`,
+  ].join('\n');
+
+  const themeHeadingStyle = normalized.headingStyle || normalized.heading?.style || 'default';
+  let decorated = sampleRawHtml;
+  if ((themeHeadingStyle && themeHeadingStyle !== 'default') || normalized.heading) {
+    decorated = decorateArticleHeadings(decorated, {
+      headingStyle: themeHeadingStyle,
+      customHeading: normalized.heading,
+      hasThemeCss,
+      primaryColor: normalized.colors?.accent,
+      titleColor: normalized.colors?.title,
+    });
+  }
+
+  return hasThemeCss ? applyCustomThemeCssToHtml(decorated, normalized) : decorated;
+}
 
 /**
  * 打开自定义主题管理弹窗
@@ -226,10 +273,16 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied, onThemesChan
         }
       });
 
-      if (theme.headingStyle && theme.headingStyle !== 'default') {
+      const hasThemeCss = Boolean(getCustomThemeCss(theme));
+      if (hasThemeCss || (theme.headingStyle && theme.headingStyle !== 'default')) {
         const meta = paletteStrip.createDiv({ cls: 'custom-theme-palette-meta' });
-        const friendlyHeading = HEADING_STYLE_LABELS[theme.headingStyle] || theme.headingStyle;
-        meta.createEl('span', { text: `标题风格: ${friendlyHeading}` });
+        if (hasThemeCss) {
+          meta.createEl('span', { text: 'CSS 定制' });
+        }
+        if (theme.headingStyle && theme.headingStyle !== 'default') {
+          const friendlyHeading = HEADING_STYLE_LABELS[theme.headingStyle] || theme.headingStyle;
+          meta.createEl('span', { text: `标题风格: ${friendlyHeading}` });
+        }
       }
     });
   }
@@ -247,7 +300,7 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied, onThemesChan
 
     const reqTextarea = step1.createEl('textarea', {
       cls: 'custom-theme-req-textarea',
-      placeholder: '输入您的主题风格诉求（如：“偏暖的秋日森林系，主色琥珀黄与松针绿，二级标题搭配 leaf 矢量叶片或双叠菱形，三级标题采用短底线与斜切条”）...',
+      placeholder: '输入您的主题风格诉求（如：“偏暖的秋日森林系，主色焦糖琥珀与松针绿，阅读轻松通透”）或微调指令（如：“二级标题去掉底色，改用细下划线”）...',
     });
 
     // 快捷灵感药丸标签
@@ -255,11 +308,11 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied, onThemesChan
     pillsRow.createEl('span', { cls: 'custom-theme-pills-label', text: '风格预设：' });
 
     const inspirationPills = [
-      { label: '秋日森系', desc: '偏暖色调的秋日森林系，主色琥珀黄与松针绿，温润克制，二级标题搭配 leaf 矢量叶片或双叠菱形(double-diamond)，三级标题采用短底线，适合户外与生活手记' },
-      { label: '极客科技', desc: '理性科技数码风，主色沉稳科技蓝，二级标题搭配 terminal 极客终端符或现代序号，三级标题采用双色斜切条(slash-bar)，四级标题用点阵(dot-matrix)，适合硬核评测与技术教程' },
-      { label: '商业财经', desc: '现代商业资讯风，主色深邃绀蓝与活力点睛橙，精致商务感，二级标题搭配 compass 商业罗盘或胶囊徽标(badge)，三级标题用左侧色块条，四级标题用叠影方块(square-pip)' },
-      { label: '人文禅意', desc: '东方极简素雅白灰黑，主色冷灰与黛青，二级标题搭配 feather 羽毛笔或留白禅意(zen)，三级标题采用留白细线与双叠菱形，适合哲学散文与深度随笔' },
-      { label: '赤红特刊', desc: '东方传统喜庆中国红与暖金配比，端庄典雅，二级标题搭配 sparkles 星芒或胶囊徽标，三级标题采用浅底小条与几何圆环(ring-dot)，适合大事件发布、节日特刊与精选周报' },
+      { label: '秋日森系', desc: '偏暖色调的秋日森林系，主色琥珀棕与松针绿，米白温和底色，标题克制留白、行高舒展，适合户外手记与生活随笔' },
+      { label: '刊物人文', desc: '杂志编辑部衬线风，米白纸感背景配合黛青与古铜金，二级标题居中搭配优雅章节序号与细线，适合深度长文与书评' },
+      { label: '现代简报', desc: '清爽现代商业资讯风，纯白底色与克制深海蓝，左对齐标题配微渐变底衬与干净引用卡片，适合行业观察与产品拆解' },
+      { label: '极客手账', desc: '冷静理性技术笔记风，冷灰与青色点缀，章节采用双斜杠 // 编号前缀，重点词配柔和底衬，适合教程与工程复盘' },
+      { label: '节日特刊', desc: '东方典雅中国红与暖金配比，庄重而不艳俗，居中对称题头与细线分隔，适合年度盘点、专题特刊与重要发布' },
     ];
 
     inspirationPills.forEach((pill) => {
@@ -273,7 +326,7 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied, onThemesChan
       };
     });
 
-    // 双通道按钮栏
+    // 双通道按钮栏 + 增量微调按钮
     const btnRow = step1.createDiv({ cls: 'custom-theme-btn-row' });
 
     const hasAiModel = hasRunnableTextProvider(plugin.settings?.ai);
@@ -290,6 +343,12 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied, onThemesChan
       text: '复制提示词 (发给外部 AI)',
     });
 
+    const aiRefineBtn = btnRow.createEl('button', {
+      cls: 'custom-theme-copy-prompt-btn-secondary is-hidden',
+      text: '基于当前样式微调',
+    });
+    aiRefineBtn.title = '保留当前主题基础，按上方输入的修改意见让 AI 局部调整';
+
     copyPromptBtn.onclick = async () => {
       const promptToCopy = buildThemePromptWithRequirement(reqTextarea.value);
       const ok = await writeClipboardText(promptToCopy);
@@ -302,52 +361,115 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied, onThemesChan
 
     // 调试与微调提示信息
     const tipEl = step1.createDiv({ cls: 'custom-theme-debug-tip' });
-    tipEl.setText('提示：AI 主题设计如同定制 CSS，排版效果往往需要根据具体需求反复调试 2~3 轮。生成后可在右侧预览，若有不满意可继续补充诉求重新生成，或在步骤 2 中直接微调 JSON。');
+    tipEl.setText('提示：AI 会生成基于微信安全 CSS 的主题配置并在下方实时渲染样张；不满意可直接在上方输入修改意见点击「基于当前样式微调」，或在下方直接修改 CSS。');
 
-    // 步骤 2：主题 JSON 配置与校验
+    // 步骤 2：主题样张预览与配置微调
     const step2 = bodyEl.createDiv({ cls: 'custom-theme-ai-step' });
     const step2Header = step2.createDiv({ cls: 'custom-theme-step-title' });
-    step2Header.createEl('span', { text: '步骤 2：检查/微调主题 JSON 配置' });
+    step2Header.createEl('span', { text: '步骤 2：实时样张预览与微调' });
 
-    // 实时主题轻量预览卡片
+    // 实时主题预览卡片（含头部摘要 + 真实文章样张预览）
     const previewCard = step2.createDiv({ cls: 'custom-theme-preview-card is-hidden' });
     const previewInfo = previewCard.createDiv({ cls: 'custom-theme-preview-info' });
     const previewSwatch = previewInfo.createDiv({ cls: 'custom-theme-color-swatch' });
     const previewName = previewInfo.createEl('span', { cls: 'custom-theme-preview-name' });
     const previewHeadingTag = previewInfo.createEl('span', { cls: 'custom-theme-preview-tag is-hidden' });
+    const samplePreviewEl = previewCard.createDiv({ cls: 'custom-theme-sample-preview' });
 
-    /** @param {any} token */
-    const updatePreviewCard = (token) => {
+    const textarea = step2.createEl('textarea', {
+      cls: 'custom-theme-json-textarea',
+      placeholder: '{\n  "id": "my-brand",\n  "name": "品牌专属风",\n  "colors": {\n    "accent": "#007AFF"\n  },\n  "css": "h2 { border-left: 4px solid #007AFF; padding-left: 10px; }"\n}',
+    });
+
+    // CSS 快捷微调区（与 JSON 中的 css / rawCssOverrides 双向同步）
+    const cssPanel = step2.createDiv({ cls: 'custom-theme-css-panel is-hidden' });
+    cssPanel.createDiv({ cls: 'custom-theme-css-label', text: '样式 CSS 快捷编辑（修改后上方样张实时更新）' });
+    const cssTextarea = cssPanel.createEl('textarea', {
+      cls: 'custom-theme-css-textarea',
+      placeholder: '在此直接微调主题 CSS（例如 h2、blockquote、p 的字号、颜色与间距）...',
+    });
+
+    /** @type {any} */
+    let currentValidToken = null;
+    let syncingFromCss = false;
+
+    /** @param {any} token @param {{ syncCssEditor?: boolean }} [opts] */
+    const updatePreviewCard = (token, opts = {}) => {
+      const syncCssEditor = opts.syncCssEditor !== false;
       if (token && token.colors?.accent) {
+        currentValidToken = token;
         previewCard.removeClass('is-hidden');
+        aiRefineBtn.removeClass('is-hidden');
         previewSwatch.setCssStyles({
           backgroundColor: token.colors.accent,
         });
         previewName.setText(token.name || '未命名主题');
+        const themeCss = getCustomThemeCss(token);
         const headingLabel = token.heading?.style || token.headingStyle || 'default';
-        if (headingLabel && headingLabel !== 'default') {
+        if (themeCss) {
+          previewHeadingTag.removeClass('is-hidden');
+          previewHeadingTag.setText('CSS 定制主题');
+        } else if (headingLabel && headingLabel !== 'default') {
           previewHeadingTag.removeClass('is-hidden');
           const friendly = HEADING_STYLE_LABELS[headingLabel] || headingLabel;
           previewHeadingTag.setText(`标题风格: ${friendly}`);
         } else {
           previewHeadingTag.addClass('is-hidden');
         }
+
+        if (syncCssEditor) {
+          cssPanel.removeClass('is-hidden');
+          cssTextarea.value = themeCss;
+        }
+
+        if (typeof samplePreviewEl.appendChild === 'function' && typeof document !== 'undefined') {
+          try {
+            const sampleHtml = buildCustomThemeSampleHtml(token);
+            setElementHtml(samplePreviewEl, sampleHtml);
+          } catch {
+            // 预览渲染失败时不中断编辑
+          }
+        }
       } else {
+        currentValidToken = null;
         previewCard.addClass('is-hidden');
+        aiRefineBtn.addClass('is-hidden');
+        cssPanel.addClass('is-hidden');
       }
     };
 
-    const textarea = step2.createEl('textarea', {
-      cls: 'custom-theme-json-textarea',
-      placeholder: '{\n  "id": "my-brand",\n  "name": "品牌专属风",\n  "colors": {\n    "accent": "#007AFF",\n    "light": "#F2F5FB",\n    "title": "#1D1D1F"\n  }\n}',
-    });
-
     textarea.addEventListener('input', () => {
+      if (syncingFromCss) return;
       const val = validateCustomThemeToken(textarea.value);
       if (val.valid && val.token) {
-        updatePreviewCard(val.token);
+        updatePreviewCard(val.token, { syncCssEditor: true });
       } else {
-        previewCard.addClass('is-hidden');
+        updatePreviewCard(null);
+      }
+    });
+
+    cssTextarea.addEventListener('input', () => {
+      const nextCss = cssTextarea.value;
+      let parsedObj;
+      try {
+        let cleaned = textarea.value.trim();
+        if (cleaned.startsWith('```')) {
+          cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+        }
+        parsedObj = JSON.parse(cleaned);
+      } catch {
+        return;
+      }
+      if (!parsedObj || typeof parsedObj !== 'object' || Array.isArray(parsedObj)) return;
+      parsedObj.css = nextCss;
+      parsedObj.rawCssOverrides = nextCss;
+      syncingFromCss = true;
+      textarea.value = JSON.stringify(parsedObj, null, 2);
+      syncingFromCss = false;
+
+      const updatedVal = validateCustomThemeToken(parsedObj);
+      if (updatedVal.valid && updatedVal.token) {
+        updatePreviewCard(updatedVal.token, { syncCssEditor: false });
       }
     });
 
@@ -356,35 +478,50 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied, onThemesChan
       editingInitialJson = '';
       const initialVal = validateCustomThemeToken(textarea.value);
       if (initialVal.valid && initialVal.token) {
-        updatePreviewCard(initialVal.token);
+        updatePreviewCard(initialVal.token, { syncCssEditor: true });
       }
     }
 
     // 错误信息显示区（默认隐藏）
     const errorBox = step2.createDiv({ cls: 'custom-theme-error-box is-hidden' });
 
-    // 点击 AI 智能生成
-    aiGenBtn.onclick = async () => {
+    /** @param {{ refine?: boolean }} [mode] */
+    const runAiThemeGeneration = async ({ refine = false } = {}) => {
       if (!hasRunnableTextProvider(plugin.settings?.ai)) {
         new Notice('请先在插件设置的「AI 自动排版」中配置可用的文本模型（如 DeepSeek、OpenAI、SiliconFlow 等）');
+        return;
+      }
+
+      if (refine && !reqTextarea.value.trim()) {
+        new Notice('请先在上方输入框填写需要微调的要求（例如：“标题去掉背景框”、“主色再暖一点”）');
+        reqTextarea.focus();
         return;
       }
 
       errorBox.empty();
       errorBox.addClass('is-hidden');
       aiGenBtn.disabled = true;
-      aiGenBtn.setText('AI 正在构思与设计中...');
+      aiRefineBtn.disabled = true;
+      const activeBtn = refine ? aiRefineBtn : aiGenBtn;
+      const originalLabel = activeBtn.textContent || '';
+      activeBtn.setText(refine ? 'AI 正在微调中...' : 'AI 正在构思与设计中...');
 
       try {
         const result = await generateCustomThemeWithAi({
           aiSettings: plugin.settings?.ai,
-          userRequirement: reqTextarea.value,
+          userRequirement: refine ? '' : reqTextarea.value,
+          currentTheme: refine ? currentValidToken : null,
+          refineInstruction: refine ? reqTextarea.value : '',
         });
 
         if (result.success && result.token && result.json) {
           textarea.value = result.json;
-          updatePreviewCard(result.token);
-          new Notice(`AI 已成功设计主题「${result.token.name}」！可检查配置或继续微调诉求`);
+          updatePreviewCard(result.token, { syncCssEditor: true });
+          new Notice(
+            refine
+              ? `已按你的要求微调主题「${result.token.name}」！`
+              : `AI 已成功设计主题「${result.token.name}」！可在下方实时样张查看效果`
+          );
         } else {
           errorBox.removeClass('is-hidden');
           errorBox.createEl('strong', { text: 'AI 生成未成功：' });
@@ -398,9 +535,13 @@ export function showCustomThemeModal({ app, plugin, onThemeApplied, onThemesChan
         errorBox.createEl('strong', { text: '调用异常：' + msg });
       } finally {
         aiGenBtn.disabled = false;
-        aiGenBtn.setText('调用 AI 智能生成');
+        aiRefineBtn.disabled = false;
+        activeBtn.setText(originalLabel);
       }
     };
+
+    aiGenBtn.onclick = () => runAiThemeGeneration({ refine: false });
+    aiRefineBtn.onclick = () => runAiThemeGeneration({ refine: true });
 
     // 底部操作按钮
     const actions = step2.createDiv({ cls: 'custom-theme-ai-actions' });

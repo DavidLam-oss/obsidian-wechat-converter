@@ -348,14 +348,16 @@ function parseCounterValue(value, fallback) {
 
 /**
  * @param {string} cssText
- * @param {{ sourceIdentity?: string, rootSelector?: string, maxDataImageBytes?: number, maxTotalDataImageBytes?: number }} [options]
+ * @param {{ sourceIdentity?: string, rootSelector?: string, maxDataImageBytes?: number, maxTotalDataImageBytes?: number, forceImportant?: boolean, rootSectionDirectChild?: boolean }} [options]
  * @returns {CustomCssCompileResult}
  */
 export function compileCustomCss(cssText, options = {}) {
   const css = String(cssText || '');
   const sourceIdentity = String(options.sourceIdentity || 'textarea');
   const rootSelector = String(options.rootSelector || DEFAULT_ROOT_SELECTOR).trim();
-  const sourceHash = hashCustomCss(`${sourceIdentity}\0${rootSelector}\0${css}`);
+  const forceImportant = Boolean(options.forceImportant);
+  const rootSectionDirectChild = Boolean(options.rootSectionDirectChild);
+  const sourceHash = hashCustomCss(`${sourceIdentity}\0${rootSelector}\0${forceImportant ? '1' : '0'}\0${rootSectionDirectChild ? '1' : '0'}\0${css}`);
   const maxDataImageBytes = options.maxDataImageBytes || DEFAULT_MAX_DATA_IMAGE_BYTES;
   const maxTotalDataImageBytes = options.maxTotalDataImageBytes || DEFAULT_MAX_TOTAL_DATA_IMAGE_BYTES;
   const cacheKey = `${sourceHash}:${maxDataImageBytes}:${maxTotalDataImageBytes}`;
@@ -436,7 +438,13 @@ export function compileCustomCss(cssText, options = {}) {
     maxTotalDataImageBytes,
   };
   root.walkDecls((declaration) => {
-    sanitizeDeclaration(declaration, diagnostics, resourceState);
+    const ok = sanitizeDeclaration(declaration, diagnostics, resourceState);
+    if (ok && forceImportant) {
+      const prop = declaration.prop.trim().toLowerCase();
+      if (prop !== 'content' && prop !== 'counter-reset' && prop !== 'counter-increment') {
+        declaration.important = true;
+      }
+    }
   });
 
   /** @type {CompiledPseudoRule[]} */
@@ -474,7 +482,11 @@ export function compileCustomCss(cssText, options = {}) {
     const properties = declarationsToRecord(rule);
     /** @type {string[]} */
     const regularSelectors = [];
-    expanded.selectors.forEach((selector) => {
+    expanded.selectors.forEach((rawSelector) => {
+      const trimmedSel = rawSelector.trim();
+      const selector = (rootSectionDirectChild && /^section(?=\s*(?:::|$))/i.test(trimmedSel))
+        ? `> ${trimmedSel}`
+        : rawSelector;
       const pseudo = parsePseudoSelector(selector);
       if (pseudo) {
         if (pseudo.baseSelector) {

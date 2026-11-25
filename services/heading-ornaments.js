@@ -83,6 +83,28 @@ export const VALID_HEADING_ORNAMENTS = /** @type {const} */ ([
   'message-square',
 ]);
 
+/**
+ * 新版 AI 生成主题推荐使用的精选克制微件子集（6 款纯 CSS 几何微件 + 8 款通用符号）。
+ * 其余图标仍保留在 VALID_HEADING_ORNAMENTS 中以保证老主题向后兼容。
+ */
+export const CURATED_AI_HEADING_ORNAMENTS = /** @type {const} */ ([
+  'none',
+  'double-diamond',
+  'slash-bar',
+  'dot-matrix',
+  'corner-bracket',
+  'square-pip',
+  'ring-dot',
+  'leaf',
+  'feather',
+  'sparkles',
+  'compass',
+  'book-open',
+  'terminal',
+  'lightbulb',
+  'bookmark',
+]);
+
 const SVG_PATH_REGEX = /^[MmLlHhVvCcSsQqTtAaZz0-9\s.,-]+$/;
 
 /**
