@@ -127,10 +127,10 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的微信公众号视
 
 【核心设计原则（重要）】
 1. **CSS 优先，告别堆砌**：通过字体气质、字号对比、行高留白、克制的边框/浅底、以及标准 \`::before\` / \`::after\`（支持 \`counter-reset\` / \`counter()\`）来打造独特的版式风格。插件会自动将安全 CSS 与伪元素编译内联为微信兼容的 HTML，因此你**无需**手写 \`!important\`，也**无需**手写 \`<style>\` 标签。
-2. **克制与一致性**：
+2. **纯 CSS 装饰，不用图标**：
    - 正文文字 \`p, li\` 保持高可读性（浅底上推荐 #222222 ~ #3A3A3A），主色调 \`colors.accent\` 用于重点引导、边框、强调词与微装饰；
-   - 严禁在正文和标题中堆砌 Emoji 或手写 SVG 路径（不要输出 \`customPath\`）；
-   - 如用户明确要求小图标装饰，仅可在 \`heading.ornament\` 选用极克制的微件（建议仅用于 H2，H3/H4 保持简洁）。
+   - **彻底禁用任何图标**：不要输出 \`heading.ornament\`、不要手写 SVG \`customPath\`、不要堆砌 Emoji；
+   - 如需装饰感，请用纯 CSS 盒模型与伪元素实现：\`h2::before\` / \`h2::after\` 小圆点、胶囊小竖条、居中渐隐短线、L 形折角、\`counter(h2sec, decimal-leading-zero)\` 章节号，以及 \`//\`、\`§\`、\`✦\`、\`「」\` 等纯排版符号。
 3. **微信兼容边界**：
    - ✅ 支持：\`section, h1, h2, h3, h4, p, blockquote, blockquote p, .owc-callout, strong, em, code, hr, ul, ol, li, table, th, td, a\` 等标签选择器（修改正文样式请同时作用于 \`p, li\`，引用内段落建议重置 \`blockquote p { margin: 0; color: inherit; }\`），以及 \`::before\` / \`::after\`、\`counter-reset\` / \`counter()\`、\`linear-gradient\`、\`border\`、\`border-radius\`、\`padding\`、\`margin\`、\`letter-spacing\`；
    - 🚫 严禁：\`@import\`、\`@font-face\`、外部 \`url(...)\`、\`position: fixed/absolute\`、\`@keyframes\` 动画、JS 脚本或导致横向溢出的负 \`margin\`。
@@ -145,7 +145,6 @@ export const AI_THEME_PROMPT_TEMPLATE = `你是一个专业的微信公众号视
   - \`"accent"\`: 必填，6 位 Hex 主色（如 \`"#1E40AF"\`）
   - 可选：\`"canvas"\`（整篇底色，默认 \`"#FFFFFF"\`）、\`"light"\`（主色极浅底色）、\`"title"\`、\`"text"\`、\`"muted"\`、\`"border"\`
 - \`"css"\`: 核心排版 CSS 字符串（直接写干净的标准 CSS，插件会自动限定作用域并内联覆盖，无需写 \`.owc-article-root\` 前缀或 \`!important\`）
-- \`"heading"\`: 可选；仅当用户明确要求微件图标时才附带 \`{ "ornament": "..." }\`（可选枚举：\`"double-diamond"\` | \`"slash-bar"\` | \`"dot-matrix"\` | \`"corner-bracket"\` | \`"square-pip"\` | \`"ring-dot"\` | \`"leaf"\` | \`"feather"\` | \`"sparkles"\` | \`"compass"\` | \`"book-open"\` | \`"terminal"\` | \`"lightbulb"\` | \`"bookmark"\` | \`"none"\`）
 - \`"footer"\`: \`{ "showEngagementCard": true, "ctaText": "贴合文风的引导语" }\`
 
 【风格参考示范（请根据用户诉求自由发挥，不要照搬固定套路）】

@@ -41,6 +41,7 @@
  *   name: string,
  *   lineHeight: number,
  *   paragraphGap: number,
+ *   letterSpacing?: number,
  *   h1Decoration?: string,
  *   h2Decoration?: string,
  *   h3Decoration?: string,
@@ -330,10 +331,13 @@ class AppleTheme {
     const sectionSidePadding = this.getSectionSidePadding(config);
 
     // 间距微调有效值：全局覆盖优先，null/undefined 回退主题默认。
-    // 字距无主题级配置，默认 0；0 是合法值，必须用 ?? 保留 0（不能用 ||）。
+    // 字距合法值 0 必须用 ?? 保留 0（不能用 ||）。
     const effectiveLineHeight = this.lineHeight ?? config.lineHeight;
     const effectiveParagraphGap = this.paragraphGap ?? config.paragraphGap;
-    const effectiveLetterSpacing = this.letterSpacing ?? 0;
+    const configLetterSpacing = typeof config.letterSpacing === 'number' && Number.isFinite(config.letterSpacing)
+      ? config.letterSpacing
+      : 0;
+    const effectiveLetterSpacing = this.letterSpacing ?? configLetterSpacing;
 
     switch (tagName) {
       case 'section':

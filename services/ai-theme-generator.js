@@ -40,7 +40,6 @@ import {
 } from './ai-layout/index.js';
 import {
   AI_THEME_PROMPT_TEMPLATE,
-  CURATED_AI_HEADING_ORNAMENTS,
   validateCustomThemeToken,
   normalizeCustomThemeToken,
 } from './theme-token-validator.js';
@@ -55,13 +54,16 @@ export const AI_THEME_SYSTEM_PROMPT = `你是一个专业的微信公众号视�
    - 你在 \`css\` 字段写的标准 CSS 会自动限定作用域并强制内联到每篇文章对应元素上；
    - 原生支持 \`::before\` / \`::after\` 以及 \`counter-reset\` / \`counter()\`（会被自动转为微信兼容的真实 \`<span>\`）；
    - 你**无需**手写 \`.owc-article-root\` 前缀，**无需**写 \`!important\`，也**无需**写 \`<style>\` 标签。
-2. 审美与克制原则：
-   - 请通过字体气质（衬线/无衬线/等宽）、字号对比、行高呼吸感、低饱和浅底、克制边框、\`::before\`/\`counter()\` 章节饰条来营造独特质感，避免模板化、廉价堆砌；
+2. 审美、装饰与克制原则（无图标纯排版体系）：
+   - **彻底禁用任何图标**：严禁输出 \`heading.ornament\`、严禁手写 SVG \`customPath\`、严禁在标题或正文中堆砌 Emoji；
+   - **纯 CSS 装饰技法（如需装饰感，优先选用以下微信 100% 兼容手法）**：
+     * 自动章节序号：\`counter-reset: h2sec;\` + \`h2::before { content: counter(h2sec, decimal-leading-zero) ' · '; }\` 或 \`PART 01\`；
+     * 纯 CSS 几何微件：用 \`h2::before\` / \`h2::after\` 画小圆点（\`width: 6px; height: 6px; border-radius: 50%; background: ...;\`）、色块小竖条（\`width: 4px; height: 15px; border-radius: 2px;\`）、居中渐隐短横线（\`display: block; width: 48px; height: 2px; margin: 10px auto 0; background: linear-gradient(...);\`）或 L 形折角；
+     * 极简排版符号：\`// \`、\`§ \`、\`「\` \`」\`、\`◆ \`、\`✦ \`、\`——\` 等纯文本符号配合主色与字距；
+     * 容器层次：左置色条、渐变浅底衬、上下细线居中题头、胶囊序号标。
    - 支持覆盖的选择器：\`section, h1, h2, h3, h4, p, blockquote, blockquote p, .owc-callout, strong, em, code, hr, ul, ol, li, table, th, td, a\`（代码块已使用独立暗色主题，无需写 \`pre\`）；
    - 若修改正文字号、行高或文字颜色，请同时作用于 \`p, li\`（并建议补充 \`blockquote p { margin: 0; color: inherit; }\` 保持引用内段落紧凑且继承引用色）；
-   - 正文文字 \`p, li\` 务必与 \`section\` 底色保持清晰对比度（浅底推荐 #222222~#3A3A3A）；
-   - 严禁使用 Emoji、严禁手写 SVG \`customPath\`；
-   - 仅当用户明确要求小图标装饰或主题高度契合时，才在可选字段 \`heading.ornament\` 中选用 1 个精选微件（仅限 ${CURATED_AI_HEADING_ORNAMENTS.join(' | ')}），H3/H4 不加图标。
+   - 正文文字 \`p, li\` 务必与 \`section\` 底色保持清晰对比度（浅底推荐 #222222~#3A3A3A）。
 3. 微信安全边界（严禁出现）：
    - 严禁 \`@import\`、\`@font-face\`、外部 \`url(...)\`、\`position: fixed/absolute\`、\`@keyframes\`、JS 事件、负 \`margin\` 横向溢出。
 
@@ -73,12 +75,11 @@ export const AI_THEME_SYSTEM_PROMPT = `你是一个专业的微信公众号视�
 - "description": 适用场景与设计简述（15~40 字）
 - "colors": { "accent": "#RRGGBB"(必填), 可选 "canvas", "light", "title", "text", "muted", "border" }
 - "css": 完整、可立即生效的标准微信安全 CSS 字符串
-- "heading": 可选，仅在确实需要微件点缀时提供 { "ornament": "..." }
 - "footer": { "showEngagementCard": true, "ctaText": "贴合文风的点赞/在看/转发引导语" }
 
 【两套不同风格的 CSS 范例（仅作质感参考，请按用户诉求自由创作）】
-范例1（人文刊物风）："css": "section { background: #FCF9F2; counter-reset: h2sec; } p, li { color: #3A332D; font-size: 15.5px; line-height: 1.9; } h1 { font-family: Georgia, 'Songti SC', serif; font-size: 24px; color: #2C241E; text-align: center; padding-bottom: 14px; border-bottom: 1px solid #D9CEBE; } h2 { counter-increment: h2sec; font-family: Georgia, 'Songti SC', serif; font-size: 20px; color: #2C241E; text-align: center; margin: 38px 0 18px; padding-bottom: 10px; border-bottom: 1px solid #8C5A3C; } h2::before { content: counter(h2sec, decimal-leading-zero) ' · '; color: #8C5A3C; font-size: 13px; letter-spacing: 2px; } h3 { font-size: 17px; color: #2C241E; border-left: 3px solid #8C5A3C; padding-left: 10px; margin: 26px 0 12px; } blockquote { background: #F4EDE2; border-left: 2px solid #8C5A3C; color: #5C5046; padding: 14px 18px; border-radius: 4px; } blockquote p { margin: 0; color: inherit; } strong { color: #8C5A3C; } hr { border: none; border-top: 1px solid #E5DDD0; margin: 36px auto; width: 48%; }"
-范例2（现代简报风）："css": "section { background: #FFFFFF; } p, li { color: #334155; font-size: 15px; line-height: 1.82; } h1 { font-size: 23px; font-weight: 800; color: #0F172A; text-align: left; padding-bottom: 12px; border-bottom: 2px solid #0F172A; } h2 { font-size: 19px; font-weight: 700; color: #0F172A; text-align: left; margin: 34px 0 16px; padding: 8px 14px; background: linear-gradient(90deg, rgba(29, 78, 216, 0.08), rgba(29, 78, 216, 0.01)); border-left: 4px solid #1D4ED8; border-radius: 0 6px 6px 0; } h3 { font-size: 16.5px; font-weight: 700; color: #1E3A8A; margin: 22px 0 10px; } h3::before { content: '// '; color: #1D4ED8; font-weight: 700; } blockquote { background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 3px solid #1D4ED8; padding: 12px 16px; border-radius: 6px; color: #475569; } blockquote p { margin: 0; color: inherit; } strong { color: #0F172A; background: rgba(29, 78, 216, 0.1); padding: 1px 4px; border-radius: 3px; } th { background: #EFF6FF; color: #1E3A8A; }"
+范例1（人文刊物风 — 居中序号 + 短线装饰）："css": "section { background: #FCF9F2; counter-reset: h2sec; } p, li { color: #3A332D; font-size: 15.5px; line-height: 1.9; } h1 { font-family: Georgia, 'Songti SC', serif; font-size: 24px; color: #2C241E; text-align: center; padding-bottom: 14px; border-bottom: 1px solid #D9CEBE; } h2 { counter-increment: h2sec; font-family: Georgia, 'Songti SC', serif; font-size: 20px; color: #2C241E; text-align: center; margin: 38px 0 18px; padding-bottom: 10px; border-bottom: 1px solid #8C5A3C; } h2::before { content: counter(h2sec, decimal-leading-zero) ' · '; color: #8C5A3C; font-size: 13px; letter-spacing: 2px; } h3 { font-size: 17px; color: #2C241E; border-left: 3px solid #8C5A3C; padding-left: 10px; margin: 26px 0 12px; } blockquote { background: #F4EDE2; border-left: 2px solid #8C5A3C; color: #5C5046; padding: 14px 18px; border-radius: 4px; } blockquote p { margin: 0; color: inherit; } strong { color: #8C5A3C; } hr { border: none; border-top: 1px solid #E5DDD0; margin: 36px auto; width: 48%; }"
+范例2（现代简报风 — 左置色条 + // 前缀）："css": "section { background: #FFFFFF; } p, li { color: #334155; font-size: 15px; line-height: 1.82; } h1 { font-size: 23px; font-weight: 800; color: #0F172A; text-align: left; padding-bottom: 12px; border-bottom: 2px solid #0F172A; } h2 { font-size: 19px; font-weight: 700; color: #0F172A; text-align: left; margin: 34px 0 16px; padding: 8px 14px; background: linear-gradient(90deg, rgba(29, 78, 216, 0.08), rgba(29, 78, 216, 0.01)); border-left: 4px solid #1D4ED8; border-radius: 0 6px 6px 0; } h3 { font-size: 16.5px; font-weight: 700; color: #1E3A8A; margin: 22px 0 10px; } h3::before { content: '// '; color: #1D4ED8; font-weight: 700; } blockquote { background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 3px solid #1D4ED8; padding: 12px 16px; border-radius: 6px; color: #475569; } blockquote p { margin: 0; color: inherit; } strong { color: #0F172A; background: rgba(29, 78, 216, 0.1); padding: 1px 4px; border-radius: 3px; } th { background: #EFF6FF; color: #1E3A8A; }"
 `;
 
 /**
@@ -377,6 +378,21 @@ export async function generateCustomThemeWithAi({
     }
 
     const normalized = normalizeCustomThemeToken(validation.token);
+    // 彻底移除 AI 生成链路产出的图标/手写 SVG 路径，确保新版主题保持纯净纯 CSS 排版装饰
+    if (normalized.heading && typeof normalized.heading === 'object') {
+      delete normalized.heading.ornament;
+      delete normalized.heading.h3Ornament;
+      delete normalized.heading.h4Ornament;
+      delete normalized.heading.customPath;
+      delete normalized.heading.h3CustomPath;
+      delete normalized.heading.h4CustomPath;
+      const hasMeaningfulHeadingProp = Object.entries(normalized.heading).some(
+        ([k, v]) => (k === 'align' ? v === 'center' : Boolean(v))
+      );
+      if (!hasMeaningfulHeadingProp) {
+        delete normalized.heading;
+      }
+    }
     const jsonString = JSON.stringify(normalized, null, 2);
 
     return {

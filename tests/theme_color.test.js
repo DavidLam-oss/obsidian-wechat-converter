@@ -209,7 +209,9 @@ describe('AppleTheme Color Logic', () => {
         themeColor: 'green',
       });
 
-      expect(theme.getStyle('p')).toContain('margin: 0 0 18px 0;');
+      expect(theme.getStyle('p')).toContain('margin: 0 0 26px 0;');
+      expect(theme.getStyle('p')).toContain('line-height: 1.9;');
+      expect(theme.getStyle('p')).toContain('letter-spacing: 0.5px;');
       expect(theme.getStyle('h3')).toContain('border-bottom: 2px solid #28a745;');
       expect(theme.getStyle('th')).toContain('background: #f6f8fa;');
       expect(theme.getStyle('mark')).toBe('background-color: #fff1a8; padding: 0 2px; border-radius: 2px;');
@@ -279,13 +281,15 @@ describe('AppleTheme Color Logic', () => {
       expect(colorful.getStyle('blockquote')).not.toContain('border: 1px solid');
     });
 
-    it('should give background-backed paper and grid themes responsive extra side breathing room', () => {
+    it('should give paper, grid, wechat, and github themes responsive extra side breathing room', () => {
       const paperDefault = new AppleTheme({ theme: 'paper', sidePadding: 16 });
       const gridDefault = new AppleTheme({ theme: 'grid', sidePadding: 16 });
       const paperCustom = new AppleTheme({ theme: 'paper', sidePadding: 32 });
       const gridCustom = new AppleTheme({ theme: 'grid', sidePadding: 36 });
       const gridNudged = new AppleTheme({ theme: 'grid', sidePadding: 17 });
       const github = new AppleTheme({ theme: 'github', sidePadding: 16 });
+      const wechat = new AppleTheme({ theme: 'wechat', sidePadding: 16 });
+      const media = new AppleTheme({ theme: 'media', sidePadding: 16 });
 
       expect(paperDefault.getStyle('section')).toContain('padding: 20px 22px;');
       expect(gridDefault.getStyle('section')).toContain('padding: 20px 22px;');
@@ -294,8 +298,10 @@ describe('AppleTheme Color Logic', () => {
       expect(gridNudged.getStyle('section')).toContain('padding: 20px 23px;');
       expect(paperCustom.getStyle('section')).toContain('padding: 20px 38px;');
       expect(gridCustom.getStyle('section')).toContain('padding: 20px 42px;');
-      expect(github.getStyle('section')).toContain('padding: 20px 16px;');
-      expect(github.getStyle('section')).not.toContain('box-sizing: border-box;');
+      expect(github.getStyle('section')).toContain('padding: 20px 20px;');
+      expect(wechat.getStyle('section')).toContain('padding: 20px 20px;');
+      expect(media.getStyle('section')).toContain('padding: 20px 16px;');
+      expect(media.getStyle('section')).not.toContain('box-sizing: border-box;');
     });
 
     it('should keep grid-specific section background handling out of other built-in themes', () => {
@@ -377,7 +383,7 @@ describe('AppleTheme Color Logic', () => {
       });
     });
 
-    it('should apply tighter spacing for h2 and h3 in the default theme', () => {
+    it('should apply Mimeng-style bottom-line h2 and left-border h3 in the classic wechat theme', () => {
       const theme = new AppleTheme({
         theme: 'wechat',
         fontSize: 3,
@@ -387,9 +393,11 @@ describe('AppleTheme Color Logic', () => {
       const h3Style = theme.getStyle('h3');
 
       expect(h2Style).toContain('font-size: 22px;');
-      expect(h2Style).toContain('margin: 34px auto 20px;');
+      expect(h2Style).toContain('margin: 32px auto 16px;');
+      expect(h2Style).toContain('background-size: 50px 2px;');
       expect(h3Style).toContain('font-size: 18px;');
-      expect(h3Style).toContain('margin: 24px 0 12px;');
+      expect(h3Style).toContain('margin: 20px 0 12px;');
+      expect(h3Style).toContain('border-left: 4px solid');
     });
 
     it('should keep classic heading decorations compatible with serif fonts', () => {
@@ -403,9 +411,29 @@ describe('AppleTheme Color Logic', () => {
       const h3Style = theme.getStyle('h3');
 
       expect(h2Style).toContain("font-family: 'Times New Roman', Georgia, 'SimSun', serif;");
-      expect(h2Style).toContain('background-image: linear-gradient(to right, transparent, #0366d6, transparent);');
-      expect(h3Style).toContain('border-left: 3px solid #0366d6;');
-      expect(h3Style).toContain('background: #0366d60A;');
+      expect(h2Style).toContain('background-image: linear-gradient(to right, #0366d6, #0366d6);');
+      expect(h2Style).toContain('background-size: 50px 2px;');
+      expect(h3Style).toContain('border-left: 4px solid #0366d6;');
+      expect(h3Style).toContain('padding-left: 10px;');
+    });
+
+    it('should allow manual spacing overrides (including 0 letterSpacing) over Mimeng defaults', () => {
+      const defaultWechat = new AppleTheme({ theme: 'wechat' });
+      expect(defaultWechat.getStyle('p')).toContain('line-height: 1.9;');
+      expect(defaultWechat.getStyle('p')).toContain('margin: 0 0 26px 0;');
+      expect(defaultWechat.getStyle('p')).toContain('letter-spacing: 0.5px;');
+
+      const manualOverride = new AppleTheme({
+        theme: 'wechat',
+        lineHeight: 1.6,
+        paragraphGap: 14,
+        letterSpacing: 0,
+        sidePadding: 12,
+      });
+      expect(manualOverride.getStyle('p')).toContain('line-height: 1.6;');
+      expect(manualOverride.getStyle('p')).toContain('margin: 0 0 14px 0;');
+      expect(manualOverride.getStyle('p')).toContain('letter-spacing: 0;');
+      expect(manualOverride.getStyle('section')).toContain('padding: 20px 16px;');
     });
   });
 

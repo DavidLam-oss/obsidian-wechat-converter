@@ -683,7 +683,8 @@ getEffectiveParagraphGap() {
 getEffectiveLetterSpacing() {
   const configured = this.plugin.settings.letterSpacing;
   if (configured !== null && configured !== undefined) return configured;
-  return 0;
+  const cfg = /** @type {{ letterSpacing?: unknown } | null} */ (this.getThemeConfigSafe());
+  return typeof cfg?.letterSpacing === 'number' ? cfg.letterSpacing : 0;
 }
 ,
 

@@ -316,6 +316,16 @@ describe('AppleStyleView settings panel + toolbar', () => {
     const summary = spacingGroup.querySelector('summary');
     expect(summary.textContent).toContain('段距 30');
     expect(summary.textContent).not.toContain('跟随主题');
+
+    // 当主题带有默认字距时，摘要默认显示主题字距，且手动拖动仍可覆盖为 0
+    view.theme.getThemeConfig = () => ({ lineHeight: 1.9, paragraphGap: 26, letterSpacing: 0.5 });
+    expect(view.getEffectiveLetterSpacing()).toBe(0.5);
+    const letterSlider = sliders[2];
+    letterSlider.value = '0';
+    letterSlider.dispatchEvent(new window.Event('change'));
+    expect(view.plugin.settings.letterSpacing).toBe(0);
+    expect(view.getEffectiveLetterSpacing()).toBe(0);
+    expect(themeUpdate).toHaveBeenCalledWith({ letterSpacing: 0 });
   });
 
   it('resetSettingsPanelViewState should collapse advanced options and scroll to top without changing settings', () => {

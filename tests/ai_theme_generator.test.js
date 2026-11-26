@@ -42,11 +42,13 @@ describe('AI Theme Generator Service', () => {
       expect(prompt).toContain('schemaVersion');
     });
 
-    it('should use default prompt text when requirement is empty', () => {
+    it('should use default prompt text when requirement is empty and exclude icon prompts', () => {
       const prompt = buildThemePromptWithRequirement('');
       expect(prompt).toContain('请自由设计一套优雅克制');
       expect(AI_THEME_SYSTEM_PROMPT).toContain('::before');
       expect(AI_THEME_SYSTEM_PROMPT).not.toContain('"customPath":');
+      expect(AI_THEME_SYSTEM_PROMPT).not.toContain('"leaf"');
+      expect(AI_THEME_SYSTEM_PROMPT).not.toContain('"terminal"');
     });
 
     it('should build incremental refine prompt preserving legacy and hybrid fields', () => {
@@ -504,6 +506,51 @@ describe('AI Theme Generator Service', () => {
       expect(result.success).toBe(false);
       expect(mockFetch).toHaveBeenCalledTimes(2);
       expect(result.error).toContain('主题配置校验失败');
+    });
+
+    it('should strip hallucinated heading ornaments and customPath from AI-generated themes', async () => {
+      const aiSettings = {
+        providers: [
+          {
+            id: 'p1',
+            kind: 'openai-compatible',
+            enabled: true,
+            baseUrl: 'https://api.example.com/v1',
+            apiKey: 'sk-123',
+            supportsText: true,
+            textModel: 'gpt-4o',
+          },
+        ],
+      };
+
+      const tokenWithHallucinatedOrnament = JSON.stringify({
+        schemaVersion: 1,
+        id: 'pure-css-only',
+        name: '纯净排版',
+        colors: { accent: '#2563EB' },
+        heading: {
+          ornament: 'leaf',
+          h3Ornament: 'slash-bar',
+          customPath: 'M12 2L2 7l10 5',
+        },
+        css: 'h2::before { content: "· "; color: #2563EB; }',
+      });
+
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ choices: [{ message: { content: tokenWithHallucinatedOrnament } }] }),
+      });
+
+      const result = await generateCustomThemeWithAi({
+        aiSettings,
+        userRequirement: '极简蓝',
+        fetchImpl: mockFetch,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.token?.heading).toBeUndefined();
+      expect(result.token?.css).toContain('h2::before');
     });
   });
 });
